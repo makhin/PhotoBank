@@ -19,7 +19,7 @@ namespace PhotoBank.DbContext.DbContext
         public DbSet<Tag> Tags { get; set; }
         public DbSet<PhotoTag> PhotoTags { get; set; }
         public DbSet<PhotoCategory> PhotoCategories { get; set; }
-
+        public DbSet<Person> Persons { get; set; }
         public PhotoBankDbContext(DbContextOptions<PhotoBankDbContext> options) : base(options)
         {
         }
