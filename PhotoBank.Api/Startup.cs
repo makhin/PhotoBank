@@ -1,3 +1,4 @@
+using System.IO;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -6,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PhotoBank.DbContext.DbContext;
+using PhotoBank.Repositories;
+using PhotoBank.Services;
 
 namespace PhotoBank.Api
 {
@@ -32,7 +35,11 @@ namespace PhotoBank.Api
                     });
             });
 
-            services.AddControllers();
+            RegisterServices.Configure(services, Configuration);
+            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            services.AddControllers().AddNewtonsoftJson(options =>
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+            );
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,9 +51,7 @@ namespace PhotoBank.Api
             }
 
             app.UseRouting();
-
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

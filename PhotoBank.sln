@@ -9,9 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.DbContext", "Phot
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Api", "PhotoBank.Api\PhotoBank.Api.csproj", "{C9C6516A-AC20-4E53-AACB-916737018EFD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoBank.Repositories", "PhotoBank.Repositories\PhotoBank.Repositories.csproj", "{BB03B6F7-5A40-4D48-97E2-75CFC99191D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Repositories", "PhotoBank.Repositories\PhotoBank.Repositories.csproj", "{BB03B6F7-5A40-4D48-97E2-75CFC99191D1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoBank.Services", "PhotoBank.Services\PhotoBank.Services.csproj", "{01B72FEE-BD48-43D8-B155-9E2B2D953C55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Services", "PhotoBank.Services\PhotoBank.Services.csproj", "{01B72FEE-BD48-43D8-B155-9E2B2D953C55}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoBank.BlazorApp", "PhotoBank.BlazorApp\PhotoBank.BlazorApp.csproj", "{23A13E61-19C4-4ED6-BA98-59C0253A84E3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{01B72FEE-BD48-43D8-B155-9E2B2D953C55}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{01B72FEE-BD48-43D8-B155-9E2B2D953C55}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{01B72FEE-BD48-43D8-B155-9E2B2D953C55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

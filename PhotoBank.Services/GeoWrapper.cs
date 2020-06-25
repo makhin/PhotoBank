@@ -2,6 +2,7 @@
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
+using NetTopologySuite.Utilities;
 
 namespace PhotoBank.Services
 {
@@ -23,6 +24,9 @@ namespace PhotoBank.Services
 
         public Geometry GetRectangle(BoundingRect rectangle)
         {
+            GeometricShapeFactory gsf = new GeometricShapeFactory();
+            gsf.CreateRectangle();
+
             return _geometryFactory.CreatePolygon(
                 new[]
                 {
