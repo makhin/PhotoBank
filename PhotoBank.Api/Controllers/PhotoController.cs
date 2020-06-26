@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
+using PhotoBank.Services.Api;
 
 namespace PhotoBank.Api.Controllers
 {
@@ -11,19 +12,18 @@ namespace PhotoBank.Api.Controllers
     [ApiController]
     public class PhotoController : Controller
     {
-        private readonly IRepository<Photo> _photoRepository;
+        private readonly IPhotoService _photoService;
 
-        public PhotoController(IRepository<Photo> photoRepository)
+        public PhotoController(IPhotoService photoService)
         {
-            _photoRepository = photoRepository;
+            _photoService = photoService;
         }
 
         // GET
         [HttpGet]
         public async Task<IActionResult> GetPhotos()
         {
-            var photos = await _photoRepository.GetAll().OrderBy(p => p.Name).Select(p => new { p.Id, p.Name })
-                .ToListAsync();
+            var photos = await _photoService.GetAll();
 
             if (!photos.Any())
             {
@@ -37,7 +37,7 @@ namespace PhotoBank.Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPhotoById(int id)
         {
-            var photo = await _photoRepository.Get(id, photos => photos);
+            var photo = await _photoService.Get(id);
 
             if (photo == null)
             {

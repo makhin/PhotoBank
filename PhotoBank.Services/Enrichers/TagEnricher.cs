@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 
-namespace PhotoBank.Services
+namespace PhotoBank.Services.Enrichers
 {
     public class TagEnricher : IEnricher<ImageAnalysis>
     {

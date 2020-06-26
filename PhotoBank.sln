@@ -13,7 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Repositories", "P
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Services", "PhotoBank.Services\PhotoBank.Services.csproj", "{01B72FEE-BD48-43D8-B155-9E2B2D953C55}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoBank.BlazorApp", "PhotoBank.BlazorApp\PhotoBank.BlazorApp.csproj", "{23A13E61-19C4-4ED6-BA98-59C0253A84E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.BlazorApp", "PhotoBank.BlazorApp\PhotoBank.BlazorApp.csproj", "{23A13E61-19C4-4ED6-BA98-59C0253A84E3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoBank.Dto", "PhotoBank.Dto\PhotoBank.Dto.csproj", "{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

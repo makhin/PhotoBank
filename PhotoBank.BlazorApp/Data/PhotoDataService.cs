@@ -32,7 +32,7 @@ namespace PhotoBank.BlazorApp.Data
         public async Task<Photo> GetPhotoById(int photoId)
         {
             return await JsonSerializer.DeserializeAsync<Photo>
-                (await _httpClient.GetStreamAsync($"api/country{photoId}"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                (await _httpClient.GetStreamAsync($"api/photo/{photoId}"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
         }
     }
 }

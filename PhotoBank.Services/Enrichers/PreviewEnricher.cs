@@ -2,7 +2,7 @@
 using System.IO;
 using PhotoBank.DbContext.Models;
 
-namespace PhotoBank.Services
+namespace PhotoBank.Services.Enrichers
 {
     public class PreviewEnricher : IEnricher<string>
     {

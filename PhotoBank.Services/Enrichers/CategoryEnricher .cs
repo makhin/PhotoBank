@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using Category = PhotoBank.DbContext.Models.Category;
 
-namespace PhotoBank.Services
+namespace PhotoBank.Services.Enrichers
 {
     public class CategoryEnricher : IEnricher<ImageAnalysis>
     {

@@ -7,10 +7,10 @@ using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Microsoft.Extensions.Configuration;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
+using PhotoBank.Services.Enrichers;
 
 namespace PhotoBank.Services
 {
-
     public interface IPhotoProcessor
     {
         bool AddPhoto(string path);

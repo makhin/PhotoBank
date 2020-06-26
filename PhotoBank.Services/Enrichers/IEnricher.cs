@@ -1,6 +1,6 @@
 ﻿using PhotoBank.DbContext.Models;
 
-namespace PhotoBank.Services
+namespace PhotoBank.Services.Enrichers
 {
     public interface IEnricher<in TSource>
     {

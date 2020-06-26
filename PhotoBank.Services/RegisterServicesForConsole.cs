@@ -2,10 +2,12 @@
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PhotoBank.Services.Api;
+using PhotoBank.Services.Enrichers;
 
 namespace PhotoBank.Services
 {
-    public static class RegisterServices
+    public static class RegisterServicesForConsole
     {
         const string ComputerVision = "ComputerVision";
 

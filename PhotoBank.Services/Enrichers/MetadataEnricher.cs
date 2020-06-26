@@ -5,7 +5,7 @@ using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using PhotoBank.DbContext.Models;
 
-namespace PhotoBank.Services
+namespace PhotoBank.Services.Enrichers
 {
     public class MetadataEnricher : IEnricher<string>
     {

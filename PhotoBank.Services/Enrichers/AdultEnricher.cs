@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using PhotoBank.DbContext.Models;
 
-namespace PhotoBank.Services
+namespace PhotoBank.Services.Enrichers
 {
     public class AdultEnricher : IEnricher<ImageAnalysis>
     {

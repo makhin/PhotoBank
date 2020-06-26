@@ -40,7 +40,7 @@ namespace PhotoBank.Console
                 options.EnableDetailedErrors();
             });
 
-            RegisterServices.Configure(services, config);
+            RegisterServicesForConsole.Configure(services, config);
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddSingleton(config);
