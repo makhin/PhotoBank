@@ -7,7 +7,7 @@ namespace PhotoBank.Dto
     {
         public MappingProfile()
         {
-            // CreateMap<Photo, PhotoDto>().ReverseMap();
+            CreateMap<Photo, PhotoDto>().IgnoreAllPropertiesWithAnInaccessibleSetter();
             CreateMap<Photo, PhotoItemDto>().IgnoreAllPropertiesWithAnInaccessibleSetter();
         }
     }

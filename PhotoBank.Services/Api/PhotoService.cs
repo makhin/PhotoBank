@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -30,13 +31,15 @@ namespace PhotoBank.Services.Api
 
         public async Task<IEnumerable<PhotoItemDto>> GetAll()
         {
-            return await _photoRepository.GetAll().ProjectTo<PhotoItemDto>(null).ToListAsync();
+            var items = await _photoRepository.GetAll().ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider).ToListAsync();
+            return items;
         }
 
         public async Task<PhotoDto> Get(int id)
         {
             var photo = await _photoRepository.Get(id, photos => photos);
-            return _mapper.Map<Photo, PhotoDto>(photo);
+            var photoDto = _mapper.Map<Photo, PhotoDto>(photo);
+            return photoDto;
         }
     }
 }

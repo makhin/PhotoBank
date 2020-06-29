@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using PhotoBank.DbContext.Models;
+using PhotoBank.Dto;
 
 namespace PhotoBank.BlazorApp.Data
 {
     public interface IPhotoDataService
     {
-        Task<IEnumerable<Photo>> GetAllPhotos();
-        Task<Photo> GetPhotoById(int photoId);
+        Task<IEnumerable<PhotoDto>> GetAllPhotos();
+        Task<PhotoDto> GetPhotoById(int photoId);
     }
 
     public class PhotoDataService : IPhotoDataService
@@ -23,16 +21,18 @@ namespace PhotoBank.BlazorApp.Data
             _httpClient = httpClient;
         }
 
-        public async Task<IEnumerable<Photo>> GetAllPhotos()
+        public async Task<IEnumerable<PhotoDto>> GetAllPhotos()
         {
-            return await JsonSerializer.DeserializeAsync<IEnumerable<Photo>>
+            return await JsonSerializer.DeserializeAsync<IEnumerable<PhotoDto>>
                 (await _httpClient.GetStreamAsync($"api/photo"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
         }
 
-        public async Task<Photo> GetPhotoById(int photoId)
+        public async Task<PhotoDto> GetPhotoById(int photoId)
         {
-            return await JsonSerializer.DeserializeAsync<Photo>
-                (await _httpClient.GetStreamAsync($"api/photo/{photoId}"), new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+            var streamAsync = await _httpClient.GetStreamAsync($"api/photo/{photoId}");
+
+            return await JsonSerializer.DeserializeAsync<PhotoDto>
+                (streamAsync, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
     }
 }

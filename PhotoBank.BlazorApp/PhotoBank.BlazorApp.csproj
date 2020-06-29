@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PhotoBank.DbContext\PhotoBank.DbContext.csproj" />
+    <ProjectReference Include="..\PhotoBank.Dto\PhotoBank.Dto.csproj" />
   </ItemGroup>
 
 </Project>

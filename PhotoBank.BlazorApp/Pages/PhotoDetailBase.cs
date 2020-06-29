@@ -7,16 +7,18 @@ using PhotoBank.Dto;
 
 namespace PhotoBank.BlazorApp.Pages
 {
-    public class PhotoOverviewBase: ComponentBase
+    public class PhotoDetailBase: ComponentBase
     {
         [Inject]
         public IPhotoDataService PhotoDataService { get; set; }
 
-        public List<PhotoDto> Photos { get; set; }
+        [Parameter]
+        public string PhotoId { get; set; }
 
+        public PhotoDto Photo { get; set; }
         protected override async Task OnInitializedAsync()
         {
-            Photos = (await PhotoDataService.GetAllPhotos()).ToList();
+            Photo = await PhotoDataService.GetPhotoById(int.Parse(PhotoId));
         }
     }
 }
