@@ -21,6 +21,7 @@ namespace PhotoBank.DbContext.Models
         [Column(TypeName = "geometry")]
         public Point Location { get; set; }
         public byte[] PreviewImage { get; set; }
+        public byte[] Thumbnail { get; set; }
         public int? Height { get; set; }
         public int? Width { get; set; }
         public int? Orientation { get; set; }

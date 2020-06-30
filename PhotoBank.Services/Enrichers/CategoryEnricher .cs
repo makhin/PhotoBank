@@ -1,13 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using PhotoBank.DbContext.Models;
+using PhotoBank.Dto;
 using PhotoBank.Repositories;
 using Category = PhotoBank.DbContext.Models.Category;
 
 namespace PhotoBank.Services.Enrichers
 {
-    public class CategoryEnricher : IEnricher<ImageAnalysis>
+    public class CategoryEnricher : IEnricher
     {
         private readonly IRepository<Category> _categoryRepository;
 
@@ -15,10 +16,13 @@ namespace PhotoBank.Services.Enrichers
         {
             _categoryRepository = categoryRepository;
         }
-        public void Enrich(Photo photo, ImageAnalysis analysis)
+        public Type[] Dependencies => new Type[0];
+
+        public void Enrich(Photo photo, SourceDataDto sourceData)
+
         {
             photo.PhotoCategories = new List<PhotoCategory>();
-            foreach (var category in analysis.Categories)
+            foreach (var category in sourceData.ImageAnalysis.Categories)
             {
                 var catModel = _categoryRepository.GetByCondition(t => t.Name == category.Name).FirstOrDefault();
 

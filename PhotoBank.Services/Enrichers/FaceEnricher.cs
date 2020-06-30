@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+﻿using System;
+using System.Collections.Generic;
 using PhotoBank.DbContext.Models;
+using PhotoBank.Dto;
 
 namespace PhotoBank.Services.Enrichers
 {
-    public class FaceEnricher : IEnricher<ImageAnalysis>
+    public class FaceEnricher : IEnricher
     {
         private readonly IGeoWrapper _geoWrapper;
 
@@ -13,10 +14,13 @@ namespace PhotoBank.Services.Enrichers
             _geoWrapper = geoWrapper;
         }
 
-        public void Enrich(Photo photo, ImageAnalysis analysis)
+        public Type[] Dependencies => new Type[0];
+
+        public void Enrich(Photo photo, SourceDataDto sourceData)
+
         {
             photo.Faces = new List<Face>();
-            foreach (var faceDescription in analysis.Faces)
+            foreach (var faceDescription in sourceData.ImageAnalysis.Faces)
             {
                 photo.Faces.Add(new Face()
                 {

@@ -1,27 +1,28 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.IO;
 using PhotoBank.DbContext.Models;
+using PhotoBank.Dto;
 
 namespace PhotoBank.Services.Enrichers
 {
-    public class PreviewEnricher : IEnricher<string>
+    public class PreviewEnricher : IEnricher
     {
-        private readonly IImageEncoder _imageEncoder;
+        public Type[] Dependencies => new Type[0];
 
-        public PreviewEnricher(IImageEncoder imageEncoder)
+        public void Enrich(Photo photo, SourceDataDto sourceData)
         {
-            _imageEncoder = imageEncoder;
+            photo.PreviewImage = ImageToByteArray(sourceData.Image);
+            photo.Thumbnail = ImageToByteArray(sourceData.Image.GetThumbnailImage(120, 120, () => false, IntPtr.Zero));
         }
-        public void Enrich(Photo photo, string path)
-        {
-            var image = Image.FromFile(path);
-            var stream = _imageEncoder.Encode(image, @"image/jpeg", 60L);
-            stream.Position = 0;
 
-            var binReader = new BinaryReader(stream);
-            var arraySize = (int)(stream.Length - stream.Position);
-            photo.PreviewImage = new byte[arraySize];
-            binReader.Read(photo.PreviewImage, 0, arraySize);
+        private byte[] ImageToByteArray(Image image)
+        {
+            using (var ms = new MemoryStream())
+            {
+                image.Save(ms, image.RawFormat);
+                return ms.ToArray();
+            }
         }
     }
 }

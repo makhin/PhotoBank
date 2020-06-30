@@ -1,17 +1,21 @@
-﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+﻿using System;
 using PhotoBank.DbContext.Models;
+using PhotoBank.Dto;
 
 namespace PhotoBank.Services.Enrichers
 {
-    public class ColorEnricher : IEnricher<ImageAnalysis>
+    public class ColorEnricher : IEnricher
     {
-        public void Enrich(Photo photo, ImageAnalysis analysis)
+        public Type[] Dependencies => new Type[0];
+
+        public void Enrich(Photo photo, SourceDataDto sourceData)
+
         {
-            photo.IsBW = analysis.Color.IsBWImg;
-            photo.AccentColor = analysis.Color.AccentColor;
-            photo.DominantColorBackground = analysis.Color.DominantColorBackground;
-            photo.DominantColorForeground = analysis.Color.DominantColorForeground;
-            photo.DominantColors = string.Join(",", analysis.Color.DominantColors);
+            photo.IsBW = sourceData.ImageAnalysis.Color.IsBWImg;
+            photo.AccentColor = sourceData.ImageAnalysis.Color.AccentColor;
+            photo.DominantColorBackground = sourceData.ImageAnalysis.Color.DominantColorBackground;
+            photo.DominantColorForeground = sourceData.ImageAnalysis.Color.DominantColorForeground;
+            photo.DominantColors = string.Join(",", sourceData.ImageAnalysis.Color.DominantColors);
         }
     }
 }

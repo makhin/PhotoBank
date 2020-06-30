@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Microsoft.Extensions.Configuration;
 using PhotoBank.DbContext.Models;
+using PhotoBank.Dto;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers;
 
@@ -22,8 +24,8 @@ namespace PhotoBank.Services
         private readonly IComputerVisionClient _client;
         private readonly IConfiguration _configuration;
         private readonly IRepository<Photo> _photoRepository;
-        private readonly IEnumerable<IEnricher<string>> _stringEnrichers;
-        private readonly IEnumerable<IEnricher<ImageAnalysis>> _analysisEnrichers;
+        private readonly ImageEncoder _imageEncoder;
+        private readonly IEnumerable<IEnricher> _enrichers;
 
         private readonly List<VisualFeatureTypes> _features = new List<VisualFeatureTypes>()
         {
@@ -38,15 +40,16 @@ namespace PhotoBank.Services
             IComputerVisionClient client,
             IConfiguration configuration,
             IRepository<Photo> photoRepository,
-            IEnumerable<IEnricher<string>> stringEnrichers,
-            IEnumerable<IEnricher<ImageAnalysis>> analysisEnrichers
+            IEnumerable<IEnricher> enrichers,
+            IOrderResolver<IEnricher> orderResolver,
+            ImageEncoder imageEncoder
             )
         {
             _client = client;
             _configuration = configuration;
             _photoRepository = photoRepository;
-            _stringEnrichers = stringEnrichers;
-            _analysisEnrichers = analysisEnrichers;
+            _imageEncoder = imageEncoder;
+            _enrichers = orderResolver.Resolve(enrichers);
         }
 
         public bool AddPhoto(string path)
@@ -56,33 +59,23 @@ namespace PhotoBank.Services
                 throw new ArgumentException("File does not exists", nameof(path));
             }
 
-            var photo = new Photo
+            var image = Image.FromFile(path);
+            var stream = _imageEncoder.Encode(image, @"image/jpeg", 60L);
+            stream.Position = 0;
+            var analysis = _client.AnalyzeImageInStreamAsync(stream, _features).Result;
+
+            var sourceData = new SourceDataDto
             {
-                Name = Path.GetFileNameWithoutExtension(path),
-                Path = Path.GetDirectoryName(path),
+                Path = path,
+                Image = image,
+                ImageAnalysis = analysis
             };
 
-            foreach (var enricher in _stringEnrichers)
-            {
-                enricher.Enrich(photo, path);
-            }
+            var photo = new Photo();
 
-            ImageAnalysis analysis;
-
-            try
+            foreach (var enricher in _enrichers)
             {
-                var stream = new MemoryStream(photo.PreviewImage);
-                analysis = _client.AnalyzeImageInStreamAsync(stream, _features).Result;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-
-            foreach (var enricher in _analysisEnrichers)
-            {
-                enricher.Enrich(photo, analysis);
+                enricher.Enrich(photo, sourceData);
             }
 
             try

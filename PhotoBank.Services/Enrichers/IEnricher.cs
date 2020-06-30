@@ -1,9 +1,11 @@
-﻿using PhotoBank.DbContext.Models;
+﻿using System;
+using PhotoBank.DbContext.Models;
+using PhotoBank.Dto;
 
 namespace PhotoBank.Services.Enrichers
 {
-    public interface IEnricher<in TSource>
+    public interface IEnricher: IOrderDependant
     {
-        void Enrich(Photo photo, TSource path);
+        void Enrich(Photo photo, SourceDataDto path);
     }
 }

@@ -2,7 +2,6 @@
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using NetTopologySuite.Geometries;
 
 namespace PhotoBank.Services
 {

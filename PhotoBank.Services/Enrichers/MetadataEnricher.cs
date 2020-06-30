@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using PhotoBank.DbContext.Models;
+using PhotoBank.Dto;
+using Directory = MetadataExtractor.Directory;
 
 namespace PhotoBank.Services.Enrichers
 {
-    public class MetadataEnricher : IEnricher<string>
+    public class MetadataEnricher : IEnricher
     {
         private readonly IGeoWrapper _geoWrapper;
 
@@ -15,10 +18,14 @@ namespace PhotoBank.Services.Enrichers
         {
             _geoWrapper = geoWrapper;
         }
+        public Type[] Dependencies => new Type[0];
 
-        public void Enrich(Photo photo, string path)
+        public void Enrich(Photo photo, SourceDataDto sourceData)
         {
-            IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(path);
+            photo.Name = Path.GetFileNameWithoutExtension(sourceData.Path);
+            photo.Path = Path.GetDirectoryName(sourceData.Path);
+
+            IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(photo.Path);
 
             var exifSubIfdDirectory = directories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
             if (exifSubIfdDirectory != null)

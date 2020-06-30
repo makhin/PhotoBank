@@ -2,7 +2,6 @@
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using PhotoBank.Services.Api;
 using PhotoBank.Services.Enrichers;
 
 namespace PhotoBank.Services
@@ -23,18 +22,20 @@ namespace PhotoBank.Services
                 };
             });
 
+            
             services.AddSingleton<IGeoWrapper, GeoWrapper>();
+            services.AddTransient<IOrderResolver<IEnricher>, OrderResolver<IEnricher>>();
             services.AddTransient<IImageEncoder, ImageEncoder>();
             services.AddTransient<IPhotoProcessor, PhotoProcessor>();
-            services.AddScoped<IEnricher<string>, MetadataEnricher>();
-            services.AddScoped<IEnricher<string>, PreviewEnricher>();
-            services.AddScoped<IEnricher<ImageAnalysis>, ColorEnricher>();
-            services.AddScoped<IEnricher<ImageAnalysis>, CaptionEnricher>();
-            services.AddScoped<IEnricher<ImageAnalysis>, TagEnricher>();
-            services.AddScoped<IEnricher<ImageAnalysis>, CaptionEnricher>();
-            services.AddScoped<IEnricher<ImageAnalysis>, ObjectPropertyEnricher>();
-            services.AddScoped<IEnricher<ImageAnalysis>, FaceEnricher>();
-            services.AddScoped<IEnricher<ImageAnalysis>, AdultEnricher>();
+            services.AddScoped<IEnricher, MetadataEnricher>();
+            services.AddScoped<IEnricher, PreviewEnricher>();
+            services.AddScoped<IEnricher, ColorEnricher>();
+            services.AddScoped<IEnricher, CaptionEnricher>();
+            services.AddScoped<IEnricher, TagEnricher>();
+            services.AddScoped<IEnricher, CaptionEnricher>();
+            services.AddScoped<IEnricher, ObjectPropertyEnricher>();
+            services.AddScoped<IEnricher, FaceEnricher>();
+            services.AddScoped<IEnricher, AdultEnricher>();
         }
     }
 }
