@@ -21,39 +21,39 @@ namespace PhotoBank.Repositories
 
     public class Repository<TTable> : IRepository<TTable> where TTable : class, IEntityBase
     {
-        private readonly PhotoBankDbContext context;
-        private readonly DbSet<TTable> entities;
+        private readonly PhotoBankDbContext _context;
+        private readonly DbSet<TTable> _entities;
 
         public Repository(PhotoBankDbContext context)
         {
-            this.context = context;
-            entities = context.Set<TTable>();
+            this._context = context;
+            _entities = context.Set<TTable>();
         }
 
         public IQueryable<TTable> GetByCondition(Expression<Func<TTable, bool>> predicate)
         {
-            return entities.Where(predicate);
+            return _entities.Where(predicate);
         }
 
         public IQueryable<TTable> GetAll()
         {
-            return entities;
+            return _entities;
         }
 
         public async Task<TTable> Get(int id, Func<IQueryable<TTable>, IQueryable<TTable>> queryable)
         {
-            IQueryable<TTable> query = entities;
+            IQueryable<TTable> query = _entities;
             query = queryable(query);
             return await query.SingleOrDefaultAsync(a => a.Id == id);
         }
 
         public async Task<TTable> Insert(TTable entity)
         {
-            await using var transaction = await context.Database.BeginTransactionAsync();
+            await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                await context.AddAsync(entity);
-                await context.SaveChangesAsync();
+                await _context.AddAsync(entity);
+                await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
                 return entity;
             }
@@ -66,7 +66,7 @@ namespace PhotoBank.Repositories
         }
         public async Task<TTable> Update(TTable entity)
         {
-            bool recordExists = entities.Any(a => a.Id == entity.Id);
+            bool recordExists = _entities.Any(a => a.Id == entity.Id);
 
             if (!recordExists)
             {
@@ -75,8 +75,8 @@ namespace PhotoBank.Repositories
 
             try
             {
-                entities.Update(entity);
-                await context.SaveChangesAsync();
+                _entities.Update(entity);
+                await _context.SaveChangesAsync();
                 return entity;
             }
             catch (DbUpdateException exception)
@@ -88,7 +88,7 @@ namespace PhotoBank.Repositories
 
         public async Task<int> Delete(int id)
         {
-            TTable entity = await entities.AsNoTracking().SingleOrDefaultAsync(m => m.Id == id);
+            TTable entity = await _entities.AsNoTracking().SingleOrDefaultAsync(m => m.Id == id);
 
             if (entity == null)
             {
@@ -97,8 +97,8 @@ namespace PhotoBank.Repositories
 
             try
             {
-                entities.Remove(entity);
-                return await context.SaveChangesAsync();
+                _entities.Remove(entity);
+                return await _context.SaveChangesAsync();
             }
             catch (DbUpdateException exception)
             {

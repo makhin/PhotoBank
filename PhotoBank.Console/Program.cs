@@ -18,7 +18,7 @@ namespace PhotoBank.Console
         {
             var services = ConfigureServices();
             var serviceProvider = services.BuildServiceProvider();
-            serviceProvider.GetService<App>().Run();
+            serviceProvider.GetService<App>()?.Run();
             DisposeServices(serviceProvider);
         }
 
@@ -58,16 +58,9 @@ namespace PhotoBank.Console
             return builder.Build();
         }
 
-        private static void DisposeServices(ServiceProvider serviceProvider)
+        private static void DisposeServices(IDisposable serviceProvider)
         {
-            if (serviceProvider == null)
-            {
-                return;
-            }
-            if (serviceProvider is IDisposable)
-            {
-                serviceProvider.Dispose();
-            }
+            serviceProvider?.Dispose();
         }
     }
 }

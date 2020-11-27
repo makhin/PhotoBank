@@ -15,8 +15,8 @@ namespace PhotoBank.Services
 {
     public interface IPhotoProcessor
     {
-        bool AddPhoto(string path);
-        Task<bool> AddPhotoAsync(string path);
+        bool AddPhoto(Storage storage, string path);
+        Task<bool> AddPhotoAsync(Storage storage, string path);
     }
 
     public class PhotoProcessor : IPhotoProcessor
@@ -27,7 +27,7 @@ namespace PhotoBank.Services
         private readonly ImageEncoder _imageEncoder;
         private readonly IEnumerable<IEnricher> _enrichers;
 
-        private readonly List<VisualFeatureTypes> _features = new List<VisualFeatureTypes>()
+        private readonly IList<VisualFeatureTypes?> _features = new List<VisualFeatureTypes?>()
         {
             VisualFeatureTypes.Categories, VisualFeatureTypes.Description,
             VisualFeatureTypes.Faces, VisualFeatureTypes.ImageType,
@@ -52,7 +52,7 @@ namespace PhotoBank.Services
             _enrichers = orderResolver.Resolve(enrichers);
         }
 
-        public bool AddPhoto(string path)
+        public bool AddPhoto(Storage storage, string path)
         {
             if (!File.Exists(path))
             {
@@ -64,14 +64,17 @@ namespace PhotoBank.Services
             stream.Position = 0;
             var analysis = _client.AnalyzeImageInStreamAsync(stream, _features).Result;
 
+            var photo = new Photo()
+            {
+                Storage = storage
+            };
+
             var sourceData = new SourceDataDto
             {
-                Path = path,
+                Path = Path.GetRelativePath(storage.Folder, path),
                 Image = image,
                 ImageAnalysis = analysis
             };
-
-            var photo = new Photo();
 
             foreach (var enricher in _enrichers)
             {
@@ -90,7 +93,7 @@ namespace PhotoBank.Services
             return true;
         }
 
-        Task<bool> IPhotoProcessor.AddPhotoAsync(string path)
+        Task<bool> IPhotoProcessor.AddPhotoAsync(Storage storage, string path)
         {
             throw new NotImplementedException();
         }
