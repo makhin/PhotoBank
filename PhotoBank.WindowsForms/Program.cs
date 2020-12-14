@@ -1,29 +1,39 @@
-﻿using System.IO;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.Dto;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
-using PhotoBank.Services.Api;
 
-namespace PhotoBank.Console
+namespace PhotoBank.WindowsForms
 {
-    using System;
-
-    class Program
+    static class Program
     {
-        static void Main(string[] args)
+        /// <summary>
+        ///  The main entry point for the application.
+        /// </summary>
+        [STAThread]
+        static void Main()
         {
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
             var services = ConfigureServices();
-            var serviceProvider = services.BuildServiceProvider();
-            var app = serviceProvider.GetService<App>();
-            app?.Run();
-            DisposeServices(serviceProvider);
+
+            using (ServiceProvider serviceProvider = services.BuildServiceProvider())
+            {
+                var form1 = serviceProvider.GetRequiredService<MainForm>();
+                Application.Run(form1);
+            }
         }
 
         private static IServiceCollection ConfigureServices()
@@ -44,14 +54,12 @@ namespace PhotoBank.Console
                 options.EnableDetailedErrors();
             });
 
-            RegisterServicesForConsole.Configure(services, config);
+            RegisterServicesForApi.Configure(services, config);
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddSingleton(config);
-            services.AddTransient<App>();
-
-            services.AddTransient<IPhotoService, PhotoService>();
             services.AddAutoMapper(typeof(MappingProfile));
+            services.AddScoped<MainForm>();
 
             return services;
         }
@@ -63,11 +71,6 @@ namespace PhotoBank.Console
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
             return builder.Build();
-        }
-
-        private static void DisposeServices(IDisposable serviceProvider)
-        {
-            serviceProvider?.Dispose();
         }
     }
 }

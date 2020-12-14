@@ -34,7 +34,7 @@ namespace PhotoBank.UnitTests
             Mock<IRepository<Photo>> repoMock = new Mock<IRepository<Photo>>();
             Mock<IMapper> mapperMock = new Mock<IMapper>();
             PhotoService photoService = new PhotoService(repoMock.Object, mapperMock.Object);
-            var result = photoService.GetAll();
+            var result = photoService.GetAllAsync();
             repoMock.Verify(r => r.GetAll(), Times.Once);
         }
     }

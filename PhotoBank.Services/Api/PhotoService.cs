@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
@@ -11,8 +12,8 @@ namespace PhotoBank.Services.Api
 {
     public interface IPhotoService
     {
-        Task<IEnumerable<PhotoItemDto>> GetAll();
-        Task<PhotoDto> Get(int id);
+        Task<IEnumerable<PhotoItemDto>> GetAllAsync();
+        PhotoDto Get(int id);
     }
 
     public class PhotoService : IPhotoService
@@ -26,17 +27,15 @@ namespace PhotoBank.Services.Api
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<PhotoItemDto>> GetAll()
+        public async Task<IEnumerable<PhotoItemDto>> GetAllAsync()
         {
-            var items = await _photoRepository.GetAll().ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider).ToListAsync();
-            return items;
+            return await _photoRepository.GetAll().ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider).ToListAsync();
         }
 
-        public async Task<PhotoDto> Get(int id)
+        public PhotoDto Get(int id)
         {
-            var photo = await _photoRepository.Get(id, photos => photos);
-            var photoDto = _mapper.Map<Photo, PhotoDto>(photo);
-            return photoDto;
+            var photo = _photoRepository.Get(id);
+            return _mapper.Map<Photo, PhotoDto>(photo);
         }
     }
 }

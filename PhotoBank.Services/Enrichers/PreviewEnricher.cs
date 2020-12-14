@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
 
@@ -8,21 +9,18 @@ namespace PhotoBank.Services.Enrichers
 {
     public class PreviewEnricher : IEnricher
     {
-        public Type[] Dependencies => new Type[0];
+        private readonly IComputerVisionClient _client;
+        public Type[] Dependencies => Array.Empty<Type>();
+
+        public PreviewEnricher(IComputerVisionClient client)
+        {
+            _client = client;
+        }
 
         public void Enrich(Photo photo, SourceDataDto sourceData)
         {
-            photo.PreviewImage = ImageToByteArray(sourceData.Image);
-            photo.Thumbnail = ImageToByteArray(sourceData.Image.GetThumbnailImage(120, 120, () => false, IntPtr.Zero));
-        }
-
-        private byte[] ImageToByteArray(Image image)
-        {
-            using (var ms = new MemoryStream())
-            {
-                image.Save(ms, image.RawFormat);
-                return ms.ToArray();
-            }
+            Stream thumbnail = _client.GenerateThumbnailInStreamAsync(50, 50, new MemoryStream(sourceData.Image), true).Result;
+            photo.Thumbnail = ((MemoryStream)thumbnail).ToArray();
         }
     }
 }

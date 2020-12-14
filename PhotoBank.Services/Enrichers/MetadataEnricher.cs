@@ -24,8 +24,7 @@ namespace PhotoBank.Services.Enrichers
         {
             photo.Name = Path.GetFileNameWithoutExtension(sourceData.Path);
             photo.Path = Path.GetDirectoryName(sourceData.Path);
-
-            IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(photo.Path);
+            IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(Path.Combine(photo.Storage.Folder, sourceData.Path));
 
             var exifSubIfdDirectory = directories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
             if (exifSubIfdDirectory != null)

@@ -8,7 +8,7 @@ namespace PhotoBank.Dto
     {
         public string Path { get; set; }
 
-        public Image Image { get; set; }
+        public byte[] Image { get; set; }
 
         public ImageAnalysis ImageAnalysis { get; set; }
     }

@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Rest;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
 using PhotoBank.Repositories;
@@ -15,6 +18,7 @@ namespace PhotoBank.Services
 {
     public interface IPhotoProcessor
     {
+        bool Contains(Storage storage, string path);
         bool AddPhoto(Storage storage, string path);
         Task<bool> AddPhotoAsync(Storage storage, string path);
     }
@@ -22,9 +26,10 @@ namespace PhotoBank.Services
     public class PhotoProcessor : IPhotoProcessor
     {
         private readonly IComputerVisionClient _client;
+        private readonly IRecognitionService _faceClient;
         private readonly IConfiguration _configuration;
         private readonly IRepository<Photo> _photoRepository;
-        private readonly ImageEncoder _imageEncoder;
+        private readonly IImageEncoder _imageEncoder;
         private readonly IEnumerable<IEnricher> _enrichers;
 
         private readonly IList<VisualFeatureTypes?> _features = new List<VisualFeatureTypes?>()
@@ -38,18 +43,27 @@ namespace PhotoBank.Services
 
         public PhotoProcessor(
             IComputerVisionClient client,
+            IRecognitionService faceClient,
             IConfiguration configuration,
             IRepository<Photo> photoRepository,
             IEnumerable<IEnricher> enrichers,
             IOrderResolver<IEnricher> orderResolver,
-            ImageEncoder imageEncoder
+            IImageEncoder imageEncoder
             )
         {
             _client = client;
+            _faceClient = faceClient;
             _configuration = configuration;
             _photoRepository = photoRepository;
             _imageEncoder = imageEncoder;
             _enrichers = orderResolver.Resolve(enrichers);
+        }
+
+        public bool Contains(Storage storage, string path)
+        {
+            var name = Path.GetFileNameWithoutExtension(path);
+            var relativePath = Path.GetRelativePath(storage.Folder, Path.GetDirectoryName(path));
+            return _photoRepository.GetByCondition(p => p.Name == name && p.Path == relativePath && p.Storage.Id == storage.Id).Any();
         }
 
         public bool AddPhoto(Storage storage, string path)
@@ -59,10 +73,8 @@ namespace PhotoBank.Services
                 throw new ArgumentException("File does not exists", nameof(path));
             }
 
-            var image = Image.FromFile(path);
-            var stream = _imageEncoder.Encode(image, @"image/jpeg", 60L);
-            stream.Position = 0;
-            var analysis = _client.AnalyzeImageInStreamAsync(stream, _features).Result;
+            var image = _imageEncoder.Prepare(path);
+            var analysis = _client.AnalyzeImageInStreamAsync(new MemoryStream(image), _features).Result;
 
             var photo = new Photo()
             {
@@ -83,7 +95,7 @@ namespace PhotoBank.Services
 
             try
             {
-                _photoRepository.Insert(photo).Wait();
+                _photoRepository.InsertAsync(photo).Wait();
             }
             catch (Exception exception)
             {
