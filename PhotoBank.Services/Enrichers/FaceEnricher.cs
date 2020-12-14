@@ -14,10 +14,9 @@ namespace PhotoBank.Services.Enrichers
             _geoWrapper = geoWrapper;
         }
 
-        public Type[] Dependencies => new Type[0];
+        public Type[] Dependencies => Array.Empty<Type>();
 
         public void Enrich(Photo photo, SourceDataDto sourceData)
-
         {
             photo.Faces = new List<Face>();
             foreach (var faceDescription in sourceData.ImageAnalysis.Faces)
@@ -26,7 +25,8 @@ namespace PhotoBank.Services.Enrichers
                 {
                     Age = faceDescription.Age,
                     Rectangle = _geoWrapper.GetRectangle(faceDescription.FaceRectangle),
-                    Gender = faceDescription.Gender.HasValue ? (int)faceDescription.Gender.Value : (int?)null
+                    Gender = faceDescription.Gender.HasValue ? (int)faceDescription.Gender.Value : (int?)null,
+                    Image = ImageHelper.GetFace(sourceData.Image, faceDescription.FaceRectangle)
                 });
             }
         }
