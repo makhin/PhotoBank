@@ -93,14 +93,17 @@ namespace PhotoBank.Repositories
                 throw new Exception("An error occurred; record not found");
             }
 
+            await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 _entities.Update(entity);
                 await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
                 return entity;
             }
             catch (DbUpdateException exception)
             {
+                await transaction.RollbackAsync();
                 Debug.WriteLine("An exception occurred: {0}, {1}", exception.InnerException, exception.Message);
                 throw new Exception("An error occurred; record not updated");
             }
@@ -115,13 +118,17 @@ namespace PhotoBank.Repositories
                 throw new Exception("Record not found; not deleted");
             }
 
+            await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 _entities.Remove(entity);
-                return await _context.SaveChangesAsync();
+                var i = await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return i;
             }
             catch (DbUpdateException exception)
             {
+                await transaction.RollbackAsync();
                 Debug.WriteLine("An exception occurred: {0}, {1}", exception.InnerException, exception.Message);
                 throw new Exception("An error occurred; not deleted");
             }

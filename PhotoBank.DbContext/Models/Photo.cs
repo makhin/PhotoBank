@@ -37,5 +37,6 @@ namespace PhotoBank.DbContext.Models
         public bool IsRacyContent { get; set; }
         public double RacyScore { get; set; }
         public string Path { get; set; }
+        public List<File> Files { get; set; }
     }
 }

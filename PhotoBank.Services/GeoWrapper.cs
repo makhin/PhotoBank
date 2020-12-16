@@ -2,14 +2,13 @@
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
-using NetTopologySuite.Utilities;
 
 namespace PhotoBank.Services
 {
     public interface IGeoWrapper
     {
-        Geometry GetRectangle(BoundingRect rectangle);
-        Geometry GetRectangle(FaceRectangle rectangle);
+        Geometry GetRectangle(BoundingRect rectangle, double scale = 1);
+        Geometry GetRectangle(FaceRectangle rectangle, double scale = 1);
         Point GetLocation(GpsDirectory gpsDirectory);
     }
 
@@ -22,32 +21,40 @@ namespace PhotoBank.Services
             _geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
         }
 
-        public Geometry GetRectangle(BoundingRect rectangle)
+        public Geometry GetRectangle(BoundingRect rectangle, double scale = 1)
         {
-            GeometricShapeFactory gsf = new GeometricShapeFactory();
-            gsf.CreateRectangle();
+            int x = (int)(rectangle.X / scale);
+            int y = (int)(rectangle.Y / scale);
+            int w = (int)(rectangle.W / scale);
+            int h = (int)(rectangle.H / scale);
 
             return _geometryFactory.CreatePolygon(
                 new[]
                 {
-                    new Coordinate(rectangle.X, rectangle.Y),
-                    new Coordinate(rectangle.X + rectangle.H, rectangle.Y),
-                    new Coordinate(rectangle.X + rectangle.H, rectangle.Y + rectangle.W),
-                    new Coordinate(rectangle.X, rectangle.Y + rectangle.W),
-                    new Coordinate(rectangle.X, rectangle.Y)
+                    new Coordinate(x, y),
+                    new Coordinate(x + h, y),
+                    new Coordinate(x + h, y + w),
+                    new Coordinate(x, y + w),
+                    new Coordinate(x, y)
                 });
         }
 
-        public Geometry GetRectangle(FaceRectangle rectangle)
+        public Geometry GetRectangle(FaceRectangle rectangle, double scale = 1)
         {
+
+            int left = (int)(rectangle.Left / scale);
+            int top = (int)(rectangle.Top / scale);
+            int width = (int)(rectangle.Width / scale);
+            int height = (int)(rectangle.Height / scale);
+
             return _geometryFactory.CreatePolygon(
                 new[]
                 {
-                    new Coordinate(rectangle.Left, rectangle.Top),
-                    new Coordinate(rectangle.Left + rectangle.Width, rectangle.Top),
-                    new Coordinate(rectangle.Left + rectangle.Width, rectangle.Top + rectangle.Height),
-                    new Coordinate(rectangle.Left, rectangle.Top + rectangle.Height),
-                    new Coordinate(rectangle.Left, rectangle.Top),
+                    new Coordinate(left, top),
+                    new Coordinate(left + width, top),
+                    new Coordinate(left + width, top + height),
+                    new Coordinate(left, top + height),
+                    new Coordinate(left, top),
                 });
         }
 

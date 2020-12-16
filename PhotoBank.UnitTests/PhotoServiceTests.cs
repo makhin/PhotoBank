@@ -9,7 +9,7 @@ using PhotoBank.Services.Api;
 namespace PhotoBank.UnitTests
 {
     [TestFixture]
-    public class Tests
+    public class PhotoServiceTests
     {
         private Mapper _mapper; 
 

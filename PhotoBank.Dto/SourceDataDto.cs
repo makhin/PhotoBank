@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-using System.IO;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 
 namespace PhotoBank.Dto
 {
@@ -11,5 +9,7 @@ namespace PhotoBank.Dto
         public byte[] Image { get; set; }
 
         public ImageAnalysis ImageAnalysis { get; set; }
+
+        public double Scale { get; set; }
     }
 }

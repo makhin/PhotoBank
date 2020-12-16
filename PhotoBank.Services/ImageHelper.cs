@@ -1,20 +1,26 @@
 ﻿using System.IO;
 using ImageMagick;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using PhotoBank.Dto;
 
 namespace PhotoBank.Services
 {
     public static class ImageHelper
     {
-        public static byte[] GetFace(byte[] data, FaceRectangle faceRectangle)
+        public static byte[] GetFace(SourceDataDto sourceData, FaceRectangle faceRectangle)
         {
-            using (var image = new MagickImage(data))
+            using (MagickImage image = new MagickImage(sourceData.Path))
             {
-                MagickGeometry size = new MagickGeometry(faceRectangle.Width, faceRectangle.Height);
-                size.IgnoreAspectRatio = true;
-                size.Y = image.Height/2 - faceRectangle.Height/2;
-                size.X = image.Width/2 - faceRectangle.Width/2;
-                image.Crop(size);
+                image.AutoOrient();
+
+                var geometry = new MagickGeometry((int)(faceRectangle.Width / sourceData.Scale), (int)(faceRectangle.Height * sourceData.Scale))
+                {
+                    IgnoreAspectRatio = true,
+                    Y = (int)(faceRectangle.Top / sourceData.Scale),
+                    X = (int)(faceRectangle.Left / sourceData.Scale)
+                };
+                image.Crop(geometry);
+
                 var stream = new MemoryStream();
                 image.Write(stream);
                 return stream.ToArray();

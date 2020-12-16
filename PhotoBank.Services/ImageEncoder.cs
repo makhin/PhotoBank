@@ -9,26 +9,36 @@ namespace PhotoBank.Services
 {
     public interface IImageEncoder
     {
-        Stream Encode(Image image, string mimeType, long encoderParameterValue);
-
-        byte[] Prepare(string path);
+        byte[] Prepare(string path, out double scale);
     }
 
     public class ImageEncoder : IImageEncoder
     {
         public const int MaxSize = 1920;
 
-        public byte[] Prepare(string path)
+        public byte[] Prepare(string path, out double scale)
         {
             var stream = new MemoryStream();
+            scale = 1;
             using (var image = new MagickImage(path))
             {
-                var maxSize = image.Width > image.Height ? image.Width : image.Height;
-                var percentage = ((double)MaxSize / (double)maxSize) * 100.0;
+                var isLandscape = image.Width > image.Height;
+                var maxSize = isLandscape ? image.Width : image.Height;
 
-                if (percentage < 100.0)
+                if (maxSize > MaxSize)
                 {
-                    image.Resize(new Percentage(percentage));
+                    if (isLandscape)
+                    {
+                        scale = ((double)MaxSize/image.Width);
+                        var geometry = new MagickGeometry(MaxSize, (int)scale * image.Height );
+                        image.Resize(geometry);
+                    }
+                    else
+                    {
+                        scale = ((double)MaxSize/image.Height);
+                        var geometry = new MagickGeometry((int)scale * image.Width, MaxSize);
+                        image.Resize(geometry);
+                    }
                 }
 
                 image.Format = MagickFormat.Jpg;
@@ -36,20 +46,6 @@ namespace PhotoBank.Services
             }
 
             return stream.ToArray();
-        }
-
-        public Stream Encode(Image image, string mimeType, long encoderParameterValue)
-        {
-            Stream stream = new MemoryStream();
-            var codecInfo = ImageCodecInfo.GetImageEncoders().FirstOrDefault(e => e.MimeType == mimeType);
-
-            var encoder = Encoder.Quality;
-            var encoderParams = new EncoderParameters(1);
-            var encoderParameter = new EncoderParameter(encoder, encoderParameterValue);
-            encoderParams.Param[0] = encoderParameter;
-
-            image.Save(stream, codecInfo, encoderParams);
-            return stream;
         }
     }
 }

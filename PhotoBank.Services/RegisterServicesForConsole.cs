@@ -42,6 +42,7 @@ namespace PhotoBank.Services
             services.AddTransient<IImageEncoder, ImageEncoder>();
             services.AddTransient<IPhotoProcessor, PhotoProcessor>();
             services.AddTransient<IRecognitionService, RecognitionService>();
+            services.AddTransient<IFaceService, FaceService>();
 
             services.AddScoped<IEnricher, MetadataEnricher>();
             services.AddScoped<IEnricher, PreviewEnricher>();

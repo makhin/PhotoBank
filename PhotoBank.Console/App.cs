@@ -7,6 +7,8 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using System;
+using Microsoft.Azure.CognitiveServices.Vision.Face;
+using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using PhotoBank.Dto;
 
 namespace PhotoBank.Console
@@ -18,20 +20,32 @@ namespace PhotoBank.Console
         private readonly IPhotoProcessor _photoProcessor;
         private readonly IRepository<Storage> _repository;
         private readonly IPhotoService _photoService;
+        private readonly IFaceService _faceService;
 
-        public App(IPhotoProcessor photoProcessor, IRepository<Storage> repository, IPhotoService photoService)
+        public App(IPhotoProcessor photoProcessor, IRepository<Storage> repository, IPhotoService photoService, IFaceService faceService)
         {
             _photoProcessor = photoProcessor;
             _repository = repository;
             _photoService = photoService;
+            _faceService = faceService;
         }
 
         public void Run()
         {
-            var storage = _repository.GetAsync(3, storages => storages).Result;
+            //AddFiles();
+            _faceService.FindSimilarFaxes();
+        }
+
+
+        private void AddFiles()
+        {
+            var storage = _repository.Get(3);
 
             var files = Directory.GetFiles(@"\\192.168.1.35\Public\Photo\RX100_2\", "*.*")
-                .OrderBy(f => new FileInfo(f).Length).Skip(300).Take(5);
+                .OrderBy(f => Path.GetFileNameWithoutExtension(new FileInfo(f).Name))
+                .ThenBy(f => new FileInfo(f).Length)
+                .Skip(500).Take(2000);
+
             foreach (var file in files)
             {
                 Console.WriteLine(file);

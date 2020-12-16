@@ -1,24 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using Microsoft.Azure.CognitiveServices.Vision.Face;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Rest;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers;
+using File = System.IO.File;
 
 namespace PhotoBank.Services
 {
     public interface IPhotoProcessor
     {
-        bool Contains(Storage storage, string path);
         bool AddPhoto(Storage storage, string path);
         Task<bool> AddPhotoAsync(Storage storage, string path);
     }
@@ -59,13 +57,6 @@ namespace PhotoBank.Services
             _enrichers = orderResolver.Resolve(enrichers);
         }
 
-        public bool Contains(Storage storage, string path)
-        {
-            var name = Path.GetFileNameWithoutExtension(path);
-            var relativePath = Path.GetRelativePath(storage.Folder, Path.GetDirectoryName(path));
-            return _photoRepository.GetByCondition(p => p.Name == name && p.Path == relativePath && p.Storage.Id == storage.Id).Any();
-        }
-
         public bool AddPhoto(Storage storage, string path)
         {
             if (!File.Exists(path))
@@ -73,19 +64,31 @@ namespace PhotoBank.Services
                 throw new ArgumentException("File does not exists", nameof(path));
             }
 
-            var image = _imageEncoder.Prepare(path);
-            var analysis = _client.AnalyzeImageInStreamAsync(new MemoryStream(image), _features).Result;
-
-            var photo = new Photo()
+            var existingPhoto = GetPhotoByName(storage, path);
+            if (existingPhoto != null)
             {
-                Storage = storage
-            };
+                existingPhoto.Files.Add(new DbContext.Models.File()
+                {
+                    Name = Path.GetFileName(path)
+                });
+                _photoRepository.UpdateAsync(existingPhoto).Wait();
+                return true;
+            }
+
+            var image = _imageEncoder.Prepare(path, out var scale);
+            var analysis = _client.AnalyzeImageInStreamAsync(new MemoryStream(image), _features).Result;
 
             var sourceData = new SourceDataDto
             {
                 Path = Path.GetRelativePath(storage.Folder, path),
                 Image = image,
-                ImageAnalysis = analysis
+                ImageAnalysis = analysis,
+                Scale = scale
+            };
+
+            var photo = new Photo
+            {
+                Storage = storage,
             };
 
             foreach (var enricher in _enrichers)
@@ -105,9 +108,16 @@ namespace PhotoBank.Services
             return true;
         }
 
-        Task<bool> IPhotoProcessor.AddPhotoAsync(Storage storage, string path)
+        public Task<bool> AddPhotoAsync(Storage storage, string path)
         {
             throw new NotImplementedException();
+        }
+
+        private Photo GetPhotoByName(Storage storage, string path)
+        {
+            var name = Path.GetFileNameWithoutExtension(path);
+            var relativePath = Path.GetRelativePath(storage.Folder, Path.GetDirectoryName(path));
+            return _photoRepository.GetByCondition(p => p.Name == name && p.Path == relativePath && p.Storage.Id == storage.Id).Include(p => p.Files).SingleOrDefault();
         }
     }
 }

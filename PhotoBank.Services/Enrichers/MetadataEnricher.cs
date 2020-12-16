@@ -7,6 +7,7 @@ using MetadataExtractor.Formats.Exif;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
 using Directory = MetadataExtractor.Directory;
+using File = PhotoBank.DbContext.Models.File;
 
 namespace PhotoBank.Services.Enrichers
 {
@@ -24,6 +25,14 @@ namespace PhotoBank.Services.Enrichers
         {
             photo.Name = Path.GetFileNameWithoutExtension(sourceData.Path);
             photo.Path = Path.GetDirectoryName(sourceData.Path);
+            photo.Files = new List<File>
+            {
+                new File
+                {
+                    Name = Path.GetFileName(sourceData.Path)
+                }
+            };
+
             IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(Path.Combine(photo.Storage.Folder, sourceData.Path));
 
             var exifSubIfdDirectory = directories.OfType<ExifSubIfdDirectory>().FirstOrDefault();

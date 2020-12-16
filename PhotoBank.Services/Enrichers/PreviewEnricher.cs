@@ -19,8 +19,14 @@ namespace PhotoBank.Services.Enrichers
 
         public void Enrich(Photo photo, SourceDataDto sourceData)
         {
-            Stream thumbnail = _client.GenerateThumbnailInStreamAsync(50, 50, new MemoryStream(sourceData.Image), true).Result;
-            photo.Thumbnail = ((MemoryStream)thumbnail).ToArray();
+            photo.PreviewImage = sourceData.Image;
+
+            var thumbnail = _client.GenerateThumbnailInStreamAsync(50, 50, new MemoryStream(sourceData.Image), true).Result;
+            using (var memoryStream = new MemoryStream())
+            {
+                thumbnail.CopyTo(memoryStream);
+                photo.Thumbnail = memoryStream.ToArray();
+            }
         }
     }
 }

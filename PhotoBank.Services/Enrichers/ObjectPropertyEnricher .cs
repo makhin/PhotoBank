@@ -25,7 +25,7 @@ namespace PhotoBank.Services.Enrichers
                 photo.ObjectProperties.Add(new ObjectProperty()
                 {
                     Name = detectedObject.ObjectProperty,
-                    Rectangle = _geoWrapper.GetRectangle(detectedObject.Rectangle),
+                    Rectangle = _geoWrapper.GetRectangle(detectedObject.Rectangle, sourceData.Scale),
                     Confidence = detectedObject.Confidence
                 });
             }

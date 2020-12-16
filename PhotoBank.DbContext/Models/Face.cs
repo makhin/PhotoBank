@@ -9,7 +9,6 @@ namespace PhotoBank.DbContext.Models
     public class Face : IEntityBase
     {
         public int Id { get; set; }
-        public string Name { get; set; }
         [Column(TypeName = "geometry")]
         public Geometry Rectangle { get; set; }
         public int Age { get; set; }
