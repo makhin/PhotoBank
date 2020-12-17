@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using NetTopologySuite.IO;
 
 namespace PhotoBank.Services
 {
@@ -62,7 +60,7 @@ namespace PhotoBank.Services
             orderDependents.ForEach(element => _elementDependents.Add(element, orderDependents.Where(e => e.Dependencies.Any(d => d == element.GetType())).ToList()));
         }
 
-        private bool MutualDependenciesExists(IList<T> orderDependents)
+        private static bool MutualDependenciesExists(IList<T> orderDependents)
         {
             return ((from element1 in orderDependents
                 from element2 in orderDependents

@@ -23,17 +23,17 @@ namespace PhotoBank.Services.Enrichers
 
         public void Enrich(Photo photo, SourceDataDto sourceData)
         {
-            photo.Name = Path.GetFileNameWithoutExtension(sourceData.Path);
-            photo.Path = Path.GetDirectoryName(sourceData.Path);
+            photo.Name = Path.GetFileNameWithoutExtension(sourceData.AbsolutePath);
+            photo.RelativePath = Path.GetDirectoryName(Path.GetRelativePath(photo.Storage.Folder, sourceData.AbsolutePath));
             photo.Files = new List<File>
             {
                 new File
                 {
-                    Name = Path.GetFileName(sourceData.Path)
+                    Name = Path.GetFileName(sourceData.AbsolutePath)
                 }
             };
 
-            IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(Path.Combine(photo.Storage.Folder, sourceData.Path));
+            IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(sourceData.AbsolutePath);
 
             var exifSubIfdDirectory = directories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
             if (exifSubIfdDirectory != null)

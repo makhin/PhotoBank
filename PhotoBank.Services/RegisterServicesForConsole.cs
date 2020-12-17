@@ -39,13 +39,12 @@ namespace PhotoBank.Services
             services.AddSingleton<IGeoWrapper, GeoWrapper>();
 
             services.AddTransient<IOrderResolver<IEnricher>, OrderResolver<IEnricher>>();
-            services.AddTransient<IImageEncoder, ImageEncoder>();
             services.AddTransient<IPhotoProcessor, PhotoProcessor>();
             services.AddTransient<IRecognitionService, RecognitionService>();
             services.AddTransient<IFaceService, FaceService>();
 
             services.AddScoped<IEnricher, MetadataEnricher>();
-            services.AddScoped<IEnricher, PreviewEnricher>();
+            services.AddScoped<IEnricher, ThumbnailEnricher>();
             services.AddScoped<IEnricher, ColorEnricher>();
             services.AddScoped<IEnricher, CaptionEnricher>();
             services.AddScoped<IEnricher, TagEnricher>();
@@ -53,6 +52,9 @@ namespace PhotoBank.Services
             services.AddScoped<IEnricher, ObjectPropertyEnricher>();
             services.AddScoped<IEnricher, FaceEnricher>();
             services.AddScoped<IEnricher, AdultEnricher>();
+            services.AddScoped<IEnricher, PreviewEnricher>();
+            services.AddScoped<IEnricher, ThumbnailEnricher>();
+            services.AddScoped<IEnricher, AnalyzeEnricher>();
         }
     }
 }

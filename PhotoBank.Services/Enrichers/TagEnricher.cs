@@ -15,7 +15,8 @@ namespace PhotoBank.Services.Enrichers
         {
             _tagRepository = tagRepository;
         }
-        public Type[] Dependencies => new Type[0];
+
+        public Type[] Dependencies => new Type[1] {typeof(AnalyzeEnricher)};
 
         public void Enrich(Photo photo, SourceDataDto sourceData)
 
@@ -23,15 +24,11 @@ namespace PhotoBank.Services.Enrichers
             photo.PhotoTags = new List<PhotoTag>();
             foreach (var tag in sourceData.ImageAnalysis.Tags)
             {
-                var tagModel = _tagRepository.GetByCondition(t => t.Name == tag.Name).FirstOrDefault();
-                if (tagModel == null)
+                var tagModel = _tagRepository.GetByCondition(t => t.Name == tag.Name).FirstOrDefault() ?? new Tag
                 {
-                    tagModel = new Tag
-                    {
-                        Name = tag.Name,
-                        Hint = tag.Hint
-                    };
-                }
+                    Name = tag.Name,
+                    Hint = tag.Hint
+                };
 
                 var photoTag = new PhotoTag
                 {

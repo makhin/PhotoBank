@@ -44,13 +44,14 @@ namespace PhotoBank.Console
             var files = Directory.GetFiles(@"\\192.168.1.35\Public\Photo\RX100_2\", "*.*")
                 .OrderBy(f => Path.GetFileNameWithoutExtension(new FileInfo(f).Name))
                 .ThenBy(f => new FileInfo(f).Length)
-                .Skip(500).Take(2000);
+                .Skip(739)
+                .Take(3000);
 
             foreach (var file in files)
             {
                 Console.WriteLine(file);
                 _photoProcessor.AddPhoto(storage, file);
-                Task.Delay(3000).Wait();
+                //Task.Delay(3000).Wait();
             }
 
             Console.WriteLine("Done");

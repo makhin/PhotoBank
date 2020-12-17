@@ -14,7 +14,7 @@ namespace PhotoBank.Services.Enrichers
             _geoWrapper = geoWrapper;
         }
 
-        public Type[] Dependencies => new Type[0];
+        public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
         public void Enrich(Photo photo, SourceDataDto sourceData)
 
@@ -25,7 +25,7 @@ namespace PhotoBank.Services.Enrichers
                 photo.ObjectProperties.Add(new ObjectProperty()
                 {
                     Name = detectedObject.ObjectProperty,
-                    Rectangle = _geoWrapper.GetRectangle(detectedObject.Rectangle, sourceData.Scale),
+                    Rectangle = _geoWrapper.GetRectangle(detectedObject.Rectangle, photo.Scale),
                     Confidence = detectedObject.Confidence
                 });
             }

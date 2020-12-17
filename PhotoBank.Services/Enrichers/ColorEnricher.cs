@@ -6,7 +6,7 @@ namespace PhotoBank.Services.Enrichers
 {
     public class ColorEnricher : IEnricher
     {
-        public Type[] Dependencies => new Type[0];
+        public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
         public void Enrich(Photo photo, SourceDataDto sourceData)
 
