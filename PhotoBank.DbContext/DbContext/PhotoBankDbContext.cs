@@ -21,6 +21,11 @@ namespace PhotoBank.DbContext.DbContext
         public DbSet<PhotoCategory> PhotoCategories { get; set; }
         public DbSet<Person> Persons { get; set; }
         public DbSet<File> Files { get; set; }
+        public DbSet<FaceList> FaceLists { get; set; }
+        public DbSet<FaceListFace> FaceListFaces { get; set; }
+        public DbSet<PersonGroup> PersonGroups { get; set; }
+        public DbSet<PersonGroupPerson> PersonGroupPersons { get; set; }
+
         public PhotoBankDbContext(DbContextOptions<PhotoBankDbContext> options) : base(options)
         {
         }
@@ -55,6 +60,42 @@ namespace PhotoBank.DbContext.DbContext
                 .HasOne(pt => pt.Category)
                 .WithMany(t => t.PhotoCategories)
                 .HasForeignKey(pt => pt.CategoryId);
+
+
+            modelBuilder.Entity<FaceListFace>().HasKey(q =>
+                new {
+                    q.FaceListId,
+                    q.FaceId
+                });
+
+            // Relationships
+            modelBuilder.Entity<FaceListFace>()
+                .HasOne(t => t.Face)
+                .WithMany(t => t.FaceListFaces)
+                .HasForeignKey(t => t.FaceId);
+
+            modelBuilder.Entity<FaceListFace>()
+                .HasOne(t => t.FaceList)
+                .WithMany(t => t.FaceListFaces)
+                .HasForeignKey(t => t.FaceListId);
+
+
+            modelBuilder.Entity<PersonGroupPerson>().HasKey(q =>
+                new {
+                    q.PersonGroupId,
+                    q.PersonId
+                });
+
+            // Relationships
+            modelBuilder.Entity<PersonGroupPerson>()
+                .HasOne(t => t.Person)
+                .WithMany(t => t.PersonGroupPersons)
+                .HasForeignKey(t => t.PersonId);
+
+            modelBuilder.Entity<PersonGroupPerson>()
+                .HasOne(t => t.PersonGroup)
+                .WithMany(t => t.PersonGroupPersons)
+                .HasForeignKey(t => t.PersonGroupId);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

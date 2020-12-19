@@ -33,7 +33,9 @@ namespace PhotoBank.Console
         public void Run()
         {
             //AddFiles();
-            _faceService.FindSimilarFaxes();
+            //_faceService.AddFacesToList();
+            //_faceService.FindSimilarFaces();
+            _faceService.GetOrCreatePersonGroupAsync();
         }
 
 

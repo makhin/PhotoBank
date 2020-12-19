@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using PhotoBank.DbContext.DbContext;
@@ -10,9 +11,10 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    partial class PhotoBankDbContextModelSnapshot : ModelSnapshot
+    [Migration("20201217104412_AddFaceList")]
+    partial class AddFaceList
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -99,9 +101,6 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("int")
                         .UseIdentityColumn();
 
-                    b.Property<Guid>("ExternalGuid")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.ToTable("FaceLists");
@@ -183,9 +182,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("ExternalGuid")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -193,42 +189,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Persons");
-                });
-
-            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroup", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
-
-                    b.Property<Guid>("ExternalGuid")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PersonGroups");
-                });
-
-            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroupPerson", b =>
-                {
-                    b.Property<int>("PersonGroupId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PersonId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("ExternalGuid")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("PersonGroupId", "PersonId");
-
-                    b.HasIndex("PersonId");
-
-                    b.ToTable("PersonGroupPersons");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Photo", b =>
@@ -432,25 +392,6 @@ namespace PhotoBank.DbContext.Migrations
                         .HasForeignKey("PhotoId");
                 });
 
-            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroupPerson", b =>
-                {
-                    b.HasOne("PhotoBank.DbContext.Models.PersonGroup", "PersonGroup")
-                        .WithMany("PersonGroupPersons")
-                        .HasForeignKey("PersonGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PhotoBank.DbContext.Models.Person", "Person")
-                        .WithMany("PersonGroupPersons")
-                        .HasForeignKey("PersonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Person");
-
-                    b.Navigation("PersonGroup");
-                });
-
             modelBuilder.Entity("PhotoBank.DbContext.Models.Photo", b =>
                 {
                     b.HasOne("PhotoBank.DbContext.Models.Storage", "Storage")
@@ -516,13 +457,6 @@ namespace PhotoBank.DbContext.Migrations
             modelBuilder.Entity("PhotoBank.DbContext.Models.Person", b =>
                 {
                     b.Navigation("Faces");
-
-                    b.Navigation("PersonGroupPersons");
-                });
-
-            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroup", b =>
-                {
-                    b.Navigation("PersonGroupPersons");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Photo", b =>

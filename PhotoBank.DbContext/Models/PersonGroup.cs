@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace PhotoBank.DbContext.Models
 {
-    public class Person : IEntityBase
+    public class PersonGroup : IEntityBase
     {
         public int Id { get; set; }
-        [Required]
+
         public string Name { get; set; }
-        public DateTime? DateOfBirth { get; set; }
+
         public Guid ExternalGuid { get; set; }
-        public IEnumerable<Face> Faces { get; set; }
+
         public ICollection<PersonGroupPerson> PersonGroupPersons { get; set; }
     }
 }

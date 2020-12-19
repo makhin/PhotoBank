@@ -14,6 +14,8 @@ namespace PhotoBank.DbContext.Models
         public int Age { get; set; }
         public int? Gender { get; set; }
         public byte[] Image { get; set; }
+
+        public ICollection<FaceListFace> FaceListFaces { get; set; }
         public Person Person { get; set; }
     }
 }
