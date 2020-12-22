@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 using NetTopologySuite.Geometries;
 
 namespace PhotoBank.DbContext.Models
@@ -14,8 +12,8 @@ namespace PhotoBank.DbContext.Models
         public int Age { get; set; }
         public int? Gender { get; set; }
         public byte[] Image { get; set; }
-
-        public ICollection<FaceListFace> FaceListFaces { get; set; }
         public Person Person { get; set; }
+        public bool? IsSample { get; set; }
+        public Guid? ExternalGuid { get; set; } 
     }
 }

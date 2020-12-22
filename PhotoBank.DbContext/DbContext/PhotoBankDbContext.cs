@@ -21,8 +21,6 @@ namespace PhotoBank.DbContext.DbContext
         public DbSet<PhotoCategory> PhotoCategories { get; set; }
         public DbSet<Person> Persons { get; set; }
         public DbSet<File> Files { get; set; }
-        public DbSet<FaceList> FaceLists { get; set; }
-        public DbSet<FaceListFace> FaceListFaces { get; set; }
         public DbSet<PersonGroup> PersonGroups { get; set; }
         public DbSet<PersonGroupPerson> PersonGroupPersons { get; set; }
 
@@ -60,25 +58,6 @@ namespace PhotoBank.DbContext.DbContext
                 .HasOne(pt => pt.Category)
                 .WithMany(t => t.PhotoCategories)
                 .HasForeignKey(pt => pt.CategoryId);
-
-
-            modelBuilder.Entity<FaceListFace>().HasKey(q =>
-                new {
-                    q.FaceListId,
-                    q.FaceId
-                });
-
-            // Relationships
-            modelBuilder.Entity<FaceListFace>()
-                .HasOne(t => t.Face)
-                .WithMany(t => t.FaceListFaces)
-                .HasForeignKey(t => t.FaceId);
-
-            modelBuilder.Entity<FaceListFace>()
-                .HasOne(t => t.FaceList)
-                .WithMany(t => t.FaceListFaces)
-                .HasForeignKey(t => t.FaceListId);
-
 
             modelBuilder.Entity<PersonGroupPerson>().HasKey(q =>
                 new {

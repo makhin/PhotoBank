@@ -7,160 +7,171 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
+using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
-using FaceList = PhotoBank.DbContext.Models.FaceList;
 using Person = Microsoft.Azure.CognitiveServices.Vision.Face.Models.Person;
-using PersonGroup = Microsoft.Azure.CognitiveServices.Vision.Face.Models.PersonGroup;
 
 namespace PhotoBank.Services
 {
     public interface IFaceService
     {
-        void AddFacesToList();
-        void FindSimilarFaces();
+        Task AddFacesToList();
+        Task FindSimilarFaces();
+        Task FindSimilarFacesInList();
+        Task SyncPersonsAsync();
+        Task SyncFacesToPersonAsync();
+        Task FindFaceAsync();
 
-        /// <summary>
-        /// Returns all PersonGroup's associated with the Face subscription key
-        /// </summary>
-        /// <returns>A list of PersonGroup's or an empty list</returns>
-        Task<IList<PersonGroup>> GetAllPersonGroupsAsync();
-
-        /// <summary>
-        /// Returns all Person.Name's associated with PERSONGROUPID
-        /// </summary>
-        /// <returns>A list of Person.Name's or an empty list</returns>
-        Task<IList<string>> GetAllPersonNamesAsync();
-
-        /// <summary>
-        /// Gets or creates a PersonGroup with PERSONGROUPID
-        /// </summary>
-        Task GetOrCreatePersonGroupAsync();
-
-        /// <summary>
-        /// Gets or creates a PersonGroupPerson
-        /// </summary>
-        /// <param name="name">PersonGroupPerson.Name</param>
-        /// <param name="groupInfos">A collection specifying the file paths of images associated with <paramref name="name"/></param>
-        Task GetOrCreatePersonAsync(string name, ObservableCollection<ImageInfo> groupInfos);
-
-        /// <summary>
-        /// Adds PersistedFace's to 'personName'
-        /// </summary>
-        /// <param name="selectedItems">A collection specifying the file paths of images to be associated with searchedForPerson</param>
-        /// <param name="groupInfos"></param>
-        Task AddFacesToPersonAsync(IList<ImageInfo> selectedItems, ObservableCollection<ImageInfo> groupInfos);
-
-        /// <summary>
-        /// Determines whether a given face matches searchedForPerson 
-        /// </summary>
-        /// <param name="faceId">PersistedFace.PersistedFaceId</param>
-        /// <param name="newImage">On success, contains confidence value</param>
-        /// <returns>Whether <paramref name="faceId"/> matches searchedForPerson</returns>
-        Task<bool> MatchFaceAsync(Guid faceId, ImageInfo newImage);
-
-        /// <summary>
-        /// Sets 'GroupInfos', which specifies the file paths of images associated with searchedForPerson
-        /// </summary>
-        /// <param name="groupInfos">On success, contains image info associated with searchedForPerson</param>
-        Task DisplayFacesAsync(ObservableCollection<ImageInfo> groupInfos);
-
-        /// <summary>
-        /// Deletes searchedForPerson
-        /// </summary>
-        /// <param name="groupInfos"></param>
-        /// <param name="groupNames"></param>
-        /// <param name="askFirst">true to display a confirmation dialog</param>
-        Task DeletePersonAsync(ObservableCollection<ImageInfo> groupInfos, ObservableCollection<string> groupNames, bool askFirst = true);
-
-    }
-
-    public class ImageInfo
-    {
-        public string FilePath { get; set; } = string.Empty;
-        public string FileName { get; set; } = string.Empty;
-        public string Metadata { get; set; } = string.Empty;
-        public string Attributes { get; set; } = string.Empty;
-        public string Caption { get; set; } = string.Empty;
-        public string OcrResult { get; set; } = string.Empty;
-        public string ThumbUrl { get; set; } = string.Empty; //"Assets/FaceFinder.jpg";
-        public string Confidence { get; set; } = string.Empty;
+        Task Test();
     }
 
     public class FaceService : IFaceService
     {
         private readonly IFaceClient _faceClient;
         private readonly IRepository<Face> _faceRepository;
-        private readonly IRepository<FaceList> _faceListRepository;
+        private readonly IRepository<DbContext.Models.Person> _personRepository;
+        private readonly IGeoWrapper _geoWrapper;
 
         private const string PersonGroupId = "my-cicrle-person-group";
-        private readonly Person _emptyPerson = new Person(Guid.Empty, string.Empty);
-
-        // Set in GetOrCreatePersonAsync()
-        private Person _searchedForPerson;
+        private const string AllFacesListId = "all-faces-list";
 
         public bool IsPersonGroupTrained;
 
-        public FaceService(IFaceClient faceClient, IRepository<Face> faceRepository, IRepository<FaceList> faceListRepository)
+        public FaceService(IFaceClient faceClient, IRepository<Face> faceRepository, IRepository<DbContext.Models.Person> personRepository, IGeoWrapper geoWrapper)
         {
             this._faceClient = faceClient;
             _faceRepository = faceRepository;
-            _faceListRepository = faceListRepository;
+            _personRepository = personRepository;
+            _geoWrapper = geoWrapper;
         }
 
-        public void FindSimilarFaces()
+        public async Task FindSimilarFaces()
         {
-            var faceList = _faceListRepository.Get(2);
-            var fl = _faceClient.FaceList.GetAsync(faceList.ExternalGuid.ToString()).Result;
-            var face = _faceRepository.GetAll().ToList().FirstOrDefault();
+            var faces = await _faceRepository.GetAll().Include(f => f.Person).Where(f => f.Person == null).ToListAsync();
+            var allFaces = new Dictionary<Face, DetectedFace>();
 
-            var detectedFaces = _faceClient.Face.DetectWithStreamAsync(new MemoryStream(face.Image)).Result;
-
-            var similarFaces = _faceClient.Face.FindSimilarAsync(detectedFaces[0].FaceId.Value, fl.FaceListId).Result;
-        }
-
-        public void AddFacesToList()
-        {
-            var faceList = _faceListRepository.Get(2);
-
-            var fl = _faceClient.FaceList.GetAsync(faceList.ExternalGuid.ToString()).Result;
-
-            if (fl == null)
+            int GetFaceIfByDetectedFaceId(Guid faceId)
             {
-                _faceClient.FaceList.CreateAsync(faceList.ExternalGuid.ToString(), "Faces_2", null, RecognitionModel.Recognition03).Wait();
+                return allFaces.Where(face => face.Value.FaceId.Value == faceId).Select(face => face.Key.Id).FirstOrDefault();
             }
-            else
-            {
-                foreach (var persistedFace in fl.PersistedFaces)
-                {
-                    _faceClient.FaceList.DeleteFaceAsync(faceList.ExternalGuid.ToString(), persistedFace.PersistedFaceId).Wait();
-                }
-                
-                fl.PersistedFaces.Clear();
-            }
-
-            var faces = _faceRepository.GetAll().ToList();
 
             foreach (var face in faces)
             {
+                IList<DetectedFace> detectedFaces = await _faceClient.Face.DetectWithStreamAsync(new MemoryStream(face.Image), true, false, new List<FaceAttributeType?>()
+                {
+                    FaceAttributeType.Noise
+                });
+                
+
+                foreach (var detectedFace in detectedFaces)
+                {
+                    if (detectedFace.FaceAttributes.Noise.Value > 0.1)
+                    {
+                        continue;
+                    }
+
+                    allFaces.Add(face, detectedFace);
+                }
+            }
+
+            var allDetectedFaces = allFaces.Select(f => f.Value);
+            var similarFacePairList = new List<Tuple<Guid, Guid>>();
+
+            Console.WriteLine("------------------------");
+            Console.WriteLine(allDetectedFaces.Count());
+            Console.WriteLine();
+
+            foreach (var face in allDetectedFaces)
+            {
+                Console.Write(".");
+                if (similarFacePairList.Select(f => f.Item2).Contains(face.FaceId.Value))
+                {
+                    continue;
+                }
+
+                var faceIds = allDetectedFaces.Select(f => f.FaceId).Except(new List<Guid?>() {face.FaceId.Value}).ToList();
+                var similarFaces = await _faceClient.Face.FindSimilarAsync(face.FaceId.Value, null, null, faceIds);
+                
+
+                foreach (var similarFace in similarFaces)
+                {
+                    if (similarFace.Confidence > 0.8)
+                    {
+                        similarFacePairList.Add(new Tuple<Guid, Guid>(face.FaceId.Value, similarFace.FaceId.Value));
+                    }
+                }
+            }
+
+            foreach (var tuple in similarFacePairList)
+            {
+                Console.WriteLine($"Face {GetFaceIfByDetectedFaceId(tuple.Item1)} similar with {GetFaceIfByDetectedFaceId(tuple.Item2)}");
+            }
+        }
+
+        public async Task FindSimilarFacesInList()
+        {
+
+            var azureFaceList = await _faceClient.FaceList.GetAsync(AllFacesListId);
+            IList<Guid?> faceIds = azureFaceList.PersistedFaces.Select(f => (Guid?)f.PersistedFaceId).ToList();
+            var dbFaces = await _faceRepository.GetAll().Include(f => f.Person).ToListAsync();
+
+            var results = new List<IList<SimilarFace>>();
+
+            foreach (var face in dbFaces)
+            {
+
+
+                using (MemoryStream stream = new MemoryStream(face.Image))
+                {
+                    var faces = await _faceClient.Face.DetectWithStreamAsync(stream);
+                    foreach (var f in faces)
+                    {
+                        results.Add(await _faceClient.Face.FindSimilarAsync(f.FaceId.Value, azureFaceList.FaceListId, maxNumOfCandidatesReturned:20));
+                    }
+                }
+
+                var detectedFaces = await _faceClient.Face.DetectWithStreamAsync(new MemoryStream(face.Image));
+                var detectedFace = detectedFaces.Single();
+
+                //var similarFaces = await _faceClient.Face.FindSimilarAsync(faceIds[0].Value, null, null, faceIds, 20, FindSimilarMatchMode.MatchFace);
+
+                var similarFaces = await _faceClient.Face.FindSimilarAsync(detectedFace.FaceId.Value, azureFaceList.FaceListId, null, null, 20, FindSimilarMatchMode.MatchFace);
+                foreach (var similarFace in similarFaces)
+                {
+                    Console.WriteLine($"Persisted face{face.Id} similar to {similarFace.PersistedFaceId} {similarFace.FaceId} with {similarFace.Confidence}");
+                }
+            }
+        }
+
+        public async Task AddFacesToList()
+        {
+            var azureFaceList = await _faceClient.FaceList.GetAsync(AllFacesListId);
+
+            if (azureFaceList != null)
+            {
+                await _faceClient.FaceList.DeleteAsync(AllFacesListId);
+            }
+            await _faceClient.FaceList.CreateAsync(AllFacesListId, "Faces_2", null, RecognitionModel.Recognition03);
+
+            var dbFaces = _faceRepository.GetAll().ToList();
+
+            foreach (var face in dbFaces)
+            {
+                Console.WriteLine(face.Id);
                 try
                 {
-                    var persistedFace = _faceClient.FaceList.AddFaceFromStreamAsync(faceList.ExternalGuid.ToString(), new MemoryStream(face.Image), null, null, DetectionModel.Detection02).Result;
+                    var targetFace = _geoWrapper.GetRectangleArray(face.Rectangle);
 
-                    face.FaceListFaces ??= new List<FaceListFace>();
-                    face.FaceListFaces.Add(new FaceListFace
-                    {
-                        ExternalGuid = persistedFace.PersistedFaceId,
-                        Face = face,
-                        FaceList = faceList
-                    });
+                    var persistedFace = await _faceClient.FaceList
+                        .AddFaceFromStreamAsync(AllFacesListId, new MemoryStream(face.Image),
+                            face.Id.ToString(), targetFace, DetectionModel.Detection02);
 
-                    Task.Delay(3000).Wait();
-                    var result = _faceRepository.UpdateAsync(face).Result;
+                    face.ExternalGuid = persistedFace.PersistedFaceId;
+                    await _faceRepository.UpdateAsync(face);
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(face.Id);
                     Console.WriteLine(e);
                 }
             }
@@ -168,257 +179,179 @@ namespace PhotoBank.Services
             Console.WriteLine("Done");
         }
 
-        /// <summary>
-        /// Returns all PersonGroup's associated with the Face subscription key
-        /// </summary>
-        /// <returns>A list of PersonGroup's or an empty list</returns>
-        public async Task<IList<PersonGroup>> GetAllPersonGroupsAsync()
+        public async Task FindFaceAsync()
         {
-            try
-            {
-                return await _faceClient.PersonGroup.ListAsync();
-            }
-            catch (APIErrorException e)
-            {
-                Debug.WriteLine("GetAllPersonGroupsAsync: " + e.Message);
-            }
-            return new List<PersonGroup>();
-        }
+            var faces = await _faceRepository.GetAll().Include(f => f.Person).Where(f => f.Id > 1797 && (!f.IsSample.HasValue || (f.IsSample.HasValue && !f.IsSample.Value))).ToListAsync();
+            var persons = await _personRepository.GetAll().ToListAsync();
 
-        /// <summary>
-        /// Returns all Person.Name's associated with PERSONGROUPID
-        /// </summary>
-        /// <returns>A list of Person.Name's or an empty list</returns>
-        public async Task<IList<string>> GetAllPersonNamesAsync()
-        {
-            IList<string> names = new List<string>();
-            try
+            foreach (var face in faces)
             {
-                IList<Person> personNames = await _faceClient.PersonGroupPerson.ListAsync(PersonGroupId);
-                foreach (Person person in personNames)
+                Console.WriteLine(face.Id);
+                var detectedFaces=  await _faceClient.Face.DetectWithStreamAsync(new MemoryStream(face.Image));
+                try
                 {
-                    // Remove appended "-group".
-                    names.Add(person.Name.Replace("_", " "));
-                }
-            }
-            catch (APIErrorException e)
-            {
-                Debug.WriteLine("GetAllPersonNamesAsync: " + e.Message);
-            }
-            return names;
-        }
-
-        /// <summary>
-        /// Gets or creates a PersonGroup with PERSONGROUPID
-        /// </summary>
-        public async Task GetOrCreatePersonGroupAsync()
-        {
-            try
-            {
-                PersonGroup personGroup = null;
-
-                // Get PersonGroup if it exists.
-                IList<PersonGroup> groups = await _faceClient.PersonGroup.ListAsync();
-                foreach (PersonGroup group in groups)
-                {
-                    if (group.PersonGroupId == PersonGroupId)
+                    var detectedFace = detectedFaces.Single();
+                    foreach (var person in persons)
                     {
-                        personGroup = group;
-                        break;
-                    }
-                }
-
-                if (personGroup == null)
-                {
-                    // PersonGroup doesn't exist, create it.
-                    await _faceClient.PersonGroup.CreateAsync(PersonGroupId, "Test_group");
-                    personGroup = (await _faceClient.PersonGroup.ListAsync())[0];
-                }
-                Debug.WriteLine("GetOrCreatePersonGroupAsync: " + personGroup.PersonGroupId);
-            }
-            catch (APIErrorException ae)
-            {
-                Debug.WriteLine("GetOrCreatePersonGroupAsync: " + ae.Message);
-            }
-        }
-
-        /// <summary>
-        /// Gets or creates a PersonGroupPerson
-        /// </summary>
-        /// <param name="name">PersonGroupPerson.Name</param>
-        /// <param name="GroupInfos">A collection specifying the file paths of images associated with <paramref name="name"/></param>
-        public async Task GetOrCreatePersonAsync(string name, ObservableCollection<ImageInfo> GroupInfos)
-        {
-            if (string.IsNullOrWhiteSpace(name)) { return; }
-            Debug.WriteLine("GetOrCreatePersonAsync: " + name);
-
-            GroupInfos.Clear();
-            IsPersonGroupTrained = false;
-
-            _searchedForPerson = _emptyPerson;
-            string personName = ConfigurePersonName(name);
-
-            try
-            {
-                IList<Person> people =
-                    await _faceClient.PersonGroupPerson.ListAsync(PersonGroupId);
-
-                // Get Person if it exists.
-                foreach (Person person in people)
-                {
-                    if (person.Name.Equals(personName))
-                    {
-                        _searchedForPerson = person;
-                        if (_searchedForPerson.PersistedFaceIds.Count > 0)
+                        var verifyResult = await _faceClient.Face.VerifyFaceToPersonAsync(detectedFace.FaceId.Value, person.ExternalGuid, PersonGroupId);
+                        
+                        if (verifyResult.IsIdentical)
                         {
-                            await DisplayFacesAsync(GroupInfos);
-                            IsPersonGroupTrained = true;
+                            Console.WriteLine("Identical");
+                            face.Person = person;
+                            await _faceRepository.UpdateAsync(face);
+                            break;
                         }
-                        return;
+                        Console.WriteLine("Not identical");
                     }
                 }
-
-                // Person doesn't exist, create it.
-                await _faceClient.PersonGroupPerson.CreateAsync(PersonGroupId, personName);
-
-                // MUST re-query to get completely formed PersonGroupPerson
-                _searchedForPerson = (await _faceClient.PersonGroupPerson.ListAsync(PersonGroupId))[0];
-                return;
-            }
-            catch (APIErrorException ae)
-            {
-                Debug.WriteLine("GetOrCreatePersonAsync: " + ae.Message);
-                _searchedForPerson = _emptyPerson;
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
         }
 
-        // Each image should contain only 1 detected face; otherwise, must specify face rectangle.
-        /// <summary>
-        /// Adds PersistedFace's to 'personName'
-        /// </summary>
-        /// <param name="selectedItems">A collection specifying the file paths of images to be associated with searchedForPerson</param>
-        /// <param name="GroupInfos"></param>
-        public async Task AddFacesToPersonAsync(
-            IList<ImageInfo> selectedItems, ObservableCollection<ImageInfo> GroupInfos)
+
+        public async Task SyncPersonsAsync()
         {
-            if ((_searchedForPerson == null) || (_searchedForPerson == _emptyPerson))
+            try
             {
-                Debug.WriteLine("AddFacesToPersonAsync, no searchedForPerson");
-                return;
-            }
+                var faceServicePersons = await _faceClient.PersonGroupPerson.ListAsync(PersonGroupId);
+                var dbPersons = await _personRepository.GetAll().ToListAsync();
 
-            IList<string> faceImagePaths = await GetFaceImagePathsAsync();
-
-            foreach (ImageInfo info in selectedItems)
-            {
-                string imagePath = info.FilePath;
-
-                // Check for duplicate images
-                if (faceImagePaths.Contains(imagePath)) { continue; } // Face already added to Person
-
-                using (FileStream stream = new FileStream(info.FilePath, FileMode.Open))
+                foreach (var dbPerson in dbPersons)
                 {
-                    PersistedFace persistedFace =
-                        await _faceClient.PersonGroupPerson.AddFaceFromStreamAsync(
-                            PersonGroupId, _searchedForPerson.PersonId, stream, imagePath);
+                    if (!faceServicePersons.Select(p => p.Name).Contains(dbPerson.Name))
+                    {
+                        Person servicePerson = await _faceClient.PersonGroupPerson.CreateAsync(PersonGroupId, dbPerson.Name);
+                        dbPerson.ExternalGuid = servicePerson.PersonId;
+                        await _personRepository.UpdateAsync(dbPerson);
+                    }
                 }
 
-                GroupInfos.Add(info);
+                foreach (var faceServicePerson in faceServicePersons)
+                {
+                    if (!dbPersons.Select(p => p.Name).Contains(faceServicePerson.Name))
+                    {
+                        await _faceClient.PersonGroupPerson.DeleteAsync(PersonGroupId, faceServicePerson.PersonId);
+                    }
+                }
             }
-
-            // MUST re-query to get updated PersonGroupPerson
-            _searchedForPerson = (await _faceClient.PersonGroupPerson.ListAsync(PersonGroupId))[0];
-
-            if (_searchedForPerson.PersistedFaceIds.Count == 0)
+            catch (APIErrorException ae)
             {
-                IsPersonGroupTrained = false;
-                return;
+                Debug.WriteLine(ae.Message);
             }
+        }
 
+        public async Task SyncFacesToPersonAsync()
+        {
+            var faces = await _faceRepository.GetAll().Include(f => f.Person)
+                .Where(f => f.IsSample.HasValue && f.IsSample.Value).ToListAsync();
+
+            foreach (var face in faces)
+            {
+                var person = await _faceClient.PersonGroupPerson.GetAsync(PersonGroupId, face.Person.ExternalGuid);
+
+                foreach (var faceId in person.PersistedFaceIds)
+                {
+                    await _faceClient.PersonGroupPerson.DeleteFaceAsync(PersonGroupId, face.Person.ExternalGuid, faceId.Value);
+                }
+
+                await _faceClient.PersonGroupPerson.AddFaceFromStreamAsync(PersonGroupId, face.Person.ExternalGuid, new MemoryStream(face.Image), face.Id.ToString());
+            }
+            
             await _faceClient.PersonGroup.TrainAsync(PersonGroupId);
 
             IsPersonGroupTrained = await GetTrainingStatusAsync();
         }
 
-        /// <summary>
-        /// Determines whether a given face matches searchedForPerson 
-        /// </summary>
-        /// <param name="faceId">PersistedFace.PersistedFaceId</param>
-        /// <param name="newImage">On success, contains confidence value</param>
-        /// <returns>Whether <paramref name="faceId"/> matches searchedForPerson</returns>
-        public async Task<bool> MatchFaceAsync(Guid faceId, ImageInfo newImage)
-        {
-            if ((faceId == Guid.Empty) || (_searchedForPerson?.PersonId == null)) { return false; }
 
-            VerifyResult results;
+        public async Task Test()
+        {
+            Console.WriteLine("Sample of finding similar faces in face list.");
+
+            string recognitionModel = RecognitionModel.Recognition02;
+
+            const string ImageUrlPrefix = "https://csdx.blob.core.windows.net/resources/Face/Images/";
+            List<string> targetImageFileNames = new List<string>
+                                                    {
+                                                        "Family1-Dad1.jpg",
+                                                        "Family1-Daughter1.jpg",
+                                                        "Family1-Mom1.jpg",
+                                                        "Family1-Son1.jpg",
+                                                        "Family2-Lady1.jpg",
+                                                        "Family2-Man1.jpg",
+                                                        "Family3-Lady1.jpg",
+                                                        "Family3-Man1.jpg"
+                                                    };
+
+            string sourceImageFileName = "findsimilar.jpg";
+
+            // Create a face list.
+            string faceListId = "test-test-test";
+            Console.WriteLine($"Create FaceList {faceListId}.");
             try
             {
-                results = await _faceClient.Face.VerifyFaceToPersonAsync(
-                    faceId, _searchedForPerson.PersonId, PersonGroupId);
-                newImage.Confidence = results.Confidence.ToString("P");
-
-            }
-            catch (APIErrorException ae)
-            {
-                Debug.WriteLine("MatchFaceAsync: " + ae.Message);
-                return false;
-            }
-
-            // TODO: add Confidence slider
-            // Default: True if similarity confidence is greater than or equal to 0.5.
-            // Can change by specifying VerifyResult.Confidence.
-            return results.IsIdentical;
-        }
-
-        /// <summary>
-        /// Sets 'GroupInfos', which specifies the file paths of images associated with searchedForPerson
-        /// </summary>
-        /// <param name="GroupInfos">On success, contains image info associated with searchedForPerson</param>
-        public async Task DisplayFacesAsync(ObservableCollection<ImageInfo> GroupInfos)
-        {
-            IList<string> faceImagePaths = await GetFaceImagePathsAsync();
-            if (faceImagePaths == Array.Empty<string>()) { return; }
-
-            foreach (string path in faceImagePaths)
-            {
-                ImageInfo groupInfo = new ImageInfo();
-                groupInfo.FilePath = path;
-                GroupInfos.Add(groupInfo);
-            }
-        }
-
-        /// <summary>
-        /// Deletes searchedForPerson
-        /// </summary>
-        /// <param name="GroupInfos"></param>
-        /// <param name="GroupNames"></param>
-        /// <param name="askFirst">true to display a confirmation dialog</param>
-        public async Task DeletePersonAsync(ObservableCollection<ImageInfo> GroupInfos,
-            ObservableCollection<string> GroupNames, bool askFirst = true)
-        {
-            try
-            {
-                GroupInfos.Clear();
-                await _faceClient.PersonGroupPerson.DeleteAsync(PersonGroupId, _searchedForPerson.PersonId);
-                string personName = _searchedForPerson.Name.Replace("_", " ");
-                if (GroupNames.Contains(personName))
-                {
-                    GroupNames.Remove(personName);
-                    Debug.WriteLine("DeletePersonAsync: " + personName);
-                }
-                _searchedForPerson = _emptyPerson;
-            }
-            catch (APIErrorException ae)
-            {
-                Debug.WriteLine("DeletePersonAsync: " + ae.Message);
+                await _faceClient.FaceList.CreateAsync(faceListId, "face list for FindSimilar sample", "face list for FindSimilar sample", recognitionModel: recognitionModel);
             }
             catch (Exception e)
             {
-                Debug.WriteLine("DeletePersonAsync: " + e.Message);
+                Console.WriteLine(e);
+                throw;
             }
+
+
+            foreach (var targetImageFileName in targetImageFileNames)
+            {
+                // Add face to face list.
+                var faces = await _faceClient.FaceList.AddFaceFromUrlAsync(
+                                faceListId,
+                                $"{ImageUrlPrefix}{targetImageFileName}",
+                                targetImageFileName);
+                if (faces == null)
+                {
+                    throw new Exception($"No face detected from image `{targetImageFileName}`.");
+                }
+
+                Console.WriteLine($"Face from image {targetImageFileName} is successfully added to the face list.");
+            }
+
+            // Get persisted faces from the face list.
+            List<PersistedFace> persistedFaces = (await _faceClient.FaceList.GetAsync(faceListId)).PersistedFaces.ToList();
+            if (persistedFaces.Count == 0)
+            {
+                throw new Exception($"No persisted face in face list '{faceListId}'.");
+            }
+
+            // Detect faces from source image url.
+            IList<DetectedFace> detectedFaces =
+                await _faceClient.Face.DetectWithUrlAsync("{ImageUrlPrefix}{sourceImageFileName}",
+                    recognitionModel: recognitionModel);
+                
+            // Find similar example of faceId to face list.
+            var similarResults = await _faceClient.Face.FindSimilarAsync(detectedFaces[0].FaceId.Value, faceListId);
+            foreach (var similarResult in similarResults)
+            {
+                PersistedFace persistedFace =
+                    persistedFaces.Find(face => face.PersistedFaceId == similarResult.PersistedFaceId);
+                if (persistedFace == null)
+                {
+                    Console.WriteLine("Persisted face not found in similar result.");
+                    continue;
+                }
+
+                Console.WriteLine(
+                    $"Faces from {sourceImageFileName} & {persistedFace.UserData} are similar with confidence: {similarResult.Confidence}.");
+            }
+
+            // Delete the face list.
+            await _faceClient.FaceList.DeleteAsync(faceListId);
+            Console.WriteLine($"Delete FaceList {faceListId}.");
+            Console.WriteLine();
         }
 
-        // TODO: add progress indicator
+
         private async Task<bool> GetTrainingStatusAsync()
         {
             TrainingStatus trainingStatus = null;
@@ -436,40 +369,6 @@ namespace PhotoBank.Services
                 return false;
             }
             return trainingStatus.Status == TrainingStatusType.Succeeded;
-        }
-
-        // PersistedFace.UserData stores the associated image file path.
-        // Returns the image file paths associated with each PersistedFace
-        private async Task<IList<string>> GetFaceImagePathsAsync()
-        {
-            IList<string> faceImagePaths = new List<string>();
-
-            IList<Guid?> persistedFaceIds = _searchedForPerson.PersistedFaceIds;
-            foreach (Guid pfid in persistedFaceIds)
-            {
-                PersistedFace face = await _faceClient.PersonGroupPerson.GetFaceAsync(
-                    PersonGroupId, _searchedForPerson.PersonId, pfid);
-                if (!string.IsNullOrEmpty(face.UserData))
-                {
-                    string imagePath = face.UserData;
-                    if (System.IO.File.Exists(imagePath))
-                    {
-                        faceImagePaths.Add(imagePath);
-                        Debug.WriteLine("GetFaceImagePathsAsync: " + imagePath);
-                    }
-                    else
-                    {
-                        await _faceClient.PersonGroupPerson.DeleteFaceAsync(PersonGroupId, _searchedForPerson.PersonId, pfid);
-                        Debug.WriteLine("GetFaceImagePathsAsync, file not found, deleting reference: " + imagePath);
-                    }
-                }
-            }
-            return faceImagePaths;
-        }
-
-        private static string ConfigurePersonName(string name)
-        {
-            return name.Replace(" ", "_");
         }
     }
 }

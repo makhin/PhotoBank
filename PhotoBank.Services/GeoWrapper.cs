@@ -1,4 +1,5 @@
-﻿using MetadataExtractor.Formats.Exif;
+﻿using System.Collections.Generic;
+using MetadataExtractor.Formats.Exif;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
@@ -7,6 +8,7 @@ namespace PhotoBank.Services
 {
     public interface IGeoWrapper
     {
+        List<int?> GetRectangleArray(Geometry geometry);
         Geometry GetRectangle(BoundingRect rectangle, double scale = 1);
         Geometry GetRectangle(FaceRectangle rectangle, double scale = 1);
         Point GetLocation(GpsDirectory gpsDirectory);
@@ -19,6 +21,17 @@ namespace PhotoBank.Services
         public GeoWrapper()
         {
             _geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+        }
+
+        public List<int?> GetRectangleArray(Geometry geometry)
+        {
+            return new List<int?>
+            {
+                0,
+                0,
+                (int?)(geometry.Coordinates[1].X - geometry.Coordinates[0].X),
+                (int?)(geometry.Coordinates[3].Y - geometry.Coordinates[0].Y)
+            };
         }
 
         public Geometry GetRectangle(BoundingRect rectangle, double scale = 1)
