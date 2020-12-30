@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
 using PhotoBank.Repositories;
@@ -18,27 +19,37 @@ namespace PhotoBank.Services.Enrichers
 
         public Type[] Dependencies => new Type[1] {typeof(AnalyzeEnricher)};
 
-        public void Enrich(Photo photo, SourceDataDto sourceData)
-
+        public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {
-            photo.PhotoTags = new List<PhotoTag>();
-            foreach (var tag in sourceData.ImageAnalysis.Tags)
+            await Task.Run(() =>
             {
-                var tagModel = _tagRepository.GetByCondition(t => t.Name == tag.Name).FirstOrDefault() ?? new Tag
-                {
-                    Name = tag.Name,
-                    Hint = tag.Hint
-                };
+                photo.PhotoTags = new List<PhotoTag>();
 
-                var photoTag = new PhotoTag
-                {
-                    Photo = photo,
-                    Tag = tagModel,
-                    Confidence = tag.Confidence
-                };
+                // Workaround for bug, when service returns the same tags
+                var tags = sourceData.ImageAnalysis.Tags.GroupBy(t => t.Name.ToLower()).Select(t =>
+                    new
+                    {
+                        Name = t.Key,
+                        Confidence = t.Max(v => v.Confidence)
+                    });
 
-                photo.PhotoTags.Add(photoTag);
-            }
+                foreach (var tag in tags)
+                {
+                    var tagModel = _tagRepository.GetByCondition(t => t.Name == tag.Name).FirstOrDefault() ?? new Tag
+                    {
+                        Name = tag.Name,
+                    };
+
+                    var photoTag = new PhotoTag
+                    {
+                        Photo = photo,
+                        Tag = tagModel,
+                        Confidence = tag.Confidence
+                    };
+
+                    photo.PhotoTags.Add(photoTag);
+                }
+            });
         }
     }
 }

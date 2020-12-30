@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using PhotoBank.DbContext.Models;
@@ -28,9 +29,9 @@ namespace PhotoBank.Services.Enrichers
 
         public Type[] Dependencies => new Type[1] {typeof(PreviewEnricher)};
 
-        public void Enrich(Photo photo, SourceDataDto source)
+        public async Task Enrich(Photo photo, SourceDataDto source)
         {
-            source.ImageAnalysis = _client.AnalyzeImageInStreamAsync(new MemoryStream(photo.PreviewImage), _features).Result;
+            source.ImageAnalysis = await _client.AnalyzeImageInStreamAsync(new MemoryStream(photo.PreviewImage), _features);
         }
     }
 }

@@ -8,7 +8,6 @@ namespace PhotoBank.Services
     {
         public static void Configure(IServiceCollection services, IConfiguration configuration)
         {
-            services.AddTransient<IPhotoService, PhotoService>();
         }
     }
 }

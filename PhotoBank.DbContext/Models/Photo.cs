@@ -18,9 +18,13 @@ namespace PhotoBank.DbContext.Models
         public string Name { get; set; }
         public DateTime? TakenDate { get; set; }
         public bool IsBW { get; set; }
+        [MaxLength(6)]
         public string AccentColor { get; set; }
+        [MaxLength(50)]
         public string DominantColorBackground { get; set; }
+        [MaxLength(50)]
         public string DominantColorForeground { get; set; }
+        [MaxLength(150)]
         public string DominantColors { get; set; }
         [Column(TypeName = "geometry")]
         public Point Location { get; set; }
@@ -38,6 +42,7 @@ namespace PhotoBank.DbContext.Models
         public double AdultScore { get; set; }
         public bool IsRacyContent { get; set; }
         public double RacyScore { get; set; }
+        [MaxLength(255)]
         public string RelativePath { get; set; }
         public List<File> Files { get; set; }
         public double Scale { get; set; }

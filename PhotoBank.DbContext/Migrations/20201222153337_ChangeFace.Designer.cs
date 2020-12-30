@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using PhotoBank.DbContext.DbContext;
@@ -10,9 +11,10 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    partial class PhotoBankDbContextModelSnapshot : ModelSnapshot
+    [Migration("20201222153337_ChangeFace")]
+    partial class ChangeFace
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -105,9 +107,6 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("int")
                         .UseIdentityColumn();
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -117,8 +116,6 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Name");
 
                     b.HasIndex("PhotoId");
 
@@ -141,17 +138,12 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<int?>("PhotoId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PropertyNameId")
-                        .HasColumnType("int");
-
                     b.Property<Geometry>("Rectangle")
                         .HasColumnType("geometry");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PhotoId");
-
-                    b.HasIndex("PropertyNameId");
 
                     b.ToTable("ObjectProperties");
                 });
@@ -222,23 +214,19 @@ namespace PhotoBank.DbContext.Migrations
                         .UseIdentityColumn();
 
                     b.Property<string>("AccentColor")
-                        .HasMaxLength(6)
-                        .HasColumnType("nvarchar(6)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("AdultScore")
                         .HasColumnType("float");
 
                     b.Property<string>("DominantColorBackground")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DominantColorForeground")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DominantColors")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("Height")
                         .HasColumnType("int");
@@ -270,8 +258,7 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("float");
 
                     b.Property<string>("RelativePath")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("Scale")
                         .HasColumnType("float");
@@ -291,8 +278,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("StorageId");
-
-                    b.HasIndex("Name", "RelativePath");
 
                     b.ToTable("Photos");
                 });
@@ -331,23 +316,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.HasIndex("TagId");
 
                     b.ToTable("PhotoTags");
-                });
-
-            modelBuilder.Entity("PhotoBank.DbContext.Models.PropertyName", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PropertyNames");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Storage", b =>
@@ -408,11 +376,9 @@ namespace PhotoBank.DbContext.Migrations
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.File", b =>
                 {
-                    b.HasOne("PhotoBank.DbContext.Models.Photo", "Photo")
+                    b.HasOne("PhotoBank.DbContext.Models.Photo", null)
                         .WithMany("Files")
                         .HasForeignKey("PhotoId");
-
-                    b.Navigation("Photo");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.ObjectProperty", b =>
@@ -420,12 +386,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.HasOne("PhotoBank.DbContext.Models.Photo", null)
                         .WithMany("ObjectProperties")
                         .HasForeignKey("PhotoId");
-
-                    b.HasOne("PhotoBank.DbContext.Models.PropertyName", "PropertyName")
-                        .WithMany()
-                        .HasForeignKey("PropertyNameId");
-
-                    b.Navigation("PropertyName");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroupPerson", b =>

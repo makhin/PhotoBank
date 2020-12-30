@@ -360,7 +360,6 @@ namespace PhotoBank.Services
                 do
                 {
                     trainingStatus = await _faceClient.PersonGroup.GetTrainingStatusAsync(PersonGroupId);
-                    await Task.Delay(1000);
                 } while (trainingStatus.Status == TrainingStatusType.Running);
             }
             catch (APIErrorException ae)

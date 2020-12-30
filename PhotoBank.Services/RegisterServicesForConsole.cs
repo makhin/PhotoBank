@@ -3,6 +3,7 @@ using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PhotoBank.Repositories;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Enrichers;
 using ApiKeyServiceClientCredentials = Microsoft.Azure.CognitiveServices.Vision.ComputerVision.ApiKeyServiceClientCredentials;
@@ -37,24 +38,27 @@ namespace PhotoBank.Services
             });
 
             services.AddSingleton<IGeoWrapper, GeoWrapper>();
+            services.AddSingleton<IOrderResolver<IEnricher>, OrderResolver<IEnricher>>();
 
-            services.AddTransient<IOrderResolver<IEnricher>, OrderResolver<IEnricher>>();
-            services.AddTransient<IPhotoProcessor, PhotoProcessor>();
-            services.AddTransient<IRecognitionService, RecognitionService>();
-            services.AddTransient<IFaceService, FaceService>();
+            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+            services.AddScoped<IRecognitionService, RecognitionService>();
+            services.AddScoped<IFaceService, FaceService>();
+
+            services.AddScoped<IPhotoProcessor, PhotoProcessor>();
+            services.AddScoped<IPhotoService, PhotoService>();
 
             services.AddScoped<IEnricher, MetadataEnricher>();
             services.AddScoped<IEnricher, ThumbnailEnricher>();
+            services.AddScoped<IEnricher, PreviewEnricher>();
+            services.AddScoped<IEnricher, AnalyzeEnricher>();
             services.AddScoped<IEnricher, ColorEnricher>();
             services.AddScoped<IEnricher, CaptionEnricher>();
             services.AddScoped<IEnricher, TagEnricher>();
             services.AddScoped<IEnricher, CaptionEnricher>();
             services.AddScoped<IEnricher, ObjectPropertyEnricher>();
-            services.AddScoped<IEnricher, FaceEnricher>();
             services.AddScoped<IEnricher, AdultEnricher>();
-            services.AddScoped<IEnricher, PreviewEnricher>();
-            services.AddScoped<IEnricher, ThumbnailEnricher>();
-            services.AddScoped<IEnricher, AnalyzeEnricher>();
+            services.AddScoped<IEnricher, FaceEnricher>();
         }
     }
 }

@@ -32,7 +32,7 @@ namespace PhotoBank.Services
 
             while (_elementDependents.Any())
             {
-                List<T> leafs = GetLeafs();
+                var leafs = GetLeafs();
                 leafs.ForEach(leaf =>
                 {
                     _elementStack.Push(leaf);

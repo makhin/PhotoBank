@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using PhotoBank.DbContext.Models;
@@ -19,61 +20,124 @@ namespace PhotoBank.Services.Enrichers
         {
             _geoWrapper = geoWrapper;
         }
-        public Type[] Dependencies => new Type[0];
+        public Type[] Dependencies => new Type[1] { typeof(PreviewEnricher) };
 
-        public void Enrich(Photo photo, SourceDataDto sourceData)
+        public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {
-            photo.Name = Path.GetFileNameWithoutExtension(sourceData.AbsolutePath);
-            photo.RelativePath = Path.GetDirectoryName(Path.GetRelativePath(photo.Storage.Folder, sourceData.AbsolutePath));
-            photo.Files = new List<File>
+            await Task.Run(() =>
             {
-                new File
+                photo.Name = Path.GetFileNameWithoutExtension(sourceData.AbsolutePath);
+                photo.RelativePath =
+                    Path.GetDirectoryName(Path.GetRelativePath(photo.Storage.Folder, sourceData.AbsolutePath));
+                photo.Files = new List<File>
                 {
-                    Name = Path.GetFileName(sourceData.AbsolutePath)
+                    new File
+                    {
+                        Name = Path.GetFileName(sourceData.AbsolutePath)
+                    }
+                };
+
+                IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(sourceData.AbsolutePath);
+
+                var exifIfd0Directory = directories.OfType<ExifIfd0Directory>().FirstOrDefault();
+                var exifSubIfdDirectory = directories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
+                var gpsDirectory = directories.OfType<GpsDirectory>().FirstOrDefault();
+
+                if (exifSubIfdDirectory != null || exifIfd0Directory != null)
+                {
+                    photo.TakenDate = GetTakenDate(new Directory[] { exifIfd0Directory, exifSubIfdDirectory});
                 }
-            };
 
-            IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(sourceData.AbsolutePath);
+                if (exifSubIfdDirectory != null)
+                {
+                    photo.Height ??= GetHeight(exifSubIfdDirectory);
+                    photo.Width ??= GetWidth(exifSubIfdDirectory);
+                }
 
-            var exifSubIfdDirectory = directories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
-            if (exifSubIfdDirectory != null)
+                if (exifIfd0Directory != null)
+                {
+                    photo.Orientation ??= GetOrientation(exifIfd0Directory);
+                }
+
+                if (gpsDirectory != null)
+                {
+                    photo.Location = _geoWrapper.GetLocation(gpsDirectory);
+                }
+            });
+        }
+
+        private static DateTime? GetTakenDate(IEnumerable<Directory> directories)
+        {
+            int[] tags = { ExifDirectoryBase.TagDateTime, ExifDirectoryBase.TagDateTimeOriginal };
+            
+            foreach (var directory in directories)
             {
-                photo.TakenDate = GetTakenDate(exifSubIfdDirectory);
+                foreach (var tag in tags)
+                {
+                    try
+                    {
+                        return directory?.GetDateTime(tag);
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
+                }
             }
 
-            var exifIfd0Directory = directories.OfType<ExifIfd0Directory>().FirstOrDefault();
-            if (exifIfd0Directory != null)
+            return null;
+        }
+
+        private static int? GetHeight(Directory directory)
+        {
+            int[] tags = { ExifDirectoryBase.TagImageHeight, ExifDirectoryBase.TagExifImageHeight };
+
+            foreach (var tag in tags)
             {
-                photo.Height = GetHeight(exifSubIfdDirectory);
-                photo.Width = GetWidth(exifSubIfdDirectory);
-                photo.Orientation = GetOrientation(exifIfd0Directory);
+                try
+                {
+                    return directory?.GetInt32(tag);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
             }
 
-            var gpsDirectory = directories.OfType<GpsDirectory>().FirstOrDefault();
-            if (gpsDirectory != null)
+            return null;
+        }
+
+        private static int? GetWidth(Directory directory)
+        {
+            int[] tags = { ExifDirectoryBase.TagImageWidth, ExifDirectoryBase.TagExifImageWidth };
+
+            foreach (var tag in tags)
             {
-                photo.Location = _geoWrapper.GetLocation(gpsDirectory);
+                try
+                {
+                    return directory?.GetInt32(tag);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
             }
+
+            return null;
         }
 
-        private static DateTime? GetTakenDate(ExifSubIfdDirectory subIfdDirectory)
+        private static int? GetOrientation(Directory directory)
         {
-            return subIfdDirectory?.GetDateTime(ExifDirectoryBase.TagDateTimeOriginal);
-        }
+            try
+            {
+                return directory?.GetInt32(ExifDirectoryBase.TagOrientation);
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
 
-        private static int? GetHeight(ExifSubIfdDirectory subIfdDirectory)
-        {
-            return subIfdDirectory?.GetInt32(ExifDirectoryBase.TagExifImageHeight);
-        }
-
-        private static int? GetWidth(ExifSubIfdDirectory subIfdDirectory)
-        {
-            return subIfdDirectory?.GetInt32(ExifDirectoryBase.TagExifImageWidth);
-        }
-
-        private static int? GetOrientation(ExifIfd0Directory exifIfd0Directory)
-        {
-            return exifIfd0Directory?.GetInt32(ExifDirectoryBase.TagOrientation);
+            return null;
         }
     }
 }

@@ -10,6 +10,7 @@ using PhotoBank.Dto;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
+using Serilog;
 
 namespace PhotoBank.Console
 {
@@ -19,10 +20,14 @@ namespace PhotoBank.Console
     {
         static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.File("consoleapp.log")
+                .CreateLogger();
+
             var services = ConfigureServices();
             var serviceProvider = services.BuildServiceProvider();
             var app = serviceProvider.GetService<App>();
-            app?.Run();
+            app?.Run().Wait();
             DisposeServices(serviceProvider);
         }
 
@@ -46,12 +51,11 @@ namespace PhotoBank.Console
 
             RegisterServicesForConsole.Configure(services, config);
 
-            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddSingleton(config);
             services.AddTransient<App>();
 
-            services.AddTransient<IPhotoService, PhotoService>();
             services.AddAutoMapper(typeof(MappingProfile));
+            services.AddLogging(configure => configure.AddSerilog());
 
             return services;
         }

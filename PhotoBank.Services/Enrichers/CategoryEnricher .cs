@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
 using PhotoBank.Repositories;
@@ -18,31 +19,33 @@ namespace PhotoBank.Services.Enrichers
         }
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
-        public void Enrich(Photo photo, SourceDataDto sourceData)
-
+        public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {
-            photo.PhotoCategories = new List<PhotoCategory>();
-            foreach (var category in sourceData.ImageAnalysis.Categories)
+            await Task.Run(() =>
             {
-                var catModel = _categoryRepository.GetByCondition(t => t.Name == category.Name).FirstOrDefault();
-
-                if (catModel == null)
+                photo.PhotoCategories = new List<PhotoCategory>();
+                foreach (var category in sourceData.ImageAnalysis.Categories)
                 {
-                    catModel = new Category
+                    var catModel = _categoryRepository.GetByCondition(t => t.Name == category.Name).FirstOrDefault();
+
+                    if (catModel == null)
                     {
-                        Name = category.Name
-                    };
-                }
+                        catModel = new Category
+                        {
+                            Name = category.Name
+                        };
+                    }
 
-                var photoCategory = new PhotoCategory()
-                {
-                    Photo = photo,
-                    Category = catModel,
-                    Score = category.Score
-                };
-                
-                photo.PhotoCategories.Add(photoCategory);
-            }
+                    var photoCategory = new PhotoCategory()
+                    {
+                        Photo = photo,
+                        Category = catModel,
+                        Score = category.Score
+                    };
+
+                    photo.PhotoCategories.Add(photoCategory);
+                }
+            });
         }
     }
 }

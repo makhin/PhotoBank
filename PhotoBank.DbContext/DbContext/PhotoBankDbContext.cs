@@ -23,6 +23,7 @@ namespace PhotoBank.DbContext.DbContext
         public DbSet<File> Files { get; set; }
         public DbSet<PersonGroup> PersonGroups { get; set; }
         public DbSet<PersonGroupPerson> PersonGroupPersons { get; set; }
+        public DbSet<PropertyName> PropertyNames { get; set; }
 
         public PhotoBankDbContext(DbContextOptions<PhotoBankDbContext> options) : base(options)
         {
@@ -31,6 +32,9 @@ namespace PhotoBank.DbContext.DbContext
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Photo>()
+                .HasIndex(p => new { p.Name, p.RelativePath });
 
             modelBuilder.Entity<PhotoTag>()
                 .HasKey(t => new { t.PhotoId, t.TagId });
@@ -75,6 +79,9 @@ namespace PhotoBank.DbContext.DbContext
                 .HasOne(t => t.PersonGroup)
                 .WithMany(t => t.PersonGroupPersons)
                 .HasForeignKey(t => t.PersonGroupId);
+
+            modelBuilder.Entity<File>()
+                .HasIndex(p => new { p.Name });
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

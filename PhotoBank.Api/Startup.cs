@@ -38,7 +38,6 @@ namespace PhotoBank.Api
                     });
             });
 
-            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             RegisterServicesForApi.Configure(services, Configuration);
 
             services.AddControllers().AddNewtonsoftJson(options =>

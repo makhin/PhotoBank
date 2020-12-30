@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 using ImageMagick;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using PhotoBank.Dto;
@@ -11,7 +12,7 @@ namespace PhotoBank.Services
     {
         public const int MaxSize = 1920;
 
-        public static byte[] GetFace(string absolutePath, double scale, FaceRectangle faceRectangle)
+        public static async Task<byte[]> GetFace(string absolutePath, double scale, FaceRectangle faceRectangle)
         {
             using (MagickImage image = new MagickImage(absolutePath))
             {
@@ -24,15 +25,16 @@ namespace PhotoBank.Services
                     X = (int)(faceRectangle.Left / scale)
                 };
                 image.Crop(geometry);
-                CutImage(image, out _);
+                ResizeImage(image, out _);
 
                 var stream = new MemoryStream();
-                image.Write(stream);
+                image.Format = MagickFormat.Jpg;
+                await image.WriteAsync(stream);
                 return stream.ToArray();
             }
         }
 
-        public static void CutImage(MagickImage image, out double scale)
+        public static void ResizeImage(MagickImage image, out double scale)
         {
             var isLandscape = image.Width > image.Height;
             var maxSize = isLandscape ? image.Width : image.Height;

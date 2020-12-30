@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
 
@@ -9,18 +10,20 @@ namespace PhotoBank.Services.Enrichers
     {
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
-        public void Enrich(Photo photo, SourceDataDto sourceData)
-
+        public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {
-            photo.Captions = new List<Caption>();
-            foreach (var caption in sourceData.ImageAnalysis.Description.Captions)
+            await Task.Run(() =>
             {
-                photo.Captions.Add(new Caption
+                photo.Captions = new List<Caption>();
+                foreach (var caption in sourceData.ImageAnalysis.Description.Captions)
                 {
-                    Confidence = caption.Confidence,
-                    Text = caption.Text
-                });
-            }
+                    photo.Captions.Add(new Caption
+                    {
+                        Confidence = caption.Confidence,
+                        Text = caption.Text
+                    });
+                }
+            });
         }
     }
 }

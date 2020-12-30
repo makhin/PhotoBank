@@ -2,14 +2,10 @@
 
 namespace PhotoBank.DbContext.Models
 {
-    public class File : IEntityBase
+    public class PropertyName : IEntityBase
     {
         public int Id { get; set; }
         [Required, MaxLength(255)]
-        public string Name { get; set; } 
-
-        public Photo Photo { get; set; }
-
-        public bool IsDeleted { get; set; }
+        public string Name { get; set; }
     }
 }

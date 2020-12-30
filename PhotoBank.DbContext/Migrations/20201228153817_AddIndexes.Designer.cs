@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using PhotoBank.DbContext.DbContext;
@@ -10,9 +11,10 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    partial class PhotoBankDbContextModelSnapshot : ModelSnapshot
+    [Migration("20201228153817_AddIndexes")]
+    partial class AddIndexes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -105,9 +107,6 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("int")
                         .UseIdentityColumn();
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -141,17 +140,12 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<int?>("PhotoId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PropertyNameId")
-                        .HasColumnType("int");
-
                     b.Property<Geometry>("Rectangle")
                         .HasColumnType("geometry");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PhotoId");
-
-                    b.HasIndex("PropertyNameId");
 
                     b.ToTable("ObjectProperties");
                 });
@@ -333,23 +327,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.ToTable("PhotoTags");
                 });
 
-            modelBuilder.Entity("PhotoBank.DbContext.Models.PropertyName", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PropertyNames");
-                });
-
             modelBuilder.Entity("PhotoBank.DbContext.Models.Storage", b =>
                 {
                     b.Property<int>("Id")
@@ -420,12 +397,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.HasOne("PhotoBank.DbContext.Models.Photo", null)
                         .WithMany("ObjectProperties")
                         .HasForeignKey("PhotoId");
-
-                    b.HasOne("PhotoBank.DbContext.Models.PropertyName", "PropertyName")
-                        .WithMany()
-                        .HasForeignKey("PropertyNameId");
-
-                    b.Navigation("PropertyName");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroupPerson", b =>

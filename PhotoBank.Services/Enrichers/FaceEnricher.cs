@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
 
@@ -18,33 +19,37 @@ namespace PhotoBank.Services.Enrichers
 
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
-        public void Enrich(Photo photo, SourceDataDto sourceData)
+        public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {
-            if (!sourceData.ImageAnalysis.Faces.Any())
-            {
-                return;
-            }
-            
-            photo.Faces = new List<Face>();
-            foreach (var faceDescription in sourceData.ImageAnalysis.Faces)
+            await Task.Run(async () =>
             {
 
-                if (faceDescription.FaceRectangle.Height / photo.Scale < MinFaceSize ||
-                    faceDescription.FaceRectangle.Width / photo.Scale < MinFaceSize)
+                if (!sourceData.ImageAnalysis.Faces.Any())
                 {
-                    continue;
+                    return;
                 }
 
-                var image = ImageHelper.GetFace(sourceData.AbsolutePath, photo.Scale, faceDescription.FaceRectangle);
-
-                photo.Faces.Add(new Face()
+                photo.Faces = new List<Face>();
+                foreach (var faceDescription in sourceData.ImageAnalysis.Faces)
                 {
-                    Age = faceDescription.Age,
-                    Rectangle = _geoWrapper.GetRectangle(faceDescription.FaceRectangle, photo.Scale),
-                    Gender = faceDescription.Gender.HasValue ? (int)faceDescription.Gender.Value : (int?)null,
-                    Image = image
-                });
-            }
+
+                    if (faceDescription.FaceRectangle.Height / photo.Scale < MinFaceSize ||
+                        faceDescription.FaceRectangle.Width / photo.Scale < MinFaceSize)
+                    {
+                        continue;
+                    }
+
+                    var image = await ImageHelper.GetFace(sourceData.AbsolutePath, photo.Scale, faceDescription.FaceRectangle);
+
+                    photo.Faces.Add(new Face()
+                    {
+                        Age = faceDescription.Age,
+                        Rectangle = _geoWrapper.GetRectangle(faceDescription.FaceRectangle, photo.Scale),
+                        Gender = faceDescription.Gender.HasValue ? (int) faceDescription.Gender.Value : (int?) null,
+                        Image = image
+                    });
+                }
+            });
         }
     }
 }
