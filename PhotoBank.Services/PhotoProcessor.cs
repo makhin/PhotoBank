@@ -8,13 +8,12 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers;
-using File = System.IO.File;
 
 namespace PhotoBank.Services
 {
     public interface IPhotoProcessor
     {
-        Task<bool> AddPhotoAsync(Storage storage, string path);
+        Task AddPhotoAsync(Storage storage, string path);
     }
 
     public class PhotoProcessor : IPhotoProcessor
@@ -35,19 +34,11 @@ namespace PhotoBank.Services
             _enrichers = orderResolver.Resolve(enrichers);
         }
 
-        public async Task<bool> AddPhotoAsync(Storage storage, string path)
+        public async Task AddPhotoAsync(Storage storage, string path)
         {
             var startTime = DateTime.Now;
 
-            if (!File.Exists(path))
-            {
-                throw new ArgumentException("File does not exists", nameof(path));
-            }
-
-            if (await VerifyDuplicates(storage, path))
-            {
-                return false;
-            }
+            await VerifyDuplicates(storage, path);
 
             var sourceData = new SourceDataDto { AbsolutePath = path };
             var photo = new Photo { Storage = storage };
@@ -69,15 +60,13 @@ namespace PhotoBank.Services
             var ms = 3000 - (int)(DateTime.Now - startTime).TotalMilliseconds;
             if (ms <= 0)
             {
-                return true;
+                return;
             }
             Console.WriteLine($"Wait {ms}");
-            Task.Delay(ms).Wait();
-
-            return true;
+            await Task.Delay(ms);
         }
 
-        private async Task<bool> VerifyDuplicates(Storage storage, string path)
+        private async Task VerifyDuplicates(Storage storage, string path)
         {
             var name = Path.GetFileNameWithoutExtension(path);
             var relativePath = Path.GetRelativePath(storage.Folder, Path.GetDirectoryName(path));
@@ -87,24 +76,15 @@ namespace PhotoBank.Services
 
             if (photoId == 0)
             {
-                return false;
+                return;
             }
 
             var fileName = Path.GetFileName(path);
-            var file = await _fileRepository.GetByCondition(f => f.Photo.Id == photoId && f.Name == fileName).SingleOrDefaultAsync();
-
-            if (file != null)
-            {
-                return true;
-            }
-
             await _fileRepository.InsertAsync(new DbContext.Models.File
             {
-                Photo = new Photo() {Id = photoId},
+                Photo = new Photo {Id = photoId},
                 Name = fileName,
             });
-
-            return true;
         }
     }
 }

@@ -47,6 +47,7 @@ namespace PhotoBank.Services
 
             services.AddScoped<IPhotoProcessor, PhotoProcessor>();
             services.AddScoped<IPhotoService, PhotoService>();
+            services.AddScoped<ISyncService, SyncService>();
 
             services.AddScoped<IEnricher, MetadataEnricher>();
             services.AddScoped<IEnricher, ThumbnailEnricher>();

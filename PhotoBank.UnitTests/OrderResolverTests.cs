@@ -20,6 +20,7 @@ namespace PhotoBank.UnitTests
         {
             await Task.Run(() =>
             {
+                Task.Delay(1000);
                 Debug.WriteLine(this.GetType().Name);
             });
         }
@@ -86,10 +87,14 @@ namespace PhotoBank.UnitTests
         [Test]
         public void Test()
         {
-            var resolver = new OrderResolver<IEnricher>();
-
             IEnumerable<IEnricher> collection = new EnricheTestBase[]{ new EnAd(), new EnAn(), new EnCap(), new EnCat(), new EnCo(), new EnFa(), new EnMe(), new EnOb(), new EnPr(), new EnTa(), new EnTh() };
-            var ordered = resolver.Resolve(collection);
+
+            IEnumerable<IEnricher> enrichers = collection.Where(e => e.Dependencies.Length == 0).ToList();
+
+            Dictionary<Type, Task> tasks0level = enrichers.ToDictionary(enricher => enricher.GetType(), enricher => enricher.Enrich(null, null));
+
+            tasks0level.Select(e => e.Value);
+
         }
     }
 }

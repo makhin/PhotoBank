@@ -13,8 +13,6 @@ namespace PhotoBank.DbContext.Models
         [Column(TypeName = "geometry")]
         public Geometry Rectangle { get; set; }
         public double Confidence { get; set; }
-        public string Name { get; set; }
-
         public PropertyName PropertyName { get; set; }
     }
 }

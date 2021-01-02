@@ -23,25 +23,28 @@ namespace PhotoBank.Services.Enrichers
 
         public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {
-            await Task.Run(() =>
+            photo.ObjectProperties = new List<ObjectProperty>();
+            foreach (var detectedObject in sourceData.ImageAnalysis.Objects)
             {
-                photo.ObjectProperties = new List<ObjectProperty>();
-                foreach (var detectedObject in sourceData.ImageAnalysis.Objects)
+                var propertyName = _propertyNameRepository.GetByCondition(t => t.Name == detectedObject.ObjectProperty).FirstOrDefault();
+
+                if (propertyName == null)
                 {
-                    var propertyName = _propertyNameRepository.GetByCondition(t => t.Name == detectedObject.ObjectProperty).FirstOrDefault() ?? new PropertyName
+                    propertyName = new PropertyName
                     {
                         Name = detectedObject.ObjectProperty,
                     };
 
-                    photo.ObjectProperties.Add(new ObjectProperty
-                    {
-                        PropertyName = propertyName,
-                        Name = detectedObject.ObjectProperty,
-                        Rectangle = _geoWrapper.GetRectangle(detectedObject.Rectangle, photo.Scale),
-                        Confidence = detectedObject.Confidence
-                    });
+                    await _propertyNameRepository.InsertAsync(propertyName);
                 }
-            });
+
+                photo.ObjectProperties.Add(new ObjectProperty
+                {
+                    PropertyName = propertyName,
+                    Rectangle = _geoWrapper.GetRectangle(detectedObject.Rectangle, photo.Scale),
+                    Confidence = detectedObject.Confidence
+                });
+            }
         }
     }
 }

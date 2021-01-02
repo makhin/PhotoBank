@@ -18,14 +18,16 @@ namespace PhotoBank.Console
         private readonly IPhotoService _photoService;
         private readonly IFaceService _faceService;
         private readonly ILogger<App> _logger;
+        private readonly ISyncService _syncService;
 
-        public App(IPhotoProcessor photoProcessor, IRepository<Storage> repository, IPhotoService photoService, IFaceService faceService, ILogger<App> logger)
+        public App(IPhotoProcessor photoProcessor, IRepository<Storage> repository, IPhotoService photoService, IFaceService faceService, ILogger<App> logger, ISyncService syncService)
         {
             _photoProcessor = photoProcessor;
             _repository = repository;
             _photoService = photoService;
             _faceService = faceService;
             _logger = logger;
+            _syncService = syncService;
         }
 
         public async Task Run()
@@ -45,19 +47,9 @@ namespace PhotoBank.Console
 
         private async Task AddFilesAsync()
         {
-            var storage = await _repository.GetAsync(7);
+            var storage = await _repository.GetAsync(9);
 
-            //await _photoProcessor.AddPhotoAsync(storage, @"\\192.168.1.35\Public\Photo\RX100\DSC00010.ARW");
-
-            const string supportedExtensions = "*.jpg,*.gif,*.png,*.bmp,*.jpe,*.jpeg,*.tiff,*.arw,*.crw";
-
-            var files = Directory.GetFiles(@"\\MYCLOUDEX2ULTRA\Public\Photo\Sorted", "*.*", SearchOption.AllDirectories)
-                .Where(s => supportedExtensions.Contains(Path.GetExtension(s).ToLower()))
-                .OrderBy(f => new FileInfo(f).DirectoryName)
-                .ThenBy(f => Path.GetFileNameWithoutExtension(new FileInfo(f).Name))
-                //.Skip(8500)
-                //.Take(1000)
-                .ToList();
+            var files = await _syncService.SyncStorage(storage);
 
             //Parallel.ForEach(files,
             //    new ParallelOptions { MaxDegreeOfParallelism = 4 }, 
@@ -67,22 +59,28 @@ namespace PhotoBank.Console
             //    Console.WriteLine($"Processing {file} on thread {Thread.CurrentThread.ManagedThreadId}");
             //});
 
-            var count = 600;
+            var count = 2000;
 
             foreach (var file in files)
             {
                 try
                 {
-                    if (!await _photoProcessor.AddPhotoAsync(storage, file)) continue;
-                    if (count-- == 0)
-                    {
-                        break;
-                    }
+                    await _photoProcessor.AddPhotoAsync(storage, file);
                 }
                 catch (Exception e)
                 {
                     _logger.Log(LogLevel.Debug, e, file);
                 }
+
+                if (count-- == 0)
+                {
+                    break;
+                }
+
+                var savedColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.WriteLine($"Count = {count}");
+                Console.ForegroundColor = savedColor;
             }
 
             Console.WriteLine("Done");
