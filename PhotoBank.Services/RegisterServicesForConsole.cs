@@ -42,7 +42,6 @@ namespace PhotoBank.Services
             services.AddSingleton<IFaceRecognitionService, FaceRecognitionService>();
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            services.AddScoped<ISimpleRepository, SimpleRepository>();
 
             services.AddScoped<IRecognitionService, RecognitionService>();
             services.AddScoped<IFaceService, FaceService>();

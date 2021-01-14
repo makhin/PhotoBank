@@ -258,6 +258,124 @@ namespace PhotoBank.Services
             IsPersonGroupTrained = await GetTrainingStatusAsync();
         }
 
+        public async Task TestLargeFaceList0(string endpoint, string key)
+        {
+            Console.WriteLine("Sample of finding similar faces in large face list.");
+
+            IFaceClient client = new FaceClient(new ApiKeyServiceClientCredentials(key)) { Endpoint = endpoint };
+            string recognitionModel = RecognitionModel.Recognition02;
+
+            var dbFaces = await _faceRepository.GetAll().Include(f => f.Person).Where(f => f.Person != null).Take(10).ToListAsync();
+
+            // Create a large face list.
+            string largeFaceListId = Guid.NewGuid().ToString();
+            Console.WriteLine($"Create large face list {largeFaceListId}.");
+            await client.LargeFaceList.CreateAsync(
+                largeFaceListId,
+                "large face list for FindSimilar sample",
+                "large face list for FindSimilar sample",
+                recognitionModel: recognitionModel);
+
+            foreach (var dbFace in dbFaces)
+            {
+                var stream = new MemoryStream(dbFace.Image);
+
+                // Add face to the large face list.
+                var faces = await client.LargeFaceList.AddFaceFromStreamAsync(
+                                largeFaceListId, stream,
+                                dbFace.Id.ToString());
+
+                if (faces == null)
+                {
+                    throw new Exception($"No face detected from image `{dbFace.Id}`.");
+                }
+
+                Console.WriteLine(
+                    $"Face from image {dbFace.Id} is successfully added to the large face list.");
+            }
+
+            // Start to train the large face list.
+            Console.WriteLine($"Train large face list {largeFaceListId}.");
+            await client.LargeFaceList.TrainAsync(largeFaceListId);
+
+            // Wait until the training is completed.
+            while (true)
+            {
+                await Task.Delay(1000);
+                var trainingStatus = await client.LargeFaceList.GetTrainingStatusAsync(largeFaceListId);
+                Console.WriteLine($"Training status is {trainingStatus.Status}.");
+                if (trainingStatus.Status != TrainingStatusType.Running)
+                {
+                    if (trainingStatus.Status == TrainingStatusType.Failed)
+                    {
+                        throw new Exception($"Training failed with message {trainingStatus.Message}.");
+                    }
+
+                    break;
+                }
+            }
+
+            // Get persisted faces from the large face list.
+            List<PersistedFace> persistedFaces = (await client.LargeFaceList.ListFacesAsync(largeFaceListId)).ToList();
+            if (persistedFaces.Count == 0)
+            {
+                throw new Exception($"No persisted face in large face list '{largeFaceListId}'.");
+            }
+
+            var ff = (await _faceRepository.GetAsync(1692)).Image;
+
+            // Detect faces from source image url.
+            IList<DetectedFace> detectedFaces = await DetectFaces(
+                                                    client,
+                                                    ff,
+                                                    recognitionModel: recognitionModel);
+
+            // Find similar example of faceId to large face list.
+            var similarResults = await client.Face.FindSimilarAsync(
+                                     detectedFaces[0].FaceId.Value,
+                                     null,
+                                     largeFaceListId);
+
+            foreach (var similarResult in similarResults)
+            {
+                PersistedFace persistedFace =
+                    persistedFaces.Find(face => face.PersistedFaceId == similarResult.PersistedFaceId);
+                if (persistedFace == null)
+                {
+                    Console.WriteLine("Persisted face not found in similar result.");
+                    continue;
+                }
+
+                Console.WriteLine(
+                    $"Faces from {persistedFace.UserData} are similar with confidence: {similarResult.Confidence}.");
+            }
+
+            // Delete the large face list.
+            await client.LargeFaceList.DeleteAsync(largeFaceListId);
+            Console.WriteLine($"Delete LargeFaceList {largeFaceListId}.");
+            Console.WriteLine();
+        }
+
+        internal static async Task<List<DetectedFace>> DetectFaces(IFaceClient faceClient, byte[] image, string recognitionModel = RecognitionModel.Recognition01)
+        {
+            var stream = new MemoryStream(image);
+
+            // Detect faces from image stream.
+            IList<DetectedFace> detectedFaces = await faceClient.Face.DetectWithStreamAsync(stream, recognitionModel: recognitionModel);
+            if (detectedFaces == null || detectedFaces.Count == 0)
+            {
+                throw new Exception($"No face detected from image ``.");
+            }
+
+            Console.WriteLine($"{detectedFaces.Count} faces detected from image ``.");
+            if (detectedFaces[0].FaceId == null)
+            {
+                throw new Exception(
+                    "Parameter `returnFaceId` of `DetectWithStreamAsync` must be set to `true` (by default) for recognition purpose.");
+            }
+
+            return detectedFaces.ToList();
+        }
 
         private async Task<bool> GetTrainingStatusAsync()
         {
