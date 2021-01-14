@@ -24,6 +24,7 @@ namespace PhotoBank.DbContext.DbContext
         public DbSet<PersonGroup> PersonGroups { get; set; }
         public DbSet<PersonGroupPerson> PersonGroupPersons { get; set; }
         public DbSet<PropertyName> PropertyNames { get; set; }
+        public DbSet<FaceToFace> FaceToFaces { get; set; }
 
         public PhotoBankDbContext(DbContextOptions<PhotoBankDbContext> options) : base(options)
         {
@@ -82,6 +83,15 @@ namespace PhotoBank.DbContext.DbContext
 
             modelBuilder.Entity<File>()
                 .HasIndex(p => new { p.Name });
+
+            modelBuilder.Entity<FaceToFace>().HasNoKey();
+
+            modelBuilder.Entity<FaceToFace>()
+                .HasIndex(p => new { p.Face1Id });
+            modelBuilder.Entity<FaceToFace>()
+                .HasIndex(p => new { p.Face2Id });
+            modelBuilder.Entity<FaceToFace>()
+                .HasIndex(p => new { p.Distance });
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

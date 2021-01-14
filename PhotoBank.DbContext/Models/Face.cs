@@ -15,5 +15,8 @@ namespace PhotoBank.DbContext.Models
         public Person Person { get; set; }
         public bool? IsSample { get; set; }
         public Guid? ExternalGuid { get; set; } 
+        public byte[] Encoding { get; set; }
+        public double CheckedWithTolerance { get; set; }
+        public bool IsExcluded { get; set; }
     }
 }

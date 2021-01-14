@@ -4,7 +4,11 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Microsoft.EntityFrameworkCore;
@@ -22,8 +26,6 @@ namespace PhotoBank.Services
         Task SyncPersonsAsync();
         Task SyncFacesToPersonAsync();
         Task FindFaceAsync();
-
-        Task Test();
     }
 
     public class FaceService : IFaceService
@@ -37,6 +39,7 @@ namespace PhotoBank.Services
         private const string AllFacesListId = "all-faces-list";
 
         public bool IsPersonGroupTrained;
+        public bool IsFaceListTrained;
 
         public FaceService(IFaceClient faceClient, IRepository<Face> faceRepository, IRepository<DbContext.Models.Person> personRepository, IGeoWrapper geoWrapper)
         {
@@ -112,60 +115,48 @@ namespace PhotoBank.Services
         public async Task FindSimilarFacesInList()
         {
 
-            var azureFaceList = await _faceClient.FaceList.GetAsync(AllFacesListId);
-            IList<Guid?> faceIds = azureFaceList.PersistedFaces.Select(f => (Guid?)f.PersistedFaceId).ToList();
-            var dbFaces = await _faceRepository.GetAll().Include(f => f.Person).ToListAsync();
+            //await _faceClient.LargeFaceList.TrainAsync(AllFacesListId);
+            //var status = await GetListTrainingStatusAsync();
+            var dbFaces = await _faceRepository.GetAll().Where(f => f.ExternalGuid.HasValue).Include(f => f.Person).Take(100).ToListAsync();
 
             var results = new List<IList<SimilarFace>>();
 
             foreach (var face in dbFaces)
             {
+                IList<DetectedFace> detectedFaces = await _faceClient.Face.DetectWithStreamAsync(new MemoryStream(face.Image));
 
-
-                using (MemoryStream stream = new MemoryStream(face.Image))
+                foreach (DetectedFace detectedFace in detectedFaces)
                 {
-                    var faces = await _faceClient.Face.DetectWithStreamAsync(stream);
-                    foreach (var f in faces)
-                    {
-                        results.Add(await _faceClient.Face.FindSimilarAsync(f.FaceId.Value, azureFaceList.FaceListId, maxNumOfCandidatesReturned:20));
-                    }
-                }
-
-                var detectedFaces = await _faceClient.Face.DetectWithStreamAsync(new MemoryStream(face.Image));
-                var detectedFace = detectedFaces.Single();
-
-                //var similarFaces = await _faceClient.Face.FindSimilarAsync(faceIds[0].Value, null, null, faceIds, 20, FindSimilarMatchMode.MatchFace);
-
-                var similarFaces = await _faceClient.Face.FindSimilarAsync(detectedFace.FaceId.Value, azureFaceList.FaceListId, null, null, 20, FindSimilarMatchMode.MatchFace);
-                foreach (var similarFace in similarFaces)
-                {
-                    Console.WriteLine($"Persisted face{face.Id} similar to {similarFace.PersistedFaceId} {similarFace.FaceId} with {similarFace.Confidence}");
+                    var faces = await _faceClient.Face.FindSimilarAsync(detectedFace.FaceId.Value, null,
+                        largeFaceListId: AllFacesListId, null, 20, FindSimilarMatchMode.MatchFace);
+                    results.Add(faces);
                 }
             }
         }
 
+
         public async Task AddFacesToList()
         {
-            var azureFaceList = await _faceClient.FaceList.GetAsync(AllFacesListId);
+            var azureFaceList = await _faceClient.LargeFaceList.GetAsync(AllFacesListId);
 
             if (azureFaceList != null)
             {
-                await _faceClient.FaceList.DeleteAsync(AllFacesListId);
+                await _faceClient.LargeFaceList.DeleteAsync(AllFacesListId);
             }
-            await _faceClient.FaceList.CreateAsync(AllFacesListId, "Faces_2", null, RecognitionModel.Recognition03);
+            await _faceClient.LargeFaceList.CreateAsync(AllFacesListId, "Faces_2", null, RecognitionModel.Recognition03);
 
-            var dbFaces = _faceRepository.GetAll().ToList();
+            var dbFaces = await _faceRepository.GetAll().Where(f => !f.IsExcluded).Take(100).ToListAsync();
 
             foreach (var face in dbFaces)
             {
                 Console.WriteLine(face.Id);
                 try
                 {
-                    var targetFace = _geoWrapper.GetRectangleArray(face.Rectangle);
+//                    var targetFace = _geoWrapper.GetRectangleArray(face.Rectangle);
 
-                    var persistedFace = await _faceClient.FaceList
+                    var persistedFace = await _faceClient.LargeFaceList
                         .AddFaceFromStreamAsync(AllFacesListId, new MemoryStream(face.Image),
-                            face.Id.ToString(), targetFace, DetectionModel.Detection02);
+                            face.Id.ToString(), null, DetectionModel.Detection02);
 
                     face.ExternalGuid = persistedFace.PersistedFaceId;
                     await _faceRepository.UpdateAsync(face);
@@ -176,6 +167,7 @@ namespace PhotoBank.Services
                 }
             }
 
+            IsFaceListTrained = await GetListTrainingStatusAsync();
             Console.WriteLine("Done");
         }
 
@@ -267,91 +259,6 @@ namespace PhotoBank.Services
         }
 
 
-        public async Task Test()
-        {
-            Console.WriteLine("Sample of finding similar faces in face list.");
-
-            string recognitionModel = RecognitionModel.Recognition02;
-
-            const string ImageUrlPrefix = "https://csdx.blob.core.windows.net/resources/Face/Images/";
-            List<string> targetImageFileNames = new List<string>
-                                                    {
-                                                        "Family1-Dad1.jpg",
-                                                        "Family1-Daughter1.jpg",
-                                                        "Family1-Mom1.jpg",
-                                                        "Family1-Son1.jpg",
-                                                        "Family2-Lady1.jpg",
-                                                        "Family2-Man1.jpg",
-                                                        "Family3-Lady1.jpg",
-                                                        "Family3-Man1.jpg"
-                                                    };
-
-            string sourceImageFileName = "findsimilar.jpg";
-
-            // Create a face list.
-            string faceListId = "test-test-test";
-            Console.WriteLine($"Create FaceList {faceListId}.");
-            try
-            {
-                await _faceClient.FaceList.CreateAsync(faceListId, "face list for FindSimilar sample", "face list for FindSimilar sample", recognitionModel: recognitionModel);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-
-
-            foreach (var targetImageFileName in targetImageFileNames)
-            {
-                // Add face to face list.
-                var faces = await _faceClient.FaceList.AddFaceFromUrlAsync(
-                                faceListId,
-                                $"{ImageUrlPrefix}{targetImageFileName}",
-                                targetImageFileName);
-                if (faces == null)
-                {
-                    throw new Exception($"No face detected from image `{targetImageFileName}`.");
-                }
-
-                Console.WriteLine($"Face from image {targetImageFileName} is successfully added to the face list.");
-            }
-
-            // Get persisted faces from the face list.
-            List<PersistedFace> persistedFaces = (await _faceClient.FaceList.GetAsync(faceListId)).PersistedFaces.ToList();
-            if (persistedFaces.Count == 0)
-            {
-                throw new Exception($"No persisted face in face list '{faceListId}'.");
-            }
-
-            // Detect faces from source image url.
-            IList<DetectedFace> detectedFaces =
-                await _faceClient.Face.DetectWithUrlAsync("{ImageUrlPrefix}{sourceImageFileName}",
-                    recognitionModel: recognitionModel);
-                
-            // Find similar example of faceId to face list.
-            var similarResults = await _faceClient.Face.FindSimilarAsync(detectedFaces[0].FaceId.Value, faceListId);
-            foreach (var similarResult in similarResults)
-            {
-                PersistedFace persistedFace =
-                    persistedFaces.Find(face => face.PersistedFaceId == similarResult.PersistedFaceId);
-                if (persistedFace == null)
-                {
-                    Console.WriteLine("Persisted face not found in similar result.");
-                    continue;
-                }
-
-                Console.WriteLine(
-                    $"Faces from {sourceImageFileName} & {persistedFace.UserData} are similar with confidence: {similarResult.Confidence}.");
-            }
-
-            // Delete the face list.
-            await _faceClient.FaceList.DeleteAsync(faceListId);
-            Console.WriteLine($"Delete FaceList {faceListId}.");
-            Console.WriteLine();
-        }
-
-
         private async Task<bool> GetTrainingStatusAsync()
         {
             TrainingStatus trainingStatus = null;
@@ -360,6 +267,24 @@ namespace PhotoBank.Services
                 do
                 {
                     trainingStatus = await _faceClient.PersonGroup.GetTrainingStatusAsync(PersonGroupId);
+                } while (trainingStatus.Status == TrainingStatusType.Running);
+            }
+            catch (APIErrorException ae)
+            {
+                Debug.WriteLine("GetTrainingStatusAsync: " + ae.Message);
+                return false;
+            }
+            return trainingStatus.Status == TrainingStatusType.Succeeded;
+        }
+
+        private async Task<bool> GetListTrainingStatusAsync()
+        {
+            TrainingStatus trainingStatus = null;
+            try
+            {
+                do
+                {
+                    trainingStatus = await _faceClient.LargeFaceList.GetTrainingStatusAsync(AllFacesListId);
                 } while (trainingStatus.Status == TrainingStatusType.Running);
             }
             catch (APIErrorException ae)

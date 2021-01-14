@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using PhotoBank.DbContext.DbContext;
@@ -10,9 +11,10 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    partial class PhotoBankDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210103160028_FaceEncoding")]
+    partial class FaceEncoding
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -68,9 +70,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<int>("Age")
                         .HasColumnType("int");
 
-                    b.Property<double>("CheckedWithTolerance")
-                        .HasColumnType("float");
-
                     b.Property<byte[]>("Encoding")
                         .HasColumnType("varbinary(max)");
 
@@ -82,9 +81,6 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.Property<byte[]>("Image")
                         .HasColumnType("varbinary(max)");
-
-                    b.Property<bool>("IsExcluded")
-                        .HasColumnType("bit");
 
                     b.Property<bool?>("IsSample")
                         .HasColumnType("bit");
@@ -105,26 +101,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.HasIndex("PhotoId");
 
                     b.ToTable("Faces");
-                });
-
-            modelBuilder.Entity("PhotoBank.DbContext.Models.FaceToFace", b =>
-                {
-                    b.Property<double>("Distance")
-                        .HasColumnType("float");
-
-                    b.Property<int>("Face1Id")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Face2Id")
-                        .HasColumnType("int");
-
-                    b.HasIndex("Distance");
-
-                    b.HasIndex("Face1Id");
-
-                    b.HasIndex("Face2Id");
-
-                    b.ToTable("FaceToFaces");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.File", b =>

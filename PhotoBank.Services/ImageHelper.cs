@@ -12,28 +12,6 @@ namespace PhotoBank.Services
     {
         public const int MaxSize = 1920;
 
-        public static async Task<byte[]> GetFace(string absolutePath, double scale, FaceRectangle faceRectangle)
-        {
-            using (MagickImage image = new MagickImage(absolutePath))
-            {
-                image.AutoOrient();
-
-                var geometry = new MagickGeometry((int)(faceRectangle.Width / scale), (int)(faceRectangle.Height / scale))
-                {
-                    IgnoreAspectRatio = true,
-                    Y = (int)(faceRectangle.Top / scale),
-                    X = (int)(faceRectangle.Left / scale)
-                };
-                image.Crop(geometry);
-                ResizeImage(image, out _);
-
-                var stream = new MemoryStream();
-                image.Format = MagickFormat.Jpg;
-                await image.WriteAsync(stream);
-                return stream.ToArray();
-            }
-        }
-
         public static void ResizeImage(MagickImage image, out double scale)
         {
             var isLandscape = image.Width > image.Height;

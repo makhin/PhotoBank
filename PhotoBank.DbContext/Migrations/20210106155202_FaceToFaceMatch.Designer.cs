@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using PhotoBank.DbContext.DbContext;
@@ -10,9 +11,10 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    partial class PhotoBankDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210106155202_FaceToFaceMatch")]
+    partial class FaceToFaceMatch
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -83,9 +85,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<byte[]>("Image")
                         .HasColumnType("varbinary(max)");
 
-                    b.Property<bool>("IsExcluded")
-                        .HasColumnType("bit");
-
                     b.Property<bool?>("IsSample")
                         .HasColumnType("bit");
 
@@ -109,20 +108,22 @@ namespace PhotoBank.DbContext.Migrations
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.FaceToFace", b =>
                 {
-                    b.Property<double>("Distance")
-                        .HasColumnType("float");
-
                     b.Property<int>("Face1Id")
                         .HasColumnType("int");
 
                     b.Property<int>("Face2Id")
                         .HasColumnType("int");
 
-                    b.HasIndex("Distance");
+                    b.Property<double>("Distance")
+                        .HasColumnType("float");
 
-                    b.HasIndex("Face1Id");
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
 
-                    b.HasIndex("Face2Id");
+                    b.Property<bool>("IsMatch")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Face1Id", "Face2Id");
 
                     b.ToTable("FaceToFaces");
                 });

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using PhotoBank.DbContext.DbContext;
@@ -10,9 +11,10 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    partial class PhotoBankDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210108111922_F2FAddId")]
+    partial class F2FAddId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -83,9 +85,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<byte[]>("Image")
                         .HasColumnType("varbinary(max)");
 
-                    b.Property<bool>("IsExcluded")
-                        .HasColumnType("bit");
-
                     b.Property<bool?>("IsSample")
                         .HasColumnType("bit");
 
@@ -109,6 +108,11 @@ namespace PhotoBank.DbContext.Migrations
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.FaceToFace", b =>
                 {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .UseIdentityColumn();
+
                     b.Property<double>("Distance")
                         .HasColumnType("float");
 
@@ -118,11 +122,7 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<int>("Face2Id")
                         .HasColumnType("int");
 
-                    b.HasIndex("Distance");
-
-                    b.HasIndex("Face1Id");
-
-                    b.HasIndex("Face2Id");
+                    b.HasKey("Id");
 
                     b.ToTable("FaceToFaces");
                 });

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 
@@ -18,7 +20,9 @@ namespace PhotoBank.Repositories
         Task<TTable> GetAsync(int id);
         TTable Get(int id);
         Task<TTable> InsertAsync(TTable entity);
+        Task InsertRangeAsync(List<TTable> entities);
         Task<TTable> UpdateAsync(TTable entity);
+        Task<int> UpdateAsync(TTable entity, params Expression<Func<TTable, object>>[] properties);
         Task<int> DeleteAsync(int id);
     }
 
@@ -67,6 +71,23 @@ namespace PhotoBank.Repositories
             return _entities.Find(id);
         }
 
+        public async Task InsertRangeAsync(List<TTable> entities)
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                await _context.AddRangeAsync(entities);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (DbUpdateException exception)
+            {
+                await transaction.RollbackAsync();
+                Debug.WriteLine("An exception occurred: {0}, {1}", exception.InnerException, exception.Message);
+                throw new Exception("An error occurred; new record not saved");
+            }
+        }
+
         public async Task<TTable> InsertAsync(TTable entity)
         {
             await using var transaction = await _context.Database.BeginTransactionAsync();
@@ -107,6 +128,33 @@ namespace PhotoBank.Repositories
                 Debug.WriteLine("An exception occurred: {0}, {1}", exception.InnerException, exception.Message);
                 throw new Exception("An error occurred; record not updated");
             }
+        }
+
+
+        public async Task<int> UpdateAsync(TTable entity, Expression<Func<TTable, object>>[] properties)
+        {
+            var entry = _context.Entry(entity);
+            entry.State = EntityState.Unchanged;
+
+
+            foreach (var property in properties)
+            {
+                var operand = ((UnaryExpression)property.Body).Operand;
+                string propertyName;
+
+                if (entity.GetType() == ((MemberExpression) operand).Member.ReflectedType)
+                {
+                    propertyName = ((MemberExpression)operand).Member.Name;
+                }
+                else
+                {
+                    propertyName = ((MemberExpression)operand).Member.ReflectedType.Name + ((MemberExpression)operand).Member.Name;
+                }
+
+                entry.Property(propertyName).IsModified = true;
+            }
+
+            return await _context.SaveChangesAsync();
         }
 
         public async Task<int> DeleteAsync(int id)
