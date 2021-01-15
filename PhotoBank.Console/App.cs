@@ -27,6 +27,7 @@ namespace PhotoBank.Console
 
         public async Task Run()
         {
+            await _faceService.SyncPersonsAsync();
         }
 
         private async Task AddFilesAsync()

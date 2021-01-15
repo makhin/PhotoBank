@@ -1,29 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using Person = Microsoft.Azure.CognitiveServices.Vision.Face.Models.Person;
+using PersonGroup = Microsoft.Azure.CognitiveServices.Vision.Face.Models.PersonGroup;
 
 namespace PhotoBank.Services
 {
     public interface IFaceService
     {
+        Task SyncPersonsAsync();
         Task AddFacesToList();
         Task FindSimilarFaces();
         Task FindSimilarFacesInList();
-        Task SyncPersonsAsync();
         Task SyncFacesToPersonAsync();
         Task FindFaceAsync();
     }
@@ -134,6 +130,62 @@ namespace PhotoBank.Services
             }
         }
 
+        public async Task SyncPersonsAsync()
+        {
+            const string recognitionModel = RecognitionModel.Recognition02;
+
+            try
+            {
+                PersonGroup group = null;
+                try
+                {
+                    group = await _faceClient.PersonGroup.GetAsync(PersonGroupId);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+
+                if (group == null)
+                {
+                    await _faceClient.PersonGroup.CreateAsync(PersonGroupId, PersonGroupId, recognitionModel: recognitionModel);
+                }
+
+                var dbPersons = await _personRepository.GetAll().ToListAsync();
+                var servicePersons = await _faceClient.PersonGroupPerson.ListAsync(PersonGroupId);
+
+                foreach (var dbPerson in dbPersons)
+                {
+                    if (dbPerson.ExternalGuid != Guid.Empty && servicePersons.Select(p => p.PersonId).Contains(dbPerson.ExternalGuid))
+                    {
+                        continue;
+                    }
+
+                    var person = await _faceClient.PersonGroupPerson.CreateAsync(PersonGroupId, dbPerson.Name,
+                        dbPerson.Id.ToString());
+                    await Task.Delay(1000);
+
+                    dbPerson.ExternalGuid = person.PersonId;
+                    await _personRepository.UpdateAsync(dbPerson, p => p.ExternalGuid);
+                }
+
+                foreach (var servicePerson in servicePersons)
+                {
+                    if (dbPersons.Select(p => p.ExternalGuid).Contains(servicePerson.PersonId))
+                    {
+                        continue;
+                    }
+
+                    await _faceClient.PersonGroupPerson.DeleteAsync(PersonGroupId, servicePerson.PersonId);
+                    await Task.Delay(1000);
+                }
+
+            }
+            catch (APIErrorException ae)
+            {
+                Debug.WriteLine(ae.Message);
+            }
+        }
 
         public async Task AddFacesToList()
         {
@@ -201,38 +253,6 @@ namespace PhotoBank.Services
                 {
                     Console.WriteLine(e);
                 }
-            }
-        }
-
-
-        public async Task SyncPersonsAsync()
-        {
-            try
-            {
-                var faceServicePersons = await _faceClient.PersonGroupPerson.ListAsync(PersonGroupId);
-                var dbPersons = await _personRepository.GetAll().ToListAsync();
-
-                foreach (var dbPerson in dbPersons)
-                {
-                    if (!faceServicePersons.Select(p => p.Name).Contains(dbPerson.Name))
-                    {
-                        Person servicePerson = await _faceClient.PersonGroupPerson.CreateAsync(PersonGroupId, dbPerson.Name);
-                        dbPerson.ExternalGuid = servicePerson.PersonId;
-                        await _personRepository.UpdateAsync(dbPerson);
-                    }
-                }
-
-                foreach (var faceServicePerson in faceServicePersons)
-                {
-                    if (!dbPersons.Select(p => p.Name).Contains(faceServicePerson.Name))
-                    {
-                        await _faceClient.PersonGroupPerson.DeleteAsync(PersonGroupId, faceServicePerson.PersonId);
-                    }
-                }
-            }
-            catch (APIErrorException ae)
-            {
-                Debug.WriteLine(ae.Message);
             }
         }
 

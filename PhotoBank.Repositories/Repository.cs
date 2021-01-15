@@ -132,9 +132,8 @@ namespace PhotoBank.Repositories
 
         public async Task<int> UpdateAsync(TTable entity, Expression<Func<TTable, object>>[] properties)
         {
-            var entry = _context.Entry(entity);
+            var entry = _entities.Attach(entity);
             entry.State = EntityState.Unchanged;
-
 
             foreach (var property in properties)
             {
