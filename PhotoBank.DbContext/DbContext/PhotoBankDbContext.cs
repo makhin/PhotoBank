@@ -21,8 +21,6 @@ namespace PhotoBank.DbContext.DbContext
         public DbSet<PhotoCategory> PhotoCategories { get; set; }
         public DbSet<Person> Persons { get; set; }
         public DbSet<File> Files { get; set; }
-        public DbSet<PersonGroup> PersonGroups { get; set; }
-        public DbSet<PersonGroupPerson> PersonGroupPersons { get; set; }
         public DbSet<PropertyName> PropertyNames { get; set; }
         public DbSet<FaceToFace> FaceToFaces { get; set; }
 
@@ -64,22 +62,18 @@ namespace PhotoBank.DbContext.DbContext
                 .WithMany(t => t.PhotoCategories)
                 .HasForeignKey(pt => pt.CategoryId);
 
-            modelBuilder.Entity<PersonGroupPerson>().HasKey(q =>
-                new {
-                    q.PersonGroupId,
-                    q.PersonId
-                });
+            modelBuilder.Entity<PersonGroupFace>().HasIndex(q => q.FaceId);
+            modelBuilder.Entity<PersonGroupFace>().HasIndex(q => q.PersonId);
 
             // Relationships
-            modelBuilder.Entity<PersonGroupPerson>()
+            modelBuilder.Entity<PersonGroupFace>()
                 .HasOne(t => t.Person)
-                .WithMany(t => t.PersonGroupPersons)
+                .WithMany(t => t.PersonGroupFaces)
                 .HasForeignKey(t => t.PersonId);
 
-            modelBuilder.Entity<PersonGroupPerson>()
-                .HasOne(t => t.PersonGroup)
-                .WithMany(t => t.PersonGroupPersons)
-                .HasForeignKey(t => t.PersonGroupId);
+            modelBuilder.Entity<PersonGroupFace>()
+                .HasOne(t => t.Face)
+                .WithOne(t => t.PersonGroupFace);
 
             modelBuilder.Entity<File>()
                 .HasIndex(p => new { p.Name });

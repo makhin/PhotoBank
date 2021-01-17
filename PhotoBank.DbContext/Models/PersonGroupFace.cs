@@ -4,14 +4,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PhotoBank.DbContext.Models
 {
-    public class PersonGroupPerson
+    public class PersonGroupFace : IEntityBase
     {
-        [Key, Column(Order = 0)]
-        public int PersonGroupId { get; set; }
-        [Key, Column(Order = 1)]
+        public int Id { get; set; }
         public int PersonId { get; set; }
-        public PersonGroup PersonGroup { get; set; }
+        public int FaceId { get; set; }
         public Person Person { get; set; }
+        public Face Face { get; set; }
         public Guid ExternalGuid { get; set; }
     }
 }

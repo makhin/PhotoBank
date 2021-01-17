@@ -11,7 +11,7 @@ namespace PhotoBank.DbContext.Models
         public string Name { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public Guid ExternalGuid { get; set; }
+        public IEnumerable<PersonGroupFace> PersonGroupFaces { get; set; }
         public IEnumerable<Face> Faces { get; set; }
-        public ICollection<PersonGroupPerson> PersonGroupPersons { get; set; }
     }
 }

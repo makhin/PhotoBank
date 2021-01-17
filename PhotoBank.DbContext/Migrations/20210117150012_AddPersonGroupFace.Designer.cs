@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using PhotoBank.DbContext.DbContext;
@@ -10,9 +11,10 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    partial class PhotoBankDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210117150012_AddPersonGroupFace")]
+    partial class AddPersonGroupFace
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -88,9 +90,6 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.Property<Geometry>("Rectangle")
                         .HasColumnType("geometry");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
