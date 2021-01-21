@@ -43,7 +43,6 @@ namespace PhotoBank.Services
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-            services.AddScoped<IRecognitionService, RecognitionService>();
             services.AddScoped<IFaceService, FaceService>();
 
             services.AddScoped<IPhotoProcessor, PhotoProcessor>();

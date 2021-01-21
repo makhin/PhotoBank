@@ -1,6 +1,6 @@
 ﻿namespace PhotoBank.DbContext.Models
 {
-    public enum Status
+    public enum ListStatus
     {
         Undefined,
         Uploaded,

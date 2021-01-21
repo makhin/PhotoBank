@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FaceRecognitionDotNet;
+using PhotoBank.DbContext.Models;
 
 namespace PhotoBank.Dto
 {
@@ -11,8 +12,9 @@ namespace PhotoBank.Dto
     {
         public int Id { get; set; }
         public int? PersonId { get; set; }
-        public int Age { get; set; }
-        public int? Gender { get; set; }
-        public FaceEncoding FaceEncoding { get; set; }
+        public byte[] Image { get; set; }
+        public IdentityStatus IdentityStatus { get; set; }
+        public DateTime? PersonDateOfBirth { get; set; }
+        public DateTime? PhotoTakenDate { get; set; }
     }
 }

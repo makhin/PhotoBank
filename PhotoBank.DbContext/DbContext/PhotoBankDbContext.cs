@@ -86,6 +86,10 @@ namespace PhotoBank.DbContext.DbContext
                 .HasIndex(p => new { p.Face2Id });
             modelBuilder.Entity<FaceToFace>()
                 .HasIndex(p => new { p.Distance });
+
+            modelBuilder.Entity<Face>()
+                .HasIndex(p => p.IdentityStatus)
+                .IncludeProperties("PersonId");
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

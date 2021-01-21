@@ -17,7 +17,10 @@ namespace PhotoBank.Dto
             CreateMap<Face, FaceDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonGroupFace.PersonId))
-                .ForMember(dest => dest.FaceEncoding, opt => opt.MapFrom(src => DeserializeFaceEncoding(src.Encoding)))
+                .ForMember(dest => dest.IdentityStatus, opt => opt.MapFrom(src => src.IdentityStatus))
+                .ForMember(dest => dest.Image, opt => opt.MapFrom(src => src.Image))
+                .ForMember(dest => dest.PersonDateOfBirth, opt => opt.MapFrom(src => src.Person.DateOfBirth))
+                .ForMember(dest => dest.PhotoTakenDate, opt => opt.MapFrom(src => src.Photo.TakenDate))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Face, PersonFaceDto>()

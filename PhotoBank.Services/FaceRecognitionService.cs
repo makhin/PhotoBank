@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -13,17 +14,14 @@ namespace PhotoBank.Services
     public interface IFaceRecognitionService
     {
         byte[] FaceEncode(byte[] image);
-        void Test();
     }
 
     public class FaceRecognitionService : IFaceRecognitionService
     {
-        private readonly IRepository<Face> _faceRepository;
         private readonly FaceRecognition _faceRecognition;
 
-        public FaceRecognitionService(IRepository<Face> faceRepository)
+        public FaceRecognitionService()
         {
-            _faceRepository = faceRepository;
             string directory = @"C:\Temp\HelenTraining\Models";
             _faceRecognition = FaceRecognition.Create(directory);
         }
@@ -54,42 +52,29 @@ namespace PhotoBank.Services
                 }
             }
         }
+    }
 
-        public void Test()
+    public class FaceComparer : IEqualityComparer<Face>
+    {
+        public bool Equals(Face x, Face y)
         {
-            var imageB = _faceRepository.Get(1593, f => f).Image;
-            var magickImageB = new MagickImage(new MemoryStream(imageB), MagickFormat.Jpg);
+            FaceEncoding xEncoding = GetEncoding(x.Encoding);
+            FaceEncoding yEncoding = GetEncoding(x.Encoding); ;
 
-            var imageA = _faceRepository.Get(1594, f => f).Image;
-            var magickImageA = new MagickImage(new MemoryStream(imageA), MagickFormat.Jpg);
+            return FaceRecognition.CompareFace(xEncoding, yEncoding, 0.65);
+        }
 
-            FaceEncoding encodingA;
-            FaceEncoding encodingB;
+        public int GetHashCode(Face face)
+        {
+            return face.Encoding.GetHashCode();
+        }
 
-            using (var frImageB = FaceRecognition.LoadImage(magickImageB.ToBitmap(ImageFormat.Jpeg)))
-            {
-                using (var frImageA = FaceRecognition.LoadImage(magickImageA.ToBitmap(ImageFormat.Jpeg)))
-                {
-                    encodingA = _faceRecognition.FaceEncodings(frImageA,
-                        new List<Location> { new Location(0, 0, magickImageA.Width, magickImageA.Height) }, 1, PredictorModel.Large).First();
-                    encodingB = _faceRecognition.FaceEncodings(frImageB,
-                        new List<Location> { new Location(0, 0, magickImageB.Width, magickImageB.Height) }, 1, PredictorModel.Large).First();
-                }
-            }
-            const double tolerance = 0.6d;
-            bool match = FaceRecognition.CompareFace(encodingA, encodingB, tolerance);
-
+        private static FaceEncoding GetEncoding(byte[] bytes)
+        {
             var binaryFormatter = new BinaryFormatter();
-            using (var memoryStream = new MemoryStream())
+            using (var memoryStream = new MemoryStream(bytes))
             {
-                binaryFormatter.Serialize(memoryStream, encodingA);
-                memoryStream.Flush();
-
-                byte[] array = memoryStream.ToArray();
-                using (var ms2 = new MemoryStream(array))
-                {
-                    var de1 = binaryFormatter.Deserialize(ms2) as FaceEncoding;
-                }
+                return (FaceEncoding)binaryFormatter.Deserialize(memoryStream);
             }
         }
     }

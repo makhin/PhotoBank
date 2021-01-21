@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using PhotoBank.DbContext.DbContext;
@@ -10,9 +11,10 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    partial class PhotoBankDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210117220743_AddListAndIdentityStatuses")]
+    partial class AddListAndIdentityStatuses
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -99,9 +101,6 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("geometry");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("IdentityStatus")
-                        .IncludeProperties(new[] { "PersonId" });
 
                     b.HasIndex("PersonId");
 
@@ -418,13 +417,11 @@ namespace PhotoBank.DbContext.Migrations
                         .WithMany("Faces")
                         .HasForeignKey("PersonId");
 
-                    b.HasOne("PhotoBank.DbContext.Models.Photo", "Photo")
+                    b.HasOne("PhotoBank.DbContext.Models.Photo", null)
                         .WithMany("Faces")
                         .HasForeignKey("PhotoId");
 
                     b.Navigation("Person");
-
-                    b.Navigation("Photo");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.File", b =>

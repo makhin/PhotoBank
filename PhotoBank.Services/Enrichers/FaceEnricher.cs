@@ -16,75 +16,78 @@ namespace PhotoBank.Services.Enrichers
     public class FaceEnricher : IEnricher
     {
         private readonly IGeoWrapper _geoWrapper;
+        private readonly IFaceService _faceService;
         private readonly FaceRecognition _faceRecognition;
         private const int MinFaceSize = 36;
 
-        public FaceEnricher(IGeoWrapper geoWrapper)
+        public FaceEnricher(IGeoWrapper geoWrapper, IFaceService faceService)
         {
             _geoWrapper = geoWrapper;
-            string directory = @"C:\Temp\HelenTraining\Models";
+            _faceService = faceService;
+            const string directory = @"C:\Temp\HelenTraining\Models";
             _faceRecognition = FaceRecognition.Create(directory);
         }
 
-        public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
+        public Type[] Dependencies => new[] { typeof(AnalyzeEnricher), typeof(MetadataEnricher) };
 
         public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {
-            await Task.Run(async () =>
+            if (!sourceData.ImageAnalysis.Faces.Any())
             {
-                if (!sourceData.ImageAnalysis.Faces.Any())
+                return;
+            }
+
+            photo.Faces = new List<Face>();
+            foreach (var faceDescription in sourceData.ImageAnalysis.Faces)
+            {
+
+                if (faceDescription.FaceRectangle.Height / photo.Scale < MinFaceSize ||
+                    faceDescription.FaceRectangle.Width / photo.Scale < MinFaceSize)
                 {
-                    return;
+                    continue;
                 }
 
-                photo.Faces = new List<Face>();
-                foreach (var faceDescription in sourceData.ImageAnalysis.Faces)
+                using (var magickImage = new MagickImage(sourceData.AbsolutePath, MagickFormat.Jpg))
                 {
+                    magickImage.AutoOrient();
+                    magickImage.Crop(GetMagickGeometry(photo, faceDescription));
+                    ImageHelper.ResizeImage(magickImage, out _);
 
-                    if (faceDescription.FaceRectangle.Height / photo.Scale < MinFaceSize ||
-                        faceDescription.FaceRectangle.Width / photo.Scale < MinFaceSize)
+                    using (var stream = new MemoryStream())
                     {
-                        continue;
-                    }
+                        await magickImage.WriteAsync(stream);
 
-                    using (var magickImage = new MagickImage(sourceData.AbsolutePath, MagickFormat.Jpg))
-                    {
-                        magickImage.AutoOrient();
-                        magickImage.Crop(GetMagickGeometry(photo, faceDescription));
-                        ImageHelper.ResizeImage(magickImage, out _);
-
-                        using (var stream = new MemoryStream())
+                        var face = new Face
                         {
-                            await magickImage.WriteAsync(stream);
+                            Age = faceDescription.Age,
+                            Rectangle = _geoWrapper.GetRectangle(faceDescription.FaceRectangle, photo.Scale),
+                            Gender = faceDescription.Gender.HasValue ? (int) faceDescription.Gender.Value : (int?) null,
+                            Image = stream.ToArray(),
+                            Encoding = GetEncoding(magickImage),
+                            Photo = photo
+                        };
 
-                            photo.Faces.Add(new Face
-                            {
-                                Age = faceDescription.Age,
-                                Rectangle = _geoWrapper.GetRectangle(faceDescription.FaceRectangle, photo.Scale),
-                                Gender = faceDescription.Gender.HasValue ? (int)faceDescription.Gender.Value : (int?)null,
-                                Image = stream.ToArray(),
-                                Encoding = GetEncoding(magickImage)
-                            });
+                        photo.Faces.Add(face);
 
-                        }
+                        await _faceService.FaceIdentityAsync(face);
                     }
                 }
-            });
+            }
         }
 
         private static MagickGeometry GetMagickGeometry(Photo photo, FaceDescription faceDescription)
         {
-            var geometry = new MagickGeometry((int) (faceDescription.FaceRectangle.Width / photo.Scale),
-                (int) (faceDescription.FaceRectangle.Height / photo.Scale))
+            var geometry = new MagickGeometry((int)(faceDescription.FaceRectangle.Width / photo.Scale),
+                (int)(faceDescription.FaceRectangle.Height / photo.Scale))
             {
                 IgnoreAspectRatio = true,
-                Y = (int) (faceDescription.FaceRectangle.Top / photo.Scale),
-                X = (int) (faceDescription.FaceRectangle.Left / photo.Scale)
+                Y = (int)(faceDescription.FaceRectangle.Top / photo.Scale),
+                X = (int)(faceDescription.FaceRectangle.Left / photo.Scale)
             };
             return geometry;
         }
 
-        public byte[] GetEncoding(MagickImage magickImage)
+        private byte[] GetEncoding(MagickImage magickImage)
         {
             using (var frImage = FaceRecognition.LoadImage(magickImage.ToBitmap(ImageFormat.Jpeg)))
             {

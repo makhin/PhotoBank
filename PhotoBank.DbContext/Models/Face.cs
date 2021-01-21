@@ -13,8 +13,11 @@ namespace PhotoBank.DbContext.Models
         public byte[] Image { get; set; }
         public PersonGroupFace PersonGroupFace { get; set; }
         public Person Person { get; set; }
+        public Photo Photo { get; set; }
         public Guid? ExternalGuid { get; set; }
-        public Status Status { get; set; }
+        public ListStatus ListStatus { get; set; }
+        public IdentityStatus IdentityStatus { get; set; }
+        public double IdentifiedWithConfidence { get; set; }
         public byte[] Encoding { get; set; }
     }
 }
