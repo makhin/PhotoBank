@@ -37,7 +37,7 @@ namespace PhotoBank.Api.Controllers
         [HttpGet("{id}")]
         public IActionResult GetPhotoById(int id)
         {
-            var photo = _photoService.Get(id);
+            var photo = _photoService.GetAsync(id);
 
             if (photo == null)
             {

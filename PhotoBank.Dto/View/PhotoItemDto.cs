@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using PhotoBank.DbContext.Models;
 
-namespace PhotoBank.Dto
+namespace PhotoBank.Dto.View
 {
     public class PhotoItemDto : IEntityBase
     {

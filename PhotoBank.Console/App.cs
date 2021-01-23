@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
+using PhotoBank.Services.Api;
 
 namespace PhotoBank.Console
 {
@@ -15,23 +16,26 @@ namespace PhotoBank.Console
         private readonly IFaceService _faceService;
         private readonly ILogger<App> _logger;
         private readonly ISyncService _syncService;
+        private readonly IPhotoService _photoService;
 
-        public App(IPhotoProcessor photoProcessor, IRepository<Storage> repository, IFaceService faceService, ILogger<App> logger, ISyncService syncService)
+        public App(IPhotoProcessor photoProcessor, IRepository<Storage> repository, IFaceService faceService, ILogger<App> logger, ISyncService syncService, IPhotoService photoService)
         {
             _photoProcessor = photoProcessor;
             _repository = repository;
             _faceService = faceService;
             _logger = logger;
             _syncService = syncService;
+            _photoService = photoService;
         }
 
         public async Task Run()
         {
+            await _photoService.GetAllAsync();
             //await AddFilesAsync();
 
-            await _faceService.SyncPersonsAsync();
-            await _faceService.SyncFacesToPersonAsync();
-            await _faceService.GroupIdentifyAsync();
+            //await _faceService.SyncPersonsAsync();
+            //await _faceService.SyncFacesToPersonAsync();
+            //await _faceService.GroupIdentifyAsync();
 
             //await _faceService.AddFacesToLargeFaceListAsync();
             //await _faceService.ListFindSimilarAsync();

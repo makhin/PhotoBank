@@ -11,6 +11,7 @@ using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
+using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
 using Person = PhotoBank.DbContext.Models.Person;
 using PersonGroup = Microsoft.Azure.CognitiveServices.Vision.Face.Models.PersonGroup;

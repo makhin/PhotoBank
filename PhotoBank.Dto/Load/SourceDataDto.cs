@@ -1,6 +1,6 @@
 ﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 
-namespace PhotoBank.Dto
+namespace PhotoBank.Dto.Load
 {
     public class SourceDataDto
     {

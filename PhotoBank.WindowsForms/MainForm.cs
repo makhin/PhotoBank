@@ -28,11 +28,11 @@ namespace PhotoBank.WindowsForms
         {
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private async void button2_Click(object sender, EventArgs e)
         {
-            using (MemoryStream stream = new MemoryStream())
+            await using (MemoryStream stream = new MemoryStream())
             {
-                var photo = _photoService.Get((int)numericUpDown1.Value);
+                var photo = await _photoService.GetAsync((int)numericUpDown1.Value);
                 if (photo == null)
                 {
                     return;

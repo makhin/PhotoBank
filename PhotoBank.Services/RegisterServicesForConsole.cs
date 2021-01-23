@@ -37,7 +37,6 @@ namespace PhotoBank.Services
                 };
             });
 
-            services.AddSingleton<IGeoWrapper, GeoWrapper>();
             services.AddSingleton<IOrderResolver<IEnricher>, OrderResolver<IEnricher>>();
             services.AddSingleton<IFaceRecognitionService, FaceRecognitionService>();
 

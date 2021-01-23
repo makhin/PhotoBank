@@ -1,0 +1,32 @@
+﻿@page "/photooverview"
+@using Microsoft.AspNetCore.Routing
+@inherits PhotoOverviewBase
+
+<h1>All photos</h1>
+
+@if (Photos == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Photo ID</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var photo in Photos)
+            {
+                var path = "photodetail/" + photo.Id;
+
+                <tr>
+                    <td><NavLink href="@path">@photo.Id</NavLink></td>
+                    <td>@photo.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

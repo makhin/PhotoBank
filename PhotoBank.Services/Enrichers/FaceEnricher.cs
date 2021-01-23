@@ -9,20 +9,19 @@ using ImageMagick;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
+using PhotoBank.Dto.Load;
 using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
 namespace PhotoBank.Services.Enrichers
 {
     public class FaceEnricher : IEnricher
     {
-        private readonly IGeoWrapper _geoWrapper;
         private readonly IFaceService _faceService;
         private readonly FaceRecognition _faceRecognition;
         private const int MinFaceSize = 36;
 
-        public FaceEnricher(IGeoWrapper geoWrapper, IFaceService faceService)
+        public FaceEnricher(IFaceService faceService)
         {
-            _geoWrapper = geoWrapper;
             _faceService = faceService;
             const string directory = @"C:\Temp\HelenTraining\Models";
             _faceRecognition = FaceRecognition.Create(directory);
@@ -60,7 +59,7 @@ namespace PhotoBank.Services.Enrichers
                         var face = new Face
                         {
                             Age = faceDescription.Age,
-                            Rectangle = _geoWrapper.GetRectangle(faceDescription.FaceRectangle, photo.Scale),
+                            Rectangle = GeoWrapper.GetRectangle(faceDescription.FaceRectangle, photo.Scale),
                             Gender = faceDescription.Gender.HasValue ? (int) faceDescription.Gender.Value : (int?) null,
                             Image = stream.ToArray(),
                             Encoding = GetEncoding(magickImage),

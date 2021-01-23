@@ -35,6 +35,7 @@ namespace PhotoBank.Api
                     {
                         builder.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName().Name);
                         builder.UseNetTopologySuite();
+                        builder.CommandTimeout((int) TimeSpan.FromMinutes(10).TotalSeconds);
                     });
             });
 

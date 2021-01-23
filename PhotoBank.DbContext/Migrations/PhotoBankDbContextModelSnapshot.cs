@@ -18,7 +18,7 @@ namespace PhotoBank.DbContext.Migrations
             modelBuilder
                 .UseIdentityColumns()
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.1");
+                .HasAnnotation("ProductVersion", "5.0.2");
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Caption", b =>
                 {
@@ -121,7 +121,8 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<int>("Face2Id")
                         .HasColumnType("int");
 
-                    b.HasIndex("Distance");
+                    b.HasIndex("Distance")
+                        .IncludeProperties(new[] { "Face1Id", "Face2Id" });
 
                     b.HasIndex("Face1Id");
 

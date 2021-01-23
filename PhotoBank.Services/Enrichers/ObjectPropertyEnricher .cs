@@ -4,18 +4,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
+using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
 
 namespace PhotoBank.Services.Enrichers
 {
     public class ObjectPropertyEnricher : IEnricher
     {
-        private readonly IGeoWrapper _geoWrapper;
         private readonly IRepository<PropertyName> _propertyNameRepository;
 
-        public ObjectPropertyEnricher(IGeoWrapper geoWrapper, IRepository<PropertyName> propertyNameRepository)
+        public ObjectPropertyEnricher(IRepository<PropertyName> propertyNameRepository)
         {
-            _geoWrapper = geoWrapper;
             _propertyNameRepository = propertyNameRepository;
         }
 
@@ -41,7 +40,7 @@ namespace PhotoBank.Services.Enrichers
                 photo.ObjectProperties.Add(new ObjectProperty
                 {
                     PropertyName = propertyName,
-                    Rectangle = _geoWrapper.GetRectangle(detectedObject.Rectangle, photo.Scale),
+                    Rectangle = GeoWrapper.GetRectangle(detectedObject.Rectangle, photo.Scale),
                     Confidence = detectedObject.Confidence
                 });
             }

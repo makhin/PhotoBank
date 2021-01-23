@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
+using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
 
 namespace PhotoBank.Services.Enrichers

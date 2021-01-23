@@ -84,8 +84,10 @@ namespace PhotoBank.DbContext.DbContext
                 .HasIndex(p => new { p.Face1Id });
             modelBuilder.Entity<FaceToFace>()
                 .HasIndex(p => new { p.Face2Id });
+
             modelBuilder.Entity<FaceToFace>()
-                .HasIndex(p => new { p.Distance });
+                .HasIndex(p => new { p.Distance }).IncludeProperties("Face1Id", "Face2Id");
+
 
             modelBuilder.Entity<Face>()
                 .HasIndex(p => p.IdentityStatus)

@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using PhotoBank.BlazorApp.Data;
 using PhotoBank.Dto;
+using PhotoBank.Dto.View;
+using PhotoBank.Services;
 
 namespace PhotoBank.BlazorApp.Pages
 {

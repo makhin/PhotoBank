@@ -7,6 +7,7 @@ using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
+using PhotoBank.Dto.Load;
 using Directory = MetadataExtractor.Directory;
 using File = PhotoBank.DbContext.Models.File;
 
@@ -14,11 +15,8 @@ namespace PhotoBank.Services.Enrichers
 {
     public class MetadataEnricher : IEnricher
     {
-        private readonly IGeoWrapper _geoWrapper;
-
-        public MetadataEnricher(IGeoWrapper geoWrapper)
+        public MetadataEnricher()
         {
-            _geoWrapper = geoWrapper;
         }
         public Type[] Dependencies => new Type[1] { typeof(PreviewEnricher) };
 
@@ -61,7 +59,7 @@ namespace PhotoBank.Services.Enrichers
 
                 if (gpsDirectory != null)
                 {
-                    photo.Location = _geoWrapper.GetLocation(gpsDirectory);
+                    photo.Location = GeoWrapper.GetLocation(gpsDirectory);
                 }
             });
         }

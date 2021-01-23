@@ -32,7 +32,7 @@ namespace PhotoBank.Services
                     format = PixelFormat.Format32bppArgb;
                 }
 
-                using (IPixelCollection<ushort> pixels = image.GetPixelsUnsafe())
+                using (IUnsafePixelCollection<byte> pixels = image.GetPixelsUnsafe())
                 {
                     var bitmap = new Bitmap(image.Width, image.Height, format);
                     var data = bitmap.LockBits(new Rectangle(0, 0, image.Width, image.Height), ImageLockMode.ReadWrite, format);

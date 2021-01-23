@@ -3,15 +3,11 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using PhotoBank.Dto;
+using PhotoBank.Dto.View;
+using PhotoBank.Services;
 
 namespace PhotoBank.BlazorApp.Data
 {
-    public interface IPhotoDataService
-    {
-        Task<IEnumerable<PhotoDto>> GetAllPhotos();
-        Task<PhotoDto> GetPhotoById(int photoId);
-    }
-
     public class PhotoDataService : IPhotoDataService
     {
         private readonly HttpClient _httpClient;

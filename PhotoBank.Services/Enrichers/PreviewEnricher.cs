@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ImageMagick;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
+using PhotoBank.Dto.Load;
 
 namespace PhotoBank.Services.Enrichers
 {

@@ -8,6 +8,7 @@ using NUnit.Framework;
 using NUnit.Framework.Internal;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
+using PhotoBank.Dto.Load;
 using PhotoBank.Services;
 using PhotoBank.Services.Enrichers;
 

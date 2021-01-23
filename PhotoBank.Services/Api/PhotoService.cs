@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
+using PhotoBank.Dto.View;
 using PhotoBank.Repositories;
 
 namespace PhotoBank.Services.Api
@@ -12,7 +15,7 @@ namespace PhotoBank.Services.Api
     public interface IPhotoService
     {
         Task<IEnumerable<PhotoItemDto>> GetAllAsync();
-        PhotoDto Get(int id);
+        Task<PhotoDto> GetAsync(int id);
     }
 
     public class PhotoService : IPhotoService
@@ -28,12 +31,12 @@ namespace PhotoBank.Services.Api
 
         public async Task<IEnumerable<PhotoItemDto>> GetAllAsync()
         {
-            return await _photoRepository.GetAll().ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider).ToListAsync();
+            return await _photoRepository.GetAll().Take(50).ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider).ToListAsync();
         }
 
-        public PhotoDto Get(int id)
+        public async Task<PhotoDto> GetAsync(int id)
         {
-            var photo = _photoRepository.Get(id);
+            var photo = await _photoRepository.GetAsync(id, p => p.Include(p1 => p1.Faces).ThenInclude(f => f.Person));
             return _mapper.Map<Photo, PhotoDto>(photo);
         }
     }

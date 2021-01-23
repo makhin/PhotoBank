@@ -1,0 +1,42 @@
+﻿@page "/photodetail/{PhotoId}"
+@inherits PhotoDetailBase
+<style type="text/css">
+    .wrapper {
+        position: relative;
+    }
+
+    .box {
+        position: absolute;
+        top: 10px;
+        border: 1px solid white;
+        background-color: transparent;
+        display: flex;
+    }
+
+    .box span {
+        -webkit-align-self: flex-end;
+        -o-align-self: flex-end;
+        align-self: flex-end;
+        color: white;
+        font-size: smaller;
+    }
+</style>
+    @if (Photo == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <Heading Size="HeadingSize.Is4">
+            @Photo.Name
+        </Heading>
+        <div class="wrapper">
+            <img src="data:image;base64,@Convert.ToBase64String(Photo.PreviewImage)" alt=""/>
+            @foreach (var face in Photo.Faces)
+            {
+                <div class="box" style="top: @face.FaceBox.Top; left: @face.FaceBox.Left; width: @face.FaceBox.Width; height: @face.FaceBox.Height">
+                    <span>@face.PersonName</span>
+                </div>
+            }
+        </div>
+    }

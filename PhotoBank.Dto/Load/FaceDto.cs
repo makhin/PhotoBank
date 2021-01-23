@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FaceRecognitionDotNet;
 using PhotoBank.DbContext.Models;
 
-namespace PhotoBank.Dto
+namespace PhotoBank.Dto.Load
 {
     public class FaceDto 
     {
