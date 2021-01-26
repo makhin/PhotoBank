@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.Dto;
 using PhotoBank.Services;
+using Serilog;
 
 namespace PhotoBank.ServerBlazorApp
 {
@@ -39,7 +40,7 @@ namespace PhotoBank.ServerBlazorApp
                 .AddBootstrapProviders()
                 .AddFontAwesomeIcons();
 
-            string connectionString = Configuration.GetConnectionString("DefaultConnection");
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
 
             services.AddDbContext<PhotoBankDbContext>(options =>
             {
@@ -72,10 +73,16 @@ namespace PhotoBank.ServerBlazorApp
                 app.UseHsts();
             }
 
+            app.UseSerilogRequestLogging();
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.ApplicationServices
+                .UseBootstrapProviders()
+                .UseFontAwesomeIcons();
 
             app.UseEndpoints(endpoints =>
             {

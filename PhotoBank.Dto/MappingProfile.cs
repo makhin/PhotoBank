@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Collections.Generic;
+using AutoMapper;
 using PhotoBank.DbContext.Models;
 
 namespace PhotoBank.Dto
@@ -8,8 +9,17 @@ namespace PhotoBank.Dto
         public MappingProfile()
         {
             CreateMap<Photo, View.PhotoDto>()
+                .ForMember(dest => dest.Captions, opt => opt.MapFrom(src => src.Captions))
+                .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.PhotoTags))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<Caption, string>().ConvertUsing(c => c.Text);
+            CreateMap<PhotoTag, string>().ConvertUsing(t => t.Tag.Name);
+
             CreateMap<Photo, View.PhotoItemDto>().IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<Person, View.PersonDto>()
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Face, View.FaceDto>()
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.Person == null ? (int?)null : src.Person.Id))

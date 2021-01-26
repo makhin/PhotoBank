@@ -32,7 +32,7 @@ namespace PhotoBank.WindowsForms
         {
             await using (MemoryStream stream = new MemoryStream())
             {
-                var photo = await _photoService.GetAsync((int)numericUpDown1.Value);
+                var photo = await _photoService.GetPhotoAsync((int)numericUpDown1.Value);
                 if (photo == null)
                 {
                     return;

@@ -1,32 +1,22 @@
 ﻿@page "/photooverview"
-@using Microsoft.AspNetCore.Routing
+@using PhotoBank.Dto.View
+@using Radzen
 @inherits PhotoOverviewBase
 
-<h1>All photos</h1>
-
-@if (Photos == null)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Photo ID</th>
-                <th>Name</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var photo in Photos)
-            {
-                var path = "photodetail/" + photo.Id;
-
-                <tr>
-                    <td><NavLink href="@path">@photo.Id</NavLink></td>
-                    <td>@photo.Name</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<RadzenGrid AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Advanced" AllowPaging="true" PageSize="4"
+            AllowSorting="true" Data="@Photos" TItem="PhotoItemDto" ColumnWidth="200px">
+    <Columns>
+        <RadzenGridColumn TItem="PhotoItemDto" Property="Id" Title="Photo ID" />
+        <RadzenGridColumn TItem="PhotoItemDto" Property="Thumbnail" Title="Thumbnail" Sortable="false" Filterable="false">
+            <Template Context="data">
+                <img src="data:image;base64,@Convert.ToBase64String(data?.Thumbnail)"/>
+            </Template>
+        </RadzenGridColumn>
+        <RadzenGridColumn TItem="PhotoItemDto" Property="Name" Title="Name" />
+        <RadzenGridColumn TItem="PhotoItemDto" Property="TakenDate" Title="Taken Date">
+            <Template Context="data">
+                @String.Format("{0:d}", data.TakenDate)
+            </Template>
+        </RadzenGridColumn>
+    </Columns>
+</RadzenGrid>

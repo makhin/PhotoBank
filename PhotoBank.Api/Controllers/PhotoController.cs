@@ -23,7 +23,7 @@ namespace PhotoBank.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPhotos()
         {
-            var photos = await _photoService.GetAllAsync();
+            var photos = await _photoService.GetAllPhotosAsync();
 
             if (!photos.Any())
             {
@@ -37,7 +37,7 @@ namespace PhotoBank.Api.Controllers
         [HttpGet("{id}")]
         public IActionResult GetPhotoById(int id)
         {
-            var photo = _photoService.GetAsync(id);
+            var photo = _photoService.GetPhotoAsync(id);
 
             if (photo == null)
             {

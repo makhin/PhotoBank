@@ -16,9 +16,9 @@ namespace PhotoBank.ServerBlazorApp.Pages
 
         public IEnumerable<PhotoItemDto> Photos { get; set; }
 
-        protected override async Task OnInitializedAsync()
+        protected override void OnInitialized()
         {
-            Photos = await PhotoService.GetAllAsync();
+            Photos = PhotoService.GetAllPhotos();
         }
     }
 }

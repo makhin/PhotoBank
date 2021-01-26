@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using PhotoBank.Dto;
@@ -16,10 +18,33 @@ namespace PhotoBank.ServerBlazorApp.Pages
         public string PhotoId { get; set; }
 
         public PhotoDto Photo { get; set; }
+        public IEnumerable<PersonDto> Persons { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            Photo = await PhotoDataService.GetAsync(int.Parse(PhotoId));
+            Photo = await PhotoDataService.GetPhotoAsync(int.Parse(PhotoId));
+            Persons = await PhotoDataService.GetAllPersonsAsync();
+        }
+
+        protected string GetPersonNameById(int? id)
+        {
+            return !id.HasValue ? string.Empty : Persons.FirstOrDefault(p => p.Id == id)?.Name;
+        }
+
+        protected Action<ChangeEventArgs> OnChangePerson(FaceDto face)
+        {
+            return async e =>
+            {
+                if (e.Value == null)
+                {
+                    return;
+                }
+
+                var personId = int.Parse(e.Value.ToString() ?? "0");
+                face.PersonId = personId;
+
+                await PhotoDataService.UpdateFaceAsync(face);
+            };
         }
     }
 }

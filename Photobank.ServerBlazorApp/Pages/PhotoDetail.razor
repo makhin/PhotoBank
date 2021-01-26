@@ -1,5 +1,9 @@
 ﻿@page "/photodetail/{PhotoId}"
+@using PhotoBank.Dto.View
 @inherits PhotoDetailBase
+
+@functions {
+}
 <style type="text/css">
     .wrapper {
         position: relative;
@@ -13,30 +17,53 @@
         display: flex;
     }
 
-    .box span {
-        -webkit-align-self: flex-end;
-        -o-align-self: flex-end;
-        align-self: flex-end;
-        color: white;
-        font-size: smaller;
-    }
+        .box span {
+            -webkit-align-self: flex-end;
+            -o-align-self: flex-end;
+            align-self: flex-end;
+            color: white;
+            font-size: smaller;
+        }
 </style>
-    @if (Photo == null)
+@if (Photo == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <span>Name:</span>
+    @Photo.Name<br>
+    <span>Caption:</span>
+    @foreach (var caption in Photo.Captions)
     {
-        <p><em>Loading...</em></p>
+        @caption<br>
     }
-    else
+    <span>Tags:</span>
+    @foreach (var tag in Photo.Tags)
     {
-        <Heading Size="HeadingSize.Is4">
-            @Photo.Name
-        </Heading>
-        <div class="wrapper">
-            <img src="data:image;base64,@Convert.ToBase64String(Photo.PreviewImage)" alt=""/>
-            @foreach (var face in Photo.Faces)
+        @tag<br>
+    }
+
+    @foreach (var face in Photo.Faces)
+    {
+        <select value="@face.PersonId" @onchange="@OnChangePerson(face)">
+            @if (Persons != null)
             {
-                <div class="box" style="top: @face.FaceBox.Top; left: @face.FaceBox.Left; width: @face.FaceBox.Width; height: @face.FaceBox.Height">
-                    <span>@face.PersonName</span>
-                </div>
+                @foreach (var person in Persons)
+                {
+                    <option value="@person.Id">@person.Name</option>
+                }
             }
-        </div>
+        </select>
     }
+
+    <div class="wrapper">
+        <img src="data:image;base64,@Convert.ToBase64String(Photo.PreviewImage)" alt="" />
+        @foreach (var face in Photo.Faces)
+        {
+            <div class="box" style="top: @face.FaceBox.Top; left: @face.FaceBox.Left; width: @face.FaceBox.Width; height: @face.FaceBox.Height">
+                <span>@GetPersonNameById(face.PersonId)</span>
+            </div>
+        }
+    </div>
+}

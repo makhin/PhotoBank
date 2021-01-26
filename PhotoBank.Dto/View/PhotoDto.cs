@@ -14,5 +14,7 @@ namespace PhotoBank.Dto.View
         public byte[] PreviewImage { get; set; }
         public int? Orientation { get; set; }
         public List<FaceDto> Faces { get; set; }
+        public List<string> Captions { get; set; }
+        public List<string> Tags { get; set; }
     }
 }
