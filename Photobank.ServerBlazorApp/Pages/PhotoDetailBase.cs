@@ -31,8 +31,10 @@ namespace PhotoBank.ServerBlazorApp.Pages
             return !id.HasValue ? string.Empty : Persons.FirstOrDefault(p => p.Id == id)?.Name;
         }
 
-        protected Action<ChangeEventArgs> OnChangePerson(FaceDto face)
+        protected Action<ChangeEventArgs> OnChangePerson(object item)
         {
+            var face = item as FaceDto;
+
             return async e =>
             {
                 if (e.Value == null)

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
@@ -15,10 +17,37 @@ namespace PhotoBank.ServerBlazorApp.Pages
         public IPhotoService PhotoService { get; set; }
 
         public IEnumerable<PhotoItemDto> Photos { get; set; }
+        public List<StorageDto> Storages { get; set; }
+        public List<PersonDto> Persons { get; set; }
+        public List<TagDto> Tags { get; set; }
+        public FilterDto Filter { get; set; }
+
+        public PhotoOverviewBase()
+        {
+            Filter = new FilterDto();
+        }
 
         protected override void OnInitialized()
         {
-            Photos = PhotoService.GetAllPhotos();
+            Photos = PhotoService.GetAllPhotos(Filter);
+        }
+
+        protected override async Task OnInitializedAsync()
+        {
+            Storages = await PhotoService.GetAllStoragesAsync();
+            Persons = await PhotoService.GetAllPersonsAsync();
+            Tags = await PhotoService.GetAllTagsAsync();
+        }
+
+        protected void ApplyFilter(FilterDto filterDto)
+        {
+            Photos = PhotoService.GetAllPhotos(Filter);
+        }
+
+        protected void Cancel()
+        {
+            Filter = new FilterDto();
+            PhotoService.GetAllPhotos(Filter);
         }
     }
 }

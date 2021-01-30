@@ -4,7 +4,6 @@
     {
         public int Id { get; set; }
         public int? PersonId { get; set; }
-        public string PersonName { get; set; }
         public FaceBoxDto FaceBox { get; set; }
     }
 }

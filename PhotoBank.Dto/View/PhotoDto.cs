@@ -7,8 +7,6 @@ namespace PhotoBank.Dto.View
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public int Height { get; set; }
-        public int Width { get; set; }
         public double Scale { get; set; }
         public DateTime? TakenDate { get; set; }
         public byte[] PreviewImage { get; set; }

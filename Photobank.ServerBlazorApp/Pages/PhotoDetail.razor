@@ -1,9 +1,13 @@
 ﻿@page "/photodetail/{PhotoId}"
+@using Microsoft.AspNetCore.Components.Web.Extensions.Head
 @using PhotoBank.Dto.View
 @inherits PhotoDetailBase
 
-@functions {
+@if (Photo != null)
+{
+    <Title value="@Photo.Name"></Title>
 }
+
 <style type="text/css">
     .wrapper {
         position: relative;
@@ -25,38 +29,43 @@
             font-size: smaller;
         }
 </style>
+
 @if (Photo == null)
 {
     <p><em>Loading...</em></p>
 }
 else
 {
-    <span>Name:</span>
-    @Photo.Name<br>
-    <span>Caption:</span>
-    @foreach (var caption in Photo.Captions)
-    {
-        @caption<br>
-    }
-    <span>Tags:</span>
-    @foreach (var tag in Photo.Tags)
-    {
-        @tag<br>
-    }
-
-    @foreach (var face in Photo.Faces)
-    {
-        <select value="@face.PersonId" @onchange="@OnChangePerson(face)">
-            @if (Persons != null)
-            {
-                @foreach (var person in Persons)
+    <RadzenCard>
+        <div class="row">
+            <div class="col-md-6">
+                <div>Name:</div>
+                <b>@Photo.Name</b>
+                <div style="margin-top:20px">Caption:</div>
+                @foreach (var caption in Photo.Captions)
                 {
-                    <option value="@person.Id">@person.Name</option>
+                    <b>@caption</b>
+                    <br />
                 }
-            }
-        </select>
-    }
+                <div style="margin-top:20px">Tags:</div>
+                @foreach (var tag in Photo.Tags)
+                {
+                    <span style="display:inline-block;color:#fff;margin:4px;padding:0 4px;border-radius:4px;background-color: #5319e7">@tag</span>
+                }
+            </div>
+            <div class="col-md-6">
+                <div>Faces:</div>
 
+                @foreach (var face in Photo.Faces)
+                {
+                    <div>
+                        <RadzenDropDown Data=@Persons @bind-Value=@face.PersonId
+                                        TextProperty="Name" ValueProperty="Id" Change=@(args => OnChangePerson(args)) />
+                    </div>
+                }
+            </div>
+        </div>
+    </RadzenCard>
     <div class="wrapper">
         <img src="data:image;base64,@Convert.ToBase64String(Photo.PreviewImage)" alt="" />
         @foreach (var face in Photo.Faces)

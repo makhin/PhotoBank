@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using AutoMapper;
 using PhotoBank.DbContext.Models;
+using PhotoBank.Dto.View;
 
 namespace PhotoBank.Dto
 {
@@ -16,6 +17,9 @@ namespace PhotoBank.Dto
             CreateMap<Caption, string>().ConvertUsing(c => c.Text);
             CreateMap<PhotoTag, string>().ConvertUsing(t => t.Tag.Name);
 
+            CreateMap<Storage, StorageDto>().IgnoreAllPropertiesWithAnInaccessibleSetter();
+            CreateMap<Tag, TagDto>().IgnoreAllPropertiesWithAnInaccessibleSetter();
+
             CreateMap<Photo, View.PhotoItemDto>().IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Person, View.PersonDto>()
@@ -23,7 +27,6 @@ namespace PhotoBank.Dto
 
             CreateMap<Face, View.FaceDto>()
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.Person == null ? (int?)null : src.Person.Id))
-                .ForMember(dest => dest.PersonName, opt => opt.MapFrom(src => src.Person == null ? string.Empty : src.Person.Name))
                 .ForMember(dest => dest.FaceBox, opt => opt.MapFrom(src => GeoWrapper.GetFaceBox(src.Rectangle, src.Photo.Scale)))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 

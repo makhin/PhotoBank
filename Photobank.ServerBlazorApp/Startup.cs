@@ -4,9 +4,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using AutoMapper;
-using Blazorise;
-using Blazorise.Bootstrap;
-using Blazorise.Icons.FontAwesome;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.DbContext;
@@ -31,14 +28,6 @@ namespace PhotoBank.ServerBlazorApp
         {
             services.AddRazorPages();
             services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
-
-            services
-                .AddBlazorise(options =>
-                {
-                    options.ChangeTextOnKeyPress = true;
-                })
-                .AddBootstrapProviders()
-                .AddFontAwesomeIcons();
 
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
 
@@ -79,10 +68,6 @@ namespace PhotoBank.ServerBlazorApp
             app.UseStaticFiles();
 
             app.UseRouting();
-
-            app.ApplicationServices
-                .UseBootstrapProviders()
-                .UseFontAwesomeIcons();
 
             app.UseEndpoints(endpoints =>
             {
