@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using PhotoBank.DbContext.Models;
 
 namespace PhotoBank.Dto.View
@@ -13,5 +14,7 @@ namespace PhotoBank.Dto.View
         public bool IsAdultContent { get; set; }
         public bool IsRacyContent { get; set; }
         public string RelativePath { get; set; }
+        public IEnumerable<TagItemDto> Tags { get; set; }
+        public IEnumerable<PersonItemDto> Persons { get; set; }
     }
 }

@@ -8,7 +8,7 @@ namespace PhotoBank.Dto.View
 {
     public class FilterDto
     {
-        public List<int> Storages { get; set; }
+        public IEnumerable<int> Storages { get; set; }
         public bool? IsBW { get; set; }
         public bool? IsAdultContent { get; set; }
         public bool? IsRacyContent { get; set; }

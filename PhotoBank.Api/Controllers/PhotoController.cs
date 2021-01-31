@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
+using PhotoBank.Dto.View;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Api;
 
@@ -23,7 +24,7 @@ namespace PhotoBank.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPhotos()
         {
-            var photos = await _photoService.GetAllPhotosAsync();
+            var photos = (await _photoService.GetAllPhotosAsync(new FilterDto(), null, null)).Photos;
 
             if (!photos.Any())
             {

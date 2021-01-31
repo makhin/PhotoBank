@@ -14,13 +14,13 @@ namespace PhotoBank.Services.Api
 {
     public interface IPhotoService
     {
-        Task<IEnumerable<PhotoItemDto>> GetAllPhotosAsync();
-        public IQueryable<PhotoItemDto> GetAllPhotos(FilterDto filter);
+        Task<QueryResult> GetAllPhotosAsync(FilterDto filter, int? skip, int? top);
         Task<PhotoDto> GetPhotoAsync(int id);
-        Task<List<PersonDto>> GetAllPersonsAsync();
-        Task<List<StorageDto>> GetAllStoragesAsync();
-        Task<List<TagDto>> GetAllTagsAsync();
-        Task UpdateFaceAsync(FaceDto faceDto);
+        Task<IEnumerable<PersonDto>> GetAllPersonsAsync();
+        Task<IEnumerable<StorageDto>> GetAllStoragesAsync();
+        Task<IEnumerable<TagDto>> GetAllTagsAsync();
+        Task<IEnumerable<PathDto>> GetAllPathsAsync();
+        Task UpdateFaceAsync(int faceId, int personId);
     }
 
     public class PhotoService : IPhotoService
@@ -32,6 +32,7 @@ namespace PhotoBank.Services.Api
         private readonly Lazy<Task<List<PersonDto>>> _persons;
         private readonly Lazy<Task<List<StorageDto>>> _storages;
         private readonly Lazy<Task<List<TagDto>>> _tags;
+        private readonly Lazy<Task<List<PathDto>>> _paths;
 
         public PhotoService(
             IRepository<Photo> photoRepository,
@@ -48,17 +49,18 @@ namespace PhotoBank.Services.Api
             _persons = new Lazy<Task<List<PersonDto>>>(() => personRepository.GetAll().OrderBy(p => p.Name).ProjectTo<PersonDto>(_mapper.ConfigurationProvider).ToListAsync());
             _storages = new Lazy<Task<List<StorageDto>>>(() => storageRepository.GetAll().OrderBy(p => p.Name).ProjectTo<StorageDto>(_mapper.ConfigurationProvider).ToListAsync());
             _tags = new Lazy<Task<List<TagDto>>>(() => tagRepository.GetAll().OrderBy(p => p.Name).ProjectTo<TagDto>(_mapper.ConfigurationProvider).ToListAsync());
+            _paths = new Lazy<Task<List<PathDto>>>(() => photoRepository.GetAll().ProjectTo<PathDto>(_mapper.ConfigurationProvider).Distinct().OrderBy(p=>p.Path).ToListAsync());
         }
 
-        public async Task<IEnumerable<PhotoItemDto>> GetAllPhotosAsync()
+        public async Task<QueryResult> GetAllPhotosAsync(FilterDto filter, int? skip, int? top)
         {
-            return await _photoRepository.GetAll().Take(50).ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
-        }
+            var queryResult = new QueryResult();
 
-        public IQueryable<PhotoItemDto> GetAllPhotos(FilterDto filter)
-        {
-            var photos = _photoRepository.GetAll();
+            var photos = _photoRepository
+                .GetAll()
+                .Include(p => p.PhotoTags)
+                .Include(p => p.Faces)
+                .AsQueryable();
 
             if (filter.IsBW.HasValue)
             {
@@ -75,6 +77,22 @@ namespace PhotoBank.Services.Api
                 photos = photos.Where(p => p.IsRacyContent);
             }
 
+            if (filter.TakenDateFrom.HasValue)
+            {
+                photos = photos.Where(p => p.TakenDate.HasValue && p.TakenDate >= filter.TakenDateFrom.Value);
+            }
+
+            if (filter.TakenDateTo.HasValue)
+            {
+                photos = photos.Where(p => p.TakenDate.HasValue && p.TakenDate <= filter.TakenDateTo.Value);
+            }
+
+            if (filter.Paths != null && filter.Paths.Any())
+            {
+                photos = photos
+                    .Where(p => filter.Paths.ToList().Contains(p.RelativePath));
+            }
+
             if (filter.Storages != null && filter.Storages.Any())
             {
                 photos = photos
@@ -82,28 +100,30 @@ namespace PhotoBank.Services.Api
                     .Where(p => filter.Storages.ToList().Contains(p.Storage.Id));
             }
 
+            if (!string.IsNullOrEmpty(filter.Caption))
+            {
+                photos = photos
+                    .Include(p => p.Captions)
+                    .Where(p => p.Captions.Select(c => EF.Functions.FreeText(c.Text, filter.Caption)).Any());
+            }
+
             if (filter.Persons != null && filter.Persons.Any())
             {
                 var list = filter.Persons.ToList<int>();
 
                 photos = photos
-                    .Include(p => p.Faces)
-                    .ThenInclude(f => f.Person)
                     .Where(p => p.Faces != null)
                     .Where(p => p.Faces.Any())
                     .Where(p => p.Faces
-                        .Select(f => f.Person.Id)
+                        .Select(f => f.PersonId.Value)
                         .Any(x => list.Contains(x)));
             }
-
 
             if (filter.Tags != null && filter.Tags.Any())
             {
                 var list = filter.Tags.ToList<int>();
 
                 photos = photos
-                    .Include(p => p.PhotoTags)
-                    .ThenInclude(f => f.Tag)
                     .Where(p => p.PhotoTags != null)
                     .Where(p => p.PhotoTags.Any())
                     .Where(p => p.PhotoTags
@@ -111,8 +131,56 @@ namespace PhotoBank.Services.Api
                         .Any(x => list.Contains(x)));
             }
 
-            return photos
-                .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider);
+            if ((filter.Tags == null || filter.Tags.Count() == 1) && (filter.Persons == null || filter.Persons.Count() == 1))
+            {
+                queryResult.Count = await photos.CountAsync();
+                queryResult.Photos = await photos.Skip(skip.Value).Take(top.Value).ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider).ToListAsync();
+                return queryResult;
+            }
+
+            var result = await photos.ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider).ToListAsync();
+
+            if (filter.Tags != null && filter.Tags.Count() > 1)
+            {
+                var list = filter.Tags.ToList<int>();
+                result =
+                    (from photo in result
+                    where
+                    (
+                        from requiredId in list
+                        where
+                        (
+                            from tag in photo.Tags
+                            where tag.TagId == requiredId
+                            select tag
+                        ).Any() == false
+                        select requiredId
+                    ).Any() == false
+                    select photo).ToList();
+            }
+
+            if (filter.Persons != null && filter.Persons.Count() > 1)
+            {
+                var list = filter.Persons.ToList<int>();
+                result =
+                    (from photo in result
+                        where
+                        (
+                            from requiredId in list
+                            where
+                            (
+                                from person in photo.Persons
+                                where person.PersonId == requiredId
+                                select person
+                            ).Any() == false
+                            select requiredId
+                        ).Any() == false
+                        select photo).ToList();
+            }
+
+            queryResult.Photos = result.Skip(skip.Value).Take(top.Value);
+            queryResult.Count = result.Count;
+            return queryResult;
         }
 
         public async Task<PhotoDto> GetPhotoAsync(int id)
@@ -128,33 +196,36 @@ namespace PhotoBank.Services.Api
             return _mapper.Map<Photo, PhotoDto>(photo);
         }
 
-        public async Task<List<PersonDto>> GetAllPersonsAsync()
+        public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync()
         {
             return await _persons.Value;
         }
 
-        public async Task<List<StorageDto>> GetAllStoragesAsync()
+        public async Task<IEnumerable<PathDto>> GetAllPathsAsync()
+        {
+            return await _paths.Value;
+        }
+
+        public async Task<IEnumerable<StorageDto>> GetAllStoragesAsync()
         {
             return await _storages.Value;
         }
 
-        public async Task<List<TagDto>> GetAllTagsAsync()
+        public async Task<IEnumerable<TagDto>> GetAllTagsAsync()
         {
             return await _tags.Value;
         }
 
-        public async Task UpdateFaceAsync(FaceDto faceDto)
+        public async Task UpdateFaceAsync(int faceId, int personId)
         {
-            var face = new Face {Id = faceDto.Id};
-            if (faceDto.PersonId.HasValue && faceDto.PersonId.Value != 0)
+            var face = new Face
             {
-                face.Person = await _personRepository.GetAsync(faceDto.PersonId.Value);
-                await _faceRepository.UpdateAsync(face, f => f.Person.Id);
-            }
-            else
-            {
-                await _faceRepository.UpdateAsync(face, f => f.Person);
-            }
+                Id = faceId,
+                IdentifiedWithConfidence = 1,
+                IdentityStatus = IdentityStatus.Identified,
+                PersonId = personId
+            };
+            await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentifiedWithConfidence, f => f.IdentityStatus);
         }
     }
 }

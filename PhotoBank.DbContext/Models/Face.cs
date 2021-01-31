@@ -12,6 +12,7 @@ namespace PhotoBank.DbContext.Models
         public int? Gender { get; set; }
         public byte[] Image { get; set; }
         public PersonGroupFace PersonGroupFace { get; set; }
+        public int? PersonId { get; set; }
         public Person Person { get; set; }
         public Photo Photo { get; set; }
         public Guid? ExternalGuid { get; set; }

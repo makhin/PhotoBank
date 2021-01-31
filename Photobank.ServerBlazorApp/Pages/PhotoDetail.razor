@@ -55,12 +55,15 @@ else
             </div>
             <div class="col-md-6">
                 <div>Faces:</div>
-
+                @{
+                    var i = 1;
+                }
                 @foreach (var face in Photo.Faces)
                 {
                     <div>
+                        <span>@((i++).ToString())</span>
                         <RadzenDropDown Data=@Persons @bind-Value=@face.PersonId
-                                        TextProperty="Name" ValueProperty="Id" Change=@(args => OnChangePerson(args)) />
+                                        TextProperty="Name" ValueProperty="Id" Change=@(args => OnChangePersonAsync(face.Id, args))/>
                     </div>
                 }
             </div>
@@ -68,9 +71,13 @@ else
     </RadzenCard>
     <div class="wrapper">
         <img src="data:image;base64,@Convert.ToBase64String(Photo.PreviewImage)" alt="" />
+        @{
+            var j = 1;
+        }
         @foreach (var face in Photo.Faces)
         {
             <div class="box" style="top: @face.FaceBox.Top; left: @face.FaceBox.Left; width: @face.FaceBox.Width; height: @face.FaceBox.Height">
+                <span>@((j++).ToString())</span><span>.</span>
                 <span>@GetPersonNameById(face.PersonId)</span>
             </div>
         }

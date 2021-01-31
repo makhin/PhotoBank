@@ -30,7 +30,6 @@ namespace PhotoBank.Console
 
         public async Task Run()
         {
-            await _photoService.GetAllPhotosAsync();
             //await AddFilesAsync();
 
             //await _faceService.SyncPersonsAsync();

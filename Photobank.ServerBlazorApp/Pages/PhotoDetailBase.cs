@@ -31,22 +31,9 @@ namespace PhotoBank.ServerBlazorApp.Pages
             return !id.HasValue ? string.Empty : Persons.FirstOrDefault(p => p.Id == id)?.Name;
         }
 
-        protected Action<ChangeEventArgs> OnChangePerson(object item)
+        protected async Task OnChangePersonAsync(int faceId, object personId)
         {
-            var face = item as FaceDto;
-
-            return async e =>
-            {
-                if (e.Value == null)
-                {
-                    return;
-                }
-
-                var personId = int.Parse(e.Value.ToString() ?? "0");
-                face.PersonId = personId;
-
-                await PhotoDataService.UpdateFaceAsync(face);
-            };
+            await PhotoDataService.UpdateFaceAsync(faceId, (int)personId);
         }
     }
 }

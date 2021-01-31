@@ -20,7 +20,23 @@ namespace PhotoBank.Dto
             CreateMap<Storage, StorageDto>().IgnoreAllPropertiesWithAnInaccessibleSetter();
             CreateMap<Tag, TagDto>().IgnoreAllPropertiesWithAnInaccessibleSetter();
 
-            CreateMap<Photo, View.PhotoItemDto>().IgnoreAllPropertiesWithAnInaccessibleSetter();
+            CreateMap<PhotoTag, TagItemDto>()
+                .ForMember(dest => dest.TagId, opt => opt.MapFrom(src => src.TagId))
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<Face, PersonItemDto>()
+                .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonId))
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<Photo, View.PhotoItemDto>()
+                .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.PhotoTags))
+                .ForMember(dest => dest.Persons, opt => opt.MapFrom(src => src.Faces))
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<Photo, View.PathDto>()
+                .ForMember(dest => dest.StorageId, opt => opt.MapFrom(src => src.StorageId))
+                .ForMember(dest => dest.Path, opt => opt.MapFrom(src => src.RelativePath))
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Person, View.PersonDto>()
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();

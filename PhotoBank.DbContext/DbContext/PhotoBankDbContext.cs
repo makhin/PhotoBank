@@ -35,6 +35,9 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => new { p.Name, p.RelativePath });
 
+            modelBuilder.Entity<Photo>()
+                .HasIndex(p => new { p.TakenDate });
+
             modelBuilder.Entity<PhotoTag>()
                 .HasKey(t => new { t.PhotoId, t.TagId });
 
@@ -47,7 +50,6 @@ namespace PhotoBank.DbContext.DbContext
                 .HasOne(pt => pt.Tag)
                 .WithMany(t => t.PhotoTags)
                 .HasForeignKey(pt => pt.TagId);
-
 
             modelBuilder.Entity<PhotoCategory>()
                 .HasKey(t => new { t.PhotoId, t.CategoryId });
@@ -84,10 +86,8 @@ namespace PhotoBank.DbContext.DbContext
                 .HasIndex(p => new { p.Face1Id });
             modelBuilder.Entity<FaceToFace>()
                 .HasIndex(p => new { p.Face2Id });
-
             modelBuilder.Entity<FaceToFace>()
                 .HasIndex(p => new { p.Distance }).IncludeProperties("Face1Id", "Face2Id");
-
 
             modelBuilder.Entity<Face>()
                 .HasIndex(p => p.IdentityStatus)

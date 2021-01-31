@@ -13,6 +13,7 @@ namespace PhotoBank.DbContext.Models
             Scale = 1;
         }
         public int Id { get; set; }
+        public int StorageId { get; set; }
         public Storage Storage { get; set; }
         [Required, MaxLength(255)]
         public string Name { get; set; }
