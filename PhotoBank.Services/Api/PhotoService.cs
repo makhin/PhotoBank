@@ -49,7 +49,8 @@ namespace PhotoBank.Services.Api
             _persons = new Lazy<Task<List<PersonDto>>>(() => personRepository.GetAll().OrderBy(p => p.Name).ProjectTo<PersonDto>(_mapper.ConfigurationProvider).ToListAsync());
             _storages = new Lazy<Task<List<StorageDto>>>(() => storageRepository.GetAll().OrderBy(p => p.Name).ProjectTo<StorageDto>(_mapper.ConfigurationProvider).ToListAsync());
             _tags = new Lazy<Task<List<TagDto>>>(() => tagRepository.GetAll().OrderBy(p => p.Name).ProjectTo<TagDto>(_mapper.ConfigurationProvider).ToListAsync());
-            _paths = new Lazy<Task<List<PathDto>>>(() => photoRepository.GetAll().ProjectTo<PathDto>(_mapper.ConfigurationProvider).Distinct().OrderBy(p=>p.Path).ToListAsync());
+            _paths = new Lazy<Task<List<PathDto>>>(() => photoRepository.GetAll()
+                .ProjectTo<PathDto>(_mapper.ConfigurationProvider).Distinct().OrderBy(p=>p.Path).ToListAsync());
         }
 
         public async Task<QueryResult> GetAllPhotosAsync(FilterDto filter, int? skip, int? top)
@@ -87,17 +88,16 @@ namespace PhotoBank.Services.Api
                 photos = photos.Where(p => p.TakenDate.HasValue && p.TakenDate <= filter.TakenDateTo.Value);
             }
 
-            if (filter.Paths != null && filter.Paths.Any())
-            {
-                photos = photos
-                    .Where(p => filter.Paths.ToList().Contains(p.RelativePath));
-            }
-
             if (filter.Storages != null && filter.Storages.Any())
             {
                 photos = photos
                     .Include(p => p.Storage)
                     .Where(p => filter.Storages.ToList().Contains(p.Storage.Id));
+
+                if (!string.IsNullOrEmpty(filter.RelativePath))
+                {
+                    photos = photos.Where(p => p.RelativePath == filter.RelativePath);
+                }
             }
 
             if (!string.IsNullOrEmpty(filter.Caption))
@@ -221,9 +221,9 @@ namespace PhotoBank.Services.Api
             var face = new Face
             {
                 Id = faceId,
-                IdentifiedWithConfidence = 1,
-                IdentityStatus = IdentityStatus.Identified,
-                PersonId = personId
+                IdentifiedWithConfidence = personId == -1 ? 0 : 1,
+                IdentityStatus = personId == -1 ? IdentityStatus.StopProcessing : IdentityStatus.Identified,
+                PersonId = personId == -1 ? (int?)null : personId
             };
             await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentifiedWithConfidence, f => f.IdentityStatus);
         }

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
@@ -34,7 +35,7 @@ namespace PhotoBank.Console
 
             //await _faceService.SyncPersonsAsync();
             //await _faceService.SyncFacesToPersonAsync();
-            //await _faceService.GroupIdentifyAsync();
+            await _faceService.GroupIdentifyAsync();
 
             //await _faceService.AddFacesToLargeFaceListAsync();
             //await _faceService.ListFindSimilarAsync();
@@ -42,9 +43,13 @@ namespace PhotoBank.Console
 
         private async Task AddFilesAsync()
         {
-            var storage = await _repository.GetAsync(7);
+            var storage = await _repository.GetAsync(10);
 
             var files = await _syncService.SyncStorage(storage);
+
+            //var files = Directory.GetFiles(@"\\MYCLOUDEX2ULTRA\Public\Photo\Veronika.disk\foto\potrets\", "*.*",
+            //    SearchOption.AllDirectories);
+
             var count = 2000;
 
             foreach (var file in files)

@@ -24,7 +24,7 @@ else
                         @if (Filter.Storages != null)
                         {
                             <div class="col-md-1">
-                                <RadzenDropDown @bind-Value="Filter.Paths" AllowClear="true" Multiple="true" Data="@(Paths.Where(o => Filter.Storages.Contains(o.StorageId)))" Style="width: 100%;" TextProperty="Path" ValueProperty="Path" Name="Paths">
+                                <RadzenDropDown @bind-Value="Filter.RelativePath" AllowClear="true" Data="@(Paths.Where(o => Filter.Storages.Contains(o.StorageId) && !string.IsNullOrEmpty(o.Path)))" Style="width: 100%;" TextProperty="Path" ValueProperty="Path" Name="Paths">
                                 </RadzenDropDown>
                             </div>
                         }

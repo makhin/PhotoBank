@@ -38,6 +38,15 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => new { p.TakenDate });
 
+            modelBuilder.Entity<Photo>()
+                .HasIndex(p => new { p.IsBW });
+
+            modelBuilder.Entity<Photo>()
+                .HasIndex(p => new { p.IsAdultContent });
+
+            modelBuilder.Entity<Photo>()
+                .HasIndex(p => new { p.IsRacyContent });
+
             modelBuilder.Entity<PhotoTag>()
                 .HasKey(t => new { t.PhotoId, t.TagId });
 
@@ -91,7 +100,11 @@ namespace PhotoBank.DbContext.DbContext
 
             modelBuilder.Entity<Face>()
                 .HasIndex(p => p.IdentityStatus)
-                .IncludeProperties("PersonId");
+                .IncludeProperties(p =>p.PersonId);
+
+            modelBuilder.Entity<Face>()
+                .HasIndex(p => p.PersonId)
+                .IncludeProperties(p => p.PhotoId);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

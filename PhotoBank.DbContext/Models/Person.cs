@@ -13,5 +13,6 @@ namespace PhotoBank.DbContext.Models
         public Guid ExternalGuid { get; set; }
         public IEnumerable<PersonGroupFace> PersonGroupFaces { get; set; }
         public IEnumerable<Face> Faces { get; set; }
+        public ICollection<PersonGroup> PersonGroups { get; set; }
     }
 }

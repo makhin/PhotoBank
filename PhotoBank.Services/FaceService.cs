@@ -240,9 +240,8 @@ namespace PhotoBank.Services
                 .GetAll()
                 .Include(f => f.Person)
                 .Include(f => f.Photo)
+                .Where( f => f.Photo.StorageId == 9 && f.IdentityStatus == IdentityStatus.ForReprocessing)
                 .ProjectTo<FaceDto>(_mapper.ConfigurationProvider)
-                .Where(f => f.PersonId == null && f.IdentityStatus == IdentityStatus.NotIdentified)
-                //.Take(5000)
                 .ToListAsync();
 
             _persons = await _personRepository.GetAll().ToListAsync();
@@ -259,7 +258,7 @@ namespace PhotoBank.Services
 
                     try
                     {
-                        //await SleepAsync();
+                        await SleepAsync();
                         detectedFaces = await DetectFacesAsync(face.Image);
                     }
                     catch (Exception e)
@@ -270,7 +269,7 @@ namespace PhotoBank.Services
                         continue;
                     }
 
-                    //await SleepAsync();
+                    await SleepAsync();
                     var identifyResults = await _faceClient.Face.IdentifyAsync(detectedFaces.Select(f => f.FaceId).ToList(), PersonGroupId);
 
                     if (!identifyResults.Any())
@@ -315,7 +314,7 @@ namespace PhotoBank.Services
 
             async Task SleepAsync()
             {
-                const int callsPerMinute = 20;
+                const int callsPerMinute = 6000;
                 if (currentMinute == DateTime.Now.Minute && ++callCounter >= callsPerMinute)
                 {
                     var millisecondsDelay = 60000 - DateTime.Now.Millisecond;

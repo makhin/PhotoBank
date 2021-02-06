@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using PhotoBank.DbContext.DbContext;
@@ -10,30 +11,16 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    partial class PhotoBankDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210201075048_AddTakenDateIndex")]
+    partial class AddTakenDateIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .UseIdentityColumns()
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("ProductVersion", "5.0.2");
-
-            modelBuilder.Entity("PersonPersonGroup", b =>
-                {
-                    b.Property<int>("PersonGroupsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PersonsId")
-                        .HasColumnType("int");
-
-                    b.HasKey("PersonGroupsId", "PersonsId");
-
-                    b.HasIndex("PersonsId");
-
-                    b.ToTable("PersonPersonGroup");
-                });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Caption", b =>
                 {
@@ -107,7 +94,7 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<int?>("PersonId")
                         .HasColumnType("int");
 
-                    b.Property<int>("PhotoId")
+                    b.Property<int?>("PhotoId")
                         .HasColumnType("int");
 
                     b.Property<Geometry>("Rectangle")
@@ -118,8 +105,7 @@ namespace PhotoBank.DbContext.Migrations
                     b.HasIndex("IdentityStatus")
                         .IncludeProperties(new[] { "PersonId" });
 
-                    b.HasIndex("PersonId")
-                        .IncludeProperties(new[] { "PhotoId" });
+                    b.HasIndex("PersonId");
 
                     b.HasIndex("PhotoId");
 
@@ -224,22 +210,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.ToTable("Persons");
                 });
 
-            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroup", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PersonGroup");
-                });
-
             modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroupFace", b =>
                 {
                     b.Property<int>("Id")
@@ -342,12 +312,6 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IsAdultContent");
-
-                    b.HasIndex("IsBW");
-
-                    b.HasIndex("IsRacyContent");
-
                     b.HasIndex("StorageId");
 
                     b.HasIndex("TakenDate");
@@ -446,21 +410,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("PersonPersonGroup", b =>
-                {
-                    b.HasOne("PhotoBank.DbContext.Models.PersonGroup", null)
-                        .WithMany()
-                        .HasForeignKey("PersonGroupsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("PhotoBank.DbContext.Models.Person", null)
-                        .WithMany()
-                        .HasForeignKey("PersonsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("PhotoBank.DbContext.Models.Caption", b =>
                 {
                     b.HasOne("PhotoBank.DbContext.Models.Photo", null)
@@ -476,9 +425,7 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.HasOne("PhotoBank.DbContext.Models.Photo", "Photo")
                         .WithMany("Faces")
-                        .HasForeignKey("PhotoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PhotoId");
 
                     b.Navigation("Person");
 

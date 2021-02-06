@@ -12,7 +12,8 @@ namespace PhotoBank.Dto.View
         public bool? IsBW { get; set; }
         public bool? IsAdultContent { get; set; }
         public bool? IsRacyContent { get; set; }
-        public IEnumerable<string> Paths { get; set; }
+        public string RelativePath { get; set; }
+        public IEnumerable<int> Paths { get; set; }
         public string Caption { get; set; }
         public DateTime? TakenDateFrom { get; set; }
         public DateTime? TakenDateTo { get; set; }
