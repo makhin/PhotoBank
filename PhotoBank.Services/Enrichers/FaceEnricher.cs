@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 using FaceRecognitionDotNet;
+using FaceRecognitionDotNet.Extensions;
 using ImageMagick;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using PhotoBank.DbContext.Models;
@@ -18,6 +19,8 @@ namespace PhotoBank.Services.Enrichers
     {
         private readonly IFaceService _faceService;
         private readonly FaceRecognition _faceRecognition;
+        //private SimpleGenderEstimator _genderEstimator;
+        //private SimpleAgeEstimator _ageEstimator;
         private const int MinFaceSize = 36;
 
         public FaceEnricher(IFaceService faceService)
@@ -31,38 +34,44 @@ namespace PhotoBank.Services.Enrichers
 
         public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {
-            if (!sourceData.ImageAnalysis.Faces.Any())
-            {
-                return;
-            }
 
-            photo.Faces = new List<Face>();
-            foreach (var faceDescription in sourceData.ImageAnalysis.Faces)
+            using (var magickImage = new MagickImage(sourceData.AbsolutePath, MagickFormat.Jpg))
             {
+                magickImage.AutoOrient();
 
-                if (faceDescription.FaceRectangle.Height / photo.Scale < MinFaceSize ||
-                    faceDescription.FaceRectangle.Width / photo.Scale < MinFaceSize)
+                var image = FaceRecognition.LoadImage(magickImage.ToBitmap(ImageFormat.Jpeg));
+                var faceLocations = _faceRecognition.FaceLocations(image).ToList();
+                if (faceLocations.Count > 0)
                 {
-                    continue;
+                    photo.Faces = new List<Face>();  //TODO check sizes
                 }
 
-                using (var magickImage = new MagickImage(sourceData.AbsolutePath, MagickFormat.Jpg))
+                var faceEncodings = _faceRecognition.FaceEncodings(image, faceLocations, 1, PredictorModel.Large).ToList();
+
+                for (var i = 0; i < faceLocations.Count; i++)
                 {
-                    magickImage.AutoOrient();
-                    magickImage.Crop(GetMagickGeometry(photo, faceDescription));
-                    ImageHelper.ResizeImage(magickImage, out _);
+                    var faceLocation = faceLocations[i];
+
+                    if (faceLocation.Bottom - faceLocation.Top < MinFaceSize ||
+                        faceLocation.Right - faceLocation.Left < MinFaceSize)
+                    {
+                        continue;
+                    }
+
+                    var faceImage = magickImage.Clone();
+
+                    faceImage.Crop(GetMagickGeometry(faceLocation));
+                    ImageHelper.ResizeImage(faceImage, out _);
 
                     using (var stream = new MemoryStream())
                     {
-                        await magickImage.WriteAsync(stream);
+                        await faceImage.WriteAsync(stream);
 
                         var face = new Face
                         {
-                            Age = faceDescription.Age,
-                            Rectangle = GeoWrapper.GetRectangle(faceDescription.FaceRectangle, photo.Scale),
-                            Gender = faceDescription.Gender.HasValue ? (int) faceDescription.Gender.Value : (int?) null,
+                            Rectangle = GeoWrapper.GetRectangle(faceLocation),
                             Image = stream.ToArray(),
-                            Encoding = GetEncoding(magickImage),
+                            Encoding = GetEncoding(faceEncodings[i]),
                             Photo = photo
                         };
 
@@ -74,41 +83,30 @@ namespace PhotoBank.Services.Enrichers
             }
         }
 
-        private static MagickGeometry GetMagickGeometry(Photo photo, FaceDescription faceDescription)
+        private static MagickGeometry GetMagickGeometry(Location location)
         {
-            var geometry = new MagickGeometry((int)(faceDescription.FaceRectangle.Width / photo.Scale),
-                (int)(faceDescription.FaceRectangle.Height / photo.Scale))
+            var geometry = new MagickGeometry(location.Right - location .Left, location.Bottom - location.Top)
             {
                 IgnoreAspectRatio = true,
-                Y = (int)(faceDescription.FaceRectangle.Top / photo.Scale),
-                X = (int)(faceDescription.FaceRectangle.Left / photo.Scale)
+                Y = location.Top,
+                X = location.Left
             };
             return geometry;
         }
 
-        private byte[] GetEncoding(MagickImage magickImage)
+        private static byte[] GetEncoding(FaceEncoding encoding)
         {
-            using (var frImage = FaceRecognition.LoadImage(magickImage.ToBitmap(ImageFormat.Jpeg)))
+            if (encoding == null)
             {
-                var encoding = _faceRecognition.FaceEncodings(frImage,
+                return null;
+            }
 
-                    new List<Location>
-                    {
-                        new Location(0, 0, magickImage.Width, magickImage.Height)
-                    }, 1, PredictorModel.Large).FirstOrDefault();
-
-                if (encoding == null)
-                {
-                    return null;
-                }
-
-                var binaryFormatter = new BinaryFormatter();
-                using (var memoryStream = new MemoryStream())
-                {
-                    binaryFormatter.Serialize(memoryStream, encoding);
-                    memoryStream.Flush();
-                    return memoryStream.ToArray();
-                }
+            var binaryFormatter = new BinaryFormatter();
+            using (var memoryStream = new MemoryStream())
+            {
+                binaryFormatter.Serialize(memoryStream, encoding);
+                memoryStream.Flush();
+                return memoryStream.ToArray();
             }
         }
     }

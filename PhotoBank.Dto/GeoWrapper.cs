@@ -4,6 +4,7 @@ using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using PhotoBank.Dto.View;
+using Location = FaceRecognitionDotNet.Location;
 
 namespace PhotoBank.Dto
 {
@@ -57,6 +58,24 @@ namespace PhotoBank.Dto
                 });
         }
 
+        public static Geometry GetRectangle(Location location)
+        {
+            int left = location.Left;
+            int top = location.Top;
+            int right = location.Right;
+            int bottom = location.Bottom;
+
+            return GeometryFactory.CreatePolygon(
+                new[]
+                {
+                    new Coordinate(left, top),
+                    new Coordinate(right, top),
+                    new Coordinate(right, bottom),
+                    new Coordinate(left, bottom),
+                    new Coordinate(left, top),
+                });
+        }
+
         public static Geometry GetRectangle(FaceRectangle rectangle, double scale = 1)
         {
 
@@ -81,5 +100,6 @@ namespace PhotoBank.Dto
             var location = gpsDirectory.GetGeoLocation();
             return location != null ? GeometryFactory.CreatePoint(new Coordinate(location.Latitude, location.Longitude)) : null;
         }
+
     }
 }

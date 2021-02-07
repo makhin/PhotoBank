@@ -51,7 +51,7 @@ namespace PhotoBank.Services
 
             try
             {
-                await _photoRepository.InsertAsync(photo);
+                //await _photoRepository.InsertAsync(photo);
             }
             catch (Exception exception)
             {

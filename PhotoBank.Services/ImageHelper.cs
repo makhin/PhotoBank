@@ -12,7 +12,7 @@ namespace PhotoBank.Services
     {
         public const int MaxSize = 1920;
 
-        public static void ResizeImage(MagickImage image, out double scale)
+        public static void ResizeImage(IMagickImage<byte> image, out double scale)
         {
             var isLandscape = image.Width > image.Height;
             var maxSize = isLandscape ? image.Width : image.Height;

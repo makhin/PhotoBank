@@ -31,11 +31,11 @@ namespace PhotoBank.Console
 
         public async Task Run()
         {
-            //await AddFilesAsync();
+            await AddFilesAsync();
 
             //await _faceService.SyncPersonsAsync();
             //await _faceService.SyncFacesToPersonAsync();
-            await _faceService.GroupIdentifyAsync();
+            //await _faceService.GroupIdentifyAsync();
 
             //await _faceService.AddFacesToLargeFaceListAsync();
             //await _faceService.ListFindSimilarAsync();
@@ -43,7 +43,7 @@ namespace PhotoBank.Console
 
         private async Task AddFilesAsync()
         {
-            var storage = await _repository.GetAsync(10);
+            var storage = await _repository.GetAsync(12);
 
             var files = await _syncService.SyncStorage(storage);
 
