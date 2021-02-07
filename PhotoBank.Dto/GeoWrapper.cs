@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using ImageMagick;
 using MetadataExtractor.Formats.Exif;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NetTopologySuite;
@@ -11,6 +13,8 @@ namespace PhotoBank.Dto
     public static class GeoWrapper
     {
         private static readonly GeometryFactory GeometryFactory;
+        private const int MinFaceSize = 36;
+        public const int MaxSize = 1920;
 
         static GeoWrapper()
         {
@@ -58,6 +62,12 @@ namespace PhotoBank.Dto
                 });
         }
 
+        public static bool IsEnoughSize(this Location faceLocation)
+        {
+            return faceLocation.Bottom - faceLocation.Top >= MinFaceSize &&
+                faceLocation.Right - faceLocation.Left >= MinFaceSize;
+        }
+
         public static Geometry GetRectangle(Location location)
         {
             int left = location.Left;
@@ -101,5 +111,43 @@ namespace PhotoBank.Dto
             return location != null ? GeometryFactory.CreatePoint(new Coordinate(location.Latitude, location.Longitude)) : null;
         }
 
+        public static void ResizeImage(IMagickImage<byte> image, out double scale)
+        {
+            var isLandscape = image.Width > image.Height;
+            var maxSize = isLandscape ? image.Width : image.Height;
+            scale = 1;
+
+            if (maxSize <= MaxSize) return;
+
+            if (isLandscape)
+            {
+                scale = ((double)MaxSize / image.Width);
+                var geometry = new MagickGeometry(MaxSize, (int)scale * image.Height);
+                image.Resize(geometry);
+            }
+            else
+            {
+                scale = ((double)MaxSize / image.Height);
+                var geometry = new MagickGeometry((int)scale * image.Width, MaxSize);
+                image.Resize(geometry);
+            }
+        }
+
+        public static MagickGeometry GetMagickGeometry(Location location, double margin = 0)
+        {
+            var originalWidth = location.Right - location.Left;
+            var originalHeight = location.Bottom - location.Top;
+
+            int width = (int)Math.Round(originalWidth * (100 + 2 * margin) / 100);
+            int height = (int)Math.Round(originalHeight * (100 + 2 * margin) / 100);
+
+            var geometry = new MagickGeometry(width, height)
+            {
+                IgnoreAspectRatio = true,
+                Y = (int)Math.Round(location.Top - originalHeight * margin / 100),
+                X = (int)Math.Round(location.Left - originalWidth * margin / 100 )
+            };
+            return geometry;
+        }
     }
 }

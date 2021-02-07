@@ -22,12 +22,10 @@ namespace PhotoBank.Services.Enrichers
                     photo.Height = image.Height;
                     photo.Width = image.Width;
                     photo.Orientation = (int?)image.Orientation;
-                    ImageHelper.ResizeImage(image, out var scale);
+                    GeoWrapper.ResizeImage(image, out var scale);
                     image.Format = MagickFormat.Jpg;
                     await image.WriteAsync(stream);
                     photo.Scale = scale;
-                    
-
                 }
 
                 photo.PreviewImage = stream.ToArray();

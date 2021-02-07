@@ -21,7 +21,6 @@ namespace PhotoBank.Services.Enrichers
         private readonly FaceRecognition _faceRecognition;
         //private SimpleGenderEstimator _genderEstimator;
         //private SimpleAgeEstimator _ageEstimator;
-        private const int MinFaceSize = 36;
 
         public FaceEnricher(IFaceService faceService)
         {
@@ -52,16 +51,11 @@ namespace PhotoBank.Services.Enrichers
                 {
                     var faceLocation = faceLocations[i];
 
-                    if (faceLocation.Bottom - faceLocation.Top < MinFaceSize ||
-                        faceLocation.Right - faceLocation.Left < MinFaceSize)
-                    {
-                        continue;
-                    }
 
                     var faceImage = magickImage.Clone();
 
-                    faceImage.Crop(GetMagickGeometry(faceLocation));
-                    ImageHelper.ResizeImage(faceImage, out _);
+                    faceImage.Crop(GeoWrapper.GetMagickGeometry(faceLocation, 5));
+                    GeoWrapper.ResizeImage(faceImage, out _);
 
                     using (var stream = new MemoryStream())
                     {
@@ -81,17 +75,6 @@ namespace PhotoBank.Services.Enrichers
                     }
                 }
             }
-        }
-
-        private static MagickGeometry GetMagickGeometry(Location location)
-        {
-            var geometry = new MagickGeometry(location.Right - location .Left, location.Bottom - location.Top)
-            {
-                IgnoreAspectRatio = true,
-                Y = location.Top,
-                X = location.Left
-            };
-            return geometry;
         }
 
         private static byte[] GetEncoding(FaceEncoding encoding)
