@@ -2,114 +2,138 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
-using FaceRecognitionDotNet;
 using ImageMagick;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
+using Newtonsoft.Json;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto;
 using PhotoBank.Dto.Load;
-using ImageFormat = System.Drawing.Imaging.ImageFormat;
+using PhotoBank.Repositories;
+using Gender = Microsoft.Azure.CognitiveServices.Vision.Face.Models.Gender;
+using Person = PhotoBank.DbContext.Models.Person;
 
 namespace PhotoBank.Services.Enrichers
 {
     public class FaceEnricher : IEnricher
     {
-        private readonly IFaceService _faceService;
-        private readonly FaceRecognition _faceRecognition;
         private const int MinFaceSize = 36;
+        private readonly IFaceService _faceService;
+        private readonly List<Person> _persons;
 
-        public FaceEnricher(IFaceService faceService)
+        public FaceEnricher(IFaceService faceService, IRepository<Person> personRepository)
         {
             _faceService = faceService;
-            const string directory = @"C:\Temp\HelenTraining\Models";
-            _faceRecognition = FaceRecognition.Create(directory);
+            _persons = personRepository.GetAll().ToList();
         }
 
-        public Type[] Dependencies => new[] { typeof(AnalyzeEnricher), typeof(MetadataEnricher) };
+        public Type[] Dependencies => new[] { typeof(PreviewEnricher), typeof(MetadataEnricher) };
+
+        public bool IsActive => true;
 
         public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {
-            if (!sourceData.ImageAnalysis.Faces.Any())
+            try
             {
-                return;
+                var detectedFaces = await _faceService.DetectFacesAsync(photo.PreviewImage);
+                if (detectedFaces.Any())
+                {
+                    photo.PersonFaces = new List<PersonFace>();
+                }
+                
+                var faceGuids = detectedFaces.Where(IsAbleToIdentify).Select(f => f.FaceId).ToList();
+                IList<IdentifyResult> identifyResults = new List<IdentifyResult>();
+                if (faceGuids.Any())
+                {
+                    identifyResults = await _faceService.IdentifyAsync(faceGuids);
+                }
+
+                foreach (var detectedFace in detectedFaces)
+                {
+                    var face = new PersonFace
+                    {
+                        IdentityStatus = IdentityStatus.NotIdentified,
+                        Age = detectedFace.FaceAttributes.Age,
+                        Rectangle = GeoWrapper.GetRectangle(detectedFace.FaceRectangle, photo.Scale),
+                        Gender = detectedFace.FaceAttributes.Gender == Gender.Male,
+                        Smile = detectedFace.FaceAttributes.Smile,
+                        FaceAttributes = JsonConvert.SerializeObject(detectedFace.FaceAttributes),
+                        Image = await CreateFacePreview(detectedFace, sourceData.PreviewImage, 1)
+                    };
+
+                    var identifyResult = identifyResults.SingleOrDefault(f => f.FaceId == detectedFace.FaceId);
+                    if (identifyResult != null)
+                    {
+                        IdentifyFace(face, identifyResult, photo.TakenDate);
+                    }
+
+                    if (IsAbleToIdentify(detectedFace, photo.Scale))
+                    {
+                        face.Image = await CreateFacePreview(detectedFace, sourceData.OriginalImage, photo.Scale);
+                        identifyResult = await _faceService.FaceIdentityAsync(face);
+                        IdentifyFace(face, identifyResult, photo.TakenDate);
+                    }
+
+                    photo.PersonFaces.Add(face);
+                }
             }
-
-            photo.Faces = new List<Face>();
-            foreach (var faceDescription in sourceData.ImageAnalysis.Faces)
+            catch (Exception e)
             {
+                Console.WriteLine(e);
+            }
+        }
 
-                if (faceDescription.FaceRectangle.Height / photo.Scale < MinFaceSize ||
-                    faceDescription.FaceRectangle.Width / photo.Scale < MinFaceSize)
+        private static async Task<byte[]> CreateFacePreview(DetectedFace detectedFace, IMagickImage<byte> image, double photoScale)
+        {
+            await using (var stream = new MemoryStream())
+            {
+                var faceImage = image.Clone();
+                faceImage.Crop(GetMagickGeometry(detectedFace, photoScale));
+                await faceImage.WriteAsync(stream);
+                return stream.ToArray();
+            }
+        }
+
+        private static bool IsAbleToIdentify(DetectedFace detectedFace)
+        {
+            return IsAbleToIdentify(detectedFace, 1);
+        }
+
+        private static bool IsAbleToIdentify(DetectedFace detectedFace, in double scale)
+        {
+            return Math.Round(detectedFace.FaceRectangle.Height / scale) >= MinFaceSize && Math.Round(detectedFace.FaceRectangle.Width / scale) >= MinFaceSize;
+        }
+
+        private void IdentifyFace(PersonFace newFace, IdentifyResult identifyResult, DateTime? photoTakenDate)
+        {
+            foreach (var candidate in identifyResult.Candidates.OrderByDescending(x => x.Confidence))
+            {
+                var person = _persons.Single(p => p.ExternalGuid == candidate.PersonId);
+
+                if (person.DateOfBirth != null && photoTakenDate > new DateTime(1990, 1, 1) && photoTakenDate < person.DateOfBirth)
                 {
                     continue;
                 }
 
-                using (var magickImage = new MagickImage(sourceData.AbsolutePath, MagickFormat.Jpg))
-                {
-                    magickImage.AutoOrient();
-                    magickImage.Crop(GetMagickGeometry(photo, faceDescription));
-                    ImageHelper.ResizeImage(magickImage, out _);
-
-                    using (var stream = new MemoryStream())
-                    {
-                        await magickImage.WriteAsync(stream);
-
-                        var face = new Face
-                        {
-                            Age = faceDescription.Age,
-                            Rectangle = GeoWrapper.GetRectangle(faceDescription.FaceRectangle, photo.Scale),
-                            Gender = faceDescription.Gender.HasValue ? (int) faceDescription.Gender.Value : (int?) null,
-                            Image = stream.ToArray(),
-                            Encoding = GetEncoding(magickImage),
-                            Photo = photo
-                        };
-
-                        photo.Faces.Add(face);
-
-                        await _faceService.FaceIdentityAsync(face);
-                    }
-                }
+                newFace.IdentityStatus = IdentityStatus.Identified;
+                newFace.IdentifiedWithConfidence = candidate.Confidence;
+                newFace.Person = person;
             }
         }
 
-        private static MagickGeometry GetMagickGeometry(Photo photo, FaceDescription faceDescription)
+        private static MagickGeometry GetMagickGeometry(DetectedFace detectedFace, double photoScale)
         {
-            var geometry = new MagickGeometry((int)(faceDescription.FaceRectangle.Width / photo.Scale),
-                (int)(faceDescription.FaceRectangle.Height / photo.Scale))
+            var height = (int)(detectedFace.FaceRectangle.Height / photoScale);
+            var width = (int)(detectedFace.FaceRectangle.Width / photoScale);
+            var top = (int)(detectedFace.FaceRectangle.Top / photoScale);
+            var left = (int)(detectedFace.FaceRectangle.Left / photoScale);
+
+            var geometry = new MagickGeometry(width, height)
             {
                 IgnoreAspectRatio = true,
-                Y = (int)(faceDescription.FaceRectangle.Top / photo.Scale),
-                X = (int)(faceDescription.FaceRectangle.Left / photo.Scale)
+                Y = top,
+                X = left
             };
             return geometry;
-        }
-
-        private byte[] GetEncoding(MagickImage magickImage)
-        {
-            using (var frImage = FaceRecognition.LoadImage(magickImage.ToBitmap(ImageFormat.Jpeg)))
-            {
-                var encoding = _faceRecognition.FaceEncodings(frImage,
-
-                    new List<Location>
-                    {
-                        new Location(0, 0, magickImage.Width, magickImage.Height)
-                    }, 1, PredictorModel.Large).FirstOrDefault();
-
-                if (encoding == null)
-                {
-                    return null;
-                }
-
-                var binaryFormatter = new BinaryFormatter();
-                using (var memoryStream = new MemoryStream())
-                {
-                    binaryFormatter.Serialize(memoryStream, encoding);
-                    memoryStream.Flush();
-                    return memoryStream.ToArray();
-                }
-            }
         }
     }
 }

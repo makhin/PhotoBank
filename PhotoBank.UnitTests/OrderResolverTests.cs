@@ -17,6 +17,7 @@ namespace PhotoBank.UnitTests
     public abstract class EnricheTestBase : IEnricher
     {
         public abstract Type[] Dependencies { get; }
+        public bool IsActive => true;
         public async Task Enrich(Photo photo, SourceDataDto path)
         {
             await Task.Run(() =>

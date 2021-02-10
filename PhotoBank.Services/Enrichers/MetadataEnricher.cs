@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto;
 using PhotoBank.Dto.Load;
 using Directory = MetadataExtractor.Directory;
 using File = PhotoBank.DbContext.Models.File;
@@ -19,6 +18,7 @@ namespace PhotoBank.Services.Enrichers
         {
         }
         public Type[] Dependencies => new Type[1] { typeof(PreviewEnricher) };
+        public bool IsActive => true;
 
         public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {

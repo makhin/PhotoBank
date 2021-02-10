@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using AutoMapper;
+using NetTopologySuite.Geometries;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto.View;
 
@@ -9,7 +10,7 @@ namespace PhotoBank.Dto
     {
         public MappingProfile()
         {
-            CreateMap<Photo, View.PhotoDto>()
+            CreateMap<Photo, PhotoDto>()
                 .ForMember(dest => dest.Captions, opt => opt.MapFrom(src => src.Captions))
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.PhotoTags))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
@@ -28,22 +29,22 @@ namespace PhotoBank.Dto
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonId))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
-            CreateMap<Photo, View.PhotoItemDto>()
+            CreateMap<Photo, PhotoItemDto>()
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.PhotoTags))
                 .ForMember(dest => dest.Persons, opt => opt.MapFrom(src => src.Faces))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
-            CreateMap<Photo, View.PathDto>()
+            CreateMap<Photo, PathDto>()
                 .ForMember(dest => dest.StorageId, opt => opt.MapFrom(src => src.StorageId))
                 .ForMember(dest => dest.Path, opt => opt.MapFrom(src => src.RelativePath))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
-            CreateMap<Person, View.PersonDto>()
+            CreateMap<Person, PersonDto>()
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
-            CreateMap<Face, View.FaceDto>()
+            CreateMap<Face, FaceDto>()
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.Person == null ? (int?)null : src.Person.Id))
-                .ForMember(dest => dest.FaceBox, opt => opt.MapFrom(src => GeoWrapper.GetFaceBox(src.Rectangle, src.Photo.Scale)))
+                .ForMember(dest => dest.FaceBox, opt => opt.MapFrom(src => GetFaceBox(src.Rectangle, src.Photo.Scale)))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Face, Load.FaceDto>()
@@ -52,6 +53,18 @@ namespace PhotoBank.Dto
                 .ForMember(dest => dest.PersonDateOfBirth, opt => opt.MapFrom(src => src.Person.DateOfBirth))
                 .ForMember(dest => dest.PhotoTakenDate, opt => opt.MapFrom(src => src.Photo.TakenDate))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
+        }
+
+        private static FaceBoxDto GetFaceBox(Geometry geometry, double scale = 1)
+        {
+            const string suffix = "px";
+            return new FaceBoxDto
+            {
+                Left = (int)(geometry.Coordinates[0].X * scale) + suffix,
+                Top = (int)(geometry.Coordinates[0].Y * scale) + suffix,
+                Width = (int)((geometry.Coordinates[1].X - geometry.Coordinates[0].X) * scale) + suffix,
+                Height = (int)((geometry.Coordinates[3].Y - geometry.Coordinates[0].Y) * scale) + suffix
+            };
         }
     }
 }

@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading.Tasks;
 using ImageMagick;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto;
 using PhotoBank.Dto.Load;
 
 namespace PhotoBank.Services.Enrichers
@@ -11,6 +10,7 @@ namespace PhotoBank.Services.Enrichers
     public class PreviewEnricher : IEnricher
     {
         public Type[] Dependencies => Array.Empty<Type>();
+        public bool IsActive => true;
 
         public async Task Enrich(Photo photo, SourceDataDto source)
         {
@@ -19,6 +19,7 @@ namespace PhotoBank.Services.Enrichers
                 using (var image = new MagickImage(source.AbsolutePath))
                 {
                     image.AutoOrient();
+                    source.OriginalImage = image.Clone();
                     photo.Height = image.Height;
                     photo.Width = image.Width;
                     photo.Orientation = (int?)image.Orientation;
@@ -26,8 +27,7 @@ namespace PhotoBank.Services.Enrichers
                     image.Format = MagickFormat.Jpg;
                     await image.WriteAsync(stream);
                     photo.Scale = scale;
-                    
-
+                    source.PreviewImage = image.Clone();
                 }
 
                 photo.PreviewImage = stream.ToArray();

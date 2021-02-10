@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto;
 using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
 
@@ -19,6 +18,7 @@ namespace PhotoBank.Services.Enrichers
         }
 
         public Type[] Dependencies => new Type[1] {typeof(AnalyzeEnricher)};
+        public bool IsActive => true;
 
         public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {

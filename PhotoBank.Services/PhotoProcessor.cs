@@ -32,7 +32,7 @@ namespace PhotoBank.Services
         {
             _photoRepository = photoRepository;
             _fileRepository = fileRepository;
-            _enrichers = orderResolver.Resolve(enrichers);
+            _enrichers = orderResolver.Resolve(enrichers.Where(e => e.IsActive));
         }
 
         public async Task AddPhotoAsync(Storage storage, string path)
@@ -51,7 +51,7 @@ namespace PhotoBank.Services
 
             try
             {
-                await _photoRepository.InsertAsync(photo);
+                //await _photoRepository.InsertAsync(photo);
             }
             catch (Exception exception)
             {

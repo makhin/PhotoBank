@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto;
 using PhotoBank.Dto.Load;
 
 namespace PhotoBank.Services.Enrichers
@@ -29,6 +28,7 @@ namespace PhotoBank.Services.Enrichers
         }
 
         public Type[] Dependencies => new Type[1] {typeof(PreviewEnricher)};
+        public bool IsActive => true;
 
         public async Task Enrich(Photo photo, SourceDataDto source)
         {

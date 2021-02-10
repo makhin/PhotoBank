@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto;
 using PhotoBank.Dto.Load;
 
 namespace PhotoBank.Services.Enrichers
@@ -12,6 +11,7 @@ namespace PhotoBank.Services.Enrichers
     {
         private readonly IComputerVisionClient _client;
         public Type[] Dependencies => new[]{typeof(PreviewEnricher)};
+        public bool IsActive => true;
 
         public ThumbnailEnricher(IComputerVisionClient client)
         {
@@ -21,7 +21,7 @@ namespace PhotoBank.Services.Enrichers
         public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {
             var thumbnail = await _client.GenerateThumbnailInStreamAsync(50, 50, new MemoryStream(photo.PreviewImage), true);
-            using (var memoryStream = new MemoryStream())
+            await using (var memoryStream = new MemoryStream())
             {
                 await thumbnail.CopyToAsync(memoryStream);
                 photo.Thumbnail = memoryStream.ToArray();

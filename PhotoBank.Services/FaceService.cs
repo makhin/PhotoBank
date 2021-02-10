@@ -26,6 +26,9 @@ namespace PhotoBank.Services
         Task GroupIdentifyAsync();
         Task FaceIdentityAsync(Face face);
         Task ListFindSimilarAsync();
+        Task<List<DetectedFace>> DetectFacesAsync(byte[] image);
+        Task<IList<IdentifyResult>> IdentifyAsync(IList<Guid?> faceIds);
+        Task<IdentifyResult> FaceIdentityAsync(PersonFace face);
     }
 
     public class FaceService : IFaceService
@@ -270,7 +273,7 @@ namespace PhotoBank.Services
                     }
 
                     await SleepAsync();
-                    var identifyResults = await _faceClient.Face.IdentifyAsync(detectedFaces.Select(f => f.FaceId).ToList(), PersonGroupId);
+                    var identifyResults = await IdentifyAsync(detectedFaces.Select(f => f.FaceId).ToList());
 
                     if (!identifyResults.Any())
                     {
@@ -336,6 +339,12 @@ namespace PhotoBank.Services
             }
         }
 
+        public async Task<IList<IdentifyResult>> IdentifyAsync(IList<Guid?> faceIds)
+        {
+
+            return await _faceClient.Face.IdentifyAsync(faceIds, PersonGroupId);
+        }
+
         public async Task ListFindSimilarAsync()
         {
             var photos = await _faceRepository
@@ -371,6 +380,25 @@ namespace PhotoBank.Services
                     Console.WriteLine(e);
                 }
             }
+        }
+
+        public async Task<IdentifyResult> FaceIdentityAsync(PersonFace face)
+        {
+            IList<DetectedFace> detectedFaces;
+
+            try
+            {
+                detectedFaces = await DetectFacesAsync(face.Image);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                face.IdentityStatus = IdentityStatus.NotDetected;
+                return await Task.FromResult((IdentifyResult)null);
+            }
+
+            var identifyResults = await _faceClient.Face.IdentifyAsync(detectedFaces.Select(f => f.FaceId).ToList(), PersonGroupId);
+            return identifyResults.SingleOrDefault();
         }
 
         public async Task FaceIdentityAsync(Face face)
@@ -430,7 +458,7 @@ namespace PhotoBank.Services
             }
         }
 
-        private async Task<List<DetectedFace>> DetectFacesAsync(byte[] image)
+        public async Task<List<DetectedFace>> DetectFacesAsync(byte[] image)
         {
             await using (var stream = new MemoryStream(image))
             {
