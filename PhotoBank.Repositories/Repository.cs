@@ -140,7 +140,7 @@ namespace PhotoBank.Repositories
                 var operand = ((UnaryExpression)property.Body).Operand;
                 string propertyName;
 
-                if (entity.GetType() == ((MemberExpression) operand).Member.ReflectedType)
+                if (entity.GetType() == ((MemberExpression)operand).Member.ReflectedType)
                 {
                     propertyName = ((MemberExpression)operand).Member.Name;
                 }

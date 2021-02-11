@@ -44,6 +44,7 @@ namespace PhotoBank.Console
                     {
                         builder.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName().Name);
                         builder.UseNetTopologySuite();
+                        builder.CommandTimeout(120);
                     });
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();

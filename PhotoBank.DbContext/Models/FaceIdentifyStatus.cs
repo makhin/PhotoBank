@@ -1,9 +1,9 @@
 ﻿namespace PhotoBank.DbContext.Models
 {
-    public enum ListStatus
+    public enum FaceIdentifyStatus
     {
         Undefined,
-        Uploaded,
-        Failed
+        NotDetected,
+        Detected
     }
 }

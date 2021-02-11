@@ -17,7 +17,7 @@ namespace PhotoBank.DbContext.Models
         [Column(TypeName = "geometry")]
         public Geometry Rectangle { get; set; }
         public IdentityStatus IdentityStatus { get; set; }
-        public double IdentifiedWithConfidence { get; set; }
+        public double? IdentifiedWithConfidence { get; set; }
         public string FaceAttributes { get; set; }
     }
 }

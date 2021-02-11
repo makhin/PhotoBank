@@ -18,7 +18,6 @@ namespace PhotoBank.DbContext.Models
         public int PhotoId { get; set; }
         public Photo Photo { get; set; }
         public Guid? ExternalGuid { get; set; }
-        public ListStatus ListStatus { get; set; }
         public IdentityStatus IdentityStatus { get; set; }
         public double IdentifiedWithConfidence { get; set; }
         public byte[] Encoding { get; set; }

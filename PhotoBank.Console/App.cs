@@ -31,7 +31,9 @@ namespace PhotoBank.Console
 
         public async Task Run()
         {
-            await AddFilesAsync();
+            await _photoProcessor.AddFacesAsync(await _repository.GetAsync(3));
+
+            //await AddFilesAsync();
 
             //await _faceService.SyncPersonsAsync();
             //await _faceService.SyncFacesToPersonAsync();
@@ -47,7 +49,7 @@ namespace PhotoBank.Console
 
             var files = await _syncService.SyncStorage(storage);
 
-            //var files = Directory.GetFiles(@"\\MYCLOUDEX2ULTRA\Public\Photo\Veronika.disk\foto\potrets\", "*.*",
+            //var files = Directory.GetFiles(@"\\MYCLOUDEX2ULTRA\Public\Photo\Veronika.disk\foto\potrets\", "O*.*",
             //    SearchOption.AllDirectories);
 
             var count = 2000;

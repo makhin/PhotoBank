@@ -48,5 +48,6 @@ namespace PhotoBank.DbContext.Models
         public string RelativePath { get; set; }
         public List<File> Files { get; set; }
         public double Scale { get; set; }
+        public FaceIdentifyStatus FaceIdentifyStatus { get; set; }
     }
 }

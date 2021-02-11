@@ -43,12 +43,21 @@ namespace PhotoBank.Services
         private const string PersonGroupId = "my-cicrle-person-group";
         private const string AllFacesListId = "all-faces-list";
 
+        private readonly IList<FaceAttributeType?> _attributes = new List<FaceAttributeType?>
+        {
+            FaceAttributeType.Accessories, FaceAttributeType.Age, FaceAttributeType.Blur,
+            FaceAttributeType.Emotion, FaceAttributeType.Exposure, FaceAttributeType.FacialHair,
+            FaceAttributeType.Gender, FaceAttributeType.Glasses, FaceAttributeType.Hair,
+            FaceAttributeType.HeadPose, FaceAttributeType.Makeup, FaceAttributeType.Noise,
+            FaceAttributeType.Smile
+        };
+
         public bool IsPersonGroupTrained;
         public bool IsFaceListTrained;
         private List<Person> _persons;
 
         private const string RecognitionModel = Microsoft.Azure.CognitiveServices.Vision.Face.Models.RecognitionModel.Recognition02;
-        private const string DetectionModel = Microsoft.Azure.CognitiveServices.Vision.Face.Models.DetectionModel.Detection02;
+        private const string DetectionModel = Microsoft.Azure.CognitiveServices.Vision.Face.Models.DetectionModel.Detection01;
 
 
         public FaceService(IFaceClient faceClient,
@@ -148,16 +157,11 @@ namespace PhotoBank.Services
                             var personGroupFace = dbPersonGroupFaces.Single(g => g.PersonId == dbPerson.Key.PersonId && g.FaceId == personFace.FaceId);
                             personGroupFace.ExternalGuid = face.PersistedFaceId;
                             await _personGroupFaceRepository.UpdateAsync(personGroupFace, pgf => pgf.ExternalGuid);
-
-                            dbFace.ListStatus = ListStatus.Uploaded; // TODO Remove
                         }
                         catch (Exception e)
                         {
                             Console.WriteLine(e);
-                            dbFace.ListStatus = ListStatus.Failed; // TODO Remove
                         }
-
-                        await _faceRepository.UpdateAsync(dbFace, f => f.ListStatus); // TODO Remove
                     }
                 }
 
@@ -341,8 +345,21 @@ namespace PhotoBank.Services
 
         public async Task<IList<IdentifyResult>> IdentifyAsync(IList<Guid?> faceIds)
         {
+            const int chunkSize = 10;
+            var results = new List<IdentifyResult>();
 
-            return await _faceClient.Face.IdentifyAsync(faceIds, PersonGroupId);
+            var requests = faceIds
+                .Select((x, i) => new { Index = i, Value = x })
+                .GroupBy(x => x.Index / chunkSize)
+                .Select(x => x.Select(v => v.Value).ToList())
+                .ToList();
+
+            foreach (var request in requests)
+            {
+                results.AddRange(await _faceClient.Face.IdentifyAsync(request, PersonGroupId));
+            }
+            
+            return await Task.FromResult(results);
         }
 
         public async Task ListFindSimilarAsync()
@@ -462,21 +479,14 @@ namespace PhotoBank.Services
         {
             await using (var stream = new MemoryStream(image))
             {
-                IList<FaceAttributeType?> attributes = new List<FaceAttributeType?>()
-                {
-                    FaceAttributeType.Accessories, FaceAttributeType.Age, FaceAttributeType.Blur,
-                    FaceAttributeType.Emotion, FaceAttributeType.Exposure, FaceAttributeType.FacialHair,
-                    FaceAttributeType.Gender, FaceAttributeType.Glasses, FaceAttributeType.Hair, 
-                    FaceAttributeType.HeadPose, FaceAttributeType.Makeup, FaceAttributeType.Noise,
-                    FaceAttributeType.Smile,
-                };
-                var detectedFaces = await _faceClient.Face.DetectWithStreamAsync(stream, recognitionModel: RecognitionModel, detectionModel: DetectionModel );
-                if (detectedFaces == null || detectedFaces.Count == 0)
-                {
-                    throw new Exception($"No face detected");
-                }
+                var detectedFaces = await _faceClient.Face.DetectWithStreamAsync(stream,
+                    recognitionModel: RecognitionModel, 
+                    detectionModel: DetectionModel, 
+                    returnFaceId: true,
+                    returnFaceLandmarks: false, 
+                    returnFaceAttributes: _attributes);
 
-                return detectedFaces.ToList();
+                return detectedFaces == null ? await Task.FromResult(new List<DetectedFace>()) : detectedFaces.ToList();
             }
         }
 

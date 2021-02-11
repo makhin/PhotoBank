@@ -35,11 +35,13 @@ namespace PhotoBank.Services.Enrichers
             try
             {
                 var detectedFaces = await _faceService.DetectFacesAsync(photo.PreviewImage);
-                if (detectedFaces.Any())
+                if (!detectedFaces.Any())
                 {
-                    photo.PersonFaces = new List<PersonFace>();
+                    return;
                 }
-                
+
+                photo.PersonFaces = new List<PersonFace>();
+
                 var faceGuids = detectedFaces.Where(IsAbleToIdentify).Select(f => f.FaceId).ToList();
                 IList<IdentifyResult> identifyResults = new List<IdentifyResult>();
                 if (faceGuids.Any())
@@ -51,6 +53,7 @@ namespace PhotoBank.Services.Enrichers
                 {
                     var face = new PersonFace
                     {
+                        PhotoId = photo.Id,
                         IdentityStatus = IdentityStatus.NotIdentified,
                         Age = detectedFace.FaceAttributes.Age,
                         Rectangle = GeoWrapper.GetRectangle(detectedFace.FaceRectangle, photo.Scale),
@@ -65,8 +68,7 @@ namespace PhotoBank.Services.Enrichers
                     {
                         IdentifyFace(face, identifyResult, photo.TakenDate);
                     }
-
-                    if (IsAbleToIdentify(detectedFace, photo.Scale))
+                    else if (IsAbleToIdentify(detectedFace, photo.Scale))
                     {
                         face.Image = await CreateFacePreview(detectedFace, sourceData.OriginalImage, photo.Scale);
                         identifyResult = await _faceService.FaceIdentityAsync(face);

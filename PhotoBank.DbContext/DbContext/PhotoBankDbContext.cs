@@ -23,6 +23,7 @@ namespace PhotoBank.DbContext.DbContext
         public DbSet<File> Files { get; set; }
         public DbSet<PropertyName> PropertyNames { get; set; }
         public DbSet<FaceToFace> FaceToFaces { get; set; }
+        public DbSet<PersonFace> PersonFaces { get; set; }
 
         public PhotoBankDbContext(DbContextOptions<PhotoBankDbContext> options) : base(options)
         {

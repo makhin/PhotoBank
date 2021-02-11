@@ -9,7 +9,7 @@ namespace PhotoBank.Services.Enrichers
     public class CaptionEnricher : IEnricher
     {
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
-        public bool IsActive => true;
+        public bool IsActive => false;
 
         public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {

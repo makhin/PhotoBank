@@ -16,7 +16,7 @@ namespace PhotoBank.Services.Enrichers
         private readonly IList<VisualFeatureTypes?> _features = new List<VisualFeatureTypes?>()
         {
             VisualFeatureTypes.Categories, VisualFeatureTypes.Description,
-            VisualFeatureTypes.Faces, VisualFeatureTypes.ImageType,
+            VisualFeatureTypes.ImageType,
             VisualFeatureTypes.Tags, VisualFeatureTypes.Adult,
             VisualFeatureTypes.Color, VisualFeatureTypes.Brands,
             VisualFeatureTypes.Objects
@@ -28,7 +28,7 @@ namespace PhotoBank.Services.Enrichers
         }
 
         public Type[] Dependencies => new Type[1] {typeof(PreviewEnricher)};
-        public bool IsActive => true;
+        public bool IsActive => false;
 
         public async Task Enrich(Photo photo, SourceDataDto source)
         {
