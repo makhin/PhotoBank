@@ -31,7 +31,7 @@ namespace PhotoBank.Console
 
         public async Task Run()
         {
-            await _photoProcessor.AddFacesAsync(await _repository.GetAsync(3));
+            await _photoProcessor.AddFacesAsync(await _repository.GetAsync(9));
 
             //await AddFilesAsync();
 

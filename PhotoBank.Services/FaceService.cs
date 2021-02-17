@@ -56,8 +56,8 @@ namespace PhotoBank.Services
         public bool IsFaceListTrained;
         private List<Person> _persons;
 
-        private const string RecognitionModel = Microsoft.Azure.CognitiveServices.Vision.Face.Models.RecognitionModel.Recognition02;
-        private const string DetectionModel = Microsoft.Azure.CognitiveServices.Vision.Face.Models.DetectionModel.Detection01;
+        private const string RecognitionModel = Microsoft.Azure.CognitiveServices.Vision.Face.Models.RecognitionModel.Recognition03;
+        private const string DetectionModel = Microsoft.Azure.CognitiveServices.Vision.Face.Models.DetectionModel.Detection02;
 
 
         public FaceService(IFaceClient faceClient,
@@ -484,7 +484,7 @@ namespace PhotoBank.Services
                     detectionModel: DetectionModel, 
                     returnFaceId: true,
                     returnFaceLandmarks: false, 
-                    returnFaceAttributes: _attributes);
+                    returnFaceAttributes: DetectionModel == Microsoft.Azure.CognitiveServices.Vision.Face.Models.DetectionModel.Detection02 ? null : _attributes);
 
                 return detectedFaces == null ? await Task.FromResult(new List<DetectedFace>()) : detectedFaces.ToList();
             }

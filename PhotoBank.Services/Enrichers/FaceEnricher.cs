@@ -55,13 +55,18 @@ namespace PhotoBank.Services.Enrichers
                     {
                         PhotoId = photo.Id,
                         IdentityStatus = IdentityStatus.NotIdentified,
-                        Age = detectedFace.FaceAttributes.Age,
-                        Rectangle = GeoWrapper.GetRectangle(detectedFace.FaceRectangle, photo.Scale),
-                        Gender = detectedFace.FaceAttributes.Gender == Gender.Male,
-                        Smile = detectedFace.FaceAttributes.Smile,
-                        FaceAttributes = JsonConvert.SerializeObject(detectedFace.FaceAttributes),
-                        Image = await CreateFacePreview(detectedFace, sourceData.PreviewImage, 1)
+                        Image = await CreateFacePreview(detectedFace, sourceData.PreviewImage, 1),
+                        Rectangle = GeoWrapper.GetRectangle(detectedFace.FaceRectangle, photo.Scale)
                     };
+
+                    var attributes = detectedFace.FaceAttributes;
+                    if (attributes != null)
+                    {
+                        face.Age = attributes.Age;
+                        face.Gender = attributes.Gender == Gender.Male;
+                        face.Smile = attributes.Smile;
+                        face.FaceAttributes = JsonConvert.SerializeObject(attributes);
+                    }
 
                     var identifyResult = identifyResults.SingleOrDefault(f => f.FaceId == detectedFace.FaceId);
                     if (identifyResult != null)
