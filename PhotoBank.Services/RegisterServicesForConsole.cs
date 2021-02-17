@@ -38,7 +38,6 @@ namespace PhotoBank.Services
             });
 
             services.AddSingleton<IOrderResolver<IEnricher>, OrderResolver<IEnricher>>();
-            services.AddSingleton<IFaceRecognitionService, FaceRecognitionService>();
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 

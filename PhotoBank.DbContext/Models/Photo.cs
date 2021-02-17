@@ -39,7 +39,6 @@ namespace PhotoBank.DbContext.Models
         public List<PhotoCategory> PhotoCategories { get; set; }
         public List<ObjectProperty> ObjectProperties { get; set; }
         public List<Face> Faces { get; set; }
-        public List<PersonFace> PersonFaces { get; set; }
         public bool IsAdultContent { get; set; }
         public double AdultScore { get; set; }
         public bool IsRacyContent { get; set; }

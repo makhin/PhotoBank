@@ -24,11 +24,11 @@ namespace PhotoBank.Services
         Task SyncFacesToPersonAsync();
         Task AddFacesToLargeFaceListAsync();
         Task GroupIdentifyAsync();
-        Task FaceIdentityAsync(Face face);
+//        Task FaceIdentityAsync(Face face);
         Task ListFindSimilarAsync();
         Task<List<DetectedFace>> DetectFacesAsync(byte[] image);
         Task<IList<IdentifyResult>> IdentifyAsync(IList<Guid?> faceIds);
-        Task<IdentifyResult> FaceIdentityAsync(PersonFace face);
+        Task<IdentifyResult> FaceIdentityAsync(Face face);
     }
 
     public class FaceService : IFaceService
@@ -399,7 +399,7 @@ namespace PhotoBank.Services
             }
         }
 
-        public async Task<IdentifyResult> FaceIdentityAsync(PersonFace face)
+        public async Task<IdentifyResult> FaceIdentityAsync(Face face)
         {
             IList<DetectedFace> detectedFaces;
 
@@ -417,7 +417,7 @@ namespace PhotoBank.Services
             var identifyResults = await _faceClient.Face.IdentifyAsync(detectedFaces.Select(f => f.FaceId).ToList(), PersonGroupId);
             return identifyResults.SingleOrDefault();
         }
-
+        /*
         public async Task FaceIdentityAsync(Face face)
         {
             _persons ??= await _personRepository.GetAll().ToListAsync();
@@ -474,7 +474,7 @@ namespace PhotoBank.Services
                 Console.WriteLine(e);
             }
         }
-
+        */
         public async Task<List<DetectedFace>> DetectFacesAsync(byte[] image)
         {
             await using (var stream = new MemoryStream(image))

@@ -40,7 +40,7 @@ namespace PhotoBank.Services.Enrichers
                     return;
                 }
 
-                photo.PersonFaces = new List<PersonFace>();
+                photo.Faces = new List<Face>();
 
                 var faceGuids = detectedFaces.Where(IsAbleToIdentify).Select(f => f.FaceId).ToList();
                 IList<IdentifyResult> identifyResults = new List<IdentifyResult>();
@@ -51,7 +51,7 @@ namespace PhotoBank.Services.Enrichers
 
                 foreach (var detectedFace in detectedFaces)
                 {
-                    var face = new PersonFace
+                    var face = new Face
                     {
                         PhotoId = photo.Id,
                         IdentityStatus = IdentityStatus.NotIdentified,
@@ -80,7 +80,7 @@ namespace PhotoBank.Services.Enrichers
                         IdentifyFace(face, identifyResult, photo.TakenDate);
                     }
 
-                    photo.PersonFaces.Add(face);
+                    photo.Faces.Add(face);
                 }
             }
             catch (Exception e)
@@ -110,7 +110,7 @@ namespace PhotoBank.Services.Enrichers
             return Math.Round(detectedFace.FaceRectangle.Height / scale) >= MinFaceSize && Math.Round(detectedFace.FaceRectangle.Width / scale) >= MinFaceSize;
         }
 
-        private void IdentifyFace(PersonFace newFace, IdentifyResult identifyResult, DateTime? photoTakenDate)
+        private void IdentifyFace(Face face, IdentifyResult identifyResult, DateTime? photoTakenDate)
         {
             foreach (var candidate in identifyResult.Candidates.OrderByDescending(x => x.Confidence))
             {
@@ -121,9 +121,9 @@ namespace PhotoBank.Services.Enrichers
                     continue;
                 }
 
-                newFace.IdentityStatus = IdentityStatus.Identified;
-                newFace.IdentifiedWithConfidence = candidate.Confidence;
-                newFace.Person = person;
+                face.IdentityStatus = IdentityStatus.Identified;
+                face.IdentifiedWithConfidence = candidate.Confidence;
+                face.Person = person;
             }
         }
 

@@ -21,13 +21,13 @@ namespace PhotoBank.Services
     {
         private readonly IRepository<Photo> _photoRepository;
         private readonly IRepository<DbContext.Models.File> _fileRepository;
-        private readonly IRepository<PersonFace> _faceRepository;
+        private readonly IRepository<Face> _faceRepository;
         private readonly IEnumerable<IEnricher> _enrichers;
 
         public PhotoProcessor(
             IRepository<Photo> photoRepository,
             IRepository<DbContext.Models.File> fileRepository,
-            IRepository<PersonFace> faceRepository,
+            IRepository<Face> faceRepository,
             IEnumerable<IEnricher> enrichers,
             IOrderResolver<IEnricher> orderResolver
             )
@@ -113,12 +113,12 @@ namespace PhotoBank.Services
                     {
                         Id = photo.Id,
                         TakenDate = photo.TakenDate,
-                        FaceIdentifyStatus = photo.PersonFaces == null ? FaceIdentifyStatus.NotDetected : FaceIdentifyStatus.Detected
+                        FaceIdentifyStatus = photo.Faces == null ? FaceIdentifyStatus.NotDetected : FaceIdentifyStatus.Detected
                     }, p => p.TakenDate, p => p.FaceIdentifyStatus);
 
-                    if (photo.PersonFaces != null)
+                    if (photo.Faces != null)
                     {
-                        foreach (var face in photo.PersonFaces)
+                        foreach (var face in photo.Faces)
                         {
                             await _faceRepository.InsertAsync(face);
                         }
