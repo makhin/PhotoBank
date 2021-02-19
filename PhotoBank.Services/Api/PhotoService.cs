@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto.View;
 using PhotoBank.Repositories;
@@ -135,8 +133,8 @@ namespace PhotoBank.Services.Api
                 queryResult.Count = await photos.CountAsync();
                 queryResult.Photos = await photos
                     .OrderBy(p => p.Id)
-                    .Skip(skip.Value)
-                    .Take(top.Value)
+                    .Skip(skip ?? 0)
+                    .Take(top ?? int.MaxValue)
                     .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
                 return queryResult;
