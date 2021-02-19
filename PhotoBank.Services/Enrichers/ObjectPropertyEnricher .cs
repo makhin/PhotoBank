@@ -18,7 +18,7 @@ namespace PhotoBank.Services.Enrichers
         }
 
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
-        public bool IsActive => false;
+        public bool IsActive => true;
 
         public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {

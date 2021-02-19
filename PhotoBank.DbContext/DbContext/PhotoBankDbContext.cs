@@ -105,6 +105,11 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Face>()
                 .HasIndex(p => p.PersonId)
                 .IncludeProperties(p => p.PhotoId);
+
+            modelBuilder.Entity<Photo>()
+                .HasIndex(p => p.StorageId)
+                .IncludeProperties(p => p.RelativePath);
+
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

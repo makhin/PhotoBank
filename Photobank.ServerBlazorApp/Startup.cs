@@ -43,7 +43,7 @@ namespace PhotoBank.ServerBlazorApp
                 options.EnableDetailedErrors();
             }, ServiceLifetime.Transient);
 
-            RegisterServicesForApi.Configure(services, Configuration);
+            RegisterServicesForApi.Configure(services);
 
             services.AddAutoMapper(typeof(MappingProfile));
         }

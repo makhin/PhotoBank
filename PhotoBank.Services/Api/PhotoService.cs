@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto.View;
 using PhotoBank.Repositories;
@@ -26,7 +27,6 @@ namespace PhotoBank.Services.Api
     public class PhotoService : IPhotoService
     {
         private readonly IRepository<Photo> _photoRepository;
-        private readonly IRepository<Person> _personRepository;
         private readonly IRepository<Face> _faceRepository;
         private readonly IMapper _mapper;
         private readonly Lazy<Task<List<PersonDto>>> _persons;
@@ -43,7 +43,6 @@ namespace PhotoBank.Services.Api
             IMapper mapper)
         {
             _photoRepository = photoRepository;
-            _personRepository = personRepository;
             _faceRepository = faceRepository;
             _mapper = mapper;
             _persons = new Lazy<Task<List<PersonDto>>>(() => personRepository.GetAll().OrderBy(p => p.Name).ProjectTo<PersonDto>(_mapper.ConfigurationProvider).ToListAsync());
@@ -104,7 +103,7 @@ namespace PhotoBank.Services.Api
             {
                 photos = photos
                     .Include(p => p.Captions)
-                    .Where(p => p.Captions.Select(c => EF.Functions.FreeText(c.Text, filter.Caption)).Any());
+                    .Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption)));
             }
 
             if (filter.Persons != null && filter.Persons.Any())
@@ -134,7 +133,12 @@ namespace PhotoBank.Services.Api
             if ((filter.Tags == null || filter.Tags.Count() == 1) && (filter.Persons == null || filter.Persons.Count() == 1))
             {
                 queryResult.Count = await photos.CountAsync();
-                queryResult.Photos = await photos.Skip(skip.Value).Take(top.Value).ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider).ToListAsync();
+                queryResult.Photos = await photos
+                    .OrderBy(p => p.Id)
+                    .Skip(skip.Value)
+                    .Take(top.Value)
+                    .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
                 return queryResult;
             }
 

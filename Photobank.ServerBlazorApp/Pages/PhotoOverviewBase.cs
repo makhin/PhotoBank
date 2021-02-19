@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.DependencyInjection;
 using PhotoBank.Dto.View;
 using PhotoBank.Services.Api;
 using Radzen;
@@ -12,7 +14,8 @@ namespace PhotoBank.ServerBlazorApp.Pages
     {
         [Inject]
         public IPhotoService PhotoService { get; set; }
-
+        public IServiceProvider ServiceProvider { get; set; }
+        public IServiceScopeFactory ScopeFactory { get; set; }
         public IEnumerable<PhotoItemDto> Photos { get; set; }
         public IEnumerable<StorageDto> Storages { get; set; }
         public IEnumerable<PersonDto> Persons { get; set; }

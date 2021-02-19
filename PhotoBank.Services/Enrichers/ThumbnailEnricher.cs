@@ -11,7 +11,7 @@ namespace PhotoBank.Services.Enrichers
     {
         private readonly IComputerVisionClient _client;
         public Type[] Dependencies => new[]{typeof(PreviewEnricher)};
-        public bool IsActive => false;
+        public bool IsActive => true;
 
         public ThumbnailEnricher(IComputerVisionClient client)
         {

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 
@@ -30,8 +31,9 @@ namespace PhotoBank.Repositories
         private readonly PhotoBankDbContext _context;
         private readonly DbSet<TTable> _entities;
 
-        public Repository(PhotoBankDbContext context)
+        public Repository(IServiceProvider serviceProvider)
         {
+            var context = serviceProvider.GetRequiredService<PhotoBankDbContext>();
             this._context = context;
             _entities = context.Set<TTable>();
         }

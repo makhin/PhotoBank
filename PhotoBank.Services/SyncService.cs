@@ -18,7 +18,7 @@ namespace PhotoBank.Services
 
     public class SyncService : ISyncService 
     {
-        const string SupportedExtensions = "*.jpg,*.gif,*.png,*.bmp,*.jpe,*.jpeg,*.tiff,*.arw,*.crw,*.bmp,*.cr2";
+        private const string SupportedExtensions = "*.jpg,*.gif,*.png,*.bmp,*.jpe,*.jpeg,*.tiff,*.arw,*.crw,*.bmp,*.cr2,*.pdf";
         private readonly IRepository<File> _fileRepository;
 
         public SyncService(IRepository<PhotoBank.DbContext.Models.File> fileRepository)

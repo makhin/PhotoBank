@@ -19,9 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Dto", "PhotoBank.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.UnitTests", "PhotoBank.UnitTests\PhotoBank.UnitTests.csproj", "{8D6228B3-00A6-4D7F-97F8-80BA25278155}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.WindowsForms", "PhotoBank.WindowsForms\PhotoBank.WindowsForms.csproj", "{6D68D68A-6B4E-4934-BF57-4C5A2FF89870}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoBank.ServerBlazorApp", "Photobank.ServerBlazorApp\PhotoBank.ServerBlazorApp.csproj", "{A21D0451-C13F-42FD-B0B2-2A5EEB4DFE5B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.ServerBlazorApp", "Photobank.ServerBlazorApp\PhotoBank.ServerBlazorApp.csproj", "{A21D0451-C13F-42FD-B0B2-2A5EEB4DFE5B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -95,14 +93,6 @@ Global
 		{8D6228B3-00A6-4D7F-97F8-80BA25278155}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8D6228B3-00A6-4D7F-97F8-80BA25278155}.Release|x64.ActiveCfg = Release|x64
 		{8D6228B3-00A6-4D7F-97F8-80BA25278155}.Release|x64.Build.0 = Release|x64
-		{6D68D68A-6B4E-4934-BF57-4C5A2FF89870}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6D68D68A-6B4E-4934-BF57-4C5A2FF89870}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6D68D68A-6B4E-4934-BF57-4C5A2FF89870}.Debug|x64.ActiveCfg = Debug|x64
-		{6D68D68A-6B4E-4934-BF57-4C5A2FF89870}.Debug|x64.Build.0 = Debug|x64
-		{6D68D68A-6B4E-4934-BF57-4C5A2FF89870}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6D68D68A-6B4E-4934-BF57-4C5A2FF89870}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6D68D68A-6B4E-4934-BF57-4C5A2FF89870}.Release|x64.ActiveCfg = Release|x64
-		{6D68D68A-6B4E-4934-BF57-4C5A2FF89870}.Release|x64.Build.0 = Release|x64
 		{A21D0451-C13F-42FD-B0B2-2A5EEB4DFE5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A21D0451-C13F-42FD-B0B2-2A5EEB4DFE5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A21D0451-C13F-42FD-B0B2-2A5EEB4DFE5B}.Debug|x64.ActiveCfg = Debug|Any CPU

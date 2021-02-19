@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Api;
 
@@ -7,10 +6,10 @@ namespace PhotoBank.Services
 {
     public static class RegisterServicesForApi
     {
-        public static void Configure(IServiceCollection services, IConfiguration configuration)
+        public static void Configure(IServiceCollection services)
         {
-            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            services.AddScoped<IPhotoService, PhotoService>();
+            services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+            services.AddTransient<IPhotoService, PhotoService>();
         }
     }
 }
