@@ -18,7 +18,6 @@ namespace PhotoBank.Services.Enrichers
         {
         }
         public Type[] Dependencies => new Type[1] { typeof(PreviewEnricher) };
-        public bool IsActive => true;
 
         public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {
@@ -29,7 +28,7 @@ namespace PhotoBank.Services.Enrichers
                     Path.GetDirectoryName(Path.GetRelativePath(photo.Storage.Folder, sourceData.AbsolutePath));
                 photo.Files = new List<File>
                 {
-                    new File
+                    new()
                     {
                         Name = Path.GetFileName(sourceData.AbsolutePath)
                     }

@@ -18,7 +18,6 @@ namespace PhotoBank.Services.Enrichers
             _categoryRepository = categoryRepository;
         }
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
-        public bool IsActive => true;
 
         public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {

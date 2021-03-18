@@ -28,7 +28,6 @@ namespace PhotoBank.Services.Enrichers
 
         public Type[] Dependencies => new[] { typeof(PreviewEnricher), typeof(MetadataEnricher) };
 
-        public bool IsActive => true;
 
         public async Task Enrich(Photo photo, SourceDataDto sourceData)
         {

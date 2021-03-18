@@ -1,7 +1,5 @@
 using System;
-using System.IO;
 using System.Reflection;
-using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.Dto;
-using PhotoBank.Repositories;
 using PhotoBank.Services;
 
 namespace PhotoBank.Api
@@ -39,7 +36,7 @@ namespace PhotoBank.Api
                     });
             });
 
-            RegisterServicesForApi.Configure(services, Configuration);
+            RegisterServicesForApi.Configure(services);
 
             services.AddControllers().AddNewtonsoftJson(options =>
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore

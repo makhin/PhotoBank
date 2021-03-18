@@ -7,7 +7,5 @@ namespace PhotoBank.Services.Enrichers
     public interface IEnricher: IOrderDependant
     {
         Task Enrich(Photo photo, SourceDataDto path);
-
-        bool IsActive { get; }
     }
 }

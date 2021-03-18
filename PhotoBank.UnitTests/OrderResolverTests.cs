@@ -2,14 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using NUnit.Framework.Internal;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto;
 using PhotoBank.Dto.Load;
-using PhotoBank.Services;
 using PhotoBank.Services.Enrichers;
 
 namespace PhotoBank.UnitTests
@@ -22,7 +18,7 @@ namespace PhotoBank.UnitTests
         {
             await Task.Run(() =>
             {
-                Task.Delay(1000);
+                Task.Delay(new Random().Next(500, 1500));
                 Debug.WriteLine(this.GetType().Name);
             });
         }
@@ -96,7 +92,6 @@ namespace PhotoBank.UnitTests
             Dictionary<Type, Task> tasks0level = enrichers.ToDictionary(enricher => enricher.GetType(), enricher => enricher.Enrich(null, null));
 
             tasks0level.Select(e => e.Value);
-
         }
     }
 }

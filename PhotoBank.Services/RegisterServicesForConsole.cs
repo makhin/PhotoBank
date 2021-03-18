@@ -37,27 +37,27 @@ namespace PhotoBank.Services
                 };
             });
 
-            services.AddSingleton<IOrderResolver<IEnricher>, OrderResolver<IEnricher>>();
+            services.AddTransient<IOrderResolver<IEnricher>, OrderResolver<IEnricher>>();
 
-            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
-            services.AddScoped<IFaceService, FaceService>();
+            services.AddTransient<IFaceService, FaceService>();
 
-            services.AddScoped<IPhotoProcessor, PhotoProcessor>();
-            services.AddScoped<IPhotoService, PhotoService>();
-            services.AddScoped<ISyncService, SyncService>();
+            services.AddTransient<IPhotoProcessor, PhotoProcessor>();
+            services.AddTransient<IPhotoService, PhotoService>();
+            services.AddTransient<ISyncService, SyncService>();
 
-            services.AddScoped<IEnricher, MetadataEnricher>();
-            services.AddScoped<IEnricher, ThumbnailEnricher>();
-            services.AddScoped<IEnricher, PreviewEnricher>();
-            services.AddScoped<IEnricher, AnalyzeEnricher>();
-            services.AddScoped<IEnricher, ColorEnricher>();
-            services.AddScoped<IEnricher, CaptionEnricher>();
-            services.AddScoped<IEnricher, TagEnricher>();
-            services.AddScoped<IEnricher, CaptionEnricher>();
-            services.AddScoped<IEnricher, ObjectPropertyEnricher>();
-            services.AddScoped<IEnricher, AdultEnricher>();
-            services.AddScoped<IEnricher, FaceEnricher>();
+            services.AddTransient<IEnricher, MetadataEnricher>();
+            services.AddTransient<IEnricher, ThumbnailEnricher>();
+            services.AddTransient<IEnricher, PreviewEnricher>();
+            services.AddTransient<IEnricher, AnalyzeEnricher>();
+            services.AddTransient<IEnricher, ColorEnricher>();
+            services.AddTransient<IEnricher, CaptionEnricher>();
+            services.AddTransient<IEnricher, TagEnricher>();
+            services.AddTransient<IEnricher, CaptionEnricher>();
+            services.AddTransient<IEnricher, ObjectPropertyEnricher>();
+            services.AddTransient<IEnricher, AdultEnricher>();
+            services.AddTransient<IEnricher, FaceEnricher>();
         }
     }
 }

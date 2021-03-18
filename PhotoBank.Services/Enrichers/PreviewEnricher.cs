@@ -10,7 +10,6 @@ namespace PhotoBank.Services.Enrichers
     public class PreviewEnricher : IEnricher
     {
         public Type[] Dependencies => Array.Empty<Type>();
-        public bool IsActive => true;
 
         public async Task Enrich(Photo photo, SourceDataDto source)
         {

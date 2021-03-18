@@ -8,6 +8,7 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers;
+using File = PhotoBank.DbContext.Models.File;
 
 namespace PhotoBank.Services
 {
@@ -15,35 +16,43 @@ namespace PhotoBank.Services
     {
         Task AddPhotoAsync(Storage storage, string path);
         Task AddFacesAsync(Storage storage);
+        Task UpdateTakenDateAsync(Storage storage);
     }
 
     public class PhotoProcessor : IPhotoProcessor
     {
         private readonly IRepository<Photo> _photoRepository;
-        private readonly IRepository<DbContext.Models.File> _fileRepository;
+        private readonly IRepository<File> _fileRepository;
         private readonly IRepository<Face> _faceRepository;
         private readonly IEnumerable<IEnricher> _enrichers;
 
+        private class PhotoFilePath
+        {
+            public int PhotoId { get; init; }
+            public string RelativePath { get; init; }
+            public List<File> Files { get; init; }
+        }
+
         public PhotoProcessor(
             IRepository<Photo> photoRepository,
-            IRepository<DbContext.Models.File> fileRepository,
+            IRepository<File> fileRepository,
             IRepository<Face> faceRepository,
+            IRepository<Enricher> enricherRepository,
             IEnumerable<IEnricher> enrichers,
             IOrderResolver<IEnricher> orderResolver
             )
         {
+            var activeEnrichers = enricherRepository.GetAll().Where(e => e.IsActive).Select(e => e.Name).ToList();
             _photoRepository = photoRepository;
             _fileRepository = fileRepository;
             _faceRepository = faceRepository;
-            _enrichers = orderResolver.Resolve(enrichers.Where(e => e.IsActive));
+            _enrichers = orderResolver.Resolve(enrichers.Where(e => activeEnrichers.Contains(e.GetType().Name)).ToList());
         }
 
         public async Task AddPhotoAsync(Storage storage, string path)
         {
             var startTime = DateTime.Now;
-
             await VerifyDuplicates(storage, path);
-
             var sourceData = new SourceDataDto { AbsolutePath = path };
             var photo = new Photo { Storage = storage };
 
@@ -76,30 +85,84 @@ namespace PhotoBank.Services
                 .GetAll()
                 .Include(p => p.Files)
                 .Where(p => p.StorageId == storage.Id && p.FaceIdentifyStatus == FaceIdentifyStatus.Undefined)
-                .Select(p => new
+                .Select(p => new PhotoFilePath
                 {
                     PhotoId =p.Id,
-                    p.RelativePath,
-                    p.Files
+                    RelativePath = p.RelativePath,
+                    Files = p.Files
                 }).ToListAsync();
 
-            foreach (var id in files)
-            {
+            await UpdateInfoAsync(storage, files,
+                photoFile => _faceRepository.GetAll().Any(f => f.PhotoId == photoFile.PhotoId), InsertFacesAsync);
+        }
 
-                if (_faceRepository.GetAll().Any(f => f.PhotoId == id.PhotoId))
+        public async Task UpdateTakenDateAsync(Storage storage)
+        {
+            var files = await _photoRepository
+                .GetAll()
+                .Where(p => p.StorageId == storage.Id && p.TakenDate == null)
+                .Select(p => new PhotoFilePath
+                {
+                    PhotoId = p.Id,
+                    RelativePath = p.RelativePath,
+                    Files = p.Files
+                }).ToListAsync();
+
+            await UpdateInfoAsync(storage, files, 
+                _ => false,
+                async delegate(Photo photo)
+                {
+                    if (photo.TakenDate == null)
+                    {
+                        return;
+                    }
+
+                    await _photoRepository.UpdateAsync(
+                        new Photo
+                        {
+                            Id = photo.Id,
+                            TakenDate = photo.TakenDate
+                        }, p => p.TakenDate);
+                });
+        }
+
+        private async void InsertFacesAsync(Photo photo)
+        {
+            await _photoRepository.UpdateAsync(new Photo
+            {
+                Id = photo.Id,
+                FaceIdentifyStatus = photo.Faces == null ? FaceIdentifyStatus.NotDetected : FaceIdentifyStatus.Detected
+            }, p => p.FaceIdentifyStatus);
+
+            if (photo.Faces == null)
+            {
+                return;
+            }
+
+            foreach (var face in photo.Faces)
+            {
+                await _faceRepository.InsertAsync(face);
+            }
+        }
+
+        private async Task UpdateInfoAsync(Storage storage, IEnumerable<PhotoFilePath> files, Func<PhotoFilePath, bool> skipCondition, Action<Photo> updateAction)
+        {
+            foreach (var photoFile in files)
+            {
+                if (skipCondition(photoFile))
                 {
                     continue;
                 }
 
                 var photo = new Photo
                 {
-                    Id = id.PhotoId,
+                    Id = photoFile.PhotoId,
                     Storage = storage
                 };
 
                 var sourceData = new SourceDataDto
                 {
-                    AbsolutePath = Path.Combine(storage.Folder, id.RelativePath, id.Files.First().Name),
+                    AbsolutePath = Path.Combine(storage.Folder, photoFile.RelativePath, photoFile.Files.First().Name),
                 };
 
                 foreach (var enricher in _enrichers)
@@ -109,20 +172,7 @@ namespace PhotoBank.Services
 
                 try
                 {
-                    await _photoRepository.UpdateAsync(new Photo
-                    {
-                        Id = photo.Id,
-                        TakenDate = photo.TakenDate,
-                        FaceIdentifyStatus = photo.Faces == null ? FaceIdentifyStatus.NotDetected : FaceIdentifyStatus.Detected
-                    }, p => p.TakenDate, p => p.FaceIdentifyStatus);
-
-                    if (photo.Faces != null)
-                    {
-                        foreach (var face in photo.Faces)
-                        {
-                            await _faceRepository.InsertAsync(face);
-                        }
-                    }
+                    updateAction(photo);
                 }
                 catch (Exception exception)
                 {

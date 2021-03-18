@@ -33,7 +33,10 @@ namespace PhotoBank.Console
         {
             //await _faceService.SyncPersonsAsync();
             //await _faceService.SyncFacesToPersonAsync();
-            await AddFilesAsync();
+            //await AddFilesAsync();
+
+            var storage = await _repository.GetAsync(7);
+            await _photoProcessor.UpdateTakenDateAsync(storage);
 
             //await _faceService.GroupIdentifyAsync();
             //await _faceService.AddFacesToLargeFaceListAsync();

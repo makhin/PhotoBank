@@ -22,7 +22,7 @@ namespace PhotoBank.DbContext.DbContext
         public DbSet<Person> Persons { get; set; }
         public DbSet<File> Files { get; set; }
         public DbSet<PropertyName> PropertyNames { get; set; }
-        public DbSet<FaceToFace> FaceToFaces { get; set; }
+        public DbSet<Enricher> Enrichers { get; set; }
 
         public PhotoBankDbContext(DbContextOptions<PhotoBankDbContext> options) : base(options)
         {
@@ -89,15 +89,6 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<File>()
                 .HasIndex(p => new { p.Name });
 
-            modelBuilder.Entity<FaceToFace>().HasNoKey();
-
-            modelBuilder.Entity<FaceToFace>()
-                .HasIndex(p => new { p.Face1Id });
-            modelBuilder.Entity<FaceToFace>()
-                .HasIndex(p => new { p.Face2Id });
-            modelBuilder.Entity<FaceToFace>()
-                .HasIndex(p => new { p.Distance }).IncludeProperties("Face1Id", "Face2Id");
-
             modelBuilder.Entity<Face>()
                 .HasIndex(p => p.IdentityStatus)
                 .IncludeProperties(p =>p.PersonId);
@@ -110,6 +101,9 @@ namespace PhotoBank.DbContext.DbContext
                 .HasIndex(p => p.StorageId)
                 .IncludeProperties(p => p.RelativePath);
 
+            modelBuilder.Entity<Enricher>()
+                .HasIndex(u => u.Name)
+                .IsUnique();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
