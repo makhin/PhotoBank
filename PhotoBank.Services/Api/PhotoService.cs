@@ -97,13 +97,6 @@ namespace PhotoBank.Services.Api
                 }
             }
 
-            if (!string.IsNullOrEmpty(filter.Caption))
-            {
-                photos = photos
-                    .Include(p => p.Captions)
-                    .Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption)));
-            }
-
             if (filter.Persons != null && filter.Persons.Any())
             {
                 var list = filter.Persons.ToList<int>();

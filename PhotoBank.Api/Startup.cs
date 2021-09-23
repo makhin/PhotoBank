@@ -27,7 +27,7 @@ namespace PhotoBank.Api
             string connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<PhotoBankDbContext>(options =>
             {
-                options.UseSqlServer(connectionString,
+                options.UseNpgsql(connectionString,
                     builder =>
                     {
                         builder.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName().Name);

@@ -34,7 +34,7 @@ namespace PhotoBank.ServerBlazorApp
             services.AddDbContext<PhotoBankDbContext>(options =>
             {
                 options.UseLoggerFactory(LoggerFactory.Create(builder => builder.AddDebug()));
-                options.UseSqlServer(connectionString,
+                options.UseNpgsql(connectionString,
                     builder =>
                     {
                         builder.UseNetTopologySuite();

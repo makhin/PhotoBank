@@ -11,32 +11,47 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    [Migration("20210101074211_RemoveName")]
-    partial class RemoveName
+    [Migration("20210318155206_InitialPG")]
+    partial class InitialPG
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .UseIdentityColumns()
-                .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.1");
+                .HasAnnotation("Relational:MaxIdentifierLength", 63)
+                .HasAnnotation("ProductVersion", "6.0.0-preview.2.21154.2")
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+            modelBuilder.Entity("PersonPersonGroup", b =>
+                {
+                    b.Property<int>("PersonGroupsId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PersonsId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("PersonGroupsId", "PersonsId");
+
+                    b.HasIndex("PersonsId");
+
+                    b.ToTable("PersonPersonGroup");
+                });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Caption", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<double>("Confidence")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
 
                     b.Property<int?>("PhotoId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Text")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -49,51 +64,82 @@ namespace PhotoBank.DbContext.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("PhotoBank.DbContext.Models.Enricher", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Enrichers");
+                });
+
             modelBuilder.Entity("PhotoBank.DbContext.Models.Face", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<int>("Age")
-                        .HasColumnType("int");
+                    b.Property<double?>("Age")
+                        .HasColumnType("double precision");
 
-                    b.Property<Guid?>("ExternalGuid")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("FaceAttributes")
+                        .HasColumnType("text");
 
-                    b.Property<int?>("Gender")
-                        .HasColumnType("int");
+                    b.Property<bool?>("Gender")
+                        .HasColumnType("boolean");
+
+                    b.Property<double>("IdentifiedWithConfidence")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("IdentityStatus")
+                        .HasColumnType("integer");
 
                     b.Property<byte[]>("Image")
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<bool?>("IsSample")
-                        .HasColumnType("bit");
+                        .HasColumnType("bytea");
 
                     b.Property<int?>("PersonId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    b.Property<int?>("PhotoId")
-                        .HasColumnType("int");
+                    b.Property<int>("PhotoId")
+                        .HasColumnType("integer");
 
                     b.Property<Geometry>("Rectangle")
                         .HasColumnType("geometry");
 
+                    b.Property<double?>("Smile")
+                        .HasColumnType("double precision");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonId");
+                    b.HasIndex("IdentityStatus")
+                        .IncludeProperties(new[] { "PersonId" });
+
+                    b.HasIndex("PersonId")
+                        .IncludeProperties(new[] { "PhotoId" });
 
                     b.HasIndex("PhotoId");
 
@@ -104,19 +150,19 @@ namespace PhotoBank.DbContext.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<int?>("PhotoId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -131,17 +177,17 @@ namespace PhotoBank.DbContext.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<double>("Confidence")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
 
                     b.Property<int?>("PhotoId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int?>("PropertyNameId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<Geometry>("Rectangle")
                         .HasColumnType("geometry");
@@ -159,18 +205,18 @@ namespace PhotoBank.DbContext.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<Guid>("ExternalGuid")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -181,75 +227,84 @@ namespace PhotoBank.DbContext.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
-
-                    b.Property<Guid>("ExternalGuid")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("PersonGroups");
+                    b.ToTable("PersonGroup");
                 });
 
-            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroupPerson", b =>
+            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroupFace", b =>
                 {
-                    b.Property<int>("PersonGroupId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PersonId")
-                        .HasColumnType("int");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<Guid>("ExternalGuid")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
-                    b.HasKey("PersonGroupId", "PersonId");
+                    b.Property<int>("FaceId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PersonId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FaceId")
+                        .IsUnique();
 
                     b.HasIndex("PersonId");
 
-                    b.ToTable("PersonGroupPersons");
+                    b.ToTable("PersonGroupFace");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Photo", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("AccentColor")
                         .HasMaxLength(6)
-                        .HasColumnType("nvarchar(6)");
+                        .HasColumnType("character varying(6)");
 
                     b.Property<double>("AdultScore")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
 
                     b.Property<string>("DominantColorBackground")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("DominantColorForeground")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("DominantColors")
                         .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<int>("FaceIdentifyStatus")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("Height")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsAdultContent")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsBW")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsRacyContent")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<Point>("Location")
                         .HasColumnType("geometry");
@@ -257,39 +312,48 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<int?>("Orientation")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<byte[]>("PreviewImage")
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("bytea");
 
                     b.Property<double>("RacyScore")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
 
                     b.Property<string>("RelativePath")
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<double>("Scale")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
 
-                    b.Property<int?>("StorageId")
-                        .HasColumnType("int");
+                    b.Property<int>("StorageId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("TakenDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<byte[]>("Thumbnail")
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("bytea");
 
                     b.Property<int?>("Width")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StorageId");
+                    b.HasIndex("IsAdultContent");
+
+                    b.HasIndex("IsBW");
+
+                    b.HasIndex("IsRacyContent");
+
+                    b.HasIndex("StorageId")
+                        .IncludeProperties(new[] { "RelativePath" });
+
+                    b.HasIndex("TakenDate");
 
                     b.HasIndex("Name", "RelativePath");
 
@@ -299,13 +363,13 @@ namespace PhotoBank.DbContext.Migrations
             modelBuilder.Entity("PhotoBank.DbContext.Models.PhotoCategory", b =>
                 {
                     b.Property<int>("PhotoId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("CategoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<double>("Score")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
 
                     b.HasKey("PhotoId", "CategoryId");
 
@@ -317,13 +381,13 @@ namespace PhotoBank.DbContext.Migrations
             modelBuilder.Entity("PhotoBank.DbContext.Models.PhotoTag", b =>
                 {
                     b.Property<int>("PhotoId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("TagId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<double>("Confidence")
-                        .HasColumnType("float");
+                        .HasColumnType("double precision");
 
                     b.HasKey("PhotoId", "TagId");
 
@@ -336,13 +400,13 @@ namespace PhotoBank.DbContext.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.HasKey("Id");
 
@@ -353,14 +417,14 @@ namespace PhotoBank.DbContext.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Folder")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -371,18 +435,33 @@ namespace PhotoBank.DbContext.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .UseIdentityColumn();
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("Hint")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("PersonPersonGroup", b =>
+                {
+                    b.HasOne("PhotoBank.DbContext.Models.PersonGroup", null)
+                        .WithMany()
+                        .HasForeignKey("PersonGroupsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PhotoBank.DbContext.Models.Person", null)
+                        .WithMany()
+                        .HasForeignKey("PersonsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Caption", b =>
@@ -398,11 +477,15 @@ namespace PhotoBank.DbContext.Migrations
                         .WithMany("Faces")
                         .HasForeignKey("PersonId");
 
-                    b.HasOne("PhotoBank.DbContext.Models.Photo", null)
+                    b.HasOne("PhotoBank.DbContext.Models.Photo", "Photo")
                         .WithMany("Faces")
-                        .HasForeignKey("PhotoId");
+                        .HasForeignKey("PhotoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Person");
+
+                    b.Navigation("Photo");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.File", b =>
@@ -427,30 +510,32 @@ namespace PhotoBank.DbContext.Migrations
                     b.Navigation("PropertyName");
                 });
 
-            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroupPerson", b =>
+            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroupFace", b =>
                 {
-                    b.HasOne("PhotoBank.DbContext.Models.PersonGroup", "PersonGroup")
-                        .WithMany("PersonGroupPersons")
-                        .HasForeignKey("PersonGroupId")
+                    b.HasOne("PhotoBank.DbContext.Models.Face", "Face")
+                        .WithOne("PersonGroupFace")
+                        .HasForeignKey("PhotoBank.DbContext.Models.PersonGroupFace", "FaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("PhotoBank.DbContext.Models.Person", "Person")
-                        .WithMany("PersonGroupPersons")
+                        .WithMany("PersonGroupFaces")
                         .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Person");
+                    b.Navigation("Face");
 
-                    b.Navigation("PersonGroup");
+                    b.Navigation("Person");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Photo", b =>
                 {
                     b.HasOne("PhotoBank.DbContext.Models.Storage", "Storage")
                         .WithMany("Photos")
-                        .HasForeignKey("StorageId");
+                        .HasForeignKey("StorageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Storage");
                 });
@@ -498,16 +583,16 @@ namespace PhotoBank.DbContext.Migrations
                     b.Navigation("PhotoCategories");
                 });
 
+            modelBuilder.Entity("PhotoBank.DbContext.Models.Face", b =>
+                {
+                    b.Navigation("PersonGroupFace");
+                });
+
             modelBuilder.Entity("PhotoBank.DbContext.Models.Person", b =>
                 {
                     b.Navigation("Faces");
 
-                    b.Navigation("PersonGroupPersons");
-                });
-
-            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroup", b =>
-                {
-                    b.Navigation("PersonGroupPersons");
+                    b.Navigation("PersonGroupFaces");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Photo", b =>
