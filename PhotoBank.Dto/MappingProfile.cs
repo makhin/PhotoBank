@@ -32,6 +32,7 @@ namespace PhotoBank.Dto
             CreateMap<Photo, PhotoItemDto>()
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.PhotoTags))
                 .ForMember(dest => dest.Persons, opt => opt.MapFrom(src => src.Faces))
+                .ForMember(dest => dest.StorageName, opt => opt.MapFrom(src => src.Storage.Name))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Photo, PathDto>()

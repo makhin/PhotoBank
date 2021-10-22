@@ -13,7 +13,7 @@ namespace PhotoBank.Services.Api
 {
     public interface IPhotoService
     {
-        Task<QueryResult> GetAllPhotosAsync(FilterDto filter, int? skip, int? top);
+        Task<QueryResult> GetAllPhotosAsync(FilterDto filter, string orderBy, int? skip, int? top);
         Task<PhotoDto> GetPhotoAsync(int id);
         Task<IEnumerable<PersonDto>> GetAllPersonsAsync();
         Task<IEnumerable<StorageDto>> GetAllStoragesAsync();
@@ -50,12 +50,14 @@ namespace PhotoBank.Services.Api
                 .ProjectTo<PathDto>(_mapper.ConfigurationProvider).Distinct().OrderBy(p=>p.Path).ToListAsync());
         }
 
-        public async Task<QueryResult> GetAllPhotosAsync(FilterDto filter, int? skip, int? top)
+        public async Task<QueryResult> GetAllPhotosAsync(FilterDto filter, string orderBy, int? skip, int? top)
         {
             var queryResult = new QueryResult();
 
             var photos = _photoRepository
                 .GetAll()
+                .Where(p => !p.IsPrivate)
+                .Include(p => p.Storage)
                 .Include(p => p.PhotoTags)
                 .Include(p => p.Faces)
                 .AsQueryable();
@@ -132,7 +134,7 @@ namespace PhotoBank.Services.Api
             {
                 queryResult.Count = await photos.CountAsync();
                 queryResult.Photos = await photos
-                    .OrderBy(p => p.Id)
+                    .OrderByDescending(p => p.Id)
                     .Skip(skip ?? 0)
                     .Take(top ?? int.MaxValue)
                     .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
@@ -180,7 +182,8 @@ namespace PhotoBank.Services.Api
                         select photo).ToList();
             }
 
-            queryResult.Photos = result.Skip(skip.Value).Take(top.Value);
+
+            queryResult.Photos = result.Skip(skip ?? 0).Take(top ?? 10);
             queryResult.Count = result.Count;
             return queryResult;
         }

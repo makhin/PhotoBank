@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -9,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.Dto;
 using PhotoBank.Services;
+using Radzen;
 using Serilog;
 
 namespace PhotoBank.ServerBlazorApp
@@ -37,13 +39,16 @@ namespace PhotoBank.ServerBlazorApp
                 options.UseSqlServer(connectionString,
                     builder =>
                     {
+                        builder.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName().Name);
                         builder.UseNetTopologySuite();
+                        builder.CommandTimeout(120);
                     });
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
-            }, ServiceLifetime.Transient);
+            });
 
-            RegisterServicesForApi.Configure(services);
+            RegisterServicesForConsole.Configure(services, Configuration);
+            services.AddScoped<TooltipService>();
 
             services.AddAutoMapper(typeof(MappingProfile));
         }
@@ -71,6 +76,7 @@ namespace PhotoBank.ServerBlazorApp
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapControllers();
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
             });

@@ -24,7 +24,7 @@ namespace PhotoBank.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPhotos()
         {
-            var photos = (await _photoService.GetAllPhotosAsync(new FilterDto(), null, null)).Photos;
+            var photos = (await _photoService.GetAllPhotosAsync(new FilterDto(), null, null, null)).Photos;
 
             if (!photos.Any())
             {

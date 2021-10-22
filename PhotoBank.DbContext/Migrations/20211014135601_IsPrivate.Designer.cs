@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using PhotoBank.DbContext.DbContext;
@@ -10,9 +11,10 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    partial class PhotoBankDbContextModelSnapshot : ModelSnapshot
+    [Migration("20211014135601_IsPrivate")]
+    partial class IsPrivate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -140,7 +142,7 @@ namespace PhotoBank.DbContext.Migrations
                     b.HasIndex("PersonId")
                         .HasAnnotation("SqlServer:Include", new[] { "PhotoId" });
 
-                    b.HasIndex("PhotoId", "Id", "PersonId");
+                    b.HasIndex("PhotoId");
 
                     b.ToTable("Faces");
                 });
@@ -346,22 +348,18 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IsPrivate");
+                    b.HasIndex("IsAdultContent");
+
+                    b.HasIndex("IsBW");
+
+                    b.HasIndex("IsRacyContent");
 
                     b.HasIndex("StorageId")
                         .HasAnnotation("SqlServer:Include", new[] { "RelativePath" });
 
-                    b.HasIndex("Id", "IsPrivate");
+                    b.HasIndex("TakenDate");
 
-                    b.HasIndex("IsAdultContent", "IsPrivate");
-
-                    b.HasIndex("IsBW", "IsPrivate");
-
-                    b.HasIndex("IsRacyContent", "IsPrivate");
-
-                    b.HasIndex("TakenDate", "IsPrivate");
-
-                    b.HasIndex("Name", "RelativePath", "IsPrivate");
+                    b.HasIndex("Name", "RelativePath");
 
                     b.ToTable("Photos");
                 });
@@ -396,8 +394,6 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("float");
 
                     b.HasKey("PhotoId", "TagId");
-
-                    b.HasIndex("PhotoId");
 
                     b.HasIndex("TagId");
 

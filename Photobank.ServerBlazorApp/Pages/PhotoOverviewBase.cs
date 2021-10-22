@@ -26,7 +26,7 @@ namespace PhotoBank.ServerBlazorApp.Pages
 
         protected async Task LoadData(LoadDataArgs args)
         {
-            var queryResult = await PhotoService.GetAllPhotosAsync(Filter, args.Skip, args.Top);
+            var queryResult = await PhotoService.GetAllPhotosAsync(Filter, args.OrderBy, args.Skip, args.Top);
             Count = queryResult.Count;
             Photos = queryResult.Photos;
         }
@@ -41,7 +41,7 @@ namespace PhotoBank.ServerBlazorApp.Pages
 
         protected async Task ApplyFilter(FilterDto filterDto)
         {
-            var queryResult = await PhotoService.GetAllPhotosAsync(Filter, 0, 20);
+            var queryResult = await PhotoService.GetAllPhotosAsync(Filter, null, 0, 20);
             Count = queryResult.Count;
             Photos = queryResult.Photos;
         }

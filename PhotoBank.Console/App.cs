@@ -33,10 +33,10 @@ namespace PhotoBank.Console
         {
             //await _faceService.SyncPersonsAsync();
             //await _faceService.SyncFacesToPersonAsync();
-            //await AddFilesAsync();
+            await AddFilesAsync();
 
-            var storage = await _repository.GetAsync(7);
-            await _photoProcessor.UpdateTakenDateAsync(storage);
+            //var storage = await _repository.GetAsync(7);
+            //await _photoProcessor.UpdateTakenDateAsync(storage);
 
             //await _faceService.GroupIdentifyAsync();
             //await _faceService.AddFacesToLargeFaceListAsync();
@@ -45,12 +45,9 @@ namespace PhotoBank.Console
 
         private async Task AddFilesAsync()
         {
-            var storage = await _repository.GetAsync(9);
+            var storage = await _repository.GetAsync(12);
 
             var files = await _syncService.SyncStorage(storage);
-
-            //var files = Directory.GetFiles(@"\\MYCLOUDEX2ULTRA\Public\Photo\Veronika.disk\foto\potrets\", "O*.*",
-            //    SearchOption.AllDirectories);
 
             var count = 2000;
 

@@ -48,7 +48,7 @@ namespace PhotoBank.Console
                     });
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
-            }, ServiceLifetime.Transient);
+            });
 
             RegisterServicesForConsole.Configure(services, config);
 

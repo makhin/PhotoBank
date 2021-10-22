@@ -57,8 +57,7 @@ namespace PhotoBank.Services
         private List<Person> _persons;
 
         private const string RecognitionModel = Microsoft.Azure.CognitiveServices.Vision.Face.Models.RecognitionModel.Recognition03;
-        private const string DetectionModel = Microsoft.Azure.CognitiveServices.Vision.Face.Models.DetectionModel.Detection02;
-
+        private const string DetectionModel = Microsoft.Azure.CognitiveServices.Vision.Face.Models.DetectionModel.Detection01;
 
         public FaceService(IFaceClient faceClient,
             IRepository<Face> faceRepository,

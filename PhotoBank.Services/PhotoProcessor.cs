@@ -14,7 +14,7 @@ namespace PhotoBank.Services
 {
     public interface IPhotoProcessor
     {
-        Task AddPhotoAsync(Storage storage, string path);
+        Task<int> AddPhotoAsync(Storage storage, string path);
         Task AddFacesAsync(Storage storage);
         Task UpdateTakenDateAsync(Storage storage);
     }
@@ -49,7 +49,7 @@ namespace PhotoBank.Services
             _enrichers = orderResolver.Resolve(enrichers.Where(e => activeEnrichers.Contains(e.GetType().Name)).ToList());
         }
 
-        public async Task AddPhotoAsync(Storage storage, string path)
+        public async Task<int> AddPhotoAsync(Storage storage, string path)
         {
             var startTime = DateTime.Now;
             await VerifyDuplicates(storage, path);
@@ -73,10 +73,11 @@ namespace PhotoBank.Services
             var ms = 3000 - (int)(DateTime.Now - startTime).TotalMilliseconds;
             if (ms <= 0)
             {
-                return;
+                return photo.Id;
             }
             Console.WriteLine($"Wait {ms}");
             await Task.Delay(ms);
+            return photo.Id;
         }
 
         public async Task AddFacesAsync(Storage storage)

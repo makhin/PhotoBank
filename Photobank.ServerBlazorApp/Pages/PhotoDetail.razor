@@ -1,6 +1,5 @@
 ﻿@page "/photodetail/{PhotoId}"
 @using Microsoft.AspNetCore.Components.Web.Extensions.Head
-@using PhotoBank.Dto.View
 @inherits PhotoDetailBase
 
 @if (Photo != null)
@@ -47,6 +46,8 @@ else
                     <b>@caption</b>
                     <br />
                 }
+                <div style="margin-top:20px"></div>
+                <span>Adult Score: <strong>@Math.Round(Photo.AdultScore, 3)</strong>;</span>&nbsp;<span>Racy Score: <strong>@Math.Round(Photo.RacyScore, 3)</strong></span>
                 <div style="margin-top:20px">Tags:</div>
                 @foreach (var tag in Photo.Tags)
                 {
@@ -55,29 +56,25 @@ else
             </div>
             <div class="col-md-6">
                 <div>Faces:</div>
-                @{
-                    var i = 1;
-                }
-                @foreach (var face in Photo.Faces)
-                {
-                    <div>
-                        <span>@((i++).ToString())</span>
-                        <RadzenDropDown Data=@Persons @bind-Value=@face.PersonId
-                                        TextProperty="Name" ValueProperty="Id" Change=@(args => OnChangePersonAsync(face.Id, args))/>
-                    </div>
-                }
+                @for (var i = 0; i < Photo.Faces.Count; i++)
+                    {
+                        var face = Photo.Faces[i];
+                        <div>
+                            <span>@((i + 1).ToString())&nbsp;@(face.Age.ToString())&nbsp;@(face.Gender.HasValue ? (face.Gender.Value && face.FaceAttributes != null ? "M" : "F") : string.Empty)</span>
+                            <RadzenDropDown Data=@Persons @bind-Value=@face.PersonId TextProperty="Name" ValueProperty="Id" Change=@(args => OnChangePersonAsync(face.Id, args))/>
+                        </div>
+                    }
             </div>
         </div>
     </RadzenCard>
     <div class="wrapper">
         <img src="data:image;base64,@Convert.ToBase64String(Photo.PreviewImage)" alt="" />
-        @{
-            var j = 1;
-        }
-        @foreach (var face in Photo.Faces)
+        @for (var i = 0; i < Photo.Faces.Count; i++)
         {
-            <div class="box" style="top: @face.FaceBox.Top; left: @face.FaceBox.Left; width: @face.FaceBox.Width; height: @face.FaceBox.Height">
-                <span>@((j++).ToString())</span><span>.</span>
+            var i2 = i;
+            var face = Photo.Faces[i];
+            <div class="box" style="top: @face.FaceBox.Top; left: @face.FaceBox.Left; width: @face.FaceBox.Width; height: @face.FaceBox.Height" @ref="MemberRef[i2]" @onmouseover="@(args => ShowTooltipWithHtml(i2, face.FriendlyFaceAttributes))">
+                <span>@((i + 1).ToString())</span><span>.</span>
             </div>
         }
     </div>

@@ -97,12 +97,15 @@ else
             <RadzenGridColumn TItem="PhotoItemDto" Property="Name" Title="Name" />
             <RadzenGridColumn TItem="PhotoItemDto" Property="TakenDate" Title="Taken Date">
                 <Template Context="data">
-                    @string.Format("{0:d}", data.TakenDate)
+                    @($"{data.TakenDate:d}")
                 </Template>
             </RadzenGridColumn>
-            <RadzenGridColumn TItem="PhotoItemDto" Property="IsBW" Title="Is BW" />
-            <RadzenGridColumn TItem="PhotoItemDto" Property="IsAdultContent" Title="Is Adult Content" />
-            <RadzenGridColumn TItem="PhotoItemDto" Property="IsRacyContent" Title="Is Racy Content" />
+            @*
+                <RadzenGridColumn TItem="PhotoItemDto" Property="IsBW" Title="Is BW" />
+                <RadzenGridColumn TItem="PhotoItemDto" Property="AdultScore" Title="Adult Score" />
+                <RadzenGridColumn TItem="PhotoItemDto" Property="RacyScore" Title="Racy Score" />
+            *@
+            <RadzenGridColumn TItem="PhotoItemDto" Property="StorageName" Title="Storage" />
             <RadzenGridColumn TItem="PhotoItemDto" Property="RelativePath" Title="Relative Path" />
         </Columns>
     </RadzenGrid>
