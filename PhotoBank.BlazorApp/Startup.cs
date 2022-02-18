@@ -67,9 +67,9 @@ namespace PhotoBank.BlazorApp
 
             app.UseRouting();
 
-            app.ApplicationServices
-                .UseBootstrapProviders()
-                .UseFontAwesomeIcons();
+            //app.ApplicationServices
+            //    .UseBootstrapProviders()
+            //    .UseFontAwesomeIcons();
 
             app.UseEndpoints(endpoints =>
             {
