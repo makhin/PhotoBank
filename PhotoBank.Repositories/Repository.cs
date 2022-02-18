@@ -26,7 +26,7 @@ namespace PhotoBank.Repositories
         Task<int> DeleteAsync(int id);
     }
 
-    public class Repository<TTable> : IRepository<TTable> where TTable : class, IEntityBase
+    public class Repository<TTable> : IRepository<TTable> where TTable : class, IEntityBase, IDisposable
     {
         private readonly PhotoBankDbContext _context;
         private readonly DbSet<TTable> _entities;
