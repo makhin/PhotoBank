@@ -7,12 +7,31 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+using PhotoBank.DbContext.DbContext;
 using Serilog;
 using Serilog.Events;
 
 namespace PhotoBank.ServerBlazorApp
 {
+    public class CountryDbContextFactory : IDesignTimeDbContextFactory<PhotoBankDbContext>
+    {
+        public PhotoBankDbContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<PhotoBankDbContext>();
+            optionsBuilder.UseSqlServer("Server=STRIX;Database=Photobank;Trusted_Connection=True;MultipleActiveResultSets=true", b =>
+            {
+                b.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName().Name);
+                b.UseNetTopologySuite();
+            });
+
+            return new PhotoBankDbContext(optionsBuilder.Options);
+        }
+    }
+
     public class Program
     {
         public static IConfiguration Configuration { get; } = new ConfigurationBuilder()

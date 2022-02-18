@@ -1,12 +1,13 @@
 ﻿
+using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Logging;
 
 namespace PhotoBank.DbContext.DbContext
 {
     using Microsoft.EntityFrameworkCore;
-    using PhotoBank.DbContext.Models;
+    using Models;
 
-    public class PhotoBankDbContext : Microsoft.EntityFrameworkCore.DbContext
+    public class PhotoBankDbContext : DbContext
     {
         public static readonly ILoggerFactory PhotoBankLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 
