@@ -11,7 +11,7 @@ using PhotoBank.DbContext.Models;
 
 namespace PhotoBank.Repositories
 {
-    public interface IRepository<TTable> where TTable : class, IEntityBase
+    public interface IRepository<TTable> where TTable : class, IEntityBase, new()
     {
         IQueryable<TTable> GetByCondition(Expression<Func<TTable, bool>> predicate);
         IQueryable<TTable> GetAll();
@@ -26,7 +26,7 @@ namespace PhotoBank.Repositories
         Task<int> DeleteAsync(int id);
     }
 
-    public class Repository<TTable> : IRepository<TTable> where TTable : class, IEntityBase, IDisposable
+    public class Repository<TTable> : IRepository<TTable> where TTable : class, IEntityBase, new()
     {
         private readonly PhotoBankDbContext _context;
         private readonly DbSet<TTable> _entities;

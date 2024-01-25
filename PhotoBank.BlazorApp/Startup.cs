@@ -1,19 +1,13 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Blazorise;
 using Blazorise.Bootstrap;
 using Blazorise.Icons.FontAwesome;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PhotoBank.BlazorApp.Data;
-using PhotoBank.Services;
 
 namespace PhotoBank.BlazorApp
 {
@@ -34,10 +28,13 @@ namespace PhotoBank.BlazorApp
             services.AddServerSideBlazor();
 
             services
-                .AddBlazorise(options =>
-                {
-                    options.ChangeTextOnKeyPress = true;
-                })
+                .AddBlazorise(
+                //TODO check
+                //   options =>
+                //{
+                //    options.ChangeTextOnKeyPress = true;
+                //}
+                    )
                 .AddBootstrapProviders()
                 .AddFontAwesomeIcons();
 
