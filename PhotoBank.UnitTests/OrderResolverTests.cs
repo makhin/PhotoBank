@@ -10,7 +10,7 @@ using PhotoBank.Services.Enrichers;
 
 namespace PhotoBank.UnitTests
 {
-    public abstract class EnricheTestBase : IEnricher
+    public abstract class EnricherTestBase : IEnricher
     {
         public abstract Type[] Dependencies { get; }
         public bool IsActive => true;
@@ -24,57 +24,57 @@ namespace PhotoBank.UnitTests
         }
     }
 
-    public class EnAd : EnricheTestBase
+    public class EnAd : EnricherTestBase
     {
         public override Type[] Dependencies => new[] { typeof(EnAn) };
     }
 
-    public class EnAn : EnricheTestBase
+    public class EnAn : EnricherTestBase
     {
         public override Type[] Dependencies => new[] { typeof(EnPr) };
     }
 
-    public class EnCap : EnricheTestBase
+    public class EnCap : EnricherTestBase
     {
         public override Type[] Dependencies => new[] { typeof(EnAn) };
     }
 
-    public class EnCat : EnricheTestBase
+    public class EnCat : EnricherTestBase
     {
         public override Type[] Dependencies => new[] { typeof(EnAn) };
     }
 
-    public class EnCo : EnricheTestBase
+    public class EnCo : EnricherTestBase
     {
         public override Type[] Dependencies => new[] { typeof(EnAn) };
     }
 
-    public class EnFa : EnricheTestBase
+    public class EnFa : EnricherTestBase
     {
         public override Type[] Dependencies => new[] { typeof(EnAn) };
     }
 
-    public class EnMe : EnricheTestBase
+    public class EnMe : EnricherTestBase
     {
         public override Type[] Dependencies => Array.Empty<Type>();
     }
 
-    public class EnOb : EnricheTestBase
+    public class EnOb : EnricherTestBase
     {
         public override Type[] Dependencies => new[] { typeof(EnAn) };
     }
 
-    public class EnPr : EnricheTestBase
+    public class EnPr : EnricherTestBase
     {
         public override Type[] Dependencies => Array.Empty<Type>();
     }
 
-    public class EnTa : EnricheTestBase
+    public class EnTa : EnricherTestBase
     {
         public override Type[] Dependencies => new[] { typeof(EnAn) };
     }
 
-    public class EnTh : EnricheTestBase
+    public class EnTh : EnricherTestBase
     {
         public override Type[] Dependencies => new[] { typeof(EnPr) };
     }
@@ -85,7 +85,7 @@ namespace PhotoBank.UnitTests
         [Test]
         public void Test()
         {
-            IEnumerable<IEnricher> collection = new EnricheTestBase[]{ new EnAd(), new EnAn(), new EnCap(), new EnCat(), new EnCo(), new EnFa(), new EnMe(), new EnOb(), new EnPr(), new EnTa(), new EnTh() };
+            IEnumerable<IEnricher> collection = new EnricherTestBase[]{ new EnAd(), new EnAn(), new EnCap(), new EnCat(), new EnCo(), new EnFa(), new EnMe(), new EnOb(), new EnPr(), new EnTa(), new EnTh() };
 
             IEnumerable<IEnricher> enrichers = collection.Where(e => e.Dependencies.Length == 0).ToList();
 

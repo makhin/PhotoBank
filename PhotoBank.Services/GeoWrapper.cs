@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
+using Amazon.Rekognition.Model;
 using MetadataExtractor.Formats.Exif;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
+using Geometry = NetTopologySuite.Geometries.Geometry;
+using Point = NetTopologySuite.Geometries.Point;
 
 namespace PhotoBank.Services
 {
@@ -24,6 +27,24 @@ namespace PhotoBank.Services
                 (int?)(geometry.Coordinates[1].X - geometry.Coordinates[0].X),
                 (int?)(geometry.Coordinates[3].Y - geometry.Coordinates[0].Y)
             };
+        }
+
+        public static Geometry GetRectangle(int imageHeight, int imageWidth, BoundingBox boundingBox, double scale = 1)
+        {
+            var x = (int)(imageWidth * boundingBox.Left / scale);
+            var y = (int)(imageHeight * boundingBox.Top / scale);
+            var w = (int)(imageWidth * boundingBox.Width / scale);
+            var h = (int)(imageHeight * boundingBox.Height / scale);
+
+            return GeometryFactory.CreatePolygon(
+                new[]
+                {
+                    new Coordinate(x, y),
+                    new Coordinate(x + h, y),
+                    new Coordinate(x + h, y + w),
+                    new Coordinate(x, y + w),
+                    new Coordinate(x, y)
+                });
         }
 
         public static Geometry GetRectangle(BoundingRect rectangle, double scale = 1)

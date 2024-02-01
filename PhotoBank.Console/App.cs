@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
@@ -14,12 +16,12 @@ namespace PhotoBank.Console
     {
         private readonly IPhotoProcessor _photoProcessor;
         private readonly IRepository<Storage> _repository;
-        private readonly IFaceService _faceService;
+        private readonly IFaceServiceAws _faceService;
         private readonly ILogger<App> _logger;
         private readonly ISyncService _syncService;
         private readonly IPhotoService _photoService;
 
-        public App(IPhotoProcessor photoProcessor, IRepository<Storage> repository, IFaceService faceService, ILogger<App> logger, ISyncService syncService, IPhotoService photoService)
+        public App(IPhotoProcessor photoProcessor, IRepository<Storage> repository, IFaceServiceAws faceService, ILogger<App> logger, ISyncService syncService, IPhotoService photoService)
         {
             _photoProcessor = photoProcessor;
             _repository = repository;
@@ -45,13 +47,18 @@ namespace PhotoBank.Console
 
         private async Task AddFilesAsync()
         {
-            var storage = await _repository.GetAsync(12);
+            var storage = await _repository.GetAsync(13);
 
-            var files = await _syncService.SyncStorage(storage);
+//            var files = await _syncService.SyncStorage(storage);
 
-            var count = 2000;
+            var files = Directory.GetFiles(@"\\MYCLOUDEX2ULTRA\MobileUploads\Sony G8341 Camera Backup\", "*.jpg", SearchOption.AllDirectories)
+                .ToList();
 
-            foreach (var file in files)
+            var enumerable = files.ToList();
+
+            var count = enumerable.Count;
+
+            foreach (var file in enumerable)
             {
                 try
                 {

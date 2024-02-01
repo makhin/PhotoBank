@@ -9,6 +9,7 @@ using AutoMapper.QueryableExtensions;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto;
 using PhotoBank.Dto.Load;
@@ -39,6 +40,7 @@ namespace PhotoBank.Services
         private readonly IRepository<PersonGroupFace> _personGroupFaceRepository;
         private readonly IRepository<Photo> _photoRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger<FaceService> _logger;
 
         private const string PersonGroupId = "my-cicrle-person-group";
         private const string AllFacesListId = "all-faces-list";
@@ -64,7 +66,8 @@ namespace PhotoBank.Services
             IRepository<DbContext.Models.Person> personRepository,
             IRepository<PersonGroupFace> personGroupFaceRepository,
             IRepository<Photo> photoRepository,
-            IMapper mapper)
+            IMapper mapper,
+            ILogger<FaceService> logger)
         {
             this._faceClient = faceClient;
             _faceRepository = faceRepository;
@@ -72,6 +75,7 @@ namespace PhotoBank.Services
             _personGroupFaceRepository = personGroupFaceRepository;
             _photoRepository = photoRepository;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task SyncPersonsAsync()
@@ -83,8 +87,9 @@ namespace PhotoBank.Services
                 {
                     group = await _faceClient.PersonGroup.GetAsync(PersonGroupId);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    _logger.LogCritical(e, "error");
                     // ignored
                 }
 
@@ -105,7 +110,7 @@ namespace PhotoBank.Services
 
                     var person = await _faceClient.PersonGroupPerson.CreateAsync(PersonGroupId, dbPerson.Name,
                         dbPerson.Id.ToString());
-                    await Task.Delay(1000);
+                    //await Task.Delay(1000);
 
                     dbPerson.ExternalGuid = person.PersonId;
                     await _personRepository.UpdateAsync(dbPerson, p => p.ExternalGuid);
@@ -119,7 +124,7 @@ namespace PhotoBank.Services
                     }
 
                     await _faceClient.PersonGroupPerson.DeleteAsync(PersonGroupId, servicePerson.PersonId);
-                    await Task.Delay(1000);
+                    //await Task.Delay(1000);
                 }
 
             }
@@ -213,7 +218,7 @@ namespace PhotoBank.Services
                     continue;
                 }
 
-                await Task.Delay(1800);
+                //await Task.Delay(1800);
                 await using (var stream = new MemoryStream(dbFace.Image))
                 {
                     try
@@ -264,7 +269,7 @@ namespace PhotoBank.Services
 
                     try
                     {
-                        await SleepAsync();
+                        //await SleepAsync();
                         detectedFaces = await DetectFacesAsync(face.Image);
                     }
                     catch (Exception e)
@@ -275,7 +280,7 @@ namespace PhotoBank.Services
                         continue;
                     }
 
-                    await SleepAsync();
+                    //await SleepAsync();
                     var identifyResults = await IdentifyAsync(detectedFaces.Select(f => f.FaceId).ToList());
 
                     if (!identifyResults.Any())
@@ -374,10 +379,10 @@ namespace PhotoBank.Services
                 try
                 {
                     IList<DetectedFace> detectedFaces = await DetectFacesAsync(photo);
-                    await Task.Delay(1800);
+                    //await Task.Delay(1800);
     
                     var similarResults = await _faceClient.Face.FindSimilarAsync(detectedFaces[0].FaceId.Value, null, AllFacesListId);
-                    await Task.Delay(1800);
+                    //await Task.Delay(1800);
 
                     foreach (var similarResult in similarResults)
                     {
@@ -496,7 +501,7 @@ namespace PhotoBank.Services
             {
                 do
                 {
-                    await Task.Delay(1000);
+                    //await Task.Delay(1000);
                     trainingStatus = await _faceClient.PersonGroup.GetTrainingStatusAsync(PersonGroupId);
                 } while (trainingStatus.Status == TrainingStatusType.Running);
             }
@@ -515,7 +520,7 @@ namespace PhotoBank.Services
             {
                 do
                 {
-                    await Task.Delay(1000);
+                    //await Task.Delay(1000);
                     trainingStatus = await _faceClient.LargeFaceList.GetTrainingStatusAsync(AllFacesListId);
                 } while (trainingStatus.Status == TrainingStatusType.Running);
             }

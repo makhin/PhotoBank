@@ -52,7 +52,23 @@ namespace PhotoBank.Services
         public async Task<int> AddPhotoAsync(Storage storage, string path)
         {
             var startTime = DateTime.Now;
-            await VerifyDuplicates(storage, path);
+            var duplicate = await VerifyDuplicates(storage, path);
+
+            if (duplicate.DuplicateStatus == DuplicateStatus.FileExists)
+            {
+                return duplicate.PhotoId;
+            }
+
+            if (duplicate.DuplicateStatus == DuplicateStatus.FileNotExists)
+            {
+                await _fileRepository.InsertAsync(new File
+                {
+                    Photo = new Photo { Id = duplicate.PhotoId },
+                    Name = duplicate.Name,
+                });
+                return duplicate.PhotoId;
+            }
+
             var sourceData = new SourceDataDto { AbsolutePath = path };
             var photo = new Photo { Storage = storage };
 
@@ -76,7 +92,7 @@ namespace PhotoBank.Services
                 return photo.Id;
             }
             Console.WriteLine($"Wait {ms}");
-            await Task.Delay(ms);
+            //await Task.Delay(ms);
             return photo.Id;
         }
 
@@ -182,25 +198,42 @@ namespace PhotoBank.Services
             }
         }
 
-        private async Task VerifyDuplicates(Storage storage, string path)
+        private async Task<DuplicateVerification> VerifyDuplicates(Storage storage, string path)
         {
             var name = Path.GetFileNameWithoutExtension(path);
             var relativePath = Path.GetRelativePath(storage.Folder, Path.GetDirectoryName(path));
-
-            var photoId = await _photoRepository.GetByCondition(p =>
-                p.Name == name && p.RelativePath == relativePath && p.Storage.Id == storage.Id).Select(p => p.Id).SingleOrDefaultAsync();
-
-            if (photoId == 0)
+            var result = new DuplicateVerification
             {
-                return;
+                PhotoId = await _photoRepository.GetByCondition(p =>
+                        p.Name == name && p.RelativePath == relativePath && p.Storage.Id == storage.Id)
+                    .Select(p => p.Id)
+                    .SingleOrDefaultAsync(),
+                Name = Path.GetFileName(path)
+            };
+            
+            if (result.PhotoId == 0)
+            {
+                result.DuplicateStatus = DuplicateStatus.PhotoNotExists;
+                return result;
             }
 
-            var fileName = Path.GetFileName(path);
-            await _fileRepository.InsertAsync(new DbContext.Models.File
-            {
-                Photo = new Photo {Id = photoId},
-                Name = fileName,
-            });
+            var file = _fileRepository.GetByCondition(f => f.Name == result.Name && f.Photo.Id == result.PhotoId);
+            result.DuplicateStatus = file != null ? DuplicateStatus.FileExists : DuplicateStatus.FileNotExists;
+            return result;
+        }
+
+        private class DuplicateVerification
+        {
+            public DuplicateStatus DuplicateStatus { get; set; }
+            public int PhotoId { get; init; }
+            public string Name { get; init; }
+        }
+
+        private enum DuplicateStatus
+        {
+            PhotoNotExists,
+            FileNotExists,
+            FileExists
         }
     }
 }

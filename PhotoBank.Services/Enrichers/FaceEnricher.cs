@@ -43,7 +43,7 @@ namespace PhotoBank.Services.Enrichers
 
                 var faceGuids = detectedFaces.Where(IsAbleToIdentify).Select(f => f.FaceId).ToList();
                 IList<IdentifyResult> identifyResults = new List<IdentifyResult>();
-                if (faceGuids.Any())
+                if (faceGuids.Count != 0)
                 {
                     identifyResults = await _faceService.IdentifyAsync(faceGuids);
                 }

@@ -14,9 +14,6 @@ namespace PhotoBank.Services.Enrichers
 {
     public class MetadataEnricher : IEnricher
     {
-        public MetadataEnricher()
-        {
-        }
         public Type[] Dependencies => new Type[1] { typeof(PreviewEnricher) };
 
         public async Task Enrich(Photo photo, SourceDataDto sourceData)

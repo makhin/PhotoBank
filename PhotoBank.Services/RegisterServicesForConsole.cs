@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
+﻿using Amazon.Rekognition;
+using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Configuration;
@@ -37,11 +38,14 @@ namespace PhotoBank.Services
                 };
             });
 
+            services.AddSingleton(typeof(AmazonRekognitionClient));
+
             services.AddTransient<IOrderResolver<IEnricher>, OrderResolver<IEnricher>>();
 
             services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
             services.AddTransient<IFaceService, FaceService>();
+            services.AddTransient<IFaceServiceAws, FaceServiceAws>();
 
             services.AddTransient<IPhotoProcessor, PhotoProcessor>();
             services.AddTransient<IPhotoService, PhotoService>();
@@ -58,6 +62,7 @@ namespace PhotoBank.Services
             services.AddTransient<IEnricher, ObjectPropertyEnricher>();
             services.AddTransient<IEnricher, AdultEnricher>();
             services.AddTransient<IEnricher, FaceEnricher>();
+            services.AddTransient<IEnricher, FaceEnricherAws>();
         }
     }
 }
