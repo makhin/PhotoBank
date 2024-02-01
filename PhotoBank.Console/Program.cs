@@ -35,7 +35,7 @@ namespace PhotoBank.Console
         {
             IServiceCollection services = new ServiceCollection();
             var config = LoadConfiguration();
-            string connectionString = config.GetConnectionString("DefaultConnection");
+            var connectionString = config.GetConnectionString("DefaultConnection");
 
             services.AddDbContext<PhotoBankDbContext>(options =>
             {

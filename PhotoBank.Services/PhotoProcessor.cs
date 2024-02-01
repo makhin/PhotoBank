@@ -9,6 +9,7 @@ using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers;
 using File = PhotoBank.DbContext.Models.File;
+using Storage = PhotoBank.DbContext.Models.Storage;
 
 namespace PhotoBank.Services
 {
@@ -17,6 +18,7 @@ namespace PhotoBank.Services
         Task<int> AddPhotoAsync(Storage storage, string path);
         Task AddFacesAsync(Storage storage);
         Task UpdateTakenDateAsync(Storage storage);
+        Task UpdatePhotosAsync(Storage storage);
     }
 
     public class PhotoProcessor : IPhotoProcessor
@@ -94,6 +96,60 @@ namespace PhotoBank.Services
             Console.WriteLine($"Wait {ms}");
             //await Task.Delay(ms);
             return photo.Id;
+        }
+
+        public async Task UpdatePhotosAsync(Storage storage)
+        {
+            var files = await _photoRepository
+                .GetAll()
+                .Include(p => p.Storage)
+                .Where(p => p.StorageId == storage.Id && p.RelativePath.Contains("Sony G8341 Camera Backup"))
+                .Select(p => new PhotoFilePath
+                {
+                    PhotoId = p.Id,
+                    RelativePath = p.RelativePath,
+                    Files = p.Files
+                }).ToListAsync();
+
+            await UpdateInfoAsync(storage, files, _ => false, UpdatePhotoAsync);
+        }
+
+        private async void UpdatePhotoAsync(Photo photo)
+        {
+            if (photo.FaceIdentifyStatus != FaceIdentifyStatus.Undefined)
+            {
+                return;
+            }
+
+            var sourceData = new SourceDataDto
+                {AbsolutePath = Path.Combine(photo.Storage.Folder, photo.RelativePath, photo.Files.First().Name)};
+            foreach (var enricher in _enrichers)
+            {
+                await enricher.Enrich(photo, sourceData);
+            }
+
+            await _photoRepository.UpdateAsync(new Photo()
+            {
+                Id = photo.Id,
+                FaceIdentifyStatus = photo.FaceIdentifyStatus,
+            }, p => p.FaceIdentifyStatus);
+
+            foreach (var face in photo.Faces)
+            {
+                await _faceRepository.InsertAsync(new Face()
+                {
+                    Age = face.Age,
+                    PhotoId = face.PhotoId,
+                    FaceAttributes = face.FaceAttributes,
+                    IdentifiedWithConfidence = face.IdentifiedWithConfidence,
+                    Gender = face.Gender,
+                    IdentityStatus = face.IdentityStatus,
+                    Image = face.Image,
+                    PersonId = face.PersonId,
+                    Rectangle = face.Rectangle,
+                    Smile = face.Smile,
+                });
+            }
         }
 
         public async Task AddFacesAsync(Storage storage)

@@ -22,7 +22,7 @@ namespace PhotoBank.ServerBlazorApp
         public PhotoBankDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<PhotoBankDbContext>();
-            optionsBuilder.UseSqlServer("Server=STRIX;Database=Photobank;Trusted_Connection=True;MultipleActiveResultSets=true", b =>
+            optionsBuilder.UseSqlServer("Server=STRIX;Database=Photobank;Trusted_Connection=True;MultipleActiveResultSets=true;Encrypt=False;", b =>
             {
                 b.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName().Name);
                 b.UseNetTopologySuite();

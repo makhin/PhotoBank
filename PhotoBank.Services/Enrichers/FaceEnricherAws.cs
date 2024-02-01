@@ -36,9 +36,11 @@ namespace PhotoBank.Services.Enrichers
                 var detectedFaces = await _faceService.DetectFacesAsync(photo.PreviewImage);
                 if (detectedFaces.Count == 0)
                 {
+                    photo.FaceIdentifyStatus = FaceIdentifyStatus.NotDetected;
                     return;
                 }
 
+                photo.FaceIdentifyStatus = FaceIdentifyStatus.Detected;
                 photo.Faces = new List<Face>();
 
                 foreach (var detectedFace in detectedFaces)

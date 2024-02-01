@@ -99,6 +99,10 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<File>()
                 .HasIndex(p => new { p.Name });
 
+            modelBuilder.Entity<File>()
+                .HasIndex(p => new { p.Name, p.PhotoId })
+                .IsUnique();
+
             modelBuilder.Entity<Face>()
                 .HasIndex(p => p.IdentityStatus)
                 .IncludeProperties(p =>p.PersonId);
