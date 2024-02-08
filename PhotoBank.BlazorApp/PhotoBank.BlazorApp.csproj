@@ -6,9 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Blazorise" Version="1.4.1" />
-    <PackageReference Include="Blazorise.Bootstrap" Version="1.4.1" />
-    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.4.1" />
+    <PackageReference Include="Blazorise" Version="1.4.2" />
+    <PackageReference Include="Blazorise.Bootstrap" Version="1.4.2" />
+    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.4.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
   </ItemGroup>
 

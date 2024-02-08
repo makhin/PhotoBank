@@ -37,8 +37,8 @@ namespace PhotoBank.Console
             //await _faceService.SyncFacesToPersonAsync();
             //await AddFilesAsync();
 
-            //var storage = await _repository.GetAsync(13);
-            //await _photoProcessor.UpdatePhotosAsync(storage);
+            var storage = await _repository.GetAsync(8);
+            await _photoProcessor.UpdatePhotosAsync(storage);
 
             //var storage = await _repository.GetAsync(7);
             //await _photoProcessor.UpdateTakenDateAsync(storage);
@@ -54,7 +54,7 @@ namespace PhotoBank.Console
 
 //            var files = await _syncService.SyncStorage(storage);
 
-            var files = Directory.GetFiles(@"\\MYCLOUDEX2ULTRA\MobileUploads\Sony G8341 Camera Backup\", "*.jpg", SearchOption.AllDirectories)
+            var files = Directory.GetFiles(@"\\MYCLOUDEX2ULTRA\MobileUploads\Xiaomi 21051182G Camera Backup\", "*.jpg", SearchOption.AllDirectories)
                 .ToList();
 
             var enumerable = files.ToList();

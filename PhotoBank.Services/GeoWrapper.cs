@@ -33,8 +33,8 @@ namespace PhotoBank.Services
         {
             var x = (int)(imageWidth * boundingBox.Left / scale);
             var y = (int)(imageHeight * boundingBox.Top / scale);
-            var w = (int)(imageWidth * boundingBox.Width / scale);
-            var h = (int)(imageHeight * boundingBox.Height / scale);
+            var w = (int)(imageHeight * boundingBox.Height / scale);
+            var h = (int)(imageWidth * boundingBox.Width / scale);
 
             return GeometryFactory.CreatePolygon(
                 new[]

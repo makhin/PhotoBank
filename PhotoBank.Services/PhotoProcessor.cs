@@ -103,7 +103,9 @@ namespace PhotoBank.Services
             var files = await _photoRepository
                 .GetAll()
                 .Include(p => p.Storage)
-                .Where(p => p.StorageId == storage.Id && p.RelativePath.Contains("Sony G8341 Camera Backup"))
+                .Where(p => p.StorageId == storage.Id
+                            && p.Id > 69797  
+                            && p.FaceIdentifyStatus == FaceIdentifyStatus.Undefined)
                 .Select(p => new PhotoFilePath
                 {
                     PhotoId = p.Id,
@@ -114,29 +116,22 @@ namespace PhotoBank.Services
             await UpdateInfoAsync(storage, files, _ => false, UpdatePhotoAsync);
         }
 
-        private async void UpdatePhotoAsync(Photo photo)
+        private async Task UpdatePhotoAsync(Photo photo)
         {
-            if (photo.FaceIdentifyStatus != FaceIdentifyStatus.Undefined)
-            {
-                return;
-            }
-
-            var sourceData = new SourceDataDto
-                {AbsolutePath = Path.Combine(photo.Storage.Folder, photo.RelativePath, photo.Files.First().Name)};
-            foreach (var enricher in _enrichers)
-            {
-                await enricher.Enrich(photo, sourceData);
-            }
-
-            await _photoRepository.UpdateAsync(new Photo()
+            await _photoRepository.UpdateAsync(new Photo
             {
                 Id = photo.Id,
                 FaceIdentifyStatus = photo.FaceIdentifyStatus,
             }, p => p.FaceIdentifyStatus);
 
+            if (photo.FaceIdentifyStatus == FaceIdentifyStatus.NotDetected)
+            {
+                return;
+            }
+
             foreach (var face in photo.Faces)
             {
-                await _faceRepository.InsertAsync(new Face()
+                await _faceRepository.InsertAsync(new Face
                 {
                     Age = face.Age,
                     PhotoId = face.PhotoId,
@@ -145,7 +140,7 @@ namespace PhotoBank.Services
                     Gender = face.Gender,
                     IdentityStatus = face.IdentityStatus,
                     Image = face.Image,
-                    PersonId = face.PersonId,
+                    PersonId = face.Person?.Id,
                     Rectangle = face.Rectangle,
                     Smile = face.Smile,
                 });
@@ -199,7 +194,7 @@ namespace PhotoBank.Services
                 });
         }
 
-        private async void InsertFacesAsync(Photo photo)
+        private async Task InsertFacesAsync(Photo photo)
         {
             await _photoRepository.UpdateAsync(new Photo
             {
@@ -218,7 +213,7 @@ namespace PhotoBank.Services
             }
         }
 
-        private async Task UpdateInfoAsync(Storage storage, IEnumerable<PhotoFilePath> files, Func<PhotoFilePath, bool> skipCondition, Action<Photo> updateAction)
+        private async Task UpdateInfoAsync(Storage storage, IEnumerable<PhotoFilePath> files, Func<PhotoFilePath, bool> skipCondition, Func<Photo, Task> updateAction)
         {
             foreach (var photoFile in files)
             {
@@ -227,15 +222,21 @@ namespace PhotoBank.Services
                     continue;
                 }
 
+                var absolutePath = Path.Combine(storage.Folder, photoFile.RelativePath, photoFile.Files.First().Name);
+                if (!Path.Exists(absolutePath))
+                {
+                    continue;
+                }
+
+                var sourceData = new SourceDataDto
+                {
+                    AbsolutePath = absolutePath,
+                };
+
                 var photo = new Photo
                 {
                     Id = photoFile.PhotoId,
                     Storage = storage
-                };
-
-                var sourceData = new SourceDataDto
-                {
-                    AbsolutePath = Path.Combine(storage.Folder, photoFile.RelativePath, photoFile.Files.First().Name),
                 };
 
                 foreach (var enricher in _enrichers)
@@ -245,7 +246,7 @@ namespace PhotoBank.Services
 
                 try
                 {
-                    updateAction(photo);
+                    await updateAction(photo);
                 }
                 catch (Exception exception)
                 {

@@ -8,6 +8,7 @@ using Amazon.Rekognition.Model;
 using ImageMagick;
 using Newtonsoft.Json;
 using PhotoBank.DbContext.Models;
+using PhotoBank.Dto;
 using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
 using Face = PhotoBank.DbContext.Models.Face;
@@ -45,49 +46,35 @@ namespace PhotoBank.Services.Enrichers
 
                 foreach (var detectedFace in detectedFaces)
                 {
+                    var previewImageHeight = sourceData.PreviewImage.Height;
+                    var previewImageWidth = sourceData.PreviewImage.Width;
+
                     var face = new Face
                     {
                         PhotoId = photo.Id,
                         IdentityStatus = IdentityStatus.NotIdentified,
-                        Image = await CreateFacePreview(detectedFace.BoundingBox, sourceData.PreviewImage, 1),
-                        Rectangle = GeoWrapper.GetRectangle(photo.Height.Value, photo.Width.Value, detectedFace.BoundingBox, photo.Scale),
+                        Image = await CreateFacePreview(detectedFace.BoundingBox, sourceData.PreviewImage),
+                        Rectangle = GeoWrapper.GetRectangle(previewImageHeight, previewImageWidth, detectedFace.BoundingBox, photo.Scale),
                         Age = (detectedFace.AgeRange.High + detectedFace.AgeRange.Low) / 2,
                         Gender = detectedFace.Gender.Value == GenderType.Male,
                         Smile = detectedFace.Smile.Confidence,
-                        FaceAttributes = JsonConvert.SerializeObject(new
-                        {
-                            detectedFace.AgeRange,
-                            detectedFace.Beard,
-                            detectedFace.Confidence,
-                            detectedFace.Emotions,
-                            detectedFace.EyeDirection,
-                            detectedFace.Eyeglasses,
-                            detectedFace.EyesOpen,
-                            detectedFace.FaceOccluded,
-                            detectedFace.Gender,
-                            detectedFace.MouthOpen,
-                            detectedFace.Mustache,
-                            detectedFace.Pose,
-                            detectedFace.Smile,
-                            detectedFace.Sunglasses,
-                        })
+                        FaceAttributes = JsonConvert.SerializeObject(detectedFace),
                     };
 
-                    byte[] faceImage;
-                    if (IsAbleToIdentify(sourceData.PreviewImage.Height, sourceData.PreviewImage.Width, detectedFace.BoundingBox))
+
+                    if (!IsAbleToIdentify(previewImageHeight, previewImageWidth, detectedFace.BoundingBox))
                     {
-                        faceImage = face.Image;
-                    }
-                    else if (IsAbleToIdentify(photo.Height.Value, photo.Width.Value, detectedFace.BoundingBox, photo.Scale))
-                    {
-                        faceImage = await CreateFacePreview(detectedFace.BoundingBox, sourceData.OriginalImage, photo.Scale);
-                    }
-                    else
-                    {
-                        continue;
+                        if (IsAbleToIdentify(previewImageHeight, previewImageWidth, detectedFace.BoundingBox, photo.Scale))
+                        {
+                            face.Image = await CreateFacePreview(detectedFace.BoundingBox, sourceData.OriginalImage);
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
 
-                    var matches = await _faceService.SearchUsersByImageAsync(faceImage);
+                    var matches = await _faceService.SearchUsersByImageAsync(face.Image);
                     IdentifyFace(face, matches, photo.TakenDate);
                     photo.Faces.Add(face);
                 }
@@ -98,33 +85,28 @@ namespace PhotoBank.Services.Enrichers
             }
         }
 
-        private static bool IsAbleToIdentify(int imageHeight, int imageWidth, BoundingBox detectedFace)
-        {
-            return IsAbleToIdentify(imageHeight, imageWidth, detectedFace, 1);
-        }
-
-        private static bool IsAbleToIdentify(int imageHeight, int imageWidth, BoundingBox detectedFace, in double scale)
+        private static bool IsAbleToIdentify(int imageHeight, int imageWidth, BoundingBox detectedFace, in double scale = 1)
         {
             return Math.Round(imageHeight * detectedFace.Height / scale) >= MinFaceSize && Math.Round(imageWidth * detectedFace.Width / scale) >= MinFaceSize;
         }
 
-        private static async Task<byte[]> CreateFacePreview(BoundingBox detectedFace, IMagickImage<byte> image, double photoScale)
+        private static async Task<byte[]> CreateFacePreview(BoundingBox detectedFace, IMagickImage<byte> image)
         {
             await using (var stream = new MemoryStream())
             {
                 var faceImage = image.Clone();
-                faceImage.Crop(GetMagickGeometry(faceImage.Height, faceImage.Width, detectedFace, photoScale));
+                faceImage.Crop(GetMagickGeometry(faceImage.Height, faceImage.Width, detectedFace));
                 await faceImage.WriteAsync(stream);
                 return stream.ToArray();
             }
         }
 
-        private static MagickGeometry GetMagickGeometry(int imageHeight, int imageWidth, BoundingBox detectedFace, double photoScale)
+        private static MagickGeometry GetMagickGeometry(int imageHeight, int imageWidth, BoundingBox detectedFace)
         {
-            var height = (int)(imageHeight * detectedFace.Height / photoScale);
-            var width = (int)(imageWidth * detectedFace.Width / photoScale);
-            var top = (int)(imageHeight * detectedFace.Top / photoScale);
-            var left = (int)(imageWidth * detectedFace.Left / photoScale);
+            var height = (int)(imageHeight * detectedFace.Height);
+            var width = (int)(imageWidth * detectedFace.Width);
+            var top = (int)(imageHeight * detectedFace.Top);
+            var left = (int)(imageWidth * detectedFace.Left);
 
             var geometry = new MagickGeometry(width, height)
             {
@@ -149,6 +131,7 @@ namespace PhotoBank.Services.Enrichers
                 face.IdentityStatus = IdentityStatus.Identified;
                 face.IdentifiedWithConfidence = candidate.Similarity;
                 face.Person = person;
+                return;
             }
         }
     }
