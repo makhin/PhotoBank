@@ -12,6 +12,9 @@ using PhotoBank.Dto;
 using PhotoBank.Services;
 using Radzen;
 using Serilog;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Identity;
+using PhotoBank.ServerBlazorApp.Areas.Identity;
 
 namespace PhotoBank.ServerBlazorApp
 {
@@ -30,6 +33,7 @@ namespace PhotoBank.ServerBlazorApp
         {
             services.AddRazorPages();
             services.AddServerSideBlazor().AddCircuitOptions(options => { options.DetailedErrors = true; });
+            services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
 
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
 
@@ -46,6 +50,9 @@ namespace PhotoBank.ServerBlazorApp
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
             });
+
+            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddEntityFrameworkStores<PhotoBankDbContext>();
 
             RegisterServicesForConsole.Configure(services, Configuration);
             services.AddScoped<TooltipService>();
@@ -73,6 +80,7 @@ namespace PhotoBank.ServerBlazorApp
             app.UseStaticFiles();
 
             app.UseRouting();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

@@ -1,4 +1,4 @@
-﻿
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Logging;
 
@@ -7,7 +7,7 @@ namespace PhotoBank.DbContext.DbContext
     using Microsoft.EntityFrameworkCore;
     using Models;
 
-    public class PhotoBankDbContext : DbContext
+    public class PhotoBankDbContext : IdentityDbContext
     {
         public static readonly ILoggerFactory PhotoBankLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 
