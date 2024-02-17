@@ -6,8 +6,8 @@ namespace PhotoBank.DbContext.DbContext
 {
     using Microsoft.EntityFrameworkCore;
     using Models;
-
-    public class PhotoBankDbContext : IdentityDbContext
+    
+    public class PhotoBankDbContext : IdentityDbContext<ApplicationUser>
     {
         public static readonly ILoggerFactory PhotoBankLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 

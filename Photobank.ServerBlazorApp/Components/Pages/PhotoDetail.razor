@@ -1,0 +1,81 @@
+﻿@page "/photodetail/{PhotoId}"
+@inherits PhotoDetailBase
+@rendermode InteractiveServer
+
+@if (Photo != null)
+{
+    <Title value="@Photo.Name"></Title>
+}
+
+<style type="text/css">
+    .wrapper {
+        position: relative;
+    }
+
+    .box {
+        position: absolute;
+        top: 10px;
+        border: 1px solid white;
+        background-color: transparent;
+        display: flex;
+    }
+
+        .box span {
+            -webkit-align-self: flex-end;
+            -o-align-self: flex-end;
+            align-self: flex-end;
+            color: white;
+            font-size: smaller;
+        }
+</style>
+
+@if (Photo == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <RadzenCard>
+        <div class="row">
+            <div class="col-md-6">
+                <div>Name:</div>
+                <b>@Photo.Name</b>
+                <div style="margin-top:20px">Caption:</div>
+                @foreach (var caption in Photo.Captions)
+                {
+                    <b>@caption</b>
+                    <br />
+                }
+                <div style="margin-top:20px"></div>
+                <span>Adult Score: <strong>@Math.Round(Photo.AdultScore, 3)</strong>;</span>&nbsp;<span>Racy Score: <strong>@Math.Round(Photo.RacyScore, 3)</strong></span>
+                <div style="margin-top:20px">Tags:</div>
+                @foreach (var tag in Photo.Tags)
+                {
+                    <span style="display:inline-block;color:#fff;margin:4px;padding:0 4px;border-radius:4px;background-color: #5319e7">@tag</span>
+                }
+            </div>
+            <div class="col-md-6">
+                <div>Faces:</div>
+                @for (var i = 0; i < Photo.Faces.Count; i++)
+                    {
+                        var face = Photo.Faces[i];
+                        <div>
+                            <span>@((i + 1).ToString())&nbsp;@(face.Age.ToString())&nbsp;@(face.Gender.HasValue ? (face.Gender.Value && face.FaceAttributes != null ? "M" : "F") : string.Empty)</span>
+                            <RadzenDropDown Data=@Persons @bind-Value=@face.PersonId TextProperty="Name" ValueProperty="Id" Change=@(args => OnChangePersonAsync(face.Id, args))/>
+                        </div>
+                    }
+            </div>
+        </div>
+    </RadzenCard>
+    <div class="wrapper">
+        <img src="data:image;base64,@Convert.ToBase64String(Photo.PreviewImage)" alt="" />
+        @for (var i = 0; i < Photo.Faces.Count; i++)
+        {
+            var i2 = i;
+            var face = Photo.Faces[i];
+            <div class="box" style="top: @face.FaceBox.Top; left: @face.FaceBox.Left; width: @face.FaceBox.Width; height: @face.FaceBox.Height" @ref="MemberRef[i2]" @onmouseover="@(args => ShowTooltipWithHtml(i2, face.FriendlyFaceAttributes))">
+                <span>@((i + 1).ToString())</span><span>.</span>
+            </div>
+        }
+    </div>
+}

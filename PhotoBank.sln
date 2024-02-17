@@ -7,13 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Console", "PhotoB
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.DbContext", "PhotoBank.DbContext\PhotoBank.DbContext.csproj", "{0B58F0BB-872E-4644-ADFD-2F52312B95B4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Api", "PhotoBank.Api\PhotoBank.Api.csproj", "{C9C6516A-AC20-4E53-AACB-916737018EFD}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Repositories", "PhotoBank.Repositories\PhotoBank.Repositories.csproj", "{BB03B6F7-5A40-4D48-97E2-75CFC99191D1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Services", "PhotoBank.Services\PhotoBank.Services.csproj", "{01B72FEE-BD48-43D8-B155-9E2B2D953C55}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.BlazorApp", "PhotoBank.BlazorApp\PhotoBank.BlazorApp.csproj", "{23A13E61-19C4-4ED6-BA98-59C0253A84E3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Dto", "PhotoBank.Dto\PhotoBank.Dto.csproj", "{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}"
 EndProject
@@ -45,14 +41,6 @@ Global
 		{0B58F0BB-872E-4644-ADFD-2F52312B95B4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0B58F0BB-872E-4644-ADFD-2F52312B95B4}.Release|x64.ActiveCfg = Release|x64
 		{0B58F0BB-872E-4644-ADFD-2F52312B95B4}.Release|x64.Build.0 = Release|x64
-		{C9C6516A-AC20-4E53-AACB-916737018EFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C9C6516A-AC20-4E53-AACB-916737018EFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C9C6516A-AC20-4E53-AACB-916737018EFD}.Debug|x64.ActiveCfg = Debug|x64
-		{C9C6516A-AC20-4E53-AACB-916737018EFD}.Debug|x64.Build.0 = Debug|x64
-		{C9C6516A-AC20-4E53-AACB-916737018EFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C9C6516A-AC20-4E53-AACB-916737018EFD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C9C6516A-AC20-4E53-AACB-916737018EFD}.Release|x64.ActiveCfg = Release|x64
-		{C9C6516A-AC20-4E53-AACB-916737018EFD}.Release|x64.Build.0 = Release|x64
 		{BB03B6F7-5A40-4D48-97E2-75CFC99191D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BB03B6F7-5A40-4D48-97E2-75CFC99191D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB03B6F7-5A40-4D48-97E2-75CFC99191D1}.Debug|x64.ActiveCfg = Debug|x64
@@ -69,14 +57,6 @@ Global
 		{01B72FEE-BD48-43D8-B155-9E2B2D953C55}.Release|Any CPU.Build.0 = Release|Any CPU
 		{01B72FEE-BD48-43D8-B155-9E2B2D953C55}.Release|x64.ActiveCfg = Release|x64
 		{01B72FEE-BD48-43D8-B155-9E2B2D953C55}.Release|x64.Build.0 = Release|x64
-		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Debug|x64.ActiveCfg = Debug|x64
-		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Debug|x64.Build.0 = Debug|x64
-		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Release|x64.ActiveCfg = Release|x64
-		{23A13E61-19C4-4ED6-BA98-59C0253A84E3}.Release|x64.Build.0 = Release|x64
 		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Debug|x64.ActiveCfg = Debug|x64
