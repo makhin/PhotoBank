@@ -56,7 +56,6 @@ namespace PhotoBank.Services.Api
 
             var photos = _photoRepository
                 .GetAll()
-                .Where(p => !p.IsPrivate)
                 .Include(p => p.Storage)
                 .Include(p => p.PhotoTags)
                 .Include(p => p.Faces)
@@ -181,7 +180,6 @@ namespace PhotoBank.Services.Api
                         ).Any() == false
                         select photo).ToList();
             }
-
 
             queryResult.Photos = result.Skip(skip ?? 0).Take(top ?? 10);
             queryResult.Count = result.Count;

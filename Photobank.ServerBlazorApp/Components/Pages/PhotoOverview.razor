@@ -1,78 +1,69 @@
 ﻿@page "/photooverview"
 @using PhotoBank.Dto.View
 @using Radzen
+@using System.Collections.ObjectModel
+@using Microsoft.AspNetCore.Authorization
 @inherits PhotoOverviewBase
 @rendermode InteractiveServer
+
+@attribute [Authorize]
 
 @if (Storages == null || Paths == null || Persons == null || Tags == null)
 {
     <p><em>Loading...</em></p>
+
 }
 else
 {
     <RadzenTemplateForm Data="@Filter" Submit="@((FilterDto args) => ApplyFilter(args))">
-        <RadzenFieldset Text="Filter">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="row">
-                        <div class="col-md-1 align-items-center d-flex">
-                            <RadzenLabel Text="Storages" />
-                        </div>
-                        <div class="col-md-1">
-                            <RadzenDropDown @bind-Value="Filter.Storages" AllowClear="true" Multiple="true" Data="@Storages" Style="width: 100%;" TextProperty="Name" ValueProperty="Id" Name="Storages">
-                            </RadzenDropDown>
-                        </div>
-                        @if (Filter.Storages != null)
-                        {
-                            <div class="col-md-1">
-                                <RadzenDropDown @bind-Value="Filter.RelativePath" AllowClear="true" Data="@(Paths.Where(o => Filter.Storages.Contains(o.StorageId) && !string.IsNullOrEmpty(o.Path)))" Style="width: 100%;" TextProperty="Path" ValueProperty="Path" Name="Paths">
-                                </RadzenDropDown>
-                            </div>
-                        }
-                        <div class="col-md-1 align-items-center d-flex">
-                            <RadzenLabel Text="Taken Date" />
-                        </div>
-                        <div class="col-md-1">
-                            <RadzenDatePicker style="width: 100%;" DateFormat="d" Name="TakenDateFrom" @bind-Value="Filter.TakenDateFrom" ShowTime="false"  />
-                        </div>
-                        <div class="col-md-1">
-                            <RadzenDatePicker style="width: 100%;" DateFormat="d" Name="TakenDateTo" @bind-Value="Filter.TakenDateTo" ShowTime="false" />
-                        </div>
-                        <div class="col-md-1 align-items-center d-flex">
-                            <RadzenCheckBox @bind-Value=@Filter.IsBW TriState="true" TValue="bool?" Name="CheckBoxIsBW" /><RadzenLabel Text="Is BW" Style="margin-left: 5px" Component="CheckBoxIsBW" />
-                        </div>
-                        <div class="col-md-1 align-items-center d-flex">
-                            <RadzenCheckBox @bind-Value=@Filter.IsAdultContent TriState="true" TValue="bool?" Name="CheckBoxIsAdult" /><RadzenLabel Text="Is Adult" Style="margin-left: 5px" Component="CheckBoxIsAdult" />
-                        </div>
-                        <div class="col-md-1 align-items-center d-flex">
-                            <RadzenCheckBox @bind-Value=@Filter.IsRacyContent TriState="true" TValue="bool?" Name="CheckBoxIsRacy" /><RadzenLabel Text="Is Racy" Style="margin-left: 5px" Component="CheckBoxIsRacy" />
-                        </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-1 align-items-center d-flex">
-                                <RadzenLabel Text="Caption" />
-                            </div>
-                            <div class="col-md-3">
-                                <RadzenTextBox style="width: 100%;" Name="Caption" @bind-Value="Filter.Caption" />
-                            </div>
-                            <div class="col-md-1 align-items-center d-flex">
-                                <RadzenLabel Text="Persons" />
-                            </div>
-                            <div class="col-md-1">
-                                <RadzenDropDown @bind-Value="Filter.Persons" AllowClear="true" Multiple="true" Data="@Persons" style="width: 100%;" TextProperty="Name" ValueProperty="Id" Name="Persons" AllowFiltering="true" FilterOperator="StringFilterOperator.Contains">
-                                </RadzenDropDown>
-                            </div>
-                            <div class="col-md-1 align-items-center d-flex">
-                                <RadzenLabel Text="Tags" />
-                            </div>
-                            <div class="col-md-1">
-                                <RadzenDropDown @bind-Value="Filter.Tags" AllowClear="true" Multiple="true" Data="@Tags" style="width: 100%;" TextProperty="Name" ValueProperty="Id" Name="Tags" AllowFiltering="true">
-                                </RadzenDropDown>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-        </RadzenFieldset>
+        <RadzenCard class="my-4">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start"  Wrap="FlexWrap.Wrap">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                    <RadzenLabel Text="Storages"/>
+                    <RadzenDropDown @bind-Value="Filter.Storages" AllowClear="true" Multiple="true" Data="@Storages" Style="width: 100%;" TextProperty="Name" ValueProperty="Id" Name="Storages">
+                    </RadzenDropDown>
+                    @if (Filter.Storages != null)
+                    {
+                        <RadzenDropDown @bind-Value="Filter.RelativePath" AllowClear="true" Data="@(Paths.Where(o => Filter.Storages.Contains(o.StorageId) && !string.IsNullOrEmpty(o.Path)))" Style="width: 100%;" TextProperty="Path" ValueProperty="Path" Name="Paths">
+                        </RadzenDropDown>
+                    }
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                    <RadzenLabel Text="Taken Date"/>
+                    <RadzenDatePicker style="width: 100%;" DateFormat="d" Name="TakenDateFrom" @bind-Value="Filter.TakenDateFrom" ShowTime="false"/>
+                    <RadzenDatePicker style="width: 100%;" DateFormat="d" Name="TakenDateTo" @bind-Value="Filter.TakenDateTo" ShowTime="false" />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                    <RadzenLabel Text="Content" />
+                    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.NoWrap">
+                        <RadzenCheckBox @bind-Value=@Filter.IsBW TriState="true" TValue="bool?" Name="CheckBoxIsBW"/><RadzenLabel Text="Is BW" Style="margin-left: 5px" Component="CheckBoxIsBW"/>
+                    </RadzenStack>
+                    @if (AllowAdultFilter)
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.NoWrap">
+                            <RadzenCheckBox @bind-Value=@Filter.IsAdultContent TriState="true" TValue="bool?" Name="CheckBoxIsAdult"/><RadzenLabel Text="Is Adult" Style="margin-left: 5px" Component="CheckBoxIsAdult"/>
+                        </RadzenStack>
+                    }
+                    @if (AllowRacyFilter)
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.NoWrap">
+                            <RadzenCheckBox @bind-Value=@Filter.IsRacyContent TriState="true" TValue="bool?" Name="CheckBoxIsRacy"/><RadzenLabel Text="Is Racy" Style="margin-left: 5px" Component="CheckBoxIsRacy"/>
+                        </RadzenStack>
+                    }
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                    <RadzenLabel Text="Persons and Tags" />
+                    <RadzenDropDown @bind-Value="Filter.Persons" AllowClear="true" Multiple="true" Data="@Persons" style="width: 100%;" TextProperty="Name" ValueProperty="Id" Name="Persons" AllowFiltering="true" FilterOperator="StringFilterOperator.Contains">
+                    </RadzenDropDown>
+                    <RadzenDropDown @bind-Value="Filter.Tags" AllowClear="true" Multiple="true" Data="@Tags" style="width: 100%;" TextProperty="Name" ValueProperty="Id" Name="Tags" AllowFiltering="true">
+                    </RadzenDropDown>
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                    <RadzenLabel Text="Caption" />
+                    <RadzenTextArea style="width: 100%;" Name="Caption" @bind-Value="Filter.Caption" Rows="3"></RadzenTextArea>
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
         <div class="row justify-content-center">
             <div class="col-md-12 d-flex align-items-end justify-content-center" style="margin-top: 16px; margin-bottom: 16px;">
                 <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Filter"/>
@@ -87,7 +78,7 @@ else
         <Columns>
             <RadzenGridColumn TItem="PhotoItemDto" Property="Id" Title="Photo ID">
                 <Template Context="data">
-                    <RadzenLink Path="@string.Format("photodetail/{0}",data.Id)" Text="@data.Id.ToString()" />
+                <RadzenLink Path="@string.Format("photodetail/{0}",data.Id)" Text="@data.Id.ToString()" target="_blank" />
                 </Template>
             </RadzenGridColumn>
             <RadzenGridColumn TItem="PhotoItemDto" Property="Thumbnail" Title="Thumbnail" Sortable="false" Filterable="false">

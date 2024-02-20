@@ -127,5 +127,6 @@ namespace PhotoBank.DbContext.DbContext
         {
             optionsBuilder.UseLoggerFactory(PhotoBankLoggerFactory);
         }
+
     }
 }

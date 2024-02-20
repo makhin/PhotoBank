@@ -3,17 +3,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
-using PhotoBank.ServerBlazorApp.Components;
 using PhotoBank.ServerBlazorApp.Components.Account;
 using Serilog.Events;
 using Serilog;
 using System.Reflection;
 using PhotoBank.Dto;
+using PhotoBank.ServerBlazorApp.Components;
 using PhotoBank.Services;
 using Radzen;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Hosting.Server;
-
+using Microsoft.Extensions.DependencyInjection;
 
 namespace PhotoBank.ServerBlazorApp
 {
@@ -44,35 +42,15 @@ namespace PhotoBank.ServerBlazorApp
 
             builder.Services.AddRazorPages();
             builder.Services.AddRazorComponents()
-                .AddInteractiveServerComponents().AddHubOptions(o =>
-                {
-                    o.MaximumReceiveMessageSize = 10 * 1024 * 1024;
-                });
-            builder.Services.AddSingleton(sp =>
-            {
-                // Get the address that the app is currently running at
-                var server = sp.GetRequiredService<IServer>();
-                var addressFeature = server.Features.Get<IServerAddressesFeature>();
-                string baseAddress = addressFeature != null ? addressFeature.Addresses.First() : string.Empty;
-                return new HttpClient { BaseAddress = new Uri(baseAddress) };
-            });
-            builder.Services.AddRadzenComponents();
+                .AddInteractiveServerComponents();
 
-            //// Add services to the container.
-            //builder.Services.AddRazorComponents()
-            //    .AddInteractiveServerComponents();
+            builder.Services.AddRadzenComponents();
 
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddScoped<IdentityUserAccessor>();
             builder.Services.AddScoped<IdentityRedirectManager>();
             builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
-
-            builder.Services.AddAuthentication(options =>
-                {
-                    options.DefaultScheme = IdentityConstants.ApplicationScheme;
-                    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-                })
-                .AddIdentityCookies();
+            builder.Services.AddHttpContextAccessor();
 
             var connectionString = configuration.GetConnectionString("DefaultConnection") ??
                                    throw new InvalidOperationException(
@@ -95,10 +73,19 @@ namespace PhotoBank.ServerBlazorApp
 
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            builder.Services.AddIdentityCore<ApplicationUser>()
-                .AddEntityFrameworkStores<PhotoBankDbContext>()
-                .AddSignInManager()
-                .AddDefaultTokenProviders();
+            builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
+                    // options are set here
+                })
+                .AddRoles<IdentityRole>()
+                .AddDefaultTokenProviders()
+                .AddEntityFrameworkStores<PhotoBankDbContext>();
+
+            builder.Services.AddAuthorizationBuilder()
+                .AddPolicy("AllowToSeeAdultContent", policy => {
+                    policy.RequireClaim("AllowAdultContent", "True");
+                }).AddPolicy("AllowToSeeRacyContent", policy => {
+                    policy.RequireClaim("AllowRacyContent", "True");
+                });
 
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
             RegisterServicesForConsole.Configure(builder.Services, configuration);
@@ -123,9 +110,10 @@ namespace PhotoBank.ServerBlazorApp
 
             app.UseStaticFiles();
             app.UseAntiforgery();
-            app.MapRazorPages();//todo 
+
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
+            
             // Add additional endpoints required by the Identity /Account Razor components.
             app.MapAdditionalIdentityEndpoints();
 

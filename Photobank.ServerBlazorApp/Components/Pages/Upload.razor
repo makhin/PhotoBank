@@ -1,7 +1,10 @@
 ﻿@page "/upload"
 @using Radzen
+@using Microsoft.AspNetCore.Authorization
 @inherits UploadBase
 @rendermode InteractiveServer
+
+@attribute [Authorize]
 
 <div class="row">
     <div class="col-xl-6">

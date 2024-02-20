@@ -1,6 +1,9 @@
 ﻿@page "/photodetail/{PhotoId}"
+@using Microsoft.AspNetCore.Authorization
 @inherits PhotoDetailBase
 @rendermode InteractiveServer
+
+@attribute [Authorize]
 
 @if (Photo != null)
 {
@@ -61,7 +64,13 @@ else
                         var face = Photo.Faces[i];
                         <div>
                             <span>@((i + 1).ToString())&nbsp;@(face.Age.ToString())&nbsp;@(face.Gender.HasValue ? (face.Gender.Value && face.FaceAttributes != null ? "M" : "F") : string.Empty)</span>
-                            <RadzenDropDown Data=@Persons @bind-Value=@face.PersonId TextProperty="Name" ValueProperty="Id" Change=@(args => OnChangePersonAsync(face.Id, args))/>
+                        <AuthorizeView Roles="User">
+                            <RadzenText Text="@GetPersonNameById(face.PersonId)"/>
+                        </AuthorizeView>
+
+                        <AuthorizeView Roles="Administrator">
+                                <RadzenDropDown Data=@Persons @bind-Value=@face.PersonId TextProperty="Name" ValueProperty="Id" Change=@(args => OnChangePersonAsync(face.Id, args))/>
+                            </AuthorizeView>
                         </div>
                     }
             </div>

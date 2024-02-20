@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PhotoBank.DbContext.DbContext;
@@ -30,35 +32,37 @@ namespace PhotoBank.Repositories
     {
         private readonly PhotoBankDbContext _context;
         private readonly DbSet<TTable> _entities;
+        private readonly IRowAuthPoliciesContainer _container;
 
-        public Repository(IServiceProvider serviceProvider)
+        public Repository(IServiceProvider serviceProvider, IHttpContextAccessor httpContextAccessor)
         {
+            _container = RowAuthPoliciesContainer.ConfigureRowAuthPolicies(httpContextAccessor);
             var context = serviceProvider.GetRequiredService<PhotoBankDbContext>();
-            this._context = context;
+
+            _context = context;
             _entities = context.Set<TTable>();
+        }
+        public IQueryable<TTable> GetAll()
+        {
+            return _container.GetPolicies<TTable>()
+                .Aggregate<IRowAuthPolicy<TTable>, IQueryable<TTable>>(_entities,
+                    (current, policy) => current.Where(policy.Expression)).AsNoTracking();
         }
 
         public IQueryable<TTable> GetByCondition(Expression<Func<TTable, bool>> predicate)
         {
-            return _entities.Where(predicate);
-        }
-
-        public IQueryable<TTable> GetAll()
-        {
-            return _entities;
+            return GetAll().Where(predicate);
         }
 
         public async Task<TTable> GetAsync(int id, Func<IQueryable<TTable>, IQueryable<TTable>> queryable)
         {
-            IQueryable<TTable> query = _entities.AsNoTracking();
-            query = queryable(query);
+            var query = queryable(GetAll());
             return await query.SingleOrDefaultAsync(a => a.Id == id);
         }
 
         public TTable Get(int id, Func<IQueryable<TTable>, IQueryable<TTable>> queryable)
         {
-            IQueryable<TTable> query = _entities.AsNoTracking();
-            query = queryable(query);
+            var query = queryable(GetAll());
             return  query.SingleOrDefault(a => a.Id == id);
         }
 
@@ -108,7 +112,7 @@ namespace PhotoBank.Repositories
         }
         public async Task<TTable> UpdateAsync(TTable entity)
         {
-            bool recordExists = _entities.Any(a => a.Id == entity.Id);
+            var recordExists = _entities.Any(a => a.Id == entity.Id);
 
             if (!recordExists)
             {
@@ -130,7 +134,6 @@ namespace PhotoBank.Repositories
                 throw new Exception("An error occurred; record not updated");
             }
         }
-
 
         public async Task<int> UpdateAsync(TTable entity, Expression<Func<TTable, object>>[] properties)
         {
@@ -159,7 +162,7 @@ namespace PhotoBank.Repositories
 
         public async Task<int> DeleteAsync(int id)
         {
-            TTable entity = await _entities.AsNoTracking().SingleOrDefaultAsync(m => m.Id == id);
+            var entity = await _entities.AsNoTracking().SingleOrDefaultAsync(m => m.Id == id);
 
             if (entity == null)
             {

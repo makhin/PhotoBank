@@ -29,11 +29,14 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
         protected override async Task OnInitializedAsync()
         {
             Photo = await PhotoDataService.GetPhotoAsync(int.Parse(PhotoId));
-            Persons = await PhotoDataService.GetAllPersonsAsync();
-            MemberRef = new ElementReference[Photo.Faces.Count];
+            if (Photo != null)
+            {
+                Persons = await PhotoDataService.GetAllPersonsAsync();
+                MemberRef = new ElementReference[Photo.Faces.Count];
+            }
         }
 
-        protected string GetPersonNameById(int? id)
+        protected string? GetPersonNameById(int? id)
         {
             return !id.HasValue ? string.Empty : Persons.FirstOrDefault(p => p.Id == id)?.Name;
         }
