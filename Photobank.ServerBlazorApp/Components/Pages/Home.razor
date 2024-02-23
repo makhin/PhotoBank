@@ -1,52 +1,7 @@
 ﻿@page "/"
-@using System.Security.Claims
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
 
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
-
-<h1>ClaimsPrincipal Data</h1>
-
-<RadzenButton Click="GetClaimsPrincipalData">Get ClaimsPrincipal Data</RadzenButton>
-
-<p>@authMessage</p>
-
-@if (claims.Any())
-{
-    <ul>
-        @foreach (var claim in claims)
-        {
-            <li>@claim.Type: @claim.Value</li>
-        }
-    </ul>
-}
-
-<p>@surname</p>
-
-@code {
-    private string? authMessage;
-    private string? surname;
-    private IEnumerable<Claim> claims = Enumerable.Empty<Claim>();
-
-    private async Task GetClaimsPrincipalData()
-    {
-        var authState = await AuthenticationStateProvider
-            .GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (user.Identity is not null && user.Identity.IsAuthenticated)
-        {
-            authMessage = $"{user.Identity.Name} is authenticated.";
-            claims = user.Claims;
-            surname = user.FindFirst(c => c.Type == ClaimTypes.Surname)?.Value;
-        }
-        else
-        {
-            authMessage = "The user is NOT authenticated.";
-        }
-    }
-}

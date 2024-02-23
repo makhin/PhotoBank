@@ -34,6 +34,13 @@ namespace PhotoBank.Repositories
         private readonly DbSet<TTable> _entities;
         private readonly IRowAuthPoliciesContainer _container;
 
+        public Repository(IServiceProvider serviceProvider)
+        {
+            var context = serviceProvider.GetRequiredService<PhotoBankDbContext>();
+
+            _context = context;
+            _entities = context.Set<TTable>();
+        }
         public Repository(IServiceProvider serviceProvider, IHttpContextAccessor httpContextAccessor)
         {
             _container = RowAuthPoliciesContainer.ConfigureRowAuthPolicies(httpContextAccessor);
@@ -44,9 +51,14 @@ namespace PhotoBank.Repositories
         }
         public IQueryable<TTable> GetAll()
         {
-            return _container.GetPolicies<TTable>()
+            if (_container != null)
+            {
+                return _container.GetPolicies<TTable>()
                 .Aggregate<IRowAuthPolicy<TTable>, IQueryable<TTable>>(_entities,
                     (current, policy) => current.Where(policy.Expression)).AsNoTracking();
+            }
+
+            return _entities.AsNoTracking();
         }
 
         public IQueryable<TTable> GetByCondition(Expression<Func<TTable, bool>> predicate)

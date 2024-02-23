@@ -8,16 +8,15 @@
 
 @attribute [Authorize]
 
-@if (Storages == null || Paths == null || Persons == null || Tags == null)
+@if (IsFilterLoading)
 {
     <p><em>Loading...</em></p>
-
 }
 else
 {
     <RadzenTemplateForm Data="@Filter" Submit="@((FilterDto args) => ApplyFilter(args))">
         <RadzenCard class="my-4">
-            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start"  Wrap="FlexWrap.Wrap">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" Wrap="FlexWrap.Wrap">
                 <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
                     <RadzenLabel Text="Storages"/>
                     <RadzenDropDown @bind-Value="Filter.Storages" AllowClear="true" Multiple="true" Data="@Storages" Style="width: 100%;" TextProperty="Name" ValueProperty="Id" Name="Storages">
@@ -31,10 +30,10 @@ else
                 <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
                     <RadzenLabel Text="Taken Date"/>
                     <RadzenDatePicker style="width: 100%;" DateFormat="d" Name="TakenDateFrom" @bind-Value="Filter.TakenDateFrom" ShowTime="false"/>
-                    <RadzenDatePicker style="width: 100%;" DateFormat="d" Name="TakenDateTo" @bind-Value="Filter.TakenDateTo" ShowTime="false" />
+                    <RadzenDatePicker style="width: 100%;" DateFormat="d" Name="TakenDateTo" @bind-Value="Filter.TakenDateTo" ShowTime="false"/>
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-                    <RadzenLabel Text="Content" />
+                    <RadzenLabel Text="Content"/>
                     <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.NoWrap">
                         <RadzenCheckBox @bind-Value=@Filter.IsBW TriState="true" TValue="bool?" Name="CheckBoxIsBW"/><RadzenLabel Text="Is BW" Style="margin-left: 5px" Component="CheckBoxIsBW"/>
                     </RadzenStack>
@@ -52,14 +51,14 @@ else
                     }
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-                    <RadzenLabel Text="Persons and Tags" />
+                    <RadzenLabel Text="Persons and Tags"/>
                     <RadzenDropDown @bind-Value="Filter.Persons" AllowClear="true" Multiple="true" Data="@Persons" style="width: 100%;" TextProperty="Name" ValueProperty="Id" Name="Persons" AllowFiltering="true" FilterOperator="StringFilterOperator.Contains">
                     </RadzenDropDown>
                     <RadzenDropDown @bind-Value="Filter.Tags" AllowClear="true" Multiple="true" Data="@Tags" style="width: 100%;" TextProperty="Name" ValueProperty="Id" Name="Tags" AllowFiltering="true">
                     </RadzenDropDown>
                 </RadzenStack>
                 <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-                    <RadzenLabel Text="Caption" />
+                    <RadzenLabel Text="Caption"/>
                     <RadzenTextArea style="width: 100%;" Name="Caption" @bind-Value="Filter.Caption" Rows="3"></RadzenTextArea>
                 </RadzenStack>
             </RadzenStack>
@@ -71,22 +70,21 @@ else
             </div>
         </div>
     </RadzenTemplateForm>
-}
 
     <RadzenGrid AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Advanced" AllowPaging="true" PageSize="20"
                 AllowSorting="true" Data="@Photos" LoadData="@LoadData" Count="@Count" TItem="PhotoItemDto" ColumnWidth="200px">
         <Columns>
             <RadzenGridColumn TItem="PhotoItemDto" Property="Id" Title="Photo ID">
                 <Template Context="data">
-                <RadzenLink Path="@string.Format("photodetail/{0}",data.Id)" Text="@data.Id.ToString()" target="_blank" />
+                    <RadzenLink Path="@string.Format("photodetail/{0}", data.Id)" Text="@data.Id.ToString()" target="_blank"/>
                 </Template>
             </RadzenGridColumn>
             <RadzenGridColumn TItem="PhotoItemDto" Property="Thumbnail" Title="Thumbnail" Sortable="false" Filterable="false">
                 <Template Context="data">
-                    <img src="data:image;base64,@Convert.ToBase64String(data?.Thumbnail)" />
+                    <img src="data:image;base64,@Convert.ToBase64String(data?.Thumbnail)"/>
                 </Template>
             </RadzenGridColumn>
-            <RadzenGridColumn TItem="PhotoItemDto" Property="Name" Title="Name" />
+            <RadzenGridColumn TItem="PhotoItemDto" Property="Name" Title="Name"/>
             <RadzenGridColumn TItem="PhotoItemDto" Property="TakenDate" Title="Taken Date">
                 <Template Context="data">
                     @($"{data.TakenDate:d}")
@@ -97,7 +95,8 @@ else
                 <RadzenGridColumn TItem="PhotoItemDto" Property="AdultScore" Title="Adult Score" />
                 <RadzenGridColumn TItem="PhotoItemDto" Property="RacyScore" Title="Racy Score" />
             *@
-            <RadzenGridColumn TItem="PhotoItemDto" Property="StorageName" Title="Storage" />
-            <RadzenGridColumn TItem="PhotoItemDto" Property="RelativePath" Title="Relative Path" />
+            <RadzenGridColumn TItem="PhotoItemDto" Property="StorageName" Title="Storage"/>
+            <RadzenGridColumn TItem="PhotoItemDto" Property="RelativePath" Title="Relative Path"/>
         </Columns>
     </RadzenGrid>
+}

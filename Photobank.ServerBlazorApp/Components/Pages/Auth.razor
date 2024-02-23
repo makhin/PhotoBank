@@ -1,6 +1,8 @@
 ﻿@page "/auth"
-
+@using System.Security.Claims
 @using Microsoft.AspNetCore.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@rendermode InteractiveServer
 
 @attribute [Authorize]
 
@@ -11,3 +13,45 @@
 <AuthorizeView>
     Hello @context.User.Identity?.Name!
 </AuthorizeView>
+
+<h1>ClaimsPrincipal Data</h1>
+
+<RadzenButton Click="GetClaimsPrincipalData">Get ClaimsPrincipal Data</RadzenButton>
+
+<p>@_authMessage</p>
+
+@if (_claims.Any())
+{
+    <ul>
+        @foreach (var claim in _claims)
+        {
+            <li>@claim.Type: @claim.Value</li>
+        }
+    </ul>
+}
+
+<p>@_surname</p>
+
+@code {
+    private string? _authMessage;
+    private string? _surname;
+    private IEnumerable<Claim> _claims = Enumerable.Empty<Claim>();
+
+    private async Task GetClaimsPrincipalData()
+    {
+        var authState = await AuthenticationStateProvider
+            .GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity is not null && user.Identity.IsAuthenticated)
+        {
+            _authMessage = $"{user.Identity.Name} is authenticated.";
+            _claims = user.Claims;
+            _surname = user.FindFirst(c => c.Type == ClaimTypes.Surname)?.Value;
+        }
+        else
+        {
+            _authMessage = "The user is NOT authenticated.";
+        }
+    }
+}

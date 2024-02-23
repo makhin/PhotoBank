@@ -25,10 +25,12 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
         public int Count { get; set; }
         public bool AllowAdultFilter { get; set; }
         public bool AllowRacyFilter { get; set; }
+        public bool IsFilterLoading { get; set; }
 
         public PhotoOverviewBase()
         {
             Filter = new FilterDto();
+            IsFilterLoading = true;
         }
 
         protected async Task LoadData(LoadDataArgs args)
@@ -40,6 +42,7 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
 
         protected override async Task OnInitializedAsync()
         {
+            IsFilterLoading = true;
             await base.OnInitializedAsync();
             Storages = await PhotoService.GetAllStoragesAsync();
             Persons = await PhotoService.GetAllPersonsAsync();
@@ -52,6 +55,16 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
 
             AllowAdultFilter = (await AuthorizationService.AuthorizeAsync(user, "AllowToSeeAdultContent")).Succeeded;
             AllowRacyFilter = (await AuthorizationService.AuthorizeAsync(user, "AllowToSeeRacyContent")).Succeeded;
+            IsFilterLoading = false;
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            //if (firstRender)
+            //{
+            //    await JS.InvokeVoidAsync(
+            //        "setElementText1", divElement, "Text after render");
+            //}
         }
 
         protected async Task ApplyFilter(FilterDto filterDto)

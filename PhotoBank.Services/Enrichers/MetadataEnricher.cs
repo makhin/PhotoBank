@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
+using MetadataExtractor.Formats.FileSystem;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto.Load;
 using Directory = MetadataExtractor.Directory;
@@ -35,13 +36,15 @@ namespace PhotoBank.Services.Enrichers
 
                 var exifIfd0Directory = directories.OfType<ExifIfd0Directory>().FirstOrDefault();
                 var exifSubIfdDirectory = directories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
+                var fileMetadataDirectory = directories.OfType<FileMetadataDirectory>().FirstOrDefault();
+
                 var gpsDirectory = directories.OfType<GpsDirectory>().FirstOrDefault();
 
-                if (exifSubIfdDirectory != null || exifIfd0Directory != null)
+                if (exifSubIfdDirectory != null || exifIfd0Directory != null || fileMetadataDirectory != null)
                 {
-                    photo.TakenDate = GetTakenDate(new Directory[] { exifIfd0Directory, exifSubIfdDirectory});
+                    photo.TakenDate = GetTakenDate(new Directory[] { exifIfd0Directory, exifSubIfdDirectory, fileMetadataDirectory });
                 }
-
+                
                 if (exifSubIfdDirectory != null)
                 {
                     photo.Height ??= GetHeight(exifSubIfdDirectory);
@@ -52,7 +55,7 @@ namespace PhotoBank.Services.Enrichers
                 {
                     photo.Orientation ??= GetOrientation(exifIfd0Directory);
                 }
-
+                
                 if (gpsDirectory != null)
                 {
                     photo.Location = GeoWrapper.GetLocation(gpsDirectory);
@@ -62,15 +65,15 @@ namespace PhotoBank.Services.Enrichers
 
         private static DateTime? GetTakenDate(IEnumerable<Directory> directories)
         {
-            int[] tags = { ExifDirectoryBase.TagDateTime, ExifDirectoryBase.TagDateTimeOriginal };
+            int[] tags = { ExifDirectoryBase.TagDateTime, ExifDirectoryBase.TagDateTimeOriginal, FileMetadataDirectory.TagFileModifiedDate };
             
-            foreach (var directory in directories)
+            foreach (var directory in directories.Where(d => d != null))
             {
                 foreach (var tag in tags)
                 {
                     try
                     {
-                        return directory?.GetDateTime(tag);
+                        return directory.GetDateTime(tag);
                     }
                     catch (Exception)
                     {
