@@ -16,5 +16,7 @@ namespace PhotoBank.Dto.View
         public List<string> Tags { get; set; }
         public double AdultScore { get; set; }
         public double RacyScore { get; set; }
+        public int Height { get; set;}
+        public int Width { get; set; }
     }
 }

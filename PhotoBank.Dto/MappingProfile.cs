@@ -45,7 +45,7 @@ namespace PhotoBank.Dto
 
             CreateMap<Face, FaceDto>()
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.Person == null ? (int?)null : src.Person.Id))
-                .ForMember(dest => dest.FaceBox, opt => opt.MapFrom(src => GetFaceBox(src.Rectangle, src.Photo.Scale)))
+                .ForMember(dest => dest.FaceBox, opt => opt.MapFrom(src => GetFaceBox(src.Rectangle, src.Photo)))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Face, Load.FaceDto>()
@@ -56,8 +56,9 @@ namespace PhotoBank.Dto
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
         }
 
-        private static FaceBoxDto GetFaceBox(Geometry geometry, double scale = 1)
+        private static FaceBoxDto GetFaceBox(Geometry geometry, Photo photo)
         {
+            var scale = photo.Scale;
             const string suffix = "px";
             return new FaceBoxDto
             {
@@ -66,6 +67,16 @@ namespace PhotoBank.Dto
                 Width = (int)((geometry.Coordinates[1].X - geometry.Coordinates[0].X) * scale) + suffix,
                 Height = (int)((geometry.Coordinates[3].Y - geometry.Coordinates[0].Y) * scale) + suffix
             };
+
+            //const string suffix = "%";
+            //var faceBoxDto = new FaceBoxDto
+            //{
+            //    Left = (int)(geometry.Coordinates[0].X * 100 / photo.Width.Value) + suffix,
+            //    Top = (int)(geometry.Coordinates[0].Y * 100 / photo.Height.Value) + suffix,
+            //    Width = (int)((geometry.Coordinates[1].X - geometry.Coordinates[0].X) * 100 / photo.Width.Value) + suffix,
+            //    Height = (int)((geometry.Coordinates[3].Y - geometry.Coordinates[0].Y) * 100 / photo.Height.Value) + suffix
+            //};
+            //return faceBoxDto;
         }
     }
 }

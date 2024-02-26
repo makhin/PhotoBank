@@ -17,7 +17,6 @@ namespace PhotoBank.Services
     {
         Task<int> AddPhotoAsync(Storage storage, string path);
         Task AddFacesAsync(Storage storage);
-        Task UpdateTakenDateAsync(Storage storage);
         Task UpdatePhotosAsync(Storage storage);
     }
 
@@ -53,7 +52,6 @@ namespace PhotoBank.Services
 
         public async Task<int> AddPhotoAsync(Storage storage, string path)
         {
-            var startTime = DateTime.Now;
             var duplicate = await VerifyDuplicates(storage, path);
 
             if (duplicate.DuplicateStatus == DuplicateStatus.FileExists)
@@ -65,7 +63,7 @@ namespace PhotoBank.Services
             {
                 await _fileRepository.InsertAsync(new File
                 {
-                    Photo = new Photo { Id = duplicate.PhotoId },
+                    Photo = new Photo {Id = duplicate.PhotoId},
                     Name = duplicate.Name,
                 });
                 return duplicate.PhotoId;
@@ -88,63 +86,7 @@ namespace PhotoBank.Services
                 Console.WriteLine("An exception occurred: {0}, {1}", exception.InnerException, exception.Message);
             }
 
-            var ms = 3000 - (int)(DateTime.Now - startTime).TotalMilliseconds;
-            if (ms <= 0)
-            {
-                return photo.Id;
-            }
-            Console.WriteLine($"Wait {ms}");
-            //await Task.Delay(ms);
             return photo.Id;
-        }
-
-        public async Task UpdatePhotosAsync(Storage storage)
-        {
-            var files = await _photoRepository
-                .GetAll()
-                .Include(p => p.Storage)
-                .Where(p => p.StorageId == storage.Id
-                            && p.Id > 69797  
-                            && p.FaceIdentifyStatus == FaceIdentifyStatus.Undefined)
-                .Select(p => new PhotoFilePath
-                {
-                    PhotoId = p.Id,
-                    RelativePath = p.RelativePath,
-                    Files = p.Files
-                }).ToListAsync();
-
-            await UpdateInfoAsync(storage, files, _ => false, UpdatePhotoAsync);
-        }
-
-        private async Task UpdatePhotoAsync(Photo photo)
-        {
-            await _photoRepository.UpdateAsync(new Photo
-            {
-                Id = photo.Id,
-                FaceIdentifyStatus = photo.FaceIdentifyStatus,
-            }, p => p.FaceIdentifyStatus);
-
-            if (photo.FaceIdentifyStatus == FaceIdentifyStatus.NotDetected)
-            {
-                return;
-            }
-
-            foreach (var face in photo.Faces)
-            {
-                await _faceRepository.InsertAsync(new Face
-                {
-                    Age = face.Age,
-                    PhotoId = face.PhotoId,
-                    FaceAttributes = face.FaceAttributes,
-                    IdentifiedWithConfidence = face.IdentifiedWithConfidence,
-                    Gender = face.Gender,
-                    IdentityStatus = face.IdentityStatus,
-                    Image = face.Image,
-                    PersonId = face.Person?.Id,
-                    Rectangle = face.Rectangle,
-                    Smile = face.Smile,
-                });
-            }
         }
 
         public async Task AddFacesAsync(Storage storage)
@@ -164,7 +106,7 @@ namespace PhotoBank.Services
                 photoFile => _faceRepository.GetAll().Any(f => f.PhotoId == photoFile.PhotoId), InsertFacesAsync);
         }
 
-        public async Task UpdateTakenDateAsync(Storage storage)
+        public async Task UpdatePhotosAsync(Storage storage)
         {
             var files = await _photoRepository
                 .GetAll()

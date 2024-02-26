@@ -34,25 +34,22 @@ namespace PhotoBank.DbContext.DbContext
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Photo>()
-                .HasIndex(p => new { p.IsPrivate });
+                .HasIndex(p => new { p.Id });
 
             modelBuilder.Entity<Photo>()
-                .HasIndex(p => new { p.Id, p.IsPrivate });
+                .HasIndex(p => new { p.Name, p.RelativePath });
 
             modelBuilder.Entity<Photo>()
-                .HasIndex(p => new { p.Name, p.RelativePath, p.IsPrivate });
+                .HasIndex(p => new { p.TakenDate });
 
             modelBuilder.Entity<Photo>()
-                .HasIndex(p => new { p.TakenDate, p.IsPrivate });
+                .HasIndex(p => new { p.IsBW });
 
             modelBuilder.Entity<Photo>()
-                .HasIndex(p => new { p.IsBW, p.IsPrivate });
+                .HasIndex(p => new { p.IsAdultContent });
 
             modelBuilder.Entity<Photo>()
-                .HasIndex(p => new { p.IsAdultContent, p.IsPrivate });
-
-            modelBuilder.Entity<Photo>()
-                .HasIndex(p => new { p.IsRacyContent, p.IsPrivate });
+                .HasIndex(p => new { p.IsRacyContent });
 
             modelBuilder.Entity<PhotoTag>()
                 .HasKey(t => new { t.PhotoId, t.TagId });

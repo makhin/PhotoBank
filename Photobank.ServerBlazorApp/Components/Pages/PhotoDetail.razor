@@ -11,6 +11,13 @@
 }
 
 <style type="text/css">
+    .imagefit {
+        max-width: 100vw; 
+        height: auto;
+        max-height:100vh;
+        width:auto;
+    }
+
     .wrapper {
         position: relative;
     }
@@ -23,13 +30,13 @@
         display: flex;
     }
 
-        .box span {
-            -webkit-align-self: flex-end;
-            -o-align-self: flex-end;
-            align-self: flex-end;
-            color: white;
-            font-size: smaller;
-        }
+    .box span {
+        -webkit-align-self: flex-end;
+        -o-align-self: flex-end;
+        align-self: flex-end;
+        color: white;
+        font-size: smaller;
+    }
 </style>
 
 @if (Photo == null)
@@ -38,6 +45,18 @@
 }
 else
 {
+    <div class="wrapper">
+        <img src="data:image;base64,@Convert.ToBase64String(Photo.PreviewImage)" alt="@string.Join(" ", Photo.Captions)"/>
+        @for (var i = 0; i < Photo.Faces.Count; i++)
+        {
+            var i2 = i;
+            var face = Photo.Faces[i];
+            var faceBox = face.FaceBox;
+            <div class="box" style="top: @faceBox.Top; left: @faceBox.Left; width: @faceBox.Width; height: @faceBox.Height" @ref="MemberRef[i2]" @onmouseover="@(args => ShowTooltipWithHtml(i2, face.FriendlyFaceAttributes))">
+                <span>@((i + 1).ToString())</span><span>.</span>
+            </div>
+        }
+    </div>
     <RadzenCard>
         <div class="row">
             <div class="col-md-6">
@@ -60,31 +79,20 @@ else
             <div class="col-md-6">
                 <div>Faces:</div>
                 @for (var i = 0; i < Photo.Faces.Count; i++)
-                    {
-                        var face = Photo.Faces[i];
-                        <div>
-                            <span>@((i + 1).ToString())&nbsp;@(face.Age.ToString())&nbsp;@(face.Gender.HasValue ? (face.Gender.Value && face.FaceAttributes != null ? "M" : "F") : string.Empty)</span>
+                {
+                    var face = Photo.Faces[i];
+                    <div>
+                        <span>@((i + 1).ToString())&nbsp;@(face.Age.ToString())&nbsp;@(face.Gender.HasValue ? (face.Gender.Value && face.FaceAttributes != null ? "M" : "F") : string.Empty)</span>
                         <AuthorizeView Roles="User">
                             <RadzenText Text="@GetPersonNameById(face.PersonId)"/>
                         </AuthorizeView>
 
                         <AuthorizeView Roles="Administrator">
-                                <RadzenDropDown Data=@Persons @bind-Value=@face.PersonId TextProperty="Name" ValueProperty="Id" Change=@(args => OnChangePersonAsync(face.Id, args))/>
-                            </AuthorizeView>
-                        </div>
-                    }
+                            <RadzenDropDown Data=@Persons @bind-Value=@face.PersonId TextProperty="Name" ValueProperty="Id" Change=@(args => OnChangePersonAsync(face.Id, args))/>
+                        </AuthorizeView>
+                    </div>
+                }
             </div>
         </div>
     </RadzenCard>
-    <div class="wrapper">
-        <img src="data:image;base64,@Convert.ToBase64String(Photo.PreviewImage)" alt="" />
-        @for (var i = 0; i < Photo.Faces.Count; i++)
-        {
-            var i2 = i;
-            var face = Photo.Faces[i];
-            <div class="box" style="top: @face.FaceBox.Top; left: @face.FaceBox.Left; width: @face.FaceBox.Width; height: @face.FaceBox.Height" @ref="MemberRef[i2]" @onmouseover="@(args => ShowTooltipWithHtml(i2, face.FriendlyFaceAttributes))">
-                <span>@((i + 1).ToString())</span><span>.</span>
-            </div>
-        }
-    </div>
 }
