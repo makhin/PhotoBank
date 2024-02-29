@@ -44,10 +44,15 @@ namespace PhotoBank.Services
             )
         {
             var activeEnrichers = enricherRepository.GetAll().Where(e => e.IsActive).Select(e => e.Name).ToList();
+            var enumerable = enrichers.ToList();
+            foreach (var enricher in enumerable)
+            {
+                enricher.IsActive = activeEnrichers.Contains(enricher.GetType().Name);
+            }
             _photoRepository = photoRepository;
             _fileRepository = fileRepository;
             _faceRepository = faceRepository;
-            _enrichers = orderResolver.Resolve(enrichers.Where(e => activeEnrichers.Contains(e.GetType().Name)).ToList());
+            _enrichers = orderResolver.Resolve(enumerable.Where(e => e.IsActive).ToList());
         }
 
         public async Task<int> AddPhotoAsync(Storage storage, string path)
@@ -74,7 +79,8 @@ namespace PhotoBank.Services
 
             foreach (var enricher in _enrichers)
             {
-                await enricher.Enrich(photo, sourceData);
+                await enricher.EnrichAsync(photo, sourceData);
+                photo.EnrichedWithEnricherType |= enricher.EnricherType;
             }
 
             try
@@ -183,7 +189,11 @@ namespace PhotoBank.Services
 
                 foreach (var enricher in _enrichers)
                 {
-                    await enricher.Enrich(photo, sourceData);
+                    if (!photo.EnrichedWithEnricherType.HasFlag(enricher.EnricherType))
+                    {
+                        await enricher.EnrichAsync(photo, sourceData);
+                    }
+                    photo.EnrichedWithEnricherType |= enricher.EnricherType;
                 }
 
                 try

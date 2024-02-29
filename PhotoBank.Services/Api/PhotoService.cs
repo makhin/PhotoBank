@@ -86,6 +86,13 @@ namespace PhotoBank.Services.Api
                 photos = photos.Where(p => p.TakenDate.HasValue && p.TakenDate <= filter.TakenDateTo.Value);
             }
 
+            if (filter.ThisDay is true)
+            {
+                photos = photos.Where(p =>
+                    p.TakenDate.HasValue && p.TakenDate.Value.Day == DateTime.Today.Day &&
+                    p.TakenDate.Value.Month == DateTime.Today.Month);
+            }
+
             if (filter.Storages != null && filter.Storages.Any())
             {
                 photos = photos

@@ -37,17 +37,12 @@ namespace PhotoBank.Repositories
         public Repository(IServiceProvider serviceProvider)
         {
             var context = serviceProvider.GetRequiredService<PhotoBankDbContext>();
-
             _context = context;
             _entities = context.Set<TTable>();
         }
-        public Repository(IServiceProvider serviceProvider, IHttpContextAccessor httpContextAccessor)
+        public Repository(IServiceProvider serviceProvider, IHttpContextAccessor httpContextAccessor) : this(serviceProvider)
         {
             _container = RowAuthPoliciesContainer.ConfigureRowAuthPolicies(httpContextAccessor);
-            var context = serviceProvider.GetRequiredService<PhotoBankDbContext>();
-
-            _context = context;
-            _entities = context.Set<TTable>();
         }
         public IQueryable<TTable> GetAll()
         {

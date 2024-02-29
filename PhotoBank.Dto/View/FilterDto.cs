@@ -17,6 +17,7 @@ namespace PhotoBank.Dto.View
         public string Caption { get; set; }
         public DateTime? TakenDateFrom { get; set; }
         public DateTime? TakenDateTo { get; set; }
+        public bool? ThisDay { get; set; }
         public IEnumerable<int> Persons { get; set; }
         public IEnumerable<int> Tags { get; set; }
     }

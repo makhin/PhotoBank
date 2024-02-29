@@ -7,13 +7,15 @@ namespace PhotoBank.Services.Enrichers
 {
     public class ColorEnricher : IEnricher
     {
+        public EnricherType EnricherType => EnricherType.Color;
+        public bool IsActive { get; set; }
         public Type[] Dependencies => new[] { typeof(AnalyzeEnricher) };
 
-        public async Task Enrich(Photo photo, SourceDataDto sourceData)
+        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
         {
+            if (!IsActive) return;
             await Task.Run(() =>
             {
-
                 photo.IsBW = sourceData.ImageAnalysis.Color.IsBWImg;
                 photo.AccentColor = sourceData.ImageAnalysis.Color.AccentColor;
                 photo.DominantColorBackground = sourceData.ImageAnalysis.Color.DominantColorBackground;

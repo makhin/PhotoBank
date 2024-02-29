@@ -9,10 +9,13 @@ namespace PhotoBank.Services.Enrichers
 {
     public class PreviewEnricher : IEnricher
     {
+        public EnricherType EnricherType => EnricherType.Preview;
+        public bool IsActive { get; set; }
         public Type[] Dependencies => Array.Empty<Type>();
 
-        public async Task Enrich(Photo photo, SourceDataDto source)
+        public async Task EnrichAsync(Photo photo, SourceDataDto source)
         {
+            if (!IsActive) return;
             using (var stream = new MemoryStream())
             {
                 using (var image = new MagickImage(source.AbsolutePath))

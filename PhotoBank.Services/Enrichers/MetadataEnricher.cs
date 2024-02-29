@@ -15,10 +15,13 @@ namespace PhotoBank.Services.Enrichers
 {
     public class MetadataEnricher : IEnricher
     {
+        public EnricherType EnricherType => EnricherType.Metadata;
+        public bool IsActive { get; set; }
         public Type[] Dependencies => new Type[1] { typeof(PreviewEnricher) };
 
-        public async Task Enrich(Photo photo, SourceDataDto sourceData)
+        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
         {
+            if (!IsActive) return;
             await Task.Run(() =>
             {
                 photo.Name = Path.GetFileNameWithoutExtension(sourceData.AbsolutePath);
@@ -65,7 +68,11 @@ namespace PhotoBank.Services.Enrichers
 
         private static DateTime? GetTakenDate(IEnumerable<Directory> directories)
         {
-            int[] tags = { ExifDirectoryBase.TagDateTime, ExifDirectoryBase.TagDateTimeOriginal, FileMetadataDirectory.TagFileModifiedDate };
+            int[] tags =
+            [
+                ExifDirectoryBase.TagDateTime, ExifDirectoryBase.TagDateTimeOriginal,
+                FileMetadataDirectory.TagFileModifiedDate
+            ];
             
             foreach (var directory in directories.Where(d => d != null))
             {
@@ -87,7 +94,7 @@ namespace PhotoBank.Services.Enrichers
 
         private static int? GetHeight(Directory directory)
         {
-            int[] tags = { ExifDirectoryBase.TagImageHeight, ExifDirectoryBase.TagExifImageHeight };
+            int[] tags = [ExifDirectoryBase.TagImageHeight, ExifDirectoryBase.TagExifImageHeight];
 
             foreach (var tag in tags)
             {
@@ -106,7 +113,7 @@ namespace PhotoBank.Services.Enrichers
 
         private static int? GetWidth(Directory directory)
         {
-            int[] tags = { ExifDirectoryBase.TagImageWidth, ExifDirectoryBase.TagExifImageWidth };
+            int[] tags = [ExifDirectoryBase.TagImageWidth, ExifDirectoryBase.TagExifImageWidth];
 
             foreach (var tag in tags)
             {

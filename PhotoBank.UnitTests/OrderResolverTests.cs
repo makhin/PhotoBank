@@ -12,9 +12,10 @@ namespace PhotoBank.UnitTests
 {
     public abstract class EnricherTestBase : IEnricher
     {
+        public EnricherType EnricherType => EnricherType.None;
+        public bool IsActive { get; set; }
         public abstract Type[] Dependencies { get; }
-        public bool IsActive => true;
-        public async Task Enrich(Photo photo, SourceDataDto path)
+        public async Task EnrichAsync(Photo photo, SourceDataDto path)
         {
             await Task.Run(() =>
             {
@@ -89,9 +90,9 @@ namespace PhotoBank.UnitTests
 
             IEnumerable<IEnricher> enrichers = collection.Where(e => e.Dependencies.Length == 0).ToList();
 
-            Dictionary<Type, Task> tasks0level = enrichers.ToDictionary(enricher => enricher.GetType(), enricher => enricher.Enrich(null, null));
+            var tasks0Level = enrichers.ToDictionary(enricher => enricher.GetType(), enricher => enricher.EnrichAsync(null, null));
 
-            tasks0level.Select(e => e.Value);
+            var tasks = tasks0Level.Select(e => e.Value);
         }
     }
 }

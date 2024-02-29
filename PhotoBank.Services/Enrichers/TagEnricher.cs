@@ -16,11 +16,13 @@ namespace PhotoBank.Services.Enrichers
         {
             _tagRepository = tagRepository;
         }
-
+        public EnricherType EnricherType => EnricherType.Tag;
+        public bool IsActive { get; set; }
         public Type[] Dependencies => new Type[1] {typeof(AnalyzeEnricher)};
 
-        public async Task Enrich(Photo photo, SourceDataDto sourceData)
+        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
         {
+            if (!IsActive) return;
             await Task.Run(() =>
             {
                 photo.PhotoTags = new List<PhotoTag>();

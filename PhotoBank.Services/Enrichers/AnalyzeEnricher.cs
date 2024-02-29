@@ -27,10 +27,15 @@ namespace PhotoBank.Services.Enrichers
             _client = client;
         }
 
+        public EnricherType EnricherType => EnricherType.Analyze;
+
+        public bool IsActive { get; set; }
+
         public Type[] Dependencies => new Type[1] {typeof(PreviewEnricher)};
 
-        public async Task Enrich(Photo photo, SourceDataDto source)
+        public async Task EnrichAsync(Photo photo, SourceDataDto source)
         {
+            if (!IsActive) return;
             source.ImageAnalysis = await _client.AnalyzeImageInStreamAsync(new MemoryStream(photo.PreviewImage), _features);
         }
     }

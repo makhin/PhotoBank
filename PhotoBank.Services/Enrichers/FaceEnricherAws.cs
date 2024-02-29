@@ -27,11 +27,13 @@ namespace PhotoBank.Services.Enrichers
             _faceService = faceService;
             _persons = personRepository.GetAll().ToList();
         }
-
+        public EnricherType EnricherType => EnricherType.Face;
+        public bool IsActive { get; set; }
         public Type[] Dependencies => new[] { typeof(PreviewEnricher), typeof(MetadataEnricher) };
 
-        public async Task Enrich(Photo photo, SourceDataDto sourceData)
+        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
         {
+            if (!IsActive) return;
             try
             {
                 var detectedFaces = await _faceService.DetectFacesAsync(photo.PreviewImage);
@@ -60,7 +62,6 @@ namespace PhotoBank.Services.Enrichers
                         Smile = detectedFace.Smile.Confidence,
                         FaceAttributes = JsonConvert.SerializeObject(detectedFace),
                     };
-
 
                     if (!IsAbleToIdentify(previewImageHeight, previewImageWidth, detectedFace.BoundingBox))
                     {

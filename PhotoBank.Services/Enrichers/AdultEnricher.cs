@@ -7,10 +7,15 @@ namespace PhotoBank.Services.Enrichers
 {
     public class AdultEnricher : IEnricher
     {
+        public EnricherType EnricherType => EnricherType.Adult;
+
+        public bool IsActive { get; set; }
+
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
-        public async Task Enrich(Photo photo, SourceDataDto sourceData)
+        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
         {
+            if (!IsActive) return;
             await Task.Run(() =>
             {
                 photo.IsAdultContent = sourceData.ImageAnalysis.Adult.IsAdultContent;

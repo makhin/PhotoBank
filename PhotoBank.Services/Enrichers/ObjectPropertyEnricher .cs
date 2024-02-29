@@ -17,10 +17,13 @@ namespace PhotoBank.Services.Enrichers
             _propertyNameRepository = propertyNameRepository;
         }
 
+        public EnricherType EnricherType => EnricherType.ObjectProperty;
+        public bool IsActive { get; set; }
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
-        public async Task Enrich(Photo photo, SourceDataDto sourceData)
+        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
         {
+            if (!IsActive) return;
             photo.ObjectProperties = new List<ObjectProperty>();
             foreach (var detectedObject in sourceData.ImageAnalysis.Objects)
             {
