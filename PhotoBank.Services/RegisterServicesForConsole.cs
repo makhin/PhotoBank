@@ -1,6 +1,7 @@
-﻿using Amazon.Rekognition;
+﻿using System;
+using System.Linq;
+using Amazon.Rekognition;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,6 +64,17 @@ namespace PhotoBank.Services
             services.AddTransient<IEnricher, AdultEnricher>();
             services.AddTransient<IEnricher, FaceEnricher>();
             services.AddTransient<IEnricher, FaceEnricherAws>();
+
+            services.AddTransient<EnricherResolver>(serviceProvider => repository =>
+            {
+                return repository.GetAll()
+                    .Where(e => e.IsActive)
+                    .Select(e => "PhotoBank.Services.Enrichers." + e.Name).AsEnumerable()
+                    .Select(Type.GetType)
+                    .Select(enricher => enricher != null
+                        ? (IEnricher) serviceProvider.GetService(enricher)
+                        : throw new NotSupportedException());
+            });
         }
     }
 }

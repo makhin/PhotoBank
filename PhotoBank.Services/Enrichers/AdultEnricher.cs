@@ -9,13 +9,10 @@ namespace PhotoBank.Services.Enrichers
     {
         public EnricherType EnricherType => EnricherType.Adult;
 
-        public bool IsActive { get; set; }
-
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
         public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
         {
-            if (!IsActive) return;
             await Task.Run(() =>
             {
                 photo.IsAdultContent = sourceData.ImageAnalysis.Adult.IsAdultContent;

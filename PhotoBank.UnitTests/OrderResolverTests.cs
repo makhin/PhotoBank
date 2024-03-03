@@ -13,7 +13,6 @@ namespace PhotoBank.UnitTests
     public abstract class EnricherTestBase : IEnricher
     {
         public EnricherType EnricherType => EnricherType.None;
-        public bool IsActive { get; set; }
         public abstract Type[] Dependencies { get; }
         public async Task EnrichAsync(Photo photo, SourceDataDto path)
         {
@@ -57,7 +56,7 @@ namespace PhotoBank.UnitTests
 
     public class EnMe : EnricherTestBase
     {
-        public override Type[] Dependencies => Array.Empty<Type>();
+        public override Type[] Dependencies => new[] { typeof(EnPr) };
     }
 
     public class EnOb : EnricherTestBase

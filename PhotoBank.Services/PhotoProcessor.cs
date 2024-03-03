@@ -39,20 +39,15 @@ namespace PhotoBank.Services
             IRepository<File> fileRepository,
             IRepository<Face> faceRepository,
             IRepository<Enricher> enricherRepository,
-            IEnumerable<IEnricher> enrichers,
-            IOrderResolver<IEnricher> orderResolver
+            IOrderResolver<IEnricher> orderResolver,
+            EnricherResolver enricherResolver
             )
         {
-            var activeEnrichers = enricherRepository.GetAll().Where(e => e.IsActive).Select(e => e.Name).ToList();
-            var enumerable = enrichers.ToList();
-            foreach (var enricher in enumerable)
-            {
-                enricher.IsActive = activeEnrichers.Contains(enricher.GetType().Name);
-            }
             _photoRepository = photoRepository;
             _fileRepository = fileRepository;
             _faceRepository = faceRepository;
-            _enrichers = orderResolver.Resolve(enumerable.Where(e => e.IsActive).ToList());
+            var enrichers = enricherResolver(enricherRepository);
+            _enrichers = orderResolver.Resolve(enrichers);
         }
 
         public async Task<int> AddPhotoAsync(Storage storage, string path)

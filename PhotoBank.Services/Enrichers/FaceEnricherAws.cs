@@ -28,12 +28,10 @@ namespace PhotoBank.Services.Enrichers
             _persons = personRepository.GetAll().ToList();
         }
         public EnricherType EnricherType => EnricherType.Face;
-        public bool IsActive { get; set; }
         public Type[] Dependencies => new[] { typeof(PreviewEnricher), typeof(MetadataEnricher) };
 
         public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
         {
-            if (!IsActive) return;
             try
             {
                 var detectedFaces = await _faceService.DetectFacesAsync(photo.PreviewImage);

@@ -16,12 +16,10 @@ namespace PhotoBank.Services.Enrichers
     public class MetadataEnricher : IEnricher
     {
         public EnricherType EnricherType => EnricherType.Metadata;
-        public bool IsActive { get; set; }
         public Type[] Dependencies => new Type[1] { typeof(PreviewEnricher) };
 
         public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
         {
-            if (!IsActive) return;
             await Task.Run(() =>
             {
                 photo.Name = Path.GetFileNameWithoutExtension(sourceData.AbsolutePath);

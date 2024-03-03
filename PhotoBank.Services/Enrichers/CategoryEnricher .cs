@@ -13,7 +13,6 @@ namespace PhotoBank.Services.Enrichers
     {
         private readonly IRepository<Category> _categoryRepository;
         public EnricherType EnricherType => EnricherType.Category;
-        public bool IsActive { get; set; }
         public CategoryEnricher(IRepository<Category> categoryRepository)
         {
             _categoryRepository = categoryRepository;
@@ -22,7 +21,6 @@ namespace PhotoBank.Services.Enrichers
 
         public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
         {
-            if (!IsActive) return;
             await Task.Run(() =>
             {
                 photo.PhotoCategories = new List<PhotoCategory>();
