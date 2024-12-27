@@ -19,7 +19,6 @@ namespace PhotoBank.Services.Enrichers
                 photo.DominantColorBackground = sourceData.ImageAnalysis.Color.DominantColorBackground;
                 photo.DominantColorForeground = sourceData.ImageAnalysis.Color.DominantColorForeground;
                 photo.DominantColors = string.Join(",", sourceData.ImageAnalysis.Color.DominantColors);
-
             });
         }
     }

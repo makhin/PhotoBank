@@ -8,6 +8,7 @@ using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.FileSystem;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto.Load;
+using PhotoBank.Services.Enrichers.Services;
 using Directory = MetadataExtractor.Directory;
 using File = PhotoBank.DbContext.Models.File;
 
@@ -15,6 +16,13 @@ namespace PhotoBank.Services.Enrichers
 {
     public class MetadataEnricher : IEnricher
     {
+        private readonly IImageMetadataReaderWrapper _imageMetadataReaderWrapper;
+
+        public MetadataEnricher(IImageMetadataReaderWrapper imageMetadataReaderWrapper)
+        {
+            _imageMetadataReaderWrapper = imageMetadataReaderWrapper;
+        }
+
         public EnricherType EnricherType => EnricherType.Metadata;
         public Type[] Dependencies => new Type[1] { typeof(PreviewEnricher) };
 
@@ -27,13 +35,13 @@ namespace PhotoBank.Services.Enrichers
                     Path.GetDirectoryName(Path.GetRelativePath(photo.Storage.Folder, sourceData.AbsolutePath));
                 photo.Files = new List<File>
                 {
-                    new()
-                    {
-                        Name = Path.GetFileName(sourceData.AbsolutePath)
-                    }
+                        new()
+                        {
+                            Name = Path.GetFileName(sourceData.AbsolutePath)
+                        }
                 };
 
-                IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(sourceData.AbsolutePath);
+                IEnumerable<Directory> directories = _imageMetadataReaderWrapper.ReadMetadata(sourceData.AbsolutePath);
 
                 var exifIfd0Directory = directories.OfType<ExifIfd0Directory>().FirstOrDefault();
                 var exifSubIfdDirectory = directories.OfType<ExifSubIfdDirectory>().FirstOrDefault();
@@ -45,7 +53,7 @@ namespace PhotoBank.Services.Enrichers
                 {
                     photo.TakenDate = GetTakenDate(new Directory[] { exifIfd0Directory, exifSubIfdDirectory, fileMetadataDirectory });
                 }
-                
+
                 if (exifSubIfdDirectory != null)
                 {
                     photo.Height ??= GetHeight(exifSubIfdDirectory);
@@ -56,7 +64,7 @@ namespace PhotoBank.Services.Enrichers
                 {
                     photo.Orientation ??= GetOrientation(exifIfd0Directory);
                 }
-                
+
                 if (gpsDirectory != null)
                 {
                     photo.Location = GeoWrapper.GetLocation(gpsDirectory);
@@ -69,9 +77,9 @@ namespace PhotoBank.Services.Enrichers
             int[] tags =
             [
                 ExifDirectoryBase.TagDateTime, ExifDirectoryBase.TagDateTimeOriginal,
-                FileMetadataDirectory.TagFileModifiedDate
+                    FileMetadataDirectory.TagFileModifiedDate
             ];
-            
+
             foreach (var directory in directories.Where(d => d != null))
             {
                 foreach (var tag in tags)

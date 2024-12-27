@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using ImageMagick;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Newtonsoft.Json;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
+using PhotoBank.Services.Enrichers.Services;
 using Gender = Microsoft.Azure.CognitiveServices.Vision.Face.Models.Gender;
 using Person = PhotoBank.DbContext.Models.Person;
 
@@ -18,11 +17,13 @@ namespace PhotoBank.Services.Enrichers
     {
         private const int MinFaceSize = 36;
         private readonly IFaceService _faceService;
+        private readonly IFacePreviewService _facePreviewService;
         private readonly List<Person> _persons;
 
-        public FaceEnricher(IFaceService faceService, IRepository<Person> personRepository)
+        public FaceEnricher(IFaceService faceService, IRepository<Person> personRepository, IFacePreviewService facePreviewService)
         {
             _faceService = faceService;
+            _facePreviewService = facePreviewService;
             _persons = personRepository.GetAll().ToList();
         }
 
@@ -56,7 +57,7 @@ namespace PhotoBank.Services.Enrichers
                     {
                         PhotoId = photo.Id,
                         IdentityStatus = IdentityStatus.NotIdentified,
-                        Image = await CreateFacePreview(detectedFace, sourceData.PreviewImage, 1),
+                        Image = await _facePreviewService.CreateFacePreview(detectedFace, sourceData.PreviewImage, 1),
                         Rectangle = GeoWrapper.GetRectangle(detectedFace.FaceRectangle, photo.Scale)
                     };
 
@@ -76,7 +77,7 @@ namespace PhotoBank.Services.Enrichers
                     }
                     else if (IsAbleToIdentify(detectedFace, photo.Scale))
                     {
-                        face.Image = await CreateFacePreview(detectedFace, sourceData.OriginalImage, photo.Scale);
+                        face.Image = await _facePreviewService.CreateFacePreview(detectedFace, sourceData.OriginalImage, photo.Scale);
                         identifyResult = await _faceService.FaceIdentityAsync(face);
                         IdentifyFace(face, identifyResult, photo.TakenDate);
                     }
@@ -87,17 +88,6 @@ namespace PhotoBank.Services.Enrichers
             catch (Exception e)
             {
                 Console.WriteLine(e);
-            }
-        }
-
-        private static async Task<byte[]> CreateFacePreview(DetectedFace detectedFace, IMagickImage<byte> image, double photoScale)
-        {
-            await using (var stream = new MemoryStream())
-            {
-                var faceImage = image.Clone();
-                faceImage.Crop(GetMagickGeometry(detectedFace, photoScale));
-                await faceImage.WriteAsync(stream);
-                return stream.ToArray();
             }
         }
 
@@ -126,22 +116,6 @@ namespace PhotoBank.Services.Enrichers
                 face.IdentifiedWithConfidence = candidate.Confidence;
                 face.Person = person;
             }
-        }
-
-        private static MagickGeometry GetMagickGeometry(DetectedFace detectedFace, double photoScale)
-        {
-            var height = (int)(detectedFace.FaceRectangle.Height / photoScale);
-            var width = (int)(detectedFace.FaceRectangle.Width / photoScale);
-            var top = (int)(detectedFace.FaceRectangle.Top / photoScale);
-            var left = (int)(detectedFace.FaceRectangle.Left / photoScale);
-
-            var geometry = new MagickGeometry(width, height)
-            {
-                IgnoreAspectRatio = true,
-                Y = top,
-                X = left
-            };
-            return geometry;
         }
     }
 }

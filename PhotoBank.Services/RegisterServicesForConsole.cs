@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.Enrichers.Services;
 using ApiKeyServiceClientCredentials = Microsoft.Azure.CognitiveServices.Vision.ComputerVision.ApiKeyServiceClientCredentials;
 
 namespace PhotoBank.Services
@@ -46,6 +47,7 @@ namespace PhotoBank.Services
             services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
             services.AddTransient<IFaceService, FaceService>();
+            services.AddTransient<IFacePreviewService, FacePreviewService>();
             services.AddTransient<IFaceServiceAws, FaceServiceAws>();
 
             services.AddTransient<IPhotoProcessor, PhotoProcessor>();
