@@ -19,48 +19,45 @@ namespace PhotoBank.Api.Controllers
             _photoService = photoService;
         }
 
-        [HttpGet(Name = "GetPhotos")]
+        [HttpGet("GetPhotos")]
         public async Task<ActionResult<QueryResult>> GetPhotos()
         {
             QueryResult? photos = await _photoService.GetAllPhotosAsync(new FilterDto(), null, 0, 10);
             return photos;
         }
 
-        [HttpGet(Name = "GetPhoto")]
+        [HttpGet("GetPhoto")]
         public async Task<ActionResult<PhotoDto>> GetPhoto()
         {
             return null;
         }
 
-        
-        [HttpGet(Name = "GetStorages")]
+        [HttpGet("GetStorages")]
         public async Task<ActionResult<IEnumerable<StorageDto>>> GetStorages()
         {
             IEnumerable<StorageDto>? storages = await _photoService.GetAllStoragesAsync();
-            return null;
+            return new ActionResult<IEnumerable<StorageDto>>(storages);
         }
-        /*
-                [HttpGet(Name = "GetPaths")]
-                public async Task<ActionResult<IEnumerable<PathDto>>> GetPaths()
-                {
-                    var paths = await _photoService.GetAllPathsAsync();
-                    return new ActionResult<IEnumerable<PathDto>>(paths);
-                }
 
-                [HttpGet(Name = "GetPersons")]
-                public async Task<ActionResult<IEnumerable<PersonDto>>> GetPersons()
-                {
-                    var persons = await _photoService.GetAllPersonsAsync();
-                    return new ActionResult<IEnumerable<PersonDto>>(persons);
-                }
+        [HttpGet("GetPaths")]
+        public async Task<ActionResult<IEnumerable<PathDto>>> GetPaths()
+        {
+            var paths = await _photoService.GetAllPathsAsync();
+            return new ActionResult<IEnumerable<PathDto>>(paths);
+        }
 
-                [HttpGet(Name = "GetTags")]
-                public async Task<ActionResult<IEnumerable<TagDto>>> GetTags()
-                {
-                    var tags = await _photoService.GetAllTagsAsync();
-                    return new ActionResult<IEnumerable<TagDto>>(tags);
-                }
+        [HttpGet("GetPersons")]
+        public async Task<ActionResult<IEnumerable<PersonDto>>> GetPersons()
+        {
+            var persons = await _photoService.GetAllPersonsAsync();
+            return new ActionResult<IEnumerable<PersonDto>>(persons);
+        }
 
-        */
+        [HttpGet("GetTags")]
+        public async Task<ActionResult<IEnumerable<TagDto>>> GetTags()
+        {
+            var tags = await _photoService.GetAllTagsAsync();
+            return new ActionResult<IEnumerable<TagDto>>(tags);
+        }
     }
 }
