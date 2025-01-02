@@ -18,8 +18,9 @@ namespace PhotoBank.UnitTests
         {
             await Task.Run(() =>
             {
-                Task.Delay(new Random().Next(500, 1500));
-                Debug.WriteLine(this.GetType().Name);
+                Task.Delay(new Random().Next(5000, 15000));
+                Debug.WriteLine($"{this.GetType().Name} started at {DateTime.Now}");
+                Console.WriteLine($"{this.GetType().Name} started at {DateTime.Now}");
             });
         }
     }
@@ -83,15 +84,63 @@ namespace PhotoBank.UnitTests
     public class OrderResolverTests
     {
         [Test]
-        public void Test()
+        public async Task Test()
         {
-            IEnumerable<IEnricher> collection = new EnricherTestBase[]{ new EnAd(), new EnAn(), new EnCap(), new EnCat(), new EnCo(), new EnFa(), new EnMe(), new EnOb(), new EnPr(), new EnTa(), new EnTh() };
+            IEnumerable<IEnricher> enrichers = new EnricherTestBase[]{ new EnAd(), new EnAn(), new EnCap(), new EnCat(), new EnCo(), new EnFa(), new EnMe(), new EnOb(), new EnPr(), new EnTa(), new EnTh() };
+            var orderedEnrichers = ResolveOrder(enrichers);
+            await RunEnrichersAsync(orderedEnrichers);
+        }
 
-            IEnumerable<IEnricher> enrichers = collection.Where(e => e.Dependencies.Length == 0).ToList();
+        private static List<IEnricher> ResolveOrder(IEnumerable<IEnricher> enrichers)
+        {
+            var resolved = new List<IEnricher>();
+            var unresolved = new HashSet<IEnricher>(enrichers);
 
-            var tasks0Level = enrichers.ToDictionary(enricher => enricher.GetType(), enricher => enricher.EnrichAsync(null, null));
+            while (unresolved.Any())
+            {
+                bool progress = false;
 
-            var tasks = tasks0Level.Select(e => e.Value);
+                foreach (var enricher in unresolved.ToList())
+                {
+                    if (enricher.Dependencies.All(d => resolved.Any(r => r.GetType() == d)))
+                    {
+                        resolved.Add(enricher);
+                        unresolved.Remove(enricher);
+                        progress = true;
+                    }
+                }
+
+                if (!progress)
+                {
+                    throw new InvalidOperationException("Circular dependency detected or missing dependency.");
+                }
+            }
+
+            return resolved;
+        }
+
+        private static async Task RunEnrichersAsync(IEnumerable<IEnricher> enrichers)
+        {
+            var photo = new Photo();
+            var path = new SourceDataDto();
+            var tasks = new Dictionary<Type, TaskCompletionSource<bool>>();
+
+            foreach (var enricher in enrichers)
+            {
+                tasks[enricher.GetType()] = new TaskCompletionSource<bool>();
+            }
+
+            foreach (var enricher in enrichers)
+            {
+                var dependencyTasks = enricher.Dependencies.Select(d => tasks[d].Task).ToArray();
+                var task = Task.WhenAll(dependencyTasks).ContinueWith(async _ =>
+                {
+                    await enricher.EnrichAsync(photo, path);
+                    tasks[enricher.GetType()].SetResult(true);
+                }).Unwrap();
+            }
+
+            await Task.WhenAll(tasks.Values.Select(t => t.Task));
         }
     }
 }

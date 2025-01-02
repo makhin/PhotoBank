@@ -66,6 +66,8 @@ namespace PhotoBank.Services
             services.AddTransient<IEnricher, AdultEnricher>();
             services.AddTransient<IEnricher, FaceEnricher>();
             services.AddTransient<IEnricher, FaceEnricherAws>();
+            services.AddTransient<IFacePreviewService, FacePreviewService>();
+            services.AddTransient<IImageMetadataReaderWrapper, ImageMetadataReaderWrapper>();
 
             services.AddTransient<EnricherResolver>(serviceProvider => repository =>
             {
