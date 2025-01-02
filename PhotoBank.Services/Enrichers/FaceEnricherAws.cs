@@ -84,7 +84,7 @@ namespace PhotoBank.Services.Enrichers
             }
         }
 
-        private static bool IsAbleToIdentify(int imageHeight, int imageWidth, BoundingBox detectedFace, in double scale = 1)
+        private static bool IsAbleToIdentify(uint imageHeight, uint imageWidth, BoundingBox detectedFace, in double scale = 1)
         {
             return Math.Round(imageHeight * detectedFace.Height / scale) >= MinFaceSize && Math.Round(imageWidth * detectedFace.Width / scale) >= MinFaceSize;
         }
@@ -100,10 +100,10 @@ namespace PhotoBank.Services.Enrichers
             }
         }
 
-        private static MagickGeometry GetMagickGeometry(int imageHeight, int imageWidth, BoundingBox detectedFace)
+        private static MagickGeometry GetMagickGeometry(uint imageHeight, uint imageWidth, BoundingBox detectedFace)
         {
-            var height = (int)(imageHeight * detectedFace.Height);
-            var width = (int)(imageWidth * detectedFace.Width);
+            var height = (uint)(imageHeight * detectedFace.Height);
+            var width = (uint)(imageWidth * detectedFace.Width);
             var top = (int)(imageHeight * detectedFace.Top);
             var left = (int)(imageWidth * detectedFace.Left);
 

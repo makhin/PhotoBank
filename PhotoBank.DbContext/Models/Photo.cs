@@ -31,8 +31,8 @@ namespace PhotoBank.DbContext.Models
         public Point Location { get; set; }
         public byte[] PreviewImage { get; set; }
         public byte[] Thumbnail { get; set; }
-        public int? Height { get; set; }
-        public int? Width { get; set; }
+        public uint? Height { get; set; }
+        public uint? Width { get; set; }
         public int? Orientation { get; set; }
         public List<Caption> Captions { get; set; }
         public List<PhotoTag> PhotoTags { get; set; }

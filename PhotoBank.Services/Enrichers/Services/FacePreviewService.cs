@@ -20,8 +20,8 @@ namespace PhotoBank.Services.Enrichers.Services
 
         private static MagickGeometry GetMagickGeometry(DetectedFace detectedFace, double photoScale)
         {
-            var height = (int)(detectedFace.FaceRectangle.Height / photoScale);
-            var width = (int)(detectedFace.FaceRectangle.Width / photoScale);
+            var height = (uint)(detectedFace.FaceRectangle.Height / photoScale);
+            var width = (uint)(detectedFace.FaceRectangle.Width / photoScale);
             var top = (int)(detectedFace.FaceRectangle.Top / photoScale);
             var left = (int)(detectedFace.FaceRectangle.Left / photoScale);
 

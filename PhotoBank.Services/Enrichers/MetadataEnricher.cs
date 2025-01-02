@@ -98,7 +98,7 @@ namespace PhotoBank.Services.Enrichers
             return null;
         }
 
-        private static int? GetHeight(Directory directory)
+        private static uint? GetHeight(Directory directory)
         {
             int[] tags = [ExifDirectoryBase.TagImageHeight, ExifDirectoryBase.TagExifImageHeight];
 
@@ -106,7 +106,7 @@ namespace PhotoBank.Services.Enrichers
             {
                 try
                 {
-                    return directory?.GetInt32(tag);
+                    return (uint)directory?.GetInt32(tag);
                 }
                 catch (Exception)
                 {
@@ -117,7 +117,7 @@ namespace PhotoBank.Services.Enrichers
             return null;
         }
 
-        private static int? GetWidth(Directory directory)
+        private static uint? GetWidth(Directory directory)
         {
             int[] tags = [ExifDirectoryBase.TagImageWidth, ExifDirectoryBase.TagExifImageWidth];
 
@@ -125,7 +125,7 @@ namespace PhotoBank.Services.Enrichers
             {
                 try
                 {
-                    return directory?.GetInt32(tag);
+                    return (uint)directory?.GetInt32(tag);
                 }
                 catch (Exception)
                 {

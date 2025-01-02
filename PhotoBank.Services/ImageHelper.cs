@@ -23,13 +23,13 @@ namespace PhotoBank.Services
             if (isLandscape)
             {
                 scale = ((double)MaxSize / image.Width);
-                var geometry = new MagickGeometry(MaxSize, (int)scale * image.Height);
+                var geometry = new MagickGeometry(MaxSize, (uint)scale * image.Height);
                 image.Resize(geometry);
             }
             else
             {
                 scale = ((double)MaxSize / image.Height);
-                var geometry = new MagickGeometry((int)scale * image.Width, MaxSize);
+                var geometry = new MagickGeometry((uint)scale * image.Width, MaxSize);
                 image.Resize(geometry);
             }
         }

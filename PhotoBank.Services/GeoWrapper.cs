@@ -29,7 +29,7 @@ namespace PhotoBank.Services
             };
         }
 
-        public static Geometry GetRectangle(int imageHeight, int imageWidth, BoundingBox boundingBox, double scale = 1)
+        public static Geometry GetRectangle(uint imageHeight, uint imageWidth, BoundingBox boundingBox, double scale = 1)
         {
             var x = (int)(imageWidth * boundingBox.Left / scale);
             var y = (int)(imageHeight * boundingBox.Top / scale);
