@@ -1,0 +1,32 @@
+﻿@page "/photooverview"
+@inject IRestService RestService
+@using PhotoBank.Dto.View
+@using PhotoBank.MAUI.Blazor.Services
+@using System.Linq
+
+<div class="photo-grid">
+    @if (_photos?.Photos != null && _photos.Photos.Any())
+    {
+        foreach (var photo in _photos.Photos)
+        {
+            <div class="photo-item">
+                <img src="data:image/jpeg;base64,@Convert.ToBase64String(photo.Thumbnail)" alt="@photo.Name" />
+                <p>@photo.Name</p>
+                <p>@photo.TakenDate?.ToString("yyyy-MM-dd")</p>
+            </div>
+        }
+    }
+    else
+    {
+        <p>No photos available.</p>
+    }
+</div>
+
+@code {
+    private QueryResult _photos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _photos = await RestService.GetPhotos();
+    }
+}
