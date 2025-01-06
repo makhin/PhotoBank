@@ -16,7 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PhotoBank.Dto\PhotoBank.Dto.csproj" />
     <ProjectReference Include="..\PhotoBank.Services\PhotoBank.Services.csproj" />
   </ItemGroup>
 

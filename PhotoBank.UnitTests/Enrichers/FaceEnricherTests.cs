@@ -6,7 +6,6 @@ using FluentAssertions;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichers.Services;
@@ -14,6 +13,7 @@ using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Person = PhotoBank.DbContext.Models.Person;
 using PhotoBank.Services;
 using ImageMagick;
+using PhotoBank.Services.Models;
 
 namespace PhotoBank.UnitTests.Enrichers
 {

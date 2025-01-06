@@ -1,9 +1,9 @@
 ﻿using System;
 using PhotoBank.DbContext.Models;
 
-namespace PhotoBank.Dto.Load
+namespace PhotoBank.Services.Models
 {
-    public class FaceDto 
+    public class FaceDto
     {
         public int Id { get; set; }
         public int? PersonId { get; set; }

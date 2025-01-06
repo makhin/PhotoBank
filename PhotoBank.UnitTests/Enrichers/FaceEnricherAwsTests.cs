@@ -8,12 +8,10 @@ using ImageMagick;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Enrichers;
-using PhotoBank.Services.Enrichers.Services;
-using Face = PhotoBank.DbContext.Models.Face;
+using PhotoBank.Services.Models;
 using Person = PhotoBank.DbContext.Models.Person;
 
 namespace PhotoBank.UnitTests.Enrichers

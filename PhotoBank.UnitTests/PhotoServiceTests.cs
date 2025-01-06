@@ -1,10 +1,6 @@
 using AutoMapper;
-using Moq;
 using NUnit.Framework;
-using PhotoBank.DbContext.Models;
-using PhotoBank.Dto;
-using PhotoBank.Repositories;
-using PhotoBank.Services.Api;
+using PhotoBank.Services;
 
 namespace PhotoBank.UnitTests
 {

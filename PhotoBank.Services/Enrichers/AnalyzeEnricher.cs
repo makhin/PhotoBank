@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.Load;
+using PhotoBank.Services.Models;
 
 namespace PhotoBank.Services.Enrichers
 {

@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.Load;
+using PhotoBank.Services.Models;
 
 namespace PhotoBank.Services.Enrichers
 {

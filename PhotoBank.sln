@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Repositories", "P
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Services", "PhotoBank.Services\PhotoBank.Services.csproj", "{01B72FEE-BD48-43D8-B155-9E2B2D953C55}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.Dto", "PhotoBank.Dto\PhotoBank.Dto.csproj", "{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.UnitTests", "PhotoBank.UnitTests\PhotoBank.UnitTests.csproj", "{8D6228B3-00A6-4D7F-97F8-80BA25278155}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.ServerBlazorApp", "Photobank.ServerBlazorApp\PhotoBank.ServerBlazorApp.csproj", "{A21D0451-C13F-42FD-B0B2-2A5EEB4DFE5B}"
@@ -63,14 +61,6 @@ Global
 		{01B72FEE-BD48-43D8-B155-9E2B2D953C55}.Release|Any CPU.Build.0 = Release|Any CPU
 		{01B72FEE-BD48-43D8-B155-9E2B2D953C55}.Release|x64.ActiveCfg = Release|x64
 		{01B72FEE-BD48-43D8-B155-9E2B2D953C55}.Release|x64.Build.0 = Release|x64
-		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Debug|x64.ActiveCfg = Debug|x64
-		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Debug|x64.Build.0 = Debug|x64
-		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Release|x64.ActiveCfg = Release|x64
-		{B67EFDE3-C2DA-4152-BF25-1C45518EEF91}.Release|x64.Build.0 = Release|x64
 		{8D6228B3-00A6-4D7F-97F8-80BA25278155}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8D6228B3-00A6-4D7F-97F8-80BA25278155}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D6228B3-00A6-4D7F-97F8-80BA25278155}.Debug|x64.ActiveCfg = Debug|x64

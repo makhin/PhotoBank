@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.Load;
+using PhotoBank.Services.Models;
 
 namespace PhotoBank.Services.Enrichers
 {

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -7,10 +6,10 @@ using FluentAssertions;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.Load;
 using PhotoBank.Services.Enrichers;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using PhotoBank.Services.Models;
 
 namespace PhotoBank.UnitTests.Enrichers
 {

@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Newtonsoft.Json;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers.Services;
+using PhotoBank.Services.Models;
 using Gender = Microsoft.Azure.CognitiveServices.Vision.Face.Models.Gender;
 using Person = PhotoBank.DbContext.Models.Person;
 

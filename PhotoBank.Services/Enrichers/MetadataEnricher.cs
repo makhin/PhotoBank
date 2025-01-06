@@ -7,8 +7,8 @@ using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.FileSystem;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.Load;
 using PhotoBank.Services.Enrichers.Services;
+using PhotoBank.Services.Models;
 using Directory = MetadataExtractor.Directory;
 using File = PhotoBank.DbContext.Models.File;
 

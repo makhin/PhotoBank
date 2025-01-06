@@ -1,16 +1,14 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.Models;
 using Category = PhotoBank.DbContext.Models.Category;
 
 namespace PhotoBank.UnitTests.Enrichers

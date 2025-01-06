@@ -1,8 +1,4 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using ImageMagick;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
-using PhotoBank.Dto;
+﻿using ImageMagick;
 
 namespace PhotoBank.Services
 {

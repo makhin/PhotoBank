@@ -8,9 +8,8 @@ using Amazon.Rekognition.Model;
 using ImageMagick;
 using Newtonsoft.Json;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto;
-using PhotoBank.Dto.Load;
 using PhotoBank.Repositories;
+using PhotoBank.Services.Models;
 using Face = PhotoBank.DbContext.Models.Face;
 using Person = PhotoBank.DbContext.Models.Person;
 

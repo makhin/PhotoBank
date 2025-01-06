@@ -7,7 +7,6 @@ using PhotoBank.ServerBlazorApp.Components.Account;
 using Serilog.Events;
 using Serilog;
 using System.Reflection;
-using PhotoBank.Dto;
 using PhotoBank.ServerBlazorApp.Components;
 using PhotoBank.Services;
 using Radzen;

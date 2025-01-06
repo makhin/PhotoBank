@@ -1,7 +1,7 @@
 ﻿using ImageMagick;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 
-namespace PhotoBank.Dto.Load
+namespace PhotoBank.Services.Models
 {
     public class SourceDataDto
     {

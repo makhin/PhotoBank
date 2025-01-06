@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace PhotoBank.Dto
+namespace PhotoBank.Services
 {
     public static class FaceHelper
     {
@@ -249,7 +249,7 @@ namespace PhotoBank.Dto
             if (faceAttributes.HeadPose != null)
             {
                 stringBuilder.AppendLine(
-                    $"Makeup : {((faceAttributes.Makeup.EyeMakeup || faceAttributes.Makeup.LipMakeup) ? "Yes" : "No")}<br/>");
+                    $"Makeup : {(faceAttributes.Makeup.EyeMakeup || faceAttributes.Makeup.LipMakeup ? "Yes" : "No")}<br/>");
             }
 
             if (faceAttributes.Noise != null)

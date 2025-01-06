@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
 using PhotoBank.DbContext.Models;
+using PhotoBank.Services.Models;
 using PhotoBank.ViewModel.Dto;
 
-namespace PhotoBank.Dto
+namespace PhotoBank.Services
 {
     public class MappingProfile : Profile
     {
@@ -41,13 +42,13 @@ namespace PhotoBank.Dto
             CreateMap<Person, PersonDto>()
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
-            CreateMap<Face, FaceDto>()
+            CreateMap<Face, ViewModel.Dto.FaceDto>()
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.Person == null ? (int?)null : src.Person.Id))
                 .ForMember(dest => dest.FaceBox, opt => opt.MapFrom(src => FaceHelper.GetFaceBox(src.Rectangle, src.Photo)))
                 .ForMember(dest => dest.FriendlyFaceAttributes, opt => opt.MapFrom(src => FaceHelper.GetFriendlyFaceAttributes(src.FaceAttributes)))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
-            CreateMap<Face, Load.FaceDto>()
+            CreateMap<Face, Models.FaceDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonGroupFace.PersonId))
                 .ForMember(dest => dest.PersonDateOfBirth, opt => opt.MapFrom(src => src.Person.DateOfBirth))

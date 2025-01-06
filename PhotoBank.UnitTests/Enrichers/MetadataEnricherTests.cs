@@ -10,9 +10,9 @@ using MetadataExtractor.Formats.FileSystem;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.Load;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichers.Services;
+using PhotoBank.Services.Models;
 using Directory = MetadataExtractor.Directory;
 using File = PhotoBank.DbContext.Models.File;
 

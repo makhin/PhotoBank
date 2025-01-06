@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.Load;
 using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.Models;
 
 namespace PhotoBank.UnitTests
 {
