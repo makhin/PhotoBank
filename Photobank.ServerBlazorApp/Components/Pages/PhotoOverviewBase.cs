@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Identity;
-using PhotoBank.Dto.View;
 using PhotoBank.Services.Api;
+using PhotoBank.ViewModel.Dto;
 using Radzen;
+using Radzen.Blazor;
 
 namespace PhotoBank.ServerBlazorApp.Components.Pages
 {
@@ -25,25 +25,43 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
         public int Count { get; set; }
         public bool AllowAdultFilter { get; set; }
         public bool AllowRacyFilter { get; set; }
-        public bool IsFilterLoading { get; set; }
+        public bool IsLoading { get; set; }
+
+        protected RadzenDataGrid<PhotoItemDto> grid;
 
         public PhotoOverviewBase()
         {
             Filter = new FilterDto();
-            IsFilterLoading = true;
+            IsLoading = false;
         }
 
         protected async Task LoadData(LoadDataArgs args)
         {
-            var queryResult = await PhotoService.GetAllPhotosAsync(Filter, args.OrderBy, args.Skip, args.Top);
-            Count = queryResult.Count;
-            Photos = queryResult.Photos;
+            IsLoading = true;
+            await Task.Yield();
+            if (Filter.IsNotEmpty())
+            {
+                Filter.OrderBy = args.OrderBy;
+                Filter.Skip = args.Skip;
+                Filter.Top = args.Top;
+                var queryResult = await PhotoService.GetAllPhotosAsync(Filter);
+                Count = queryResult.Count;
+                Photos = queryResult.Photos;
+            }
+            else
+            {
+                Photos = Enumerable.Empty<PhotoItemDto>();
+                Count = 0;
+            }
+            IsLoading = false;
         }
 
         protected override async Task OnInitializedAsync()
         {
-            IsFilterLoading = true;
             await base.OnInitializedAsync();
+            Photos = Enumerable.Empty<PhotoItemDto>();
+            Count = 0;
+
             Storages = await PhotoService.GetAllStoragesAsync();
             Persons = await PhotoService.GetAllPersonsAsync();
             Tags = await PhotoService.GetAllTagsAsync();
@@ -54,29 +72,20 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
             var user = authState.User;
 
             AllowAdultFilter = (await AuthorizationService.AuthorizeAsync(user, "AllowToSeeAdultContent")).Succeeded;
-            AllowRacyFilter = (await AuthorizationService.AuthorizeAsync(user, "AllowToSeeRacyContent")).Succeeded;
-            IsFilterLoading = false;
-        }
-
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            //if (firstRender)
-            //{
-            //    await JS.InvokeVoidAsync(
-            //        "setElementText1", divElement, "Text after render");
-            //}
+            AllowRacyFilter = (await AuthorizationService.AuthorizeAsync(user, "AllowToSeeRacyContent")).Succeeded;            
         }
 
         protected async Task ApplyFilter(FilterDto filterDto)
-        {
-            var queryResult = await PhotoService.GetAllPhotosAsync(Filter, null, 0, 20);
-            Count = queryResult.Count;
-            Photos = queryResult.Photos;
+        {            
+            grid.Reset(true);
+            await grid.FirstPage(true);
         }
 
-        protected void Cancel()
+        protected async void Cancel()
         {
             Filter = new FilterDto();
+            grid.Reset(true);
+            await grid.FirstPage(true);
         }
     }
 }

@@ -1,45 +1,48 @@
-﻿using System;
+﻿using Amazon.Rekognition.Model;
+using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
+using Newtonsoft.Json;
+using PhotoBank.DbContext.Models;
+using PhotoBank.ViewModel.Dto;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Amazon.Rekognition.Model;
-using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
-using Newtonsoft.Json;
-using FaceAttributes = Microsoft.Azure.CognitiveServices.Vision.Face.Models.FaceAttributes;
 
-namespace PhotoBank.Dto.View
+namespace PhotoBank.Dto
 {
-    public class FaceDto 
+    public static class FaceHelper
     {
-        public int Id { get; set; }
-        public int? PersonId { get; set; }
-        public double? Age { get; set; }
-        public bool? Gender { get; set; }
-        public string FaceAttributes { get; set; }
-        public FaceBoxDto FaceBox { get; set; }
-
-        public string FriendlyFaceAttributes
+        public static FaceBoxDto GetFaceBox(NetTopologySuite.Geometries.Geometry geometry, Photo photo)
         {
-            get
+            var scale = photo.Scale;
+            const string suffix = "px";
+            return new FaceBoxDto
             {
-                if (string.IsNullOrEmpty(FaceAttributes))
-                {
-                    return "Not available";
-                }
+                Left = (int)(geometry.Coordinates[0].X * scale) + suffix,
+                Top = (int)(geometry.Coordinates[0].Y * scale) + suffix,
+                Width = (int)((geometry.Coordinates[1].X - geometry.Coordinates[0].X) * scale) + suffix,
+                Height = (int)((geometry.Coordinates[3].Y - geometry.Coordinates[0].Y) * scale) + suffix
+            };
+        }
 
-                if (FaceAttributes.StartsWith("{\"age\""))
-                {
-                    return GetAzureFaceAttributes(FaceAttributes).ToString();
-                }
-
-                if (FaceAttributes.StartsWith("{\"AgeRange\""))
-                {
-                    return GetAwsFaceAttributes(FaceAttributes).ToString();
-                    
-                }
-
+        public static string GetFriendlyFaceAttributes(string faceAttributes)
+        {
+            if (string.IsNullOrEmpty(faceAttributes))
+            {
                 return "Not available";
             }
+
+            if (faceAttributes.StartsWith("{\"age\""))
+            {
+                return GetAzureFaceAttributes(faceAttributes).ToString();
+            }
+
+            if (faceAttributes.StartsWith("{\"AgeRange\""))
+            {
+                return GetAwsFaceAttributes(faceAttributes).ToString();
+            }
+
+            return "Not available";
         }
 
         private static StringBuilder GetAwsFaceAttributes(string attributes)
@@ -57,7 +60,7 @@ namespace PhotoBank.Dto.View
                     $"The detected face is estimated to be between {face.AgeRange.Low} and {face.AgeRange.High} years old,");
             }
 
-            if (face.Beard is {Value: true})
+            if (face.Beard is { Value: true })
             {
                 stringBuilder.AppendLine($"has beard,");
             }
@@ -114,7 +117,7 @@ namespace PhotoBank.Dto.View
             // Get accessories of the faces
             if (faceAttributes.Accessories != null)
             {
-                var accessoriesList = (List<Accessory>) faceAttributes.Accessories;
+                var accessoriesList = (List<Accessory>)faceAttributes.Accessories;
                 var count = faceAttributes.Accessories.Count;
                 string accessory;
                 var accessoryArray = new string[count];

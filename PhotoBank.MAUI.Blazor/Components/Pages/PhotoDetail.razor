@@ -1,0 +1,24 @@
+﻿@page "/photodetail/{PhotoId:int}"
+@inject IRestService RestService
+@using PhotoBank.ViewModel.Dto
+@using PhotoBank.MAUI.Blazor.Services
+@using System.Linq
+@if (Photo != null)
+{
+    <img src="data:image;base64,@Convert.ToBase64String(Photo.PreviewImage)" alt="@string.Join(" ", Photo.Captions)" />
+}
+else
+{
+    <p>Loading...</p>
+}
+@code {
+    protected PhotoDto Photo;
+
+    [Parameter]
+    public int PhotoId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Photo = await RestService.GetPhoto(PhotoId);
+    }
+}

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
-using PhotoBank.Dto.View;
 using PhotoBank.Services.Api;
+using PhotoBank.ViewModel.Dto;
 using Radzen;
 
 namespace PhotoBank.ServerBlazorApp.Components.Pages

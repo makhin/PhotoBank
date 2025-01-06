@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using AutoMapper;
-using NetTopologySuite.Geometries;
+﻿using AutoMapper;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.View;
+using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.Dto
 {
@@ -45,7 +43,8 @@ namespace PhotoBank.Dto
 
             CreateMap<Face, FaceDto>()
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.Person == null ? (int?)null : src.Person.Id))
-                .ForMember(dest => dest.FaceBox, opt => opt.MapFrom(src => GetFaceBox(src.Rectangle, src.Photo)))
+                .ForMember(dest => dest.FaceBox, opt => opt.MapFrom(src => FaceHelper.GetFaceBox(src.Rectangle, src.Photo)))
+                .ForMember(dest => dest.FriendlyFaceAttributes, opt => opt.MapFrom(src => FaceHelper.GetFriendlyFaceAttributes(src.FaceAttributes)))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Face, Load.FaceDto>()
@@ -54,29 +53,6 @@ namespace PhotoBank.Dto
                 .ForMember(dest => dest.PersonDateOfBirth, opt => opt.MapFrom(src => src.Person.DateOfBirth))
                 .ForMember(dest => dest.PhotoTakenDate, opt => opt.MapFrom(src => src.Photo.TakenDate))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
-        }
-
-        private static FaceBoxDto GetFaceBox(Geometry geometry, Photo photo)
-        {
-            var scale = photo.Scale;
-            const string suffix = "px";
-            return new FaceBoxDto
-            {
-                Left = (int)(geometry.Coordinates[0].X * scale) + suffix,
-                Top = (int)(geometry.Coordinates[0].Y * scale) + suffix,
-                Width = (int)((geometry.Coordinates[1].X - geometry.Coordinates[0].X) * scale) + suffix,
-                Height = (int)((geometry.Coordinates[3].Y - geometry.Coordinates[0].Y) * scale) + suffix
-            };
-
-            //const string suffix = "%";
-            //var faceBoxDto = new FaceBoxDto
-            //{
-            //    Left = (int)(geometry.Coordinates[0].X * 100 / photo.Width.Value) + suffix,
-            //    Top = (int)(geometry.Coordinates[0].Y * 100 / photo.Height.Value) + suffix,
-            //    Width = (int)((geometry.Coordinates[1].X - geometry.Coordinates[0].X) * 100 / photo.Width.Value) + suffix,
-            //    Height = (int)((geometry.Coordinates[3].Y - geometry.Coordinates[0].Y) * 100 / photo.Height.Value) + suffix
-            //};
-            //return faceBoxDto;
         }
     }
 }

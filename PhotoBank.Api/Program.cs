@@ -1,10 +1,10 @@
-
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.Dto;
 using PhotoBank.Services;
+using Serilog.Events;
+using Serilog;
 
 namespace PhotoBank.Api
 {
@@ -12,6 +12,8 @@ namespace PhotoBank.Api
     {
         public static void Main(string[] args)
         {
+            Console.WriteLine("Start App!");
+
             IConfiguration configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -21,7 +23,18 @@ namespace PhotoBank.Api
                 .AddEnvironmentVariables()
                 .Build();
 
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+                .Enrich.FromLogContext()
+                .WriteTo.Debug()
+                .CreateLogger();
+
             var builder = WebApplication.CreateBuilder(args);
+
+            builder.Host.UseSerilog();
+
+            builder.WebHost.UseKestrel();
 
             // Add services to the container.
             var connectionString = configuration.GetConnectionString("DefaultConnection") ??
@@ -66,6 +79,7 @@ namespace PhotoBank.Api
 
             app.MapControllers();
 
+            Console.WriteLine("Run App!");
             app.Run();
         }
     }

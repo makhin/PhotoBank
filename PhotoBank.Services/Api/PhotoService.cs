@@ -6,14 +6,14 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Dto.View;
 using PhotoBank.Repositories;
+using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.Services.Api
 {
     public interface IPhotoService
     {
-        Task<QueryResult> GetAllPhotosAsync(FilterDto filter, string orderBy, int? skip, int? top);
+        Task<QueryResult> GetAllPhotosAsync(FilterDto filter);
         Task<PhotoDto> GetPhotoAsync(int id);
         Task<IEnumerable<PersonDto>> GetAllPersonsAsync();
         Task<IEnumerable<StorageDto>> GetAllStoragesAsync();
@@ -50,7 +50,7 @@ namespace PhotoBank.Services.Api
                 .ProjectTo<PathDto>(_mapper.ConfigurationProvider).Distinct().OrderBy(p=>p.Path).ToListAsync());
         }
 
-        public async Task<QueryResult> GetAllPhotosAsync(FilterDto filter, string orderBy, int? skip, int? top)
+        public async Task<QueryResult> GetAllPhotosAsync(FilterDto filter)
         {
             var queryResult = new QueryResult();
 
@@ -141,8 +141,8 @@ namespace PhotoBank.Services.Api
                 queryResult.Count = await photos.CountAsync();
                 queryResult.Photos = await photos
                     .OrderByDescending(p => p.Id)
-                    .Skip(skip ?? 0)
-                    .Take(top ?? int.MaxValue)
+                    .Skip(filter.Skip ?? 0)
+                    .Take(filter.Top ?? int.MaxValue)
                     .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
                 return queryResult;
@@ -188,7 +188,7 @@ namespace PhotoBank.Services.Api
                         select photo).ToList();
             }
 
-            queryResult.Photos = result.Skip(skip ?? 0).Take(top ?? 10);
+            queryResult.Photos = result.Skip(filter.Skip ?? 0).Take(filter.Top ?? 10);
             queryResult.Count = result.Count;
             return queryResult;
         }

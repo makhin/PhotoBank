@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PhotoBank.DbContext\PhotoBank.DbContext.csproj" />
+    <ProjectReference Include="..\PhotoBank.ViewModel.Dto\PhotoBank.ViewModel.Dto.csproj" />
   </ItemGroup>
 
 </Project>

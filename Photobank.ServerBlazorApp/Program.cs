@@ -11,7 +11,6 @@ using PhotoBank.Dto;
 using PhotoBank.ServerBlazorApp.Components;
 using PhotoBank.Services;
 using Radzen;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace PhotoBank.ServerBlazorApp
 {

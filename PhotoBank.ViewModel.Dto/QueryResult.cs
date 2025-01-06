@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace PhotoBank.Dto.View
+namespace PhotoBank.ViewModel.Dto
 {
     public class QueryResult
     {

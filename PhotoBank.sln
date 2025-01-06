@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotoBank.MAUI.Blazor", "Ph
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoBank.Api", "PhotoBank.Api\PhotoBank.Api.csproj", "{3267B5DA-F866-471C-B496-2510EAED53E4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoBank.ViewModel.Dto", "PhotoBank.ViewModel.Dto\PhotoBank.ViewModel.Dto.csproj", "{84FA7787-892C-45A8-8988-B21CBA3FE2AC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -105,6 +107,14 @@ Global
 		{3267B5DA-F866-471C-B496-2510EAED53E4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3267B5DA-F866-471C-B496-2510EAED53E4}.Release|x64.ActiveCfg = Release|Any CPU
 		{3267B5DA-F866-471C-B496-2510EAED53E4}.Release|x64.Build.0 = Release|Any CPU
+		{84FA7787-892C-45A8-8988-B21CBA3FE2AC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84FA7787-892C-45A8-8988-B21CBA3FE2AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84FA7787-892C-45A8-8988-B21CBA3FE2AC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{84FA7787-892C-45A8-8988-B21CBA3FE2AC}.Debug|x64.Build.0 = Debug|Any CPU
+		{84FA7787-892C-45A8-8988-B21CBA3FE2AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84FA7787-892C-45A8-8988-B21CBA3FE2AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84FA7787-892C-45A8-8988-B21CBA3FE2AC}.Release|x64.ActiveCfg = Release|Any CPU
+		{84FA7787-892C-45A8-8988-B21CBA3FE2AC}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,32 +1,149 @@
 ﻿@page "/photooverview"
 @inject IRestService RestService
-@using PhotoBank.Dto.View
+@using PhotoBank.ViewModel.Dto
 @using PhotoBank.MAUI.Blazor.Services
 @using System.Linq
 
-<div class="photo-grid">
-    @if (_photos?.Photos != null && _photos.Photos.Any())
-    {
-        foreach (var photo in _photos.Photos)
-        {
-            <div class="photo-item">
-                <img src="data:image/jpeg;base64,@Convert.ToBase64String(photo.Thumbnail)" alt="@photo.Name" />
-                <p>@photo.Name</p>
-                <p>@photo.TakenDate?.ToString("yyyy-MM-dd")</p>
-            </div>
-        }
-    }
-    else
-    {
-        <p>No photos available.</p>
-    }
-</div>
+<RadzenTemplateForm Data="@Filter" Submit="@((FilterDto args) => ApplyFilter(args))">
+    <RadzenCard class="my-4">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" Wrap="FlexWrap.Wrap">
+            <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                <RadzenLabel Text="Storages" />
+                <RadzenDropDown @bind-Value=@Filter.Storages AllowClear="true" Multiple="true" Data=@storages Style="width: 100%;" TextProperty="Name" ValueProperty="Id" Name="Storages">
+                </RadzenDropDown>
+                @if (Filter.Storages != null)
+                {
+                    <RadzenDropDown @bind-Value="Filter.RelativePath" AllowClear="true" Data="@(paths.Where(o => Filter.Storages.Contains(o.StorageId) && !string.IsNullOrEmpty(o.Path)))" Style="width: 100%;" TextProperty="Path" ValueProperty="Path" Name="Paths">
+                    </RadzenDropDown>
+                }
+            </RadzenStack>
+
+            <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                <RadzenLabel Text="Taken Date" />
+                <RadzenDatePicker DateFormat="d" Name="TakenDateFrom" @bind-Value=@Filter.TakenDateFrom ShowTime="false" />
+                <RadzenDatePicker DateFormat="d" Name="TakenDateTo" @bind-Value=@Filter.TakenDateTo ShowTime="false" />
+            </RadzenStack>
+
+            <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                <RadzenLabel Text="Content" />
+                <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.NoWrap">
+                    <RadzenCheckBox @bind-Value=@Filter.IsBW TriState="true" TValue="bool?" Name="CheckBoxIsBW" /><RadzenLabel Text="Is BW" Style="margin-left: 5px" Component="CheckBoxIsBW" />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.NoWrap">
+                    <RadzenCheckBox @bind-Value=@Filter.ThisDay TriState="true" TValue="bool?" Name="CheckBoxThisDay" /><RadzenLabel Text="This Day" Style="margin-left: 5px" Component="CheckBoxThisDay" />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.NoWrap">
+                    <RadzenCheckBox @bind-Value=@Filter.IsAdultContent TriState="true" TValue="bool?" Name="CheckBoxIsAdult" /><RadzenLabel Text="Is Adult" Style="margin-left: 5px" Component="CheckBoxIsAdult" />
+                </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.NoWrap">
+                    <RadzenCheckBox @bind-Value=@Filter.IsRacyContent TriState="true" TValue="bool?" Name="CheckBoxIsRacy" /><RadzenLabel Text="Is Racy" Style="margin-left: 5px" Component="CheckBoxIsRacy" />
+                </RadzenStack>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                <RadzenLabel Text="Persons and Tags" />
+                <RadzenDropDown @bind-Value="Filter.Persons" AllowClear="true" Multiple="true" Data="@persons" style="width: 100%;" TextProperty="Name" ValueProperty="Id" Name="Persons" AllowFiltering="true" FilterOperator="StringFilterOperator.Contains">
+                </RadzenDropDown>
+                <RadzenDropDown @bind-Value="Filter.Tags" AllowClear="true" Multiple="true" Data="@tags" style="width: 100%;" TextProperty="Name" ValueProperty="Id" Name="Tags" AllowFiltering="true">
+                </RadzenDropDown>
+            </RadzenStack>
+            <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+                <RadzenLabel Text="Caption" />
+                <RadzenTextArea style="width: 100%;" Name="Caption" @bind-Value="Filter.Caption" Rows="3"></RadzenTextArea>
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+    <div class="row justify-content-center">
+        <div class="col-md-12 d-flex align-items-end justify-content-center" style="margin-top: 16px; margin-bottom: 16px;">
+            <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="Filter" />
+            <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" style="display: inline-block; margin-left: 10px;" Text="Clear" Click="@Cancel" />
+        </div>
+    </div>
+</RadzenTemplateForm>
+<RadzenDataGrid @ref="grid" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Advanced" AllowPaging="true" PageSize="10"
+                AllowSorting="true" Data="@photos" Count="@count" LoadData="@LoadData" TItem="PhotoItemDto" ColumnWidth="200px" IsLoading="@isLoading" EmptyText="No photos" Responsive="true">
+    <Columns>
+        <RadzenDataGridColumn TItem="PhotoItemDto" Property="Id" Title="Photo ID">
+            <Template Context="data">
+                <RadzenButton ButtonStyle="ButtonStyle.Light" Click="@(() => OpenPhoto(data.Id))" Text="@data.Id.ToString()" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="PhotoItemDto" Property="Thumbnail" Title="Thumbnail" Sortable="false" Filterable="false">
+            <Template Context="data">
+                <img src="data:image;base64,@Convert.ToBase64String(data?.Thumbnail)" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="PhotoItemDto" Property="Name" Title="Name" />
+        <RadzenDataGridColumn TItem="PhotoItemDto" Property="TakenDate" Title="Taken Date">
+            <Template Context="data">
+                @($"{data.TakenDate:d}")
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="PhotoItemDto" Property="StorageName" Title="Storage" />
+        <RadzenDataGridColumn TItem="PhotoItemDto" Property="RelativePath" Title="Relative Path" />
+    </Columns>
+</RadzenDataGrid>
 
 @code {
-    private QueryResult _photos;
+    RadzenDataGrid<PhotoItemDto> grid;
+
+    int count;
+    IEnumerable<PhotoItemDto> photos;
+
+    List<StorageDto> storages;
+    List<PathDto> paths;
+    List<TagDto> tags;
+    List<PersonDto> persons;
+
+    FilterDto Filter = new FilterDto();
+    bool isLoading = false;
 
     protected override async Task OnInitializedAsync()
     {
-        _photos = await RestService.GetPhotos();
+        photos = Enumerable.Empty<PhotoItemDto>();
+        count = 0;
+
+        storages = (await RestService.GetStorages()).ToList();
+        paths = (await RestService.GetPaths()).ToList();
+        tags = (await RestService.GetTags()).ToList();
+        persons = (await RestService.GetPersons()).ToList();
+    }
+
+    protected async Task LoadData(LoadDataArgs args)
+    {
+        isLoading = true;
+        await Task.Yield();
+        if (Filter.IsNotEmpty())
+        {
+            Filter.OrderBy = args.OrderBy;
+            Filter.Skip = args.Skip;
+            Filter.Top = args.Top;
+            var queryResult = await RestService.GetPhotos(Filter);
+            photos = queryResult.Photos;
+            count = queryResult.Count;
+        }
+        else
+        {
+            photos = Enumerable.Empty<PhotoItemDto>();
+            count = 0;
+        }
+        isLoading = false;
+    }
+
+    protected async Task ApplyFilter(FilterDto filterDto)
+    {
+        grid.Reset(true);
+        await grid.FirstPage(true);
+    }
+
+    protected async Task Cancel()
+    {
+        Filter = new FilterDto();
+        grid.Reset(true);
+        await grid.FirstPage(true);
+    }
+
+    protected async Task OpenPhoto(int id)
+    {
+        Navigation.NavigateTo($"/photodetails/{id}");
     }
 }

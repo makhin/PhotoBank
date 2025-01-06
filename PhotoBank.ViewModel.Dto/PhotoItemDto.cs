@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using PhotoBank.DbContext.Models;
 
-namespace PhotoBank.Dto.View
+namespace PhotoBank.ViewModel.Dto
 {
-    public class PhotoItemDto : IEntityBase
+    public class PhotoItemDto
     {
         public int Id { get; set; }
         public byte[] Thumbnail { get; set; }

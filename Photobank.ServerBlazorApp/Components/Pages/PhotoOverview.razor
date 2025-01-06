@@ -1,5 +1,5 @@
 ﻿@page "/photooverview"
-@using PhotoBank.Dto.View
+@using PhotoBank.ViewModel.Dto;
 @using Radzen
 @using System.Collections.ObjectModel
 @using Microsoft.AspNetCore.Authorization
@@ -8,12 +8,6 @@
 @rendermode InteractiveServer
 @attribute [Authorize]
 
-@if (IsFilterLoading)
-{
-    <p><em>Loading...</em></p>
-}
-else
-{
     <RadzenTemplateForm Data="@Filter" Submit="@((FilterDto args) => ApplyFilter(args))">
         <RadzenCard class="my-4">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start" Wrap="FlexWrap.Wrap">
@@ -77,7 +71,7 @@ else
     </RadzenTemplateForm>
 
      <RadzenDataGrid AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" FilterMode="FilterMode.Advanced" AllowPaging="true" PageSize="20"
-                    AllowSorting="true" Data="@Photos" LoadData="@LoadData" Count="@Count" TItem="PhotoItemDto" ColumnWidth="200px">
+                AllowSorting="true" Data="@Photos" LoadData="@LoadData" Count="@Count" TItem="PhotoItemDto" ColumnWidth="200px" IsLoading="@IsLoading" @ref="grid" EmptyText="No photos" Responsive="true">
         <Columns>
             <RadzenDataGridColumn TItem="PhotoItemDto" Property="Id" Title="Photo ID">
                 <Template Context="data">
@@ -99,4 +93,3 @@ else
             <RadzenDataGridColumn TItem="PhotoItemDto" Property="RelativePath" Title="Relative Path" />
         </Columns>
     </RadzenDataGrid>
-}

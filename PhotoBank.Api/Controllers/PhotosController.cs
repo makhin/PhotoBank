@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using PhotoBank.Dto.View;
 using PhotoBank.Services.Api;
+using PhotoBank.ViewModel.Dto;
 using System.Diagnostics.Metrics;
 
 namespace PhotoBank.Api.Controllers
@@ -19,17 +19,18 @@ namespace PhotoBank.Api.Controllers
             _photoService = photoService;
         }
 
-        [HttpGet("GetPhotos")]
-        public async Task<ActionResult<QueryResult>> GetPhotos()
+        [HttpPost("GetPhotos")]
+        public async Task<ActionResult<QueryResult>> GetPhotos(FilterDto request)
         {
-            QueryResult? photos = await _photoService.GetAllPhotosAsync(new FilterDto(), null, 0, 10);
+            QueryResult? photos = await _photoService.GetAllPhotosAsync(request);
             return photos;
         }
 
         [HttpGet("GetPhoto")]
-        public async Task<ActionResult<PhotoDto>> GetPhoto()
+        public async Task<ActionResult<PhotoDto>> GetPhoto(int id)
         {
-            return null;
+            var photo = await _photoService.GetPhotoAsync(id);
+            return photo;
         }
 
         [HttpGet("GetStorages")]

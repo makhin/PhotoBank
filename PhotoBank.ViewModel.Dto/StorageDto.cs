@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PhotoBank.Dto.View
+namespace PhotoBank.ViewModel.Dto
 {
     public class StorageDto
     {
