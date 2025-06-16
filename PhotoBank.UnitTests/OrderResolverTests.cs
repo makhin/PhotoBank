@@ -5,79 +5,177 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Services.Enrichers;
-using PhotoBank.Services.Models;
 
 namespace PhotoBank.UnitTests
 {
+    public interface IEnricher
+    {
+        EnricherType EnricherType { get; }
+        EnricherType[] Dependencies { get; }
+        Task EnrichAsync();
+    }
+
     public abstract class EnricherTestBase : IEnricher
     {
-        public EnricherType EnricherType => EnricherType.None;
-        public abstract Type[] Dependencies { get; }
-        public async Task EnrichAsync(Photo photo, SourceDataDto path)
+        public abstract EnricherType EnricherType { get; }
+        public abstract EnricherType[] Dependencies { get; }
+        public async Task EnrichAsync()
         {
-            await Task.Run(() =>
-            {
-                Task.Delay(new Random().Next(5000, 15000));
-                Debug.WriteLine($"{this.GetType().Name} started at {DateTime.Now}");
-                Console.WriteLine($"{this.GetType().Name} started at {DateTime.Now}");
-            });
+            Debug.WriteLine($"{this.GetType().Name} started at {DateTime.Now}");
+            Console.WriteLine($"{this.GetType().Name} started at {DateTime.Now}");
+
+            Random random = new Random();
+            int delay = random.Next(10000, 15000);
+            await Task.Delay(delay);
+
+            Debug.WriteLine($"{this.GetType().Name} finished at {DateTime.Now} delay {delay}");
+            Console.WriteLine($"{this.GetType().Name} finished at {DateTime.Now} delay {delay}");
         }
     }
 
     public class EnAd : EnricherTestBase
     {
-        public override Type[] Dependencies => new[] { typeof(EnAn) };
+        public override EnricherType EnricherType => EnricherType.Adult;
+
+        public override EnricherType[] Dependencies => new[] { EnricherType.Analyze };
     }
 
     public class EnAn : EnricherTestBase
     {
-        public override Type[] Dependencies => new[] { typeof(EnPr) };
+        public override EnricherType EnricherType => EnricherType.Analyze;
+        public override EnricherType[] Dependencies => new[] { EnricherType.Preview };
     }
 
     public class EnCap : EnricherTestBase
     {
-        public override Type[] Dependencies => new[] { typeof(EnAn) };
+        public override EnricherType EnricherType => EnricherType.Caption;
+        public override EnricherType[] Dependencies => new[] { EnricherType.Analyze };
     }
 
     public class EnCat : EnricherTestBase
     {
-        public override Type[] Dependencies => new[] { typeof(EnAn) };
+        public override EnricherType EnricherType => EnricherType.Category;
+        public override EnricherType[] Dependencies => new[] { EnricherType.Analyze };
     }
 
     public class EnCo : EnricherTestBase
     {
-        public override Type[] Dependencies => new[] { typeof(EnAn) };
+        public override EnricherType EnricherType => EnricherType.Color;
+        public override EnricherType[] Dependencies => new[] { EnricherType.Analyze };
     }
 
     public class EnFa : EnricherTestBase
     {
-        public override Type[] Dependencies => new[] { typeof(EnAn) };
+        public override EnricherType EnricherType => EnricherType.Face;
+        public override EnricherType[] Dependencies => new[] { EnricherType.Analyze };
     }
 
     public class EnMe : EnricherTestBase
     {
-        public override Type[] Dependencies => new[] { typeof(EnPr) };
+        public override EnricherType EnricherType => EnricherType.Metadata;
+        public override EnricherType[] Dependencies => new[] { EnricherType.Preview };
     }
 
     public class EnOb : EnricherTestBase
     {
-        public override Type[] Dependencies => new[] { typeof(EnAn) };
+        public override EnricherType EnricherType => EnricherType.ObjectProperty;
+        public override EnricherType[] Dependencies => new[] { EnricherType.Analyze };
     }
 
     public class EnPr : EnricherTestBase
     {
-        public override Type[] Dependencies => Array.Empty<Type>();
+        public override EnricherType EnricherType => EnricherType.Preview;
+        public override EnricherType[] Dependencies => Array.Empty<EnricherType>();
     }
 
     public class EnTa : EnricherTestBase
     {
-        public override Type[] Dependencies => new[] { typeof(EnAn) };
+        public override EnricherType EnricherType => EnricherType.Tag;
+        public override EnricherType[] Dependencies => new[] { EnricherType.Analyze };
     }
 
     public class EnTh : EnricherTestBase
     {
-        public override Type[] Dependencies => new[] { typeof(EnPr) };
+        public override EnricherType EnricherType => EnricherType.Thumbnail;
+        public override EnricherType[] Dependencies => new[] { EnricherType.Preview };
+    }
+
+    public class DependencyExecutor
+    {
+        public async Task ExecuteAsync(IEnumerable<EnricherTestBase> enrichers)
+        {
+            var enricherList = enrichers.ToList();
+            var typeToInstance = enricherList.ToDictionary(e => e.EnricherType);
+            var dependencyGraph = new Dictionary<EnricherType, List<EnricherType>>();
+            var incomingEdges = new Dictionary<EnricherType, int>();
+
+            // Инициализация графа
+            foreach (var enricher in enricherList)
+            {
+                var type = enricher.EnricherType;
+                incomingEdges[type] = 0;
+                dependencyGraph[type] = new List<EnricherType>();
+            }
+
+            // Построение зависимостей
+            foreach (var enricher in enricherList)
+            {
+                var currentType = enricher.EnricherType;
+                foreach (var dependencyType in enricher.Dependencies)
+                {
+                    if (!dependencyGraph.ContainsKey(dependencyType))
+                        throw new InvalidOperationException($"Missing dependency: {dependencyType}");
+
+                    dependencyGraph[dependencyType].Add(currentType);
+                    incomingEdges[currentType]++;
+                }
+            }
+
+            var readyQueue = new Queue<EnricherType>(
+                incomingEdges.Where(kv => kv.Value == 0).Select(kv => kv.Key)
+            );
+
+            var completed = new HashSet<EnricherType>();
+            var runningTasks = new Dictionary<EnricherType, Task>();
+
+            while (readyQueue.Count > 0 || runningTasks.Count > 0)
+            {
+                while (readyQueue.Count > 0)
+                {
+                    var type = readyQueue.Dequeue();
+                    var enricher = typeToInstance[type];
+
+                    var task = Task.Run(async () =>
+                    {
+                        await enricher.EnrichAsync();
+                        lock (completed)
+                        {
+                            completed.Add(type);
+                            foreach (var dependent in dependencyGraph[type])
+                            {
+                                incomingEdges[dependent]--;
+                                if (incomingEdges[dependent] == 0)
+                                {
+                                    readyQueue.Enqueue(dependent);
+                                }
+                            }
+                        }
+                    });
+
+                    runningTasks[type] = task;
+                }
+
+                var finished = await Task.WhenAny(runningTasks.Values);
+                var finishedEntry = runningTasks.First(kvp => kvp.Value == finished);
+                runningTasks.Remove(finishedEntry.Key);
+            }
+
+            if (completed.Count < enricherList.Count)
+                throw new InvalidOperationException("Cycle detected in dependencies");
+
+            Debug.WriteLine($"Done {DateTime.Now}");
+            Console.WriteLine($"Done {DateTime.Now}");
+        }
     }
 
     [TestFixture]
@@ -86,61 +184,9 @@ namespace PhotoBank.UnitTests
         [Test]
         public async Task Test()
         {
-            IEnumerable<IEnricher> enrichers = new EnricherTestBase[]{ new EnAd(), new EnAn(), new EnCap(), new EnCat(), new EnCo(), new EnFa(), new EnMe(), new EnOb(), new EnPr(), new EnTa(), new EnTh() };
-            var orderedEnrichers = ResolveOrder(enrichers);
-            await RunEnrichersAsync(orderedEnrichers);
-        }
-
-        private static List<IEnricher> ResolveOrder(IEnumerable<IEnricher> enrichers)
-        {
-            var resolved = new List<IEnricher>();
-            var unresolved = new HashSet<IEnricher>(enrichers);
-
-            while (unresolved.Any())
-            {
-                bool progress = false;
-
-                foreach (var enricher in unresolved.ToList())
-                {
-                    if (enricher.Dependencies.All(d => resolved.Any(r => r.GetType() == d)))
-                    {
-                        resolved.Add(enricher);
-                        unresolved.Remove(enricher);
-                        progress = true;
-                    }
-                }
-
-                if (!progress)
-                {
-                    throw new InvalidOperationException("Circular dependency detected or missing dependency.");
-                }
-            }
-
-            return resolved;
-        }
-
-        private static async Task RunEnrichersAsync(IEnumerable<IEnricher> enrichers)
-        {
-            var photo = new Photo();
-            var path = new SourceDataDto();
-            var tasks = new Dictionary<Type, TaskCompletionSource<bool>>();
-
-            foreach (var enricher in enrichers)
-            {
-                tasks[enricher.GetType()] = new TaskCompletionSource<bool>();
-            }
-
-            foreach (var enricher in enrichers)
-            {
-                var dependencyTasks = enricher.Dependencies.Select(d => tasks[d].Task).ToArray();
-                var task = Task.WhenAll(dependencyTasks).ContinueWith(async _ =>
-                {
-                    await enricher.EnrichAsync(photo, path);
-                    tasks[enricher.GetType()].SetResult(true);
-                }).Unwrap();
-            }
-
-            await Task.WhenAll(tasks.Values.Select(t => t.Task));
+            IEnumerable<EnricherTestBase> enrichers = new EnricherTestBase[]{ new EnAd(), new EnAn(), new EnCap(), new EnCat(), new EnCo(), new EnFa(), new EnMe(), new EnOb(), new EnPr(), new EnTa(), new EnTh() };
+            var executor = new DependencyExecutor();
+            await executor.ExecuteAsync(enrichers);
         }
     }
 }
