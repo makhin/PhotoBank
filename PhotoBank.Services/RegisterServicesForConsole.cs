@@ -41,8 +41,7 @@ namespace PhotoBank.Services
             });
 
             services.AddSingleton(typeof(AmazonRekognitionClient));
-
-            services.AddTransient<IOrderResolver<IEnricher>, OrderResolver<IEnricher>>();
+            services.AddTransient<IDependencyExecutor, DependencyExecutor>();
 
             services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 

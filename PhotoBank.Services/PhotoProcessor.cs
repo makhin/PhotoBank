@@ -25,6 +25,7 @@ namespace PhotoBank.Services
         private readonly IRepository<Photo> _photoRepository;
         private readonly IRepository<File> _fileRepository;
         private readonly IRepository<Face> _faceRepository;
+        private readonly IDependencyExecutor _dependencyExecutor;
         private readonly IEnumerable<IEnricher> _enrichers;
 
         private class PhotoFilePath
@@ -39,15 +40,15 @@ namespace PhotoBank.Services
             IRepository<File> fileRepository,
             IRepository<Face> faceRepository,
             IRepository<Enricher> enricherRepository,
-            IOrderResolver<IEnricher> orderResolver,
+            IDependencyExecutor dependencyExecutor,
             EnricherResolver enricherResolver
             )
         {
             _photoRepository = photoRepository;
             _fileRepository = fileRepository;
             _faceRepository = faceRepository;
-            var enrichers = enricherResolver(enricherRepository);
-            _enrichers = orderResolver.Resolve(enrichers);
+            _dependencyExecutor = dependencyExecutor;
+            _enrichers = enricherResolver(enricherRepository);
         }
 
         public async Task<int> AddPhotoAsync(Storage storage, string path)
@@ -72,11 +73,7 @@ namespace PhotoBank.Services
             var sourceData = new SourceDataDto { AbsolutePath = path };
             var photo = new Photo { Storage = storage };
 
-            foreach (var enricher in _enrichers)
-            {
-                await enricher.EnrichAsync(photo, sourceData);
-                photo.EnrichedWithEnricherType |= enricher.EnricherType;
-            }
+            await _dependencyExecutor.ExecuteAsync(_enrichers, photo, sourceData);
 
             try
             {
