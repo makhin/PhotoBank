@@ -2,7 +2,10 @@
 {
     public class PathDto
     {
+        [System.ComponentModel.DataAnnotations.Required]
         public int StorageId { get; set; }
-        public string Path { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Path { get; set; } = default!;
     }
 }

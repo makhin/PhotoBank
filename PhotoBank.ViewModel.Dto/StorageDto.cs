@@ -8,7 +8,11 @@ namespace PhotoBank.ViewModel.Dto
 {
     public class StorageDto
     {
+        [System.ComponentModel.DataAnnotations.Required]
+
         public int Id { get; set; }
-        public string Name { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Required] 
+        public string Name { get; set; } = default!;
     }
 }

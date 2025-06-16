@@ -7,8 +7,8 @@ namespace PhotoBank.ViewModel.Dto
         public int? PersonId { get; set; }
         public double? Age { get; set; }
         public bool? Gender { get; set; }
-        public string FaceAttributes { get; set; }
-        public FaceBoxDto FaceBox { get; set; }
-        public string FriendlyFaceAttributes { get;set; }
+        public string? FaceAttributes { get; set; }
+        public required FaceBoxDto FaceBox { get; set; }
+        public required string FriendlyFaceAttributes { get;set; }
     }
 }

@@ -64,7 +64,7 @@
     <Columns>
         <RadzenDataGridColumn TItem="PhotoItemDto" Property="Id" Title="Photo ID">
             <Template Context="data">
-                <RadzenButton ButtonStyle="ButtonStyle.Light" Click="@(() => OpenPhoto(data.Id))" Text="@data.Id.ToString()" />
+                <RadzenLink Path="@string.Format("photodetail/{0}", data.Id)" Text="@data.Id.ToString()" target="_blank" />
             </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="PhotoItemDto" Property="Thumbnail" Title="Thumbnail" Sortable="false" Filterable="false">
@@ -140,10 +140,5 @@
         Filter = new FilterDto();
         grid.Reset(true);
         await grid.FirstPage(true);
-    }
-
-    protected async Task OpenPhoto(int id)
-    {
-        Navigation.NavigateTo($"/photodetails/{id}");
     }
 }

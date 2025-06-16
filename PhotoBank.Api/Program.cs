@@ -40,6 +40,16 @@ namespace PhotoBank.Api
                                    throw new InvalidOperationException(
                                        "Connection string 'DefaultConnection' not found.");
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowLocalFrontend",
+                    policy => policy
+                        .WithOrigins("http://localhost:5174")
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials());
+            });
+
             builder.Services.AddDbContext<PhotoBankDbContext>(options =>
             {
                 options.UseLoggerFactory(LoggerFactory.Create(loggingBuilder => loggingBuilder.AddDebug()));
@@ -53,6 +63,11 @@ namespace PhotoBank.Api
                     });
                 options.EnableSensitiveDataLogging();
                 options.EnableDetailedErrors();
+            });
+
+            builder.Services.Configure<RouteOptions>(options =>
+            {
+                options.LowercaseUrls = true;
             });
 
             builder.Services.AddControllers();
@@ -75,6 +90,8 @@ namespace PhotoBank.Api
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
+
+            app.UseCors("AllowLocalFrontend");
 
             app.MapControllers();
 
