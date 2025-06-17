@@ -4,11 +4,11 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CalendarIcon } from "lucide-react";
+import {Cat, Dog, Turtle, Rabbit, Fish} from "lucide-react";
+import {MultiSelect} from "@/components/ui/multi-select.tsx";
+import {DatePickerWithRange} from "@/components/ui/date-picker-range.tsx";
+import {useState} from "react";
 
 type DateRange = {
   from: Date | null;
@@ -28,7 +28,7 @@ interface FormData {
   dateRange: DateRange;
 }
 
-export function DemoForm() {
+export function FilterForm() {
   const form = useForm<FormData>({
     defaultValues: {
       select1: "",
@@ -48,6 +48,16 @@ export function DemoForm() {
     console.log("Submitted:", data);
   }
 
+    const [selectedFrameworks, setSelectedFrameworks] = useState<string[]>(["react", "angular"]);
+
+    const frameworksList = [
+        { value: "react", label: "React", icon: Turtle },
+        { value: "angular", label: "Angular", icon: Cat },
+        { value: "vue", label: "Vue", icon: Dog },
+        { value: "svelte", label: "Svelte", icon: Rabbit },
+        { value: "ember", label: "Ember", icon: Fish },
+    ];
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full max-w-screen-xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -59,16 +69,13 @@ export function DemoForm() {
             <FormItem>
               <FormLabel>Select 1</FormLabel>
               <FormControl>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="???????? ???????" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="option1">Option 1</SelectItem>
-                    <SelectItem value="option2">Option 2</SelectItem>
-                    <SelectItem value="option3">Option 3</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <MultiSelect {...field}
+                               options={frameworksList}
+                               onValueChange={setSelectedFrameworks}
+                               defaultValue={selectedFrameworks}
+                               placeholder="Select frameworks"
+                               variant="inverted"
+                  />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -81,16 +88,13 @@ export function DemoForm() {
             <FormItem>
               <FormLabel>Select 2</FormLabel>
               <FormControl>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="???????? ???????" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="option1">Option 1</SelectItem>
-                    <SelectItem value="option2">Option 2</SelectItem>
-                    <SelectItem value="option3">Option 3</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <MultiSelect {...field}
+                               options={frameworksList}
+                               onValueChange={setSelectedFrameworks}
+                               defaultValue={selectedFrameworks}
+                               placeholder="Select frameworks"
+                               variant="inverted"
+                  />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -103,16 +107,13 @@ export function DemoForm() {
             <FormItem>
               <FormLabel>Select 3</FormLabel>
               <FormControl>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="???????? ???????" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="option1">Option 1</SelectItem>
-                    <SelectItem value="option2">Option 2</SelectItem>
-                    <SelectItem value="option3">Option 3</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <MultiSelect {...field}
+                               options={frameworksList}
+                               onValueChange={setSelectedFrameworks}
+                               defaultValue={selectedFrameworks}
+                               placeholder="Select frameworks"
+                               variant="inverted"
+                  />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -125,16 +126,13 @@ export function DemoForm() {
             <FormItem>
               <FormLabel>Select 4</FormLabel>
               <FormControl>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="???????? ???????" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="option1">Option 1</SelectItem>
-                    <SelectItem value="option2">Option 2</SelectItem>
-                    <SelectItem value="option3">Option 3</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <MultiSelect {...field}
+                               options={frameworksList}
+                               onValueChange={setSelectedFrameworks}
+                               defaultValue={selectedFrameworks}
+                               placeholder="Select frameworks"
+                               variant="inverted"
+                  />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -215,8 +213,7 @@ export function DemoForm() {
             <FormItem className="col-span-4">
               <FormLabel>Text Input</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="??????? ?????..." 
+                <Input
                   className="w-full" 
                   {...field} 
                 />
@@ -234,31 +231,7 @@ export function DemoForm() {
             <FormItem className="col-span-4">
               <FormLabel>Date Range</FormLabel>
               <FormControl>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value?.from && field.value.to ? (
-                        <>
-                          {field.value.from.toLocaleDateString()} ? {field.value.to.toLocaleDateString()}
-                        </>
-                      ) : field.value?.from ? (
-                        field.value.from.toLocaleDateString()
-                      ) : (
-                        "???????? ????"
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar 
-                      mode="range" 
-                      selected={field.value ?? null}
-                      onSelect={field.onChange} 
-                      numberOfMonths={2} 
-                      initialFocus 
-                    />
-                  </PopoverContent>
-                </Popover>
+                  <DatePickerWithRange {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
