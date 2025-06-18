@@ -12,7 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { cn } from "@/utils/utils";
+import { cn } from "@/lib/utils";
 
 export function DatePickerWithRange({
                                       className,
