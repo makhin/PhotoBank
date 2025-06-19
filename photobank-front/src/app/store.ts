@@ -1,14 +1,14 @@
 import {configureStore} from "@reduxjs/toolkit";
-import metaReducer from '@/features/meta/metaSlice';
-import {photobankApi} from "@/features/api/photobankApi.ts";
+import metaReducer from '@/features/meta/model/metaSlice.ts';
+import {api} from "@/entities/photo/api.ts";
 
 export const store = configureStore({
     reducer: {
         metadata: metaReducer,
-        [photobankApi.reducerPath]: photobankApi.reducer,
+        [api.reducerPath]: api.reducer,
     },
     middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware().concat(photobankApi.middleware),
+        getDefaultMiddleware().concat(api.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

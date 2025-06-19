@@ -4,7 +4,7 @@ import {Checkbox} from '@/components/ui/checkbox';
 import {MultiSelect} from '@/components/ui/multi-select';
 import {DatePickerWithRange} from '@/components/ui/date-picker-range';
 import {FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form';
-import type {FormData} from '@/lib/form-schema';
+import type {FormData} from '@/features/filter/lib/form-schema.ts';
 import {useSelector} from "react-redux";
 import type {RootState} from "@/app/store.ts";
 

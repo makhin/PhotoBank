@@ -1,6 +1,6 @@
 import {createAsyncThunk, createSlice, type PayloadAction} from '@reduxjs/toolkit'
 
-import type {PathDto, PersonDto, StorageDto, TagDto,} from '@/types/dto'
+import type {PathDto, PersonDto, StorageDto, TagDto,} from '@/entities/meta/model.ts'
 
 interface MetadataPayload {
     tags: TagDto[]

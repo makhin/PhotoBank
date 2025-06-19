@@ -1,5 +1,5 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import type { FilterDto, PhotoItemDto } from '@/types/dto'
+import {createSlice, type PayloadAction} from '@reduxjs/toolkit'
+import type {FilterDto, PhotoItemDto} from '@/entities/meta/model.ts'
 
 interface PhotoState {
     filter: FilterDto

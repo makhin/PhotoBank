@@ -33,16 +33,6 @@ export interface FilterDto {
     top?: number;
 }
 
-export interface PathDto {
-    storageId: number;
-    path: string;
-}
-
-export interface PersonDto {
-    id: number;
-    name: string;
-}
-
 export interface PersonItemDto {
     personId?: number;
 }
@@ -90,16 +80,6 @@ export interface ProblemDetails {
 export interface QueryResult {
     count?: number;
     photos?: PhotoItemDto[];
-}
-
-export interface StorageDto {
-    id: number;
-    name: string;
-}
-
-export interface TagDto {
-    id: number;
-    name: string;
 }
 
 export interface TagItemDto {

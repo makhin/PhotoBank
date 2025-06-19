@@ -1,13 +1,9 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type {
-    FilterDto,
-    QueryResult,
-    PhotoDto,
-} from '@/types/dto'
+import {createApi, fetchBaseQuery} from '@reduxjs/toolkit/query/react'
+import type {FilterDto, PhotoDto, QueryResult,} from '@/entities/meta/model.ts'
 
-export const photobankApi = createApi({
+export const api = createApi({
     reducerPath: 'photobankApi',
-    baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
+    baseQuery: fetchBaseQuery({baseUrl: '/api'}),
     endpoints: (builder) => ({
         getPhotoById: builder.query<PhotoDto, number>({
             query: (id) => `photos/${id}`,
@@ -25,4 +21,4 @@ export const photobankApi = createApi({
 export const {
     useGetPhotoByIdQuery,
     useSearchPhotosMutation,
-} = photobankApi
+} = api

@@ -3,7 +3,7 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import {Button} from '@/components/ui/button';
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Form} from '@/components/ui/form';
-import {type FormData, formSchema} from '@/lib/form-schema';
+import {type FormData, formSchema} from '@/features/filter/lib/form-schema.ts';
 import {FilterFormFields} from "@/components/FilterFormFields.tsx";
 
 export function FilterForm() {
