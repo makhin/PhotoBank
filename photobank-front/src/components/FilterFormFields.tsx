@@ -5,13 +5,27 @@ import {MultiSelect} from '@/components/ui/multi-select';
 import {DatePickerWithRange} from '@/components/ui/date-picker-range';
 import {FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form';
 import type {FormData} from '@/lib/form-schema';
-import {pathsData, personsData, storagesData, tagsData} from '@/lib/form-data';
+import {useSelector} from "react-redux";
+import type {RootState} from "@/app/store.ts";
 
 interface FilterFormFieldsProps {
     control: Control<FormData>;
 }
 
 export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
+    const storages = useSelector((state: RootState) => state.metadata.storages).map(s => {
+        return {label: s.name, value: s.id.toString()};
+    });
+    const paths = useSelector((state: RootState) => state.metadata.paths).map(s => {
+        return {label: s.path, value: s.path};
+    });
+    const persons = useSelector((state: RootState) => state.metadata.persons).map(s => {
+        return {label: s.name, value: s.id.toString()};
+    });
+    const tags = useSelector((state: RootState) => state.metadata.tags).map(s => {
+        return {label: s.name, value: s.id.toString()};
+    });
+
     return (
         <>
             {/* Search Input */}
@@ -57,7 +71,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
-                                    options={storagesData}
+                                    options={storages}
                                     placeholder="Select storages"
                                 />
                             </FormControl>
@@ -76,7 +90,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
-                                    options={pathsData}
+                                    options={paths}
                                     placeholder="Select skills"
                                 />
                             </FormControl>
@@ -95,7 +109,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
-                                    options={personsData}
+                                    options={persons}
                                     placeholder="Select locations"
                                 />
                             </FormControl>
@@ -114,7 +128,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
-                                    options={tagsData}
+                                    options={tags}
                                     placeholder="Select departments"
                                 />
                             </FormControl>
