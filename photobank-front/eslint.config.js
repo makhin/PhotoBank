@@ -1,5 +1,4 @@
 import js from '@eslint/js';
-import globals from 'globals';
 import tseslint from '@typescript-eslint/eslint-plugin';
 import parser from '@typescript-eslint/parser';
 import react from 'eslint-plugin-react';
@@ -7,6 +6,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import importPlugin from 'eslint-plugin-import';
+import prettier from 'eslint-config-prettier';
 
 /** @type {import("eslint").Linter.FlatConfig[]} */
 export default [
@@ -20,9 +20,8 @@ export default [
                 project: './tsconfig.json',
                 sourceType: 'module',
                 ecmaVersion: 'latest',
-                ecmaFeatures: {jsx: true, tsx: true},
+                ecmaFeatures: {jsx: true},
             },
-            globals: globals.browser,
         },
         plugins: {
             '@typescript-eslint': tseslint,
@@ -34,32 +33,60 @@ export default [
         },
         rules: {
             // TypeScript
+            '@typescript-eslint/no-unused-vars': ['warn', {argsIgnorePattern: '^_'}],
+            '@typescript-eslint/explicit-function-return-type': 'off',
             '@typescript-eslint/no-explicit-any': 'warn',
-            '@typescript-eslint/consistent-type-imports': 'warn',
 
             // React
-            'react/react-in-jsx-scope': 'off', // React 17+
+            'react/react-in-jsx-scope': 'off',
             'react/prop-types': 'off',
+            'react/jsx-boolean-value': ['warn', 'never'],
+            'react/jsx-no-leaked-render': ['error', {validStrategies: ['ternary']}],
 
             // React Hooks
             'react-hooks/rules-of-hooks': 'error',
             'react-hooks/exhaustive-deps': 'warn',
 
-            // JSX Accessibility
-            'jsx-a11y/alt-text': 'warn',
+            // Accessibility
+            'jsx-a11y/anchor-is-valid': 'warn',
 
-            // Import sorting
+            // Import
             'import/order': [
                 'warn',
                 {
-                    groups: [['builtin', 'external'], ['internal'], ['parent', 'sibling', 'index']],
-                    'newlines-between': 'always',
+                    groups: [
+                        'builtin',
+                        'external',
+                        'internal',
+                        'parent',
+                        'sibling',
+                        'index',
+                        'object',
+                        'type',
+                    ],
                     alphabetize: {order: 'asc', caseInsensitive: true},
+                    'newlines-between': 'always',
                 },
             ],
 
             // React Fast Refresh
             'react-refresh/only-export-components': ['warn', {allowConstantExport: true}],
+
+            // General
+            'no-console': ['warn', {allow: ['warn', 'error']}],
+            'no-debugger': 'warn',
+
+            // Prettier
+            'prettier/prettier': 'warn',
+        },
+        settings: {
+            react: {
+                version: 'detect',
+            },
+            'import/resolver': {
+                typescript: {},
+            },
         },
     },
+    prettier, // must be last to override conflicting style rules
 ];
