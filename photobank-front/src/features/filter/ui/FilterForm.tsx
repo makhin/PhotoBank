@@ -10,18 +10,18 @@ export function FilterForm() {
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            searchTerm: '',
+            caption: '',
             storages: [],
             paths: [],
             persons: [],
             tags: [],
-            isRemote: false,
-            isFullTime: false,
-            isUrgent: false,
-            hasExperience: false,
+            isBW: false,
+            isAdultContent: false,
+            isRacyContent: false,
+            thisDay: true,
             dateRange: {
-                from: undefined,
-                to: undefined
+                from: null,
+                to: null
             }
         },
     });

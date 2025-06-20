@@ -32,12 +32,12 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                     control={control}
-                    name="searchTerm"
+                    name="caption"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel>Search Term</FormLabel>
+                            <FormLabel>Caption</FormLabel>
                             <FormControl>
-                                <Input placeholder="Enter search term..." {...field} />
+                                <Input placeholder="Enter caption..." {...field} />
                             </FormControl>
                             <FormMessage/>
                         </FormItem>
@@ -66,7 +66,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     name="storages"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel>Categories</FormLabel>
+                            <FormLabel>Storages</FormLabel>
                             <FormControl>
                                 <MultiSelect
                                     value={field.value}
@@ -85,13 +85,13 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     name="paths"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel>Skills</FormLabel>
+                            <FormLabel>Paths</FormLabel>
                             <FormControl>
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
                                     options={paths}
-                                    placeholder="Select skills"
+                                    placeholder="Select paths"
                                 />
                             </FormControl>
                             <FormMessage/>
@@ -104,13 +104,13 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     name="persons"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel>Locations</FormLabel>
+                            <FormLabel>Persons</FormLabel>
                             <FormControl>
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
                                     options={persons}
-                                    placeholder="Select locations"
+                                    placeholder="Select persons"
                                 />
                             </FormControl>
                             <FormMessage/>
@@ -123,13 +123,13 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     name="tags"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel>Departments</FormLabel>
+                            <FormLabel>Tags</FormLabel>
                             <FormControl>
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
                                     options={tags}
-                                    placeholder="Select departments"
+                                    placeholder="Select tags"
                                 />
                             </FormControl>
                             <FormMessage/>
@@ -142,7 +142,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <FormField
                     control={control}
-                    name="isRemote"
+                    name="isBW"
                     render={({field}) => (
                         <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
@@ -152,7 +152,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                 />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                                <FormLabel>Remote Work</FormLabel>
+                                <FormLabel>Black-White</FormLabel>
                             </div>
                         </FormItem>
                     )}
@@ -160,7 +160,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
 
                 <FormField
                     control={control}
-                    name="isFullTime"
+                    name="isAdultContent"
                     render={({field}) => (
                         <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
@@ -170,7 +170,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                 />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                                <FormLabel>Full Time</FormLabel>
+                                <FormLabel>Adult Content</FormLabel>
                             </div>
                         </FormItem>
                     )}
@@ -178,7 +178,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
 
                 <FormField
                     control={control}
-                    name="isUrgent"
+                    name="isRacyContent"
                     render={({field}) => (
                         <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
@@ -188,7 +188,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                 />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                                <FormLabel>Urgent</FormLabel>
+                                <FormLabel>Racy Content</FormLabel>
                             </div>
                         </FormItem>
                     )}
@@ -196,7 +196,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
 
                 <FormField
                     control={control}
-                    name="hasExperience"
+                    name="thisDay"
                     render={({field}) => (
                         <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
@@ -206,7 +206,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                 />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                                <FormLabel>Experience Required</FormLabel>
+                                <FormLabel>This Day</FormLabel>
                             </div>
                         </FormItem>
                     )}
