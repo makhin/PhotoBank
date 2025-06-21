@@ -147,6 +147,9 @@ importers:
       eslint-plugin-react-refresh:
         specifier: ^0.4.19
         version: 0.4.20(eslint@9.29.0(jiti@2.4.2))
+      eslint-plugin-redux:
+        specifier: ^0.1.0
+        version: 0.1.0
       globals:
         specifier: ^16.0.0
         version: 16.2.0
@@ -1721,6 +1724,9 @@ packages:
     engines: {node: '>=4'}
     peerDependencies:
       eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8 || ^9.7
+
+  eslint-plugin-redux@0.1.0:
+    resolution: {integrity: sha512-VDaQh2fLEzjMrKPjRlyxp46sf2e7rwgF0GGAJoKjauPYaZmI1fP7PrE2kbK+9cjZqBOMAcRrx55bdTUb/argWg==}
 
   eslint-scope@8.4.0:
     resolution: {integrity: sha512-sNXOfKCn74rt8RICKMvJS7XKV/Xk9kA7DyJr8mJik3S7Cwgy3qlkkmyS2uQB3jiJg6VNdZd/pDBJu0nvG2NlTg==}
@@ -4535,6 +4541,8 @@ snapshots:
       semver: 6.3.1
       string.prototype.matchall: 4.0.12
       string.prototype.repeat: 1.0.0
+
+  eslint-plugin-redux@0.1.0: {}
 
   eslint-scope@8.4.0:
     dependencies:
