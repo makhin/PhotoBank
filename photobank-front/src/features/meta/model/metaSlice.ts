@@ -17,6 +17,7 @@ interface MetadataState extends Omit<MetadataPayload, 'version'> {
     error?: string
 }
 
+const baseUrl = import.meta.env.VITE_API_BASE_URL
 const LOCAL_KEY = 'photobank_metadata_cache'
 const LOCAL_VERSION = 1
 
@@ -57,10 +58,10 @@ export const loadMetadata = createAsyncThunk(
         if (fromCache) return fromCache
 
         const [tags, persons, paths, storages] = await Promise.all([
-            fetch('/api/storages').then(res => res.json()),
-            fetch('/api/tags').then(res => res.json()),
-            fetch('/api/persons').then(res => res.json()),
-            fetch('/api/paths').then(res => res.json()),
+            fetch(`${baseUrl}/api/storages`).then(res => res.json()),
+            fetch(`${baseUrl}/api/tags`).then(res => res.json()),
+            fetch(`${baseUrl}/api/persons`).then(res => res.json()),
+            fetch(`${baseUrl}/api/paths`).then(res => res.json()),
         ])
 
         const result: MetadataPayload = {tags, persons, paths, storages, version: LOCAL_VERSION}
