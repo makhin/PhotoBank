@@ -1,5 +1,5 @@
-import {FilterForm} from "@/features/filter/ui/FilterForm.tsx";
+import { FilterForm } from '@/features/filter/ui/FilterForm.tsx';
 
 export function PhotoListPage() {
-    return <FilterForm/>
+  return <FilterForm />;
 }
