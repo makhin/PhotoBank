@@ -5,10 +5,11 @@ import type {
   PhotoDto,
   QueryResult,
 } from '@/entities/photo/model.ts';
+import {BASE_URL} from "@/shared/constants.ts";
 
 export const api = createApi({
   reducerPath: 'photobankApi',
-  baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
+  baseQuery: fetchBaseQuery({ baseUrl: `${BASE_URL}/api/` }),
   endpoints: (builder) => ({
     getPhotoById: builder.query<PhotoDto, number>({
       query: (id) => `photos/${id.toString()}`,

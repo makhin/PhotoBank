@@ -42,12 +42,12 @@ namespace PhotoBank.Api
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowLocalFrontend",
-                    policy => policy
-                        .WithOrigins("http://localhost:5174")
+                options.AddPolicy("AllowLocalFrontend", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5173")
                         .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials());
+                        .AllowAnyMethod();
+                });
             });
 
             builder.Services.AddDbContext<PhotoBankDbContext>(options =>
@@ -87,11 +87,11 @@ namespace PhotoBank.Api
                 app.UseSwaggerUI();
             }
 
+            app.UseCors("AllowLocalFrontend");
+
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
-            app.UseCors("AllowLocalFrontend");
 
             app.MapControllers();
 

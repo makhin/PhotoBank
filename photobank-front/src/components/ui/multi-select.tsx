@@ -1,28 +1,22 @@
-// src/components/multi-select.tsx
-
 import * as React from "react";
 import {cva, type VariantProps} from "class-variance-authority";
 import {CheckIcon, ChevronDown, WandSparkles, XCircle, XIcon,} from "lucide-react";
 
-import {cn} from "@/shared/lib/utils";
+import {cn} from "@/lib/utils";
 import {Separator} from "@/components/ui/separator";
 import {Button} from "@/components/ui/button";
 import {Badge} from "@/components/ui/badge";
 import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    CommandSeparator,
 } from "@/components/ui/command";
 
-/**
- * Variants for the multi-select component to handle different styles.
- * Uses class-variance-authority (cva) to define different styles based on "variant" prop.
- */
 const multiSelectVariants = cva(
     "m-1 transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 duration-300",
     {
@@ -54,59 +48,19 @@ interface MultiSelectProps
      * Each option object has a label, value, and an optional icon.
      */
     options: {
-        /** The text to display for the option. */
         label: string;
-        /** The unique value associated with the option. */
         value: string;
-        /** Optional icon component to display alongside the option. */
         icon?: React.ComponentType<{ className?: string }>;
     }[];
-
-    /**
-     * Callback function triggered when the selected values change.
-     * Receives an array of the new selected values.
-     */
     onValueChange: (value: string[]) => void;
-
-    /** The default selected values when the component mounts. */
     defaultValue?: string[];
-
-    /**
-     * Placeholder text to be displayed when no values are selected.
-     * Optional, defaults to "Select options".
-     */
     placeholder?: string;
-
-    /**
-     * Animation duration in seconds for the visual effects (e.g., bouncing badges).
-     * Optional, defaults to 0 (no animation).
-     */
     animation?: number;
-
-    /**
-     * Maximum number of items to display. Extra selected items will be summarized.
-     * Optional, defaults to 3.
-     */
     maxCount?: number;
-
-    /**
-     * The modality of the popover. When set to true, interaction with outside elements
-     * will be disabled and only popover content will be visible to screen readers.
-     * Optional, defaults to false.
-     */
     modalPopover?: boolean;
-
-    /**
-     * If true, renders the multi-select component as a child of another component.
-     * Optional, defaults to false.
-     */
     asChild?: boolean;
-
-    /**
-     * Additional class names to apply custom styles to the multi-select component.
-     * Optional, can be used to add custom styles.
-     */
     className?: string;
+    searchLimit?: number;
 }
 
 export const MultiSelect = React.forwardRef<
@@ -125,6 +79,7 @@ export const MultiSelect = React.forwardRef<
             modalPopover = false,
             asChild = false,
             className,
+            searchLimit = 20,
             ...props
         },
         ref
@@ -133,10 +88,17 @@ export const MultiSelect = React.forwardRef<
             React.useState<string[]>(defaultValue);
         const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
         const [isAnimating, setIsAnimating] = React.useState(false);
+        const [query, setQuery] = React.useState("");
 
-        const handleInputKeyDown = (
-            event: React.KeyboardEvent<HTMLInputElement>
-        ) => {
+        const visibleOptions = React.useMemo(() => {
+            const lower = query.trim().toLowerCase();
+            const result = lower
+                ? options.filter((o) => o.label.toLowerCase().startsWith(lower))
+                : options;
+            return result.slice(0, searchLimit);
+        }, [query, options, searchLimit]);
+
+        const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
             if (event.key === "Enter") {
                 setIsPopoverOpen(true);
             } else if (event.key === "Backspace" && !event.currentTarget.value) {
@@ -168,16 +130,6 @@ export const MultiSelect = React.forwardRef<
             const newSelectedValues = selectedValues.slice(0, maxCount);
             setSelectedValues(newSelectedValues);
             onValueChange(newSelectedValues);
-        };
-
-        const toggleAll = () => {
-            if (selectedValues.length === options.length) {
-                handleClear();
-            } else {
-                const allValues = options.map((option) => option.value);
-                setSelectedValues(allValues);
-                onValueChange(allValues);
-            }
         };
 
         return (
@@ -275,32 +227,16 @@ export const MultiSelect = React.forwardRef<
                     align="start"
                     onEscapeKeyDown={() => setIsPopoverOpen(false)}
                 >
-                    <Command>
+                    <Command shouldFilter={false}>
                         <CommandInput
                             placeholder="Search..."
                             onKeyDown={handleInputKeyDown}
+                            onValueChange={setQuery}
                         />
                         <CommandList>
                             <CommandEmpty>No results found.</CommandEmpty>
                             <CommandGroup>
-                                <CommandItem
-                                    key="all"
-                                    onSelect={toggleAll}
-                                    className="cursor-pointer"
-                                >
-                                    <div
-                                        className={cn(
-                                            "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                                            selectedValues.length === options.length
-                                                ? "bg-primary text-primary-foreground"
-                                                : "opacity-50 [&_svg]:invisible"
-                                        )}
-                                    >
-                                        <CheckIcon className="h-4 w-4"/>
-                                    </div>
-                                    <span>(Select All)</span>
-                                </CommandItem>
-                                {options.map((option) => {
+                                {visibleOptions.map((option) => {
                                     const isSelected = selectedValues.includes(option.value);
                                     return (
                                         <CommandItem

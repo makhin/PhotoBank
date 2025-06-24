@@ -10,12 +10,8 @@ export const formSchema = z.object({
   isRacyContent: z.boolean().optional(),
   isAdultContent: z.boolean().optional(),
   thisDay: z.boolean().optional(),
-  dateRange: z
-    .object({
-      from: z.date().optional().nullable(),
-      to: z.date().optional().nullable(),
-    })
-    .optional(),
+  dateFrom: z.date().optional(),
+  dateTo: z.date().optional(),
 });
 
 export type FormData = z.infer<typeof formSchema>;

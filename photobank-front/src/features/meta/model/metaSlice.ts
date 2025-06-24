@@ -1,15 +1,7 @@
-import {
-    createAsyncThunk,
-    createSlice,
-    type PayloadAction,
-} from '@reduxjs/toolkit';
+import {createAsyncThunk, createSlice, type PayloadAction,} from '@reduxjs/toolkit';
 
-import type {
-    PathDto,
-    PersonDto,
-    StorageDto,
-    TagDto,
-} from '@/entities/meta/model.ts';
+import type {PathDto, PersonDto, StorageDto, TagDto,} from '@/entities/meta/model.ts';
+import {BASE_URL, METADATA_CACHE_KEY, METADATA_CACHE_VERSION} from "@/shared/constants.ts";
 
 interface MetadataPayload {
     tags: TagDto[];
@@ -26,16 +18,12 @@ interface MetadataState extends Omit<MetadataPayload, 'version'> {
     error?: string;
 }
 
-const baseUrl: string = import.meta.env.VITE_API_BASE_URL as string;
-const LOCAL_KEY = 'photobank_metadata_cache';
-const LOCAL_VERSION = 1;
-
 const loadFromCache = (): MetadataPayload | null => {
     try {
-        const raw = localStorage.getItem(LOCAL_KEY);
+        const raw = localStorage.getItem(METADATA_CACHE_KEY);
         if (!raw) return null;
         const parsed: MetadataPayload = JSON.parse(raw) as MetadataPayload;
-        return parsed.version === LOCAL_VERSION ? parsed : null;
+        return parsed.version === METADATA_CACHE_VERSION ? parsed : null;
     } catch {
         return null;
     }
@@ -43,7 +31,7 @@ const loadFromCache = (): MetadataPayload | null => {
 
 const saveToCache = (data: MetadataPayload) => {
     try {
-        localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+        localStorage.setItem(METADATA_CACHE_KEY, JSON.stringify(data));
     } catch {
         console.error('saveToCache error');
     }
@@ -54,7 +42,7 @@ const initialState: MetadataState = {
     persons: [],
     paths: [],
     storages: [],
-    version: LOCAL_VERSION,
+    version: METADATA_CACHE_VERSION,
     loaded: false,
     loading: false,
     error: undefined,
@@ -65,10 +53,10 @@ export const loadMetadata = createAsyncThunk('metadata/load', async () => {
     if (fromCache) return fromCache;
 
     const [storages, tags, persons, paths] = await Promise.all([
-        fetch(`${baseUrl}/api/storages`).then((res) => res.json()) as Promise<StorageDto[]>,
-        fetch(`${baseUrl}/api/tags`).then((res) => res.json()) as Promise<TagDto[]>,
-        fetch(`${baseUrl}/api/persons`).then((res) => res.json()) as Promise<PersonDto[]>,
-        fetch(`${baseUrl}/api/paths`).then((res) => res.json()) as Promise<PathDto[]>,
+        fetch(`${BASE_URL}/api/storages`).then((res) => res.json()) as Promise<StorageDto[]>,
+        fetch(`${BASE_URL}/api/tags`).then((res) => res.json()) as Promise<TagDto[]>,
+        fetch(`${BASE_URL}/api/persons`).then((res) => res.json()) as Promise<PersonDto[]>,
+        fetch(`${BASE_URL}/api/paths`).then((res) => res.json()) as Promise<PathDto[]>,
     ]);
 
     const result: MetadataPayload = {
@@ -76,7 +64,7 @@ export const loadMetadata = createAsyncThunk('metadata/load', async () => {
         persons,
         paths,
         storages,
-        version: LOCAL_VERSION,
+        version: METADATA_CACHE_VERSION,
     };
     saveToCache(result);
     return result;
@@ -87,7 +75,7 @@ export const metadataSlice = createSlice({
     initialState,
     reducers: {
         clearCache(state) {
-            localStorage.removeItem(LOCAL_KEY);
+            localStorage.removeItem(METADATA_CACHE_KEY);
             state.loaded = false;
         },
     },
