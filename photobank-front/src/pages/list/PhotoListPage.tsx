@@ -1,16 +1,16 @@
 import { Calendar, User, Tag } from 'lucide-react';
 import {format, parseISO} from "date-fns";
+import {useSelector} from "react-redux";
+import {useEffect, useState} from "react";
 
+import { useSearchPhotosMutation } from '@/entities/photo/api.ts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import type { PhotoItemDto } from '@/entities/photo/model';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import type {RootState} from "@/app/store.ts";
 
 import PhotoPreview from './PhotoPreview';
-
-interface PhotoGridProps {
-    photos: PhotoItemDto[];
-}
 
 const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -21,7 +21,19 @@ const formatDate = (dateString?: string) => {
     }
 };
 
-const PhotoGrid = ({ photos }: PhotoGridProps) => {
+const PhotoListPage = () => {
+    const persons = useSelector((state: RootState) => state.metadata.persons);
+    const tags    = useSelector((state: RootState) => state.metadata.tags);
+
+    const [searchPhotos] = useSearchPhotosMutation();
+    const [photos, setPhotos] = useState<PhotoItemDto[]>([]);
+
+    useEffect(() => {
+        searchPhotos({thisDay: true, top: 20}).unwrap().then(result => {
+            setPhotos(result.photos || []);
+        });
+    }, [searchPhotos]);
+
     return (
         <div className="w-full h-screen flex flex-col bg-background">
             <div className="p-6 border-b">
@@ -63,9 +75,6 @@ const PhotoGrid = ({ photos }: PhotoGridProps) => {
 
                                         <div className="col-span-2">
                                             <div className="font-medium truncate">{photo.name}</div>
-                                            <div className="text-xs text-muted-foreground truncate mt-1">
-                                                {photo.storageName}
-                                            </div>
                                         </div>
 
                                         <div className="col-span-1">
@@ -77,7 +86,7 @@ const PhotoGrid = ({ photos }: PhotoGridProps) => {
 
                                         <div className="col-span-2">
                                             <div className="text-xs text-muted-foreground truncate">
-                                                {photo.relativePath}
+                                                {photo.storageName} {photo.relativePath}
                                             </div>
                                         </div>
 
@@ -96,7 +105,7 @@ const PhotoGrid = ({ photos }: PhotoGridProps) => {
                                                         <User className="w-3 h-3 text-muted-foreground" />
                                                         {photo.persons.slice(0, 3).map((person, index) => (
                                                             <Badge key={index} variant="outline" className="text-xs">
-                                                                ID: {person.personId}
+                                                                { persons.find(p => p.id === person.personId)?.name || person.personId }
                                                             </Badge>
                                                         ))}
                                                         {photo.persons.length > 3 && (
@@ -112,7 +121,7 @@ const PhotoGrid = ({ photos }: PhotoGridProps) => {
                                                         <Tag className="w-3 h-3 text-muted-foreground" />
                                                         {photo.tags.slice(0, 3).map((tag, index) => (
                                                             <Badge key={index} variant="secondary" className="text-xs">
-                                                                ID: {tag.tagId}
+                                                                {tags.find(t => t.id === tag.tagId)?.name || tag.tagId}
                                                             </Badge>
                                                         ))}
                                                         {photo.tags.length > 3 && (
@@ -151,7 +160,7 @@ const PhotoGrid = ({ photos }: PhotoGridProps) => {
                                         </div>
 
                                         <div className="text-xs text-muted-foreground">
-                                            {photo.storageName}
+                                            {photo.storageName} {photo.relativePath}
                                         </div>
 
                                         <div className="flex items-center gap-4 text-sm">
@@ -172,7 +181,7 @@ const PhotoGrid = ({ photos }: PhotoGridProps) => {
                                                 <User className="w-3 h-3 text-muted-foreground" />
                                                 {photo.persons.slice(0, 2).map((person, index) => (
                                                     <Badge key={index} variant="outline" className="text-xs">
-                                                        ID: {person.personId}
+                                                        {persons.find(p => p.id === person.personId)?.name || person.personId}
                                                     </Badge>
                                                 ))}
                                                 {photo.persons.length > 2 && (
@@ -188,7 +197,7 @@ const PhotoGrid = ({ photos }: PhotoGridProps) => {
                                                 <Tag className="w-3 h-3 text-muted-foreground" />
                                                 {photo.tags.slice(0, 2).map((tag, index) => (
                                                     <Badge key={index} variant="secondary" className="text-xs">
-                                                        ID: {tag.tagId}
+                                                        {tags.find(t => t.id === tag.tagId)?.name || tag.tagId}
                                                     </Badge>
                                                 ))}
                                                 {photo.tags.length > 2 && (
@@ -209,4 +218,4 @@ const PhotoGrid = ({ photos }: PhotoGridProps) => {
     );
 };
 
-export default PhotoGrid;
+export default PhotoListPage;

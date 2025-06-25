@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
-import { PhotoListPage } from '@/pages/list/PhotoListPage.tsx';
+import PhotoListPage from '@/pages/list/PhotoListPage.tsx';
 import { FilterPage } from '@/pages/filter/FilterPage.tsx';
 import { PhotoDetailsPage } from '@/pages/detail/PhotoDetailsPage.tsx';
 
