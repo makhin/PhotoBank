@@ -1,8 +1,8 @@
 export interface FaceBoxDto {
-  top: string;
-  left: string;
-  width: string;
-  height: string;
+  top: number;
+  left: number;
+  width: number;
+  height: number;
 }
 
 export interface FaceDto {

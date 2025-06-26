@@ -11,7 +11,7 @@ import {FilterFormFields} from '@/components/FilterFormFields.tsx';
 // Infer FormData type from formSchema to ensure compatibility
 type FormData = z.infer<typeof formSchema>;
 
-export function FilterPage() {
+function FilterPage() {
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -53,3 +53,5 @@ export function FilterPage() {
       </Card>
   );
 }
+
+export default FilterPage;
