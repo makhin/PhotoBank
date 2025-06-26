@@ -1,5 +1,6 @@
 import {useState, useRef, useEffect} from 'react';
 import {useParams} from "react-router-dom";
+import {format, parseISO} from "date-fns";
 
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
@@ -12,16 +13,21 @@ import type {FaceBoxDto} from '@/entities/photo/model.ts';
 import {useGetPhotoByIdQuery} from "@/entities/photo/api.ts";
 
 const PhotoDetailsPage = () => {
-    const [imageLoaded, setImageLoaded] = useState(false);
     const [imageNaturalSize, setImageNaturalSize] = useState({width: 0, height: 0});
     const [imageDisplaySize, setImageDisplaySize] = useState({width: 0, height: 0});
-    const [containerSize, setContainerSize] = useState({width: 0, height: 0});
-    const imageRef = useRef<HTMLImageElement>(null);
+    const [, setContainerSize] = useState({width: 0, height: 0});
     const containerRef = useRef<HTMLDivElement>(null);
 
     const {id} = useParams<{ id: string }>();
     const photoId = id ? +id : 0;
-    const {data: photo, error} = useGetPhotoByIdQuery(photoId);
+    const {data: photo, error, isSuccess} = useGetPhotoByIdQuery(photoId);
+
+
+    useEffect(() => {
+        if (isSuccess && photo.width && photo.height && photo.scale) {
+            setImageNaturalSize({width: photo.width * photo.scale, height: photo.height * photo.scale});
+        }
+    }, [isSuccess, photo]);
 
     useEffect(() => {
         if (error) {
@@ -30,17 +36,13 @@ const PhotoDetailsPage = () => {
     }, [error]);
 
     const calculateImageSize = (naturalWidth: number, naturalHeight: number, containerWidth: number, containerHeight: number) => {
-        // Rule 1: If image is smaller than container, show as is
         if (naturalWidth <= containerWidth && naturalHeight <= containerHeight) {
             return {width: naturalWidth, height: naturalHeight};
         }
 
-        // Calculate scale factors
         const scaleByWidth = containerWidth / naturalWidth;
         const scaleByHeight = containerHeight / naturalHeight;
 
-        // Rule 2 & 3: Scale by the dimension that requires more scaling (smaller scale factor)
-        // This ensures the image fits within the container
         const scale = Math.min(scaleByWidth, scaleByHeight);
 
         return {
@@ -50,8 +52,8 @@ const PhotoDetailsPage = () => {
     };
 
     const updateSizes = () => {
-        console.log("Updating sizes...", imageLoaded);
-        if (containerRef.current && imageRef.current && imageLoaded) {
+        console.log("Updating sizes...", imageNaturalSize);
+        if (containerRef.current) {
             const containerRect = containerRef.current.getBoundingClientRect();
             const newContainerSize = {
                 width: containerRect.width,
@@ -59,6 +61,8 @@ const PhotoDetailsPage = () => {
             };
 
             setContainerSize(newContainerSize);
+
+            console.log(newContainerSize);
 
             const calculatedSize = calculateImageSize(
                 imageNaturalSize.width,
@@ -83,33 +87,11 @@ const PhotoDetailsPage = () => {
             resizeObserver.disconnect();
             window.removeEventListener('resize', updateSizes);
         };
-    }, [imageLoaded, imageNaturalSize]);
+    }, [imageNaturalSize]);
 
-    // Add effect to handle initial sizing when photo changes
-    useEffect(() => {
-        if (photo && photo.previewImage) {
-            setImageLoaded(false);
-            setImageNaturalSize({width: 0, height: 0});
-            setImageDisplaySize({width: 0, height: 0});
-        }
-    }, [photo]);
-
-    const handleImageLoad = () => {
-        if (imageRef.current) {
-            const naturalSize = {
-                width: imageRef.current.naturalWidth,
-                height: imageRef.current.naturalHeight
-            };
-            setImageNaturalSize(naturalSize);
-            setImageLoaded(true);
-
-            // Trigger size calculation immediately after image loads
-            setTimeout(updateSizes, 0);
-        }
-    };
 
     const calculateFacePosition = (faceBox: FaceBoxDto) => {
-        if (!imageLoaded || !imageDisplaySize.width || !imageDisplaySize.height) {
+        if (!imageDisplaySize.width || !imageDisplaySize.height) {
             return {display: 'none'};
         }
 
@@ -138,13 +120,11 @@ const PhotoDetailsPage = () => {
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'Not specified';
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        try {
+            return format(parseISO(dateString), 'dd.MM.yyyy, HH:mm');
+        } catch {
+            return 'Invalid date';
+        }
     };
 
     const getGenderText = (gender?: boolean) => {
@@ -159,7 +139,7 @@ const PhotoDetailsPage = () => {
         <div className="h-screen w-screen bg-background text-foreground overflow-hidden">
             <div className="h-full w-full grid grid-cols-1 lg:grid-cols-3 gap-0">
                 {/* Main Photo Display */}
-                <div className="lg:col-span-2 h-full flex flex-col">
+                <div className="lg:col-span-2 h-full flex flex-col min-h-0">
                     <Card className="flex-1 overflow-hidden border-0 lg:border-r lg:rounded-none bg-background">
                         <CardHeader className="pb-4 border-b border-border">
                             <CardTitle className="text-2xl font-bold">
@@ -169,23 +149,15 @@ const PhotoDetailsPage = () => {
                                 <p className="text-muted-foreground italic">{photo.captions[0]}</p>
                             )}
                         </CardHeader>
-                        <CardContent className="p-0 flex-1">
+                        <CardContent className="p-0 flex-1 h-full min-h-0">
                             <div
                                 ref={containerRef}
                                 className="relative bg-black flex items-center justify-center h-full w-full"
                             >
                                 <img
-                                    ref={imageRef}
                                     src={`data:image/jpeg;base64,${photo.previewImage}`}
                                     alt={photo.name}
-                                    onLoad={handleImageLoad}
-                                    style={{
-                                        width: imageDisplaySize.width || 'auto',
-                                        height: imageDisplaySize.height || 'auto',
-                                        maxWidth: '100%',
-                                        maxHeight: '100%'
-                                    }}
-                                    className="block"
+                                    className="max-h-full max-w-full object-contain"
                                 />
 
                                 {/* Face Detection Overlays */}
