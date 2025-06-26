@@ -2,9 +2,9 @@
 {
     public class FaceBoxDto
     {
-        public required string Top { set; get; }
-        public required string Left { set; get; }
-        public required string Width { set; get; }
-        public required string Height { set; get; }
+        public required int Top { set; get; }
+        public required int Left { set; get; }
+        public required int Width { set; get; }
+        public required int Height { set; get; }
     }
 }

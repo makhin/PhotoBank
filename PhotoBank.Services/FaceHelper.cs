@@ -15,13 +15,12 @@ namespace PhotoBank.Services
         public static FaceBoxDto GetFaceBox(NetTopologySuite.Geometries.Geometry geometry, Photo photo)
         {
             var scale = photo.Scale;
-            const string suffix = "px";
             return new FaceBoxDto
             {
-                Left = (int)(geometry.Coordinates[0].X * scale) + suffix,
-                Top = (int)(geometry.Coordinates[0].Y * scale) + suffix,
-                Width = (int)((geometry.Coordinates[1].X - geometry.Coordinates[0].X) * scale) + suffix,
-                Height = (int)((geometry.Coordinates[3].Y - geometry.Coordinates[0].Y) * scale) + suffix
+                Left = (int)(geometry.Coordinates[0].X * scale),
+                Top = (int)(geometry.Coordinates[0].Y * scale),
+                Width = (int)((geometry.Coordinates[1].X - geometry.Coordinates[0].X) * scale),
+                Height = (int)((geometry.Coordinates[3].Y - geometry.Coordinates[0].Y) * scale)
             };
         }
 
