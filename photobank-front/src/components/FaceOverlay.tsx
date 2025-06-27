@@ -3,16 +3,24 @@ import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.t
 import {Label} from "@/components/ui/label.tsx";
 import {getGenderText} from "@/lib/utils.ts";
 
-export const FaceOverlay = ({face, index, position}: {
-    face: FaceDto,
-    index: number,
-    position: React.CSSProperties
+import './FaceOverlay.css';
+
+export const FaceOverlay = ({
+                                face,
+                                index,
+                                style,
+                            }: {
+    face: FaceDto;
+    index: number;
+    style?: React.CSSProperties;
 }) => (
     <Popover key={face.id || index}>
         <PopoverTrigger asChild>
-            <div style={position} className="hover:border-blue-400 hover:bg-blue-200/20">
-                <span
-                    className="absolute -top-5 left-1/2 -translate-x-1/2 text-xs bg-blue-500 text-white px-1 py-0.5 rounded shadow z-20">
+            <div
+                style={style}
+                className="absolute hover:border-blue-400 hover:bg-blue-200/20 face-box"
+            >
+                <span className="absolute top-0 right-0 text-xs bg-blue-500 text-white px-1 rounded shadow z-20">
                     {index + 1}
                 </span>
             </div>
@@ -23,7 +31,7 @@ export const FaceOverlay = ({face, index, position}: {
                 <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                         <Label className="text-muted-foreground">Age</Label>
-                        <p className="font-medium">{face.age || 'Unknown'}</p>
+                        <p className="font-medium">{face.age || "Unknown"}</p>
                     </div>
                     <div>
                         <Label className="text-muted-foreground">Gender</Label>

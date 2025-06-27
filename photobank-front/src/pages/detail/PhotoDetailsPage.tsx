@@ -1,5 +1,6 @@
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useEffect, useMemo, useRef, useState, useCallback} from 'react';
 import {useParams} from "react-router-dom";
+import {useSelector} from "react-redux";
 
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
@@ -10,12 +11,14 @@ import {ScrollArea} from '@/components/ui/scroll-area';
 import type {FaceBoxDto} from '@/entities/photo/model.ts';
 import {useGetPhotoByIdQuery} from "@/entities/photo/api.ts";
 import {ScoreBar} from '@/components/ScoreBar';
-import {formatDate, getGenderText} from '@/lib/utils';
+import {formatDate} from '@/lib/utils';
 import {FaceOverlay} from "@/components/FaceOverlay.tsx";
+import type {RootState} from "@/app/store.ts";
+import {FacePersonSelector} from "@/components/FacePersonSelector.tsx";
 
 const calculateImageSize = (naturalWidth: number, naturalHeight: number, containerWidth: number, containerHeight: number) => {
     if (naturalWidth <= containerWidth && naturalHeight <= containerHeight) {
-        return {width: naturalWidth, height: naturalHeight};
+        return {width: naturalWidth, height: naturalHeight, scale: 1};
     }
 
     const scaleByWidth = containerWidth / naturalWidth;
@@ -25,27 +28,34 @@ const calculateImageSize = (naturalWidth: number, naturalHeight: number, contain
 
     return {
         width: naturalWidth * scale,
-        height: naturalHeight * scale
+        height: naturalHeight * scale,
+        scale: scale
     };
 };
 
 const PhotoDetailsPage = () => {
-    const [imageNaturalSize, setImageNaturalSize] = useState({width: 0, height: 0});
-    const [imageDisplaySize, setImageDisplaySize] = useState({width: 0, height: 0});
+    const [imageDisplaySize, setImageDisplaySize] = useState({width: 0, height: 0, scale: 1});
     const [containerSize, setContainerSize] = useState({width: 0, height: 0});
+    const persons = useSelector((state: RootState) => state.metadata.persons);
+
     const containerRef = useRef<HTMLDivElement>(null);
 
     const {id} = useParams<{ id: string }>();
     const photoId = id ? +id : 0;
-    const {data: photo, error, isSuccess} = useGetPhotoByIdQuery(photoId);
+    const {data: photo, error} = useGetPhotoByIdQuery(photoId);
 
     const formattedTakenDate = useMemo(() => photo?.takenDate && formatDate(photo.takenDate), [photo?.takenDate]);
 
-    const previewImageSrc = useMemo(() => {
-        return photo?.previewImage ? `data:image/jpeg;base64,${photo.previewImage}` : '';
-    }, [photo?.previewImage]);
+    const previewImageSrc = photo?.previewImage && `data:image/jpeg;base64,${photo.previewImage}`;
 
-    const updateSizes = () => {
+    const imageNaturalSize = useMemo(() => {
+        if (photo?.width && photo.height && photo.scale) {
+            return {width: photo.width * photo.scale, height: photo.height * photo.scale};
+        }
+        return {width: 0, height: 0};
+    }, [photo]);
+
+    const updateSizes = useCallback(() => {
         if (containerRef.current) {
             const containerRect = containerRef.current.getBoundingClientRect();
             const newContainerSize = {
@@ -53,7 +63,9 @@ const PhotoDetailsPage = () => {
                 height: containerRect.height
             };
 
-            setContainerSize(newContainerSize);
+            if (newContainerSize.width !== containerSize.width || newContainerSize.height !== containerSize.height) {
+                setContainerSize(newContainerSize);
+            }
 
             const calculatedSize = calculateImageSize(
                 imageNaturalSize.width,
@@ -62,45 +74,25 @@ const PhotoDetailsPage = () => {
                 newContainerSize.height
             );
 
-            setImageDisplaySize(calculatedSize);
+            if (calculatedSize.width !== imageDisplaySize.width || calculatedSize.height !== imageDisplaySize.height) {
+                setImageDisplaySize(calculatedSize);
+            }
         }
-    };
-
-    const calculateFacePosition = (faceBox: FaceBoxDto) => {
-        if (!imageDisplaySize.width || !imageDisplaySize.height) {
-            return {display: 'none'};
-        }
-
-        const scaleX = imageDisplaySize.width / imageNaturalSize.width;
-        const scaleY = imageDisplaySize.height / imageNaturalSize.height;
-
-        const offsetLeft = (containerSize.width - imageDisplaySize.width) / 2;
-        const offsetTop = (containerSize.height - imageDisplaySize.height) / 2;
-
-        const left = faceBox.left * scaleX + offsetLeft;
-        const top = faceBox.top * scaleY + offsetTop;
-        const width = faceBox.width * scaleX;
-        const height = faceBox.height * scaleY;
-
-        return {
-            position: 'absolute' as const,
-            left: `${left.toString()}px`,
-            top: `${top.toString()}px`,
-            width: `${width.toString()}px`,
-            height: `${height.toString()}px`,
-            border: '2px solid #3b82f6',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease-in-out',
-            zIndex: 10,
-        };
-    };
+    }, [imageNaturalSize, containerSize, imageDisplaySize]);
 
     useEffect(() => {
-        if (isSuccess && photo.width && photo.height && photo.scale) {
-            setImageNaturalSize({width: photo.width * photo.scale, height: photo.height * photo.scale});
-        }
-    }, [isSuccess, photo]);
+        const resizeObserver = new ResizeObserver(updateSizes);
+        const container = containerRef.current;
+        if (container) resizeObserver.observe(container);
+
+        window.addEventListener('resize', updateSizes);
+        updateSizes();
+
+        return () => {
+            resizeObserver.disconnect();
+            window.removeEventListener('resize', updateSizes);
+        };
+    }, [updateSizes]);
 
     useEffect(() => {
         if (error) {
@@ -108,24 +100,32 @@ const PhotoDetailsPage = () => {
         }
     }, [error]);
 
-    useEffect(() => {
-        if (!imageNaturalSize.width || !imageNaturalSize.height) return;
-        const resizeObserver = new ResizeObserver(updateSizes);
-        if (containerRef.current) {
-            resizeObserver.observe(containerRef.current);
+    const calculateFacePosition = (faceBox: FaceBoxDto) => {
+        if (!imageDisplaySize.width || !imageDisplaySize.height) {
+            return {display: 'none'};
         }
 
-        window.addEventListener('resize', updateSizes);
+        const scale = imageDisplaySize.scale
+        const offsetLeft = (containerSize.width - imageDisplaySize.width) / 2;
+        const offsetTop = (containerSize.height - imageDisplaySize.height) / 2;
 
-        return () => {
-            resizeObserver.disconnect();
-            window.removeEventListener('resize', updateSizes);
+        const left = faceBox.left * scale + offsetLeft;
+        const top = faceBox.top * scale + offsetTop;
+        const width = faceBox.width * scale;
+        const height = faceBox.height * scale;
+
+        return {
+            left: `${left.toString()}px`,
+            top: `${top.toString()}px`,
+            width: `${width.toString()}px`,
+            height: `${height.toString()}px`,
         };
-    }, [imageNaturalSize.width, imageNaturalSize.height]);
+    };
 
     if (!photo) {
         return <div className="p-4">Загрузка...</div>;
     }
+
     return (
         <div className="h-screen w-screen bg-background text-foreground overflow-hidden">
             <div className="h-full w-full grid grid-cols-1 lg:grid-cols-3 gap-0">
@@ -146,6 +146,7 @@ const PhotoDetailsPage = () => {
                                 className="relative bg-black flex items-center justify-center h-full w-full"
                             >
                                 <img
+                                    loading="lazy"
                                     src={previewImageSrc}
                                     alt={photo.name}
                                     className="max-h-full max-w-full object-contain"
@@ -155,7 +156,7 @@ const PhotoDetailsPage = () => {
                                         key={face.id || index}
                                         face={face}
                                         index={index}
-                                        position={calculateFacePosition(face.faceBox)}
+                                        style={calculateFacePosition(face.faceBox)}
                                     />
                                 ))}
                             </div>
@@ -268,10 +269,12 @@ const PhotoDetailsPage = () => {
                                     </CardHeader>
                                     <CardContent className="space-y-3">
                                         {photo.adultScore !== undefined && (
-                                            <ScoreBar label="Adult Score" score={photo.adultScore} colorClass="bg-orange-500" />
+                                            <ScoreBar label="Adult Score" score={photo.adultScore}
+                                                      colorClass="bg-orange-500"/>
                                         )}
                                         {photo.racyScore !== undefined && (
-                                            <ScoreBar label="Racy Score" score={photo.racyScore} colorClass="bg-red-500" />
+                                            <ScoreBar label="Racy Score" score={photo.racyScore}
+                                                      colorClass="bg-red-500"/>
                                         )}
                                     </CardContent>
                                 </Card>
@@ -290,15 +293,17 @@ const PhotoDetailsPage = () => {
                                             Hover over the blue boxes on the image to see face details.
                                         </p>
                                         <div className="space-y-2">
-                                            {photo.faces.map((face, index) => (
-                                                <div key={face.id || index} className="p-2 bg-muted rounded text-sm">
-                                                    <span className="font-medium">Face {index + 1}:</span>
-                                                    <span className="ml-2 text-muted-foreground">
-                          {face.age ? `Age ${face.age.toString()}` : 'Age unknown'}
-                                                        {face.gender !== undefined && `, ${getGenderText(face.gender)}`}
-                        </span>
-                                                </div>
-                                            ))}
+                                            {photo.faces.map((face, index) => {
+                                                return (
+                                                    <FacePersonSelector
+                                                        key={index}
+                                                        faceIndex={index}
+                                                        personId={face.personId ?? undefined}
+                                                        persons={persons}
+                                                        disabled={true}
+                                                    />
+                                                );
+                                            })}
                                         </div>
                                     </CardContent>
                                 </Card>
