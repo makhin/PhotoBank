@@ -1,16 +1,33 @@
-import {useState, useRef, useEffect} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 import {useParams} from "react-router-dom";
-import {format, parseISO} from "date-fns";
 
 import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
-import {Popover, PopoverContent, PopoverTrigger} from '@/components/ui/popover';
 import {Label} from '@/components/ui/label';
 import {Input} from '@/components/ui/input';
 import {Textarea} from '@/components/ui/textarea';
 import {ScrollArea} from '@/components/ui/scroll-area';
 import type {FaceBoxDto} from '@/entities/photo/model.ts';
 import {useGetPhotoByIdQuery} from "@/entities/photo/api.ts";
+import {ScoreBar} from '@/components/ScoreBar';
+import {formatDate, getGenderText} from '@/lib/utils';
+import {FaceOverlay} from "@/components/FaceOverlay.tsx";
+
+const calculateImageSize = (naturalWidth: number, naturalHeight: number, containerWidth: number, containerHeight: number) => {
+    if (naturalWidth <= containerWidth && naturalHeight <= containerHeight) {
+        return {width: naturalWidth, height: naturalHeight};
+    }
+
+    const scaleByWidth = containerWidth / naturalWidth;
+    const scaleByHeight = containerHeight / naturalHeight;
+
+    const scale = Math.min(scaleByWidth, scaleByHeight);
+
+    return {
+        width: naturalWidth * scale,
+        height: naturalHeight * scale
+    };
+};
 
 const PhotoDetailsPage = () => {
     const [imageNaturalSize, setImageNaturalSize] = useState({width: 0, height: 0});
@@ -22,34 +39,11 @@ const PhotoDetailsPage = () => {
     const photoId = id ? +id : 0;
     const {data: photo, error, isSuccess} = useGetPhotoByIdQuery(photoId);
 
+    const formattedTakenDate = useMemo(() => photo?.takenDate && formatDate(photo.takenDate), [photo?.takenDate]);
 
-    useEffect(() => {
-        if (isSuccess && photo.width && photo.height && photo.scale) {
-            setImageNaturalSize({width: photo.width * photo.scale, height: photo.height * photo.scale});
-        }
-    }, [isSuccess, photo]);
-
-    useEffect(() => {
-        if (error) {
-            console.error("Ошибка загрузки фото:", error);
-        }
-    }, [error]);
-
-    const calculateImageSize = (naturalWidth: number, naturalHeight: number, containerWidth: number, containerHeight: number) => {
-        if (naturalWidth <= containerWidth && naturalHeight <= containerHeight) {
-            return {width: naturalWidth, height: naturalHeight};
-        }
-
-        const scaleByWidth = containerWidth / naturalWidth;
-        const scaleByHeight = containerHeight / naturalHeight;
-
-        const scale = Math.min(scaleByWidth, scaleByHeight);
-
-        return {
-            width: naturalWidth * scale,
-            height: naturalHeight * scale
-        };
-    };
+    const previewImageSrc = useMemo(() => {
+        return photo?.previewImage ? `data:image/jpeg;base64,${photo.previewImage}` : '';
+    }, [photo?.previewImage]);
 
     const updateSizes = () => {
         if (containerRef.current) {
@@ -71,21 +65,6 @@ const PhotoDetailsPage = () => {
             setImageDisplaySize(calculatedSize);
         }
     };
-
-    useEffect(() => {
-        const resizeObserver = new ResizeObserver(updateSizes);
-        if (containerRef.current) {
-            resizeObserver.observe(containerRef.current);
-        }
-
-        window.addEventListener('resize', updateSizes);
-
-        return () => {
-            resizeObserver.disconnect();
-            window.removeEventListener('resize', updateSizes);
-        };
-    }, [imageNaturalSize]);
-
 
     const calculateFacePosition = (faceBox: FaceBoxDto) => {
         if (!imageDisplaySize.width || !imageDisplaySize.height) {
@@ -117,19 +96,32 @@ const PhotoDetailsPage = () => {
         };
     };
 
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return 'Not specified';
-        try {
-            return format(parseISO(dateString), 'dd.MM.yyyy, HH:mm');
-        } catch {
-            return 'Invalid date';
+    useEffect(() => {
+        if (isSuccess && photo.width && photo.height && photo.scale) {
+            setImageNaturalSize({width: photo.width * photo.scale, height: photo.height * photo.scale});
         }
-    };
+    }, [isSuccess, photo]);
 
-    const getGenderText = (gender?: boolean) => {
-        if (gender === undefined) return 'Unknown';
-        return gender ? 'Female' : 'Male';
-    };
+    useEffect(() => {
+        if (error) {
+            console.error("Ошибка загрузки фото:", error);
+        }
+    }, [error]);
+
+    useEffect(() => {
+        if (!imageNaturalSize.width || !imageNaturalSize.height) return;
+        const resizeObserver = new ResizeObserver(updateSizes);
+        if (containerRef.current) {
+            resizeObserver.observe(containerRef.current);
+        }
+
+        window.addEventListener('resize', updateSizes);
+
+        return () => {
+            resizeObserver.disconnect();
+            window.removeEventListener('resize', updateSizes);
+        };
+    }, [imageNaturalSize.width, imageNaturalSize.height]);
 
     if (!photo) {
         return <div className="p-4">Загрузка...</div>;
@@ -154,53 +146,17 @@ const PhotoDetailsPage = () => {
                                 className="relative bg-black flex items-center justify-center h-full w-full"
                             >
                                 <img
-                                    src={`data:image/jpeg;base64,${photo.previewImage}`}
+                                    src={previewImageSrc}
                                     alt={photo.name}
                                     className="max-h-full max-w-full object-contain"
                                 />
-
-                                {/* Face Detection Overlays */}
-                                {photo.faces && photo.faces.map((face, index) => (
-                                    <Popover key={face.id || index}>
-                                        <PopoverTrigger asChild>
-                                            <div style={calculateFacePosition(face.faceBox)} className="hover:border-blue-400 hover:bg-blue-200/20">
-                                                <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-xs bg-blue-500 text-white px-1 py-0.5 rounded shadow z-20">
-                                                    {index + 1}
-                                                </span>
-                                            </div>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-80 bg-popover border-border shadow-xl">
-                                            <div className="space-y-3">
-                                                <h4 className="font-semibold border-b border-border pb-2">
-                                                    Face Details
-                                                </h4>
-                                                <div className="grid grid-cols-2 gap-3 text-sm">
-                                                    <div>
-                                                        <Label className="text-muted-foreground">Age</Label>
-                                                        <p className="font-medium">{face.age || 'Unknown'}</p>
-                                                    </div>
-                                                    <div>
-                                                        <Label className="text-muted-foreground">Gender</Label>
-                                                        <p className="font-medium">{getGenderText(face.gender)}</p>
-                                                    </div>
-                                                    {face.personId && (
-                                                        <div className="col-span-2">
-                                                            <Label className="text-muted-foreground">Person ID</Label>
-                                                            <p className="font-medium">{face.personId}</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                {face.friendlyFaceAttributes && (
-                                                    <div>
-                                                        <Label className="text-muted-foreground">Attributes</Label>
-                                                        <p className="text-sm mt-1">
-                                                            {face.friendlyFaceAttributes}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </PopoverContent>
-                                    </Popover>
+                                {photo.faces?.map((face, index) => (
+                                    <FaceOverlay
+                                        key={face.id || index}
+                                        face={face}
+                                        index={index}
+                                        position={calculateFacePosition(face.faceBox)}
+                                    />
                                 ))}
                             </div>
                         </CardContent>
@@ -230,7 +186,7 @@ const PhotoDetailsPage = () => {
 
                                     <div>
                                         <Label className="text-muted-foreground text-xs">Taken Date</Label>
-                                        <Input value={formatDate(photo.takenDate)} readOnly className="mt-1 bg-muted"/>
+                                        <Input value={formattedTakenDate} readOnly className="mt-1 bg-muted"/>
                                     </div>
 
                                     {photo.width && photo.height && (
@@ -305,7 +261,6 @@ const PhotoDetailsPage = () => {
                                 </Card>
                             )}
 
-                            {/* Content Analysis Scores */}
                             {(photo.adultScore !== undefined || photo.racyScore !== undefined) && (
                                 <Card className="bg-card border-border">
                                     <CardHeader className="pb-3">
@@ -313,36 +268,10 @@ const PhotoDetailsPage = () => {
                                     </CardHeader>
                                     <CardContent className="space-y-3">
                                         {photo.adultScore !== undefined && (
-                                            <div>
-                                                <Label className="text-muted-foreground text-xs">Adult Score</Label>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <div className="flex-1 bg-muted rounded-full h-2">
-                                                        <div
-                                                            className="bg-orange-500 h-2 rounded-full transition-all duration-500"
-                                                            style={{width: `${(photo.adultScore * 100).toString()}%`}}
-                                                        />
-                                                    </div>
-                                                    <span className="text-sm font-medium">
-                          {(photo.adultScore * 100).toFixed(1)}%
-                        </span>
-                                                </div>
-                                            </div>
+                                            <ScoreBar label="Adult Score" score={photo.adultScore} colorClass="bg-orange-500" />
                                         )}
                                         {photo.racyScore !== undefined && (
-                                            <div>
-                                                <Label className="text-muted-foreground text-xs">Racy Score</Label>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <div className="flex-1 bg-muted rounded-full h-2">
-                                                        <div
-                                                            className="bg-red-500 h-2 rounded-full transition-all duration-500"
-                                                            style={{width: `${(photo.racyScore * 100).toString()}%`}}
-                                                        />
-                                                    </div>
-                                                    <span className="text-sm font-medium">
-                          {(photo.racyScore * 100).toFixed(1)}%
-                        </span>
-                                                </div>
-                                            </div>
+                                            <ScoreBar label="Racy Score" score={photo.racyScore} colorClass="bg-red-500" />
                                         )}
                                     </CardContent>
                                 </Card>

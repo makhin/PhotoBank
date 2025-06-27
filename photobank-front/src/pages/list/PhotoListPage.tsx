@@ -1,5 +1,4 @@
 import { Calendar, User, Tag } from 'lucide-react';
-import {format, parseISO} from "date-fns";
 import {useSelector} from "react-redux";
 import {useEffect, useState} from "react";
 import { useNavigate } from "react-router-dom";
@@ -10,17 +9,9 @@ import { Card } from '@/components/ui/card';
 import type { PhotoItemDto } from '@/entities/photo/model';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type {RootState} from "@/app/store.ts";
+import { formatDate } from '@/lib/utils';
 
 import PhotoPreview from './PhotoPreview';
-
-const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    try {
-        return format(parseISO(dateString), 'dd.MM.yyyy');
-    } catch {
-        return 'N/A';
-    }
-};
 
 const PhotoListPage = () => {
     const persons = useSelector((state: RootState) => state.metadata.persons);
