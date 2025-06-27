@@ -35,18 +35,33 @@ namespace PhotoBank.Api
 
             builder.WebHost.UseKestrel();
 
+            builder.WebHost.UseUrls("http://0.0.0.0:5066");
+
             // Add services to the container.
             var connectionString = configuration.GetConnectionString("DefaultConnection") ??
                                    throw new InvalidOperationException(
                                        "Connection string 'DefaultConnection' not found.");
 
+            //builder.Services.AddCors(options =>
+            //{
+            //    options.AddPolicy("AllowLocalFrontend-1", policy =>
+            //    {
+            //        policy.WithOrigins("http://localhost:5173")
+            //            .AllowAnyMethod()
+            //            .AllowAnyHeader()
+            //            .AllowCredentials();
+            //    });
+            //});
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowLocalFrontend", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173")
+                    policy
+                        .WithOrigins("http://192.168.1.45:5173") // IP фронта!
+                        .AllowAnyMethod()
                         .AllowAnyHeader()
-                        .AllowAnyMethod();
+                        .AllowCredentials();
                 });
             });
 
