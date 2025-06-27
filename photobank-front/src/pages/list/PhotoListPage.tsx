@@ -2,6 +2,7 @@ import { Calendar, User, Tag } from 'lucide-react';
 import {format, parseISO} from "date-fns";
 import {useSelector} from "react-redux";
 import {useEffect, useState} from "react";
+import { useNavigate } from "react-router-dom";
 
 import { useSearchPhotosMutation } from '@/entities/photo/api.ts';
 import { Badge } from '@/components/ui/badge';
@@ -27,9 +28,10 @@ const PhotoListPage = () => {
 
     const [searchPhotos] = useSearchPhotosMutation();
     const [photos, setPhotos] = useState<PhotoItemDto[]>([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        searchPhotos({thisDay: true, top: 20}).unwrap().then(result => {
+        searchPhotos({thisDay: true, orderBy: 'takenDate', top: 20}).unwrap().then(result => {
             setPhotos(result.photos || []);
         });
     }, [searchPhotos]);
@@ -57,7 +59,7 @@ const PhotoListPage = () => {
 
                         <div className="space-y-3">
                             {photos.map((photo) => (
-                                <Card key={photo.id || photo.storageName} className="p-4 hover:shadow-md transition-shadow">
+                                <Card key={photo.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => { navigate(`/photos/${photo.id?.toString()}`); }}>
                                     <div className="grid grid-cols-12 gap-4 items-center">
                                         <div className="col-span-1">
                                             <Badge variant="outline" className="font-mono text-xs">
@@ -143,7 +145,8 @@ const PhotoListPage = () => {
                     <div className="lg:hidden">
                         <div className="grid gap-4 sm:grid-cols-2">
                             {photos.map((photo) => (
-                                <Card key={photo.id || photo.storageName} className="p-4 hover:shadow-md transition-shadow">
+                                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                                <Card key={photo.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => { navigate(`/photos/${photo.id?.toString()}`); }}>
                                     <div className="space-y-3">
                                         <div className="flex items-start gap-3">
                                             <PhotoPreview

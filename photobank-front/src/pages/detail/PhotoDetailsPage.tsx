@@ -15,7 +15,7 @@ import {useGetPhotoByIdQuery} from "@/entities/photo/api.ts";
 const PhotoDetailsPage = () => {
     const [imageNaturalSize, setImageNaturalSize] = useState({width: 0, height: 0});
     const [imageDisplaySize, setImageDisplaySize] = useState({width: 0, height: 0});
-    const [, setContainerSize] = useState({width: 0, height: 0});
+    const [containerSize, setContainerSize] = useState({width: 0, height: 0});
     const containerRef = useRef<HTMLDivElement>(null);
 
     const {id} = useParams<{ id: string }>();
@@ -52,7 +52,6 @@ const PhotoDetailsPage = () => {
     };
 
     const updateSizes = () => {
-        console.log("Updating sizes...", imageNaturalSize);
         if (containerRef.current) {
             const containerRect = containerRef.current.getBoundingClientRect();
             const newContainerSize = {
@@ -61,8 +60,6 @@ const PhotoDetailsPage = () => {
             };
 
             setContainerSize(newContainerSize);
-
-            console.log(newContainerSize);
 
             const calculatedSize = calculateImageSize(
                 imageNaturalSize.width,
@@ -98,8 +95,11 @@ const PhotoDetailsPage = () => {
         const scaleX = imageDisplaySize.width / imageNaturalSize.width;
         const scaleY = imageDisplaySize.height / imageNaturalSize.height;
 
-        const left = faceBox.left * scaleX;
-        const top = faceBox.top * scaleY;
+        const offsetLeft = (containerSize.width - imageDisplaySize.width) / 2;
+        const offsetTop = (containerSize.height - imageDisplaySize.height) / 2;
+
+        const left = faceBox.left * scaleX + offsetLeft;
+        const top = faceBox.top * scaleY + offsetTop;
         const width = faceBox.width * scaleX;
         const height = faceBox.height * scaleY;
 
@@ -111,7 +111,6 @@ const PhotoDetailsPage = () => {
             height: `${height.toString()}px`,
             border: '2px solid #3b82f6',
             borderRadius: '4px',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
             cursor: 'pointer',
             transition: 'all 0.2s ease-in-out',
             zIndex: 10,
@@ -164,10 +163,11 @@ const PhotoDetailsPage = () => {
                                 {photo.faces && photo.faces.map((face, index) => (
                                     <Popover key={face.id || index}>
                                         <PopoverTrigger asChild>
-                                            <div
-                                                style={calculateFacePosition(face.faceBox)}
-                                                className="hover:border-blue-400 hover:bg-blue-200/20"
-                                            />
+                                            <div style={calculateFacePosition(face.faceBox)} className="hover:border-blue-400 hover:bg-blue-200/20">
+                                                <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-xs bg-blue-500 text-white px-1 py-0.5 rounded shadow z-20">
+                                                    {index + 1}
+                                                </span>
+                                            </div>
                                         </PopoverTrigger>
                                         <PopoverContent className="w-80 bg-popover border-border shadow-xl">
                                             <div className="space-y-3">
