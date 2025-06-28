@@ -201,6 +201,9 @@ importers:
       axios:
         specifier: ^1.10.0
         version: 1.10.0
+      dotenv:
+        specifier: ^17.0.0
+        version: 17.0.0
     devDependencies:
       typescript:
         specifier: ^5.8.3
