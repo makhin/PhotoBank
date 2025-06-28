@@ -1,6 +1,6 @@
 import { Calendar, User, Tag } from 'lucide-react';
 import {useSelector} from "react-redux";
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useSearchPhotosMutation } from '@/entities/photo/api.ts';
@@ -12,10 +12,14 @@ import type {RootState} from "@/app/store.ts";
 import { formatDate } from '@/lib/utils';
 
 import PhotoPreview from './PhotoPreview';
+import {MAX_VISIBLE_PERSONS_LG, MAX_VISIBLE_TAGS_LG, MAX_VISIBLE_PERSONS_SM, MAX_VISIBLE_TAGS_SM} from '@/shared/constants';
 
 const PhotoListPage = () => {
     const persons = useSelector((state: RootState) => state.metadata.persons);
     const tags    = useSelector((state: RootState) => state.metadata.tags);
+
+    const personsMap = useMemo(() => Object.fromEntries(persons.map(p => [p.id, p.name])), [persons]);
+    const tagsMap = useMemo(() => Object.fromEntries(tags.map(t => [t.id, t.name])), [tags]);
 
     const [searchPhotos] = useSearchPhotosMutation();
     const [photos, setPhotos] = useState<PhotoItemDto[]>([]);
@@ -97,14 +101,14 @@ const PhotoListPage = () => {
                                                 {photo.persons && photo.persons.length > 0 && (
                                                     <div className="flex items-center gap-1 flex-wrap">
                                                         <User className="w-3 h-3 text-muted-foreground" />
-                                                        {photo.persons.slice(0, 3).map((person, index) => (
+                                                        {photo.persons.slice(0, MAX_VISIBLE_PERSONS_LG).map((person, index) => (
                                                             <Badge key={index} variant="outline" className="text-xs">
-                                                                { persons.find(p => p.id === person.personId)?.name || person.personId }
+                                                                {personsMap[person.personId ?? ''] ?? person.personId}
                                                             </Badge>
                                                         ))}
-                                                        {photo.persons.length > 3 && (
+                                                        {photo.persons.length > MAX_VISIBLE_PERSONS_LG && (
                                                             <Badge variant="outline" className="text-xs">
-                                                                +{photo.persons.length - 3}
+                                                                +{photo.persons.length - MAX_VISIBLE_PERSONS_LG}
                                                             </Badge>
                                                         )}
                                                     </div>
@@ -113,14 +117,14 @@ const PhotoListPage = () => {
                                                 {photo.tags && photo.tags.length > 0 && (
                                                     <div className="flex items-center gap-1 flex-wrap">
                                                         <Tag className="w-3 h-3 text-muted-foreground" />
-                                                        {photo.tags.slice(0, 3).map((tag, index) => (
+                                                        {photo.tags.slice(0, MAX_VISIBLE_TAGS_LG).map((tag, index) => (
                                                             <Badge key={index} variant="secondary" className="text-xs">
-                                                                {tags.find(t => t.id === tag.tagId)?.name || tag.tagId}
+                                                                {tagsMap[tag.tagId ?? ''] ?? tag.tagId}
                                                             </Badge>
                                                         ))}
-                                                        {photo.tags.length > 3 && (
+                                                        {photo.tags.length > MAX_VISIBLE_TAGS_LG && (
                                                             <Badge variant="secondary" className="text-xs">
-                                                                +{photo.tags.length - 3}
+                                                                +{photo.tags.length - MAX_VISIBLE_TAGS_LG}
                                                             </Badge>
                                                         )}
                                                     </div>
@@ -174,14 +178,14 @@ const PhotoListPage = () => {
                                         {photo.persons && photo.persons.length > 0 && (
                                             <div className="flex items-center gap-1 flex-wrap">
                                                 <User className="w-3 h-3 text-muted-foreground" />
-                                                {photo.persons.slice(0, 2).map((person, index) => (
+                                                {photo.persons.slice(0, MAX_VISIBLE_PERSONS_SM).map((person, index) => (
                                                     <Badge key={index} variant="outline" className="text-xs">
-                                                        {persons.find(p => p.id === person.personId)?.name || person.personId}
+                                                        {personsMap[person.personId ?? ''] ?? person.personId}
                                                     </Badge>
                                                 ))}
-                                                {photo.persons.length > 2 && (
+                                                {photo.persons.length > MAX_VISIBLE_PERSONS_SM && (
                                                     <Badge variant="outline" className="text-xs">
-                                                        +{photo.persons.length - 2}
+                                                        +{photo.persons.length - MAX_VISIBLE_PERSONS_SM}
                                                     </Badge>
                                                 )}
                                             </div>
@@ -190,14 +194,14 @@ const PhotoListPage = () => {
                                         {photo.tags && photo.tags.length > 0 && (
                                             <div className="flex items-center gap-1 flex-wrap">
                                                 <Tag className="w-3 h-3 text-muted-foreground" />
-                                                {photo.tags.slice(0, 2).map((tag, index) => (
+                                                {photo.tags.slice(0, MAX_VISIBLE_TAGS_SM).map((tag, index) => (
                                                     <Badge key={index} variant="secondary" className="text-xs">
-                                                        {tags.find(t => t.id === tag.tagId)?.name || tag.tagId}
+                                                        {tagsMap[tag.tagId ?? ''] ?? tag.tagId}
                                                     </Badge>
                                                 ))}
-                                                {photo.tags.length > 2 && (
+                                                {photo.tags.length > MAX_VISIBLE_TAGS_SM && (
                                                     <Badge variant="secondary" className="text-xs">
-                                                        +{photo.tags.length - 2}
+                                                        +{photo.tags.length - MAX_VISIBLE_TAGS_SM}
                                                     </Badge>
                                                 )}
                                             </div>
