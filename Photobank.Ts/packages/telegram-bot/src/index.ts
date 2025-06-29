@@ -1,21 +1,21 @@
 import { Bot } from "grammy";
+import {BOT_TOKEN} from "./config";
+import { thisDayCommand } from "./commands/thisday";
+import { loadDictionaries } from "@photobank/shared/dictionaries";
+import {photoByIdCommand} from "./commands/photoById";
 
-// Создайте экземпляр класса `Bot` и передайте ему токен вашего бота.
-const bot = new Bot(""); // <-- поместите токен вашего бота между "".
+const bot = new Bot(BOT_TOKEN);
 
-// Теперь вы можете зарегистрировать слушателей на объекте вашего бота `bot`.
-// grammY будет вызывать слушателей, когда пользователи будут отправлять сообщения вашему боту.
+await loadDictionaries();
 
-// Обработайте команду /start.
 bot.command(
     "start",
     (ctx) => ctx.reply("Добро пожаловать. Запущен и работает!"),
 );
-// Обработайте другие сообщения.
+
+bot.command("thisday", thisDayCommand);
+bot.command("photo", photoByIdCommand);
+
 bot.on("message", (ctx) => ctx.reply("Получил другое сообщение!"));
 
-// Теперь, когда вы указали, как обрабатывать сообщения, вы можете запустить своего бота.
-// Он подключится к серверам Telegram и будет ждать сообщений.
-
-// Запустите бота.
 bot.start();
