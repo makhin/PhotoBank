@@ -1,7 +1,6 @@
-import {Context, InputFile} from "grammy";
+import { Context, InputFile } from "grammy";
 import { getPhotoById } from "@photobank/shared/api";
-import {getPersonName, getStorageName} from "@photobank/shared/dictionaries";
-import {formatDate} from "@photobank/shared/index";
+import { formatPhotoMessage } from "@photobank/shared/utils/formatPhotoMessage";
 
 export async function photoByIdCommand(ctx: Context) {
     const parts = ctx.message?.text?.split(" ");
@@ -15,34 +14,19 @@ export async function photoByIdCommand(ctx: Context) {
     try {
         const photo = await getPhotoById(id);
 
-        if (!photo || !photo.previewImage) {
-            await ctx.reply("❌ Фото не найдено или нет превью.");
+        if (!photo) {
+            await ctx.reply("❌ Фото не найдено.");
             return;
         }
 
-        const buffer = Buffer.from(photo.previewImage, "base64");
-        const file = new InputFile(buffer);
+        const { caption, image } = formatPhotoMessage(photo);
 
-        const tags = photo.tags?.length ? `🏷️ ${photo.tags.join(", ")}` : "";
-        const people = photo.faces
-            ?.map(f => f.personId ?? 0)
-            .filter(Boolean)
-            .map(getPersonName)
-            .join(", ");
-        const takenDate = formatDate(photo.takenDate);
-
-        const persons = people ? `👤 ${people}` : "";
-        const captionLines = [
-            `📸 ${photo.name}`,
-            `📅 ${takenDate}`,
-            `📝 ${(photo.captions ? photo.captions[0] : "Нет описания")}`,
-            persons,
-            tags,
-        ].filter(Boolean);
-
-        await ctx.replyWithPhoto(file, {
-            caption: captionLines.join("\n")
-        });
+        if (image) {
+            const file = new InputFile(image, `${photo.name ?? "photo"}.jpg`);
+            await ctx.replyWithPhoto(file, { caption, parse_mode: "HTML" });
+        } else {
+            await ctx.reply(caption, { parse_mode: "HTML" });
+        }
     } catch (error) {
         console.error("Ошибка при получении фото:", error);
         await ctx.reply("🚫 Не удалось получить фото.");

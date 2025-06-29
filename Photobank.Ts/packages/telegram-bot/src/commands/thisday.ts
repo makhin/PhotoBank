@@ -14,42 +14,69 @@ export async function thisDayCommand(ctx: Context) {
     await sendThisDayPage(ctx, page);
 }
 
-export async function sendThisDayPage(ctx: Context, page: number) {
+export async function sendThisDayPage(ctx: Context, page: number, edit = false) {
     const skip = (page - 1) * PAGE_SIZE;
     const queryResult = await searchPhotos({ thisDay: true, top: PAGE_SIZE, skip });
 
     if (!queryResult.count || !queryResult.photos?.length) {
-        await ctx.reply("📭 Сегодняшних фото пока нет.");
+        const fallback = "📭 Сегодняшних фото пока нет.";
+        if (edit) {
+            await ctx.editMessageText(fallback).catch(() => ctx.reply(fallback));
+        } else {
+            await ctx.reply(fallback);
+        }
         return;
     }
 
     const totalPages = Math.ceil(queryResult.count / PAGE_SIZE);
-    const keyboard = new InlineKeyboard();
-
-    // Группировка по годам
     const byYear = new Map<number, typeof queryResult.photos>();
+
     for (const photo of queryResult.photos) {
         const year = photo.takenDate ? new Date(photo.takenDate).getFullYear() : 0;
         if (!byYear.has(year)) byYear.set(year, []);
         byYear.get(year)!.push(photo);
     }
 
+    const sections: string[] = [];
+
     [...byYear.entries()]
         .sort(([a], [b]) => b - a)
         .forEach(([year, photos]) => {
-            keyboard.text(`📅 ${year || "Неизвестно"}`).row();
-            photos.forEach((photo, i) => {
-                const title = photo.name ? `📸 ${photo.name}` : `📸 Фото ${photo.id}`;
-                keyboard.text(title, `photo:${photo.id}`);
-                if ((i + 1) % 2 === 0) keyboard.row();
+            sections.push(`📅 <b>${year || "Неизвестный год"}</b>`);
+            photos.forEach(photo => {
+                const title = photo.name ?? `Фото ${photo.id}`;
+                const storage = photo.storageName ?? "???";
+                const path = photo.relativePath ?? "-";
+                const peopleCount = photo.persons?.length ?? 0;
+                const isAdult = photo.isAdultContent ? "🔞" : "";
+                const isRacy = photo.isRacyContent ? "⚠️" : "";
+                sections.push(`• <b>${title}</b> ${isAdult}${isRacy}
+📁 ${storage} / ${path}
+👥 ${peopleCount} чел.
+🔗 /photo${photo.id}`);
             });
-            keyboard.row();
         });
 
+    sections.push(`\n📄 Страница ${page} из ${totalPages}`);
+
+    const keyboard = new InlineKeyboard();
     if (page > 1) keyboard.text("◀ Назад", `thisday:${page - 1}`);
     if (page < totalPages) keyboard.text("Вперёд ▶", `thisday:${page + 1}`);
 
-    await ctx.reply(`🗓 Фото за этот день — страница ${page} из ${totalPages}`, {
-        reply_markup: keyboard,
-    });
+    const text = sections.join("\n\n");
+
+    if (edit) {
+        await ctx.editMessageText(text, {
+            parse_mode: "HTML",
+            reply_markup: keyboard,
+        }).catch(() => ctx.reply(text, {
+            parse_mode: "HTML",
+            reply_markup: keyboard,
+        }));
+    } else {
+        await ctx.reply(text, {
+            parse_mode: "HTML",
+            reply_markup: keyboard,
+        });
+    }
 }
