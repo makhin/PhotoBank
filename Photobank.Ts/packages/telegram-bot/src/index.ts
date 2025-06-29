@@ -1,6 +1,6 @@
 import { Bot } from "grammy";
 import {BOT_TOKEN} from "./config";
-import { thisDayCommand } from "./commands/thisday";
+import {sendThisDayPage, thisDayCommand} from "./commands/thisday";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import {photoByIdCommand} from "./commands/photoById";
 
@@ -14,6 +14,13 @@ bot.command(
 );
 
 bot.command("thisday", thisDayCommand);
+
+bot.callbackQuery(/^thisday:(\d+)$/, async (ctx) => {
+    const page = parseInt(ctx.match[1], 10);
+    await ctx.answerCallbackQuery();
+    await sendThisDayPage(ctx, page);
+});
+
 bot.command("photo", photoByIdCommand);
 
 bot.on("message", (ctx) => ctx.reply("Получил другое сообщение!"));

@@ -11,10 +11,10 @@ import {ScrollArea} from '@/components/ui/scroll-area';
 import type {FaceBoxDto} from '@/entities/photo/model.ts';
 import {useGetPhotoByIdQuery} from "@/entities/photo/api.ts";
 import {ScoreBar} from '@/components/ScoreBar';
-import {formatDate} from '@/lib/utils';
 import {FaceOverlay} from "@/components/FaceOverlay.tsx";
 import type {RootState} from "@/app/store.ts";
 import {FacePersonSelector} from "@/components/FacePersonSelector.tsx";
+import {formatDate} from "@photobank/shared";
 
 const calculateImageSize = (naturalWidth: number, naturalHeight: number, containerWidth: number, containerHeight: number) => {
     if (naturalWidth <= containerWidth && naturalHeight <= containerHeight) {

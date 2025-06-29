@@ -1,9 +1,9 @@
 import type {FaceDto} from "@/entities/photo/model.ts";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
 import {Label} from "@/components/ui/label.tsx";
-import {getGenderText} from "@/lib/utils.ts";
 
 import './FaceOverlay.css';
+import {getGenderText} from "@photobank/shared";
 
 export const FaceOverlay = ({
                                 face,

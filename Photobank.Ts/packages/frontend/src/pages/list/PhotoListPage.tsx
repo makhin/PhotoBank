@@ -9,10 +9,10 @@ import { Card } from '@/components/ui/card';
 import type { PhotoItemDto } from '@/entities/photo/model';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type {RootState} from "@/app/store.ts";
-import { formatDate } from '@/lib/utils';
 
 import PhotoPreview from './PhotoPreview';
 import {MAX_VISIBLE_PERSONS_LG, MAX_VISIBLE_TAGS_LG, MAX_VISIBLE_PERSONS_SM, MAX_VISIBLE_TAGS_SM} from '@/shared/constants';
+import {formatDate} from "@photobank/shared";
 
 const PhotoListPage = () => {
     const persons = useSelector((state: RootState) => state.metadata.persons);
