@@ -140,7 +140,7 @@ namespace PhotoBank.Services.Api
             {
                 queryResult.Count = await photos.CountAsync();
                 queryResult.Photos = await photos
-                    .OrderByDescending(p => p.Id)
+                    .OrderByDescending(p => p.TakenDate)
                     .Skip(filter.Skip ?? 0)
                     .Take(filter.Top ?? int.MaxValue)
                     .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)

@@ -3,6 +3,7 @@ import {BOT_TOKEN} from "./config";
 import {sendThisDayPage, thisDayCommand} from "./commands/thisday";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import {photoByIdCommand} from "./commands/photoById";
+import {sendPhotoById} from "./photo";
 
 const bot = new Bot(BOT_TOKEN);
 
@@ -22,6 +23,12 @@ bot.callbackQuery(/^thisday:(\d+)$/, async (ctx) => {
 });
 
 bot.command("photo", photoByIdCommand);
+
+bot.callbackQuery(/^photo:(\d+)$/, async (ctx) => {
+    const id = parseInt(ctx.match[1], 10);
+    await ctx.answerCallbackQuery();
+    await sendPhotoById(ctx, id);
+});
 
 bot.on("message", (ctx) => ctx.reply("Получил другое сообщение!"));
 
