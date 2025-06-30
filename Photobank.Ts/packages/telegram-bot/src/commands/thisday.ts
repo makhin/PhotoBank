@@ -50,9 +50,8 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
                 const peopleCount = photo.persons?.length ?? 0;
                 const isAdult = photo.isAdultContent ? "🔞" : "";
                 const isRacy = photo.isRacyContent ? "⚠️" : "";
-                sections.push(`• <b>${title}</b> ${isAdult}${isRacy}
-📁 ${storage} / ${path}
-👥 ${peopleCount} чел.
+                sections.push(`📁 ${storage} / ${path} / <b>${title}</b>
+👥 ${peopleCount} чел. ${isAdult}${isRacy}
 🔗 /photo${photo.id}`);
             });
         });
