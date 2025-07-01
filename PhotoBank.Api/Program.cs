@@ -1,6 +1,8 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.DbContext;
+using PhotoBank.DbContext.Models;
+using Microsoft.AspNetCore.Identity;
 using PhotoBank.Services;
 using Serilog.Events;
 using Serilog;
@@ -47,7 +49,19 @@ namespace PhotoBank.Api
                 options.AddPolicy("AllowLocalFrontend", policy =>
                 {
                     policy
-                        .WithOrigins("http://192.168.1.45:5173") // IP фронта!
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddDefaultIdentity<ApplicationUser>()
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<PhotoBankDbContext>();
+
+            builder.Services.AddAuthorizationBuilder()
+                .AddPolicy("AllowToSeeAdultContent", policy => {
+                    policy.RequireClaim("AllowAdultContent", "True");
+                })
+                .AddPolicy("AllowToSeeRacyContent", policy => {
+                    policy.RequireClaim("AllowRacyContent", "True");
+                });
+            app.UseAuthentication();
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials();

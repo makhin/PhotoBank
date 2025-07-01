@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
@@ -7,6 +8,7 @@ using System.Diagnostics.Metrics;
 namespace PhotoBank.Api.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
     public class PhotosController(ILogger<PhotosController> logger, IPhotoService photoService)
         : ControllerBase
