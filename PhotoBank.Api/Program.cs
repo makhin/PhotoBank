@@ -49,24 +49,14 @@ namespace PhotoBank.Api
                 options.AddPolicy("AllowLocalFrontend", policy =>
                 {
                     policy
-            builder.Services.AddHttpContextAccessor();
-            builder.Services.AddDefaultIdentity<ApplicationUser>()
-                .AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<PhotoBankDbContext>();
-
-            builder.Services.AddAuthorizationBuilder()
-                .AddPolicy("AllowToSeeAdultContent", policy => {
-                    policy.RequireClaim("AllowAdultContent", "True");
-                })
-                .AddPolicy("AllowToSeeRacyContent", policy => {
-                    policy.RequireClaim("AllowRacyContent", "True");
-                });
-            app.UseAuthentication();
+                        .WithOrigins("http://192.168.1.45:5173") // IP !
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials();
                 });
             });
+
+            builder.Services.AddHttpContextAccessor();
 
             builder.Services.AddDbContext<PhotoBankDbContext>(options =>
             {
@@ -83,6 +73,17 @@ namespace PhotoBank.Api
                 options.EnableDetailedErrors();
             });
 
+            builder.Services.AddDefaultIdentity<ApplicationUser>()
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<PhotoBankDbContext>();
+
+            builder.Services.AddAuthorizationBuilder()
+                .AddPolicy("AllowToSeeAdultContent", policy => {
+                    policy.RequireClaim("AllowAdultContent", "True");
+                })
+                .AddPolicy("AllowToSeeRacyContent", policy => {
+                    policy.RequireClaim("AllowRacyContent", "True");
+                });
             builder.Services.Configure<RouteOptions>(options =>
             {
                 options.LowercaseUrls = true;
@@ -108,7 +109,7 @@ namespace PhotoBank.Api
             app.UseCors("AllowLocalFrontend");
 
             app.UseHttpsRedirection();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();

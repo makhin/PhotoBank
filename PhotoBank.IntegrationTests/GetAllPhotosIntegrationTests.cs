@@ -1,20 +1,13 @@
-using AutoMapper;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using PhotoBank.DbContext.DbContext;
-using PhotoBank.DbContext.Models;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace PhotoBank.IntegrationTests;
