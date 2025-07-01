@@ -42,17 +42,6 @@ namespace PhotoBank.Api
                                    throw new InvalidOperationException(
                                        "Connection string 'DefaultConnection' not found.");
 
-            //builder.Services.AddCors(options =>
-            //{
-            //    options.AddPolicy("AllowLocalFrontend-1", policy =>
-            //    {
-            //        policy.WithOrigins("http://localhost:5173")
-            //            .AllowAnyMethod()
-            //            .AllowAnyHeader()
-            //            .AllowCredentials();
-            //    });
-            //});
-
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowLocalFrontend", policy =>
