@@ -1,17 +1,17 @@
 import { FaceDto } from './FaceDto';
 
 export interface PhotoDto {
-  id?: number;
+  id: number;
   name: string;
-  scale?: number;
+  scale: number;
   takenDate?: string;
   previewImage: string;
   orientation?: number;
   faces?: FaceDto[];
   captions?: string[];
   tags?: string[];
-  adultScore?: number;
-  racyScore?: number;
-  height?: number;
-  width?: number;
+  adultScore: number;
+  racyScore: number;
+  height: number;
+  width: number;
 }

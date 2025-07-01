@@ -1,7 +1,7 @@
 import { FaceBoxDto } from './FaceBoxDto';
 
 export interface FaceDto {
-  id?: number;
+  id: number;
   personId?: number;
   age?: number;
   gender?: boolean;

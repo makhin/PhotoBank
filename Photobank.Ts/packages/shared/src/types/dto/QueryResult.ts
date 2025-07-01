@@ -1,6 +1,6 @@
 import { PhotoItemDto } from './PhotoItemDto';
 
 export interface QueryResult {
-  count?: number;
+  count: number;
   photos?: PhotoItemDto[];
 }

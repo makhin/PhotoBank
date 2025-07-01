@@ -1,3 +1,3 @@
 export interface TagItemDto {
-  tagId?: number;
+  tagId: number;
 }
