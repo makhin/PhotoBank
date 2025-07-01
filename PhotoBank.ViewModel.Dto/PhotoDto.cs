@@ -5,10 +5,14 @@ namespace PhotoBank.ViewModel.Dto
 {
     public class PhotoDto
     {
+        [System.ComponentModel.DataAnnotations.Required]
         public int Id { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Required]
         public required string Name { get; set; }
         public double Scale { get; set; }
         public DateTime? TakenDate { get; set; }
+        [System.ComponentModel.DataAnnotations.Required]
         public required byte[] PreviewImage { get; set; }
         public int? Orientation { get; set; }
         public List<FaceDto>? Faces { get; set; }

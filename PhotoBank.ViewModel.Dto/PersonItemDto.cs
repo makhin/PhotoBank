@@ -2,6 +2,7 @@
 {
     public class PersonItemDto
     {
+        [System.ComponentModel.DataAnnotations.Required]
         public int PersonId { get; set; }
     }
 }
