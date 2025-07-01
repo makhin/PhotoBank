@@ -8,6 +8,7 @@ export const formatDate = (dateString?: string) => {
     return 'неверный формат даты';
   }
 };
+
 export const getGenderText = (gender?: boolean) => {
   if (gender === undefined) return 'не указан пол';
   return gender ? 'Муж' : 'Жен';

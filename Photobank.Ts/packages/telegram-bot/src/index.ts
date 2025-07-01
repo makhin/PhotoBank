@@ -1,14 +1,16 @@
 import { Bot } from "grammy";
-import {BOT_TOKEN} from "./config";
+import {BOT_TOKEN, API_EMAIL, API_PASSWORD} from "./config";
 import {sendThisDayPage, thisDayCommand} from "./commands/thisday";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import {photoByIdCommand} from "./commands/photoById";
 import { registerPhotoRoutes } from "./commands/photoRouter";
+import { login } from "@photobank/shared/api";
 
 const bot = new Bot(BOT_TOKEN);
 
 registerPhotoRoutes(bot);
 
+await login({ email: API_EMAIL, password: API_PASSWORD });
 await loadDictionaries();
 
 bot.command(
