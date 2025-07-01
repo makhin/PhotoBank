@@ -4,3 +4,4 @@ export * from './persons';
 export * from './tags';
 export * from './paths';
 export * from './storages';
+export * from './auth';
