@@ -1,7 +1,8 @@
-import {createAsyncThunk, createSlice, type PayloadAction,} from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { getAllStorages, getAllTags, getAllPersons, getAllPaths } from '@photobank/shared/api';
 
-import type {PathDto, PersonDto, StorageDto, TagDto,} from '@/entities/meta/model.ts';
-import {BASE_URL, METADATA_CACHE_KEY, METADATA_CACHE_VERSION} from "@/shared/constants.ts";
+import type { PathDto, PersonDto, StorageDto, TagDto } from '@photobank/shared/types';
+import { METADATA_CACHE_KEY, METADATA_CACHE_VERSION } from '@/shared/constants.ts';
 
 interface MetadataPayload {
     tags: TagDto[];
@@ -52,12 +53,10 @@ export const loadMetadata = createAsyncThunk('metadata/load', async () => {
     const fromCache = loadFromCache();
     if (fromCache) return fromCache;
 
-    const [storages, tags, persons, paths] = await Promise.all([
-        fetch(`${BASE_URL}/api/storages`).then((res) => res.json()) as Promise<StorageDto[]>,
-        fetch(`${BASE_URL}/api/tags`).then((res) => res.json()) as Promise<TagDto[]>,
-        fetch(`${BASE_URL}/api/persons`).then((res) => res.json()) as Promise<PersonDto[]>,
-        fetch(`${BASE_URL}/api/paths`).then((res) => res.json()) as Promise<PathDto[]>,
-    ]);
+    const storages = await getAllStorages();
+    const tags = await getAllTags();
+    const persons = await getAllPersons();
+    const paths = await getAllPaths();
 
     const result: MetadataPayload = {
         tags,

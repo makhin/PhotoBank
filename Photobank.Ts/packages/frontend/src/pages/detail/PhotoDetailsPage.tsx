@@ -1,20 +1,20 @@
-import {useEffect, useMemo, useRef, useState, useCallback} from 'react';
-import {useParams} from "react-router-dom";
-import {useSelector} from "react-redux";
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { formatDate } from '@photobank/shared';
 
-import {Card, CardContent, CardHeader, CardTitle} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
 import {Label} from '@/components/ui/label';
 import {Input} from '@/components/ui/input';
 import {Textarea} from '@/components/ui/textarea';
 import {ScrollArea} from '@/components/ui/scroll-area';
-import type {FaceBoxDto} from '@/entities/photo/model.ts';
+import type { FaceBoxDto } from '@photobank/shared/types';
 import {useGetPhotoByIdQuery} from "@/entities/photo/api.ts";
 import {ScoreBar} from '@/components/ScoreBar';
 import {FaceOverlay} from "@/components/FaceOverlay.tsx";
 import type {RootState} from "@/app/store.ts";
 import {FacePersonSelector} from "@/components/FacePersonSelector.tsx";
-import {formatDate} from "@photobank/shared";
 
 const calculateImageSize = (naturalWidth: number, naturalHeight: number, containerWidth: number, containerHeight: number) => {
     if (naturalWidth <= containerWidth && naturalHeight <= containerHeight) {

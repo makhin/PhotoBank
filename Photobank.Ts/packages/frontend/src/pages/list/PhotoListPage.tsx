@@ -1,18 +1,18 @@
 import { Calendar, User, Tag } from 'lucide-react';
-import {useSelector} from "react-redux";
-import {useEffect, useMemo, useState} from "react";
-import { useNavigate } from "react-router-dom";
+import { useSelector } from 'react-redux';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { formatDate } from '@photobank/shared';
 
 import { useSearchPhotosMutation } from '@/entities/photo/api.ts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import type { PhotoItemDto } from '@/entities/photo/model';
+import type { PhotoItemDto } from '@photobank/shared/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type {RootState} from "@/app/store.ts";
+import {MAX_VISIBLE_PERSONS_LG, MAX_VISIBLE_TAGS_LG, MAX_VISIBLE_PERSONS_SM, MAX_VISIBLE_TAGS_SM} from '@/shared/constants';
 
 import PhotoPreview from './PhotoPreview';
-import {MAX_VISIBLE_PERSONS_LG, MAX_VISIBLE_TAGS_LG, MAX_VISIBLE_PERSONS_SM, MAX_VISIBLE_TAGS_SM} from '@/shared/constants';
-import {formatDate} from "@photobank/shared";
 
 const PhotoListPage = () => {
     const persons = useSelector((state: RootState) => state.metadata.persons);

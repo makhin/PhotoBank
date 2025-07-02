@@ -13,7 +13,7 @@ import {
     CommandGroup,
     CommandItem,
 } from "@/components/ui/command";
-import type {PersonDto} from "@/entities/meta/model.ts";
+import type { PersonDto } from '@photobank/shared/types';
 
 
 interface FacePersonSelectorProps {
