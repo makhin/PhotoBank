@@ -1,4 +1,4 @@
-import { PersonDto } from '../types';
+import type { PersonDto } from '../types';
 import { apiClient } from './client';
 
 export const getAllPersons = async (): Promise<PersonDto[]> => {

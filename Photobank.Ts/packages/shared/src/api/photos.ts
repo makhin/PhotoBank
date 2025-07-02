@@ -1,4 +1,4 @@
-import { FilterDto, PhotoDto, QueryResult } from '../types';
+import type { FilterDto, PhotoDto, QueryResult } from '../types';
 import { apiClient } from './client';
 
 export const searchPhotos = async (filter: FilterDto): Promise<QueryResult> => {

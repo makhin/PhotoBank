@@ -1,5 +1,5 @@
-import { TagItemDto } from './TagItemDto';
-import { PersonItemDto } from './PersonItemDto';
+import type { TagItemDto } from './TagItemDto';
+import type { PersonItemDto } from './PersonItemDto';
 
 export interface PhotoItemDto {
   id: number;

@@ -2,6 +2,7 @@ export * from './dto/FilterDto';
 export * from './dto/PhotoDto';
 export * from './dto/PhotoItemDto';
 export * from './dto/FaceDto';
+export * from './dto/FaceBoxDto';
 export * from './dto/TagDto';
 export * from './dto/PersonDto';
 export * from './dto/PathDto';

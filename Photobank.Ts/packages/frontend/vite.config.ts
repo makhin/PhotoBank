@@ -1,5 +1,8 @@
-import {defineConfig} from 'vite'
-import path from "path"
+import { defineConfig } from 'vite'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
@@ -13,6 +16,7 @@ export default defineConfig({
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "./src"),
+            "@photobank/shared": path.resolve(__dirname, "../shared/src"),
         },
     },
 })

@@ -1,4 +1,4 @@
-import { StorageDto } from '../types';
+import type { StorageDto } from '../types';
 import { apiClient } from './client';
 
 export const getAllStorages = async (): Promise<StorageDto[]> => {
