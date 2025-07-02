@@ -7,11 +7,15 @@
   "types": "src/index.ts",
   "devDependencies": {
     "@types/node": "^24.0.7",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "axios": "^1.10.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.0.0"
+  },
+  "scripts": {
+    "test": "vitest run"
   }
 }
