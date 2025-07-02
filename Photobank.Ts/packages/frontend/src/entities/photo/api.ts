@@ -1,25 +1,31 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
+import { searchPhotos as searchPhotosApi, getPhotoById as getPhotoByIdApi } from '@photobank/shared/api';
 
-import type {
-  FilterDto,
-  PhotoDto,
-  QueryResult,
-} from '@/entities/photo/model.ts';
-import {BASE_URL} from "@/shared/constants.ts";
+import type { FilterDto, PhotoDto, QueryResult } from '@photobank/shared/types';
 
 export const api = createApi({
   reducerPath: 'photobankApi',
-  baseQuery: fetchBaseQuery({ baseUrl: `${BASE_URL}/api/` }),
+  baseQuery: fakeBaseQuery(),
   endpoints: (builder) => ({
     getPhotoById: builder.query<PhotoDto, number>({
-      query: (id) => `photos/${id.toString()}`,
+      async queryFn(id) {
+        try {
+          const data = await getPhotoByIdApi(id);
+          return { data: data as PhotoDto };
+        } catch (error) {
+          return { error: error as unknown as Error };
+        }
+      },
     }),
     searchPhotos: builder.mutation<QueryResult, FilterDto>({
-      query: (filter) => ({
-        url: 'photos/search',
-        method: 'POST',
-        body: filter,
-      }),
+      async queryFn(filter) {
+        try {
+          const data = await searchPhotosApi(filter);
+          return { data: data as QueryResult };
+        } catch (error) {
+          return { error: error as unknown as Error };
+        }
+      },
     }),
   }),
 });

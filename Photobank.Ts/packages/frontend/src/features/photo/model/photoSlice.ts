@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-import type { FilterDto, PhotoItemDto } from '@/entities/photo/model.ts';
+import type { FilterDto, PhotoItemDto } from '@photobank/shared/types';
 
 interface PhotoState {
   filter: FilterDto;
