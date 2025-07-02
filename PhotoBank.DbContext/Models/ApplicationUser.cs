@@ -9,5 +9,6 @@ namespace PhotoBank.DbContext.Models
 {
     public class ApplicationUser : IdentityUser
     {
+        public string? Telegram { get; set; }
     }
 }

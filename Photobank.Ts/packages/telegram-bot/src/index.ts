@@ -4,9 +4,15 @@ import {sendThisDayPage, thisDayCommand} from "./commands/thisday";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import {photoByIdCommand} from "./commands/photoById";
 import { registerPhotoRoutes } from "./commands/photoRouter";
-import { login } from "@photobank/shared/api";
+import { login, setImpersonateUser } from "@photobank/shared/api";
 
 const bot = new Bot(BOT_TOKEN);
+
+bot.use(async (ctx, next) => {
+    const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
+    setImpersonateUser(username);
+    await next();
+});
 
 registerPhotoRoutes(bot);
 

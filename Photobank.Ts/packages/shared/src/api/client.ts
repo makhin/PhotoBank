@@ -2,6 +2,11 @@ import axios from 'axios';
 import {API_BASE_URL, isBrowser} from "@photobank/shared/config";
 import {getAuthToken} from './auth';
 
+let impersonateUser: string | null = null;
+export const setImpersonateUser = (username: string | null | undefined) => {
+  impersonateUser = username ?? null;
+};
+
 export const apiClient = axios.create({
   baseURL: `${API_BASE_URL}/api/`,
   timeout: 10000,
@@ -16,6 +21,10 @@ apiClient.interceptors.request.use((config) => {
   if (token) {
     config.headers = config.headers ?? {};
     config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  if (impersonateUser) {
+    config.headers = config.headers ?? {};
+    config.headers['X-Impersonate-User'] = impersonateUser;
   }
   return config;
 });

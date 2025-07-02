@@ -4,6 +4,7 @@ using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using Microsoft.AspNetCore.Identity;
 using PhotoBank.Services;
+using PhotoBank.Api.Middleware;
 using Serilog.Events;
 using Serilog;
 
@@ -110,6 +111,7 @@ namespace PhotoBank.Api
 
             app.UseHttpsRedirection();
             app.UseAuthentication();
+            app.UseMiddleware<ImpersonationMiddleware>();
             app.UseAuthorization();
 
             app.MapControllers();
