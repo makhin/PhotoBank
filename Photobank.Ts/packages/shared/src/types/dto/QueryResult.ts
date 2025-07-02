@@ -1,4 +1,4 @@
-import { PhotoItemDto } from './PhotoItemDto';
+import type { PhotoItemDto } from './PhotoItemDto';
 
 export interface QueryResult {
   count: number;

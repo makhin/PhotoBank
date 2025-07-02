@@ -28,6 +28,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@photobank/shared/*": [
+        "../shared/src/*"
       ]
     }
   },
