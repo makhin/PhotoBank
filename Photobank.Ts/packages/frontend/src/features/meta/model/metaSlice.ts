@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { getAllStorages, getAllTags, getAllPersons, getAllPaths } from '@photobank/shared/api';
+import {getAllPersons} from "@photobank/shared/api";
 
-import type { PathDto, PersonDto, StorageDto, TagDto } from '@photobank/shared/types';
 import { METADATA_CACHE_KEY, METADATA_CACHE_VERSION } from '@/shared/constants.ts';
 
 interface MetadataPayload {
@@ -53,10 +52,10 @@ export const loadMetadata = createAsyncThunk('metadata/load', async () => {
     const fromCache = loadFromCache();
     if (fromCache) return fromCache;
 
-    const storages = await getAllStorages();
-    const tags = await getAllTags();
-    const persons = await getAllPersons();
-    const paths = await getAllPaths();
+    const storages: StorageDto[] = await getAllStorages();
+    const tags: TagDto[] = await getAllTags();
+    const persons: PersonDto[] = await getAllPersons();
+    const paths: PathDto[] = await getAllPaths();
 
     const result: MetadataPayload = {
         tags,
