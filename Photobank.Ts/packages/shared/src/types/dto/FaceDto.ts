@@ -1,4 +1,4 @@
-import { FaceBoxDto } from './FaceBoxDto';
+import type { FaceBoxDto } from './FaceBoxDto';
 
 export interface FaceDto {
   id: number;
