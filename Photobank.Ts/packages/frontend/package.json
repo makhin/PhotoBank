@@ -10,13 +10,15 @@
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,scss,html,json}\"",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "eslintConfig": {
     "extends": "./eslint.config.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
+    "@photobank/shared": "workspace:*",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
     "@radix-ui/react-checkbox": "^1.3.2",
     "@radix-ui/react-dialog": "^1.1.14",
@@ -45,8 +47,7 @@
     "react-router-dom": "^7.6.2",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.10",
-    "zod": "^3.25.64",
-    "@photobank/shared": "workspace:*"
+    "zod": "^3.25.64"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
@@ -71,6 +72,7 @@
     "eslint-plugin-redux": "^0.1.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.0.0",
+    "jsdom": "^26.1.0",
     "prettier": "^3.5.3",
     "tailwindcss-debug-screens": "^3.0.1",
     "tw-animate-css": "^1.3.4",
