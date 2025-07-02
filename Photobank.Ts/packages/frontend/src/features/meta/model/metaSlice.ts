@@ -1,7 +1,11 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import {getAllPersons} from "@photobank/shared/api";
+import { getAllPaths, getAllPersons, getAllStorages, getAllTags } from '@photobank/shared/api';
+import type { PathDto, PersonDto, StorageDto, TagDto } from '@photobank/shared/types';
 
-import { METADATA_CACHE_KEY, METADATA_CACHE_VERSION } from '@/shared/constants.ts';
+import {
+  METADATA_CACHE_KEY,
+  METADATA_CACHE_VERSION,
+} from '@/shared/constants';
 
 interface MetadataPayload {
     tags: TagDto[];
