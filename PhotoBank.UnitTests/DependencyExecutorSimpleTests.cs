@@ -72,6 +72,16 @@ namespace PhotoBank.UnitTests
         }
     }
 
+    public class BlockingEnricher1 : BlockingEnricher
+    {
+        public BlockingEnricher1(TaskCompletionSource<bool> release) : base(EnricherType.Adult, release) { }
+    }
+
+    public class BlockingEnricher2 : BlockingEnricher
+    {
+        public BlockingEnricher2(TaskCompletionSource<bool> release) : base(EnricherType.Metadata, release) { }
+    }
+
     [TestFixture]
     public class DependencyExecutorSimpleTests
     {
@@ -120,20 +130,21 @@ namespace PhotoBank.UnitTests
         {
             var release1 = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             var release2 = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var enricher1 = new BlockingEnricher(EnricherType.Adult, release1);
-            var enricher2 = new BlockingEnricher(EnricherType.Metadata, release2);
+            var enricher1 = new BlockingEnricher1( release1);
+            var enricher2 = new BlockingEnricher2(release2);
             var executor = new DependencyExecutor();
 
             var executeTask = executor.ExecuteAsync(new IEnricher[] { enricher1, enricher2 }, new Photo(), null);
 
             var bothStarted = Task.WhenAll(enricher1.Started, enricher2.Started);
             var finished = await Task.WhenAny(bothStarted, Task.Delay(1000));
-            Assert.That(finished, Is.EqualTo(bothStarted), "Enrichers did not start in parallel");
-
+            
             release1.SetResult(true);
             release2.SetResult(true);
 
             await executeTask;
+
+            Assert.That(finished, Is.EqualTo(bothStarted), "Enrichers did not start in parallel");
         }
     }
 }
