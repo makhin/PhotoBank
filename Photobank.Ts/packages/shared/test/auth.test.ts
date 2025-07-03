@@ -5,8 +5,12 @@ const createStorage = (initial: Record<string, string> = {}) => {
   const store: Record<string, string | undefined> = { ...initial };
   return {
     getItem: (k: string) => (k in store ? store[k]! : null),
-    setItem: (k: string, v: string) => { store[k] = v; },
-    removeItem: (k: string) => { delete store[k]; },
+    setItem: (k: string, v: string) => {
+      store[k] = v;
+    },
+    removeItem: (k: string) => {
+      delete store[k];
+    },
   };
 };
 
@@ -72,5 +76,30 @@ describe('auth utilities', () => {
     expect(postMock).toHaveBeenCalledWith('/auth/login', { email: 'e', password: 'p' });
     expect(result).toEqual({ token: 'res' });
     expect(auth.getAuthToken()).toBe('res');
+  });
+
+  it('register posts user info', async () => {
+    const postMock = vi.fn().mockResolvedValue({});
+    vi.doMock('../src/api/client', () => ({ apiClient: { post: postMock } }));
+    const auth = await import('../src/api/auth');
+    await auth.register({ email: 'e', password: 'p' });
+    expect(postMock).toHaveBeenCalledWith('/auth/register', { email: 'e', password: 'p' });
+  });
+
+  it('getCurrentUser fetches user', async () => {
+    const getMock = vi.fn().mockResolvedValue({ data: { email: 'a@b.c' } });
+    vi.doMock('../src/api/client', () => ({ apiClient: { get: getMock } }));
+    const auth = await import('../src/api/auth');
+    const user = await auth.getCurrentUser();
+    expect(getMock).toHaveBeenCalledWith('/auth/user');
+    expect(user).toEqual({ email: 'a@b.c' });
+  });
+
+  it('updateUser sends data', async () => {
+    const putMock = vi.fn().mockResolvedValue({});
+    vi.doMock('../src/api/client', () => ({ apiClient: { put: putMock } }));
+    const auth = await import('../src/api/auth');
+    await auth.updateUser({ phoneNumber: '123' });
+    expect(putMock).toHaveBeenCalledWith('/auth/user', { phoneNumber: '123' });
   });
 });

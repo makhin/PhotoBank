@@ -1,11 +1,11 @@
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  token: string;
-}
+import type {
+  LoginRequestDto,
+  LoginResponseDto,
+  RegisterRequestDto,
+  UserDto,
+  UpdateUserDto,
+} from '../types';
+import { apiClient } from './client';
 
 const AUTH_TOKEN_KEY = 'photobank_token';
 let authToken: string | null = null;
@@ -38,12 +38,32 @@ export const loadAuthToken = () => {
 // Immediately load token when running in browser environment
 loadAuthToken();
 
-import { apiClient } from './client';
-
-export const login = async (data: LoginRequest): Promise<LoginResponse> => {
-  const response = await apiClient.post<LoginResponse>('/auth/login', data);
+export const login = async (
+  data: LoginRequestDto,
+): Promise<LoginResponseDto> => {
+  const response = await apiClient.post<LoginResponseDto>(
+    '/auth/login',
+    data,
+  );
   setAuthToken(response.data.token);
   return response.data;
+};
+
+export const register = async (
+  data: RegisterRequestDto,
+): Promise<void> => {
+  await apiClient.post('/auth/register', data);
+};
+
+export const getCurrentUser = async (): Promise<UserDto> => {
+  const response = await apiClient.get<UserDto>('/auth/user');
+  return response.data;
+};
+
+export const updateUser = async (
+  data: UpdateUserDto,
+): Promise<void> => {
+  await apiClient.put('/auth/user', data);
 };
 
 export const logout = () => {
