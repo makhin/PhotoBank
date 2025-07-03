@@ -40,11 +40,11 @@ describe('metaSlice', () => {
     const getAllPersons = vi.fn().mockResolvedValue(payload.persons);
     const getAllPaths = vi.fn().mockResolvedValue(payload.paths);
     vi.doMock('@photobank/shared/api', () => ({
+      getAllStorages,
+      getAllTags,
       getAllPersons,
+      getAllPaths,
     }));
-    vi.stubGlobal('getAllStorages', getAllStorages);
-    vi.stubGlobal('getAllTags', getAllTags);
-    vi.stubGlobal('getAllPaths', getAllPaths);
     const { loadMetadata } = await import('../src/features/meta/model/metaSlice');
     const dispatch = vi.fn();
     const getState = vi.fn();
