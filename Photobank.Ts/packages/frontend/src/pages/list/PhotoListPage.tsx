@@ -10,11 +10,15 @@ import { Card } from '@/components/ui/card';
 import type { PhotoItemDto } from '@photobank/shared/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type {RootState} from "@/app/store.ts";
+import { useAppDispatch } from '@/app/hook.ts';
+import { setLastResult } from '@/features/photo/model/photoSlice.ts';
 import {MAX_VISIBLE_PERSONS_LG, MAX_VISIBLE_TAGS_LG, MAX_VISIBLE_PERSONS_SM, MAX_VISIBLE_TAGS_SM} from '@/shared/constants';
 
 import PhotoPreview from './PhotoPreview';
 
 const PhotoListPage = () => {
+    const dispatch = useAppDispatch();
+    const filter  = useSelector((state: RootState) => state.photo.filter);
     const persons = useSelector((state: RootState) => state.metadata.persons);
     const tags    = useSelector((state: RootState) => state.metadata.tags);
 
@@ -26,10 +30,11 @@ const PhotoListPage = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        searchPhotos({thisDay: true, orderBy: 'takenDate', top: 50}).unwrap().then(result => {
+        searchPhotos(filter).unwrap().then(result => {
             setPhotos(result.photos || []);
+            dispatch(setLastResult(result.photos || []));
         });
-    }, [searchPhotos]);
+    }, [searchPhotos, filter, dispatch]);
 
     return (
         <div className="w-full h-screen flex flex-col bg-background">
