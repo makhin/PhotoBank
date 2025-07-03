@@ -12,7 +12,7 @@ describe('photoSlice', () => {
     let state = reducer(undefined, setFilter({ caption: 'foo' } as any));
     expect(state.filter).toEqual({ caption: 'foo' });
     state = reducer(state, resetFilter());
-    expect(state.filter).toEqual({});
+    expect(state.filter).toEqual({ top: 10 });
   });
 
   it('manages selected photos without duplicates', () => {
@@ -31,3 +31,4 @@ describe('photoSlice', () => {
     expect(state.lastResult).toBe(photos);
   });
 });
+

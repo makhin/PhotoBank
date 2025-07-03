@@ -13,3 +13,5 @@ export const getGenderText = (gender?: boolean) => {
   if (gender === undefined) return 'не указан пол';
   return gender ? 'Муж' : 'Жен';
 };
+
+export { getFilterHash } from './utils/getFilterHash';
