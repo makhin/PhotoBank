@@ -51,6 +51,8 @@ function FilterPage() {
       thisDay: data.thisDay,
       takenDateFrom: data.dateFrom?.toISOString(),
       takenDateTo: data.dateTo?.toISOString(),
+      skip: 0,
+      top: 10,
     } as const;
 
     dispatch(setFilter(filter));

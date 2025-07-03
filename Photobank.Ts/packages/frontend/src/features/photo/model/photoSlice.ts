@@ -9,7 +9,7 @@ interface PhotoState {
 }
 
 const initialState: PhotoState = {
-  filter: {},
+  filter: { top: 10 },
   selectedPhotos: [],
   lastResult: [],
 };
@@ -22,7 +22,7 @@ const photoSlice = createSlice({
       state.filter = action.payload;
     },
     resetFilter(state) {
-      state.filter = {};
+      state.filter = { top: 10 };
     },
     setSelectedPhotos(state, action: PayloadAction<number[]>) {
       state.selectedPhotos = action.payload;

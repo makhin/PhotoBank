@@ -28,14 +28,32 @@ const PhotoListPage = () => {
 
     const [searchPhotos] = useSearchPhotosMutation();
     const [photos, setPhotos] = useState<PhotoItemDto[]>([]);
+    const [total, setTotal] = useState(0);
+    const [skip, setSkip] = useState(filter.skip ?? 0);
+    const top = filter.top ?? 10;
     const navigate = useNavigate();
 
     useEffect(() => {
-        searchPhotos(filter).unwrap().then(result => {
+        searchPhotos({ ...filter, skip: 0, top }).unwrap().then(result => {
             setPhotos(result.photos || []);
+            setTotal(result.count || 0);
+            setSkip(result.photos?.length ?? 0);
             dispatch(setLastResult(result.photos || []));
         });
-    }, [searchPhotos, filter, dispatch]);
+    }, [searchPhotos, filter, dispatch, top]);
+
+    const loadMore = () => {
+        searchPhotos({ ...filter, skip, top }).unwrap().then(result => {
+            const newPhotos = result.photos || [];
+            setPhotos(prev => {
+                const updated = [...prev, ...newPhotos];
+                dispatch(setLastResult(updated));
+                return updated;
+            });
+            setSkip(prev => prev + newPhotos.length);
+            setTotal(result.count || 0);
+        });
+    };
 
     return (
         <div className="w-full h-screen flex flex-col bg-background">
@@ -222,6 +240,11 @@ const PhotoListPage = () => {
                             ))}
                         </div>
                     </div>
+                    {photos.length < total && (
+                        <div className="flex justify-center mt-4">
+                            <Button variant="outline" onClick={loadMore}>Load More</Button>
+                        </div>
+                    )}
                 </div>
             </ScrollArea>
         </div>
