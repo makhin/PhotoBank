@@ -7,7 +7,6 @@ using PhotoBank.Services;
 using PhotoBank.Api.Middleware;
 using Serilog.Events;
 using Serilog;
-using Microsoft.OpenApi.Models;
 
 namespace PhotoBank.Api
 {
@@ -94,33 +93,7 @@ namespace PhotoBank.Api
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(options =>
-            {
-                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    Scheme = "bearer",
-                    BearerFormat = "JWT",
-                    In = ParameterLocation.Header,
-                    Description = "Enter JWT token"
-                });
-
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        Array.Empty<string>()
-                    }
-                });
-            });
+            builder.Services.AddSwaggerGen();
 
             RegisterServicesForApi.Configure(builder.Services);
             builder.Services.AddAutoMapper(typeof(MappingProfile));
