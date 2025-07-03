@@ -4,6 +4,8 @@ import type {z} from 'zod';
 
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '@/app/hook.ts';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/app/store.ts';
 import { setFilter } from '@/features/photo/model/photoSlice.ts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,21 +19,22 @@ type FormData = z.infer<typeof formSchema>;
 function FilterPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const savedFilter = useSelector((state: RootState) => state.photo.filter);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      caption: undefined,
-      storages: [],
-      paths: [],
-      persons: [],
-      tags: [],
-      isBW: undefined,
-      isAdultContent: undefined,
-      isRacyContent: undefined,
-      thisDay: true,
-      dateFrom: undefined,
-      dateTo: undefined,
+      caption: savedFilter.caption,
+      storages: savedFilter.storages?.map(String) ?? [],
+      paths: savedFilter.paths?.map(String) ?? [],
+      persons: savedFilter.persons?.map(String) ?? [],
+      tags: savedFilter.tags?.map(String) ?? [],
+      isBW: savedFilter.isBW,
+      isAdultContent: savedFilter.isAdultContent,
+      isRacyContent: savedFilter.isRacyContent,
+      thisDay: savedFilter.thisDay ?? true,
+      dateFrom: savedFilter.takenDateFrom ? new Date(savedFilter.takenDateFrom) : undefined,
+      dateTo: savedFilter.takenDateTo ? new Date(savedFilter.takenDateTo) : undefined,
     },
   });
 

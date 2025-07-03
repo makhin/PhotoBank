@@ -7,6 +7,7 @@ import { formatDate } from '@photobank/shared';
 import { useSearchPhotosMutation } from '@/entities/photo/api.ts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import type { PhotoItemDto } from '@photobank/shared/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type {RootState} from "@/app/store.ts";
@@ -38,9 +39,14 @@ const PhotoListPage = () => {
 
     return (
         <div className="w-full h-screen flex flex-col bg-background">
-            <div className="p-6 border-b">
-                <h1 className="text-3xl font-bold">Photo Gallery</h1>
-                <p className="text-muted-foreground mt-2">{photos.length} photos</p>
+            <div className="p-6 border-b flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold">Photo Gallery</h1>
+                    <p className="text-muted-foreground mt-2">{photos.length} photos</p>
+                </div>
+                <Button variant="outline" onClick={() => { navigate('/filter'); }}>
+                    Filter
+                </Button>
             </div>
 
             <ScrollArea className="flex-1">
