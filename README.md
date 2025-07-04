@@ -38,10 +38,10 @@ pnpm install
 pnpm dev
 ```
 
-Перед запуском задайте `VITE_API_BASE_URL` (или в `.env` файл) – адрес API, например:
+Перед запуском задайте `API_BASE_URL` (или в `.env` файл) – адрес API, например:
 
 ```bash
-VITE_API_BASE_URL=http://localhost:5066
+API_BASE_URL=http://localhost:5066
 ```
 
 ### Телеграм‑бот
@@ -129,10 +129,10 @@ pnpm install
 pnpm dev
 ```
 
-Before running set `VITE_API_BASE_URL` (or put it into `.env`) – the API address, for example:
+Before running set `API_BASE_URL` (or put it into `.env`) – the API address, for example:
 
 ```bash
-VITE_API_BASE_URL=http://localhost:5066
+API_BASE_URL=http://localhost:5066
 ```
 
 ### Telegram bot
