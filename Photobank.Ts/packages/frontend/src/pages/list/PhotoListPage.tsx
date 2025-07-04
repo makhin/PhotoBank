@@ -16,6 +16,7 @@ import { setLastResult } from '@/features/photo/model/photoSlice.ts';
 import {MAX_VISIBLE_PERSONS_LG, MAX_VISIBLE_TAGS_LG, MAX_VISIBLE_PERSONS_SM, MAX_VISIBLE_TAGS_SM} from '@/shared/constants';
 
 import PhotoPreview from './PhotoPreview';
+import PhotoPreviewModal from '@/components/PhotoPreviewModal';
 
 const PhotoListPage = () => {
     const dispatch = useAppDispatch();
@@ -32,6 +33,7 @@ const PhotoListPage = () => {
     const [skip, setSkip] = useState(filter.skip ?? 0);
     const top = filter.top ?? 10;
     const navigate = useNavigate();
+    const [previewId, setPreviewId] = useState<number | null>(null);
 
     useEffect(() => {
         searchPhotos({ ...filter, skip: 0, top }).unwrap().then(result => {
@@ -84,7 +86,7 @@ const PhotoListPage = () => {
                         <div className="space-y-3">
                             {photos.map((photo) => (
                                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                                <Card key={photo.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => { navigate(`/photos/${photo.id?.toString()}`); }}>
+                                <Card key={photo.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => { setPreviewId(photo.id); }}>
                                     <div className="grid grid-cols-12 gap-4 items-center">
                                         <div className="col-span-1">
                                             <Badge variant="outline" className="font-mono text-xs">
@@ -171,7 +173,7 @@ const PhotoListPage = () => {
                         <div className="grid gap-4 sm:grid-cols-2">
                             {photos.map((photo) => (
                                 // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-                                <Card key={photo.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => { navigate(`/photos/${photo.id?.toString()}`); }}>
+                                <Card key={photo.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => { setPreviewId(photo.id); }}>
                                     <div className="space-y-3">
                                         <div className="flex items-start gap-3">
                                             <PhotoPreview
@@ -247,6 +249,10 @@ const PhotoListPage = () => {
                     )}
                 </div>
             </ScrollArea>
+            <PhotoPreviewModal
+                photoId={previewId}
+                onOpenChange={(open) => { if (!open) setPreviewId(null); }}
+            />
         </div>
     );
 };
