@@ -1,6 +1,6 @@
 import { Calendar, User, Tag } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '@photobank/shared';
 
@@ -8,14 +8,58 @@ import { useSearchPhotosMutation } from '@/entities/photo/api.ts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import type { PhotoItemDto } from '@photobank/shared/types';
+import type { PhotoItemDto, FilterDto } from '@photobank/shared/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type {RootState} from "@/app/store.ts";
+import type { RootState } from '@/app/store.ts';
 import { useAppDispatch } from '@/app/hook.ts';
-import { setLastResult } from '@/features/photo/model/photoSlice.ts';
-import {MAX_VISIBLE_PERSONS_LG, MAX_VISIBLE_TAGS_LG, MAX_VISIBLE_PERSONS_SM, MAX_VISIBLE_TAGS_SM} from '@/shared/constants';
+import { setLastResult, setFilter } from '@/features/photo/model/photoSlice.ts';
+import {
+    MAX_VISIBLE_PERSONS_LG,
+    MAX_VISIBLE_TAGS_LG,
+    MAX_VISIBLE_PERSONS_SM,
+    MAX_VISIBLE_TAGS_SM,
+    PHOTOS_CACHE_KEY,
+    PHOTOS_CACHE_VERSION,
+} from '@/shared/constants';
 
 import PhotoPreview from './PhotoPreview';
+
+interface PhotosCache {
+    filter: FilterDto;
+    skip: number;
+    scrollTop: number;
+    version: number;
+}
+
+const filterSignature = (f: FilterDto) => {
+    const clone = { ...f } as Partial<FilterDto>;
+    delete clone.skip;
+    delete clone.top;
+    return JSON.stringify(clone);
+};
+
+const loadCache = (currentFilter: FilterDto): PhotosCache | null => {
+    try {
+        const raw = localStorage.getItem(PHOTOS_CACHE_KEY);
+        if (!raw) return null;
+        const parsed: PhotosCache = JSON.parse(raw) as PhotosCache;
+        if (parsed.version !== PHOTOS_CACHE_VERSION) return null;
+        if (filterSignature(parsed.filter) !== filterSignature(currentFilter)) {
+            return null;
+        }
+        return parsed;
+    } catch {
+        return null;
+    }
+};
+
+const saveCache = (data: PhotosCache) => {
+    try {
+        localStorage.setItem(PHOTOS_CACHE_KEY, JSON.stringify(data));
+    } catch {
+        console.error('saveCache error');
+    }
+};
 
 const PhotoListPage = () => {
     const dispatch = useAppDispatch();
@@ -32,28 +76,87 @@ const PhotoListPage = () => {
     const [skip, setSkip] = useState(filter.skip ?? 0);
     const top = filter.top ?? 10;
     const navigate = useNavigate();
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        searchPhotos({ ...filter, skip: 0, top }).unwrap().then(result => {
-            setPhotos(result.photos || []);
-            setTotal(result.count || 0);
-            setSkip(result.photos?.length ?? 0);
-            dispatch(setLastResult(result.photos || []));
-        });
+        const cached = loadCache(filter);
+        const activeFilter = cached ? cached.filter : filter;
+        if (cached) {
+            dispatch(setFilter(cached.filter));
+        }
+
+        const initialSkip = cached?.skip ?? 0;
+        const queryTop = initialSkip > 0 ? initialSkip : activeFilter.top ?? top;
+
+        searchPhotos({ ...activeFilter, skip: 0, top: queryTop })
+            .unwrap()
+            .then((result) => {
+                const fetched = result.photos || [];
+                const newPhotos = fetched.slice(0, initialSkip || fetched.length);
+                const newSkip = initialSkip || newPhotos.length;
+                setPhotos(newPhotos);
+                setTotal(result.count || 0);
+                setSkip(newSkip);
+                dispatch(setLastResult(newPhotos));
+                requestAnimationFrame(() => {
+                    const viewport = scrollAreaRef.current?.querySelector(
+                        '[data-slot="scroll-area-viewport"]'
+                    ) as HTMLElement | null;
+                    if (viewport) {
+                        viewport.scrollTop = cached?.scrollTop ?? 0;
+                    }
+                });
+                const viewport = scrollAreaRef.current?.querySelector(
+                    '[data-slot="scroll-area-viewport"]'
+                ) as HTMLElement | null;
+                saveCache({
+                    filter: activeFilter,
+                    skip: newSkip,
+                    scrollTop: viewport?.scrollTop ?? 0,
+                    version: PHOTOS_CACHE_VERSION,
+                });
+            });
     }, [searchPhotos, filter, dispatch, top]);
 
     const loadMore = () => {
         searchPhotos({ ...filter, skip, top }).unwrap().then(result => {
             const newPhotos = result.photos || [];
-            setPhotos(prev => {
-                const updated = [...prev, ...newPhotos];
-                dispatch(setLastResult(updated));
-                return updated;
-            });
-            setSkip(prev => prev + newPhotos.length);
+            const updated = [...photos, ...newPhotos];
+            const newSkip = skip + newPhotos.length;
+            setPhotos(updated);
+            setSkip(newSkip);
             setTotal(result.count || 0);
+            dispatch(setLastResult(updated));
+            const viewport = scrollAreaRef.current?.querySelector(
+                '[data-slot="scroll-area-viewport"]'
+            ) as HTMLElement | null;
+            saveCache({
+                filter,
+                skip: newSkip,
+                scrollTop: viewport?.scrollTop ?? 0,
+                version: PHOTOS_CACHE_VERSION,
+            });
         });
     };
+
+    useEffect(() => {
+        const handleBeforeUnload = () => {
+            const viewport = scrollAreaRef.current?.querySelector(
+                '[data-slot="scroll-area-viewport"]'
+            ) as HTMLElement | null;
+            saveCache({
+                filter,
+                skip,
+                scrollTop: viewport?.scrollTop ?? 0,
+                version: PHOTOS_CACHE_VERSION,
+            });
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => {
+            handleBeforeUnload();
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [filter, skip]);
 
     return (
         <div className="w-full h-screen flex flex-col bg-background">
@@ -67,7 +170,7 @@ const PhotoListPage = () => {
                 </Button>
             </div>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1" ref={scrollAreaRef}>
                 <div className="p-6">
                     {/* Desktop/Tablet View */}
                     <div className="hidden lg:block">
