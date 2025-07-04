@@ -48,12 +48,13 @@ namespace PhotoBank.Api
                                    throw new InvalidOperationException(
                                        "Connection string 'DefaultConnection' not found.");
 
+            var allowedOrigins = configuration["Cors:AllowedOrigins"] ?? "http://localhost:5173";
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowLocalFrontend", policy =>
                 {
                     policy
-                        .WithOrigins("http://192.168.1.45:5173") // IP !
+                        .WithOrigins(allowedOrigins)
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials();
