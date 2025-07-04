@@ -27,11 +27,6 @@ bot.command(
 
 bot.command("thisday", thisDayCommand);
 
-bot.callbackQuery(/^thisday:(\d+)$/, async (ctx) => {
-    const page = parseInt(ctx.match[1], 10);
-    await ctx.answerCallbackQuery();
-    await sendThisDayPage(ctx, page);
-});
 
 bot.command("photo", photoByIdCommand);
 
