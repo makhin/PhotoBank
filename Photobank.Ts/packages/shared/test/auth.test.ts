@@ -102,4 +102,13 @@ describe('auth utilities', () => {
     await auth.updateUser({ phoneNumber: '123' });
     expect(putMock).toHaveBeenCalledWith('/auth/user', { phoneNumber: '123' });
   });
+
+  it('getUserClaims fetches claims', async () => {
+    const getMock = vi.fn().mockResolvedValue({ data: [{ type: 't', value: 'v' }] });
+    vi.doMock('../src/api/client', () => ({ apiClient: { get: getMock } }));
+    const auth = await import('../src/api/auth');
+    const claims = await auth.getUserClaims();
+    expect(getMock).toHaveBeenCalledWith('/auth/claims');
+    expect(claims).toEqual([{ type: 't', value: 'v' }]);
+  });
 });
