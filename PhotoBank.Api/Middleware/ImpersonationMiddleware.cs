@@ -22,7 +22,7 @@ public class ImpersonationMiddleware
 
         if (context.Request.Headers.TryGetValue(HeaderName, out var username) && !string.IsNullOrWhiteSpace(username))
         {
-            var user = await userManager.Users.FirstOrDefaultAsync(u => u.Telegram == username);
+            var user = await userManager.Users.FirstOrDefaultAsync(u => u.Telegram == username.ToString());
             if (user is not null)
             {
                 var claims = new List<Claim>(context.User.Claims)
