@@ -21,3 +21,7 @@ export {
   cachePhoto,
   getCachedPhoto,
 } from './cache/photosCache';
+export {
+  cacheFilterResult,
+  getCachedFilterResult,
+} from './cache/filterResultsCache';
