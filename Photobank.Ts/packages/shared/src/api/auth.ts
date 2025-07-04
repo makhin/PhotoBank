@@ -4,6 +4,7 @@ import type {
   RegisterRequestDto,
   UserDto,
   UpdateUserDto,
+  ClaimDto,
 } from '../types';
 import { apiClient } from './client';
 
@@ -64,6 +65,11 @@ export const updateUser = async (
   data: UpdateUserDto,
 ): Promise<void> => {
   await apiClient.put('/auth/user', data);
+};
+
+export const getUserClaims = async (): Promise<ClaimDto[]> => {
+  const response = await apiClient.get<ClaimDto[]>('/auth/claims');
+  return response.data;
 };
 
 export const logout = () => {

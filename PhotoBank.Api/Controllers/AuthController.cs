@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace PhotoBank.Api.Controllers;
 
@@ -80,6 +82,20 @@ public class AuthController(
             return BadRequest(result.Errors);
 
         return Ok();
+    }
+
+    [HttpGet("claims")]
+    [Authorize]
+    [ProducesResponseType(typeof(IEnumerable<ClaimDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUserClaims()
+    {
+        var user = await userManager.GetUserAsync(User);
+        if (user == null)
+            return NotFound();
+
+        var claims = await userManager.GetClaimsAsync(user);
+        var result = claims.Select(c => new ClaimDto { Type = c.Type, Value = c.Value });
+        return Ok(result);
     }
 }
 
