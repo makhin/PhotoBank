@@ -11,6 +11,7 @@ namespace PhotoBank.Services
             services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
             services.AddTransient<IPhotoService, PhotoService>();
             services.AddTransient<ITokenService, TokenService>();
+            services.AddTransient<IImageService, ImageService>();
         }
     }
 }

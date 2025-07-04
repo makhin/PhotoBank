@@ -9,8 +9,14 @@ namespace PhotoBank.Services.Enrichers
 {
     public class PreviewEnricher : IEnricher
     {
+        private readonly IImageService _imageService;
         public EnricherType EnricherType => EnricherType.Preview;
         public Type[] Dependencies => Array.Empty<Type>();
+
+        public PreviewEnricher(IImageService imageService)
+        {
+            _imageService = imageService;
+        }
 
         public async Task EnrichAsync(Photo photo, SourceDataDto source)
         {
@@ -23,7 +29,7 @@ namespace PhotoBank.Services.Enrichers
                     photo.Height = image.Height;
                     photo.Width = image.Width;
                     photo.Orientation = (int?)image.Orientation;
-                    ImageHelper.ResizeImage(image, out var scale);
+                    _imageService.ResizeImage(image, out var scale);
                     image.Format = MagickFormat.Jpg;
                     await image.WriteAsync(stream);
                     photo.Scale = scale;
