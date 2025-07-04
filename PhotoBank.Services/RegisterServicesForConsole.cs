@@ -51,6 +51,7 @@ namespace PhotoBank.Services
 
             services.AddTransient<IPhotoProcessor, PhotoProcessor>();
             services.AddTransient<IPhotoService, PhotoService>();
+            services.AddTransient<IImageService, ImageService>();
             services.AddTransient<ISyncService, SyncService>();
 
             services.AddTransient<IEnricher, MetadataEnricher>();
