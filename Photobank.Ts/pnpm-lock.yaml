@@ -245,6 +245,9 @@ importers:
         specifier: ^1.36.3
         version: 1.36.3
     devDependencies:
+      ts-node-dev:
+        specifier: ^2.0.0
+        version: 2.0.0(@types/node@24.0.7)(typescript@5.8.3)
       tsx:
         specifier: ^4.20.3
         version: 4.20.3

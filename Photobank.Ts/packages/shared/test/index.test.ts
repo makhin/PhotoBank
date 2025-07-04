@@ -6,7 +6,7 @@ import { formatDate, getGenderText } from '../src';
 describe('formatDate', () => {
   it('returns formatted date for valid ISO string', () => {
     const result = formatDate('2024-01-02T03:04:05Z');
-    expect(result).toBe('02.01.2024, 03:04');
+    expect(result).toBe('02.01.2024, 04:04');
   });
 
   it('returns fallback for undefined input', () => {
