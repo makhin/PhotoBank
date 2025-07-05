@@ -34,7 +34,7 @@ apiClient.interceptors.response.use(undefined, (error) => {
     error.response &&
     (error.response.status === 401 || error.response.status === 403)
   ) {
-    if (isBrowser) {
+    if (isBrowser()) {
       console.warn('Unauthorized request, redirecting to login');
       window.location.href = '/login';
     }

@@ -22,7 +22,7 @@ class FilterResultsDb extends Dexie {
 let db: FilterResultsDb | undefined;
 let memoryCache: LRUCache<string, CachedFilterResult> | undefined;
 
-if (isBrowser) {
+if (isBrowser()) {
   db = new FilterResultsDb();
 } else {
   memoryCache = new LRUCache({ max: 100 });
@@ -30,7 +30,7 @@ if (isBrowser) {
 
 export async function cacheFilterResult(hash: string, ids: number[]): Promise<void> {
   const cached: CachedFilterResult = { hash, ids, added: Date.now() };
-  if (isBrowser) {
+  if (isBrowser()) {
     await db!.filterResults.put(cached);
   } else {
     memoryCache!.set(hash, cached);
@@ -38,7 +38,7 @@ export async function cacheFilterResult(hash: string, ids: number[]): Promise<vo
 }
 
 export async function getCachedFilterResult(hash: string): Promise<CachedFilterResult | undefined> {
-  if (isBrowser) {
+  if (isBrowser()) {
     return db!.filterResults.get(hash);
   }
   return Promise.resolve(memoryCache!.get(hash));

@@ -11,7 +11,7 @@ export const searchPhotos = async (filter: FilterDto): Promise<QueryResult> => {
     const ids = response.data.photos.map((p) => p.id);
     const hash = await getFilterHash(filter);
     void cacheFilterResult(hash, ids);
-    if (isBrowser) {
+    if (isBrowser()) {
       for (const item of response.data.photos) {
         void cachePhotoItem(item);
       }
@@ -21,12 +21,12 @@ export const searchPhotos = async (filter: FilterDto): Promise<QueryResult> => {
 };
 
 export const getPhotoById = async (id: number): Promise<PhotoDto> => {
-  if (isBrowser) {
+  if (isBrowser()) {
     const cached = await getCachedPhoto(id);
     if (cached) return cached;
   }
   const response = await apiClient.get<PhotoDto>(`/photos/${id}`);
-  if (isBrowser) {
+  if (isBrowser()) {
     void cachePhoto(response.data);
   }
   return response.data;
