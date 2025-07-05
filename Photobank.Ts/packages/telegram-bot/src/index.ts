@@ -1,6 +1,6 @@
 import { Bot } from "grammy";
 import {BOT_TOKEN, API_EMAIL, API_PASSWORD} from "./config";
-import {sendThisDayPage, thisDayCommand} from "./commands/thisday";
+import {sendThisDayPage, thisDayCommand, captionCache} from "./commands/thisday";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import {photoByIdCommand} from "./commands/photoById";
 import { registerPhotoRoutes } from "./commands/photoRouter";
@@ -36,6 +36,12 @@ bot.callbackQuery(/^thisday:(\d+)$/, async (ctx) => {
     const page = parseInt(ctx.match[1], 10);
     await ctx.answerCallbackQuery();
     await sendThisDayPage(ctx, page, true);
+});
+
+bot.callbackQuery(/^caption:(\d+)$/, async (ctx) => {
+    const id = parseInt(ctx.match[1], 10);
+    const caption = captionCache.get(id);
+    await ctx.answerCallbackQuery(caption ?? "Без подписи.", { show_alert: true });
 });
 
 bot.on("message", (ctx) => ctx.reply("Получил другое сообщение!"));
