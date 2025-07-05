@@ -59,6 +59,7 @@ namespace PhotoBank.Services.Api
                 .Include(p => p.Storage)
                 .Include(p => p.PhotoTags)
                 .Include(p => p.Faces)
+                .Include(p => p.Captions)
                 .AsQueryable();
 
             if (filter.IsBW.HasValue)

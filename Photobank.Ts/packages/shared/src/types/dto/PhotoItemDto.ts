@@ -15,4 +15,5 @@ export interface PhotoItemDto {
   relativePath: string;
   tags?: TagItemDto[];
   persons?: PersonItemDto[];
+  captions?: string[];
 }
