@@ -55,8 +55,14 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
                     const peopleCount = photo.persons?.length ?? 0;
                     const isAdult = photo.isAdultContent ? "🔞" : "";
                     const isRacy = photo.isRacyContent ? "⚠️" : "";
-                    sections.push(`• <b>${title}</b>
-👥 ${peopleCount} чел. ${isAdult}${isRacy}
+
+                    const metaParts: string[] = [];
+                    if (peopleCount > 0) metaParts.push(`👥 ${peopleCount} чел.`);
+                    if (isAdult) metaParts.push(isAdult);
+                    if (isRacy) metaParts.push(isRacy);
+
+                    const metaLine = metaParts.length ? `\n${metaParts.join(" ")}` : "";
+                    sections.push(`• <b>${title}</b>${metaLine}
 🔗 /photo${photo.id}`);
                 });
             });
