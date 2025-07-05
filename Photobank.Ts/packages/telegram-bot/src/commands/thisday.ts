@@ -29,30 +29,36 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
     }
 
     const totalPages = Math.ceil(queryResult.count / PAGE_SIZE);
-    const byYear = new Map<number, typeof queryResult.photos>();
+    const byYear = new Map<number, Map<string, typeof queryResult.photos>>();
 
     for (const photo of queryResult.photos) {
         const year = photo.takenDate ? new Date(photo.takenDate).getFullYear() : 0;
-        if (!byYear.has(year)) byYear.set(year, []);
-        byYear.get(year)!.push(photo);
+        if (!byYear.has(year)) byYear.set(year, new Map());
+        const yearMap = byYear.get(year)!;
+        const storage = photo.storageName ?? "???";
+        const path = photo.relativePath ?? "-";
+        const key = `${storage} / ${path}`;
+        if (!yearMap.has(key)) yearMap.set(key, []);
+        yearMap.get(key)!.push(photo);
     }
 
     const sections: string[] = [];
 
     [...byYear.entries()]
         .sort(([a], [b]) => b - a)
-        .forEach(([year, photos]) => {
+        .forEach(([year, folders]) => {
             sections.push(`📅 <b>${year || "Неизвестный год"}</b>`);
-            photos.forEach(photo => {
-                const title = photo.name ?? `Фото ${photo.id}`;
-                const storage = photo.storageName ?? "???";
-                const path = photo.relativePath ?? "-";
-                const peopleCount = photo.persons?.length ?? 0;
-                const isAdult = photo.isAdultContent ? "🔞" : "";
-                const isRacy = photo.isRacyContent ? "⚠️" : "";
-                sections.push(`📁 ${storage} / ${path} / <b>${title}</b>
+            [...folders.entries()].forEach(([folder, photos]) => {
+                sections.push(`📁 ${folder}`);
+                photos.forEach(photo => {
+                    const title = photo.name ?? `Фото ${photo.id}`;
+                    const peopleCount = photo.persons?.length ?? 0;
+                    const isAdult = photo.isAdultContent ? "🔞" : "";
+                    const isRacy = photo.isRacyContent ? "⚠️" : "";
+                    sections.push(`• <b>${title}</b>
 👥 ${peopleCount} чел. ${isAdult}${isRacy}
 🔗 /photo${photo.id}`);
+                });
             });
         });
 
