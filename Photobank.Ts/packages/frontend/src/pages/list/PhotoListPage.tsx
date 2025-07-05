@@ -84,11 +84,18 @@ const PhotoListPage = () => {
 
     useEffect(() => {
         const cached = loadCache(filter);
-        const activeFilter = cached ? cached.filter : filter;
+
         if (cached) {
-            dispatch(setFilter(cached.filter));
+            const cachedSignature = filterSignature(cached.filter);
+            const currentSignature = filterSignature(filter);
+
+            if (cachedSignature !== currentSignature) {
+                dispatch(setFilter(cached.filter));
+                return; // wait for filter update before searching
+            }
         }
 
+        const activeFilter = cached ? cached.filter : filter;
         const initialSkip = cached?.skip ?? 0;
         const queryTop = initialSkip > 0 ? initialSkip : activeFilter.top ?? top;
 
