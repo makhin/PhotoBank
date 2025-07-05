@@ -1,6 +1,8 @@
 import { Context, InlineKeyboard } from "grammy";
 import { searchPhotos } from "@photobank/shared/api/photos";
 
+export const captionCache = new Map<number, string>();
+
 const PAGE_SIZE = 10;
 
 function parsePage(text?: string): number {
@@ -43,6 +45,7 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
     }
 
     const sections: string[] = [];
+    const keyboard = new InlineKeyboard();
 
     [...byYear.entries()]
         .sort(([a], [b]) => b - a)
@@ -62,21 +65,20 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
                     if (isRacy) metaParts.push(isRacy);
 
                     const caption = photo.captions?.join(" ") ?? "";
-                    const shortCaption = caption
-                        ? caption.slice(0, 30) + (caption.length > 30 ? "..." : "")
-                        : "";
-                    const captionLine = shortCaption ? `\n📝 ${shortCaption}` : "";
 
                     const metaLine = metaParts.length ? `\n${metaParts.join(" ")}` : "";
-                    sections.push(`• <b>${title}</b>${captionLine}${metaLine}
-🔗 /photo${photo.id}`);
+                    sections.push(`• <b>${title}</b>${metaLine} 🔗 /photo${photo.id}`);
+                    if (caption) {
+                        captionCache.set(photo.id, caption);
+                        keyboard.text("ℹ️", `caption:${photo.id}`).row();
+                    }
                 });
             });
         });
 
     sections.push(`\n📄 Страница ${page} из ${totalPages}`);
+    keyboard.row();
 
-    const keyboard = new InlineKeyboard();
     if (page > 1) keyboard.text("◀ Назад", `thisday:${page - 1}`);
     if (page < totalPages) keyboard.text("Вперёд ▶", `thisday:${page + 1}`);
 
