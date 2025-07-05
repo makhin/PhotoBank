@@ -26,5 +26,6 @@ namespace PhotoBank.ViewModel.Dto
         public required string RelativePath { get; set; }
         public IEnumerable<TagItemDto>? Tags { get; set; }
         public IEnumerable<PersonItemDto>? Persons { get; set; }
+        public List<string>? Captions { get; set; }
     }
 }
