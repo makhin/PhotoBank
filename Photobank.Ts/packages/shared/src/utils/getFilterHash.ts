@@ -1,5 +1,5 @@
 import type {FilterDto} from '../types';
-import {isBrowser, isNode} from "@photobank/shared/config";
+import {isNode} from "@photobank/shared/config";
 
 /**
  * Creates a stable hash for a filter. Works in both Node.js and browser.
@@ -23,20 +23,23 @@ export async function getFilterHash(filter: FilterDto): Promise<string> {
     }
 
     const json = JSON.stringify(normalized);
-    const encoder = new TextEncoder();
-    const data = encoder.encode(json);
 
     if (isNode()) {
         // Node.js: use built-in crypto
         const { createHash } = await import('node:crypto');
-        return createHash('sha256').update(data).digest('hex');
-    } else if (isBrowser() && crypto.subtle) {
-        // Browser: use Web Crypto API
+        return createHash('sha256').update(json).digest('hex');
+    }
+
+    if (typeof crypto !== 'undefined' && crypto.subtle) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(json);
         const hashBuffer = await crypto.subtle.digest('SHA-256', data);
         return bufferToHex(hashBuffer);
-    } else {
-        throw new Error('No suitable crypto API found');
     }
+
+    // Fallback for older browsers
+    const { default: SHA256 } = await import('crypto-js/sha256');
+    return SHA256(json).toString();
 }
 
 // Helper: convert ArrayBuffer to hex string
