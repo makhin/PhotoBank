@@ -15,7 +15,7 @@ export async function sendPhotoById(ctx: Context, id: number) {
     const { caption, image } = formatPhotoMessage(photo);
 
     if (image) {
-        const file = new InputFile(image, `${photo.name ?? "photo"}.jpg`);
+        const file = new InputFile(image, `${photo.name}.jpg`);
         await ctx.replyWithPhoto(file, {
             caption,
             parse_mode: "HTML",

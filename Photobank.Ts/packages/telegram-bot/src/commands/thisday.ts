@@ -37,8 +37,8 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
         const year = photo.takenDate ? new Date(photo.takenDate).getFullYear() : 0;
         if (!byYear.has(year)) byYear.set(year, new Map());
         const yearMap = byYear.get(year)!;
-        const storage = photo.storageName ?? "???";
-        const path = photo.relativePath ?? "-";
+        const storage = photo.storageName;
+        const path = photo.relativePath;
         const key = `${storage} / ${path}`;
         if (!yearMap.has(key)) yearMap.set(key, []);
         yearMap.get(key)!.push(photo);
@@ -54,7 +54,7 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
             [...folders.entries()].forEach(([folder, photos]) => {
                 sections.push(`📁 ${folder}`);
                 photos.forEach(photo => {
-                    const title = photo.name ?? `Фото ${photo.id}`;
+                    const title = photo.name;
                     const peopleCount = photo.persons?.length ?? 0;
                     const isAdult = photo.isAdultContent ? "🔞" : "";
                     const isRacy = photo.isRacyContent ? "⚠️" : "";

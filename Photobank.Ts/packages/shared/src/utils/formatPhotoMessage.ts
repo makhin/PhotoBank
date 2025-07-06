@@ -6,7 +6,7 @@ import { Buffer } from "buffer";
 export function formatPhotoMessage(photo: PhotoDto): { caption: string, image?: Buffer } {
     const lines: string[] = [];
 
-    lines.push(`📸 <b>${photo.name ?? "Без названия"}</b>`);
+    lines.push(`📸 <b>${photo.name}</b>`);
     if (photo.takenDate) {
         lines.push(`📅 ${formatDate(photo.takenDate)}`);
     }
@@ -18,8 +18,8 @@ export function formatPhotoMessage(photo: PhotoDto): { caption: string, image?: 
 
     if (photo.faces?.length) {
         const people = photo.faces
-            .map(f => f.personId ?? 0)
-            .filter(Boolean)
+            .map(f => f.personId)
+            .filter((id): id is number => id !== undefined)
             .map(getPersonName);
         if (people.length) {
             lines.push(`👤 ${people.join(", ")}`);
