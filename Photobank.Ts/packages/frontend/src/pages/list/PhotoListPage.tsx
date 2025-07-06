@@ -12,55 +12,17 @@ import type { PhotoItemDto, FilterDto } from '@photobank/shared/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { RootState } from '@/app/store.ts';
 import { useAppDispatch } from '@/app/hook.ts';
-import { setLastResult, setFilter } from '@/features/photo/model/photoSlice.ts';
+import { setLastResult } from '@/features/photo/model/photoSlice.ts';
 import {
     MAX_VISIBLE_PERSONS_LG,
     MAX_VISIBLE_TAGS_LG,
     MAX_VISIBLE_PERSONS_SM,
     MAX_VISIBLE_TAGS_SM,
-    PHOTOS_CACHE_KEY,
-    PHOTOS_CACHE_VERSION,
 } from '@/shared/constants';
 
 import PhotoPreview from './PhotoPreview';
 import PhotoPreviewModal from '@/components/PhotoPreviewModal';
 
-interface PhotosCache {
-    filter: FilterDto;
-    skip: number;
-    scrollTop: number;
-    version: number;
-}
-
-const filterSignature = (f: FilterDto) => {
-    const clone = { ...f } as Partial<FilterDto>;
-    delete clone.skip;
-    delete clone.top;
-    return JSON.stringify(clone);
-};
-
-const loadCache = (currentFilter: FilterDto): PhotosCache | null => {
-    try {
-        const raw = localStorage.getItem(PHOTOS_CACHE_KEY);
-        if (!raw) return null;
-        const parsed: PhotosCache = JSON.parse(raw) as PhotosCache;
-        if (parsed.version !== PHOTOS_CACHE_VERSION) return null;
-        if (filterSignature(parsed.filter) !== filterSignature(currentFilter)) {
-            return null;
-        }
-        return parsed;
-    } catch {
-        return null;
-    }
-};
-
-const saveCache = (data: PhotosCache) => {
-    try {
-        localStorage.setItem(PHOTOS_CACHE_KEY, JSON.stringify(data));
-    } catch {
-        console.error('saveCache error');
-    }
-};
 
 const PhotoListPage = () => {
     const dispatch = useAppDispatch();
@@ -83,49 +45,14 @@ const PhotoListPage = () => {
 
 
     useEffect(() => {
-        const cached = loadCache(filter);
-
-        if (cached) {
-            const cachedSignature = filterSignature(cached.filter);
-            const currentSignature = filterSignature(filter);
-
-            if (cachedSignature !== currentSignature) {
-                dispatch(setFilter(cached.filter));
-                return; // wait for filter update before searching
-            }
-        }
-
-        const activeFilter = cached ? cached.filter : filter;
-        const initialSkip = cached?.skip ?? 0;
-        const queryTop = initialSkip > 0 ? initialSkip : activeFilter.top ?? top;
-
-        searchPhotos({ ...activeFilter, skip: 0, top: queryTop })
+        searchPhotos({ ...filter, skip: 0, top })
             .unwrap()
             .then((result) => {
                 const fetched = result.photos || [];
-                const newPhotos = fetched.slice(0, initialSkip || fetched.length);
-                const newSkip = initialSkip || newPhotos.length;
-                setPhotos(newPhotos);
+                setPhotos(fetched);
                 setTotal(result.count || 0);
-                setSkip(newSkip);
-                dispatch(setLastResult(newPhotos));
-                requestAnimationFrame(() => {
-                    const viewport = scrollAreaRef.current?.querySelector(
-                        '[data-slot="scroll-area-viewport"]'
-                    ) as HTMLElement | null;
-                    if (viewport) {
-                        viewport.scrollTop = cached?.scrollTop ?? 0;
-                    }
-                });
-                const viewport = scrollAreaRef.current?.querySelector(
-                    '[data-slot="scroll-area-viewport"]'
-                ) as HTMLElement | null;
-                saveCache({
-                    filter: activeFilter,
-                    skip: newSkip,
-                    scrollTop: viewport?.scrollTop ?? 0,
-                    version: PHOTOS_CACHE_VERSION,
-                });
+                setSkip(fetched.length);
+                dispatch(setLastResult(fetched));
             });
     }, [searchPhotos, filter, dispatch, top]);
 
@@ -138,36 +65,9 @@ const PhotoListPage = () => {
             setSkip(newSkip);
             setTotal(result.count || 0);
             dispatch(setLastResult(updated));
-            const viewport = scrollAreaRef.current?.querySelector(
-                '[data-slot="scroll-area-viewport"]'
-            ) as HTMLElement | null;
-            saveCache({
-                filter,
-                skip: newSkip,
-                scrollTop: viewport?.scrollTop ?? 0,
-                version: PHOTOS_CACHE_VERSION,
-            });
         });
     };
 
-    useEffect(() => {
-        const handleBeforeUnload = () => {
-            const viewport = scrollAreaRef.current?.querySelector(
-                '[data-slot="scroll-area-viewport"]'
-            ) as HTMLElement | null;
-            saveCache({
-                filter,
-                skip,
-                scrollTop: viewport?.scrollTop ?? 0,
-                version: PHOTOS_CACHE_VERSION,
-            });
-        };
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        return () => {
-            handleBeforeUnload();
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-        };
-    }, [filter, skip]);
 
     return (
         <div className="w-full h-screen flex flex-col bg-background">
