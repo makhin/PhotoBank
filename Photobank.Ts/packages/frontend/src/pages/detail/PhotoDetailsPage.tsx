@@ -153,7 +153,7 @@ const PhotoDetailsPage = () => {
                                 />
                                 {photo.faces?.map((face, index) => (
                                     <FaceOverlay
-                                        key={face.id || index}
+                                        key={face.id}
                                         face={face}
                                         index={index}
                                         style={calculateFacePosition(face.faceBox)}
@@ -262,23 +262,17 @@ const PhotoDetailsPage = () => {
                                 </Card>
                             )}
 
-                            {(photo.adultScore !== undefined || photo.racyScore !== undefined) && (
-                                <Card className="bg-card border-border">
-                                    <CardHeader className="pb-3">
-                                        <CardTitle className="text-lg">Content Analysis</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-3">
-                                        {photo.adultScore !== undefined && (
-                                            <ScoreBar label="Adult Score" score={photo.adultScore}
-                                                      colorClass="bg-orange-500"/>
-                                        )}
-                                        {photo.racyScore !== undefined && (
-                                            <ScoreBar label="Racy Score" score={photo.racyScore}
-                                                      colorClass="bg-red-500"/>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            )}
+                            <Card className="bg-card border-border">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-lg">Content Analysis</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    <ScoreBar label="Adult Score" score={photo.adultScore}
+                                              colorClass="bg-orange-500"/>
+                                    <ScoreBar label="Racy Score" score={photo.racyScore}
+                                              colorClass="bg-red-500"/>
+                                </CardContent>
+                            </Card>
 
                             {/* Faces Summary */}
                             {photo.faces && photo.faces.length > 0 && (
@@ -298,7 +292,7 @@ const PhotoDetailsPage = () => {
                                                     <FacePersonSelector
                                                         key={index}
                                                         faceIndex={index}
-                                                        personId={face.personId ?? undefined}
+                                                        personId={face.personId}
                                                         persons={persons}
                                                         disabled={true}
                                                     />

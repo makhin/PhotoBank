@@ -102,7 +102,7 @@ const PhotoListPage = () => {
                                     <div className="grid grid-cols-12 gap-4 items-center">
                                         <div className="col-span-1">
                                             <Badge variant="outline" className="font-mono text-xs">
-                                                {photo.id || 'N/A'}
+                                                {photo.id}
                                             </Badge>
                                         </div>
 
@@ -146,7 +146,7 @@ const PhotoListPage = () => {
                                                         <User className="w-3 h-3 text-muted-foreground" />
                                                         {photo.persons.slice(0, MAX_VISIBLE_PERSONS_LG).map((person, index) => (
                                                             <Badge key={index} variant="outline" className="text-xs">
-                                                                {personsMap[person.personId ?? ''] ?? person.personId}
+                                                                {personsMap[person.personId] ?? person.personId}
                                                             </Badge>
                                                         ))}
                                                         {photo.persons.length > MAX_VISIBLE_PERSONS_LG && (
@@ -162,7 +162,7 @@ const PhotoListPage = () => {
                                                         <Tag className="w-3 h-3 text-muted-foreground" />
                                                         {photo.tags.slice(0, MAX_VISIBLE_TAGS_LG).map((tag, index) => (
                                                             <Badge key={index} variant="secondary" className="text-xs">
-                                                                {tagsMap[tag.tagId ?? ''] ?? tag.tagId}
+                                                                {tagsMap[tag.tagId] ?? tag.tagId}
                                                             </Badge>
                                                         ))}
                                                         {photo.tags.length > MAX_VISIBLE_TAGS_LG && (
@@ -196,7 +196,7 @@ const PhotoListPage = () => {
                                             <div className="flex-1 min-w-0">
                                                 <div className="font-medium truncate">{photo.name}</div>
                                                 <Badge variant="outline" className="font-mono text-xs mt-1">
-                                                    {photo.id || 'N/A'}
+                                                    {photo.id}
                                                 </Badge>
                                             </div>
                                         </div>
@@ -223,7 +223,7 @@ const PhotoListPage = () => {
                                                 <User className="w-3 h-3 text-muted-foreground" />
                                                 {photo.persons.slice(0, MAX_VISIBLE_PERSONS_SM).map((person, index) => (
                                                     <Badge key={index} variant="outline" className="text-xs">
-                                                        {personsMap[person.personId ?? ''] ?? person.personId}
+                                                        {personsMap[person.personId] ?? person.personId}
                                                     </Badge>
                                                 ))}
                                                 {photo.persons.length > MAX_VISIBLE_PERSONS_SM && (
@@ -239,7 +239,7 @@ const PhotoListPage = () => {
                                                 <Tag className="w-3 h-3 text-muted-foreground" />
                                                 {photo.tags.slice(0, MAX_VISIBLE_TAGS_SM).map((tag, index) => (
                                                     <Badge key={index} variant="secondary" className="text-xs">
-                                                        {tagsMap[tag.tagId ?? ''] ?? tag.tagId}
+                                                        {tagsMap[tag.tagId] ?? tag.tagId}
                                                     </Badge>
                                                 ))}
                                                 {photo.tags.length > MAX_VISIBLE_TAGS_SM && (
