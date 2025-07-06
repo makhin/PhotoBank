@@ -14,6 +14,28 @@ describe('api helpers', () => {
     expect(res).toEqual({ count: 1 });
   });
 
+  it('searchPhotos returns cached result when available', async () => {
+    const postMock = vi.fn().mockResolvedValue({ data: { count: 0 } });
+    const cachedItem = { id: 1 };
+    // simulate browser environment
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (global as any).window = { crypto: {} };
+    vi.doMock('../src/api/client', () => ({ apiClient: { post: postMock } }));
+    vi.doMock('../src/cache/filterResultsCache', () => ({
+      cacheFilterResult: vi.fn(),
+      getCachedFilterResult: vi.fn().mockResolvedValue({ hash: 'h', count: 1, photos: [cachedItem] }),
+    }));
+    vi.doMock('../src/cache/photosCache', () => ({
+      cachePhoto: vi.fn(),
+      getCachedPhoto: vi.fn(),
+    }));
+    vi.doMock('../src/utils/getFilterHash', () => ({ getFilterHash: vi.fn().mockResolvedValue('h') }));
+    const { searchPhotos } = await import('../src/api/photos');
+    const res = await searchPhotos({} as any);
+    expect(postMock).not.toHaveBeenCalled();
+    expect(res).toEqual({ count: 1, photos: [cachedItem] });
+  });
+
   it('getPhotoById requests by id', async () => {
     const getMock = vi.fn().mockResolvedValue({ data: { id: 5 } });
     vi.doMock('../src/api/client', () => ({ apiClient: { get: getMock } }));

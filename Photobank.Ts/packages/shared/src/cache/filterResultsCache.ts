@@ -1,10 +1,12 @@
 import Dexie, { type Table } from 'dexie';
 import { LRUCache } from 'lru-cache';
 import { isBrowser } from '../config';
+import type { PhotoItemDto } from '../types';
 
 export interface CachedFilterResult {
   hash: string;
-  ids: number[];
+  count: number;
+  photos: PhotoItemDto[];
   added: number;
 }
 
@@ -28,8 +30,11 @@ if (isBrowser()) {
   memoryCache = new LRUCache({ max: 100 });
 }
 
-export async function cacheFilterResult(hash: string, ids: number[]): Promise<void> {
-  const cached: CachedFilterResult = { hash, ids, added: Date.now() };
+export async function cacheFilterResult(
+  hash: string,
+  result: { count: number; photos: PhotoItemDto[] }
+): Promise<void> {
+  const cached: CachedFilterResult = { hash, count: result.count, photos: result.photos, added: Date.now() };
   if (isBrowser()) {
     await db!.filterResults.put(cached);
   } else {
@@ -37,7 +42,9 @@ export async function cacheFilterResult(hash: string, ids: number[]): Promise<vo
   }
 }
 
-export async function getCachedFilterResult(hash: string): Promise<CachedFilterResult | undefined> {
+export async function getCachedFilterResult(
+  hash: string
+): Promise<CachedFilterResult | undefined> {
   if (isBrowser()) {
     return db!.filterResults.get(hash);
   }

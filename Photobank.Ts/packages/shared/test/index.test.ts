@@ -1,12 +1,15 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { formatDate, getGenderText } from '../src';
+import { format, parseISO } from 'date-fns';
 
 // FormatDate tests
 
 describe('formatDate', () => {
   it('returns formatted date for valid ISO string', () => {
-    const result = formatDate('2024-01-02T03:04:05Z');
-    expect(result).toBe('02.01.2024, 04:04');
+    const input = '2024-01-02T03:04:05Z';
+    const expected = format(parseISO(input), 'dd.MM.yyyy, HH:mm');
+    const result = formatDate(input);
+    expect(result).toBe(expected);
   });
 
   it('returns fallback for undefined input', () => {

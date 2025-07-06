@@ -8,10 +8,12 @@ describe('filterResultsCache', () => {
     delete (global as any).window;
   });
 
-  it('stores and retrieves ids by hash', async () => {
+  it('stores and retrieves photos by hash', async () => {
     const { cacheFilterResult, getCachedFilterResult } = await import('../src/cache/filterResultsCache');
-    await cacheFilterResult('abc', [1, 2, 3]);
+    const photos = [{ id: 1 }, { id: 2 }];
+    await cacheFilterResult('abc', { count: 2, photos });
     const cached = await getCachedFilterResult('abc');
-    expect(cached?.ids).toEqual([1, 2, 3]);
+    expect(cached?.count).toBe(2);
+    expect(cached?.photos).toEqual(photos);
   });
 });
