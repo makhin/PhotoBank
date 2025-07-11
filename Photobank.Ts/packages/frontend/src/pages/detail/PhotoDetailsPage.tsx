@@ -33,7 +33,11 @@ const calculateImageSize = (naturalWidth: number, naturalHeight: number, contain
     };
 };
 
-const PhotoDetailsPage = () => {
+interface PhotoDetailsPageProps {
+    photoId?: number;
+}
+
+const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const [imageDisplaySize, setImageDisplaySize] = useState({width: 0, height: 0, scale: 1});
     const [containerSize, setContainerSize] = useState({width: 0, height: 0});
     const persons = useSelector((state: RootState) => state.metadata.persons);
@@ -41,8 +45,8 @@ const PhotoDetailsPage = () => {
     const containerRef = useRef<HTMLDivElement>(null);
 
     const {id} = useParams<{ id: string }>();
-    const photoId = id ? +id : 0;
-    const {data: photo, error} = useGetPhotoByIdQuery(photoId);
+    const photoId = propPhotoId ?? (id ? +id : 0);
+    const {data: photo, error} = useGetPhotoByIdQuery(photoId, { skip: photoId === 0 });
 
     const formattedTakenDate = useMemo(() => photo?.takenDate && formatDate(photo.takenDate), [photo?.takenDate]);
 
