@@ -11,7 +11,7 @@ const PhotoPreviewModal = ({ photoId, onOpenChange }: PhotoPreviewModalProps) =>
 
     return (
         <Dialog open={photoId !== null} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-w-none w-screen h-screen top-0 left-0 translate-x-0 translate-y-0">
                 <DialogHeader>
                     <DialogTitle>{photo?.name || 'Preview'}</DialogTitle>
                 </DialogHeader>
@@ -21,7 +21,7 @@ const PhotoPreviewModal = ({ photoId, onOpenChange }: PhotoPreviewModalProps) =>
                     <img
                         src={`data:image/jpeg;base64,${photo.previewImage}`}
                         alt={photo.name}
-                        className="max-h-[80vh] w-auto mx-auto"
+                        className="max-h-full max-w-full w-auto h-auto mx-auto object-contain"
                     />
                 )}
             </DialogContent>
