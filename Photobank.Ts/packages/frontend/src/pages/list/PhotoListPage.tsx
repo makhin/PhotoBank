@@ -2,13 +2,13 @@ import { Calendar, User, Tag } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { formatDate } from '@photobank/shared';
+import { firstNWords, formatDate } from '@photobank/shared';
+import type { PhotoItemDto } from '@photobank/shared/types';
 
 import { useSearchPhotosMutation } from '@/entities/photo/api.ts';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import type { PhotoItemDto, FilterDto } from '@photobank/shared/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { RootState } from '@/app/store.ts';
 import { useAppDispatch } from '@/app/hook.ts';
@@ -19,9 +19,9 @@ import {
     MAX_VISIBLE_PERSONS_SM,
     MAX_VISIBLE_TAGS_SM,
 } from '@/shared/constants';
+import PhotoPreviewModal from '@/components/PhotoPreviewModal';
 
 import PhotoPreview from './PhotoPreview';
-import PhotoPreviewModal from '@/components/PhotoPreviewModal';
 
 
 const PhotoListPage = () => {
@@ -97,7 +97,6 @@ const PhotoListPage = () => {
 
                         <div className="space-y-3">
                             {photos.map((photo) => (
-                                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                                 <Card key={photo.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => { setPreviewId(photo.id); }}>
                                     <div className="grid grid-cols-12 gap-4 items-center">
                                         <div className="col-span-1">
@@ -115,7 +114,7 @@ const PhotoListPage = () => {
                                         </div>
 
                                         <div className="col-span-2">
-                                            <div className="font-medium truncate">{photo.name}</div>
+                                            <div className="font-medium truncate">{photo.name} {firstNWords(photo.captions?.join(' ') ?? '', 5)}</div>
                                         </div>
 
                                         <div className="col-span-1">
@@ -184,7 +183,6 @@ const PhotoListPage = () => {
                     <div className="lg:hidden">
                         <div className="grid gap-4 sm:grid-cols-2">
                             {photos.map((photo) => (
-                                // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
                                 <Card key={photo.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => { setPreviewId(photo.id); }}>
                                     <div className="space-y-3">
                                         <div className="flex items-start gap-3">

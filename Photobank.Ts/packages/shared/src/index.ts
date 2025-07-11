@@ -23,3 +23,16 @@ export {
   cacheFilterResult,
   getCachedFilterResult,
 } from './cache/filterResultsCache';
+
+export const firstNWords = (sentence: string, count: number): string => {
+  const trimmed = sentence.trim();
+  if (trimmed === '') return '';
+
+  const words = trimmed.split(/\s+/);
+  if (words.length <= count) {
+    return trimmed + ' ';
+  }
+
+  return words.slice(0, count).join(' ') + '... ';
+};
+

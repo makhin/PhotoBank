@@ -1,5 +1,6 @@
 import { Context, InlineKeyboard } from "grammy";
 import { searchPhotos } from "@photobank/shared/api/photos";
+import {firstNWords} from "@photobank/shared/index";
 
 export const captionCache = new Map<number, string>();
 
@@ -67,7 +68,7 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
                     const caption = photo.captions?.join(" ").slice(0, 20) ?? "";
 
                     const metaLine = metaParts.length ? `\n${metaParts.join(" ")}` : "";
-                    sections.push(`• <b>${title}</b>${caption} ${metaLine} 🔗 /photo${photo.id}`);
+                    sections.push(`• <b>${title}</b> ${firstNWords(caption, 5)} ${metaLine} 🔗 /photo${photo.id}`);
                 });
             });
         });
