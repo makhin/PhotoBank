@@ -5,6 +5,7 @@ import type {
   UserDto,
   UpdateUserDto,
   ClaimDto,
+  RoleDto,
 } from '../types';
 import { apiClient } from './client';
 
@@ -13,10 +14,16 @@ let authToken: string | null = null;
 
 export const getAuthToken = () => authToken;
 
-export const setAuthToken = (token: string) => {
+export const setAuthToken = (token: string, remember = true) => {
   authToken = token;
   if (typeof window !== 'undefined') {
-    localStorage.setItem(AUTH_TOKEN_KEY, token);
+    const hasSession = typeof window.sessionStorage !== 'undefined';
+    const storage = remember || !hasSession ? localStorage : window.sessionStorage;
+    storage.setItem(AUTH_TOKEN_KEY, token);
+    if (hasSession) {
+      const other = storage === window.localStorage ? window.sessionStorage : window.localStorage;
+      other.removeItem(AUTH_TOKEN_KEY);
+    }
   }
 };
 
@@ -29,7 +36,11 @@ export const clearAuthToken = () => {
 
 export const loadAuthToken = () => {
   if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem(AUTH_TOKEN_KEY);
+    const saved =
+      localStorage.getItem(AUTH_TOKEN_KEY) ??
+      (typeof window.sessionStorage !== 'undefined'
+        ? window.sessionStorage.getItem(AUTH_TOKEN_KEY)
+        : null);
     if (saved) {
       authToken = saved;
     }
@@ -46,7 +57,7 @@ export const login = async (
     '/auth/login',
     data,
   );
-  setAuthToken(response.data.token);
+  setAuthToken(response.data.token, data.rememberMe ?? true);
   return response.data;
 };
 
@@ -69,6 +80,11 @@ export const updateUser = async (
 
 export const getUserClaims = async (): Promise<ClaimDto[]> => {
   const response = await apiClient.get<ClaimDto[]>('/auth/claims');
+  return response.data;
+};
+
+export const getUserRoles = async (): Promise<RoleDto[]> => {
+  const response = await apiClient.get<RoleDto[]>('/auth/roles');
   return response.data;
 };
 

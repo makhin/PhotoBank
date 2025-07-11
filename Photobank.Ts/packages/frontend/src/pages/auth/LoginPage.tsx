@@ -6,11 +6,13 @@ import {login} from '@photobank/shared/api';
 
 import {Button} from '@/components/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
+import {Checkbox} from '@/components/ui/checkbox';
 import {Input} from '@/components/ui/input';
 
 const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+  rememberMe: z.boolean().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -22,6 +24,7 @@ export default function LoginPage() {
     defaultValues: {
       email: '',
       password: '',
+      rememberMe: false,
     },
   });
 
@@ -63,6 +66,24 @@ export default function LoginPage() {
                   <Input {...field} type="password" />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="rememberMe"
+            render={({field}) => (
+              <FormItem className="flex items-center space-x-2">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    id="rememberMe"
+                  />
+                </FormControl>
+                <FormLabel htmlFor="rememberMe" className="font-normal">
+                  Stay logged in
+                </FormLabel>
               </FormItem>
             )}
           />

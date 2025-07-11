@@ -14,6 +14,7 @@ namespace PhotoBank.Api.Controllers;
 public class AuthController(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
+    RoleManager<IdentityRole> roleManager,
     ITokenService tokenService) : ControllerBase
 {
     [HttpPost("login")]
@@ -22,7 +23,7 @@ public class AuthController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
-        var result = await signInManager.PasswordSignInAsync(request.Email, request.Password, false, false);
+        var result = await signInManager.PasswordSignInAsync(request.Email, request.Password, request.RememberMe, false);
         if (!result.Succeeded)
             return BadRequest();
 
@@ -30,7 +31,7 @@ public class AuthController(
         if (user == null)
             return BadRequest();
 
-        var token = tokenService.CreateToken(user);
+        var token = tokenService.CreateToken(user, request.RememberMe);
         return Ok(new LoginResponseDto { Token = token });
     }
 
@@ -96,6 +97,33 @@ public class AuthController(
         var claims = await userManager.GetClaimsAsync(user);
         var result = claims.Select(c => new ClaimDto { Type = c.Type, Value = c.Value });
         return Ok(result);
+    }
+
+    [HttpGet("roles")]
+    [Authorize]
+    [ProducesResponseType(typeof(IEnumerable<RoleDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUserRoles()
+    {
+        var user = await userManager.GetUserAsync(User);
+        if (user == null)
+            return NotFound();
+
+        var names = await userManager.GetRolesAsync(user);
+        var roles = new List<RoleDto>();
+        foreach (var name in names)
+        {
+            var role = await roleManager.FindByNameAsync(name);
+            if (role == null)
+                continue;
+            var roleClaims = await roleManager.GetClaimsAsync(role);
+            roles.Add(new RoleDto
+            {
+                Name = name,
+                Claims = roleClaims.Select(c => new ClaimDto { Type = c.Type, Value = c.Value })
+            });
+        }
+
+        return Ok(roles);
     }
 }
 

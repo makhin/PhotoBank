@@ -3,12 +3,18 @@ import {useNavigate} from 'react-router-dom';
 import {useForm} from 'react-hook-form';
 import {z} from 'zod';
 import {zodResolver} from '@hookform/resolvers/zod';
-import {getCurrentUser, updateUser, logout} from '@photobank/shared/api';
+import {
+  getCurrentUser,
+  updateUser,
+  logout,
+  getUserRoles,
+  getUserClaims,
+} from '@photobank/shared/api';
 
 import {Button} from '@/components/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
 import {Input} from '@/components/ui/input';
-import type {UserDto} from '@photobank/shared/types';
+import type {UserDto, RoleDto, ClaimDto} from '@photobank/shared/types';
 
 const formSchema = z.object({
   phoneNumber: z.string().optional(),
@@ -20,6 +26,8 @@ type FormData = z.infer<typeof formSchema>;
 export default function MyProfilePage() {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserDto | null>(null);
+  const [roles, setRoles] = useState<RoleDto[]>([]);
+  const [claims, setClaims] = useState<ClaimDto[]>([]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -27,12 +35,16 @@ export default function MyProfilePage() {
   });
 
   useEffect(() => {
-    getCurrentUser().then((u) => {
-      setUser(u);
-      form.reset({ phoneNumber: u.phoneNumber ?? '', telegram: u.telegram ?? '' });
-    }).catch((e) => {
-      console.error(e);
-    });
+    getCurrentUser()
+      .then((u) => {
+        setUser(u);
+        form.reset({ phoneNumber: u.phoneNumber ?? '', telegram: u.telegram ?? '' });
+      })
+      .catch((e) => {
+        console.error(e);
+      });
+    getUserRoles().then(setRoles).catch(console.error);
+    getUserClaims().then(setClaims).catch(console.error);
   }, [form]);
 
   const onSubmit = async (data: FormData) => {
@@ -84,6 +96,35 @@ export default function MyProfilePage() {
               <Button type="submit" className="w-full">Save</Button>
             </form>
           </Form>
+          {roles.length > 0 && (
+            <div>
+              <h2 className="font-medium">Roles</h2>
+              <ul className="list-disc list-inside space-y-1 ml-4">
+                {roles.map((r) => (
+                  <li key={r.name}>
+                    <span className="font-semibold">{r.name}</span>
+                    {r.claims.length > 0 && (
+                      <ul className="list-disc list-inside ml-4">
+                        {r.claims.map((c, idx) => (
+                          <li key={idx}>{c.type}: {c.value}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {claims.length > 0 && (
+            <div>
+              <h2 className="font-medium">User Claims</h2>
+              <ul className="list-disc list-inside ml-4 space-y-1">
+                {claims.map((c, idx) => (
+                  <li key={idx}>{c.type}: {c.value}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
       <Button variant="secondary" className="w-full" onClick={() => { logout(); navigate('/login'); }}>
