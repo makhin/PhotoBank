@@ -73,7 +73,6 @@ const renderPage = async () => {
   );
 };
 
-
 describe('PhotoDetailsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();

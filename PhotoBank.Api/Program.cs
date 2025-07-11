@@ -118,7 +118,10 @@ namespace PhotoBank.Api
             builder.Services.AddSwaggerGen();
 
             RegisterServicesForApi.Configure(builder.Services);
-            builder.Services.AddAutoMapper(typeof(MappingProfile));
+            builder.Services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile<MappingProfile>();
+            });
 
             var app = builder.Build();
 

@@ -54,7 +54,11 @@ namespace PhotoBank.Console
             services.AddSingleton(config);
             services.AddTransient<App>();
 
-            services.AddAutoMapper(typeof(MappingProfile));
+            services.AddLogging();
+            services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile<MappingProfile>();
+            });
             services.AddLogging(configure => configure.AddSerilog());
 
             return services;

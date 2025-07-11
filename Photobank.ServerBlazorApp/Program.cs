@@ -88,7 +88,10 @@ namespace PhotoBank.ServerBlazorApp
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
             RegisterServicesForConsole.Configure(builder.Services, configuration);
             builder.Services.AddScoped<TooltipService>();
-            builder.Services.AddAutoMapper(typeof(MappingProfile));
+            builder.Services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile<MappingProfile>();
+            });
 
             WebApplication app = builder.Build();
 

@@ -41,7 +41,12 @@ public class GetAllPhotosIntegrationTests
                     builder.CommandTimeout(120);
                 }));
         RegisterServicesForApi.Configure(services);
-        services.AddAutoMapper(typeof(MappingProfile));
+
+        services.AddLogging();
+        services.AddAutoMapper(cfg =>
+        {
+            cfg.AddProfile<MappingProfile>();
+        });
         _provider = services.BuildServiceProvider();
     }
 

@@ -101,7 +101,7 @@ namespace PhotoBank.UnitTests.Enrichers
             var photo = new Photo();
             var sourceData = new SourceDataDto
             {
-                PreviewImage = new MagickImage(new byte[] { 1, 2, 3 })
+                PreviewImage = new MagickImage(MagickColors.Red, 100, 100)
             };
             var detectedFaces = new List<FaceDetail>
             {
@@ -124,7 +124,7 @@ namespace PhotoBank.UnitTests.Enrichers
             var photo = new Photo();
             var sourceData = new SourceDataDto
             {
-                PreviewImage = new MagickImage(new byte[] { 1, 2, 3 })
+                PreviewImage = new MagickImage(MagickColors.Red, 100, 100)
             };
             var detectedFaces = new List<FaceDetail>
             {

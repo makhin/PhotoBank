@@ -27,7 +27,6 @@ bot.command(
 
 bot.command("thisday", thisDayCommand);
 
-
 bot.command("photo", photoByIdCommand);
 
 bot.command("claims", claimsCommand);

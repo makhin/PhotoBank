@@ -85,7 +85,9 @@ namespace PhotoBank.Services.Enrichers
 
         private static bool IsAbleToIdentify(uint imageHeight, uint imageWidth, BoundingBox detectedFace, in double scale = 1)
         {
-            return Math.Round(imageHeight * detectedFace.Height / scale) >= MinFaceSize && Math.Round(imageWidth * detectedFace.Width / scale) >= MinFaceSize;
+            if (detectedFace.Width.HasValue && detectedFace.Height.HasValue)
+                return Math.Round((decimal) (imageHeight * detectedFace.Height / scale)) >= MinFaceSize && Math.Round((decimal)(imageWidth * detectedFace.Width / scale)) >= MinFaceSize;
+            return false;
         }
 
         private static async Task<byte[]> CreateFacePreview(BoundingBox detectedFace, IMagickImage<byte> image)
@@ -127,7 +129,7 @@ namespace PhotoBank.Services.Enrichers
                 }
 
                 face.IdentityStatus = IdentityStatus.Identified;
-                face.IdentifiedWithConfidence = candidate.Similarity;
+                if (candidate.Similarity != null) face.IdentifiedWithConfidence = (double) candidate.Similarity;
                 face.Person = person;
                 return;
             }

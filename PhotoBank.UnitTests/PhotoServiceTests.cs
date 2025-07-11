@@ -1,4 +1,5 @@
-using AutoMapper;
+﻿using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using PhotoBank.Services;
 
@@ -7,14 +8,20 @@ namespace PhotoBank.UnitTests
     [TestFixture]
     public class PhotoServiceTests
     {
-        private Mapper _mapper; 
+        private IMapper _mapper;
 
         [SetUp]
         public void Setup()
         {
-            var mappingProfile = new MappingProfile();
-            var config = new MapperConfiguration(c => c.AddProfile(mappingProfile));
-            _mapper = new Mapper(config);
+            var services = new ServiceCollection();
+            services.AddLogging();
+            services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile(new MappingProfile());
+            });
+
+            var provider = services.BuildServiceProvider();
+            _mapper = provider.GetRequiredService<IMapper>();
         }
 
         [Test]

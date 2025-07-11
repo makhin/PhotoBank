@@ -64,14 +64,10 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
                     if (isAdult) metaParts.push(isAdult);
                     if (isRacy) metaParts.push(isRacy);
 
-                    const caption = photo.captions?.join(" ") ?? "";
+                    const caption = photo.captions?.join(" ").slice(0, 20) ?? "";
 
                     const metaLine = metaParts.length ? `\n${metaParts.join(" ")}` : "";
-                    sections.push(`• <b>${title}</b>${metaLine} 🔗 /photo${photo.id}`);
-                    if (caption) {
-                        captionCache.set(photo.id, caption);
-                        keyboard.text("ℹ️", `caption:${photo.id}`).row();
-                    }
+                    sections.push(`• <b>${title}</b>${caption} ${metaLine} 🔗 /photo${photo.id}`);
                 });
             });
         });
