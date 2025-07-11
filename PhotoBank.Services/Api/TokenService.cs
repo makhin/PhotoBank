@@ -11,12 +11,12 @@ namespace PhotoBank.Services.Api;
 
 public interface ITokenService
 {
-    string CreateToken(ApplicationUser user, bool rememberMe = false);
+    string CreateToken(ApplicationUser user, bool rememberMe = false, IEnumerable<Claim>? additionalClaims = null);
 }
 
 public class TokenService(IConfiguration configuration) : ITokenService
 {
-    public string CreateToken(ApplicationUser user, bool rememberMe = false)
+    public string CreateToken(ApplicationUser user, bool rememberMe = false, IEnumerable<Claim>? additionalClaims = null)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -28,6 +28,11 @@ public class TokenService(IConfiguration configuration) : ITokenService
             new(ClaimTypes.NameIdentifier, user.Id),
             new(ClaimTypes.Name, user.UserName ?? string.Empty)
         };
+
+        if (additionalClaims != null)
+        {
+            claims.AddRange(additionalClaims);
+        }
 
         var token = new JwtSecurityToken(
             issuer: configuration["Jwt:Issuer"],
