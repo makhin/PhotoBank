@@ -74,7 +74,9 @@ const PhotoListPage = () => {
             <div className="p-6 border-b flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold">Photo Gallery</h1>
-                    <p className="text-muted-foreground mt-2">{photos.length} photos</p>
+                    <p className="text-muted-foreground mt-2">
+                        {photos.length} of {total} photos
+                    </p>
                 </div>
                 <Button variant="outline" onClick={() => { navigate('/filter'); }}>
                     Filter
