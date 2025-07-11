@@ -4,7 +4,7 @@ import {sendThisDayPage, thisDayCommand, captionCache} from "./commands/thisday"
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import {photoByIdCommand} from "./commands/photoById";
 import { registerPhotoRoutes } from "./commands/photoRouter";
-import { claimsCommand } from "./commands/claims";
+import { profileCommand } from "./commands/profile";
 import { login, setImpersonateUser } from "@photobank/shared/api";
 
 const bot = new Bot(BOT_TOKEN);
@@ -29,7 +29,7 @@ bot.command("thisday", thisDayCommand);
 
 bot.command("photo", photoByIdCommand);
 
-bot.command("claims", claimsCommand);
+bot.command("profile", profileCommand);
 
 bot.callbackQuery(/^thisday:(\d+)$/, async (ctx) => {
     const page = parseInt(ctx.match[1], 10);
