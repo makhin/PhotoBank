@@ -111,4 +111,13 @@ describe('auth utilities', () => {
     expect(getMock).toHaveBeenCalledWith('/auth/claims');
     expect(claims).toEqual([{ type: 't', value: 'v' }]);
   });
+
+  it('getUserRoles fetches roles with claims', async () => {
+    const getMock = vi.fn().mockResolvedValue({ data: [{ name: 'admin', claims: [] }] });
+    vi.doMock('../src/api/client', () => ({ apiClient: { get: getMock } }));
+    const auth = await import('../src/api/auth');
+    const roles = await auth.getUserRoles();
+    expect(getMock).toHaveBeenCalledWith('/auth/roles');
+    expect(roles).toEqual([{ name: 'admin', claims: [] }]);
+  });
 });

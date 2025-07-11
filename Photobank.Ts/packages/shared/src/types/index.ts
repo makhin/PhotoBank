@@ -17,3 +17,4 @@ export * from './dto/RegisterRequestDto';
 export * from './dto/UpdateUserDto';
 export * from './dto/UserDto';
 export * from './dto/ClaimDto';
+export * from './dto/RoleDto';
