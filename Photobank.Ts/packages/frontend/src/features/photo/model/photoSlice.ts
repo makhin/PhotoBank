@@ -1,5 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
+import { DEFAULT_PHOTO_FILTER } from '@/shared/constants.ts';
+
 import type { FilterDto, PhotoItemDto } from '@photobank/shared/types';
 
 interface PhotoState {
@@ -9,7 +11,7 @@ interface PhotoState {
 }
 
 const initialState: PhotoState = {
-  filter: { top: 10 },
+  filter: { ...DEFAULT_PHOTO_FILTER },
   selectedPhotos: [],
   lastResult: [],
 };
@@ -22,7 +24,7 @@ const photoSlice = createSlice({
       state.filter = action.payload;
     },
     resetFilter(state) {
-      state.filter = { top: 10 };
+      state.filter = { ...DEFAULT_PHOTO_FILTER };
     },
     setSelectedPhotos(state, action: PayloadAction<number[]>) {
       state.selectedPhotos = action.payload;

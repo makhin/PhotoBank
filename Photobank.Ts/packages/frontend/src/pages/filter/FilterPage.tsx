@@ -2,7 +2,7 @@ import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import type {z} from 'zod';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch } from '@/app/hook.ts';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/app/store.ts';
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { formSchema } from '@/features/filter/lib/form-schema.ts';
 import { FilterFormFields } from '@/components/FilterFormFields.tsx';
+import { DEFAULT_FORM_VALUES } from '@/shared/constants.ts';
 
 // Infer FormData type from formSchema to ensure compatibility
 type FormData = z.infer<typeof formSchema>;
@@ -19,23 +20,28 @@ type FormData = z.infer<typeof formSchema>;
 function FilterPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const savedFilter = useSelector((state: RootState) => state.photo.filter);
+
+  const useCurrentFilter = (location.state as { useCurrentFilter?: boolean } | null)?.useCurrentFilter;
+
+  const savedDefaults = {
+    caption: savedFilter.caption,
+    storages: savedFilter.storages?.map(String) ?? [],
+    paths: savedFilter.paths?.map(String) ?? [],
+    persons: savedFilter.persons?.map(String) ?? [],
+    tags: savedFilter.tags?.map(String) ?? [],
+    isBW: savedFilter.isBW,
+    isAdultContent: savedFilter.isAdultContent,
+    isRacyContent: savedFilter.isRacyContent,
+    thisDay: savedFilter.thisDay,
+    dateFrom: savedFilter.takenDateFrom ? new Date(savedFilter.takenDateFrom) : undefined,
+    dateTo: savedFilter.takenDateTo ? new Date(savedFilter.takenDateTo) : undefined,
+  } as const;
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      caption: savedFilter.caption,
-      storages: savedFilter.storages?.map(String) ?? [],
-      paths: savedFilter.paths?.map(String) ?? [],
-      persons: savedFilter.persons?.map(String) ?? [],
-      tags: savedFilter.tags?.map(String) ?? [],
-      isBW: savedFilter.isBW,
-      isAdultContent: savedFilter.isAdultContent,
-      isRacyContent: savedFilter.isRacyContent,
-      thisDay: savedFilter.thisDay,
-      dateFrom: savedFilter.takenDateFrom ? new Date(savedFilter.takenDateFrom) : undefined,
-      dateTo: savedFilter.takenDateTo ? new Date(savedFilter.takenDateTo) : undefined,
-    },
+    defaultValues: useCurrentFilter ? savedDefaults : { ...DEFAULT_FORM_VALUES },
   });
 
   const onSubmit = (data: FormData) => {

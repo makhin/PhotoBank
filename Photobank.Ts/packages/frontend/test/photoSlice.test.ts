@@ -6,13 +6,14 @@ import reducer, {
   resetFilter,
   setLastResult,
 } from '../src/features/photo/model/photoSlice';
+import { DEFAULT_PHOTO_FILTER } from '../src/shared/constants';
 
 describe('photoSlice', () => {
   it('sets and resets filter', () => {
     let state = reducer(undefined, setFilter({ caption: 'foo' } as any));
     expect(state.filter).toEqual({ caption: 'foo' });
     state = reducer(state, resetFilter());
-    expect(state.filter).toEqual({ top: 10 });
+    expect(state.filter).toEqual(DEFAULT_PHOTO_FILTER);
   });
 
   it('manages selected photos without duplicates', () => {
