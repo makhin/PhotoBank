@@ -15,6 +15,7 @@ export const getGenderText = (gender?: boolean) => {
 };
 
 export { getFilterHash } from './utils/getFilterHash';
+export { getOrientation } from './utils/getOrientation';
 export {
   cachePhoto,
   getCachedPhoto,
