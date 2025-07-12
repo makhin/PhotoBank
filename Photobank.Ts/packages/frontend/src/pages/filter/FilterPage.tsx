@@ -32,7 +32,7 @@ function FilterPage() {
       isBW: savedFilter.isBW,
       isAdultContent: savedFilter.isAdultContent,
       isRacyContent: savedFilter.isRacyContent,
-      thisDay: savedFilter.thisDay ?? true,
+      thisDay: savedFilter.thisDay,
       dateFrom: savedFilter.takenDateFrom ? new Date(savedFilter.takenDateFrom) : undefined,
       dateTo: savedFilter.takenDateTo ? new Date(savedFilter.takenDateTo) : undefined,
     },
