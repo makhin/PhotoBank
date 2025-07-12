@@ -6,7 +6,7 @@ import * as React from "react";
 import {format} from 'date-fns';
 
 import {Input} from '@/components/ui/input';
-import {Checkbox} from '@/components/ui/checkbox';
+import {TriStateCheckbox} from '@/components/ui/tri-state-checkbox';
 import {MultiSelect} from '@/components/ui/multi-select';
 import {FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form';
 import type {FormData} from '@/features/filter/lib/form-schema.ts';
@@ -240,9 +240,9 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     render={({field}) => (
                         <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
-                                <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
+                                <TriStateCheckbox
+                                    value={field.value}
+                                    onValueChange={field.onChange}
                                 />
                             </FormControl>
                             <div className="space-y-1 leading-none">
@@ -258,9 +258,9 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     render={({field}) => (
                         <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
-                                <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
+                                <TriStateCheckbox
+                                    value={field.value}
+                                    onValueChange={field.onChange}
                                 />
                             </FormControl>
                             <div className="space-y-1 leading-none">
@@ -276,9 +276,9 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     render={({field}) => (
                         <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
-                                <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
+                                <TriStateCheckbox
+                                    value={field.value}
+                                    onValueChange={field.onChange}
                                 />
                             </FormControl>
                             <div className="space-y-1 leading-none">
@@ -294,9 +294,9 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     render={({field}) => (
                         <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                             <FormControl>
-                                <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
+                                <TriStateCheckbox
+                                    value={field.value}
+                                    onValueChange={field.onChange}
                                 />
                             </FormControl>
                             <div className="space-y-1 leading-none">
