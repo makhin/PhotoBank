@@ -6,7 +6,7 @@ import reducer, {
   resetFilter,
   setLastResult,
 } from '../src/features/photo/model/photoSlice';
-import { DEFAULT_PHOTO_FILTER } from '../src/shared/constants';
+import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants';
 
 describe('photoSlice', () => {
   it('sets and resets filter', () => {
