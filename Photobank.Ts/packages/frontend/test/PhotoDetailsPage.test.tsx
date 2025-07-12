@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -83,5 +83,17 @@ describe('PhotoDetailsPage', () => {
     expect(screen.getByText('Photo Properties')).toBeTruthy();
     expect(screen.getByDisplayValue('Test Photo')).toBeTruthy();
     expect(screen.getAllByDisplayValue('1').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText('Show face boxes')).toBeTruthy();
+  });
+
+  it('toggles face boxes visibility', async () => {
+    await renderPage();
+    const checkbox = screen.getByLabelText('Show face boxes');
+    expect(checkbox.getAttribute('data-state')).toBe('checked');
+    expect(document.querySelectorAll('.face-box').length).toBeGreaterThan(0);
+    fireEvent.click(checkbox);
+    await waitFor(() => {
+      expect(checkbox.getAttribute('data-state')).toBe('unchecked');
+    });
   });
 });
