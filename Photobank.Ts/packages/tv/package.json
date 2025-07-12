@@ -10,11 +10,15 @@
   },
   "dependencies": {
     "@photobank/shared": "workspace:*",
+    "@react-native-community/datetimepicker": "^8.4.2",
+    "axios": "^1.10.0",
     "expo": "~53.0.17",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
     "react-native": "0.79.5",
-    "react-native-tvfocus": "^0.2.0"
+    "react-native-paper": "^5.14.5",
+    "react-native-tvfocus": "^0.2.0",
+    "react-native-vector-icons": "^10.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
