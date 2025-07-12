@@ -1,10 +1,10 @@
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import type {z} from 'zod';
-
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAppDispatch } from '@/app/hook.ts';
 import { useSelector } from 'react-redux';
+
+import { useAppDispatch } from '@/app/hook.ts';
 import type { RootState } from '@/app/store.ts';
 import { setFilter } from '@/features/photo/model/photoSlice.ts';
 import { Button } from '@/components/ui/button';

@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import { View, Text, Button, StyleSheet } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { FilterDto } from "@photobank/shared/types";
-import { defaultFilter } from "@photobank/shared/filter";
+import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants';
 
 export const PhotoFilters = ({
   onApply,
 }: {
   onApply: (f: FilterDto) => void;
 }) => {
-  const [filter, setFilter] = useState<FilterDto>(defaultFilter);
+  const [filter, setFilter] = useState<FilterDto>(DEFAULT_PHOTO_FILTER);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const applyFilter = () => {
