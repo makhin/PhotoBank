@@ -28,7 +28,13 @@ public class ImpersonationMiddleware
             {
                 var userClaims = await userManager.GetClaimsAsync(user);
 
-                var impersonatedIdentity = new ClaimsIdentity(userClaims,
+                var impersonatedClaims = new List<Claim>(userClaims)
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.Name, user.UserName ?? string.Empty)
+                };
+
+                var impersonatedIdentity = new ClaimsIdentity(impersonatedClaims,
                     context.User.Identity?.AuthenticationType ?? "Impersonation");
                 var impersonatedPrincipal = new ClaimsPrincipal(impersonatedIdentity);
 
@@ -38,7 +44,7 @@ public class ImpersonationMiddleware
                 {
                     new Claim("ImpersonatedUser", username!)
                 };
-                claims.AddRange(userClaims);
+                claims.AddRange(impersonatedClaims);
                 var identity = new ClaimsIdentity(claims,
                     context.User.Identity?.AuthenticationType ?? "Impersonation");
                 context.User = new ClaimsPrincipal(identity);
