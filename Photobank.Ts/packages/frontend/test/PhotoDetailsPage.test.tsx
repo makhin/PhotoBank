@@ -89,11 +89,12 @@ describe('PhotoDetailsPage', () => {
   it('toggles face boxes visibility', async () => {
     await renderPage();
     const checkbox = screen.getByLabelText('Show face boxes');
-    expect(checkbox.getAttribute('data-state')).toBe('checked');
-    expect(document.querySelectorAll('.face-box').length).toBeGreaterThan(0);
+    expect(checkbox.getAttribute('data-state')).toBe('unchecked');
+    expect(document.querySelectorAll('.face-box').length).toBe(0);
     fireEvent.click(checkbox);
     await waitFor(() => {
-      expect(checkbox.getAttribute('data-state')).toBe('unchecked');
+      expect(checkbox.getAttribute('data-state')).toBe('checked');
+      expect(document.querySelectorAll('.face-box').length).toBeGreaterThan(0);
     });
   });
 });

@@ -41,7 +41,7 @@ interface PhotoDetailsPageProps {
 const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const [imageDisplaySize, setImageDisplaySize] = useState({width: 0, height: 0, scale: 1});
     const [containerSize, setContainerSize] = useState({width: 0, height: 0});
-    const [showFaceBoxes, setShowFaceBoxes] = useState(true);
+    const [showFaceBoxes, setShowFaceBoxes] = useState(false);
     const persons = useSelector((state: RootState) => state.metadata.persons);
 
     const containerRef = useRef<HTMLDivElement>(null);
