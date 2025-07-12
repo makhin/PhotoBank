@@ -13,6 +13,7 @@ namespace PhotoBank.Repositories
     internal class RowAuthPoliciesContainer : IRowAuthPoliciesContainer
     {
         private readonly List<Tuple<Type, object>> _policies = new();
+        private const string ImpersonatedPrincipalKey = "ImpersonatedPrincipal";
 
         public IRowAuthPoliciesContainer Register<TTable>(Expression<Func<TTable, bool>> expression)
         {
@@ -28,7 +29,11 @@ namespace PhotoBank.Repositories
 
         public static IRowAuthPoliciesContainer ConfigureRowAuthPolicies(IHttpContextAccessor httpContextAccessor)
         {
-            var user = httpContextAccessor.HttpContext.User;
+            var httpContext = httpContextAccessor.HttpContext;
+            var user = httpContext.Items.ContainsKey(ImpersonatedPrincipalKey) &&
+                       httpContext.Items[ImpersonatedPrincipalKey] is ClaimsPrincipal impersonated
+                ? impersonated
+                : httpContext.User;
             var rowAuthPoliciesContainer = new RowAuthPoliciesContainer();
             
             if (!user.HasClaim(c => c.Type == "AllowAdultContent" && c.Value == "True"))
