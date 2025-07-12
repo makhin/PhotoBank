@@ -86,7 +86,7 @@ const PhotoListPage = () => {
         <Button
           variant="outline"
           onClick={() => {
-            navigate('/filter');
+            navigate('/filter', { state: { useCurrentFilter: true } });
           }}
         >
           Filter
