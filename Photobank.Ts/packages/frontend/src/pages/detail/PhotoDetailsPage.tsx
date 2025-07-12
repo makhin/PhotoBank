@@ -9,6 +9,7 @@ import {Label} from '@/components/ui/label';
 import {Input} from '@/components/ui/input';
 import {Textarea} from '@/components/ui/textarea';
 import {ScrollArea} from '@/components/ui/scroll-area';
+import {Checkbox} from '@/components/ui/checkbox';
 import type { FaceBoxDto } from '@photobank/shared/types';
 import {useGetPhotoByIdQuery} from "@/entities/photo/api.ts";
 import {ScoreBar} from '@/components/ScoreBar';
@@ -40,6 +41,7 @@ interface PhotoDetailsPageProps {
 const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const [imageDisplaySize, setImageDisplaySize] = useState({width: 0, height: 0, scale: 1});
     const [containerSize, setContainerSize] = useState({width: 0, height: 0});
+    const [showFaceBoxes, setShowFaceBoxes] = useState(true);
     const persons = useSelector((state: RootState) => state.metadata.persons);
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -155,14 +157,15 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                     alt={photo.name}
                                     className="max-h-full max-w-full object-contain"
                                 />
-                                {photo.faces?.map((face, index) => (
-                                    <FaceOverlay
-                                        key={face.id}
-                                        face={face}
-                                        index={index}
-                                        style={calculateFacePosition(face.faceBox)}
-                                    />
-                                ))}
+                                {showFaceBoxes &&
+                                    photo.faces?.map((face, index) => (
+                                        <FaceOverlay
+                                            key={face.id}
+                                            face={face}
+                                            index={index}
+                                            style={calculateFacePosition(face.faceBox)}
+                                        />
+                                    ))}
                             </div>
                         </CardContent>
                     </Card>
@@ -281,11 +284,23 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                             {/* Faces Summary */}
                             {photo.faces && photo.faces.length > 0 && (
                                 <Card className="bg-card border-border">
-                                    <CardHeader className="pb-3">
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-center justify-between">
                                         <CardTitle className="text-lg">
                                             Detected Faces ({photo.faces.length})
                                         </CardTitle>
-                                    </CardHeader>
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id="show-face-boxes"
+                                                checked={showFaceBoxes}
+                                                onCheckedChange={(v) => setShowFaceBoxes(!!v)}
+                                            />
+                                            <Label htmlFor="show-face-boxes" className="text-sm">
+                                                Show face boxes
+                                            </Label>
+                                        </div>
+                                    </div>
+                                </CardHeader>
                                     <CardContent>
                                         <p className="text-sm text-muted-foreground mb-3">
                                             Hover over the blue boxes on the image to see face details.
