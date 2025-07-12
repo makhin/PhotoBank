@@ -1,4 +1,4 @@
-export const API_BASE_URL: string = "http://localhost:5066"
+export const API_BASE_URL: string = "http://192.168.1.45:5066"
 
 export function isBrowser(): boolean {
     return typeof window !== 'undefined' && typeof window.crypto !== 'undefined';
