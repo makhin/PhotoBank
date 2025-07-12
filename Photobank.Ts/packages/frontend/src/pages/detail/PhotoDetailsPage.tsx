@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { formatDate } from '@photobank/shared';
+import { formatDate, getOrientation } from '@photobank/shared';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
@@ -222,7 +222,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                     {photo.orientation && (
                                         <div>
                                             <Label className="text-muted-foreground text-xs">Orientation</Label>
-                                            <Input value={photo.orientation.toString()} readOnly
+                                            <Input value={getOrientation(photo.orientation)} readOnly
                                                    className="mt-1 bg-muted"/>
                                         </div>
                                     )}
