@@ -16,9 +16,9 @@ export const getAuthToken = () => authToken;
 
 export const setAuthToken = (token: string, remember = true) => {
   authToken = token;
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
     const hasSession = typeof window.sessionStorage !== 'undefined';
-    const storage = remember || !hasSession ? localStorage : window.sessionStorage;
+    const storage = remember || !hasSession ? window.localStorage : window.sessionStorage;
     storage.setItem(AUTH_TOKEN_KEY, token);
     if (hasSession) {
       const other = storage === window.localStorage ? window.sessionStorage : window.localStorage;
@@ -29,15 +29,15 @@ export const setAuthToken = (token: string, remember = true) => {
 
 export const clearAuthToken = () => {
   authToken = null;
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
+  if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+    window.localStorage.removeItem(AUTH_TOKEN_KEY);
   }
 };
 
 export const loadAuthToken = () => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
     const saved =
-      localStorage.getItem(AUTH_TOKEN_KEY) ??
+      window.localStorage.getItem(AUTH_TOKEN_KEY) ??
       (typeof window.sessionStorage !== 'undefined'
         ? window.sessionStorage.getItem(AUTH_TOKEN_KEY)
         : null);
