@@ -8,6 +8,7 @@ namespace PhotoBank.Api.Middleware;
 public class ImpersonationMiddleware
 {
     public const string HeaderName = "X-Impersonate-User";
+    public const string ImpersonatedPrincipalKey = "ImpersonatedPrincipal";
     private readonly RequestDelegate _next;
 
     public ImpersonationMiddleware(RequestDelegate next)
@@ -25,13 +26,21 @@ public class ImpersonationMiddleware
             var user = await userManager.Users.FirstOrDefaultAsync(u => u.Telegram == username.ToString());
             if (user is not null)
             {
+                var userClaims = await userManager.GetClaimsAsync(user);
+
+                var impersonatedIdentity = new ClaimsIdentity(userClaims,
+                    context.User.Identity?.AuthenticationType ?? "Impersonation");
+                var impersonatedPrincipal = new ClaimsPrincipal(impersonatedIdentity);
+
+                context.Items[ImpersonatedPrincipalKey] = impersonatedPrincipal;
+
                 var claims = new List<Claim>(context.User.Claims)
                 {
                     new Claim("ImpersonatedUser", username!)
                 };
-                var userClaims = await userManager.GetClaimsAsync(user);
                 claims.AddRange(userClaims);
-                var identity = new ClaimsIdentity(claims, context.User.Identity?.AuthenticationType ?? "Impersonation");
+                var identity = new ClaimsIdentity(claims,
+                    context.User.Identity?.AuthenticationType ?? "Impersonation");
                 context.User = new ClaimsPrincipal(identity);
             }
         }
