@@ -26,7 +26,7 @@ export async function getFilterHash(filter: FilterDto): Promise<string> {
 
     if (isNode()) {
         // Node.js: use built-in crypto
-        const { createHash } = await import('node:crypto');
+        const { createHash } = await import('crypto');
         return createHash('sha256').update(json).digest('hex');
     }
 

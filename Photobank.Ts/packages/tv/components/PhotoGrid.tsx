@@ -1,5 +1,5 @@
 import React from "react";
-import { View, FlatList, StyleSheet } from "react-native";
+import { View, FlatList, StyleSheet, Text } from "react-native";
 import { FilterDto } from "@photobank/shared/types";
 import { PhotoCard } from "./PhotoCard";
 import { usePhotos } from "../hooks/usePhotoApi";
