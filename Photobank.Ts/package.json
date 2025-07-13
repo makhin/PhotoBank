@@ -19,7 +19,5 @@
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
   },
-  "dependencies": {
-    "crypto-js": "^4.2.0"
-  }
+  "dependencies": {}
 }
