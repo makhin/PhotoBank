@@ -84,6 +84,13 @@ cd Photobank.Ts
 pnpm -r test
 ```
 
+### Docker Compose
+
+```
+cp .env.example .env
+docker compose up --build
+```
+
 ## Лицензия
 
 Проект распространяется под лицензией MIT. Текст лицензии находится в файле [LICENSE](LICENSE).
@@ -172,6 +179,13 @@ For Node.js packages:
 ```bash
 cd Photobank.Ts
 pnpm -r test
+```
+
+### Docker Compose
+
+```
+cp .env.example .env
+docker compose up --build
 ```
 
 ## License
