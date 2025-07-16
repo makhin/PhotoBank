@@ -1,4 +1,4 @@
-import {FilterDto} from "@photobank/shared/types";
+import type { FilterDto } from "@photobank/shared/types";
 
 export const DEFAULT_PHOTO_FILTER: FilterDto = {
     thisDay: true,

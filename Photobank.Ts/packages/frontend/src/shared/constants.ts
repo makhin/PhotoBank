@@ -19,4 +19,4 @@ export const DEFAULT_FORM_VALUES = {
   thisDay: undefined,
   dateFrom: undefined,
   dateTo: undefined,
-} as const;
+};

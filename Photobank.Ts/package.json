@@ -16,8 +16,8 @@
   "license": "ISC",
   "packageManager": "pnpm@10.12.4",
   "devDependencies": {
+    "@types/object-hash": "^3.0.6",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3"
-  },
-  "dependencies": {}
+  }
 }
