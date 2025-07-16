@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  api:
+    build:
+      context: .
+      dockerfile: PhotoBank.Api/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
+    ports:
+      - "5066:5066"
+  frontend:
+    build:
+      context: ./Photobank.Ts
+      dockerfile: Dockerfile.frontend
+    environment:
+      - API_BASE_URL=http://api:5066
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+  bot:
+    build:
+      context: ./Photobank.Ts
+      dockerfile: packages/telegram-bot/Dockerfile
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - API_EMAIL=${API_EMAIL}
+      - API_PASSWORD=${API_PASSWORD}
+      - API_BASE_URL=http://api:5066
+    depends_on:
+      - api
