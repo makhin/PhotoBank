@@ -6,9 +6,12 @@ import { CheckIcon, MinusIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-interface TriStateCheckboxProps extends Omit<React.ComponentProps<typeof CheckboxPrimitive.Root>, "checked" | "onCheckedChange"> {
-  value: boolean | undefined
-  onValueChange: (value: boolean | undefined) => void
+interface TriStateCheckboxProps extends Omit<
+  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>,
+  "checked" | "onCheckedChange" | "value"
+> {
+  value: CheckboxPrimitive.CheckedState | undefined
+  onValueChange: (value: CheckboxPrimitive.CheckedState | undefined) => void
 }
 
 function TriStateCheckbox({
