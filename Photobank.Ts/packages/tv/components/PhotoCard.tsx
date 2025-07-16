@@ -1,33 +1,24 @@
-import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
-import { PhotoItemDto } from "@photobank/shared/types";
+import React from 'react';
+import { TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { PhotoItemDto } from '@photobank/shared/types';
 
-export const PhotoCard = ({ photo }: { photo: PhotoItemDto }) => {
-  return (
-    <TouchableOpacity style={styles.card}>
+export const PhotoCard = ({ photo, onPress }: { photo: PhotoItemDto; onPress: () => void }) => (
+    <TouchableOpacity style={styles.card} onPress={onPress}>
       <Image
-        source={{ uri: `data:image/jpeg;base64,${photo.thumbnail}` }}
-        style={styles.image}
+          source={{ uri: `data:image/jpeg;base64,${photo.thumbnail}` }}
+          style={styles.image}
+          resizeMode="cover"
       />
-      <Text style={styles.title}>{photo.name}</Text>
     </TouchableOpacity>
-  );
-};
+);
 
 const styles = StyleSheet.create({
   card: {
-    margin: 5,
-    backgroundColor: "#222",
-    borderRadius: 8,
-    overflow: "hidden",
+    width: 640,
+    height: 360,
+    marginHorizontal: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
-  image: {
-    width: 200,
-    height: 120,
-  },
-  title: {
-    color: "#fff",
-    textAlign: "center",
-    padding: 5,
-  },
+  image: { width: '100%', height: '100%' },
 });

@@ -1,23 +1,26 @@
-import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
-import { FilterDto } from "@photobank/shared/types";
-import { PhotoGrid } from "../components/PhotoGrid";
-import { PhotoFilters } from "../components/PhotoFilters";
+import React from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { PhotoRow } from '../components/PhotoRow';
+import { usePhotos } from '../hooks/usePhotoApi';
+import {DEFAULT_PHOTO_FILTER} from "@photobank/shared/constants";
 
 export const HomeScreen = () => {
-  const [filter, setFilter] = useState<FilterDto | null>(null);
+    const { photos, loading } = usePhotos(DEFAULT_PHOTO_FILTER);
 
-  return (
-    <View style={styles.container}>
-      <PhotoFilters onApply={setFilter} />
-      <PhotoGrid filter={filter} />
-    </View>
-  );
+    return (
+        <ScrollView style={styles.container}>
+            {photos.map((row, idx) => (
+                <PhotoRow key={idx} title={row.name} photos={photos} />
+            ))}
+        </ScrollView>
+    );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000", // Тёмный фон для TV
-  },
+    container: {
+        flex: 1,
+        backgroundColor: '#000',
+        width: 3840,
+        height: 2160,
+    },
 });
