@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@types/object-hash':
+        specifier: ^3.0.6
+        version: 3.0.6
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@types/node@24.0.13)(typescript@5.8.3)
@@ -2149,6 +2152,9 @@ packages:
 
   '@types/node@24.0.7':
     resolution: {integrity: sha512-YIEUUr4yf8q8oQoXPpSlnvKNVKDQlPMWrmOcgzoduo7kvA2UF0/BwJ/eMKFTiTtkNL17I0M6Xe2tvwFU7be6iw==}
+
+  '@types/object-hash@3.0.6':
+    resolution: {integrity: sha512-fOBV8C1FIu2ELinoILQ+ApxcUKz4ngq+IWUYrxSGjXzzjUALijilampwkMgEtJ+h2njAW3pi853QpzNVCHB73w==}
 
   '@types/react-dom@19.1.6':
     resolution: {integrity: sha512-4hOiT/dwO8Ko0gV1m/TJZYk3y0KBnY9vzDh7W+DH17b2HFSOGgdj33dhihPeuy3l0q23+4e+hoXHV6hCC4dCXw==}
@@ -7869,6 +7875,8 @@ snapshots:
   '@types/node@24.0.7':
     dependencies:
       undici-types: 7.8.0
+
+  '@types/object-hash@3.0.6': {}
 
   '@types/react-dom@19.1.6(@types/react@19.1.8)':
     dependencies:
