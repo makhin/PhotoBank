@@ -37,7 +37,7 @@ function FilterPage() {
     thisDay: savedFilter.thisDay,
     dateFrom: savedFilter.takenDateFrom ? new Date(savedFilter.takenDateFrom) : undefined,
     dateTo: savedFilter.takenDateTo ? new Date(savedFilter.takenDateTo) : undefined,
-  } as const;
+  };
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
