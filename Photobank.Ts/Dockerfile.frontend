@@ -1,5 +1,0 @@
-FROM node:20-alpine
-WORKDIR /app
-COPY . .
-RUN corepack enable && pnpm install
-CMD ["pnpm", "--filter", "frontend", "dev"]

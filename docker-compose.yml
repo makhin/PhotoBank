@@ -1,23 +1,25 @@
 services:
   api:
     build:
-      context: .
-      dockerfile: PhotoBank.Api/Dockerfile
+      context: ./PhotoBank.Api
+      dockerfile: Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
     ports:
       - "5066:5066"
+
   frontend:
     build:
       context: ./Photobank.Ts
-      dockerfile: Dockerfile.frontend
+      dockerfile: packages/frontend/Dockerfile.frontend
     environment:
       - API_BASE_URL=http://api:5066
     ports:
       - "5173:5173"
     depends_on:
       - api
+
   bot:
     build:
       context: ./Photobank.Ts

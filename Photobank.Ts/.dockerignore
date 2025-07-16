@@ -1,0 +1,10 @@
+node_modules
+.pnpm
+packages/**/node_modules
+packages/**/.pnpm
+.next
+dist
+build
+*.log
+.DS_Store
+Thumbs.db

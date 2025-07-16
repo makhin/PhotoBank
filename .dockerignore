@@ -1,0 +1,15 @@
+# игнорировать зависимости и кэш
+node_modules
+.pnpm
+.pnpm-debug.log
+package-lock.json
+yarn.lock
+*.log
+
+# игнорировать сборки и мусор
+dist
+build
+.next
+tmp
+.DS_Store
+Thumbs.db

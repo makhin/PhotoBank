@@ -1,8 +1,17 @@
 # build stage
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
+
+# копируем только csproj и восстанавливаем зависимости
+COPY PhotoBank.Api/PhotoBank.Api.csproj PhotoBank.Api/
+RUN dotnet restore PhotoBank.Api/PhotoBank.Api.csproj
+
+# копируем остальной код
 COPY . .
-RUN dotnet publish PhotoBank.Api/PhotoBank.Api.csproj -c Release -o /app/publish
+
+# билдим и публикуем
+WORKDIR /src/PhotoBank.Api
+RUN dotnet publish -c Release -o /app/publish
 
 # runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
