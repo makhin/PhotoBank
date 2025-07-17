@@ -1,10 +1,17 @@
+# игнорировать зависимости и кэш
 node_modules
-.pnpm
 packages/**/node_modules
+.pnpm
+.pnpm-debug.log
 packages/**/.pnpm
-.next
+
+# игнорировать сборки и мусор
+package-lock.json
 dist
 build
-*.log
+.next
+tmp
 .DS_Store
 Thumbs.db
+yarn.lock
+*.log
