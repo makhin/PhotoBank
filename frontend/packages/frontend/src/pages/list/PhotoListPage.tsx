@@ -2,7 +2,7 @@ import { Calendar, User, Tag } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { formatDate } from '@photobank/shared';
+import { formatDate, firstNWords } from '@photobank/shared';
 import type { PhotoItemDto } from '@photobank/shared/types';
 
 import { useSearchPhotosMutation } from '@/entities/photo/api.ts';
@@ -132,6 +132,11 @@ const PhotoListPage = () => {
 
                     <div className="col-span-2">
                       <div className="font-medium truncate">{photo.name}</div>
+                      {photo.captions && photo.captions.length > 0 && (
+                        <div className="text-xs text-muted-foreground truncate">
+                          {firstNWords(photo.captions[0], 5)}
+                        </div>
+                      )}
                     </div>
 
                     <div className="col-span-1">
@@ -241,6 +246,11 @@ const PhotoListPage = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">{photo.name}</div>
+                        {photo.captions && photo.captions.length > 0 && (
+                          <div className="text-xs text-muted-foreground truncate">
+                            {firstNWords(photo.captions[0], 5)}
+                          </div>
+                        )}
                         <Badge
                           variant="outline"
                           className="font-mono text-xs mt-1"
