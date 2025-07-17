@@ -1,27 +1,17 @@
 services:
-  api:
-    build:
-      context: ./backend
-    ports:
-      - "5066:5066"
-
   frontend:
     build:
-      context: ./frontend
+      context: .
       dockerfile: Dockerfile.frontend
     ports:
       - "5173:5173"
-    depends_on:
-      - api
 
   bot:
     build:
-      context: ./frontend
+      context: .
       dockerfile: Dockerfile.bot
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
       - API_EMAIL=${API_EMAIL}
       - API_PASSWORD=${API_PASSWORD}
-      - API_BASE_URL=http://api:5066
-    depends_on:
-      - api
+      - API_BASE_URL=http://host.docker.internal:5066

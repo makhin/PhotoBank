@@ -1,0 +1,15 @@
+# directories
+bin
+obj
+**/bin/
+**/obj/
+**/out/
+.vs
+.git
+
+# files
+Dockerfile*
+**/*.trx
+**/*.md
+*.user
+*.suo

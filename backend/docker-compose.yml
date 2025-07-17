@@ -1,0 +1,8 @@
+services:
+  api:
+    build:
+      context: .
+    environment:
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
+    ports:
+      - "5066:5066"

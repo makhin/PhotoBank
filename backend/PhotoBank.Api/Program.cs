@@ -53,7 +53,7 @@ namespace PhotoBank.Api
                 options.AddPolicy("AllowLocalFrontend", policy =>
                 {
                     policy
-                        .WithOrigins("http://192.168.1.45:5173") // IP !
+                        .WithOrigins("http://localhost:5173")
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials();
@@ -126,7 +126,7 @@ namespace PhotoBank.Api
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+//            if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
