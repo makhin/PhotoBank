@@ -50,10 +50,10 @@ namespace PhotoBank.Api
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowLocalFrontend", policy =>
+                options.AddPolicy("AllowAll", policy =>
                 {
                     policy
-                        .WithOrigins("http://localhost:5173")
+			.AllowAnyOrigin()
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials();
@@ -132,7 +132,7 @@ namespace PhotoBank.Api
                 app.UseSwaggerUI();
             }
 
-            app.UseCors("AllowLocalFrontend");
+            app.UseCors("AllowAll");
 
             app.UseHttpsRedirection();
             app.UseAuthentication();
