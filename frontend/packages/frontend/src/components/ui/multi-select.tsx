@@ -53,6 +53,7 @@ interface MultiSelectProps
         icon?: React.ComponentType<{ className?: string }>;
     }[];
     onValueChange: (value: string[]) => void;
+    value?: string[];
     defaultValue?: string[];
     placeholder?: string;
     animation?: number;
@@ -71,6 +72,7 @@ export const MultiSelect = React.forwardRef<
         {
             options,
             onValueChange,
+            value,
             variant,
             defaultValue = [],
             placeholder = "Select options",
@@ -85,10 +87,16 @@ export const MultiSelect = React.forwardRef<
         ref
     ) => {
         const [selectedValues, setSelectedValues] =
-            React.useState<string[]>(defaultValue);
+            React.useState<string[]>(value ?? defaultValue);
         const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
         const [isAnimating, setIsAnimating] = React.useState(false);
         const [query, setQuery] = React.useState("");
+
+        React.useEffect(() => {
+            if (value !== undefined) {
+                setSelectedValues(value);
+            }
+        }, [value]);
 
         const visibleOptions = React.useMemo(() => {
             const lower = query.trim().toLowerCase();
