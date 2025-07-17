@@ -42,14 +42,13 @@ const PhotoListPage = () => {
   const [photos, setPhotos] = useState<PhotoItemDto[]>([]);
   const [total, setTotal] = useState(0);
   const [skip, setSkip] = useState(filter.skip ?? 0);
-  const top = filter.top ?? 10;
   const navigate = useNavigate();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const [detailsId, setDetailsId] = useState<number | null>(null);
 
   useEffect(() => {
-    searchPhotos({ ...filter, skip: 0, top })
+    searchPhotos({ ...filter })
       .unwrap()
       .then((result) => {
         const fetched = result.photos || [];
@@ -58,10 +57,10 @@ const PhotoListPage = () => {
         setSkip(fetched.length);
         dispatch(setLastResult(fetched));
       });
-  }, [searchPhotos, filter, dispatch, top]);
+  }, [searchPhotos, filter, dispatch]);
 
   const loadMore = () => {
-    searchPhotos({ ...filter, skip, top })
+    searchPhotos({ ...filter, skip })
       .unwrap()
       .then((result) => {
         const newPhotos = result.photos || [];
