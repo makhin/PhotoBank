@@ -1,6 +1,7 @@
 import { Bot } from "grammy";
 import {BOT_TOKEN, API_EMAIL, API_PASSWORD} from "./config";
 import {sendThisDayPage, thisDayCommand, captionCache} from "./commands/thisday";
+import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import { photoByIdCommand } from "./commands/photoById";
 import { registerPhotoRoutes } from "./commands/photoRouter";
@@ -36,6 +37,8 @@ bot.command("photo", photoByIdCommand);
 
 bot.command("profile", profileCommand);
 
+bot.command("subscribe", subscribeCommand);
+
 bot.callbackQuery(/^thisday:(\d+)$/, async (ctx) => {
     const page = parseInt(ctx.match[1], 10);
     await ctx.answerCallbackQuery();
@@ -51,3 +54,4 @@ bot.callbackQuery(/^caption:(\d+)$/, async (ctx) => {
 bot.on("message", (ctx) => ctx.reply(unknownMessageReplyMsg));
 
 bot.start();
+initSubscriptionScheduler(bot);

@@ -17,6 +17,7 @@ export const captionMissingMsg = "Без подписи.";
 export const unknownMessageReplyMsg = "Получил другое сообщение!";
 export const photoCommandUsageMsg = "❗ Используй: /photo <id>";
 export const photoNotFoundMsg = "❌ Фото не найдено.";
+export const subscribeCommandUsageMsg = "❗ Используй: /subscribe HH:MM";
 export const todaysPhotosEmptyMsg = "📭 Сегодняшних фото пока нет.";
 export const unknownYearLabel = "Неизвестный год";
 export const prevPageText = "◀ Назад";
