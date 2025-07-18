@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useGetPhotoByIdQuery } from '@/entities/photo/api';
+import { previewModalFallbackTitle, loadingText } from '@photobank/shared/constants';
 
 interface PhotoPreviewModalProps {
     photoId: number | null;
@@ -13,10 +14,10 @@ const PhotoPreviewModal = ({ photoId, onOpenChange }: PhotoPreviewModalProps) =>
         <Dialog open={photoId !== null} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-none w-screen h-screen top-0 left-0 translate-x-0 translate-y-0">
                 <DialogHeader>
-                    <DialogTitle>{photo?.name || 'Preview'}</DialogTitle>
+                    <DialogTitle>{photo?.name || previewModalFallbackTitle}</DialogTitle>
                 </DialogHeader>
                 {isFetching || !photo ? (
-                    <p className="p-4">Loading...</p>
+                    <p className="p-4">{loadingText}</p>
                 ) : (
                     <img
                         src={`data:image/jpeg;base64,${photo.previewImage}`}

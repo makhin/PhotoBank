@@ -10,6 +10,14 @@ import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/
 import {Checkbox} from '@/components/ui/checkbox';
 import {Input} from '@/components/ui/input';
 import {PasswordInput} from '@/components/ui/password-input';
+import {
+  loginTitle,
+  invalidCredentialsMsg,
+  emailLabel,
+  passwordLabel,
+  stayLoggedInLabel,
+  loginButtonText,
+} from '@photobank/shared/constants';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -37,13 +45,13 @@ export default function LoginPage() {
       navigate('/filter');
     } catch (e) {
       console.error(e);
-      setErrorMessage('Invalid email or password');
+      setErrorMessage(invalidCredentialsMsg);
     }
   };
 
   return (
     <div className="w-full max-w-sm mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Login</h1>
+      <h1 className="text-2xl font-bold mb-4">{loginTitle}</h1>
       {errorMessage && (
         <p className="text-destructive text-sm mb-2" role="alert">
           {errorMessage}
@@ -57,7 +65,7 @@ export default function LoginPage() {
             name="email"
             render={({field}) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{emailLabel}</FormLabel>
                 <FormControl>
                   <Input {...field} type="email" />
                 </FormControl>
@@ -70,7 +78,7 @@ export default function LoginPage() {
             name="password"
             render={({field}) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>{passwordLabel}</FormLabel>
                 <FormControl>
                   <PasswordInput {...field} />
                 </FormControl>
@@ -91,12 +99,12 @@ export default function LoginPage() {
                   />
                 </FormControl>
                 <FormLabel htmlFor="rememberMe" className="font-normal">
-                  Stay logged in
+                  {stayLoggedInLabel}
                 </FormLabel>
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full">Login</Button>
+          <Button type="submit" className="w-full">{loginButtonText}</Button>
         </form>
       </Form>
     </div>

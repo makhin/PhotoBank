@@ -14,6 +14,13 @@ import {
     CommandItem,
 } from "@/components/ui/command";
 import type { PersonDto } from '@photobank/shared/types';
+import {
+    unassignedLabel,
+    facePrefix,
+    searchPersonPlaceholder,
+    noPersonFoundText,
+    noneLabel,
+} from '@photobank/shared/constants';
 
 
 interface FacePersonSelectorProps {
@@ -35,7 +42,7 @@ export const FacePersonSelector = ({
     const [selectedId, setSelectedId] = useState<number | undefined>(personId);
 
     const selectedName =
-        persons.find((p) => p.id === selectedId)?.name ?? "Unassigned";
+        persons.find((p) => p.id === selectedId)?.name ?? unassignedLabel;
 
     const handleSelect = (id: number | undefined) => {
         setSelectedId(id);
@@ -46,7 +53,7 @@ export const FacePersonSelector = ({
     return (
         <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-                <span className="font-medium">Face {faceIndex + 1}:</span>
+                <span className="font-medium">{facePrefix} {faceIndex + 1}:</span>
                 <Popover open={open} onOpenChange={setOpen}>
                     <PopoverTrigger asChild>
                         <Button
@@ -59,11 +66,11 @@ export const FacePersonSelector = ({
                     </PopoverTrigger>
                     <PopoverContent className="w-[200px] p-0">
                         <Command>
-                            <CommandInput placeholder="Search person..."/>
-                            <CommandEmpty>No person found.</CommandEmpty>
+                            <CommandInput placeholder={searchPersonPlaceholder}/>
+                            <CommandEmpty>{noPersonFoundText}</CommandEmpty>
                             <CommandGroup>
                                 <CommandItem onSelect={() => { handleSelect(undefined); }}>
-                                    None
+                                    {noneLabel}
                                 </CommandItem>
                                 {persons.map((person) => (
                                     <CommandItem

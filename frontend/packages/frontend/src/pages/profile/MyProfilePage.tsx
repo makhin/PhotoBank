@@ -15,6 +15,16 @@ import {Button} from '@/components/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
 import {Input} from '@/components/ui/input';
 import type {UserDto, RoleDto, ClaimDto} from '@photobank/shared/types';
+import {
+  myProfileTitle,
+  emailPrefix,
+  phoneNumberLabel,
+  telegramLabel,
+  saveButtonText,
+  rolesTitle,
+  userClaimsTitle,
+  logoutButtonText,
+} from '@photobank/shared/constants';
 
 const formSchema = z.object({
   phoneNumber: z.string().optional(),
@@ -58,11 +68,11 @@ export default function MyProfilePage() {
 
   return (
     <div className="w-full max-w-md mx-auto p-4 space-y-4">
-      <h1 className="text-2xl font-bold">My Profile</h1>
+      <h1 className="text-2xl font-bold">{myProfileTitle}</h1>
       {user && (
         <div className="space-y-2">
           <div>
-            <span className="font-medium">Email:</span> {user.email}
+            <span className="font-medium">{emailPrefix}</span> {user.email}
           </div>
           <Form {...form}>
             {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
@@ -72,7 +82,7 @@ export default function MyProfilePage() {
                 name="phoneNumber"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>Phone number</FormLabel>
+                    <FormLabel>{phoneNumberLabel}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -85,7 +95,7 @@ export default function MyProfilePage() {
                 name="telegram"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>Telegram</FormLabel>
+                    <FormLabel>{telegramLabel}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -93,12 +103,12 @@ export default function MyProfilePage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">Save</Button>
+              <Button type="submit" className="w-full">{saveButtonText}</Button>
             </form>
           </Form>
           {roles.length > 0 && (
             <div>
-              <h2 className="font-medium">Roles</h2>
+              <h2 className="font-medium">{rolesTitle}</h2>
               <ul className="list-disc list-inside space-y-1 ml-4">
                 {roles.map((r) => (
                   <li key={r.name}>
@@ -117,7 +127,7 @@ export default function MyProfilePage() {
           )}
           {claims.length > 0 && (
             <div>
-              <h2 className="font-medium">User Claims</h2>
+              <h2 className="font-medium">{userClaimsTitle}</h2>
               <ul className="list-disc list-inside ml-4 space-y-1">
                 {claims.map((c, idx) => (
                   <li key={idx}>{c.type}: {c.value}</li>
@@ -128,7 +138,7 @@ export default function MyProfilePage() {
         </div>
       )}
       <Button variant="secondary" className="w-full" onClick={() => { logout(); navigate('/login'); }}>
-        Logout
+        {logoutButtonText}
       </Button>
     </div>
   );

@@ -3,6 +3,14 @@ import {getGenderText} from '@photobank/shared';
 import type { FaceDto } from '@photobank/shared/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover.tsx';
 import { Label } from '@/components/ui/label.tsx';
+import {
+    faceDetailsTitle,
+    ageLabel,
+    genderLabel,
+    personIdLabel,
+    attributesLabel,
+    unknownLabel,
+} from '@photobank/shared/constants';
 
 import './FaceOverlay.css';
 
@@ -28,26 +36,26 @@ export const FaceOverlay = ({
         </PopoverTrigger>
         <PopoverContent className="w-80 bg-popover border-border shadow-xl">
             <div className="space-y-3">
-                <h4 className="font-semibold border-b border-border pb-2">Face Details</h4>
+                <h4 className="font-semibold border-b border-border pb-2">{faceDetailsTitle}</h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                        <Label className="text-muted-foreground">Age</Label>
-                        <p className="font-medium">{face.age || "Unknown"}</p>
+                        <Label className="text-muted-foreground">{ageLabel}</Label>
+                        <p className="font-medium">{face.age || unknownLabel}</p>
                     </div>
                     <div>
-                        <Label className="text-muted-foreground">Gender</Label>
+                        <Label className="text-muted-foreground">{genderLabel}</Label>
                         <p className="font-medium">{getGenderText(face.gender)}</p>
                     </div>
                     {face.personId && (
                         <div className="col-span-2">
-                            <Label className="text-muted-foreground">Person ID</Label>
+                            <Label className="text-muted-foreground">{personIdLabel}</Label>
                             <p className="font-medium">{face.personId}</p>
                         </div>
                     )}
                 </div>
                 {face.friendlyFaceAttributes && (
                     <div>
-                        <Label className="text-muted-foreground">Attributes</Label>
+                        <Label className="text-muted-foreground">{attributesLabel}</Label>
                         <p className="text-sm mt-1">{face.friendlyFaceAttributes}</p>
                     </div>
                 )}

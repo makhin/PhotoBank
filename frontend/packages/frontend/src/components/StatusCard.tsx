@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
 import { useAppSelector } from '@/app/hook';
+import { botRunningText } from '@photobank/shared/constants';
 
 export function StatusCard() {
   const { lastError } = useAppSelector((s) => (s as any).bot);
@@ -12,7 +13,7 @@ export function StatusCard() {
             <AlertTriangle className="mr-2" /> {lastError}
           </div>
         ) : (
-          <p className="text-green-700">Bot is running</p>
+          <p className="text-green-700">{botRunningText}</p>
         )}
       </CardContent>
     </Card>
