@@ -40,4 +40,21 @@ describe('LoginPage', () => {
     await screen.findByRole('alert');
     expect(loginMock).toHaveBeenCalled();
   });
+
+  it('toggles password visibility', async () => {
+    const loginMock = vi.fn();
+    await renderPage(loginMock);
+
+    const passwordField = screen.getAllByTestId('password-input')[0];
+    const toggle = screen.getAllByRole('button', { name: /show password/i })[0];
+
+    expect(passwordField.getAttribute('type')).toBe('password');
+
+    fireEvent.click(toggle);
+    expect(passwordField.getAttribute('type')).toBe('text');
+    expect(toggle.textContent).toBe('Hide password');
+
+    fireEvent.click(toggle);
+    expect(passwordField.getAttribute('type')).toBe('password');
+  });
 });

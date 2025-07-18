@@ -9,6 +9,7 @@ import {Button} from '@/components/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
 import {Checkbox} from '@/components/ui/checkbox';
 import {Input} from '@/components/ui/input';
+import {PasswordInput} from '@/components/ui/password-input';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -71,7 +72,7 @@ export default function LoginPage() {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input {...field} type="password" />
+                  <PasswordInput {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
