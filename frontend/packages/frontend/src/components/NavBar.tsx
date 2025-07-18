@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { getAuthToken } from '@photobank/shared/api';
+import { useEffect, useState } from 'react';
+import { getAuthToken, getUserRoles } from '@photobank/shared/api';
 import { Button } from '@/components/ui/button';
 import {
   navbarFilterLabel,
@@ -7,12 +8,27 @@ import {
   navbarProfileLabel,
   navbarLoginLabel,
   navbarLogoutLabel,
+  navbarRegisterLabel,
+  navbarUsersLabel,
 } from '@photobank/shared/constants';
 
 export default function NavBar() {
   // useLocation to trigger re-render on route changes
   useLocation();
   const loggedIn = Boolean(getAuthToken());
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (loggedIn) {
+      getUserRoles()
+        .then((roles) => {
+          setIsAdmin(roles.some((r) => r.name === 'Administrator'));
+        })
+        .catch(() => setIsAdmin(false));
+    } else {
+      setIsAdmin(false);
+    }
+  }, [loggedIn]);
 
   const linkClass = 'text-sm';
 
@@ -34,6 +50,13 @@ export default function NavBar() {
             <NavLink to="/profile">{navbarProfileLabel}</NavLink>
           </Button>
         </li>
+        {isAdmin && (
+          <li>
+            <Button variant="link" className={linkClass} asChild>
+              <NavLink to="/admin/users">{navbarUsersLabel}</NavLink>
+            </Button>
+          </li>
+        )}
         {loggedIn ? (
           <li className="ml-auto">
             <Button variant="link" className={linkClass} asChild>
@@ -41,11 +64,18 @@ export default function NavBar() {
             </Button>
           </li>
         ) : (
-          <li className="ml-auto">
-            <Button variant="link" className={linkClass} asChild>
-              <NavLink to="/login">{navbarLoginLabel}</NavLink>
-            </Button>
-          </li>
+          <>
+            <li className="ml-auto">
+              <Button variant="link" className={linkClass} asChild>
+                <NavLink to="/login">{navbarLoginLabel}</NavLink>
+              </Button>
+            </li>
+            <li>
+              <Button variant="link" className={linkClass} asChild>
+                <NavLink to="/register">{navbarRegisterLabel}</NavLink>
+              </Button>
+            </li>
+          </>
         )}
       </ul>
     </nav>

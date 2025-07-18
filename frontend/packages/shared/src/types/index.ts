@@ -18,3 +18,4 @@ export * from './dto/UpdateUserDto';
 export * from './dto/UserDto';
 export * from './dto/ClaimDto';
 export * from './dto/RoleDto';
+export * from './dto/UserWithClaimsDto';

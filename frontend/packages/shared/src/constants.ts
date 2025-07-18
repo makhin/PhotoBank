@@ -58,6 +58,8 @@ export const navbarPhotosLabel = 'Photos';
 export const navbarProfileLabel = 'Profile';
 export const navbarLoginLabel = 'Login';
 export const navbarLogoutLabel = 'Logout';
+export const navbarRegisterLabel = 'Register';
+export const navbarUsersLabel = 'Users';
 
 // PhotoPreviewModal
 export const previewModalFallbackTitle = 'Preview';
@@ -108,6 +110,11 @@ export const passwordLabel = 'Password';
 export const stayLoggedInLabel = 'Stay logged in';
 export const loginButtonText = 'Login';
 
+// Register page
+export const registerTitle = 'Register';
+export const registerButtonText = 'Register';
+
+
 // Logout page
 export const loggingOutMsg = 'Logging out...';
 
@@ -156,3 +163,7 @@ export const colDateLabel = 'Date';
 export const colStorageLabel = 'Storage';
 export const colFlagsLabel = 'Flags';
 export const colDetailsLabel = 'Details';
+
+// Admin pages
+export const manageUsersTitle = 'Manage Users';
+export const saveUserButtonText = 'Save User';
