@@ -11,11 +11,12 @@ import {Textarea} from '@/components/ui/textarea';
 import {ScrollArea} from '@/components/ui/scroll-area';
 import {Checkbox} from '@/components/ui/checkbox';
 import type { FaceBoxDto } from '@photobank/shared/types';
-import {useGetPhotoByIdQuery} from "@/entities/photo/api.ts";
+import {useGetPhotoByIdQuery, useUpdateFaceMutation} from "@/entities/photo/api.ts";
 import {ScoreBar} from '@/components/ScoreBar';
 import {FaceOverlay} from "@/components/FaceOverlay.tsx";
 import type {RootState} from "@/app/store.ts";
 import {FacePersonSelector} from "@/components/FacePersonSelector.tsx";
+import {useIsAdmin} from '@photobank/shared';
 import {
     photoPropertiesTitle,
     nameLabel,
@@ -61,6 +62,8 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const [containerSize, setContainerSize] = useState({width: 0, height: 0});
     const [showFaceBoxes, setShowFaceBoxes] = useState(false);
     const persons = useSelector((state: RootState) => state.metadata.persons);
+    const isAdmin = useIsAdmin();
+    const [updateFace] = useUpdateFaceMutation();
 
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -331,7 +334,13 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                                         faceIndex={index}
                                                         personId={face.personId}
                                                         persons={persons}
-                                                        disabled={true}
+                                                        disabled={!showFaceBoxes || !isAdmin}
+                                                        onChange={(personId) =>
+                                                            updateFace({
+                                                                faceId: face.id,
+                                                                personId: personId ?? -1,
+                                                            })
+                                                        }
                                                     />
                                                 );
                                             })}

@@ -33,6 +33,7 @@ const photo = {
 
 vi.mock('../src/entities/photo/api.ts', () => ({
   useGetPhotoByIdQuery: () => ({ data: photo, error: undefined }),
+  useUpdateFaceMutation: () => [vi.fn(), { isLoading: false }],
 }));
 
 class RO {
