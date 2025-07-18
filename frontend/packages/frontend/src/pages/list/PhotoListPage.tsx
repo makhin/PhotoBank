@@ -18,7 +18,17 @@ import {
   MAX_VISIBLE_TAGS_LG,
   MAX_VISIBLE_PERSONS_SM,
   MAX_VISIBLE_TAGS_SM,
-} from '@/shared/constants';
+  photoGalleryTitle,
+  filterButtonText,
+  loadMoreButton,
+  colIdLabel,
+  colPreviewLabel,
+  colNameLabel,
+  colDateLabel,
+  colStorageLabel,
+  colFlagsLabel,
+  colDetailsLabel,
+} from '@photobank/shared/constants';
 import PhotoDetailsModal from '@/components/PhotoDetailsModal';
 
 import PhotoPreview from './PhotoPreview';
@@ -77,7 +87,7 @@ const PhotoListPage = () => {
     <div className="w-full h-screen flex flex-col bg-background">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Photo Gallery</h1>
+          <h1 className="text-3xl font-bold">{photoGalleryTitle}</h1>
           <p className="text-muted-foreground mt-2">
             {photos.length} of {total} photos
           </p>
@@ -88,7 +98,7 @@ const PhotoListPage = () => {
             navigate('/filter', { state: { useCurrentFilter: true } });
           }}
         >
-          Filter
+          {filterButtonText}
         </Button>
       </div>
 
@@ -97,13 +107,13 @@ const PhotoListPage = () => {
           {/* Desktop/Tablet View */}
           <div className="hidden lg:block">
             <div className="grid grid-cols-12 gap-4 mb-4 px-4 py-2 bg-muted/50 rounded-lg font-medium text-sm">
-              <div className="col-span-1">ID</div>
-              <div className="col-span-2">Preview</div>
-              <div className="col-span-2">Name</div>
-              <div className="col-span-1">Date</div>
-              <div className="col-span-2">Storage</div>
-              <div className="col-span-1">Flags</div>
-              <div className="col-span-3">Details</div>
+              <div className="col-span-1">{colIdLabel}</div>
+              <div className="col-span-2">{colPreviewLabel}</div>
+              <div className="col-span-2">{colNameLabel}</div>
+              <div className="col-span-1">{colDateLabel}</div>
+              <div className="col-span-2">{colStorageLabel}</div>
+              <div className="col-span-1">{colFlagsLabel}</div>
+              <div className="col-span-3">{colDetailsLabel}</div>
             </div>
 
             <div className="space-y-3">
@@ -340,7 +350,7 @@ const PhotoListPage = () => {
           {photos.length < total && (
             <div className="flex justify-center mt-4">
               <Button variant="outline" onClick={loadMore}>
-                Load More
+                {loadMoreButton}
               </Button>
             </div>
           )}

@@ -16,6 +16,24 @@ import {ScoreBar} from '@/components/ScoreBar';
 import {FaceOverlay} from "@/components/FaceOverlay.tsx";
 import type {RootState} from "@/app/store.ts";
 import {FacePersonSelector} from "@/components/FacePersonSelector.tsx";
+import {
+    photoPropertiesTitle,
+    nameLabel,
+    idLabel,
+    takenDateLabel,
+    widthLabel,
+    heightLabel,
+    scaleLabel,
+    orientationLabel,
+    tagsTitle,
+    captionsTitle,
+    contentAnalysisTitle,
+    adultScoreLabel,
+    racyScoreLabel,
+    detectedFacesTitle,
+    showFaceBoxesLabel,
+    hoverFaceHint,
+} from '@photobank/shared/constants';
 
 const calculateImageSize = (naturalWidth: number, naturalHeight: number, containerWidth: number, containerHeight: number) => {
     if (naturalWidth <= containerWidth && naturalHeight <= containerHeight) {
@@ -177,35 +195,35 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                         <div className="p-4 space-y-4">
                             <Card className="bg-card border-border">
                                 <CardHeader className="pb-3">
-                                    <CardTitle className="text-lg">Photo Properties</CardTitle>
+                                    <CardTitle className="text-lg">{photoPropertiesTitle}</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
                                     <div>
-                                        <Label className="text-muted-foreground text-xs">Name</Label>
+                                        <Label className="text-muted-foreground text-xs">{nameLabel}</Label>
                                         <Input value={photo.name} readOnly className="mt-1 bg-muted"/>
                                     </div>
 
                                     {photo.id && (
                                         <div>
-                                            <Label className="text-muted-foreground text-xs">ID</Label>
+                                            <Label className="text-muted-foreground text-xs">{idLabel}</Label>
                                             <Input value={photo.id.toString()} readOnly className="mt-1 bg-muted"/>
                                         </div>
                                     )}
 
                                     <div>
-                                        <Label className="text-muted-foreground text-xs">Taken Date</Label>
+                                        <Label className="text-muted-foreground text-xs">{takenDateLabel}</Label>
                                         <Input value={formattedTakenDate} readOnly className="mt-1 bg-muted"/>
                                     </div>
 
                                     {photo.width && photo.height && (
                                         <div className="grid grid-cols-2 gap-2">
                                             <div>
-                                                <Label className="text-muted-foreground text-xs">Width</Label>
+                                                <Label className="text-muted-foreground text-xs">{widthLabel}</Label>
                                                 <Input value={`${photo.width.toString()}px`} readOnly
                                                        className="mt-1 bg-muted"/>
                                             </div>
                                             <div>
-                                                <Label className="text-muted-foreground text-xs">Height</Label>
+                                                <Label className="text-muted-foreground text-xs">{heightLabel}</Label>
                                                 <Input value={`${photo.height.toString()}px`} readOnly
                                                        className="mt-1 bg-muted"/>
                                             </div>
@@ -214,14 +232,14 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
 
                                     {photo.scale && (
                                         <div>
-                                            <Label className="text-muted-foreground text-xs">Scale</Label>
+                                            <Label className="text-muted-foreground text-xs">{scaleLabel}</Label>
                                             <Input value={photo.scale.toString()} readOnly className="mt-1 bg-muted"/>
                                         </div>
                                     )}
 
                                     {photo.orientation && (
                                         <div>
-                                            <Label className="text-muted-foreground text-xs">Orientation</Label>
+                                            <Label className="text-muted-foreground text-xs">{orientationLabel}</Label>
                                             <Input value={getOrientation(photo.orientation)} readOnly
                                                    className="mt-1 bg-muted"/>
                                         </div>
@@ -233,7 +251,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                             {photo.tags && photo.tags.length > 0 && (
                                 <Card className="bg-card border-border">
                                     <CardHeader className="pb-3">
-                                        <CardTitle className="text-lg">Tags</CardTitle>
+                                        <CardTitle className="text-lg">{tagsTitle}</CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="flex flex-wrap gap-2">
@@ -252,7 +270,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                             {photo.captions && photo.captions.length > 0 && (
                                 <Card className="bg-card border-border">
                                     <CardHeader className="pb-3">
-                                        <CardTitle className="text-lg">Captions</CardTitle>
+                                        <CardTitle className="text-lg">{captionsTitle}</CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-2">
@@ -271,12 +289,12 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
 
                             <Card className="bg-card border-border">
                                 <CardHeader className="pb-3">
-                                    <CardTitle className="text-lg">Content Analysis</CardTitle>
+                                    <CardTitle className="text-lg">{contentAnalysisTitle}</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
-                                    <ScoreBar label="Adult Score" score={photo.adultScore}
+                                    <ScoreBar label={adultScoreLabel} score={photo.adultScore}
                                               colorClass="bg-orange-500"/>
-                                    <ScoreBar label="Racy Score" score={photo.racyScore}
+                                    <ScoreBar label={racyScoreLabel} score={photo.racyScore}
                                               colorClass="bg-red-500"/>
                                 </CardContent>
                             </Card>
@@ -287,7 +305,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="text-lg">
-                                            Detected Faces ({photo.faces.length})
+                                            {detectedFacesTitle} ({photo.faces.length})
                                         </CardTitle>
                                         <div className="flex items-center space-x-2">
                                             <Checkbox
@@ -296,14 +314,14 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                                 onCheckedChange={(v) => setShowFaceBoxes(!!v)}
                                             />
                                             <Label htmlFor="show-face-boxes" className="text-sm">
-                                                Show face boxes
+                                                {showFaceBoxesLabel}
                                             </Label>
                                         </div>
                                     </div>
                                 </CardHeader>
                                     <CardContent>
                                         <p className="text-sm text-muted-foreground mb-3">
-                                            Hover over the blue boxes on the image to see face details.
+                                            {hoverFaceHint}
                                         </p>
                                         <div className="space-y-2">
                                             {photo.faces.map((face, index) => {

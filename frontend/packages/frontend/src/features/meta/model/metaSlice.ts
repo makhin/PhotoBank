@@ -5,7 +5,7 @@ import type { PathDto, PersonDto, StorageDto, TagDto } from '@photobank/shared/t
 import {
   METADATA_CACHE_KEY,
   METADATA_CACHE_VERSION,
-} from '@/shared/constants';
+} from '@photobank/shared/constants';
 
 interface MetadataPayload {
     tags: TagDto[];

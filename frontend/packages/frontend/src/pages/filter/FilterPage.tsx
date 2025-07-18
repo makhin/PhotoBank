@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { formSchema } from '@/features/filter/lib/form-schema.ts';
 import { FilterFormFields } from '@/components/FilterFormFields.tsx';
-import { DEFAULT_FORM_VALUES } from '@/shared/constants.ts';
+import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton } from '@photobank/shared/constants';
 
 // Infer FormData type from formSchema to ensure compatibility
 type FormData = z.infer<typeof formSchema>;
@@ -68,7 +68,7 @@ function FilterPage() {
   return (
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle>Advanced Filter Form</CardTitle>
+          <CardTitle>{filterFormTitle}</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -77,7 +77,7 @@ function FilterPage() {
               <FilterFormFields control={form.control} />
               {/* Submit Button */}
               <Button type="submit" className="w-full">
-                Apply Filters
+                {applyFiltersButton}
               </Button>
             </form>
           </Form>
