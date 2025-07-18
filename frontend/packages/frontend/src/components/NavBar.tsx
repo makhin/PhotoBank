@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { getAuthToken, getUserRoles } from '@photobank/shared/api';
+import { getAuthToken } from '@photobank/shared/api';
+import { useIsAdmin } from '@photobank/shared';
 import { Button } from '@/components/ui/button';
 import {
   navbarFilterLabel,
@@ -16,19 +16,7 @@ export default function NavBar() {
   // useLocation to trigger re-render on route changes
   useLocation();
   const loggedIn = Boolean(getAuthToken());
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    if (loggedIn) {
-      getUserRoles()
-        .then((roles) => {
-          setIsAdmin(roles.some((r) => r.name === 'Administrator'));
-        })
-        .catch(() => setIsAdmin(false));
-    } else {
-      setIsAdmin(false);
-    }
-  }, [loggedIn]);
+  const isAdmin = useIsAdmin();
 
   const linkClass = 'text-sm';
 

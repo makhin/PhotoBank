@@ -12,6 +12,7 @@ import {FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/compo
 import type {FormData} from '@/features/filter/lib/form-schema.ts';
 import type {RootState} from '@/app/store.ts';
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
+import { useIsAdmin } from '@photobank/shared';
 
 import {Button} from './ui/button';
 import {Calendar} from './ui/calendar';
@@ -42,6 +43,7 @@ interface FilterFormFieldsProps {
 export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
     const [openFrom, setOpenFrom] = React.useState(false)
     const [openTo, setOpenTo] = React.useState(false)
+    const isAdmin = useIsAdmin()
 
     const tags = useSelector((state: RootState) => state.metadata.tags)
     const persons = useSelector((state: RootState) => state.metadata.persons)
@@ -271,41 +273,45 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     )}
                 />
 
-                <FormField
-                    control={control}
-                    name="isAdultContent"
-                    render={({field}) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                                <TriStateCheckbox
-                                    value={field.value}
-                                    onValueChange={field.onChange}
-                                />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                                <FormLabel>{adultContentLabel}</FormLabel>
-                            </div>
-                        </FormItem>
-                    )}
-                />
+                {isAdmin && (
+                    <FormField
+                        control={control}
+                        name="isAdultContent"
+                        render={({field}) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                    <TriStateCheckbox
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                    />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel>{adultContentLabel}</FormLabel>
+                                </div>
+                            </FormItem>
+                        )}
+                    />
+                )}
 
-                <FormField
-                    control={control}
-                    name="isRacyContent"
-                    render={({field}) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                                <TriStateCheckbox
-                                    value={field.value}
-                                    onValueChange={field.onChange}
-                                />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                                <FormLabel>{racyContentLabel}</FormLabel>
-                            </div>
-                        </FormItem>
-                    )}
-                />
+                {isAdmin && (
+                    <FormField
+                        control={control}
+                        name="isRacyContent"
+                        render={({field}) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                    <TriStateCheckbox
+                                        value={field.value}
+                                        onValueChange={field.onChange}
+                                    />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel>{racyContentLabel}</FormLabel>
+                                </div>
+                            </FormItem>
+                        )}
+                    />
+                )}
 
                 <FormField
                     control={control}

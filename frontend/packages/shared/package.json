@@ -18,6 +18,9 @@
     "dotenv": "^17.0.0",
     "lru-cache": "^10.4.3"
   },
+  "peerDependencies": {
+    "react": "^19.1.0"
+  },
   "scripts": {
     "test": "vitest run"
   }

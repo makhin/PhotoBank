@@ -37,3 +37,5 @@ export const firstNWords = (sentence: string, count: number): string => {
   return words.slice(0, count).join(' ') + '... ';
 };
 
+export { checkIsAdmin } from './utils/admin';
+export { useIsAdmin } from './hooks/useIsAdmin';
