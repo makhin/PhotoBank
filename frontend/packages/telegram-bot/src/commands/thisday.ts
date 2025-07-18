@@ -1,7 +1,14 @@
 import {Context, InlineKeyboard} from "grammy";
 import {searchPhotos} from "@photobank/shared/api/photos";
 import {firstNWords} from "@photobank/shared/index";
-import {apiErrorMsg, sorryTryToRequestLaterMsg} from "@photobank/shared/constants";
+import {
+    apiErrorMsg,
+    sorryTryToRequestLaterMsg,
+    todaysPhotosEmptyMsg,
+    unknownYearLabel,
+    prevPageText,
+    nextPageText,
+} from "@photobank/shared/constants";
 
 export const captionCache = new Map<number, string>();
 
@@ -32,7 +39,7 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
     }
 
     if (!queryResult.count || !queryResult.photos?.length) {
-        const fallback = "📭 Сегодняшних фото пока нет.";
+        const fallback = todaysPhotosEmptyMsg;
         if (edit) {
             await ctx.editMessageText(fallback).catch(() => ctx.reply(fallback));
         } else {
@@ -61,7 +68,7 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
     [...byYear.entries()]
         .sort(([a], [b]) => b - a)
         .forEach(([year, folders]) => {
-            sections.push(`📅 <b>${year || "Неизвестный год"}</b>`);
+            sections.push(`📅 <b>${year || unknownYearLabel}</b>`);
             [...folders.entries()].forEach(([folder, photos]) => {
                 sections.push(`📁 ${folder}`);
                 photos.forEach(photo => {
@@ -86,8 +93,8 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
     sections.push(`\n📄 Страница ${page} из ${totalPages}`);
     keyboard.row();
 
-    if (page > 1) keyboard.text("◀ Назад", `thisday:${page - 1}`);
-    if (page < totalPages) keyboard.text("Вперёд ▶", `thisday:${page + 1}`);
+    if (page > 1) keyboard.text(prevPageText, `thisday:${page - 1}`);
+    if (page < totalPages) keyboard.text(nextPageText, `thisday:${page + 1}`);
 
     const text = sections.join("\n\n");
 

@@ -1,6 +1,7 @@
 import { Context, InputFile } from "grammy";
 import { getPhotoById } from "@photobank/shared/api/photos";
 import { formatPhotoMessage } from "@photobank/shared/utils/formatPhotoMessage";
+import { photoNotFoundMsg } from "@photobank/shared/constants";
 
 export async function sendPhotoById(ctx: Context, id: number) {
     let photo;
@@ -8,7 +9,7 @@ export async function sendPhotoById(ctx: Context, id: number) {
     try {
         photo = await getPhotoById(id);
     } catch {
-        await ctx.reply("❌ Фото не найдено.");
+        await ctx.reply(photoNotFoundMsg);
         return;
     }
 

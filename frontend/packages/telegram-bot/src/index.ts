@@ -2,10 +2,15 @@ import { Bot } from "grammy";
 import {BOT_TOKEN, API_EMAIL, API_PASSWORD} from "./config";
 import {sendThisDayPage, thisDayCommand, captionCache} from "./commands/thisday";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
-import {photoByIdCommand} from "./commands/photoById";
+import { photoByIdCommand } from "./commands/photoById";
 import { registerPhotoRoutes } from "./commands/photoRouter";
 import { profileCommand } from "./commands/profile";
 import { login, setImpersonateUser } from "@photobank/shared/api";
+import {
+    captionMissingMsg,
+    unknownMessageReplyMsg,
+    welcomeBotMsg,
+} from "@photobank/shared/constants";
 
 const bot = new Bot(BOT_TOKEN);
 
@@ -22,7 +27,7 @@ await loadDictionaries();
 
 bot.command(
     "start",
-    (ctx) => ctx.reply("Добро пожаловать. Запущен и работает!"),
+    (ctx) => ctx.reply(welcomeBotMsg),
 );
 
 bot.command("thisday", thisDayCommand);
@@ -40,9 +45,9 @@ bot.callbackQuery(/^thisday:(\d+)$/, async (ctx) => {
 bot.callbackQuery(/^caption:(\d+)$/, async (ctx) => {
     const id = parseInt(ctx.match[1], 10);
     const caption = captionCache.get(id);
-    await ctx.answerCallbackQuery(caption ?? "Без подписи.", { show_alert: true });
+    await ctx.answerCallbackQuery(caption ?? captionMissingMsg, { show_alert: true });
 });
 
-bot.on("message", (ctx) => ctx.reply("Получил другое сообщение!"));
+bot.on("message", (ctx) => ctx.reply(unknownMessageReplyMsg));
 
 bot.start();

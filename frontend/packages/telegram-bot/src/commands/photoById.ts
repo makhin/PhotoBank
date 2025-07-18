@@ -1,14 +1,19 @@
 import { Context, InputFile } from "grammy";
 import { getPhotoById } from "@photobank/shared/api";
 import { formatPhotoMessage } from "@photobank/shared/utils/formatPhotoMessage";
-import {apiErrorMsg, getPhotoErrorMsg} from "@photobank/shared/constants";
+import {
+    apiErrorMsg,
+    getPhotoErrorMsg,
+    photoCommandUsageMsg,
+    photoNotFoundMsg,
+} from "@photobank/shared/constants";
 
 export async function photoByIdCommand(ctx: Context) {
     const parts = ctx.message?.text?.split(" ");
     const id = Number(parts?.[1]);
 
     if (!id || isNaN(id)) {
-        await ctx.reply("❗ Используй: /photo <id>");
+        await ctx.reply(photoCommandUsageMsg);
         return;
     }
 
@@ -16,7 +21,7 @@ export async function photoByIdCommand(ctx: Context) {
         const photo = await getPhotoById(id);
 
         if (!photo) {
-            await ctx.reply("❌ Фото не найдено.");
+            await ctx.reply(photoNotFoundMsg);
             return;
         }
 

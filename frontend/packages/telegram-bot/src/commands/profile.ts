@@ -1,6 +1,13 @@
 import { Context } from "grammy";
 import { getUserRoles, getUserClaims } from "@photobank/shared/api";
-import {apiErrorMsg, getProfileErrorMsg} from "@photobank/shared/constants";
+import {
+    apiErrorMsg,
+    getProfileErrorMsg,
+    rolesLabel,
+    rolesEmptyLabel,
+    claimsLabel,
+    claimsEmptyLabel,
+} from "@photobank/shared/constants";
 
 export async function profileCommand(ctx: Context) {
     const username = ctx.from?.username ?? String(ctx.from?.id ?? "");
@@ -15,7 +22,7 @@ export async function profileCommand(ctx: Context) {
         ];
 
         if (roles.length) {
-            lines.push("Роли:");
+            lines.push(rolesLabel);
             for (const role of roles) {
                 lines.push(`- ${role.name}`);
                 for (const claim of role.claims) {
@@ -23,16 +30,16 @@ export async function profileCommand(ctx: Context) {
                 }
             }
         } else {
-            lines.push("Роли отсутствуют.");
+            lines.push(rolesEmptyLabel);
         }
 
         if (claims.length) {
-            lines.push("Права пользователя:");
+            lines.push(claimsLabel);
             for (const claim of claims) {
                 lines.push(`- ${claim.type}: ${claim.value}`);
             }
         } else {
-            lines.push("Права пользователя отсутствуют.");
+            lines.push(claimsEmptyLabel);
         }
 
         await ctx.reply(lines.join("\n"));

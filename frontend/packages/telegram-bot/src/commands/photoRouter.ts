@@ -1,5 +1,6 @@
 import { Bot, Context } from "grammy";
-import {sendPhotoById} from "../photo";
+import { sendPhotoById } from "../photo";
+import { photoCommandUsageMsg } from "@photobank/shared/constants";
 
 // Основная команда
 export function registerPhotoRoutes(bot: Bot) {
@@ -8,7 +9,7 @@ export function registerPhotoRoutes(bot: Bot) {
         const parts = ctx.message?.text?.split(" ");
         const id = Number(parts?.[1]);
         if (!id || isNaN(id)) {
-            await ctx.reply("❗ Используй: /photo <id>");
+            await ctx.reply(photoCommandUsageMsg);
             return;
         }
         await sendPhotoById(ctx, id);
