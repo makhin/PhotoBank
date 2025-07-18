@@ -53,7 +53,7 @@ namespace PhotoBank.Api
                 options.AddPolicy("AllowAll", policy =>
                 {
                     policy
-			.AllowAnyOrigin()
+                        .SetIsOriginAllowed(_ => true)
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials();
