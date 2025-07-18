@@ -80,4 +80,12 @@ describe('api helpers', () => {
     expect(getMock).toHaveBeenCalledWith('/tags');
     expect(res).toEqual([{ id: 3 }]);
   });
+
+  it('updateFace sends data', async () => {
+    const putMock = vi.fn().mockResolvedValue({});
+    vi.doMock('../src/api/client', () => ({ apiClient: { put: putMock } }));
+    const { updateFace } = await import('../src/api/faces');
+    await updateFace({ faceId: 5, personId: 2 });
+    expect(putMock).toHaveBeenCalledWith('/faces', { faceId: 5, personId: 2 });
+  });
 });
