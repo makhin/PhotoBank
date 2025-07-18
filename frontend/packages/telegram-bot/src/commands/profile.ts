@@ -1,5 +1,6 @@
 import { Context } from "grammy";
 import { getUserRoles, getUserClaims } from "@photobank/shared/api";
+import {apiErrorMsg, getProfileErrorMsg} from "@photobank/shared/constants";
 
 export async function profileCommand(ctx: Context) {
     const username = ctx.from?.username ?? String(ctx.from?.id ?? "");
@@ -36,7 +37,7 @@ export async function profileCommand(ctx: Context) {
 
         await ctx.reply(lines.join("\n"));
     } catch (error) {
-        console.error("Ошибка при получении профиля:", error);
-        await ctx.reply("🚫 Не удалось получить профиль пользователя.");
+        console.error(apiErrorMsg, error);
+        await ctx.reply(getProfileErrorMsg);
     }
 }

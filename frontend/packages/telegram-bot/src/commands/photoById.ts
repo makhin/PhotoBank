@@ -1,6 +1,7 @@
 import { Context, InputFile } from "grammy";
 import { getPhotoById } from "@photobank/shared/api";
 import { formatPhotoMessage } from "@photobank/shared/utils/formatPhotoMessage";
+import {apiErrorMsg, getPhotoErrorMsg} from "@photobank/shared/constants";
 
 export async function photoByIdCommand(ctx: Context) {
     const parts = ctx.message?.text?.split(" ");
@@ -28,7 +29,7 @@ export async function photoByIdCommand(ctx: Context) {
             await ctx.reply(caption, { parse_mode: "HTML" });
         }
     } catch (error) {
-        console.error("Ошибка при получении фото:", error);
-        await ctx.reply("🚫 Не удалось получить фото.");
+        console.error(apiErrorMsg, error);
+        await ctx.reply(getPhotoErrorMsg);
     }
 }

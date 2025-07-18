@@ -1,6 +1,7 @@
-import { Context, InlineKeyboard } from "grammy";
-import { searchPhotos } from "@photobank/shared/api/photos";
-import { firstNWords } from "@photobank/shared/index";
+import {Context, InlineKeyboard} from "grammy";
+import {searchPhotos} from "@photobank/shared/api/photos";
+import {firstNWords} from "@photobank/shared/index";
+import {apiErrorMsg, sorryTryToRequestLaterMsg} from "@photobank/shared/constants";
 
 export const captionCache = new Map<number, string>();
 
@@ -25,8 +26,8 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
     try {
         queryResult = await searchPhotos({ thisDay: true, top: PAGE_SIZE, skip });
     } catch (err) {
-        console.error("API error:", err);
-        await ctx.reply("Sorry, try to request later.");
+        console.error(apiErrorMsg, err);
+        await ctx.reply(sorryTryToRequestLaterMsg);
         return;
     }
 
