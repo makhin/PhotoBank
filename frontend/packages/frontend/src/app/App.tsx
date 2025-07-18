@@ -14,10 +14,10 @@ export default function App() {
   const loggedIn = Boolean(getAuthToken());
 
   useEffect(() => {
-    if (!loaded) {
+    if (loggedIn && !loaded) {
       dispatch(loadMetadata());
     }
-  }, [loaded, dispatch]);
+  }, [loaded, loggedIn, dispatch]);
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
