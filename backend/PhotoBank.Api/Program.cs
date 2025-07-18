@@ -133,8 +133,8 @@ namespace PhotoBank.Api
             }
 
             app.UseCors("AllowAll");
-
-            app.UseHttpsRedirection();
+            // Disabled HTTPS redirection to ensure CORS headers are applied
+            // correctly during local development when running over HTTP.
             app.UseAuthentication();
             app.UseMiddleware<ImpersonationMiddleware>();
             app.UseAuthorization();
