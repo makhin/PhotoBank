@@ -1,6 +1,6 @@
 import { Context, InlineKeyboard } from "grammy";
 import { searchPhotos } from "@photobank/shared/api/photos";
-import {firstNWords} from "@photobank/shared/index";
+import { firstNWords } from "@photobank/shared/index";
 
 export const captionCache = new Map<number, string>();
 
@@ -12,14 +12,23 @@ function parsePage(text?: string): number {
     return match ? parseInt(match[1], 10) || 1 : 1;
 }
 
-export async function thisDayCommand(ctx: Context) {
+export async function handleThisDay(ctx: Context) {
     const page = parsePage(ctx.message?.text);
     await sendThisDayPage(ctx, page);
 }
 
+export const thisDayCommand = handleThisDay;
+
 export async function sendThisDayPage(ctx: Context, page: number, edit = false) {
     const skip = (page - 1) * PAGE_SIZE;
-    const queryResult = await searchPhotos({ thisDay: true, top: PAGE_SIZE, skip });
+    let queryResult;
+    try {
+        queryResult = await searchPhotos({ thisDay: true, top: PAGE_SIZE, skip });
+    } catch (err) {
+        console.error("API error:", err);
+        await ctx.reply("Sorry, try to request later.");
+        return;
+    }
 
     if (!queryResult.count || !queryResult.photos?.length) {
         const fallback = "📭 Сегодняшних фото пока нет.";
