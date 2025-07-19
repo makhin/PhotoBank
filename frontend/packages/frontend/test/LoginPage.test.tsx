@@ -14,6 +14,7 @@ global.ResizeObserver = RO;
 const renderPage = async (loginMock: any) => {
   vi.doMock('@photobank/shared/api', () => ({ login: loginMock }));
   const { default: LoginPage } = await import('../src/pages/auth/LoginPage');
+
   render(
     <MemoryRouter initialEntries={["/login"]}>
       <Routes>
