@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { formatDate, getOrientation } from '@photobank/shared';
+import { formatDate, getOrientation, getPlaceByGeoPoint } from '@photobank/shared';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {Badge} from '@/components/ui/badge';
@@ -26,6 +26,8 @@ import {
     heightLabel,
     scaleLabel,
     orientationLabel,
+    locationLabel,
+    openInMapsText,
     tagsTitle,
     captionsTitle,
     contentAnalysisTitle,
@@ -61,6 +63,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const [imageDisplaySize, setImageDisplaySize] = useState({width: 0, height: 0, scale: 1});
     const [containerSize, setContainerSize] = useState({width: 0, height: 0});
     const [showFaceBoxes, setShowFaceBoxes] = useState(false);
+    const [placeName, setPlaceName] = useState('');
     const persons = useSelector((state: RootState) => state.metadata.persons);
     const isAdmin = useIsAdmin();
     const [updateFace] = useUpdateFaceMutation();
@@ -126,6 +129,18 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
             console.error("Ошибка загрузки фото:", error);
         }
     }, [error]);
+
+    useEffect(() => {
+        if (!photo?.location) {
+            setPlaceName('');
+            return;
+        }
+        let cancelled = false;
+        getPlaceByGeoPoint(photo.location).then((name) => {
+            if (!cancelled) setPlaceName(name);
+        });
+        return () => { cancelled = true; };
+    }, [photo?.location]);
 
     const calculateFacePosition = (faceBox: FaceBoxDto) => {
         if (!imageDisplaySize.width || !imageDisplaySize.height) {
@@ -245,6 +260,20 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                             <Label className="text-muted-foreground text-xs">{orientationLabel}</Label>
                                             <Input value={getOrientation(photo.orientation)} readOnly
                                                    className="mt-1 bg-muted"/>
+                                        </div>
+                                    )}
+
+                                    {photo.location && placeName && (
+                                        <div>
+                                            <Label className="text-muted-foreground text-xs">{locationLabel}</Label>
+                                            <a
+                                                href={`https://www.google.com/maps?q=${photo.location.latitude},${photo.location.longitude}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="mt-1 block text-primary underline"
+                                            >
+                                                {openInMapsText}: {placeName}
+                                            </a>
                                         </div>
                                     )}
                                 </CardContent>
