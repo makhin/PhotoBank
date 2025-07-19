@@ -15,8 +15,10 @@
 ### Backend
 
 ```bash
-# восстановить зависимости и запустить API
+# восстановить зависимости и CLI-инструменты
 dotnet restore
+dotnet tool restore --project PhotoBank.Api
+# запустить API
 dotnet run --project PhotoBank.Api
 ```
 
@@ -28,6 +30,12 @@ ConnectionStrings__DefaultConnection="Server=localhost;Database=Photobank;Truste
 Jwt__Key="SuperSecretKey1234567890"
 Jwt__Issuer="PhotoBank.Api"
 Jwt__Audience="PhotoBank.Api"
+```
+
+Для генерации файла `swagger.json` выполните после сборки:
+
+```bash
+dotnet swagger tofile --output swagger.json PhotoBank.Api/bin/Debug/net9.0/PhotoBank.Api.dll v1
 ```
 
 ### Фронтенд
@@ -116,6 +124,7 @@ The project is composed of several modules:
 
 ```bash
 dotnet restore
+dotnet tool restore --project PhotoBank.Api
 dotnet run --project PhotoBank.Api
 ```
 
@@ -127,6 +136,12 @@ ConnectionStrings__DefaultConnection="Server=localhost;Database=Photobank;Truste
 Jwt__Key="SuperSecretKey1234567890"
 Jwt__Issuer="PhotoBank.Api"
 Jwt__Audience="PhotoBank.Api"
+```
+
+To generate the `swagger.json` file after building, run:
+
+```bash
+dotnet swagger tofile --output swagger.json PhotoBank.Api/bin/Debug/net9.0/PhotoBank.Api.dll v1
 ```
 
 ### Frontend
