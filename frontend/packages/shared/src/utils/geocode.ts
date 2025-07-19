@@ -1,25 +1,25 @@
 import axios from 'axios';
 import type { GeoPointDto } from '../types';
-import { GOOGLE_API_KEY } from '../config';
 
 /**
  * Returns a human friendly place name for the given coordinates using
- * Google Geocoding API. Falls back to "lat, lng" when the request fails
- * or API key is not provided.
+ * the Nominatim reverse geocoding API. Falls back to "lat, lng" when the
+ * request fails.
  */
 export async function getPlaceByGeoPoint(point: GeoPointDto): Promise<string> {
-  if (!GOOGLE_API_KEY) {
-    return `${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}`;
-  }
-
   try {
-    const res = await axios.get('https://maps.googleapis.com/maps/api/geocode/json', {
+    const res = await axios.get('https://nominatim.openstreetmap.org/reverse', {
       params: {
-        latlng: `${point.latitude},${point.longitude}`,
-        key: GOOGLE_API_KEY,
+        format: 'json',
+        lat: point.latitude,
+        lon: point.longitude,
+      },
+      headers: {
+        'User-Agent': 'photobank',
       },
     });
-    const name = res.data?.results?.[0]?.formatted_address;
+
+    const name = res.data?.display_name as string | undefined;
     return name ?? `${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}`;
   } catch {
     return `${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}`;
