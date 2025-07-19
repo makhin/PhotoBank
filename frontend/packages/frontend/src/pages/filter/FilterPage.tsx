@@ -3,16 +3,18 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import type {z} from 'zod';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
 
-import { useAppDispatch } from '@/app/hook.ts';
+import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
 import type { RootState } from '@/app/store.ts';
 import { setFilter } from '@/features/photo/model/photoSlice.ts';
+import { loadMetadata } from '@/features/meta/model/metaSlice.ts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { formSchema } from '@/features/filter/lib/form-schema.ts';
 import { FilterFormFields } from '@/components/FilterFormFields.tsx';
-import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton } from '@photobank/shared/constants';
+import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton, loadingText } from '@photobank/shared/constants';
 
 // Infer FormData type from formSchema to ensure compatibility
 type FormData = z.infer<typeof formSchema>;
@@ -22,6 +24,14 @@ function FilterPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const savedFilter = useSelector((state: RootState) => state.photo.filter);
+  const loaded = useAppSelector((s) => s.metadata.loaded);
+  const loading = useAppSelector((s) => s.metadata.loading);
+
+  useEffect(() => {
+    if (!loaded && !loading) {
+      dispatch(loadMetadata());
+    }
+  }, [loaded, loading, dispatch]);
 
   const useCurrentFilter = (location.state as { useCurrentFilter?: boolean } | null)?.useCurrentFilter;
 
@@ -64,6 +74,10 @@ function FilterPage() {
     dispatch(setFilter(filter));
     navigate('/photos');
   };
+
+  if (!loaded) {
+    return <p className="p-4">{loadingText}</p>;
+  }
 
   return (
       <Card className="w-full max-w-4xl mx-auto">
