@@ -2,7 +2,7 @@ steps:
   frontend-test:
     image: node:20-alpine
     commands:
-      - echo "📦 Frontend: install & test"
+      - echo 📦 Frontend: install & test
       - corepack enable
       - pnpm install
       - pnpm -r test
@@ -10,7 +10,7 @@ steps:
   backend-test:
     image: mcr.microsoft.com/dotnet/nightly/sdk:9.0
     commands:
-      - echo "🛠 Backend: restore & test (.NET 9)"
+      - echo 🛠 Backend: restore & test (.NET 9)
       - dotnet --version
       - dotnet restore
       - dotnet test --no-build --verbosity normal
@@ -20,7 +20,7 @@ steps:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     commands:
-      - echo "🚀 Deploying fullstack app with docker-compose"
+      - echo 🚀 Deploying fullstack app with docker-compose
       - docker compose pull
       - docker compose up -d --build
     when:
