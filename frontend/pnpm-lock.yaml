@@ -225,6 +225,9 @@ importers:
       object-hash:
         specifier: ^3.0.0
         version: 3.0.0
+      react:
+        specifier: ^19.1.0
+        version: 19.1.0
     devDependencies:
       '@types/node':
         specifier: ^24.0.7

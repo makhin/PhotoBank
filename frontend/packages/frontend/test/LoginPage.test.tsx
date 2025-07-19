@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import metaReducer from '../src/features/meta/model/metaSlice';
+import authReducer from '../src/features/auth/model/authSlice';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 class RO {
@@ -17,7 +18,7 @@ global.ResizeObserver = RO;
 const renderPage = async (loginMock: any) => {
   vi.doMock('@photobank/shared/api', () => ({ login: loginMock }));
   const { default: LoginPage } = await import('../src/pages/auth/LoginPage');
-  const store = configureStore({ reducer: { metadata: metaReducer } });
+  const store = configureStore({ reducer: { metadata: metaReducer, auth: authReducer } });
   render(
     <Provider store={store}>
       <MemoryRouter initialEntries={["/login"]}>

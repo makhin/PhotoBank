@@ -5,6 +5,8 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import metaReducer from '../src/features/meta/model/metaSlice';
+import photoReducer from '../src/features/photo/model/photoSlice';
+import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants';
 import { METADATA_CACHE_VERSION } from '@photobank/shared/constants';
 
 class RO {
@@ -28,8 +30,11 @@ const initialMeta = {
 
 const renderPage = async (preloaded: any) => {
   const store = configureStore({
-    reducer: { metadata: metaReducer },
-    preloadedState: { metadata: { ...initialMeta, ...preloaded } },
+    reducer: { metadata: metaReducer, photo: photoReducer },
+    preloadedState: {
+      metadata: { ...initialMeta, ...preloaded },
+      photo: { filter: { ...DEFAULT_PHOTO_FILTER }, selectedPhotos: [], lastResult: [] },
+    },
   });
 
   const { default: FilterPage } = await import('../src/pages/filter/FilterPage');
