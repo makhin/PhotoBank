@@ -177,10 +177,11 @@ export const MultiSelect = React.forwardRef<
                                                 {option?.label}
                                                 <XCircle
                                                     className="ml-2 h-4 w-4 cursor-pointer"
-                                                    onClick={(event) => {
-                                                        event.stopPropagation();
-                                                        toggleOption(value);
-                                                    }}
+                                                onClick={(event) => {
+                                                    event.preventDefault();
+                                                    event.stopPropagation();
+                                                    toggleOption(value);
+                                                }}
                                                 />
                                             </Badge>
                                         );
@@ -198,6 +199,7 @@ export const MultiSelect = React.forwardRef<
                                             <XCircle
                                                 className="ml-2 h-4 w-4 cursor-pointer"
                                                 onClick={(event) => {
+                                                    event.preventDefault();
                                                     event.stopPropagation();
                                                     clearExtraOptions();
                                                 }}
@@ -209,6 +211,7 @@ export const MultiSelect = React.forwardRef<
                                     <XIcon
                                         className="h-4 mx-2 cursor-pointer text-muted-foreground"
                                         onClick={(event) => {
+                                            event.preventDefault();
                                             event.stopPropagation();
                                             handleClear();
                                         }}
