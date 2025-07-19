@@ -1,10 +1,10 @@
 import {useNavigate} from 'react-router-dom';
 import {useForm} from 'react-hook-form';
-import {useState} from 'react';
+import {useCallback} from 'react';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
-import {login} from '@photobank/shared/api';
-import {useAppDispatch} from '@/app/hook.ts';
+import {loginUser, resetError} from '@/features/auth/model/authSlice.ts';
+import {useAppDispatch, useAppSelector} from '@/app/hook.ts';
 
 import {Button} from '@/components/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
@@ -13,7 +13,6 @@ import {Input} from '@/components/ui/input';
 import {PasswordInput} from '@/components/ui/password-input';
 import {
   loginTitle,
-  invalidCredentialsMsg,
   emailLabel,
   passwordLabel,
   stayLoggedInLabel,
@@ -31,7 +30,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function LoginPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const {loading, error} = useAppSelector((s) => s.auth);
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -41,22 +40,28 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      await login(data);
-      navigate('/filter');
-    } catch (e) {
-      console.error(e);
-      setErrorMessage(invalidCredentialsMsg);
+  const onSubmit = useCallback(
+    async (data: FormData) => {
+      const result = await dispatch(loginUser(data));
+      if (loginUser.fulfilled.match(result)) {
+        navigate('/filter');
+      }
+    },
+    [dispatch, navigate],
+  );
+
+  const handleFieldChange = useCallback(() => {
+    if (error) {
+      dispatch(resetError());
     }
-  };
+  }, [dispatch, error]);
 
   return (
     <div className="w-full max-w-sm mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">{loginTitle}</h1>
-      {errorMessage && (
+      {error && (
         <p className="text-destructive text-sm mb-2" role="alert">
-          {errorMessage}
+          {error}
         </p>
       )}
       <Form {...form}>
@@ -69,7 +74,14 @@ export default function LoginPage() {
               <FormItem>
                 <FormLabel>{emailLabel}</FormLabel>
                 <FormControl>
-                  <Input {...field} type="email" />
+                  <Input
+                    {...field}
+                    type="email"
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleFieldChange();
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -82,7 +94,13 @@ export default function LoginPage() {
               <FormItem>
                 <FormLabel>{passwordLabel}</FormLabel>
                 <FormControl>
-                  <PasswordInput {...field} />
+                  <PasswordInput
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleFieldChange();
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -96,7 +114,10 @@ export default function LoginPage() {
                 <FormControl>
                   <Checkbox
                     checked={field.value}
-                    onCheckedChange={field.onChange}
+                    onCheckedChange={(v) => {
+                      field.onChange(v);
+                      handleFieldChange();
+                    }}
                     id="rememberMe"
                   />
                 </FormControl>
@@ -106,7 +127,9 @@ export default function LoginPage() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full">{loginButtonText}</Button>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? '...' : loginButtonText}
+          </Button>
         </form>
       </Form>
     </div>

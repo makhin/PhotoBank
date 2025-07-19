@@ -3,6 +3,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import metaReducer from '@/features/meta/model/metaSlice.ts';
 import photoReducer from '@/features/photo/model/photoSlice.ts';
 import botReducer from '@/features/bot/model/botSlice.ts';
+import authReducer from '@/features/auth/model/authSlice.ts';
 import { api } from '@/entities/photo/api.ts';
 
 export const store = configureStore({
@@ -10,6 +11,7 @@ export const store = configureStore({
     metadata: metaReducer,
     photo: photoReducer,
     bot: botReducer,
+    auth: authReducer,
     [api.reducerPath]: api.reducer,
   },
   middleware: (getDefaultMiddleware) =>
