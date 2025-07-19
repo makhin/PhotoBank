@@ -39,3 +39,4 @@ export const firstNWords = (sentence: string, count: number): string => {
 
 export { checkIsAdmin } from './utils/admin';
 export { useIsAdmin } from './hooks/useIsAdmin';
+export { getPlaceByGeoPoint } from './utils/geocode';
