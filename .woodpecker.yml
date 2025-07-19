@@ -1,0 +1,21 @@
+pipeline:
+  build:
+    image: node:20-alpine
+    platform: linux/arm64
+    commands:
+      - corepack enable
+      - pnpm install
+      - pnpm -r test
+
+  deploy:
+    image: docker:26
+    platform: linux/arm64
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    commands:
+      - git pull origin master
+      - docker compose -f docker-compose.yml pull
+      - docker compose -f docker-compose.yml up -d --build
+    when:
+      branch: master
+      event: push
