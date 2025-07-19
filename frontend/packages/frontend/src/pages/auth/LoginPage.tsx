@@ -4,6 +4,7 @@ import {useState} from 'react';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
 import {login} from '@photobank/shared/api';
+import {useAppDispatch} from '@/app/hook.ts';
 
 import {Button} from '@/components/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
@@ -29,6 +30,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
