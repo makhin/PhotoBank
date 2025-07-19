@@ -3,6 +3,7 @@ export * from './dto/PhotoDto';
 export * from './dto/PhotoItemDto';
 export * from './dto/FaceDto';
 export * from './dto/FaceBoxDto';
+export * from './dto/GeoPointDto';
 export * from './dto/TagDto';
 export * from './dto/TagItemDto';
 export * from './dto/PersonDto';
