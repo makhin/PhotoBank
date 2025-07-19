@@ -22,6 +22,6 @@ services:
       - BOT_TOKEN=${BOT_TOKEN}
       - API_EMAIL=${API_EMAIL}
       - API_PASSWORD=${API_PASSWORD}
-      - API_BASE_URL=http://api:5066
+      - API_BASE_URL=${API_BASE_URL}
     depends_on:
       - api

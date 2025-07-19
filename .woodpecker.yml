@@ -1,21 +1,28 @@
-pipeline:
-  build:
+steps:
+  frontend-test:
     image: node:20-alpine
-    platform: linux/arm64
     commands:
+      - echo "📦 Frontend: install & test"
       - corepack enable
       - pnpm install
       - pnpm -r test
 
+  backend-test:
+    image: mcr.microsoft.com/dotnet/nightly/sdk:9.0
+    commands:
+      - echo "🛠 Backend: restore & test (.NET 9)"
+      - dotnet --version
+      - dotnet restore
+      - dotnet test --no-build --verbosity normal
+
   deploy:
     image: docker:26
-    platform: linux/arm64
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     commands:
-      - git pull origin master
-      - docker compose -f docker-compose.yml pull
-      - docker compose -f docker-compose.yml up -d --build
+      - echo "🚀 Deploying fullstack app with docker-compose"
+      - docker compose pull
+      - docker compose up -d --build
     when:
       branch: master
       event: push
