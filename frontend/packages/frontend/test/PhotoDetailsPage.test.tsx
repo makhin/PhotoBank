@@ -29,12 +29,18 @@ const photo = {
   height: 100,
   width: 200,
   orientation: 1,
+  location: { latitude: 10, longitude: 20 },
 };
 
 vi.mock('../src/entities/photo/api.ts', () => ({
   useGetPhotoByIdQuery: () => ({ data: photo, error: undefined }),
   useUpdateFaceMutation: () => [vi.fn(), { isLoading: false }],
 }));
+
+vi.mock('@photobank/shared', async () => {
+  const actual = await vi.importActual<any>('@photobank/shared');
+  return { ...actual, getPlaceByGeoPoint: vi.fn().mockResolvedValue('Nice place') };
+});
 
 class RO {
   observe() {}
@@ -85,6 +91,9 @@ describe('PhotoDetailsPage', () => {
     expect(screen.getByDisplayValue('Test Photo')).toBeTruthy();
     expect(screen.getAllByDisplayValue('1').length).toBeGreaterThan(0);
     expect(screen.getByLabelText('Show face boxes')).toBeTruthy();
+    const placeLink = await screen.findByRole('link', { name: /Nice place/ });
+    expect(placeLink).toBeTruthy();
+    expect(placeLink.getAttribute('href')).toContain('10,20');
   });
 
   it('toggles face boxes visibility', async () => {
