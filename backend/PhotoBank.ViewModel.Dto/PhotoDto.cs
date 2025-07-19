@@ -14,6 +14,7 @@ namespace PhotoBank.ViewModel.Dto
         public DateTime? TakenDate { get; set; }
         [System.ComponentModel.DataAnnotations.Required]
         public required byte[] PreviewImage { get; set; }
+        public GeoPointDto? Location { get; set; }
         public int? Orientation { get; set; }
         public List<FaceDto>? Faces { get; set; }
         public List<string>? Captions { get; set; }

@@ -12,6 +12,14 @@ namespace PhotoBank.Services
             CreateMap<Photo, PhotoDto>()
                 .ForMember(dest => dest.Captions, opt => opt.MapFrom(src => src.Captions))
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.PhotoTags))
+                .ForMember(dest => dest.Location,
+                    opt => opt.MapFrom(src => src.Location == null
+                        ? null
+                        : new GeoPointDto
+                        {
+                            Latitude = src.Location.Coordinate.X,
+                            Longitude = src.Location.Coordinate.Y
+                        }))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Caption, string>().ConvertUsing(c => c.Text);
