@@ -5,6 +5,6 @@ steps:
       - echo "Backend restore build test"
       - dotnet --version
       - cd backend
-      - dotnet restore PhotoBank.sln
-      - dotnet build PhotoBank.sln --no-restore --configuration Release
-      - dotnet test PhotoBank.sln --no-build --configuration Release --verbosity normal
+      - dotnet restore PhotoBank.Backend.sln
+      - dotnet build PhotoBank.Backend.sln --no-restore --configuration Release
+      - dotnet test PhotoBank.Backend.sln --no-build --configuration Release --verbosity normal
