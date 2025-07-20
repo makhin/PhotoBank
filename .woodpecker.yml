@@ -22,6 +22,7 @@ steps:
 
   docker-build-push:
     image: plugins/docker
+    privileged: true
     settings:
       repo: makhin/photobank
       tags: latest
