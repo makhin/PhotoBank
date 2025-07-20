@@ -18,7 +18,7 @@ steps:
       - pnpm build
       - pnpm test || echo "⚠️ Frontend tests failed, ignoring"
 
-  - name: docker-build-push
+  - name: docker-compose-build-push
     image: docker:cli
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -28,10 +28,10 @@ steps:
       DOCKER_PASSWORD:
         from_secret: docker_password
     commands:
-      - echo "Docker build and push start"
+      - echo "Docker Compose build and push start"
       - docker version
       - docker info
       - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      - docker build --platform linux/arm64 -t makhin/photobank:latest -f ./Dockerfile .
-      - docker push makhin/photobank:latest
+      - docker compose build
+      - docker compose push
       - docker logout
