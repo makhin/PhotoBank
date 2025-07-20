@@ -2,9 +2,9 @@ steps:
   - name: frontend-build-test
     image: node:20-alpine
     commands:
-      - echo "Frontend install build test"
+      - echo "Install dependencies"
       - cd frontend
       - corepack enable
       - pnpm install --frozen-lockfile
-      - pnpm build
-      - pnpm test
+      - pnpm -r --if-present build
+      - pnpm -r --if-present test
