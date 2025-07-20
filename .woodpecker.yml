@@ -1,37 +1,5 @@
-when:
-  event:
-    - push
-    - pull_request
-
 steps:
-  frontend-test:
-    image: node:20-alpine
+  hello:
+    image: alpine
     commands:
-      - "echo '📦 Frontend: install & test'"
-      - corepack enable
-      - pnpm install
-      - pnpm -r test
-
-  backend-test:
-    image: mcr.microsoft.com/dotnet/nightly/sdk:9.0
-    commands:
-      - "echo '🛠 Backend: restore & test (.NET 9)'"
-      - dotnet --version
-      - dotnet restore
-      - dotnet test --no-build --verbosity normal
-
-  docker-build-push:
-    image: plugins/docker
-    privileged: true
-    settings:
-      repo: makhin/photobank
-      tags: latest
-      dockerfile: ./Dockerfile
-      context: .
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-    when:
-      branch: master
-      event: push
+      - echo "👋 Hello from Woodpecker"
