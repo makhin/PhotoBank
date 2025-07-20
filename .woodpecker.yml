@@ -1,10 +1,10 @@
 steps:
-  - name: backend-build-test
-    image: mcr.microsoft.com/dotnet/sdk:9.0
+  - name: frontend-build-test
+    image: node:20-alpine
     commands:
-      - echo "Backend restore build test"
-      - dotnet --version
-      - cd backend
-      - dotnet restore PhotoBank.Backend.sln
-      - dotnet build PhotoBank.Backend.sln --no-restore --configuration Release
-      - dotnet test PhotoBank.Backend.sln --no-build --configuration Release --filter "FullyQualifiedName~PhotoBank.UnitTests"
+      - echo "Frontend install build test"
+      - cd frontend
+      - corepack enable
+      - pnpm install --frozen-lockfile
+      - pnpm build
+      - pnpm test
