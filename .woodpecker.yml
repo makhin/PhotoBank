@@ -13,10 +13,8 @@ steps:
       - docker version
       - docker info
       - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      - docker build -t makhin/woodpecker-dummy:latest - <<EOF
-        FROM alpine
-        CMD ["echo", "Hello from Woodpecker pushed image!"]
-        EOF
+      - echo "FROM alpine\nCMD [\"echo\", \"Hello from Woodpecker pushed image!\"]" > Dockerfile
+      - docker build --platform linux/arm64 -t makhin/woodpecker-dummy:latest .
       - docker push makhin/woodpecker-dummy:latest
       - docker logout
       - echo "Pull and run image from Docker Hub"
