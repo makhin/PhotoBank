@@ -1,10 +1,23 @@
 steps:
-  - name: frontend-build-test
-    image: node:20-alpine
+  - name: docker-build-push-test
+    image: docker:cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      DOCKER_USERNAME:
+        from_secret: docker_username
+      DOCKER_PASSWORD:
+        from_secret: docker_password
     commands:
-      - echo "Install dependencies"
-      - cd frontend
-      - corepack enable
-      - pnpm install --frozen-lockfile
-      - pnpm -r --if-present build
-      - pnpm -r --if-present test
+      - echo "Docker build and push test start"
+      - docker version
+      - docker info
+      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - docker build -t makhin/woodpecker-dummy:latest - <<EOF
+        FROM alpine
+        CMD ["echo", "Hello from Woodpecker pushed image!"]
+        EOF
+      - docker push makhin/woodpecker-dummy:latest
+      - docker logout
+      - echo "Pull and run image from Docker Hub"
+      - docker run --rm makhin/woodpecker-dummy:latest
