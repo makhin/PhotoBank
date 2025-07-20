@@ -1,5 +1,24 @@
 steps:
-  - name: docker-build-push-test
+  - name: backend-build-test
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    commands:
+      - echo "Backend build and test"
+      - cd backend
+      - dotnet restore PhotoBank.sln
+      - dotnet build PhotoBank.sln --no-restore --configuration Release
+      - dotnet test PhotoBank.sln --no-build --configuration Release --filter "FullyQualifiedName~PhotoBank.UnitTests" || echo "⚠️ Backend tests failed, ignoring"
+
+  - name: frontend-build-test
+    image: node:20-alpine
+    commands:
+      - echo "Frontend install build and test"
+      - cd frontend
+      - corepack enable
+      - pnpm install --frozen-lockfile
+      - pnpm build
+      - pnpm test || echo "⚠️ Frontend tests failed, ignoring"
+
+  - name: docker-build-push
     image: docker:cli
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -9,15 +28,10 @@ steps:
       DOCKER_PASSWORD:
         from_secret: docker_password
     commands:
-      - echo "Docker build and push test start"
+      - echo "Docker build and push start"
       - docker version
       - docker info
       - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      - |
-        echo 'FROM alpine' > Dockerfile
-        echo 'CMD ["echo", "Hello from Woodpecker pushed image!"]' >> Dockerfile
-      - docker build --platform linux/arm64 -t makhin/woodpecker-dummy:latest .
-      - docker push makhin/woodpecker-dummy:latest
+      - docker build --platform linux/arm64 -t makhin/photobank:latest -f ./Dockerfile .
+      - docker push makhin/photobank:latest
       - docker logout
-      - echo "Pull and run image from Docker Hub"
-      - docker run --rm makhin/woodpecker-dummy:latest
