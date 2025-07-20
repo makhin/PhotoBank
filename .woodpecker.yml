@@ -1,9 +1,12 @@
 steps:
-  backend-build-test:
+  - name: backend-build-test
     image: mcr.microsoft.com/dotnet/sdk:9.0
     commands:
-      - echo "Backend restore, build, test"
+      - echo "Backend restore build test"
       - dotnet --version
+      - pwd
+      - ls -la
+      - ls -la backend
       - dotnet restore ./backend/Photobank.sln
       - dotnet build ./backend/Photobank.sln --no-restore --configuration Release
       - dotnet test ./backend/Photobank.sln --no-build --configuration Release --verbosity normal
