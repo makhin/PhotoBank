@@ -4,9 +4,9 @@ steps:
     commands:
       - echo "Backend build and test"
       - cd backend
-      - dotnet restore PhotoBank.sln
-      - dotnet build PhotoBank.sln --no-restore --configuration Release
-      - dotnet test PhotoBank.sln --no-build --configuration Release --filter "FullyQualifiedName~PhotoBank.UnitTests" || echo "⚠️ Backend tests failed, ignoring"
+      - dotnet restore PhotoBank.Backend.sln
+      - dotnet build PhotoBank.Backend.sln --no-restore --configuration Release
+      - dotnet test PhotoBank.Backend.sln --no-build --configuration Release --filter "FullyQualifiedName~PhotoBank.UnitTests" || echo "⚠️ Backend tests failed, ignoring"
 
   - name: frontend-build-test
     image: node:20-alpine
