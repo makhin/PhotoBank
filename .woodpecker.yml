@@ -8,4 +8,4 @@ steps:
       - dotnet restore PhotoBank.Backend.sln
       - dotnet build PhotoBank.Backend.sln --no-restore --configuration Release
 
-.     - dotnet test PhotoBank.Backend.sln --no-build --configuration Release --filter "FullyQualifiedName~PhotoBank.UnitTests"
+      - dotnet test PhotoBank.Backend.sln --no-build --configuration Release --filter "FullyQualifiedName~PhotoBank.UnitTests"
