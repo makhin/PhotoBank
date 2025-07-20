@@ -9,6 +9,7 @@
 - **PhotoBank.Console** – консольные утилиты.
 - **PhotoBank.DbContext**, **PhotoBank.Repositories**, **PhotoBank.Services**, **PhotoBank.ViewModel.Dto** – общие слои приложения.
 - **PhotoBank.UnitTests**, **PhotoBank.IntegrationTests** – проекты с тестами.
+- **PhotoBank.Backend.sln** – решение со всеми бэкенд‑проектами без MAUI.
 
 ## Сборка и запуск
 
@@ -84,6 +85,8 @@ dotnet run --project PhotoBank.MAUI.Blazor
 
 ```bash
 dotnet test PhotoBank.sln
+# либо
+dotnet test PhotoBank.Backend.sln
 ```
 
 Для пакетов Node.js:
@@ -117,6 +120,7 @@ The project is composed of several modules:
 - **PhotoBank.Console** – command-line utilities.
 - **PhotoBank.DbContext**, **PhotoBank.Repositories**, **PhotoBank.Services**, **PhotoBank.ViewModel.Dto** – common layers.
 - **PhotoBank.UnitTests**, **PhotoBank.IntegrationTests** – test projects.
+- **PhotoBank.Backend.sln** – solution containing all backend projects without the MAUI client.
 
 ## Build and run
 
@@ -188,6 +192,8 @@ For .NET projects:
 
 ```bash
 dotnet test PhotoBank.sln
+# or
+dotnet test PhotoBank.Backend.sln
 ```
 
 For Node.js packages:
