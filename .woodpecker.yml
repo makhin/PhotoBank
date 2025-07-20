@@ -20,14 +20,17 @@ steps:
       - dotnet restore
       - dotnet test --no-build --verbosity normal
 
-  deploy:
-    image: docker:26
-    privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    commands:
-      - "echo '🚀 Deploying fullstack app with docker-compose'"
-      - docker compose pull
-      - docker compose up -d --build
+  docker-build-push:
+    image: plugins/docker
+    settings:
+      repo: makhin/photobank
+      tags: latest
+      dockerfile: ./Dockerfile
+      context: .
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
     when:
       branch: master
+      event: push
