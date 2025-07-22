@@ -9,7 +9,7 @@ services:
       - "5173:5173"
     restart: always
     environment:
-      - VITE_API_BASE_URL=http://192.168.1.63:5066 # проброс в Docker
+      - VITE_API_BASE_URL=${API_BASE_URL}
 
   bot:
     build:
@@ -19,4 +19,4 @@ services:
       - BOT_TOKEN=${BOT_TOKEN}
       - API_EMAIL=${API_EMAIL}
       - API_PASSWORD=${API_PASSWORD}
-      - VITE_API_BASE_URL=http://192.168.1.63:5066
+      - VITE_API_BASE_URL=${API_BASE_URL}
