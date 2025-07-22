@@ -30,7 +30,6 @@ steps:
         from_secret: docker_username
       DOCKER_PASSWORD:
         from_secret: docker_password
-    environment:
       VITE_API_BASE_URL:
         from_secret: vite_api_base_url
     commands:
