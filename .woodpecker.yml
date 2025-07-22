@@ -22,7 +22,7 @@ steps:
       - pnpm test || echo "⚠️ Frontend tests failed, ignoring"
 
   - name: docker-compose-build
-    image: docker:cli
+    image: docker:cli-24.0.7
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
