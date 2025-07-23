@@ -1,0 +1,15 @@
+services:
+  insightface-api:
+    build: .
+    ports:
+      - "5555:5555"
+    environment:
+      - DB_URL=${DB_URL}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    runtime: nvidia
