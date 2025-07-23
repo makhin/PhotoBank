@@ -5,10 +5,12 @@ using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PhotoBank.InsightFaceApiClient;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichers.Services;
+using PhotoBank.Services.Recognition;
 using ApiKeyServiceClientCredentials = Microsoft.Azure.CognitiveServices.Vision.ComputerVision.ApiKeyServiceClientCredentials;
 
 namespace PhotoBank.Services
@@ -68,6 +70,9 @@ namespace PhotoBank.Services
             services.AddTransient<IEnricher, FaceEnricherAws>();
             services.AddTransient<IFacePreviewService, FacePreviewService>();
             services.AddTransient<IImageMetadataReaderWrapper, ImageMetadataReaderWrapper>();
+
+            services.AddSingleton<IInsightFaceApiClient, InsightFaceApiClient.InsightFaceApiClient>();
+            services.AddTransient<IRecognitionService, RecognitionService>();
 
             services.AddTransient<EnricherResolver>(serviceProvider => repository =>
             {

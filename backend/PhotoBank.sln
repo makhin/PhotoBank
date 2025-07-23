@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoBank.Api", "PhotoBank.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoBank.ViewModel.Dto", "PhotoBank.ViewModel.Dto\PhotoBank.ViewModel.Dto.csproj", "{84FA7787-892C-45A8-8988-B21CBA3FE2AC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoBank.InsightFaceApiClient", "PhotoBank.InsightFace.Client\PhotoBank.InsightFaceApiClient.csproj", "{9FE32204-3871-2978-95D3-BDC786905E1F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -115,6 +117,14 @@ Global
 		{84FA7787-892C-45A8-8988-B21CBA3FE2AC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{84FA7787-892C-45A8-8988-B21CBA3FE2AC}.Release|x64.ActiveCfg = Release|Any CPU
 		{84FA7787-892C-45A8-8988-B21CBA3FE2AC}.Release|x64.Build.0 = Release|Any CPU
+		{9FE32204-3871-2978-95D3-BDC786905E1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FE32204-3871-2978-95D3-BDC786905E1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FE32204-3871-2978-95D3-BDC786905E1F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9FE32204-3871-2978-95D3-BDC786905E1F}.Debug|x64.Build.0 = Debug|Any CPU
+		{9FE32204-3871-2978-95D3-BDC786905E1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FE32204-3871-2978-95D3-BDC786905E1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FE32204-3871-2978-95D3-BDC786905E1F}.Release|x64.ActiveCfg = Release|Any CPU
+		{9FE32204-3871-2978-95D3-BDC786905E1F}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

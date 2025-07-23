@@ -1,17 +1,28 @@
-
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
-namespace PhotoBank.InsightFace.Client
+namespace PhotoBank.InsightFaceApiClient
 {
-    public class InsightFaceApiClient
+    public interface IInsightFaceApiClient
+    {
+        Task<bool> HealthAsync();
+        Task<string> GetPersonsAsync();
+        Task<string> RegisterAsync(int personId, Stream fileStream, string fileName = "upload.jpg");
+        Task<string> RecognizeAsync(Stream fileStream, string fileName = "upload.jpg");
+        Task<string> BatchRecognizeAsync(IEnumerable<(Stream fileStream, string fileName)> files);
+    }
+
+    public class InsightFaceApiClient : IInsightFaceApiClient
     {
         private readonly HttpClient _httpClient;
 
-        public InsightFaceApiClient(string baseUrl)
+        public InsightFaceApiClient()
         {
-            _httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
+            _httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5555") };
         }
 
         public async Task<bool> HealthAsync()
@@ -28,7 +39,7 @@ namespace PhotoBank.InsightFace.Client
             return await response.Content.ReadAsStringAsync();
         }
 
-        public async Task<string> RegisterAsync(int personId, Stream fileStream, string fileName)
+        public async Task<string> RegisterAsync(int personId, Stream fileStream, string fileName = "upload.jpg")
         {
             using var content = new MultipartFormDataContent();
             var fileContent = new StreamContent(fileStream);
@@ -40,7 +51,7 @@ namespace PhotoBank.InsightFace.Client
             return await response.Content.ReadAsStringAsync();
         }
 
-        public async Task<string> RecognizeAsync(Stream fileStream, string fileName)
+        public async Task<string> RecognizeAsync(Stream fileStream, string fileName = "upload.jpg")
         {
             using var content = new MultipartFormDataContent();
             var fileContent = new StreamContent(fileStream);
