@@ -10,11 +10,13 @@ import RegisterPage from '@/pages/auth/RegisterPage.tsx';
 import LogoutPage from '@/pages/auth/LogoutPage.tsx';
 import MyProfilePage from '@/pages/profile/MyProfilePage.tsx';
 import UsersPage from '@/pages/admin/UsersPage.tsx';
+import ServiceInfoPage from '@/pages/service/ServiceInfoPage.tsx';
 
 export const AppRoutes = () => (
   <Routes>
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
+    <Route path="/service" element={<ServiceInfoPage />} />
     <Route element={<RequireAuth />}>
       <Route path="/" element={<Navigate to="/filter" />} />
       <Route path="/logout" element={<LogoutPage />} />
