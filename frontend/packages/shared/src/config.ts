@@ -16,8 +16,8 @@ export async function loadResources(): Promise<void> {
       }
     } else {
       const fs = await import('fs/promises');
-      const path = await import('path');
-      const file = await fs.readFile(path.resolve(__dirname, '../Resources.json'), 'utf-8');
+      const url = new URL('../Resources.json', import.meta.url);
+      const file = await fs.readFile(url, 'utf-8');
       data = JSON.parse(file);
     }
     if (data?.API_BASE_URL) {
