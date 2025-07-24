@@ -1,34 +1,43 @@
-// Determine API base URL from environment variables for both Node and browser contexts. Vite exposes variables prefixed with `VITE_` to the client.
-export const API_BASE_URL: string = (() => {
-    // Vite during build replaces `import.meta.env` with the actual environment values. Use `VITE_API_BASE_URL` if present.
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) {
-        return (import.meta as any).env.VITE_API_BASE_URL as string;
-    }
+// Shared runtime configuration loaded from Resources.json
 
-    // When running under Node (e.g. in the Telegram bot) fall back to standard environment variables.
-    if (typeof process !== 'undefined') {
-        if (process.env.VITE_API_BASE_URL) {
-            return process.env.VITE_API_BASE_URL;
-        }
-        if (process.env.API_BASE_URL) {
-            return process.env.API_BASE_URL;
-        }
-    }
+let API_BASE_URL = "http://localhost:5066";
 
-    // Default value used in development when no environment variable is set.
-    return "http://localhost:5066";
-})();
+export function getApiBaseUrl(): string {
+  return API_BASE_URL;
+}
+
+export async function loadResources(): Promise<void> {
+  try {
+    let data: { API_BASE_URL?: string } | undefined;
+    if (isBrowser()) {
+      const res = await fetch('/Resources.json');
+      if (res.ok) {
+        data = await res.json();
+      }
+    } else {
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      const file = await fs.readFile(path.resolve(__dirname, '../Resources.json'), 'utf-8');
+      data = JSON.parse(file);
+    }
+    if (data?.API_BASE_URL) {
+      API_BASE_URL = data.API_BASE_URL;
+    }
+  } catch (err) {
+    console.warn('Failed to load Resources.json', err);
+  }
+}
 
 export const GOOGLE_API_KEY: string | undefined = (() => {
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GOOGLE_API_KEY) {
-        return (import.meta as any).env.VITE_GOOGLE_API_KEY as string;
-    }
-    if (typeof process !== 'undefined') {
-        return process.env.VITE_GOOGLE_API_KEY ?? process.env.GOOGLE_API_KEY;
-    }
-    return undefined;
+  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GOOGLE_API_KEY) {
+    return (import.meta as any).env.VITE_GOOGLE_API_KEY as string;
+  }
+  if (typeof process !== 'undefined') {
+    return process.env.VITE_GOOGLE_API_KEY ?? process.env.GOOGLE_API_KEY;
+  }
+  return undefined;
 })();
 
 export function isBrowser(): boolean {
-    return typeof window !== 'undefined' && typeof window.crypto !== 'undefined';
+  return typeof window !== 'undefined' && typeof window.crypto !== 'undefined';
 }
