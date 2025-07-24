@@ -2,6 +2,7 @@ import { Bot } from "grammy";
 import {BOT_TOKEN, API_EMAIL, API_PASSWORD} from "./config";
 import {sendThisDayPage, thisDayCommand, captionCache} from "./commands/thisday";
 import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
+import { filterCommand, handleFilterWizard, handleFilterNavigation } from "./commands/filter";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import { photoByIdCommand } from "./commands/photoById";
 import { registerPhotoRoutes } from "./commands/photoRouter";
@@ -43,6 +44,8 @@ bot.command("profile", profileCommand);
 
 bot.command("subscribe", subscribeCommand);
 
+bot.command("filter", filterCommand);
+
 bot.callbackQuery(/^thisday:(\d+)$/, async (ctx) => {
     const page = parseInt(ctx.match[1], 10);
     await ctx.answerCallbackQuery();
@@ -54,6 +57,10 @@ bot.callbackQuery(/^caption:(\d+)$/, async (ctx) => {
     const caption = captionCache.get(id);
     await ctx.answerCallbackQuery(caption ?? captionMissingMsg, { show_alert: true });
 });
+
+bot.callbackQuery(/^filter_(next|prev):(\d+)$/, handleFilterNavigation);
+
+bot.on("message:text", handleFilterWizard);
 
 bot.on("message", (ctx) => ctx.reply(unknownMessageReplyMsg));
 
