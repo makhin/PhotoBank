@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PhotoBank.InsightFace.Client\PhotoBank.InsightFaceApiClient.csproj" />
     <ProjectReference Include="..\PhotoBank.Repositories\PhotoBank.Repositories.csproj" />
     <ProjectReference Include="..\PhotoBank.Services\PhotoBank.Services.csproj" />
   </ItemGroup>

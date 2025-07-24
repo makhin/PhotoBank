@@ -13,16 +13,18 @@
   },
   "dependencies": {
     "axios": "^1.10.0",
-    "object-hash": "^3.0.0",
     "date-fns": "^4.1.0",
     "dexie": "^4.0.11",
     "dotenv": "^17.0.0",
-    "lru-cache": "^10.4.3"
+    "lru-cache": "^10.4.3",
+    "object-hash": "^3.0.0",
+    "openapi-typescript-codegen": "^0.29.0"
   },
   "peerDependencies": {
     "react": "^19.1.0"
   },
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "generate:api": "openapi --input ../../../openapi.yaml --output src/generated --client axios"
   }
 }
