@@ -35,7 +35,10 @@ public class PhotoService : IPhotoService
     private readonly Lazy<Task<IReadOnlyList<PathDto>>> _paths;
 
     private static readonly MemoryCacheEntryOptions CacheOptions = new()
-        { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5) };
+    {
+        AbsoluteExpiration = null, // Setting AbsoluteExpiration to null
+        SlidingExpiration = null  // Optional: SlidingExpiration can also be null for endless expiration
+    };
 
     public PhotoService(
         IRepository<Photo> photoRepository,
@@ -51,22 +54,22 @@ public class PhotoService : IPhotoService
         _mapper = mapper;
         _cache = cache;
         _persons = new Lazy<Task<IReadOnlyList<PersonDto>>>(() =>
-            GetCachedAsync("persons", () => personRepository.GetAll()
+                GetCachedAsync("persons", async () => (IReadOnlyList<PersonDto>)await personRepository.GetAll()
                 .OrderBy(p => p.Name)
                 .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
                 .ToListAsync()));
         _storages = new Lazy<Task<IReadOnlyList<StorageDto>>>(() =>
-            GetCachedAsync("storages", () => storageRepository.GetAll()
+            GetCachedAsync("storages", async () => (IReadOnlyList<StorageDto>)await storageRepository.GetAll()
                 .OrderBy(p => p.Name)
                 .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
                 .ToListAsync()));
         _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
-            GetCachedAsync("tags", () => tagRepository.GetAll()
+            GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
                 .OrderBy(p => p.Name)
                 .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
                 .ToListAsync()));
         _paths = new Lazy<Task<IReadOnlyList<PathDto>>>(() =>
-            GetCachedAsync("paths", () => photoRepository.GetAll()
+            GetCachedAsync("paths", async () => (IReadOnlyList<PathDto>)await photoRepository.GetAll()
                 .ProjectTo<PathDto>(_mapper.ConfigurationProvider)
                 .Distinct()
                 .OrderBy(p => p.Path)
@@ -128,20 +131,21 @@ public class PhotoService : IPhotoService
     {
         var query = ApplyFilter(_photoRepository.GetAll().AsNoTracking().AsSplitQuery(), filter);
 
-        var countTask = query.CountAsync();
-        var photosTask = query
+        // Execute the count query first
+        var count = await query.CountAsync();
+
+        // Execute the photos query next
+        var photos = await query
             .OrderByDescending(p => p.TakenDate)
             .Skip(filter.Skip ?? 0)
             .Take(filter.Top ?? int.MaxValue)
             .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
-        await Task.WhenAll(countTask, photosTask);
-
         return new QueryResult
         {
-            Count = countTask.Result,
-            Photos = photosTask.Result
+            Count = count,
+            Photos = photos
         };
     }
 
@@ -170,7 +174,7 @@ public class PhotoService : IPhotoService
             Id = faceId,
             IdentifiedWithConfidence = personId == -1 ? 0 : 1,
             IdentityStatus = personId == -1 ? IdentityStatus.StopProcessing : IdentityStatus.Identified,
-            PersonId = personId == -1 ? (int?)null : personId
+            PersonId = personId == -1 ? null : personId
         };
         await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentifiedWithConfidence, f => f.IdentityStatus);
     }
