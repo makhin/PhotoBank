@@ -7,6 +7,7 @@ using PhotoBank.DbContext.DbContext;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
+using System.Diagnostics;
 using System;
 using System.Threading.Tasks;
 
@@ -17,6 +18,16 @@ public class GetAllPhotosIntegrationTests
 {
     private ServiceProvider _provider = null!;
     private IConfiguration _config = null!;
+
+    private async Task<QueryResult> MeasureGetAllPhotosAsync(FilterDto filter)
+    {
+        var service = _provider.GetRequiredService<IPhotoService>();
+        var sw = Stopwatch.StartNew();
+        var result = await service.GetAllPhotosAsync(filter);
+        sw.Stop();
+        TestContext.WriteLine($"{TestContext.CurrentContext.Test.Name}: {sw.ElapsedMilliseconds} ms");
+        return result;
+    }
 
     [OneTimeSetUp]
     public void OneTimeSetup()
@@ -59,13 +70,12 @@ public class GetAllPhotosIntegrationTests
     [Test]
     public async Task GetAllPhotosAsync_NoFilter_ReturnsAll()
     {
-        var service = _provider.GetRequiredService<IPhotoService>();
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
         };
-        var result = await service.GetAllPhotosAsync(filterDto);
+        var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Count.Should().Be(5180);
         result.Photos.Should().HaveCount(5180);
     }
@@ -73,14 +83,13 @@ public class GetAllPhotosIntegrationTests
     [Test]
     public async Task GetAllPhotosAsync_NoFilterTop10_Returns10()
     {
-        var service = _provider.GetRequiredService<IPhotoService>();
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
             Top = 10
         };
-        var result = await service.GetAllPhotosAsync(filterDto);
+        var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Count.Should().Be(5180);
         result.Photos.Should().HaveCount(10);
     }
@@ -88,7 +97,6 @@ public class GetAllPhotosIntegrationTests
     [Test]
     public async Task GetAllPhotosAsync_NoFilterTopAndSkip10_Returns10()
     {
-        var service = _provider.GetRequiredService<IPhotoService>();
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
@@ -96,7 +104,7 @@ public class GetAllPhotosIntegrationTests
             Top = 10,
             Skip = 10
         };
-        var result = await service.GetAllPhotosAsync(filterDto);
+        var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Count.Should().Be(5180);
         result.Photos.Should().HaveCount(10);
     }
@@ -104,63 +112,58 @@ public class GetAllPhotosIntegrationTests
     [Test]
     public async Task GetAllPhotosAsync_FilterByIsBW_ReturnsOnlyBW()
     {
-        var service = _provider.GetRequiredService<IPhotoService>();
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
             IsBW = true
         };
-        var result = await service.GetAllPhotosAsync(filterDto);
+        var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Count.Should().Be(60);
     }
 
     [Test]
     public async Task GetAllPhotosAsync_FilterByIsAdult_ReturnsOnlyAdult()
     {
-        var service = _provider.GetRequiredService<IPhotoService>();
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
             IsAdultContent = true
         };
-        var result = await service.GetAllPhotosAsync(filterDto);
+        var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Count.Should().Be(20);
     }
 
     [Test]
     public async Task GetAllPhotosAsync_FilterByIsRacy_ReturnsOnlyRacy()
     {
-        var service = _provider.GetRequiredService<IPhotoService>();
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
             IsRacyContent = true
         };
-        var result = await service.GetAllPhotosAsync(filterDto);
+        var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Count.Should().Be(71);
     }
 
     [Test]
     public async Task GetAllPhotosAsync_FilterByStorage_ReturnsMatchingPhoto()
     {
-        var service = _provider.GetRequiredService<IPhotoService>();
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
             Storages = new []{3, 4}
         };
-        var result = await service.GetAllPhotosAsync(filterDto);
+        var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Count.Should().Be(1385);
     }
 
     [Test]
     public async Task GetAllPhotosAsync_FilterByStorageAndPath_ReturnsMatchingPhoto()
     {
-        var service = _provider.GetRequiredService<IPhotoService>();
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
@@ -168,49 +171,46 @@ public class GetAllPhotosIntegrationTests
             Storages = new[] { 3, 4 },
             RelativePath = "Test"
         };
-        var result = await service.GetAllPhotosAsync(filterDto);
+        var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Count.Should().Be(0);
     }
 
     [Test]
     public async Task GetAllPhotosAsync_FilterByTag_ReturnsMatchingPhoto()
     {
-        var service = _provider.GetRequiredService<IPhotoService>();
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
             Tags = new []{3504, 3505}
         };
-        var result = await service.GetAllPhotosAsync(filterDto);
+        var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Count.Should().Be(2420);
     }
 
     [Test]
     public async Task GetAllPhotosAsync_FilterByPerson_ReturnsMatchingPhoto()
     {
-        var service = _provider.GetRequiredService<IPhotoService>();
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
             Persons = new[] { 1, 2 }
         };
-        var result = await service.GetAllPhotosAsync(filterDto);
+        var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Count.Should().Be(104);
     }
 
     [Test]
     public async Task GetAllPhotosAsync_FilterByCaption_ReturnsMatchingPhoto()
     {
-        var service = _provider.GetRequiredService<IPhotoService>();
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
             Caption = "sky and grass"
         };
-        var result = await service.GetAllPhotosAsync(filterDto);
+        var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Count.Should().Be(163);
     }
 }
