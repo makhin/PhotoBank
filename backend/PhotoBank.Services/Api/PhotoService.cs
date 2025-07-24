@@ -52,146 +52,83 @@ namespace PhotoBank.Services.Api
 
         public async Task<QueryResult> GetAllPhotosAsync(FilterDto filter)
         {
-            var queryResult = new QueryResult();
-
-            var photos = _photoRepository
+            var query = _photoRepository
                 .GetAll()
-                .Include(p => p.Storage)
-                .Include(p => p.PhotoTags)
-                .Include(p => p.Faces)
-                .Include(p => p.Captions)
-                .AsQueryable();
+                .AsNoTrackingWithIdentityResolution()
+                .AsSplitQuery();
 
-            if (filter.IsBW.HasValue)
+            if (filter.IsBW is true)
             {
-                photos = photos.Where(p => p.IsBW);
+                query = query.Where(p => p.IsBW);
             }
 
-            if (filter.IsAdultContent.HasValue)
+            if (filter.IsAdultContent is true)
             {
-                photos = photos.Where(p => p.IsAdultContent);
+                query = query.Where(p => p.IsAdultContent);
             }
 
-            if (filter.IsRacyContent.HasValue)
+            if (filter.IsRacyContent is true)
             {
-                photos = photos.Where(p => p.IsRacyContent);
+                query = query.Where(p => p.IsRacyContent);
             }
 
             if (filter.TakenDateFrom.HasValue)
             {
-                photos = photos.Where(p => p.TakenDate.HasValue && p.TakenDate >= filter.TakenDateFrom.Value);
+                query = query.Where(p => p.TakenDate.HasValue && p.TakenDate >= filter.TakenDateFrom.Value);
             }
 
             if (filter.TakenDateTo.HasValue)
             {
-                photos = photos.Where(p => p.TakenDate.HasValue && p.TakenDate <= filter.TakenDateTo.Value);
+                query = query.Where(p => p.TakenDate.HasValue && p.TakenDate <= filter.TakenDateTo.Value);
             }
 
             if (filter.ThisDay is true)
             {
-                photos = photos.Where(p =>
+                query = query.Where(p =>
                     p.TakenDate.HasValue && p.TakenDate.Value.Day == DateTime.Today.Day &&
                     p.TakenDate.Value.Month == DateTime.Today.Month);
             }
 
             if (filter.Storages != null && filter.Storages.Any())
             {
-                photos = photos
-                    .Include(p => p.Storage)
-                    .Where(p => filter.Storages.ToList().Contains(p.Storage.Id));
+                var storages = filter.Storages.ToList();
+                query = query.Where(p => storages.Contains(p.StorageId));
 
                 if (!string.IsNullOrEmpty(filter.RelativePath))
                 {
-                    photos = photos.Where(p => p.RelativePath == filter.RelativePath);
+                    query = query.Where(p => p.RelativePath == filter.RelativePath);
                 }
             }
 
             if (!string.IsNullOrEmpty(filter.Caption))
             {
-                photos = photos
-                    .Include(p => p.Captions)
-                    .Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption)));
+                query = query.Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption!)));
             }
 
             if (filter.Persons != null && filter.Persons.Any())
             {
-                var list = filter.Persons.ToList<int>();
-
-                photos = photos
-                    .Where(p => p.Faces != null)
-                    .Where(p => p.Faces.Any())
-                    .Where(p => p.Faces
-                        .Select(f => f.PersonId.Value)
-                        .Any(x => list.Contains(x)));
+                var ids = filter.Persons.ToList();
+                query = query.Where(p => ids.All(id => p.Faces.Any(f => f.PersonId == id)));
             }
 
             if (filter.Tags != null && filter.Tags.Any())
             {
-                var list = filter.Tags.ToList<int>();
-
-                photos = photos
-                    .Where(p => p.PhotoTags != null)
-                    .Where(p => p.PhotoTags.Any())
-                    .Where(p => p.PhotoTags
-                        .Select(f => f.Tag.Id)
-                        .Any(x => list.Contains(x)));
+                var ids = filter.Tags.ToList();
+                query = query.Where(p => ids.All(id => p.PhotoTags.Any(t => t.TagId == id)));
             }
 
-            if ((filter.Tags == null || filter.Tags.Count() == 1) && (filter.Persons == null || filter.Persons.Count() == 1))
+            var result = new QueryResult
             {
-                queryResult.Count = await photos.CountAsync();
-                queryResult.Photos = await photos
+                Count = await query.CountAsync(),
+                Photos = await query
                     .OrderByDescending(p => p.TakenDate)
                     .Skip(filter.Skip ?? 0)
                     .Take(filter.Top ?? int.MaxValue)
                     .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
-                    .ToListAsync();
-                return queryResult;
-            }
+                    .ToListAsync()
+            };
 
-            var result = await photos.ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider).ToListAsync();
-
-            if (filter.Tags != null && filter.Tags.Count() > 1)
-            {
-                var list = filter.Tags.ToList<int>();
-                result =
-                    (from photo in result
-                    where
-                    (
-                        from requiredId in list
-                        where
-                        (
-                            from tag in photo.Tags
-                            where tag.TagId == requiredId
-                            select tag
-                        ).Any() == false
-                        select requiredId
-                    ).Any() == false
-                    select photo).ToList();
-            }
-
-            if (filter.Persons != null && filter.Persons.Count() > 1)
-            {
-                var list = filter.Persons.ToList<int>();
-                result =
-                    (from photo in result
-                        where
-                        (
-                            from requiredId in list
-                            where
-                            (
-                                from person in photo.Persons
-                                where person.PersonId == requiredId
-                                select person
-                            ).Any() == false
-                            select requiredId
-                        ).Any() == false
-                        select photo).ToList();
-            }
-
-            queryResult.Photos = result.Skip(filter.Skip ?? 0).Take(filter.Top ?? 10);
-            queryResult.Count = result.Count;
-            return queryResult;
+            return result;
         }
 
         public async Task<PhotoDto> GetPhotoAsync(int id)
