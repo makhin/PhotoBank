@@ -6,7 +6,8 @@ import { loadDictionaries } from "@photobank/shared/dictionaries";
 import { photoByIdCommand } from "./commands/photoById";
 import { registerPhotoRoutes } from "./commands/photoRouter";
 import { profileCommand } from "./commands/profile";
-import { login, setImpersonateUser } from "@photobank/shared/api";
+import { login, setImpersonateUser, setApiBaseUrl } from "@photobank/shared/api";
+import { loadResources, getApiBaseUrl } from "@photobank/shared/config";
 import {
     captionMissingMsg,
     unknownMessageReplyMsg,
@@ -22,6 +23,9 @@ bot.use(async (ctx, next) => {
 });
 
 registerPhotoRoutes(bot);
+
+await loadResources();
+setApiBaseUrl(getApiBaseUrl());
 
 await login({ email: API_EMAIL, password: API_PASSWORD });
 await loadDictionaries();

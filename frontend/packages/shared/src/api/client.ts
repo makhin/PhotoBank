@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {API_BASE_URL, isBrowser} from "@photobank/shared/config";
+import { getApiBaseUrl, isBrowser } from "@photobank/shared/config";
 import {getAuthToken} from './auth';
 
 let impersonateUser: string | null = null;
@@ -8,13 +8,17 @@ export const setImpersonateUser = (username: string | null | undefined) => {
 };
 
 export const apiClient = axios.create({
-  baseURL: `${API_BASE_URL}/api/`,
+  baseURL: '',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
   withCredentials: true,
 });
+
+export function setApiBaseUrl(url: string) {
+  apiClient.defaults.baseURL = `${url}/api/`;
+}
 
 apiClient.interceptors.request.use((config) => {
   const token = getAuthToken();
