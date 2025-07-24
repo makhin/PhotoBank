@@ -28,16 +28,6 @@ export async function loadResources(): Promise<void> {
   }
 }
 
-export const GOOGLE_API_KEY: string | undefined = (() => {
-  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GOOGLE_API_KEY) {
-    return (import.meta as any).env.VITE_GOOGLE_API_KEY as string;
-  }
-  if (typeof process !== 'undefined') {
-    return process.env.VITE_GOOGLE_API_KEY ?? process.env.GOOGLE_API_KEY;
-  }
-  return undefined;
-})();
-
 export function isBrowser(): boolean {
   return typeof window !== 'undefined' && typeof window.crypto !== 'undefined';
 }

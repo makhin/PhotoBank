@@ -4,6 +4,7 @@ import numpy as np
 import insightface
 import json
 import logging
+import cv2
 
 # Setup logger
 logger = logging.getLogger("face_service")
