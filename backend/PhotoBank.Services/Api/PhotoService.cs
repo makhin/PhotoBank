@@ -189,7 +189,10 @@ namespace PhotoBank.Services.Api
                         select photo).ToList();
             }
 
-            queryResult.Photos = result.Skip(filter.Skip ?? 0).Take(filter.Top ?? 10);
+            queryResult.Photos = result
+                .OrderByDescending(p => p.TakenDate)
+                .Skip(filter.Skip ?? 0)
+                .Take(filter.Top ?? 10);
             queryResult.Count = result.Count;
             return queryResult;
         }

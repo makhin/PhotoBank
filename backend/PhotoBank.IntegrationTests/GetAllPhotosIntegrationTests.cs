@@ -176,20 +176,46 @@ public class GetAllPhotosIntegrationTests
     }
 
     [Test]
-    public async Task GetAllPhotosAsync_FilterByTag_ReturnsMatchingPhoto()
+    public async Task GetAllPhotosAsync_FilterByOneTag_ReturnsMatchingPhoto()
     {
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
-            Tags = new []{3504, 3505}
+            Tags = new []{ 3504 }
+        };
+        var result = await MeasureGetAllPhotosAsync(filterDto);
+        result.Count.Should().Be(2462);
+    }
+
+    [Test]
+    public async Task GetAllPhotosAsync_FilterByOnePerson_ReturnsMatchingPhoto()
+    {
+        var filterDto = new FilterDto()
+        {
+            TakenDateFrom = new DateTime(2015, 1, 1),
+            TakenDateTo = new DateTime(2016, 1, 1),
+            Persons = new[] { 1 }
+        };
+        var result = await MeasureGetAllPhotosAsync(filterDto);
+        result.Count.Should().Be(401);
+    }
+
+    [Test]
+    public async Task GetAllPhotosAsync_FilterByTwoTags_ReturnsMatchingPhoto()
+    {
+        var filterDto = new FilterDto()
+        {
+            TakenDateFrom = new DateTime(2015, 1, 1),
+            TakenDateTo = new DateTime(2016, 1, 1),
+            Tags = new[] { 3504, 3505 }
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Count.Should().Be(2420);
     }
 
     [Test]
-    public async Task GetAllPhotosAsync_FilterByPerson_ReturnsMatchingPhoto()
+    public async Task GetAllPhotosAsync_FilterByTwoPersons_ReturnsMatchingPhoto()
     {
         var filterDto = new FilterDto()
         {
