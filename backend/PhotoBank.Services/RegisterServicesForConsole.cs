@@ -22,6 +22,7 @@ namespace PhotoBank.Services
 
         public static void Configure(IServiceCollection services, IConfiguration configuration)
         {
+            services.AddMemoryCache();
             services.AddSingleton<IComputerVisionClient, ComputerVisionClient>(provider =>
             {
                 var key = configuration.GetSection(ComputerVision)["Key"];

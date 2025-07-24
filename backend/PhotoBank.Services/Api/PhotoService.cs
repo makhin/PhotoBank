@@ -1,179 +1,182 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.ViewModel.Dto;
 
-namespace PhotoBank.Services.Api
+namespace PhotoBank.Services.Api;
+
+public interface IPhotoService
 {
-    public interface IPhotoService
+    Task<QueryResult> GetAllPhotosAsync(FilterDto filter);
+    Task<PhotoDto> GetPhotoAsync(int id);
+    Task<IEnumerable<PersonDto>> GetAllPersonsAsync();
+    Task<IEnumerable<StorageDto>> GetAllStoragesAsync();
+    Task<IEnumerable<TagDto>> GetAllTagsAsync();
+    Task<IEnumerable<PathDto>> GetAllPathsAsync();
+    Task UpdateFaceAsync(int faceId, int personId);
+}
+
+public class PhotoService : IPhotoService
+{
+    private readonly IRepository<Photo> _photoRepository;
+    private readonly IRepository<Face> _faceRepository;
+    private readonly IMapper _mapper;
+    private readonly IMemoryCache _cache;
+    private readonly Lazy<Task<IReadOnlyList<PersonDto>>> _persons;
+    private readonly Lazy<Task<IReadOnlyList<StorageDto>>> _storages;
+    private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
+    private readonly Lazy<Task<IReadOnlyList<PathDto>>> _paths;
+
+    private static readonly MemoryCacheEntryOptions CacheOptions = new()
     {
-        Task<QueryResult> GetAllPhotosAsync(FilterDto filter);
-        Task<PhotoDto> GetPhotoAsync(int id);
-        Task<IEnumerable<PersonDto>> GetAllPersonsAsync();
-        Task<IEnumerable<StorageDto>> GetAllStoragesAsync();
-        Task<IEnumerable<TagDto>> GetAllTagsAsync();
-        Task<IEnumerable<PathDto>> GetAllPathsAsync();
-        Task UpdateFaceAsync(int faceId, int personId);
+        AbsoluteExpiration = null, // Setting AbsoluteExpiration to null
+        SlidingExpiration = null  // Optional: SlidingExpiration can also be null for endless expiration
+    };
+
+    public PhotoService(
+        IRepository<Photo> photoRepository,
+        IRepository<Person> personRepository,
+        IRepository<Face> faceRepository,
+        IRepository<Storage> storageRepository,
+        IRepository<Tag> tagRepository,
+        IMapper mapper,
+        IMemoryCache cache)
+    {
+        _photoRepository = photoRepository;
+        _faceRepository = faceRepository;
+        _mapper = mapper;
+        _cache = cache;
+        _persons = new Lazy<Task<IReadOnlyList<PersonDto>>>(() =>
+                GetCachedAsync("persons", async () => (IReadOnlyList<PersonDto>)await personRepository.GetAll()
+                .OrderBy(p => p.Name)
+                .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
+                .ToListAsync()));
+        _storages = new Lazy<Task<IReadOnlyList<StorageDto>>>(() =>
+            GetCachedAsync("storages", async () => (IReadOnlyList<StorageDto>)await storageRepository.GetAll()
+                .OrderBy(p => p.Name)
+                .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
+                .ToListAsync()));
+        _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
+            GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
+                .OrderBy(p => p.Name)
+                .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
+                .ToListAsync()));
+        _paths = new Lazy<Task<IReadOnlyList<PathDto>>>(() =>
+            GetCachedAsync("paths", async () => (IReadOnlyList<PathDto>)await photoRepository.GetAll()
+                .ProjectTo<PathDto>(_mapper.ConfigurationProvider)
+                .Distinct()
+                .OrderBy(p => p.Path)
+                .ToListAsync()));
     }
 
-    public class PhotoService : IPhotoService
+    private async Task<IReadOnlyList<T>> GetCachedAsync<T>(string key, Func<Task<IReadOnlyList<T>>> factory)
     {
-        private readonly IRepository<Photo> _photoRepository;
-        private readonly IRepository<Face> _faceRepository;
-        private readonly IMapper _mapper;
-        private readonly Lazy<Task<List<PersonDto>>> _persons;
-        private readonly Lazy<Task<List<StorageDto>>> _storages;
-        private readonly Lazy<Task<List<TagDto>>> _tags;
-        private readonly Lazy<Task<List<PathDto>>> _paths;
-
-        public PhotoService(
-            IRepository<Photo> photoRepository,
-            IRepository<Person> personRepository,
-            IRepository<Face> faceRepository,
-            IRepository<Storage> storageRepository,
-            IRepository<Tag> tagRepository,
-            IMapper mapper)
+        if (!_cache.TryGetValue(key, out IReadOnlyList<T> values))
         {
-            _photoRepository = photoRepository;
-            _faceRepository = faceRepository;
-            _mapper = mapper;
-            _persons = new Lazy<Task<List<PersonDto>>>(() => personRepository.GetAll().OrderBy(p => p.Name).ProjectTo<PersonDto>(_mapper.ConfigurationProvider).ToListAsync());
-            _storages = new Lazy<Task<List<StorageDto>>>(() => storageRepository.GetAll().OrderBy(p => p.Name).ProjectTo<StorageDto>(_mapper.ConfigurationProvider).ToListAsync());
-            _tags = new Lazy<Task<List<TagDto>>>(() => tagRepository.GetAll().OrderBy(p => p.Name).ProjectTo<TagDto>(_mapper.ConfigurationProvider).ToListAsync());
-            _paths = new Lazy<Task<List<PathDto>>>(() => photoRepository.GetAll()
-                .ProjectTo<PathDto>(_mapper.ConfigurationProvider).Distinct().OrderBy(p=>p.Path).ToListAsync());
+            values = await factory();
+            _cache.Set(key, values, CacheOptions);
         }
 
-        public async Task<QueryResult> GetAllPhotosAsync(FilterDto filter)
+        return values;
+    }
+
+    private static IQueryable<Photo> ApplyFilter(IQueryable<Photo> query, FilterDto filter)
+    {
+        if (filter.IsBW is true) query = query.Where(p => p.IsBW);
+        if (filter.IsAdultContent is true) query = query.Where(p => p.IsAdultContent);
+        if (filter.IsRacyContent is true) query = query.Where(p => p.IsRacyContent);
+        if (filter.TakenDateFrom.HasValue)
+            query = query.Where(p => p.TakenDate.HasValue && p.TakenDate >= filter.TakenDateFrom.Value);
+        if (filter.TakenDateTo.HasValue)
+            query = query.Where(p => p.TakenDate.HasValue && p.TakenDate <= filter.TakenDateTo.Value);
+        if (filter.ThisDay is true)
+            query = query.Where(p => p.TakenDate.HasValue &&
+                                     p.TakenDate.Value.Day == DateTime.Today.Day &&
+                                     p.TakenDate.Value.Month == DateTime.Today.Month);
+        if (filter.Storages?.Any() == true)
         {
-            var query = _photoRepository
-                .GetAll()
-                .AsNoTrackingWithIdentityResolution()
-                .AsSplitQuery();
+            var storages = filter.Storages.ToList();
+            query = query.Where(p => storages.Contains(p.StorageId));
 
-            if (filter.IsBW is true)
-            {
-                query = query.Where(p => p.IsBW);
-            }
-
-            if (filter.IsAdultContent is true)
-            {
-                query = query.Where(p => p.IsAdultContent);
-            }
-
-            if (filter.IsRacyContent is true)
-            {
-                query = query.Where(p => p.IsRacyContent);
-            }
-
-            if (filter.TakenDateFrom.HasValue)
-            {
-                query = query.Where(p => p.TakenDate.HasValue && p.TakenDate >= filter.TakenDateFrom.Value);
-            }
-
-            if (filter.TakenDateTo.HasValue)
-            {
-                query = query.Where(p => p.TakenDate.HasValue && p.TakenDate <= filter.TakenDateTo.Value);
-            }
-
-            if (filter.ThisDay is true)
-            {
-                query = query.Where(p =>
-                    p.TakenDate.HasValue && p.TakenDate.Value.Day == DateTime.Today.Day &&
-                    p.TakenDate.Value.Month == DateTime.Today.Month);
-            }
-
-            if (filter.Storages != null && filter.Storages.Any())
-            {
-                var storages = filter.Storages.ToList();
-                query = query.Where(p => storages.Contains(p.StorageId));
-
-                if (!string.IsNullOrEmpty(filter.RelativePath))
-                {
-                    query = query.Where(p => p.RelativePath == filter.RelativePath);
-                }
-            }
-
-            if (!string.IsNullOrEmpty(filter.Caption))
-            {
-                query = query.Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption!)));
-            }
-
-            if (filter.Persons != null && filter.Persons.Any())
-            {
-                var ids = filter.Persons.ToList();
-                query = query.Where(p => ids.All(id => p.Faces.Any(f => f.PersonId == id)));
-            }
-
-            if (filter.Tags != null && filter.Tags.Any())
-            {
-                var ids = filter.Tags.ToList();
-                query = query.Where(p => ids.All(id => p.PhotoTags.Any(t => t.TagId == id)));
-            }
-
-            var result = new QueryResult
-            {
-                Count = await query.CountAsync(),
-                Photos = await query
-                    .OrderByDescending(p => p.TakenDate)
-                    .Skip(filter.Skip ?? 0)
-                    .Take(filter.Top ?? int.MaxValue)
-                    .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
-                    .ToListAsync()
-            };
-
-            return result;
+            if (!string.IsNullOrEmpty(filter.RelativePath))
+                query = query.Where(p => p.RelativePath == filter.RelativePath);
         }
 
-        public async Task<PhotoDto> GetPhotoAsync(int id)
+        if (!string.IsNullOrEmpty(filter.Caption))
+            query = query.Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption!)));
+
+        if (filter.Persons?.Any() == true)
         {
-            var photo = await _photoRepository.GetAsync(id,
-                p => p
-                    .Include(p1 => p1.Faces)
-                    .ThenInclude(f => f.Person)
-                    .Include(p1 => p1.Captions)
-                    .Include(p1 => p1.PhotoTags)
-                    .ThenInclude(t => t.Tag)
-            );
-            return _mapper.Map<Photo, PhotoDto>(photo);
+            var ids = filter.Persons.ToList();
+            query = query.Where(p => ids.All(id => p.Faces.Any(f => f.PersonId == id)));
         }
 
-        public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync()
+        if (filter.Tags?.Any() == true)
         {
-            return await _persons.Value;
+            var ids = filter.Tags.ToList();
+            query = query.Where(p => ids.All(id => p.PhotoTags.Any(t => t.TagId == id)));
         }
 
-        public async Task<IEnumerable<PathDto>> GetAllPathsAsync()
-        {
-            return await _paths.Value;
-        }
+        return query;
+    }
 
-        public async Task<IEnumerable<StorageDto>> GetAllStoragesAsync()
-        {
-            return await _storages.Value;
-        }
+    public async Task<QueryResult> GetAllPhotosAsync(FilterDto filter)
+    {
+        var query = ApplyFilter(_photoRepository.GetAll().AsNoTracking().AsSplitQuery(), filter);
 
-        public async Task<IEnumerable<TagDto>> GetAllTagsAsync()
-        {
-            return await _tags.Value;
-        }
+        // Execute the count query first
+        var count = await query.CountAsync();
 
-        public async Task UpdateFaceAsync(int faceId, int personId)
+        // Execute the photos query next
+        var photos = await query
+            .OrderByDescending(p => p.TakenDate)
+            .Skip(filter.Skip ?? 0)
+            .Take(filter.Top ?? int.MaxValue)
+            .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+
+        return new QueryResult
         {
-            var face = new Face
-            {
-                Id = faceId,
-                IdentifiedWithConfidence = personId == -1 ? 0 : 1,
-                IdentityStatus = personId == -1 ? IdentityStatus.StopProcessing : IdentityStatus.Identified,
-                PersonId = personId == -1 ? (int?)null : personId
-            };
-            await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentifiedWithConfidence, f => f.IdentityStatus);
-        }
+            Count = count,
+            Photos = photos
+        };
+    }
+
+    public async Task<PhotoDto> GetPhotoAsync(int id)
+    {
+        var photo = await _photoRepository.GetAsync(id,
+            q => q.Include(p => p.Faces).ThenInclude(f => f.Person)
+                   .Include(p => p.Captions)
+                   .Include(p => p.PhotoTags).ThenInclude(t => t.Tag));
+
+        return _mapper.Map<Photo, PhotoDto>(photo);
+    }
+
+    public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync() => await _persons.Value;
+
+    public async Task<IEnumerable<PathDto>> GetAllPathsAsync() => await _paths.Value;
+
+    public async Task<IEnumerable<StorageDto>> GetAllStoragesAsync() => await _storages.Value;
+
+    public async Task<IEnumerable<TagDto>> GetAllTagsAsync() => await _tags.Value;
+
+    public async Task UpdateFaceAsync(int faceId, int personId)
+    {
+        var face = new Face
+        {
+            Id = faceId,
+            IdentifiedWithConfidence = personId == -1 ? 0 : 1,
+            IdentityStatus = personId == -1 ? IdentityStatus.StopProcessing : IdentityStatus.Identified,
+            PersonId = personId == -1 ? null : personId
+        };
+        await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentifiedWithConfidence, f => f.IdentityStatus);
     }
 }
+
