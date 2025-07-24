@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { getApiBaseUrl, isBrowser } from "@photobank/shared/config";
-import {getAuthToken} from './auth';
+import { isBrowser } from "@photobank/shared/config";
+import { getAuthToken } from './auth';
 
 let impersonateUser: string | null = null;
 export const setImpersonateUser = (username: string | null | undefined) => {

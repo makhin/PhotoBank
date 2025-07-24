@@ -1,40 +1,40 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace PhotoBank.Console
 {
+    using PhotoBank.Services.Recognition;
     using System;
 
     public class App
     {
         private readonly IPhotoProcessor _photoProcessor;
-        private readonly IRepository<Storage> _repository;
-        private readonly IFaceServiceAws _faceService;
+        private readonly IRepository<Storage> _storages;
         private readonly ILogger<App> _logger;
         private readonly ISyncService _syncService;
-        private readonly IPhotoService _photoService;
+        private readonly IRecognitionService _recognitionService;
 
-        public App(IPhotoProcessor photoProcessor, IRepository<Storage> repository, IFaceServiceAws faceService, ILogger<App> logger, ISyncService syncService, IPhotoService photoService)
+        public App(IPhotoProcessor photoProcessor, IRepository<Storage> storages, ILogger<App> logger, ISyncService syncService, IRecognitionService recognitionService)
         {
             _photoProcessor = photoProcessor;
-            _repository = repository;
-            _faceService = faceService;
+            _storages = storages;
             _logger = logger;
             _syncService = syncService;
-            _photoService = photoService;
+            _recognitionService = recognitionService;
         }
 
         public async Task Run()
         {
-            var storage = await _repository.GetAsync(7);
-            await AddFilesAsync(storage);
+            await _recognitionService.RegisterPersonsAsync();
+            //var storage = await _storages.GetAsync(7);
+            //await AddFilesAsync(storage);
         }
 
         private async Task AddFilesAsync(Storage storage)
