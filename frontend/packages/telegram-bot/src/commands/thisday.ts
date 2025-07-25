@@ -29,6 +29,14 @@ export async function handleThisDay(ctx: Context) {
 export const thisDayCommand = handleThisDay;
 
 export async function sendThisDayPage(ctx: Context, page: number, edit = false) {
+    const chatId = ctx.chat?.id;
+    if (chatId) {
+        const prev = currentPagePhotos.get(chatId);
+        if (prev && prev.page !== page) {
+            await deletePhotoMessage(ctx);
+        }
+    }
+
     const skip = (page - 1) * PAGE_SIZE;
     let queryResult;
     try {
@@ -50,14 +58,6 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
     }
 
     const totalPages = Math.ceil(queryResult.count / PAGE_SIZE);
-
-    const chatId = ctx.chat?.id;
-    if (chatId) {
-        const prev = currentPagePhotos.get(chatId);
-        if (prev && prev.page !== page) {
-            await deletePhotoMessage(ctx);
-        }
-    }
     const byYear = new Map<number, Map<string, typeof queryResult.photos>>();
 
     for (const photo of queryResult.photos) {
