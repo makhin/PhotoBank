@@ -33,4 +33,10 @@ export function registerPhotoRoutes(bot: Bot) {
         await ctx.answerCallbackQuery();
         await openPhotoInline(ctx, id);
     });
+
+    bot.callbackQuery(/^photo_nav:(\d+)$/, async (ctx) => {
+        const id = Number(ctx.match[1]);
+        await ctx.answerCallbackQuery();
+        await openPhotoInline(ctx, id);
+    });
 }

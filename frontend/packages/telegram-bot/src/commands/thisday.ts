@@ -9,6 +9,7 @@ import {
     prevPageText,
     nextPageText,
 } from "@photobank/shared/constants";
+import { currentPagePhotos, deletePhotoMessage } from "../photo";
 
 export const captionCache = new Map<number, string>();
 
@@ -49,6 +50,14 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
     }
 
     const totalPages = Math.ceil(queryResult.count / PAGE_SIZE);
+
+    const chatId = ctx.chat?.id;
+    if (chatId) {
+        const prev = currentPagePhotos.get(chatId);
+        if (prev && prev.page !== page) {
+            await deletePhotoMessage(ctx);
+        }
+    }
     const byYear = new Map<number, Map<string, typeof queryResult.photos>>();
 
     for (const photo of queryResult.photos) {
@@ -96,6 +105,10 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
         if (index % 5 === 0) keyboard.row();
         keyboard.text(String(index + 1), `photo:${id}`);
     });
+
+    if (chatId) {
+        currentPagePhotos.set(chatId, { page, ids: photoIds });
+    }
 
     keyboard.row();
 
