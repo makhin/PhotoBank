@@ -94,7 +94,8 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
                     const metaLine = metaParts.length ? `\n${metaParts.join(" ")}` : "";
 
                     const caption = photo.captions?.join(" ") ?? "";
-                    sections.push(`[-] <b>${title}</b> ${firstNWords(caption, 5)} ${metaLine}`);
+                    const index = photoIds.length + 1;
+                    sections.push(`[${index}] <b>${title}</b> ${firstNWords(caption, 5)} ${metaLine}`);
                     photoIds.push(photo.id);
                 });
             });

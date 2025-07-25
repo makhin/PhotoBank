@@ -47,7 +47,7 @@ it('edits existing message when available', async () => {
   await openPhotoInline(ctx, 1);
   expect(ctx.api.editMessageMedia).toHaveBeenCalled();
   expect(ctx.replyWithPhoto).not.toHaveBeenCalled();
-  expect(ctx.api.editMessageMedia.mock.calls[0][2].reply_markup).toBeDefined();
+  expect(ctx.api.editMessageMedia.mock.calls[0][3].reply_markup).toBeDefined();
 });
 
 it('adds navigation buttons from current page list', async () => {

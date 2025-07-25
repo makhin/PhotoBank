@@ -87,19 +87,22 @@ export async function openPhotoInline(ctx: Context, id: number) {
         try {
             if (image) {
                 const file = new InputFile(image, `${photo.name}.jpg`);
-                await ctx.api.editMessageMedia(chatId, existing, {
-                    type: "photo",
-                    media: file,
-                    caption,
-                    parse_mode: "HTML",
-                    reply_markup: keyboard,
-                });
+                await ctx.api.editMessageMedia(
+                    chatId,
+                    existing,
+                    {
+                        type: "photo",
+                        media: file,
+                        caption,
+                        parse_mode: "HTML",
+                    },
+                    { reply_markup: keyboard }
+                );
             } else {
                 await ctx.api.editMessageCaption(chatId, existing, {
                     caption,
                     parse_mode: "HTML",
-                    reply_markup: keyboard,
-                });
+                }, { reply_markup: keyboard });
             }
             return;
         } catch {
