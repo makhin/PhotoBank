@@ -64,7 +64,7 @@ export const FacePersonSelector = ({
                             {selectedName}
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[200px] p-0">
+                    <PopoverContent className="w-[200px] p-0 max-h-60 overflow-y-auto">
                         <Command>
                             <CommandInput placeholder={searchPersonPlaceholder}/>
                             <CommandEmpty>{noPersonFoundText}</CommandEmpty>
