@@ -100,10 +100,7 @@ export async function openPhotoInline(ctx: Context, id: number) {
                     { reply_markup: keyboard }
                 );
             } else {
-                await ctx.api.editMessageCaption(chatId, existing, {
-                    caption,
-                    parse_mode: "HTML",
-                }, { reply_markup: keyboard });
+                await ctx.api.editMessageCaption(chatId, existing, { caption, parse_mode: "HTML" });
             }
             return;
         } catch {
