@@ -19,6 +19,10 @@ export async function subscribeCommand(ctx: Context) {
         await ctx.reply(subscribeCommandUsageMsg);
         return;
     }
+    if (!ctx.chat) {
+        await ctx.reply("❌ Ошибка: невозможно определить чат.");
+        return;
+    }
     subscriptions.set(ctx.chat.id, time);
     await ctx.reply(`✅ Подписка на ежедневную рассылку в ${time} оформлена.`);
 }
