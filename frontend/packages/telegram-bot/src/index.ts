@@ -3,7 +3,6 @@ import {BOT_TOKEN, API_EMAIL, API_PASSWORD} from "./config";
 import {sendThisDayPage, thisDayCommand, captionCache} from "./commands/thisday";
 import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
-import { photoByIdCommand } from "./commands/photoById";
 import { registerPhotoRoutes } from "./commands/photoRouter";
 import { profileCommand } from "./commands/profile";
 import { login, setImpersonateUser, setApiBaseUrl } from "@photobank/shared/api";
@@ -35,8 +34,6 @@ bot.command(
 );
 
 bot.command("thisday", thisDayCommand);
-
-bot.command("photo", photoByIdCommand);
 
 bot.command("profile", profileCommand);
 
