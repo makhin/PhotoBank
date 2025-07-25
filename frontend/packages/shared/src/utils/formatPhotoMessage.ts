@@ -3,7 +3,7 @@ import { getPersonName } from "@photobank/shared/dictionaries";
 import { formatDate } from "@photobank/shared/index";
 import { Buffer } from "buffer";
 
-export function formatPhotoMessage(photo: PhotoDto): { caption: string, image?: Buffer } {
+export function formatPhotoMessage(photo: PhotoDto): { caption: string, hasSpoiler: boolean, image?: Buffer } {
     const lines: string[] = [];
 
     lines.push(`📸 <b>${photo.name}</b>`);
@@ -32,6 +32,7 @@ export function formatPhotoMessage(photo: PhotoDto): { caption: string, image?: 
 
     return {
         caption: lines.join("\n"),
+        hasSpoiler: photo.adultScore > 0.5 || photo.racyScore > 0.5,
         image,
     };
 }

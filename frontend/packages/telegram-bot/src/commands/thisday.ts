@@ -78,11 +78,11 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
     [...byYear.entries()]
         .sort(([a], [b]) => b - a)
         .forEach(([year, folders]) => {
-            sections.push(`📅 <b>${year || unknownYearLabel}</b>`);
+            sections.push(`\n📅 <b>${year || unknownYearLabel}</b>`);
             [...folders.entries()].forEach(([folder, photos]) => {
                 sections.push(`📁 ${folder}`);
                 photos.forEach(photo => {
-                    const title = photo.name.slice(0, 20) || "Без названия";
+                    const title = photo.name.slice(0, 10) || "Без названия";
                     const peopleCount = photo.persons?.length ?? 0;
                     const isAdult = photo.isAdultContent ? "🔞" : "";
                     const isRacy = photo.isRacyContent ? "⚠️" : "";
@@ -95,7 +95,7 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
 
                     const caption = photo.captions?.join(" ") ?? "";
                     const index = photoIds.length + 1;
-                    sections.push(`[${index}] <b>${title}</b> ${firstNWords(caption, 5)} ${metaLine}`);
+                    sections.push(`[${index}] <b>${title}</b>\n${firstNWords(caption, 5)} ${metaLine}`);
                     photoIds.push(photo.id);
                 });
             });
@@ -117,7 +117,7 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
     if (page > 1) keyboard.text(prevPageText, `thisday:${page - 1}`);
     if (page < totalPages) keyboard.text(nextPageText, `thisday:${page + 1}`);
 
-    const text = sections.join("\n\n");
+    const text = sections.join("\n");
 
     if (edit) {
         await ctx.editMessageText(text, {

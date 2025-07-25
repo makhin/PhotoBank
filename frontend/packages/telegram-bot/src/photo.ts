@@ -37,13 +37,14 @@ export async function sendPhotoById(ctx: Context, id: number) {
         return;
     }
 
-    const { caption, image } = formatPhotoMessage(photo);
+    const { caption, hasSpoiler, image } = formatPhotoMessage(photo);
 
     if (image) {
         const file = new InputFile(image, `${photo.name}.jpg`);
         await ctx.replyWithPhoto(file, {
             caption,
             parse_mode: "HTML",
+            has_spoiler: hasSpoiler,
         });
     } else {
         await ctx.reply(caption, { parse_mode: "HTML" });
@@ -58,7 +59,7 @@ export async function openPhotoInline(ctx: Context, id: number) {
         return;
     }
 
-    const { caption, image } = formatPhotoMessage(photo);
+    const { caption, hasSpoiler, image } = formatPhotoMessage(photo);
 
     let keyboard: InlineKeyboard | undefined;
     if (chatId) {
@@ -75,7 +76,7 @@ export async function openPhotoInline(ctx: Context, id: number) {
     if (!chatId) {
         if (image) {
             const file = new InputFile(image, `${photo.name}.jpg`);
-            await ctx.replyWithPhoto(file, { caption, parse_mode: "HTML", reply_markup: keyboard });
+            await ctx.replyWithPhoto(file, { caption, parse_mode: "HTML", reply_markup: keyboard, has_spoiler: hasSpoiler });
         } else {
             await ctx.reply(caption, { parse_mode: "HTML", reply_markup: keyboard });
         }
@@ -112,7 +113,7 @@ export async function openPhotoInline(ctx: Context, id: number) {
 
     if (image) {
         const file = new InputFile(image, `${photo.name}.jpg`);
-        const msg = await ctx.replyWithPhoto(file, { caption, parse_mode: "HTML", reply_markup: keyboard });
+        const msg = await ctx.replyWithPhoto(file, { caption, parse_mode: "HTML", reply_markup: keyboard, has_spoiler: hasSpoiler });
         photoMessages.set(chatId, msg.message_id);
     } else {
         const msg = await ctx.reply(caption, { parse_mode: "HTML", reply_markup: keyboard });
