@@ -3,6 +3,7 @@ import { View, Image, Text, StyleSheet, TouchableOpacity, ActivityIndicator } fr
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import { usePhotoById } from '../hooks/usePhotoApi';
 
 // Определяем список маршрутов и их параметры
@@ -47,7 +48,7 @@ export const PhotoViewer = () => {
                         <TouchableOpacity
                             style={styles.leftNav}
                             onPress={() =>
-                                navigation.navigate('PhotoViewer', { photoId: prevId, photoIds })
+                                { navigation.navigate('PhotoViewer', { photoId: prevId, photoIds }); }
                             }
                         >
                             <Text style={styles.navText}>⟵</Text>
@@ -57,7 +58,7 @@ export const PhotoViewer = () => {
                         <TouchableOpacity
                             style={styles.rightNav}
                             onPress={() =>
-                                navigation.navigate('PhotoViewer', { photoId: nextId, photoIds })
+                                { navigation.navigate('PhotoViewer', { photoId: nextId, photoIds }); }
                             }
                         >
                             <Text style={styles.navText}>⟶</Text>
@@ -65,7 +66,7 @@ export const PhotoViewer = () => {
                     )}
                     <TouchableOpacity
                         style={styles.closeButton}
-                        onPress={() => navigation.goBack()}
+                        onPress={() => { navigation.goBack(); }}
                     >
                         <Text style={styles.closeText}>✕</Text>
                     </TouchableOpacity>

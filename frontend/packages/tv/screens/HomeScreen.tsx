@@ -1,8 +1,9 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+import {DEFAULT_PHOTO_FILTER} from "@photobank/shared/constants";
+
 import { PhotoRow } from '../components/PhotoRow';
 import { usePhotos } from '../hooks/usePhotoApi';
-import {DEFAULT_PHOTO_FILTER} from "@photobank/shared/constants";
 
 export const HomeScreen = () => {
     const { photos, loading } = usePhotos(DEFAULT_PHOTO_FILTER);

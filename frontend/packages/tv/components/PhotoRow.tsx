@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { PhotoCard } from './PhotoCard';
 import { useNavigation } from '@react-navigation/native';
 import { PhotoItemDto } from '@photobank/shared/types';
+
+import { PhotoCard } from './PhotoCard';
 
 export const PhotoRow = ({ title, photos }: { title: string; photos: PhotoItemDto[] }) => {
     const navigation = useNavigation();
@@ -17,10 +18,10 @@ export const PhotoRow = ({ title, photos }: { title: string; photos: PhotoItemDt
                     <PhotoCard
                         photo={item}
                         onPress={() =>
-                            navigation.navigate('PhotoViewer', {
+                            { navigation.navigate('PhotoViewer', {
                                 photoId: item.id,
                                 photoIds: photos.map((p) => p.id),
-                            })
+                            }); }
                         }
                     />
                 )}

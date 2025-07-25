@@ -12,24 +12,26 @@
   },
   "dependencies": {
     "@photobank/shared": "workspace:*",
-    "@react-native-community/datetimepicker": "^8.4.2",
-    "@react-navigation/native": "^7.1.14",
-    "@react-navigation/native-stack": "^7.3.21",
-    "@react-navigation/stack": "^7.4.2",
-    "axios": "^1.11.0",
-    "expo": "~53.0.20",
-    "expo-status-bar": "~2.2.3",
-    "react": "19.1.0",
-    "react-native": "0.80.2",
-    "react-native-paper": "^5.14.5",
-    "react-native-tvfocus": "^0.2.0",
-    "react-native-vector-icons": "^10.3.0"
+    "@react-native-community/datetimepicker": "8.4.2",
+    "@react-navigation/native": "7.1.14",
+    "@react-navigation/native-stack": "7.3.21",
+    "@react-navigation/stack": "7.4.2",
+    "axios": "1.10.0",
+    "expo": "53.0.17",
+    "expo-status-bar": "2.2.3",
+    "react": "19.0.0",
+    "react-native": "0.79.5",
+    "react-native-paper": "5.14.5",
+    "react-native-tvfocus": "0.2.0",
+    "react-native-vector-icons": "10.2.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.0",
-    "@types/node": "^24.1.0",
-    "@types/react": "~19.1.8",
-    "typescript": "~5.8.3"
+    "@babel/core": "7.25.2",
+    "@types/node": "24.0.13",
+    "@types/react": "19.0.10",
+    "metro": "0.80.12",
+    "metro-core": "0.80.12",
+    "typescript": "5.8.3"
   },
   "private": true
 }

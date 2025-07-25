@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { login } from '@photobank/shared/api';
+
 import {API_EMAIL, API_PASSWORD} from '../config';
 
 export function useAutoLogin() {

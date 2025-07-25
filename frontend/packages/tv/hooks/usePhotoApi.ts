@@ -10,8 +10,8 @@ export const usePhotos = (filter: FilterDto | null) => {
     if (!filter) return;
     setLoading(true);
        searchPhotos(filter)
-      .then((data) => setPhotos(data.photos || []))
-      .finally(() => setLoading(false));
+      .then((data) => { setPhotos(data.photos || []); })
+      .finally(() => { setLoading(false); });
   }, [filter]);
 
   return { photos, loading };
@@ -24,8 +24,8 @@ export const usePhotoById = (id: number) => {
   useEffect(() => {
     setLoading(true);
     getPhotoById(id)
-        .then((data) => setPhoto(data))
-        .finally(() => setLoading(false));
+        .then((data) => { setPhoto(data); })
+        .finally(() => { setLoading(false); });
   }, [id]);
 
   return { photo, loading };
