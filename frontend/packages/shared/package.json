@@ -25,6 +25,8 @@
   },
   "scripts": {
     "test": "vitest run",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"**/*.{ts,tsx}\"",
     "generate:api": "openapi --input ../../../openapi.yaml --output src/generated --client axios"
   }
 }
