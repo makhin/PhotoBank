@@ -82,7 +82,7 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
             [...folders.entries()].forEach(([folder, photos]) => {
                 sections.push(`📁 ${folder}`);
                 photos.forEach(photo => {
-                    const title = photo.name;
+                    const title = photo.name.slice(0, 20) || "Без названия";
                     const peopleCount = photo.persons?.length ?? 0;
                     const isAdult = photo.isAdultContent ? "🔞" : "";
                     const isRacy = photo.isRacyContent ? "⚠️" : "";
@@ -91,11 +91,10 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
                     if (peopleCount > 0) metaParts.push(`👥 ${peopleCount} чел.`);
                     if (isAdult) metaParts.push(isAdult);
                     if (isRacy) metaParts.push(isRacy);
-
-                    const caption = photo.captions?.join(" ").slice(0, 20) ?? "";
-
                     const metaLine = metaParts.length ? `\n${metaParts.join(" ")}` : "";
-                    sections.push(`• <b>${title}</b> ${firstNWords(caption, 5)} ${metaLine}`);
+
+                    const caption = photo.captions?.join(" ") ?? "";
+                    sections.push(`[-] <b>${title}</b> ${firstNWords(caption, 5)} ${metaLine}`);
                     photoIds.push(photo.id);
                 });
             });
