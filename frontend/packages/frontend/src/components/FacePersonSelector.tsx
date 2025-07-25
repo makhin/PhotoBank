@@ -72,7 +72,7 @@ export const FacePersonSelector = ({
                                 <CommandItem onSelect={() => { handleSelect(undefined); }}>
                                     {noneLabel}
                                 </CommandItem>
-                                {persons.map((person) => (
+                                {persons.slice(0, 10).map((person) => (
                                     <CommandItem
                                         key={person.id}
                                         value={person.name}

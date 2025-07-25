@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Linq;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
@@ -20,6 +21,7 @@ public class ImpersonationMiddleware
     {
         // Resolve UserManager<ApplicationUser> from the request's scoped services
         var userManager = context.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = context.RequestServices.GetRequiredService<RoleManager<IdentityRole>>();
 
         if (context.Request.Headers.TryGetValue(HeaderName, out var username) && !string.IsNullOrWhiteSpace(username))
         {
@@ -27,6 +29,16 @@ public class ImpersonationMiddleware
             if (user is not null)
             {
                 var userClaims = await userManager.GetClaimsAsync(user);
+                var roleNames = await userManager.GetRolesAsync(user);
+                foreach (var name in roleNames)
+                {
+                    var role = await roleManager.FindByNameAsync(name);
+                    if (role != null)
+                    {
+                        var roleClaims = await roleManager.GetClaimsAsync(role);
+                        userClaims = userClaims.Concat(roleClaims).ToList();
+                    }
+                }
 
                 var impersonatedClaims = new List<Claim>(userClaims)
                 {
