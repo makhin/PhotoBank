@@ -12,7 +12,9 @@ const PhotoPreviewModal = ({ photoId, onOpenChange }: PhotoPreviewModalProps) =>
 
     return (
         <Dialog open={photoId !== null} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-none w-screen h-screen top-0 left-0 translate-x-0 translate-y-0">
+            <DialogContent
+                className="!inset-0 !max-w-none sm:!max-w-none w-screen h-dvh translate-x-0 translate-y-0 p-0"
+            >
                 <DialogHeader>
                     <DialogTitle>{photo?.name || previewModalFallbackTitle}</DialogTitle>
                 </DialogHeader>

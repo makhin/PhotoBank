@@ -84,7 +84,7 @@ const PhotoListPage = () => {
   };
 
   return (
-    <div className="w-full h-screen flex flex-col bg-background">
+    <div className="w-full h-dvh flex flex-col bg-background">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{photoGalleryTitle}</h1>
