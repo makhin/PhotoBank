@@ -64,6 +64,7 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
 
     const sections: string[] = [];
     const keyboard = new InlineKeyboard();
+    const photoIds: number[] = [];
 
     [...byYear.entries()]
         .sort(([a], [b]) => b - a)
@@ -85,13 +86,20 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
                     const caption = photo.captions?.join(" ").slice(0, 20) ?? "";
 
                     const metaLine = metaParts.length ? `\n${metaParts.join(" ")}` : "";
-                    sections.push(`• <b>${title}</b> ${firstNWords(caption, 5)} ${metaLine} 🔗 /photo${photo.id}`);
+                    sections.push(`• <b>${title}</b> ${firstNWords(caption, 5)} ${metaLine}`);
+                    photoIds.push(photo.id);
                 });
             });
         });
 
-    sections.push(`\n📄 Страница ${page} из ${totalPages}`);
+    photoIds.forEach((id, index) => {
+        if (index % 5 === 0) keyboard.row();
+        keyboard.text(String(index + 1), `photo:${id}`);
+    });
+
     keyboard.row();
+
+    sections.push(`\n📄 Страница ${page} из ${totalPages}`);
 
     if (page > 1) keyboard.text(prevPageText, `thisday:${page - 1}`);
     if (page < totalPages) keyboard.text(nextPageText, `thisday:${page + 1}`);
