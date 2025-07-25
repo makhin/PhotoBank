@@ -25,11 +25,11 @@ export async function photoByIdCommand(ctx: Context) {
             return;
         }
 
-        const { caption, image } = formatPhotoMessage(photo);
+        const { caption, hasSpoiler, image } = formatPhotoMessage(photo);
 
         if (image) {
             const file = new InputFile(image, `${photo.name}.jpg`);
-            await ctx.replyWithPhoto(file, { caption, parse_mode: "HTML" });
+            await ctx.replyWithPhoto(file, { caption, parse_mode: "HTML", has_spoiler: hasSpoiler });
         } else {
             await ctx.reply(caption, { parse_mode: "HTML" });
         }

@@ -9,6 +9,7 @@ import {
     prevPageText,
     nextPageText,
 } from "@photobank/shared/constants";
+import { currentPagePhotos, deletePhotoMessage } from "../photo";
 
 export const captionCache = new Map<number, string>();
 
@@ -49,6 +50,14 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
     }
 
     const totalPages = Math.ceil(queryResult.count / PAGE_SIZE);
+
+    const chatId = ctx.chat?.id;
+    if (chatId) {
+        const prev = currentPagePhotos.get(chatId);
+        if (prev && prev.page !== page) {
+            await deletePhotoMessage(ctx);
+        }
+    }
     const byYear = new Map<number, Map<string, typeof queryResult.photos>>();
 
     for (const photo of queryResult.photos) {
@@ -64,15 +73,16 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
 
     const sections: string[] = [];
     const keyboard = new InlineKeyboard();
+    const photoIds: number[] = [];
 
     [...byYear.entries()]
         .sort(([a], [b]) => b - a)
         .forEach(([year, folders]) => {
-            sections.push(`📅 <b>${year || unknownYearLabel}</b>`);
+            sections.push(`\n📅 <b>${year || unknownYearLabel}</b>`);
             [...folders.entries()].forEach(([folder, photos]) => {
                 sections.push(`📁 ${folder}`);
                 photos.forEach(photo => {
-                    const title = photo.name;
+                    const title = photo.name.slice(0, 10) || "Без названия";
                     const peopleCount = photo.persons?.length ?? 0;
                     const isAdult = photo.isAdultContent ? "🔞" : "";
                     const isRacy = photo.isRacyContent ? "⚠️" : "";
@@ -81,22 +91,33 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
                     if (peopleCount > 0) metaParts.push(`👥 ${peopleCount} чел.`);
                     if (isAdult) metaParts.push(isAdult);
                     if (isRacy) metaParts.push(isRacy);
-
-                    const caption = photo.captions?.join(" ").slice(0, 20) ?? "";
-
                     const metaLine = metaParts.length ? `\n${metaParts.join(" ")}` : "";
-                    sections.push(`• <b>${title}</b> ${firstNWords(caption, 5)} ${metaLine} 🔗 /photo${photo.id}`);
+
+                    const caption = photo.captions?.join(" ") ?? "";
+                    const index = photoIds.length + 1;
+                    sections.push(`[${index}] <b>${title}</b>\n${firstNWords(caption, 5)} ${metaLine}`);
+                    photoIds.push(photo.id);
                 });
             });
         });
 
-    sections.push(`\n📄 Страница ${page} из ${totalPages}`);
+    photoIds.forEach((id, index) => {
+        if (index % 5 === 0) keyboard.row();
+        keyboard.text(String(index + 1), `photo:${id}`);
+    });
+
+    if (chatId) {
+        currentPagePhotos.set(chatId, { page, ids: photoIds });
+    }
+
     keyboard.row();
+
+    sections.push(`\n📄 Страница ${page} из ${totalPages}`);
 
     if (page > 1) keyboard.text(prevPageText, `thisday:${page - 1}`);
     if (page < totalPages) keyboard.text(nextPageText, `thisday:${page + 1}`);
 
-    const text = sections.join("\n\n");
+    const text = sections.join("\n");
 
     if (edit) {
         await ctx.editMessageText(text, {

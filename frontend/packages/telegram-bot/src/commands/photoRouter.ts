@@ -1,5 +1,5 @@
 import { Bot, Context } from "grammy";
-import { sendPhotoById } from "../photo";
+import { sendPhotoById, openPhotoInline } from "../photo";
 import { photoCommandUsageMsg } from "@photobank/shared/constants";
 
 // Основная команда
@@ -31,6 +31,12 @@ export function registerPhotoRoutes(bot: Bot) {
     bot.callbackQuery(/^photo:(\d+)$/, async (ctx) => {
         const id = Number(ctx.match[1]);
         await ctx.answerCallbackQuery();
-        await sendPhotoById(ctx, id);
+        await openPhotoInline(ctx, id);
+    });
+
+    bot.callbackQuery(/^photo_nav:(\d+)$/, async (ctx) => {
+        const id = Number(ctx.match[1]);
+        await ctx.answerCallbackQuery();
+        await openPhotoInline(ctx, id);
     });
 }
