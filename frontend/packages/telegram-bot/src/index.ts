@@ -9,6 +9,7 @@ import { tagsCallbackPattern, personsCallbackPattern } from "./patterns";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import { registerPhotoRoutes } from "./commands/photoRouter";
 import { profileCommand } from "./commands/profile";
+import { withRegistered } from './registration';
 import { login, setImpersonateUser, setApiBaseUrl } from "@photobank/shared/api";
 import { loadResources, getApiBaseUrl } from "@photobank/shared/config";
 import {
@@ -37,48 +38,48 @@ bot.command(
     (ctx) => ctx.reply(welcomeBotMsg),
 );
 
-bot.command("thisday", thisDayCommand);
-bot.command("search", searchCommand);
+bot.command("thisday", withRegistered(thisDayCommand));
+bot.command("search", withRegistered(searchCommand));
 
 bot.command("profile", profileCommand);
 
-bot.command("subscribe", subscribeCommand);
+bot.command("subscribe", withRegistered(subscribeCommand));
 
-bot.command("tags", tagsCommand);
-bot.command("persons", personsCommand);
+bot.command("tags", withRegistered(tagsCommand));
+bot.command("persons", withRegistered(personsCommand));
 
-bot.callbackQuery(/^thisday:(\d+)$/, async (ctx) => {
+bot.callbackQuery(/^thisday:(\d+)$/, withRegistered(async (ctx) => {
     const page = parseInt(ctx.match[1], 10);
     await ctx.answerCallbackQuery();
     await sendThisDayPage(ctx, page, true);
-});
+}));
 
-bot.callbackQuery(/^caption:(\d+)$/, async (ctx) => {
+bot.callbackQuery(/^caption:(\d+)$/, withRegistered(async (ctx) => {
     const id = parseInt(ctx.match[1], 10);
     const caption = captionCache.get(id);
     await ctx.answerCallbackQuery(caption ?? captionMissingMsg);
-});
+}));
 
-bot.callbackQuery(tagsCallbackPattern, async (ctx) => {
+bot.callbackQuery(tagsCallbackPattern, withRegistered(async (ctx) => {
     const page = parseInt(ctx.match[1], 10);
     const prefix = decodeURIComponent(ctx.match[2]);
     await ctx.answerCallbackQuery();
     await sendTagsPage(ctx, prefix, page, true);
-});
+}));
 
-bot.callbackQuery(personsCallbackPattern, async (ctx) => {
+bot.callbackQuery(personsCallbackPattern, withRegistered(async (ctx) => {
     const page = parseInt(ctx.match[1], 10);
     const prefix = decodeURIComponent(ctx.match[2]);
     await ctx.answerCallbackQuery();
     await sendPersonsPage(ctx, prefix, page, true);
-});
+}));
 
-bot.callbackQuery(/^search:(\d+):(.+)$/, async (ctx) => {
+bot.callbackQuery(/^search:(\d+):(.+)$/, withRegistered(async (ctx) => {
     const page = parseInt(ctx.match[1], 10);
     const caption = decodeURIComponent(ctx.match[2]);
     await ctx.answerCallbackQuery();
     await sendSearchPage(ctx, caption, page, true);
-});
+}));
 
 bot.start();
 initSubscriptionScheduler(bot);

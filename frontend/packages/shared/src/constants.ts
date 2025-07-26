@@ -21,6 +21,8 @@ export const subscribeCommandUsageMsg = "❗ Используй: /subscribe HH:M
 export const searchCommandUsageMsg = "❗ Используй: /search <caption>";
 export const todaysPhotosEmptyMsg = "📭 Сегодняшних фото пока нет.";
 export const searchPhotosEmptyMsg = "📭 По вашему запросу фото не найдены.";
+export const notRegisteredMsg =
+  "⚠️ Ваш телеграм не зарегистрирован. Обратитесь к администратору.";
 export const unknownYearLabel = "Неизвестный год";
 export const prevPageText = "◀ Назад";
 export const nextPageText = "Вперёд ▶";
