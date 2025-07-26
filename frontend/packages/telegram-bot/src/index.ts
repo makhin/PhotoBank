@@ -5,6 +5,7 @@ import { sendSearchPage, searchCommand } from "./commands/search";
 import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
 import { tagsCommand, sendTagsPage } from "./commands/tags";
 import { personsCommand, sendPersonsPage } from "./commands/persons";
+import { tagsCallbackPattern, personsCallbackPattern } from "./patterns";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import { registerPhotoRoutes } from "./commands/photoRouter";
 import { profileCommand } from "./commands/profile";
@@ -58,14 +59,14 @@ bot.callbackQuery(/^caption:(\d+)$/, async (ctx) => {
     await ctx.answerCallbackQuery(caption ?? captionMissingMsg);
 });
 
-bot.callbackQuery(/^tags:(\d+):(.+)$/, async (ctx) => {
+bot.callbackQuery(tagsCallbackPattern, async (ctx) => {
     const page = parseInt(ctx.match[1], 10);
     const prefix = decodeURIComponent(ctx.match[2]);
     await ctx.answerCallbackQuery();
     await sendTagsPage(ctx, prefix, page, true);
 });
 
-bot.callbackQuery(/^persons:(\d+):(.+)$/, async (ctx) => {
+bot.callbackQuery(personsCallbackPattern, async (ctx) => {
     const page = parseInt(ctx.match[1], 10);
     const prefix = decodeURIComponent(ctx.match[2]);
     await ctx.answerCallbackQuery();
