@@ -2,6 +2,8 @@ import {Bot} from "grammy";
 import {BOT_TOKEN, API_EMAIL, API_PASSWORD} from "./config";
 import {sendThisDayPage, thisDayCommand, captionCache} from "./commands/thisday";
 import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
+import { tagsCommand, sendTagsPage } from "./commands/tags";
+import { personsCommand, sendPersonsPage } from "./commands/persons";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import { registerPhotoRoutes } from "./commands/photoRouter";
 import { profileCommand } from "./commands/profile";
@@ -39,6 +41,9 @@ bot.command("profile", profileCommand);
 
 bot.command("subscribe", subscribeCommand);
 
+bot.command("tags", tagsCommand);
+bot.command("persons", personsCommand);
+
 bot.callbackQuery(/^thisday:(\d+)$/, async (ctx) => {
     const page = parseInt(ctx.match[1], 10);
     await ctx.answerCallbackQuery();
@@ -49,6 +54,20 @@ bot.callbackQuery(/^caption:(\d+)$/, async (ctx) => {
     const id = parseInt(ctx.match[1], 10);
     const caption = captionCache.get(id);
     await ctx.answerCallbackQuery(caption ?? captionMissingMsg);
+});
+
+bot.callbackQuery(/^tags:(\d+):(.+)$/, async (ctx) => {
+    const page = parseInt(ctx.match[1], 10);
+    const prefix = decodeURIComponent(ctx.match[2]);
+    await ctx.answerCallbackQuery();
+    await sendTagsPage(ctx, prefix, page, true);
+});
+
+bot.callbackQuery(/^persons:(\d+):(.+)$/, async (ctx) => {
+    const page = parseInt(ctx.match[1], 10);
+    const prefix = decodeURIComponent(ctx.match[2]);
+    await ctx.answerCallbackQuery();
+    await sendPersonsPage(ctx, prefix, page, true);
 });
 
 bot.start();
