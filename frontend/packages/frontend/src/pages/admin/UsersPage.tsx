@@ -34,7 +34,7 @@ function UserEditor({ user, onSave }: UserEditorProps) {
   const defaultValues = {
     phoneNumber: user.phoneNumber ?? '',
     telegram: user.telegram ?? '',
-    claims: user.claims.map((c) => `${c.type}:${c.value}`).join('\n'),
+    claims: user.claims?.map((c) => `${c.type}:${c.value}`).join('\n') ?? '',
   };
   const form = useForm<FormData>({ resolver: zodResolver(schema), defaultValues });
   return (
@@ -42,7 +42,7 @@ function UserEditor({ user, onSave }: UserEditorProps) {
       <h2 className="font-semibold">{user.email}</h2>
       <Form {...form}>
         {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-        <form onSubmit={form.handleSubmit((d) => onSave(user.id, d))} className="space-y-4">
+        <form onSubmit={form.handleSubmit((d) => onSave(user.id!, d))} className="space-y-4">
           <FormField
             control={form.control}
             name="phoneNumber"

@@ -113,9 +113,9 @@ export default function MyProfilePage() {
                 {roles.map((r) => (
                   <li key={r.name}>
                     <span className="font-semibold">{r.name}</span>
-                    {r.claims.length > 0 && (
+                    {r.claims && r.claims.length > 0 && (
                       <ul className="list-disc list-inside ml-4">
-                        {r.claims.map((c, idx) => (
+                        {r.claims?.map((c, idx) => (
                           <li key={idx}>{c.type}: {c.value}</li>
                         ))}
                       </ul>

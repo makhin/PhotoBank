@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { GeoPointDto } from '../types';
+import type { GeoPointDto } from '../generated';
 
 /**
  * Returns a human friendly place name for the given coordinates using

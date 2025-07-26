@@ -16,8 +16,8 @@ export function setApiBaseUrl(url: string) {
   axios.defaults.baseURL = url;
 }
 
-OpenAPI.TOKEN = () => getAuthToken() ?? '';
-OpenAPI.HEADERS = () =>
+OpenAPI.TOKEN = async () => getAuthToken() ?? '';
+OpenAPI.HEADERS = async () =>
   impersonateUser ? { 'X-Impersonate-User': impersonateUser } : {};
 
 axios.interceptors.response.use(undefined, (error) => {

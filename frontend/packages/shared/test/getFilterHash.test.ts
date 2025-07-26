@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { getFilterHash } from '../src';
-import type { FilterDto } from '../src/types';
+import type { FilterDto } from '../src/generated';
 
 describe('getFilterHash', () => {
   it('returns stable hash for identical filters', async () => {

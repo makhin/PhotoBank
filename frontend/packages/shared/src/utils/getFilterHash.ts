@@ -1,4 +1,4 @@
-import type {FilterDto} from '../types';
+import type {FilterDto} from '../generated';
 import objectHash from 'object-hash';
 
 /**

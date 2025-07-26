@@ -1,7 +1,7 @@
 import Dexie, { type Table } from 'dexie';
 import { LRUCache } from 'lru-cache';
 import { isBrowser } from '../config';
-import type { PhotoDto } from '../types';
+import type { PhotoDto } from '../generated';
 
 export interface CachedPhoto extends PhotoDto {
   added: number;
