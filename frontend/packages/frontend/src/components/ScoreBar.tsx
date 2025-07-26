@@ -2,12 +2,12 @@ import { Label } from "@/components/ui/label";
 
 interface ScoreBarProps {
     label: string;
-    score: number;
+    score?: number;
     colorClass: string;
 }
 
 export const ScoreBar = ({ label, score, colorClass }: ScoreBarProps) => {
-    const percent = (score * 100).toFixed(1);
+    const percent = ((score ?? 0) * 100).toFixed(1);
 
     return (
         <div>

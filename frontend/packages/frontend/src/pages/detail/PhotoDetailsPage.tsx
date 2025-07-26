@@ -74,7 +74,9 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const photoId = propPhotoId ?? (id ? +id : 0);
     const {data: photo, error} = useGetPhotoByIdQuery(photoId, { skip: photoId === 0 });
 
-    const formattedTakenDate = useMemo(() => photo?.takenDate && formatDate(photo.takenDate), [photo?.takenDate]);
+    const formattedTakenDate = useMemo(() =>
+        photo?.takenDate ? formatDate(photo.takenDate) : '',
+    [photo?.takenDate]);
 
     const previewImageSrc = photo?.previewImage && `data:image/jpeg;base64,${photo.previewImage}`;
 
@@ -258,7 +260,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                     {photo.orientation && (
                                         <div>
                                             <Label className="text-muted-foreground text-xs">{orientationLabel}</Label>
-                                            <Input value={getOrientation(photo.orientation)} readOnly
+                                            <Input value={getOrientation(photo.orientation ?? undefined)} readOnly
                                                    className="mt-1 bg-muted"/>
                                         </div>
                                     )}

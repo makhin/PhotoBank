@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { formatPhotoMessage } from '../src/utils/formatPhotoMessage';
-import type { PhotoDto } from '../src/types';
+import type { PhotoDto } from '../src/generated';
 
 vi.mock('../src/dictionaries', () => ({
   getPersonName: (id: number) => `Person ${id}`,

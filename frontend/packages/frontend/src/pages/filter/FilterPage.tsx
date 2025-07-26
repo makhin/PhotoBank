@@ -35,16 +35,16 @@ function FilterPage() {
 
   const useCurrentFilter = (location.state as { useCurrentFilter?: boolean } | null)?.useCurrentFilter;
 
-  const savedDefaults = {
-    caption: savedFilter.caption,
+  const savedDefaults: FormData = {
+    caption: savedFilter.caption ?? undefined,
     storages: savedFilter.storages?.map(String) ?? [],
     paths: savedFilter.paths?.map(String) ?? [],
     persons: savedFilter.persons?.map(String) ?? [],
     tags: savedFilter.tags?.map(String) ?? [],
-    isBW: savedFilter.isBW,
-    isAdultContent: savedFilter.isAdultContent,
-    isRacyContent: savedFilter.isRacyContent,
-    thisDay: savedFilter.thisDay,
+    isBW: savedFilter.isBW ?? undefined,
+    isAdultContent: savedFilter.isAdultContent ?? undefined,
+    isRacyContent: savedFilter.isRacyContent ?? undefined,
+    thisDay: savedFilter.thisDay ?? undefined,
     dateFrom: savedFilter.takenDateFrom ? new Date(savedFilter.takenDateFrom) : undefined,
     dateTo: savedFilter.takenDateTo ? new Date(savedFilter.takenDateTo) : undefined,
   };
