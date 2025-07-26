@@ -17,7 +17,10 @@ export const searchPhotos = async (filter: FilterDto): Promise<QueryResult> => {
 
   const result = await PhotosService.postApiPhotosSearch(filter);
   if (result.photos) {
-    void cacheFilterResult(hash, { count: result.count, photos: result.photos });
+    void cacheFilterResult(hash, {
+      count: result.count ?? 0,
+      photos: result.photos ?? [],
+    });
   }
   return result;
 };
