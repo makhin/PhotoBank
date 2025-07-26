@@ -64,7 +64,7 @@ export const FacePersonSelector = ({
                             {selectedName}
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[200px] p-0 max-h-60 overflow-y-auto">
+                    <PopoverContent className="w-[200px] p-0">
                         <Command>
                             <CommandInput placeholder={searchPersonPlaceholder}/>
                             <CommandEmpty>{noPersonFoundText}</CommandEmpty>
@@ -72,7 +72,7 @@ export const FacePersonSelector = ({
                                 <CommandItem onSelect={() => { handleSelect(undefined); }}>
                                     {noneLabel}
                                 </CommandItem>
-                                {persons.map((person) => (
+                                {persons.slice(0, 10).map((person) => (
                                     <CommandItem
                                         key={person.id}
                                         value={person.name}
