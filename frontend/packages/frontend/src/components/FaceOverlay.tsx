@@ -1,6 +1,6 @@
 import {getGenderText} from '@photobank/shared';
 
-import type { FaceDto } from '@photobank/shared/types';
+import type { FaceDto } from '@photobank/shared/generated';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover.tsx';
 import { Label } from '@/components/ui/label.tsx';
 import {

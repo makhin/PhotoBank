@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { getAllPaths, getAllPersons, getAllStorages, getAllTags } from '@photobank/shared/api';
-import type { PathDto, PersonDto, StorageDto, TagDto } from '@photobank/shared/types';
+import type { PathDto, PersonDto, StorageDto, TagDto } from '@photobank/shared/generated';
 
 import {
   METADATA_CACHE_KEY,

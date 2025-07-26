@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Image, StyleSheet, Text, View } from 'react-native';
-import { PhotoItemDto } from '@photobank/shared/types';
+import { PhotoItemDto } from '@photobank/shared/generated';
 
 export const PhotoCard = ({ photo, onPress }: { photo: PhotoItemDto; onPress: () => void }) => (
     <TouchableOpacity style={styles.card} onPress={onPress}>

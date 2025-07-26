@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { FilterDto, PhotoItemDto } from '@photobank/shared/types';
+import type { FilterDto, PhotoItemDto } from '@photobank/shared/generated';
 import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants.ts';
 
 interface PhotoState {

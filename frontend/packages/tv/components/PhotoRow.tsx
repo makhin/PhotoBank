@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { PhotoItemDto } from '@photobank/shared/types';
+import { PhotoItemDto } from '@photobank/shared/generated';
 
 import { PhotoCard } from './PhotoCard';
 

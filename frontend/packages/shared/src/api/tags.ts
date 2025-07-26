@@ -1,7 +1,6 @@
-import type { TagDto } from '../types';
-import { apiClient } from './client';
+import type { TagDto } from '../generated';
+import { TagsService } from '../generated';
 
 export const getAllTags = async (): Promise<TagDto[]> => {
-  const response = await apiClient.get<TagDto[]>('/tags');
-  return response.data;
+  return TagsService.getApiTags();
 };

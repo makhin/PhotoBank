@@ -6,8 +6,8 @@ import type {
   UpdateUserDto,
   ClaimDto,
   RoleDto,
-} from '../types';
-import { apiClient } from './client';
+} from '../generated';
+import { AuthService } from '../generated';
 
 const AUTH_TOKEN_KEY = 'photobank_token';
 let authToken: string | null = null;
@@ -53,39 +53,33 @@ loadAuthToken();
 export const login = async (
   data: LoginRequestDto,
 ): Promise<LoginResponseDto> => {
-  const response = await apiClient.post<LoginResponseDto>(
-    '/auth/login',
-    data,
-  );
-  setAuthToken(response.data.token, data.rememberMe ?? true);
-  return response.data;
+  const response = await AuthService.postApiAuthLogin(data);
+  setAuthToken(response.token!, data.rememberMe ?? true);
+  return response;
 };
 
 export const register = async (
   data: RegisterRequestDto,
 ): Promise<void> => {
-  await apiClient.post('/auth/register', data);
+  await AuthService.postApiAuthRegister(data);
 };
 
 export const getCurrentUser = async (): Promise<UserDto> => {
-  const response = await apiClient.get<UserDto>('/auth/user');
-  return response.data;
+  return AuthService.getApiAuthUser();
 };
 
 export const updateUser = async (
   data: UpdateUserDto,
 ): Promise<void> => {
-  await apiClient.put('/auth/user', data);
+  await AuthService.putApiAuthUser(data);
 };
 
 export const getUserClaims = async (): Promise<ClaimDto[]> => {
-  const response = await apiClient.get<ClaimDto[]>('/auth/claims');
-  return response.data;
+  return AuthService.getApiAuthClaims();
 };
 
 export const getUserRoles = async (): Promise<RoleDto[]> => {
-  const response = await apiClient.get<RoleDto[]>('/auth/roles');
-  return response.data;
+  return AuthService.getApiAuthRoles();
 };
 
 export const logout = () => {
