@@ -18,7 +18,14 @@ const PAGE_SIZE = 10;
 function parseCaption(text?: string): string {
   if (!text) return "";
   const match = text.match(/^\/search\s+(.+)/);
-  return match ? match[1] : "";
+  let caption = match ? match[1].trim() : "";
+  if (
+    (caption.startsWith('"') && caption.endsWith('"')) ||
+    (caption.startsWith("'") && caption.endsWith("'"))
+  ) {
+    caption = caption.slice(1, -1);
+  }
+  return caption;
 }
 
 export async function handleSearch(ctx: Context) {
