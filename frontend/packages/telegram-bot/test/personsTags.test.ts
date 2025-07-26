@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { sendTagsPage } from '../src/commands/tags';
 import { sendPersonsPage } from '../src/commands/persons';
+import { tagsCallbackPattern, personsCallbackPattern } from '../src/patterns';
 import * as api from '@photobank/shared/api';
 
 describe('sendTagsPage', () => {
@@ -26,5 +27,19 @@ describe('sendPersonsPage', () => {
     const text = ctx.reply.mock.calls[0][0];
     expect(text).toContain('al10');
     expect(text).toContain('Страница 2 из 2');
+  });
+});
+
+describe('callback regex', () => {
+  it('matches empty prefix for tags', () => {
+    const match = 'tags:2:'.match(tagsCallbackPattern);
+    expect(match?.[1]).toBe('2');
+    expect(match?.[2]).toBe('');
+  });
+
+  it('matches empty prefix for persons', () => {
+    const match = 'persons:3:'.match(personsCallbackPattern);
+    expect(match?.[1]).toBe('3');
+    expect(match?.[2]).toBe('');
   });
 });
