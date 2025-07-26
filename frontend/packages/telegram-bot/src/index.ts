@@ -1,6 +1,7 @@
 import {Bot} from "grammy";
 import {BOT_TOKEN, API_EMAIL, API_PASSWORD} from "./config";
 import {sendThisDayPage, thisDayCommand, captionCache} from "./commands/thisday";
+import { sendSearchPage, searchCommand } from "./commands/search";
 import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
 import { tagsCommand, sendTagsPage } from "./commands/tags";
 import { personsCommand, sendPersonsPage } from "./commands/persons";
@@ -36,6 +37,7 @@ bot.command(
 );
 
 bot.command("thisday", thisDayCommand);
+bot.command("search", searchCommand);
 
 bot.command("profile", profileCommand);
 
@@ -68,6 +70,13 @@ bot.callbackQuery(/^persons:(\d+):(.+)$/, async (ctx) => {
     const prefix = decodeURIComponent(ctx.match[2]);
     await ctx.answerCallbackQuery();
     await sendPersonsPage(ctx, prefix, page, true);
+});
+
+bot.callbackQuery(/^search:(\d+):(.+)$/, async (ctx) => {
+    const page = parseInt(ctx.match[1], 10);
+    const caption = decodeURIComponent(ctx.match[2]);
+    await ctx.answerCallbackQuery();
+    await sendSearchPage(ctx, caption, page, true);
 });
 
 bot.start();
