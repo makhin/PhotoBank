@@ -17,11 +17,8 @@ export function formatPhotoMessage(photo: PhotoDto): { caption: string, hasSpoil
     if (photo.tags?.length) lines.push(`🏷️ ${photo.tags.join(", ")}`);
 
     if (photo.faces?.length) {
-        const people = photo.faces
-            .map(f => f.personId)
-            .filter((id): id is number => id !== undefined)
-            .map(getPersonName);
-        if (people.length) {
+        const people = photo.faces.map(f => getPersonName(f.personId));
+        if (people.some(Boolean)) {
             lines.push(`👤 ${people.join(", ")}`);
         }
     }

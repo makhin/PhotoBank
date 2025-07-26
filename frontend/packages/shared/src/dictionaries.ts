@@ -1,4 +1,5 @@
 import {getAllPersons} from "@photobank/shared/api";
+import { unknownPersonLabel } from "@photobank/shared/constants";
 
 let tagMap = new Map<number, string>();
 let personMap = new Map<number, string>();
@@ -16,7 +17,8 @@ export function getTagName(id: number): string {
     return tagMap.get(id) ?? `#${id}`;
 }
 
-export function getPersonName(id: number): string {
+export function getPersonName(id: number | null | undefined): string {
+    if (id === null || id === undefined) return unknownPersonLabel;
     return personMap.get(id) ?? `ID ${id}`;
 }
 

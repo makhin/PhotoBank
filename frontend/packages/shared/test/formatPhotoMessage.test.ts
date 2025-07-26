@@ -3,7 +3,7 @@ import { formatPhotoMessage } from '../src/utils/formatPhotoMessage';
 import type { PhotoDto } from '../src/generated';
 
 vi.mock('../src/dictionaries', () => ({
-  getPersonName: (id: number) => `Person ${id}`,
+  getPersonName: (id: number | null | undefined) => id == null ? 'Неизвестный' : `Person ${id}`,
 }));
 
 describe('formatPhotoMessage', () => {
@@ -39,5 +39,13 @@ describe('formatPhotoMessage', () => {
     const { image } = formatPhotoMessage({ ...basePhoto, previewImage: base64 });
     expect(image).toBeInstanceOf(Buffer);
     expect(image?.toString()).toBe('img');
+  });
+
+  it('replaces missing person with unknown label', () => {
+    const { caption } = formatPhotoMessage({
+      ...basePhoto,
+      faces: [{ id: 1, personId: null, faceBox: { top:0, left:0, width:1, height:1}, friendlyFaceAttributes: '' }],
+    });
+    expect(caption).toContain('👤 Неизвестный');
   });
 });
