@@ -1,6 +1,6 @@
-import { apiClient } from './client';
-import type { UpdateFaceDto } from '../types';
+import type { UpdateFaceDto } from '../generated';
+import { FacesService } from '../generated';
 
 export const updateFace = async (dto: UpdateFaceDto): Promise<void> => {
-  await apiClient.put('/faces', dto);
+  await FacesService.putApiFaces(dto);
 };

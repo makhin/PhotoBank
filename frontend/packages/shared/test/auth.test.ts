@@ -69,55 +69,55 @@ describe('auth utilities', () => {
   });
 
   it('login posts credentials and saves token', async () => {
-    const postMock = vi.fn().mockResolvedValue({ data: { token: 'res' } });
-    vi.doMock('../src/api/client', () => ({ apiClient: { post: postMock } }));
+    const postMock = vi.fn().mockResolvedValue({ token: 'res' });
+    vi.doMock('../src/generated', () => ({ AuthService: { postApiAuthLogin: postMock } }));
     const auth = await import('../src/api/auth');
     const result = await auth.login({ email: 'e', password: 'p' });
-    expect(postMock).toHaveBeenCalledWith('/auth/login', { email: 'e', password: 'p' });
+    expect(postMock).toHaveBeenCalledWith({ email: 'e', password: 'p' });
     expect(result).toEqual({ token: 'res' });
     expect(auth.getAuthToken()).toBe('res');
   });
 
   it('register posts user info', async () => {
     const postMock = vi.fn().mockResolvedValue({});
-    vi.doMock('../src/api/client', () => ({ apiClient: { post: postMock } }));
+    vi.doMock('../src/generated', () => ({ AuthService: { postApiAuthRegister: postMock } }));
     const auth = await import('../src/api/auth');
     await auth.register({ email: 'e', password: 'p' });
-    expect(postMock).toHaveBeenCalledWith('/auth/register', { email: 'e', password: 'p' });
+    expect(postMock).toHaveBeenCalledWith({ email: 'e', password: 'p' });
   });
 
   it('getCurrentUser fetches user', async () => {
-    const getMock = vi.fn().mockResolvedValue({ data: { email: 'a@b.c' } });
-    vi.doMock('../src/api/client', () => ({ apiClient: { get: getMock } }));
+    const getMock = vi.fn().mockResolvedValue({ email: 'a@b.c' });
+    vi.doMock('../src/generated', () => ({ AuthService: { getApiAuthUser: getMock } }));
     const auth = await import('../src/api/auth');
     const user = await auth.getCurrentUser();
-    expect(getMock).toHaveBeenCalledWith('/auth/user');
+    expect(getMock).toHaveBeenCalled();
     expect(user).toEqual({ email: 'a@b.c' });
   });
 
   it('updateUser sends data', async () => {
     const putMock = vi.fn().mockResolvedValue({});
-    vi.doMock('../src/api/client', () => ({ apiClient: { put: putMock } }));
+    vi.doMock('../src/generated', () => ({ AuthService: { putApiAuthUser: putMock } }));
     const auth = await import('../src/api/auth');
     await auth.updateUser({ phoneNumber: '123' });
-    expect(putMock).toHaveBeenCalledWith('/auth/user', { phoneNumber: '123' });
+    expect(putMock).toHaveBeenCalledWith({ phoneNumber: '123' });
   });
 
   it('getUserClaims fetches claims', async () => {
-    const getMock = vi.fn().mockResolvedValue({ data: [{ type: 't', value: 'v' }] });
-    vi.doMock('../src/api/client', () => ({ apiClient: { get: getMock } }));
+    const getMock = vi.fn().mockResolvedValue([{ type: 't', value: 'v' }]);
+    vi.doMock('../src/generated', () => ({ AuthService: { getApiAuthClaims: getMock } }));
     const auth = await import('../src/api/auth');
     const claims = await auth.getUserClaims();
-    expect(getMock).toHaveBeenCalledWith('/auth/claims');
+    expect(getMock).toHaveBeenCalled();
     expect(claims).toEqual([{ type: 't', value: 'v' }]);
   });
 
   it('getUserRoles fetches roles with claims', async () => {
-    const getMock = vi.fn().mockResolvedValue({ data: [{ name: 'admin', claims: [] }] });
-    vi.doMock('../src/api/client', () => ({ apiClient: { get: getMock } }));
+    const getMock = vi.fn().mockResolvedValue([{ name: 'admin', claims: [] }]);
+    vi.doMock('../src/generated', () => ({ AuthService: { getApiAuthRoles: getMock } }));
     const auth = await import('../src/api/auth');
     const roles = await auth.getUserRoles();
-    expect(getMock).toHaveBeenCalledWith('/auth/roles');
+    expect(getMock).toHaveBeenCalled();
     expect(roles).toEqual([{ name: 'admin', claims: [] }]);
   });
 });

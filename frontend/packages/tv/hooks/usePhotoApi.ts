@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import {PhotoItemDto, FilterDto, PhotoDto} from "@photobank/shared/types";
+import { PhotoItemDto, FilterDto, PhotoDto } from '@photobank/shared/generated';
 import {getPhotoById, searchPhotos} from "@photobank/shared/api";
 
 export const usePhotos = (filter: FilterDto | null) => {

@@ -1,7 +1,6 @@
-import type { PersonDto } from '../types';
-import { apiClient } from './client';
+import type { PersonDto } from '../generated';
+import { PersonsService } from '../generated';
 
 export const getAllPersons = async (): Promise<PersonDto[]> => {
-  const response = await apiClient.get<PersonDto[]>('/persons');
-  return response.data;
+  return PersonsService.getApiPersons();
 };

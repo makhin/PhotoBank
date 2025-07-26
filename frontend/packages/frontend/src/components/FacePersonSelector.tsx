@@ -13,7 +13,7 @@ import {
     CommandGroup,
     CommandItem,
 } from "@/components/ui/command";
-import type { PersonDto } from '@photobank/shared/types';
+import type { PersonDto } from '@photobank/shared/generated';
 import {
     unassignedLabel,
     facePrefix,

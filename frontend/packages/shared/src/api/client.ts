@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { isBrowser } from "@photobank/shared/config";
+import { isBrowser } from '@photobank/shared/config';
+import { OpenAPI } from '../generated';
 import { getAuthToken } from './auth';
 
 let impersonateUser: string | null = null;
@@ -7,33 +8,19 @@ export const setImpersonateUser = (username: string | null | undefined) => {
   impersonateUser = username ?? null;
 };
 
-export const apiClient = axios.create({
-  baseURL: '',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true,
-});
+OpenAPI.WITH_CREDENTIALS = true;
+axios.defaults.timeout = 10000;
 
 export function setApiBaseUrl(url: string) {
-  apiClient.defaults.baseURL = `${url}/api/`;
+  OpenAPI.BASE = url;
+  axios.defaults.baseURL = url;
 }
 
-apiClient.interceptors.request.use((config) => {
-  const token = getAuthToken();
-  if (token) {
-    config.headers = config.headers ?? {};
-    config.headers['Authorization'] = `Bearer ${token}`;
-  }
-  if (impersonateUser) {
-    config.headers = config.headers ?? {};
-    config.headers['X-Impersonate-User'] = impersonateUser;
-  }
-  return config;
-});
+OpenAPI.TOKEN = () => getAuthToken() ?? '';
+OpenAPI.HEADERS = () =>
+  impersonateUser ? { 'X-Impersonate-User': impersonateUser } : {};
 
-apiClient.interceptors.response.use(undefined, (error) => {
+axios.interceptors.response.use(undefined, (error) => {
   if (
     error.response &&
     (error.response.status === 401 || error.response.status === 403)

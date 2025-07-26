@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getAllUsers, updateUserById, setUserClaims } from '@photobank/shared/api';
-import type { UserWithClaimsDto } from '@photobank/shared/types';
+import type { UserWithClaimsDto } from '@photobank/shared/generated';
 import { Button } from '@/components/ui/button';
 import {
   Form,

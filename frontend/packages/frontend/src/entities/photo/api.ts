@@ -4,9 +4,9 @@ import {
   getPhotoById as getPhotoByIdApi,
   updateFace as updateFaceApi,
 } from '@photobank/shared/api';
-import type { UpdateFaceDto } from '@photobank/shared/types';
+import type { UpdateFaceDto } from '@photobank/shared/generated';
 
-import type { FilterDto, PhotoDto, QueryResult } from '@photobank/shared/types';
+import type { FilterDto, PhotoDto, QueryResult } from '@photobank/shared/generated';
 
 export const api = createApi({
   reducerPath: 'photobankApi',

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDate, firstNWords } from '@photobank/shared';
-import type { PhotoItemDto } from '@photobank/shared/types';
+import type { PhotoItemDto } from '@photobank/shared/generated';
 
 import { useSearchPhotosMutation } from '@/entities/photo/api.ts';
 import { Badge } from '@/components/ui/badge';

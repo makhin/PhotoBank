@@ -1,5 +1,5 @@
-import type { FilterDto, PhotoDto, QueryResult } from '../types';
-import { apiClient } from './client';
+import type { FilterDto, PhotoDto, QueryResult } from '../generated';
+import { PhotosService } from '../generated';
 import { isBrowser } from '../config';
 import { cachePhoto, getCachedPhoto } from '../cache/photosCache';
 import { cacheFilterResult, getCachedFilterResult } from '../cache/filterResultsCache';
@@ -15,11 +15,11 @@ export const searchPhotos = async (filter: FilterDto): Promise<QueryResult> => {
     }
   }
 
-  const response = await apiClient.post<QueryResult>('/photos/search', filter);
-  if (response.data.photos) {
-    void cacheFilterResult(hash, { count: response.data.count, photos: response.data.photos });
+  const result = await PhotosService.postApiPhotosSearch(filter);
+  if (result.photos) {
+    void cacheFilterResult(hash, { count: result.count, photos: result.photos });
   }
-  return response.data;
+  return result;
 };
 
 export const getPhotoById = async (id: number): Promise<PhotoDto> => {
@@ -27,9 +27,9 @@ export const getPhotoById = async (id: number): Promise<PhotoDto> => {
     const cached = await getCachedPhoto(id);
     if (cached) return cached;
   }
-  const response = await apiClient.get<PhotoDto>(`/photos/${id}`);
+  const result = await PhotosService.getApiPhotos(id);
   if (isBrowser()) {
-    void cachePhoto(response.data);
+    void cachePhoto(result);
   }
-  return response.data;
+  return result;
 };

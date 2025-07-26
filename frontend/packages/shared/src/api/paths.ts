@@ -1,7 +1,6 @@
-import type { PathDto } from '../types';
-import { apiClient } from './client';
+import type { PathDto } from '../generated';
+import { PathsService } from '../generated';
 
 export const getAllPaths = async (): Promise<PathDto[]> => {
-  const response = await apiClient.get<PathDto[]>('/paths');
-  return response.data;
+  return PathsService.getApiPaths();
 };

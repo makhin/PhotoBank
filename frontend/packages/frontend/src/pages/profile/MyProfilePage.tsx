@@ -14,7 +14,7 @@ import {
 import {Button} from '@/components/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
 import {Input} from '@/components/ui/input';
-import type {UserDto, RoleDto, ClaimDto} from '@photobank/shared/types';
+import type { UserDto, RoleDto, ClaimDto } from '@photobank/shared/generated';
 import {
   myProfileTitle,
   emailPrefix,
