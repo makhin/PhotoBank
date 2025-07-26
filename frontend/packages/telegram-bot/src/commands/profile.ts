@@ -1,5 +1,5 @@
 import { Context } from "grammy";
-import { getUserRoles, getUserClaims } from "@photobank/shared/api";
+import { getUserRoles, getUserClaims, getCurrentUser } from "@photobank/shared/api";
 import {
     apiErrorMsg,
     getProfileErrorMsg,
@@ -7,11 +7,13 @@ import {
     rolesEmptyLabel,
     claimsLabel,
     claimsEmptyLabel,
+    notRegisteredMsg,
 } from "@photobank/shared/constants";
 
 export async function profileCommand(ctx: Context) {
     const username = ctx.from?.username ?? String(ctx.from?.id ?? "");
     try {
+        await getCurrentUser();
         const [roles, claims] = await Promise.all([
             getUserRoles(),
             getUserClaims(),
@@ -43,7 +45,11 @@ export async function profileCommand(ctx: Context) {
         }
 
         await ctx.reply(lines.join("\n"));
-    } catch (error) {
+    } catch (error: any) {
+        if (error?.response?.status === 404) {
+            await ctx.reply(notRegisteredMsg);
+            return;
+        }
         console.error(apiErrorMsg, error);
         await ctx.reply(getProfileErrorMsg);
     }
