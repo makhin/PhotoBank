@@ -363,7 +363,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                                     <FacePersonSelector
                                                         key={index}
                                                         faceIndex={index}
-                                                        personId={face.personId}
+                                                        personId={face.personId ?? undefined}
                                                         persons={persons}
                                                         disabled={!showFaceBoxes || !isAdmin}
                                                         onChange={(personId) =>

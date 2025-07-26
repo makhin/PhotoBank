@@ -17,8 +17,9 @@ export function setApiBaseUrl(url: string) {
 }
 
 OpenAPI.TOKEN = async () => getAuthToken() ?? '';
-OpenAPI.HEADERS = async () =>
-  impersonateUser ? { 'X-Impersonate-User': impersonateUser } : {};
+OpenAPI.HEADERS = async (_options): Promise<Record<string, string>> => {
+  return impersonateUser ? { 'X-Impersonate-User': impersonateUser } : {};
+};
 
 axios.interceptors.response.use(undefined, (error) => {
   if (

@@ -152,7 +152,7 @@ const PhotoListPage = () => {
                     <div className="col-span-1">
                       <div className="flex items-center gap-1 text-sm">
                         <Calendar className="w-3 h-3" />
-                        {formatDate(photo.takenDate)}
+                        {formatDate(photo.takenDate ?? undefined)}
                       </div>
                     </div>
 
@@ -277,7 +277,7 @@ const PhotoListPage = () => {
                     <div className="flex items-center gap-4 text-sm">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        {formatDate(photo.takenDate)}
+                        {formatDate(photo.takenDate ?? undefined)}
                       </div>
                     </div>
 

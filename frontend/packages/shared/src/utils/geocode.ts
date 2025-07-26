@@ -7,12 +7,14 @@ import type { GeoPointDto } from '../generated';
  * request fails.
  */
 export async function getPlaceByGeoPoint(point: GeoPointDto): Promise<string> {
+  const lat = point.latitude ?? 0;
+  const lon = point.longitude ?? 0;
   try {
     const res = await axios.get('https://nominatim.openstreetmap.org/reverse', {
       params: {
         format: 'json',
-        lat: point.latitude,
-        lon: point.longitude,
+        lat,
+        lon,
       },
       headers: {
         'User-Agent': 'photobank',
@@ -20,8 +22,8 @@ export async function getPlaceByGeoPoint(point: GeoPointDto): Promise<string> {
     });
 
     const name = res.data?.display_name as string | undefined;
-    return name ?? `${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}`;
+    return name ?? `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
   } catch {
-    return `${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}`;
+    return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
   }
 }
