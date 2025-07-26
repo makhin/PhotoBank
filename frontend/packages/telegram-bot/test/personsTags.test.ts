@@ -28,6 +28,19 @@ describe('sendPersonsPage', () => {
     expect(text).toContain('al10');
     expect(text).toContain('Страница 2 из 2');
   });
+
+  it('skips persons with id below 1', async () => {
+    const persons = [
+      { id: 0, name: 'skip' },
+      { id: 1, name: 'al00' },
+    ];
+    vi.spyOn(api, 'getAllPersons').mockResolvedValue(persons as any);
+    const ctx = { reply: vi.fn() } as any;
+    await sendPersonsPage(ctx, 'a', 1);
+    expect(ctx.reply).toHaveBeenCalled();
+    const text = ctx.reply.mock.calls[0][0];
+    expect(text).not.toContain('skip');
+  });
 });
 
 describe('callback regex', () => {

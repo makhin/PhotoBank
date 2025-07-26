@@ -24,6 +24,7 @@ export const searchPhotosEmptyMsg = "📭 По вашему запросу фо�
 export const notRegisteredMsg =
   "⚠️ Ваш телеграм не зарегистрирован. Обратитесь к администратору.";
 export const unknownYearLabel = "Неизвестный год";
+export const unknownPersonLabel = "Неизвестный";
 export const prevPageText = "◀ Назад";
 export const nextPageText = "Вперёд ▶";
 export const rolesLabel = "Роли:";

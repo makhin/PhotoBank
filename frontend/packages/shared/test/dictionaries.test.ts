@@ -18,6 +18,11 @@ describe('dictionaries', () => {
     expect(dict.getPersonName(99)).toBe('ID 99');
   });
 
+  it('getPersonName returns unknown label for null', async () => {
+    const dict = await import('../src/dictionaries');
+    expect(dict.getPersonName(null)).toBe('Неизвестный');
+  });
+
   it('getTagName and getStorageName fall back', async () => {
     const dict = await import('../src/dictionaries');
     expect(dict.getTagName(5)).toBe('#5');

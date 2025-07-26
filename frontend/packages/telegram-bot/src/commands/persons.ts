@@ -21,6 +21,7 @@ export async function sendPersonsPage(ctx: Context, prefix: string, page: number
     }
 
     const filtered = persons
+        .filter(p => p.id >= 1)
         .filter(p => p.name.toLowerCase().startsWith(prefix.toLowerCase()))
         .sort((a, b) => a.name.localeCompare(b.name));
 
