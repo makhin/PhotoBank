@@ -54,6 +54,17 @@ pnpm dev
 VITE_API_BASE_URL=http://localhost:5066
 ```
 
+Также можно указать параметры Azure OpenAI:
+
+```bash
+VITE_AZURE_OPENAI_ENDPOINT=https://photobankopenai.openai.azure.com
+VITE_AZURE_OPENAI_DEPLOYMENT=gpt-4o
+VITE_AZURE_OPENAI_API_VERSION=2025-01-01-preview
+VITE_AZURE_OPENAI_KEY=<your-api-key>
+```
+
+Ключ `VITE_AZURE_OPENAI_KEY` должен быть предоставлен пользователем.
+
 ### Телеграм‑бот
 
 ```bash
@@ -161,6 +172,17 @@ Before running set `VITE_API_BASE_URL` (or put it into `.env`) – the API addre
 ```bash
 VITE_API_BASE_URL=http://localhost:5066
 ```
+
+You can also specify Azure OpenAI settings:
+
+```bash
+VITE_AZURE_OPENAI_ENDPOINT=https://photobankopenai.openai.azure.com
+VITE_AZURE_OPENAI_DEPLOYMENT=gpt-4o
+VITE_AZURE_OPENAI_API_VERSION=2025-01-01-preview
+VITE_AZURE_OPENAI_KEY=<your-api-key>
+```
+
+The `VITE_AZURE_OPENAI_KEY` value must be supplied by the user.
 
 ### Telegram bot
 
