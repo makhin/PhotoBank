@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
 using System.Diagnostics.Metrics;
+using System.Collections.Generic;
 
 namespace PhotoBank.Api.Controllers
 {
@@ -32,6 +33,14 @@ namespace PhotoBank.Api.Controllers
                 return NotFound();
 
             return Ok(photo);
+        }
+
+        [HttpGet("duplicates")]
+        [ProducesResponseType(typeof(IEnumerable<PhotoItemDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<PhotoItemDto>>> GetDuplicates([FromQuery] int? id, [FromQuery] string? hash, [FromQuery] int threshold = 5)
+        {
+            var result = await photoService.FindDuplicatesAsync(id, hash, threshold);
+            return Ok(result);
         }
     }
 }

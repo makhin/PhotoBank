@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { FilterDto } from '../models/FilterDto';
 import type { PhotoDto } from '../models/PhotoDto';
+import type { PhotoItemDto } from '../models/PhotoItemDto';
 import type { QueryResult } from '../models/QueryResult';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -24,6 +25,28 @@ export class PhotosService {
             mediaType: 'application/json',
             errors: {
                 400: `Bad Request`,
+            },
+        });
+    }
+    /**
+     * @param id
+     * @param hash
+     * @param threshold
+     * @returns PhotoItemDto OK
+     * @throws ApiError
+     */
+    public static getApiPhotosDuplicates(
+        id?: number,
+        hash?: string,
+        threshold: number = 5,
+    ): CancelablePromise<Array<PhotoItemDto>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/photos/duplicates',
+            query: {
+                'id': id,
+                'hash': hash,
+                'threshold': threshold,
             },
         });
     }

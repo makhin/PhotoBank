@@ -75,6 +75,11 @@ namespace PhotoBank.Services
 
             await _dependencyExecutor.ExecuteAsync(_enrichers, photo, sourceData);
 
+            if (photo.PreviewImage != null)
+            {
+                photo.ImageHash = ImageHashHelper.ComputeHash(photo.PreviewImage);
+            }
+
             try
             {
                 await _photoRepository.InsertAsync(photo);
