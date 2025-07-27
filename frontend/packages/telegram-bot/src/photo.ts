@@ -1,5 +1,5 @@
 import { Context, InputFile, InlineKeyboard } from "grammy";
-import { getPhotoById } from "@photobank/shared/api/photos";
+import { PhotosService } from "@photobank/shared/generated";
 import { formatPhotoMessage } from "@photobank/shared/utils/formatPhotoMessage";
 import { photoNotFoundMsg, prevPageText, nextPageText } from "@photobank/shared/constants";
 
@@ -21,7 +21,7 @@ export async function deletePhotoMessage(ctx: Context) {
 
 async function fetchPhoto(id: number) {
     try {
-        return await getPhotoById(id);
+        return await PhotosService.getApiPhotos(id);
     } catch {
         return null;
     }
@@ -31,7 +31,7 @@ export async function sendPhotoById(ctx: Context, id: number) {
     let photo;
 
     try {
-        photo = await getPhotoById(id);
+        photo = await PhotosService.getApiPhotos(id);
     } catch {
         await ctx.reply(photoNotFoundMsg);
         return;

@@ -1,12 +1,12 @@
 import {useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {logout} from '@photobank/shared/api';
+import { clearAuthToken } from '@photobank/shared/api/auth';
 import { loggingOutMsg } from '@photobank/shared/constants';
 
 export default function LogoutPage() {
   const navigate = useNavigate();
   useEffect(() => {
-    logout();
+    clearAuthToken();
     navigate('/login');
   }, [navigate]);
 

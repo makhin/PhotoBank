@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { login } from '@photobank/shared/api';
+import { AuthService } from '@photobank/shared/generated';
+import { setAuthToken } from '@photobank/shared/api/auth';
 
 import {API_EMAIL, API_PASSWORD} from '../config';
 
@@ -8,7 +9,11 @@ export function useAutoLogin() {
     async function doLogin() {
       try {
         console.log('Logging in with default credentials');
-        await login({ email: API_EMAIL, password: API_PASSWORD });
+        const res = await AuthService.postApiAuthLogin({
+          email: API_EMAIL,
+          password: API_PASSWORD,
+        });
+        setAuthToken(res.token!, true);
         console.log('Login success');
       } catch (e) {
         console.error('Login failed', e);

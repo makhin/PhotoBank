@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { register } from '@photobank/shared/api';
+import { AuthService } from '@photobank/shared/generated';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -38,7 +38,7 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await register(data);
+      await AuthService.postApiAuthRegister(data);
       navigate('/login');
     } catch (e) {
       console.error(e);

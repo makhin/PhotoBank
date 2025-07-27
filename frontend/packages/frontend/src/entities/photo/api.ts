@@ -1,9 +1,5 @@
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
-import {
-  searchPhotos as searchPhotosApi,
-  getPhotoById as getPhotoByIdApi,
-  updateFace as updateFaceApi,
-} from '@photobank/shared/api';
+import { PhotosService, FacesService } from '@photobank/shared/generated';
 import type { UpdateFaceDto } from '@photobank/shared/generated';
 
 import type { FilterDto, PhotoDto, QueryResult } from '@photobank/shared/generated';
@@ -15,7 +11,7 @@ export const api = createApi({
     getPhotoById: builder.query<PhotoDto, number>({
       async queryFn(id) {
         try {
-          const data = await getPhotoByIdApi(id);
+          const data = await PhotosService.getApiPhotos(id);
           return { data: data as PhotoDto };
         } catch (error) {
           return { error: error as unknown as Error };
@@ -25,7 +21,7 @@ export const api = createApi({
     searchPhotos: builder.mutation<QueryResult, FilterDto>({
       async queryFn(filter) {
         try {
-          const data = await searchPhotosApi(filter);
+          const data = await PhotosService.postApiPhotosSearch(filter);
           return { data: data as QueryResult };
         } catch (error) {
           return { error: error as unknown as Error };
@@ -35,7 +31,7 @@ export const api = createApi({
     updateFace: builder.mutation<void, UpdateFaceDto>({
       async queryFn(dto) {
         try {
-          await updateFaceApi(dto);
+          await FacesService.putApiFaces(dto);
           return { data: undefined };
         } catch (error) {
           return { error: error as unknown as Error };

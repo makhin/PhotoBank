@@ -12,7 +12,10 @@ class RO {
 global.ResizeObserver = RO;
 
 const renderPage = async (regMock: any) => {
-  vi.doMock('@photobank/shared/api', () => ({ register: regMock }));
+  vi.doMock('@photobank/shared/generated', () => ({
+    AuthService: { postApiAuthRegister: regMock },
+    OpenAPI: {},
+  }));
   const { default: RegisterPage } = await import('../src/pages/auth/RegisterPage');
   render(
     <MemoryRouter initialEntries={["/register"]}>

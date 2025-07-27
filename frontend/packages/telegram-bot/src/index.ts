@@ -19,12 +19,10 @@ import { loadDictionaries } from "@photobank/shared/dictionaries";
 import { registerPhotoRoutes } from "./commands/photoRouter";
 import { profileCommand } from "./commands/profile";
 import { withRegistered } from './registration';
-import {
-    login,
-    setImpersonateUser,
-    setApiBaseUrl,
-    configureAzureOpenAI,
-} from "@photobank/shared/api";
+import { AuthService } from "@photobank/shared/generated";
+import { setAuthToken } from "@photobank/shared/api/auth";
+import { setImpersonateUser, setApiBaseUrl } from "@photobank/shared/api/client";
+import { configureAzureOpenAI } from "@photobank/shared/api/openai";
 import { loadResources, getApiBaseUrl } from "@photobank/shared/config";
 import {
     captionMissingMsg,
@@ -44,7 +42,11 @@ registerPhotoRoutes(bot);
 await loadResources();
 setApiBaseUrl(getApiBaseUrl());
 
-await login({ email: API_EMAIL, password: API_PASSWORD });
+const loginRes = await AuthService.postApiAuthLogin({
+    email: API_EMAIL,
+    password: API_PASSWORD,
+});
+setAuthToken(loginRes.token!, true);
 await loadDictionaries();
 
 configureAzureOpenAI({

@@ -1,4 +1,4 @@
-import {getAllPersons} from "@photobank/shared/api";
+import { PersonsService } from "@photobank/shared/generated";
 import { unknownPersonLabel } from "@photobank/shared/constants";
 
 let tagMap = new Map<number, string>();
@@ -8,7 +8,7 @@ let pathMap = new Map<number, string>();
 
 export async function loadDictionaries() {
 //    tagMap = new Map((await getAllTags()).map(tag => [tag.id, tag.name]));
-    personMap = new Map((await getAllPersons()).map(p => [p.id, p.name]));
+    personMap = new Map((await PersonsService.getApiPersons()).map(p => [p.id, p.name]));
 //    storageMap = new Map((await getAllStorages()).map(p => [p.id, p.name]));
 //    pathMap = new Map((await getAllPaths()).map(p => [p.storageId, p.path]));
 }

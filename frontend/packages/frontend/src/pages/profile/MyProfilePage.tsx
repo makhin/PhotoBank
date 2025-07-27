@@ -4,12 +4,10 @@ import {useForm} from 'react-hook-form';
 import {z} from 'zod';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {
-  getCurrentUser,
-  updateUser,
-  logout,
-  getUserRoles,
-  getUserClaims,
-} from '@photobank/shared/api';
+  AuthService,
+  UsersService,
+} from '@photobank/shared/generated';
+import { clearAuthToken } from '@photobank/shared/api/auth';
 
 import {Button} from '@/components/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
@@ -45,7 +43,7 @@ export default function MyProfilePage() {
   });
 
   useEffect(() => {
-    getCurrentUser()
+    AuthService.getApiAuthUser()
       .then((u) => {
         setUser(u);
         form.reset({ phoneNumber: u.phoneNumber ?? '', telegram: u.telegram ?? '' });
@@ -53,13 +51,13 @@ export default function MyProfilePage() {
       .catch((e) => {
         console.error(e);
       });
-    getUserRoles().then(setRoles).catch(console.error);
-    getUserClaims().then(setClaims).catch(console.error);
+    AuthService.getApiAuthRoles().then(setRoles).catch(console.error);
+    AuthService.getApiAuthClaims().then(setClaims).catch(console.error);
   }, [form]);
 
   const onSubmit = async (data: FormData) => {
     try {
-      await updateUser(data);
+      await AuthService.putApiAuthUser(data);
       navigate('/filter');
     } catch (e) {
       console.error(e);
@@ -137,7 +135,14 @@ export default function MyProfilePage() {
           )}
         </div>
       )}
-      <Button variant="secondary" className="w-full" onClick={() => { logout(); navigate('/login'); }}>
+      <Button
+        variant="secondary"
+        className="w-full"
+        onClick={() => {
+          clearAuthToken();
+          navigate('/login');
+        }}
+      >
         {logoutButtonText}
       </Button>
     </div>

@@ -7,7 +7,7 @@ describe('dictionaries', () => {
 
   it('getPersonName returns loaded name', async () => {
     const getAllPersons = vi.fn().mockResolvedValue([{ id: 1, name: 'John' }]);
-    vi.doMock('../src/api', () => ({ getAllPersons }));
+    vi.doMock('../src/generated', () => ({ PersonsService: { getApiPersons: getAllPersons } }));
     const dict = await import('../src/dictionaries');
     await dict.loadDictionaries();
     expect(dict.getPersonName(1)).toBe('John');
