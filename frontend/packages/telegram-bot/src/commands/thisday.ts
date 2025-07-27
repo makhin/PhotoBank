@@ -1,5 +1,5 @@
 import {Context, InlineKeyboard} from "grammy";
-import {searchPhotos} from "@photobank/shared/api/photos";
+import { PhotosService } from "@photobank/shared/generated";
 import {firstNWords} from "@photobank/shared/index";
 import {
     apiErrorMsg,
@@ -40,7 +40,11 @@ export async function sendThisDayPage(ctx: Context, page: number, edit = false) 
     const skip = (page - 1) * PAGE_SIZE;
     let queryResult;
     try {
-        queryResult = await searchPhotos({ thisDay: true, top: PAGE_SIZE, skip });
+        queryResult = await PhotosService.postApiPhotosSearch({
+            thisDay: true,
+            top: PAGE_SIZE,
+            skip,
+        });
     } catch (err) {
         console.error(apiErrorMsg, err);
         await ctx.reply(sorryTryToRequestLaterMsg);

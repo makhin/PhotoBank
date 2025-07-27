@@ -1,5 +1,5 @@
 import { Context } from "grammy";
-import { getAllTags } from "@photobank/shared/api";
+import { TagsService } from "@photobank/shared/generated";
 import { parsePrefix, sendNamedItemsPage } from "./helpers";
 
 export async function sendTagsPage(
@@ -11,7 +11,7 @@ export async function sendTagsPage(
   await sendNamedItemsPage({
     ctx,
     command: "tags",
-    fetchAll: getAllTags,
+    fetchAll: TagsService.getApiTags,
     prefix,
     page,
     edit,

@@ -1,5 +1,5 @@
 import { Context } from "grammy";
-import { getAllPersons } from "@photobank/shared/api";
+import { PersonsService } from "@photobank/shared/generated";
 import { parsePrefix, sendNamedItemsPage } from "./helpers";
 
 export async function sendPersonsPage(
@@ -11,7 +11,7 @@ export async function sendPersonsPage(
   await sendNamedItemsPage({
     ctx,
     command: "persons",
-    fetchAll: getAllPersons,
+    fetchAll: PersonsService.getApiPersons,
     prefix,
     page,
     edit,

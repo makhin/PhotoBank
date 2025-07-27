@@ -1,10 +1,10 @@
 import { Context } from 'grammy';
-import { getCurrentUser } from '@photobank/shared/api/auth';
+import { AuthService } from '@photobank/shared/generated';
 import { notRegisteredMsg } from '@photobank/shared/constants';
 
 export async function ensureRegistered(ctx: Context): Promise<boolean> {
   try {
-    await getCurrentUser();
+    await AuthService.getApiAuthUser();
     return true;
   } catch {
     await ctx.reply(notRegisteredMsg);

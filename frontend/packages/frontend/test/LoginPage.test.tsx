@@ -16,7 +16,11 @@ class RO {
 global.ResizeObserver = RO;
 
 const renderPage = async (loginMock: any) => {
-  vi.doMock('@photobank/shared/api', () => ({ login: loginMock }));
+  vi.doMock('@photobank/shared/generated', () => ({
+    AuthService: { postApiAuthLogin: loginMock },
+    OpenAPI: {},
+  }));
+  vi.doMock('@photobank/shared/api/auth', () => ({ setAuthToken: vi.fn() }));
   const { default: LoginPage } = await import('../src/pages/auth/LoginPage');
   const store = configureStore({ reducer: { metadata: metaReducer, auth: authReducer } });
   render(

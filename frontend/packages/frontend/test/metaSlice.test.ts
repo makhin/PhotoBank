@@ -39,11 +39,12 @@ describe('metaSlice', () => {
     const getAllTags = vi.fn().mockResolvedValue(payload.tags);
     const getAllPersons = vi.fn().mockResolvedValue(payload.persons);
     const getAllPaths = vi.fn().mockResolvedValue(payload.paths);
-    vi.doMock('@photobank/shared/api', () => ({
-      getAllStorages,
-      getAllTags,
-      getAllPersons,
-      getAllPaths,
+    vi.doMock('@photobank/shared/generated', () => ({
+      StoragesService: { getApiStorages: getAllStorages },
+      TagsService: { getApiTags: getAllTags },
+      PersonsService: { getApiPersons: getAllPersons },
+      PathsService: { getApiPaths: getAllPaths },
+      OpenAPI: {},
     }));
     const { loadMetadata } = await import('../src/features/meta/model/metaSlice');
     const dispatch = vi.fn();

@@ -13,12 +13,18 @@ describe('authSlice', () => {
   });
 
   it('loginUser calls api', async () => {
-    const loginMock = vi.fn().mockResolvedValue({});
-    vi.doMock('@photobank/shared/api', () => ({ login: loginMock }));
+    const loginMock = vi.fn().mockResolvedValue({ token: 't' });
+    const setToken = vi.fn();
+    vi.doMock('@photobank/shared/generated', () => ({
+      AuthService: { postApiAuthLogin: loginMock },
+      OpenAPI: {},
+    }));
+    vi.doMock('@photobank/shared/api/auth', () => ({ setAuthToken: setToken }));
     const { loginUser } = await import('../src/features/auth/model/authSlice');
     const dispatch = vi.fn();
     const getState = vi.fn();
     await loginUser({ email: 'a', password: 'b' })(dispatch, getState, undefined);
     expect(loginMock).toHaveBeenCalledWith({ email: 'a', password: 'b' });
+    expect(setToken).toHaveBeenCalledWith('t', true);
   });
 });

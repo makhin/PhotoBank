@@ -1,5 +1,5 @@
 import { Context } from "grammy";
-import { getUserRoles, getUserClaims, getCurrentUser } from "@photobank/shared/api";
+import { AuthService } from "@photobank/shared/generated";
 import {
     apiErrorMsg,
     getProfileErrorMsg,
@@ -13,10 +13,10 @@ import {
 export async function profileCommand(ctx: Context) {
     const username = ctx.from?.username ?? String(ctx.from?.id ?? "");
     try {
-        await getCurrentUser();
+        await AuthService.getApiAuthUser();
         const [roles, claims] = await Promise.all([
-            getUserRoles(),
-            getUserClaims(),
+            AuthService.getApiAuthRoles(),
+            AuthService.getApiAuthClaims(),
         ]);
 
         const lines: string[] = [

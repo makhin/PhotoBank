@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { LoginRequestDto } from '@photobank/shared/generated';
-import { login } from '@photobank/shared/api';
+import { AuthService } from '@photobank/shared/generated';
+import { setAuthToken } from '@photobank/shared/api/auth';
 import { invalidCredentialsMsg } from '@photobank/shared/constants';
 
 interface AuthState {
@@ -17,7 +18,8 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async (data: LoginRequestDto, { rejectWithValue }) => {
     try {
-      await login(data);
+      const res = await AuthService.postApiAuthLogin(data);
+      setAuthToken(res.token!, data.rememberMe ?? true);
     } catch (e) {
       return rejectWithValue(invalidCredentialsMsg);
     }

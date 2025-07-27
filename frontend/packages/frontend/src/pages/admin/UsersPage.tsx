@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getAllUsers, updateUserById, setUserClaims } from '@photobank/shared/api';
+import { UsersService } from '@photobank/shared/generated';
 import type { UserWithClaimsDto } from '@photobank/shared/generated';
 import { Button } from '@/components/ui/button';
 import {
@@ -93,17 +93,17 @@ export default function UsersPage() {
   const [users, setUsers] = useState<UserWithClaimsDto[]>([]);
 
   useEffect(() => {
-    getAllUsers().then(setUsers).catch(console.error);
+    UsersService.getApiAdminUsers().then(setUsers).catch(console.error);
   }, []);
 
   const handleSave = async (id: string, data: FormData) => {
-    await updateUserById(id, data);
+    await UsersService.putApiAdminUsers(id, data);
     const claims = (data.claims ?? '').split('\n').filter(Boolean).map((l) => {
       const [type, value] = l.split(':');
       return { type: type.trim(), value: value.trim() };
     });
     if (claims.length) {
-      await setUserClaims(id, claims);
+      await UsersService.putApiAdminUsersClaims(id, claims);
     }
   };
 
