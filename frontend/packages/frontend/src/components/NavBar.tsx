@@ -10,6 +10,7 @@ import {
   navbarLogoutLabel,
   navbarRegisterLabel,
   navbarUsersLabel,
+  navbarOpenAiLabel,
 } from '@photobank/shared/constants';
 
 export default function NavBar() {
@@ -36,6 +37,11 @@ export default function NavBar() {
         <li>
           <Button variant="link" className={linkClass} asChild>
             <NavLink to="/profile">{navbarProfileLabel}</NavLink>
+          </Button>
+        </li>
+        <li>
+          <Button variant="link" className={linkClass} asChild>
+            <NavLink to="/openai">{navbarOpenAiLabel}</NavLink>
           </Button>
         </li>
         {isAdmin && (
