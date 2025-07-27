@@ -1,7 +1,16 @@
 import {Bot} from "grammy";
-import {BOT_TOKEN, API_EMAIL, API_PASSWORD} from "./config";
+import {
+    BOT_TOKEN,
+    API_EMAIL,
+    API_PASSWORD,
+    AZURE_OPENAI_ENDPOINT,
+    AZURE_OPENAI_KEY,
+    AZURE_OPENAI_DEPLOYMENT,
+    AZURE_OPENAI_API_VERSION,
+} from "./config";
 import {sendThisDayPage, thisDayCommand, captionCache} from "./commands/thisday";
 import { sendSearchPage, searchCommand } from "./commands/search";
+import { aiCommand } from "./commands/ai";
 import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
 import { tagsCommand, sendTagsPage } from "./commands/tags";
 import { personsCommand, sendPersonsPage } from "./commands/persons";
@@ -10,7 +19,12 @@ import { loadDictionaries } from "@photobank/shared/dictionaries";
 import { registerPhotoRoutes } from "./commands/photoRouter";
 import { profileCommand } from "./commands/profile";
 import { withRegistered } from './registration';
-import { login, setImpersonateUser, setApiBaseUrl } from "@photobank/shared/api";
+import {
+    login,
+    setImpersonateUser,
+    setApiBaseUrl,
+    configureAzureOpenAI,
+} from "@photobank/shared/api";
 import { loadResources, getApiBaseUrl } from "@photobank/shared/config";
 import {
     captionMissingMsg,
@@ -33,6 +47,13 @@ setApiBaseUrl(getApiBaseUrl());
 await login({ email: API_EMAIL, password: API_PASSWORD });
 await loadDictionaries();
 
+configureAzureOpenAI({
+    endpoint: AZURE_OPENAI_ENDPOINT,
+    apiKey: AZURE_OPENAI_KEY,
+    deployment: AZURE_OPENAI_DEPLOYMENT,
+    apiVersion: AZURE_OPENAI_API_VERSION,
+});
+
 bot.command(
     "start",
     (ctx) => ctx.reply(welcomeBotMsg),
@@ -40,6 +61,7 @@ bot.command(
 
 bot.command("thisday", withRegistered(thisDayCommand));
 bot.command("search", withRegistered(searchCommand));
+bot.command("ai", aiCommand);
 
 bot.command("profile", profileCommand);
 

@@ -15,3 +15,8 @@ if (!API_EMAIL || !API_PASSWORD) {
   throw new Error(apiCredentialsNotDefinedError);
 }
 
+export const AZURE_OPENAI_ENDPOINT: string = process.env.VITE_AZURE_OPENAI_ENDPOINT || '';
+export const AZURE_OPENAI_KEY: string = process.env.VITE_AZURE_OPENAI_KEY || '';
+export const AZURE_OPENAI_DEPLOYMENT: string = process.env.VITE_AZURE_OPENAI_DEPLOYMENT || '';
+export const AZURE_OPENAI_API_VERSION: string | undefined = process.env.VITE_AZURE_OPENAI_API_VERSION;
+

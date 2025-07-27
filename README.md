@@ -71,6 +71,9 @@ BOT_TOKEN=ваш_токен
 API_EMAIL=admin@example.com
 API_PASSWORD=secret
 API_BASE_URL=http://localhost:5066
+VITE_AZURE_OPENAI_ENDPOINT=https://example.openai.azure.com
+VITE_AZURE_OPENAI_KEY=your_key
+VITE_AZURE_OPENAI_DEPLOYMENT=gpt-4
 ```
 
 ### MAUI/Blazor клиент
@@ -182,6 +185,9 @@ BOT_TOKEN=your_token
 API_EMAIL=admin@example.com
 API_PASSWORD=secret
 API_BASE_URL=http://localhost:5066
+VITE_AZURE_OPENAI_ENDPOINT=https://example.openai.azure.com
+VITE_AZURE_OPENAI_KEY=your_key
+VITE_AZURE_OPENAI_DEPLOYMENT=gpt-4
 ```
 
 ### MAUI/Blazor client

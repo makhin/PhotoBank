@@ -19,6 +19,7 @@ export const photoCommandUsageMsg = "❗ Используй: /photo <id>";
 export const photoNotFoundMsg = "❌ Фото не найдено.";
 export const subscribeCommandUsageMsg = "❗ Используй: /subscribe HH:MM";
 export const searchCommandUsageMsg = "❗ Используй: /search <caption>";
+export const aiCommandUsageMsg = "❗ Используй: /ai <prompt>";
 export const todaysPhotosEmptyMsg = "📭 Сегодняшних фото пока нет.";
 export const searchPhotosEmptyMsg = "📭 По вашему запросу фото не найдены.";
 export const notRegisteredMsg =
