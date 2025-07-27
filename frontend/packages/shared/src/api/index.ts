@@ -7,3 +7,4 @@ export * from './storages';
 export * from './auth';
 export * from './users';
 export * from './faces';
+export * from './openai';
