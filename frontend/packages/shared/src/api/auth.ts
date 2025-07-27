@@ -50,38 +50,3 @@ export const loadAuthToken = () => {
 // Immediately load token when running in browser environment
 loadAuthToken();
 
-export const login = async (
-  data: LoginRequestDto,
-): Promise<LoginResponseDto> => {
-  const response = await AuthService.postApiAuthLogin(data);
-  setAuthToken(response.token!, data.rememberMe ?? true);
-  return response;
-};
-
-export const register = async (
-  data: RegisterRequestDto,
-): Promise<void> => {
-  await AuthService.postApiAuthRegister(data);
-};
-
-export const getCurrentUser = async (): Promise<UserDto> => {
-  return AuthService.getApiAuthUser();
-};
-
-export const updateUser = async (
-  data: UpdateUserDto,
-): Promise<void> => {
-  await AuthService.putApiAuthUser(data);
-};
-
-export const getUserClaims = async (): Promise<ClaimDto[]> => {
-  return AuthService.getApiAuthClaims();
-};
-
-export const getUserRoles = async (): Promise<RoleDto[]> => {
-  return AuthService.getApiAuthRoles();
-};
-
-export const logout = () => {
-  clearAuthToken();
-};
