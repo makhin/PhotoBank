@@ -178,3 +178,9 @@ export const saveUserButtonText = 'Save User';
 
 // Service page
 export const serviceInfoTitle = 'Technical Information';
+
+// OpenAI page
+export const openAiPageTitle = 'OpenAI Chat';
+export const openAiSendButton = 'Send';
+export const openAiPromptPlaceholder = 'Enter your request...';
+export const navbarOpenAiLabel = 'OpenAI';

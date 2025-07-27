@@ -11,12 +11,14 @@ import LogoutPage from '@/pages/auth/LogoutPage.tsx';
 import MyProfilePage from '@/pages/profile/MyProfilePage.tsx';
 import UsersPage from '@/pages/admin/UsersPage.tsx';
 import ServiceInfoPage from '@/pages/service/ServiceInfoPage.tsx';
+import OpenAIPage from '@/pages/openai/OpenAIPage.tsx';
 
 export const AppRoutes = () => (
   <Routes>
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
     <Route path="/service" element={<ServiceInfoPage />} />
+    <Route path="/openai" element={<OpenAIPage />} />
     <Route element={<RequireAuth />}>
       <Route path="/" element={<Navigate to="/filter" />} />
       <Route path="/logout" element={<LogoutPage />} />
