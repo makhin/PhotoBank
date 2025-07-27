@@ -53,6 +53,8 @@ pnpm dev
 ```bash
 VITE_API_BASE_URL=http://localhost:5066
 ```
+При необходимости можно задать версию Azure OpenAI через переменную
+`VITE_AZURE_OPENAI_API_VERSION` (по умолчанию `2024-02-15-preview`).
 
 ### Телеграм‑бот
 
@@ -161,6 +163,9 @@ Before running set `VITE_API_BASE_URL` (or put it into `.env`) – the API addre
 ```bash
 VITE_API_BASE_URL=http://localhost:5066
 ```
+
+If needed, you can specify the Azure OpenAI version via
+`VITE_AZURE_OPENAI_API_VERSION` (default is `2024-02-15-preview`).
 
 ### Telegram bot
 
