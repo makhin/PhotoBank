@@ -71,6 +71,15 @@ API_PASSWORD=secret
 API_BASE_URL=http://localhost:5066
 ```
 
+### Android TV клиент
+
+```bash
+cd Photobank.Ts/packages/tv
+pnpm install
+pnpm start # запускает Metro-сервер
+pnpm android # сборка и запуск на эмуляторе или устройстве
+```
+
 ### MAUI/Blazor клиент
 
 ```bash
@@ -177,6 +186,15 @@ BOT_TOKEN=your_token
 API_EMAIL=admin@example.com
 API_PASSWORD=secret
 API_BASE_URL=http://localhost:5066
+```
+
+### Android TV client
+
+```bash
+cd Photobank.Ts/packages/tv
+pnpm install
+pnpm start # start Metro bundler
+pnpm android # build and run on emulator or device
 ```
 
 ### MAUI/Blazor client
