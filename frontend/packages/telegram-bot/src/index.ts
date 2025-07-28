@@ -3,6 +3,7 @@ import {
     BOT_TOKEN,
     API_EMAIL,
     API_PASSWORD,
+    API_BASE_URL,
     AZURE_OPENAI_ENDPOINT,
     AZURE_OPENAI_KEY,
     AZURE_OPENAI_DEPLOYMENT,
@@ -23,7 +24,6 @@ import { AuthService } from "@photobank/shared/generated";
 import { setAuthToken } from "@photobank/shared/api/auth";
 import { setImpersonateUser, setApiBaseUrl } from "@photobank/shared/api/client";
 import { configureAzureOpenAI } from "@photobank/shared/api/openai";
-import { loadResources, getApiBaseUrl } from "@photobank/shared/config";
 import {
     captionMissingMsg,
     welcomeBotMsg,
@@ -39,8 +39,7 @@ bot.use(async (ctx, next) => {
 
 registerPhotoRoutes(bot);
 
-await loadResources();
-setApiBaseUrl(getApiBaseUrl());
+setApiBaseUrl(API_BASE_URL);
 
 const loginRes = await AuthService.postApiAuthLogin({
     email: API_EMAIL,

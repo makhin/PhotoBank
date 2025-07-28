@@ -1,5 +1,9 @@
-import { Context } from "grammy";
-import { aiCommandUsageMsg, sorryTryToRequestLaterMsg } from "@photobank/shared/constants";
+import { Context } from 'grammy';
+import {
+  aiCommandUsageMsg,
+  sorryTryToRequestLaterMsg,
+} from '@photobank/shared/constants';
+import { createChatCompletion } from '@photobank/shared/api/openai';
 
 export function parseAiPrompt(text?: string): string | null {
     if (!text) return null;
@@ -9,15 +13,19 @@ export function parseAiPrompt(text?: string): string | null {
 }
 
 export async function aiCommand(ctx: Context) {
-    const prompt = parseAiPrompt(ctx.message?.text);
-    if (!prompt) {
-        await ctx.reply(aiCommandUsageMsg);
-        return;
-    }
-    try {
-        await ctx.reply(sorryTryToRequestLaterMsg);
-    } catch (err) {
-        console.error(err);
-        await ctx.reply(sorryTryToRequestLaterMsg);
-    }
+  const prompt = parseAiPrompt(ctx.message?.text);
+  if (!prompt) {
+    await ctx.reply(aiCommandUsageMsg);
+    return;
+  }
+  try {
+    const res = await createChatCompletion({
+      messages: [{ role: 'user', content: prompt }],
+    });
+    const reply = res.choices[0]?.message.content;
+    await ctx.reply(reply ?? sorryTryToRequestLaterMsg);
+  } catch (err) {
+    console.error(err);
+    await ctx.reply(sorryTryToRequestLaterMsg);
+  }
 }

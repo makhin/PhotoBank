@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import { LRUCache } from 'lru-cache';
-import { isBrowser } from '../config';
+import { isBrowser } from '../utils/isBrowser';
 import type { PhotoItemDto } from '../generated';
 
 export interface CachedFilterResult {

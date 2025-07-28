@@ -1,5 +1,5 @@
 import { serviceInfoTitle } from '@photobank/shared/constants';
-import { getApiBaseUrl } from '@photobank/shared/config.ts';
+import { API_BASE_URL } from '@/config.ts';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusCard } from '@/components/StatusCard';
@@ -7,7 +7,7 @@ import { StatusCard } from '@/components/StatusCard';
 export default function ServiceInfoPage() {
   const info = {
     mode: import.meta.env.MODE,
-    apiBaseUrl: getApiBaseUrl(),
+    apiBaseUrl: API_BASE_URL,
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
   } as const;
 
