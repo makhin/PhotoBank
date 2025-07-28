@@ -23,7 +23,7 @@ import { withRegistered } from './registration';
 import { AuthService } from "@photobank/shared/generated";
 import { setAuthToken } from "@photobank/shared/api/auth";
 import { setImpersonateUser, setApiBaseUrl } from "@photobank/shared/api/client";
-import { configureAzureOpenAI } from "@photobank/shared/api/openai";
+import { configureAzureOpenAI } from "@photobank/shared/ai/openai";
 import {
     captionMissingMsg,
     welcomeBotMsg,
