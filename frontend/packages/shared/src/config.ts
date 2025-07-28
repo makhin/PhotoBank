@@ -1,5 +1,3 @@
-// Shared runtime configuration loaded from Resources.json
-
 let API_BASE_URL = "http://localhost:5066";
 
 export function getApiBaseUrl(): string {
@@ -12,13 +10,13 @@ export async function loadResources(): Promise<void> {
     if (isBrowser()) {
       const res = await fetch('/Resources.json');
       if (res.ok) {
-        data = await res.json();
+        data = (await res.json()) as { API_BASE_URL?: string };
       }
     } else {
       const fs = await import('fs/promises');
       const url = new URL('../Resources.json', import.meta.url);
       const file = await fs.readFile(url, 'utf-8');
-      data = JSON.parse(file);
+      data = JSON.parse(file) as { API_BASE_URL?: string };
     }
     if (data?.API_BASE_URL) {
       API_BASE_URL = data.API_BASE_URL;

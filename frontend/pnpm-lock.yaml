@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      zod:
+        specifier: ^4.0.10
+        version: 4.0.10
     devDependencies:
       '@eslint/js':
         specifier: ^9.31.0
@@ -273,12 +277,21 @@ importers:
       object-hash:
         specifier: ^3.0.0
         version: 3.0.0
+      openai:
+        specifier: ^5.10.2
+        version: 5.10.2(ws@8.18.3)(zod@4.0.10)
       openapi-typescript-codegen:
         specifier: ^0.29.0
         version: 0.29.0
       react:
         specifier: ^19.1.0
         version: 19.1.0
+      zod:
+        specifier: ^4.0.10
+        version: 4.0.10
+      zod-to-json-schema:
+        specifier: ^3.24.6
+        version: 3.24.6(zod@4.0.10)
     devDependencies:
       '@types/node':
         specifier: ^24.1.0
@@ -4591,6 +4604,18 @@ packages:
     resolution: {integrity: sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ==}
     engines: {node: '>=12'}
 
+  openai@5.10.2:
+    resolution: {integrity: sha512-n+vi74LzHtvlKcDPn9aApgELGiu5CwhaLG40zxLTlFQdoSJCLACORIPC2uVQ3JEYAbqapM+XyRKFy2Thej7bIw==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.23.8
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
+
   openapi-typescript-codegen@0.29.0:
     resolution: {integrity: sha512-/wC42PkD0LGjDTEULa/XiWQbv4E9NwLjwLjsaJ/62yOsoYhwvmBR31kPttn1DzQ2OlGe5stACcF/EIkZk43M6w==}
     hasBin: true
@@ -5966,6 +5991,11 @@ packages:
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+
+  zod-to-json-schema@3.24.6:
+    resolution: {integrity: sha512-h/z3PKvcTcTetyjl1fkj79MHNEjm+HpD6NXheWjzOekY7kV+lwDYnHw+ivHkijnCSMz1yJaWBD9vu/Fcmk+vEg==}
+    peerDependencies:
+      zod: ^3.24.1
 
   zod@4.0.10:
     resolution: {integrity: sha512-3vB+UU3/VmLL2lvwcY/4RV2i9z/YU0DTV/tDuYjrwmx5WeJ7hwy+rGEEx8glHp6Yxw7ibRbKSaIFBgReRPe5KA==}
@@ -10900,6 +10930,11 @@ snapshots:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
+  openai@5.10.2(ws@8.18.3)(zod@4.0.10):
+    optionalDependencies:
+      ws: 8.18.3
+      zod: 4.0.10
+
   openapi-typescript-codegen@0.29.0:
     dependencies:
       '@apidevtools/json-schema-ref-parser': 11.9.3
@@ -12375,5 +12410,9 @@ snapshots:
   yn@3.1.1: {}
 
   yocto-queue@0.1.0: {}
+
+  zod-to-json-schema@3.24.6(zod@4.0.10):
+    dependencies:
+      zod: 4.0.10
 
   zod@4.0.10: {}

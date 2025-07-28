@@ -1,18 +1,10 @@
 import axios from 'axios';
 
 export interface AzureOpenAIConfig {
-  endpoint: string; // e.g. https://my-resource.openai.azure.com
+  endpoint: string;
   apiKey: string;
   deployment: string;
-  apiVersion?: string;
-}
-
-const DEFAULT_API_VERSION = '2024-02-15-preview';
-
-let config: AzureOpenAIConfig | null = null;
-
-export function configureAzureOpenAI(cfg: AzureOpenAIConfig): void {
-  config = { ...cfg, apiVersion: cfg.apiVersion ?? DEFAULT_API_VERSION };
+  apiVersion: string;
 }
 
 export interface ChatMessage {
@@ -32,14 +24,21 @@ export interface ChatCompletionResponse {
   [key: string]: unknown;
 }
 
+let config: AzureOpenAIConfig | null = null;
+
+export function configureAzureOpenAI(cfg: AzureOpenAIConfig): void {
+  config = { ...cfg };
+}
+
 export async function createChatCompletion(
   request: ChatCompletionRequest,
 ): Promise<ChatCompletionResponse> {
   if (!config) {
     throw new Error('Azure OpenAI is not configured');
   }
-  const { endpoint, deployment, apiKey, apiVersion = DEFAULT_API_VERSION } = config;
+  const { endpoint, deployment, apiKey, apiVersion } = config;
   const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
+
   const res = await axios.post(url, request, {
     headers: {
       'api-key': apiKey,
