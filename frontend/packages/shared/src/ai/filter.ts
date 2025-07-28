@@ -1,4 +1,3 @@
-// filter.ts
 import { z } from "zod";
 
 export const PhotoFilterSchema = z.object({

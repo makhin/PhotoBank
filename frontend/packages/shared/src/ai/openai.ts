@@ -6,6 +6,11 @@ import { FEW_SHOTS, SYSTEM_PROMPT } from '@photobank/shared/ai/constants';
 
 import { PhotoFilter, PhotoFilterSchema } from './filter';
 
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
 const endpoint = 'https://photobankopenai.openai.azure.com/';
 const modelName = 'gpt-4o';
 const deployment = 'gpt-4o';

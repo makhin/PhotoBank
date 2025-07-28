@@ -1,14 +1,10 @@
-import { useEffect, useState } from 'react';
-import {
-  configureAzureOpenAI,
-  createChatCompletion,
-  type ChatMessage,
-} from '@photobank/shared/api';
+import { useState } from 'react';
 import {
   openAiPageTitle,
   openAiSendButton,
   openAiPromptPlaceholder,
 } from '@photobank/shared/constants';
+import type { ChatMessage } from '@photobank/shared/ai/openai.ts';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,16 +16,7 @@ export default function OpenAIPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    configureAzureOpenAI({
-      endpoint: import.meta.env.VITE_AZURE_OPENAI_ENDPOINT,
-      apiKey: import.meta.env.VITE_AZURE_OPENAI_KEY,
-      deployment: import.meta.env.VITE_AZURE_OPENAI_DEPLOYMENT,
-      apiVersion: import.meta.env.VITE_AZURE_OPENAI_API_VERSION,
-    });
-  }, []);
-
-  const sendMessage = async () => {
+  const sendMessage = () => {
     if (!input.trim()) return;
     const userMsg: ChatMessage = { role: 'user', content: input };
     const newMessages = [...messages, userMsg];
@@ -37,17 +24,7 @@ export default function OpenAIPage() {
     setInput('');
     setLoading(true);
     setError(null);
-    try {
-      const res = await createChatCompletion({ messages: newMessages });
-      const assistant = res.choices[0]?.message;
-      if (assistant) {
-        setMessages([...newMessages, assistant]);
-      }
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
+    setLoading(false);
   };
 
   return (
@@ -71,7 +48,7 @@ export default function OpenAIPage() {
           <div className="flex items-start gap-2">
             <Textarea
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => { setInput(e.target.value); }}
               placeholder={openAiPromptPlaceholder}
               className="flex-1"
             />

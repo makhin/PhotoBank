@@ -1,5 +1,4 @@
 import { Context } from "grammy";
-import { createChatCompletion } from "@photobank/shared/api";
 import { aiCommandUsageMsg, sorryTryToRequestLaterMsg } from "@photobank/shared/constants";
 
 export function parseAiPrompt(text?: string): string | null {
@@ -16,9 +15,7 @@ export async function aiCommand(ctx: Context) {
         return;
     }
     try {
-        const res = await createChatCompletion({ messages: [{ role: 'user', content: prompt }] });
-        const reply = res.choices[0]?.message?.content;
-        await ctx.reply(reply ?? sorryTryToRequestLaterMsg);
+        await ctx.reply(sorryTryToRequestLaterMsg);
     } catch (err) {
         console.error(err);
         await ctx.reply(sorryTryToRequestLaterMsg);
