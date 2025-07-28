@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { isBrowser } from '@photobank/shared/config';
+import { isBrowser } from '../utils/isBrowser';
 import { OpenAPI } from '../generated';
 import { getAuthToken } from './auth';
 
