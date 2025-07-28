@@ -1,5 +1,4 @@
 import AzureOpenAI from 'openai';
-import axios from 'axios';
 import zodToJsonSchema from 'zod-to-json-schema';
 import { ChatCompletionMessageParam } from 'openai/src/resources/chat/completions/completions';
 
@@ -49,17 +48,24 @@ export interface ChatCompletionResponse {
 export async function createChatCompletion(
   request: ChatCompletionRequest,
 ): Promise<ChatCompletionResponse> {
-  if (!config) {
-    throw new Error('Azure OpenAI is not configured');
+  if (!client) {
+    if (!config) {
+      throw new Error('Azure OpenAI is not configured');
+    }
+    client = new AzureOpenAI({
+      endpoint: config.endpoint,
+      apiKey: config.apiKey,
+      deployment: config.deployment,
+      apiVersion: config.apiVersion,
+    });
   }
-  const { endpoint, deployment, apiKey, apiVersion = DEFAULT_API_VERSION } = config;
-  const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
-  const res = await axios.post(url, request, {
-    headers: {
-      'api-key': apiKey,
-    },
+
+  const response = await client.chat.completions.create({
+    ...request,
+    model: config?.deployment,
   });
-  return res.data as ChatCompletionResponse;
+
+  return response as unknown as ChatCompletionResponse;
 }
 
 export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
