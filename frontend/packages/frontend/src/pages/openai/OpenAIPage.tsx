@@ -4,7 +4,7 @@ import {
   openAiSendButton,
   openAiPromptPlaceholder,
 } from '@photobank/shared/constants';
-import type { ChatMessage } from '@photobank/shared/ai/openai.ts';
+import type { ChatMessage } from '@photobank/shared/ai/openai';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';

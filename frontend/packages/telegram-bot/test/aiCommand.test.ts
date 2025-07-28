@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { aiCommand, parseAiPrompt } from '../src/commands/ai';
-import * as openai from '@photobank/shared/api/openai';
+import * as openai from '@photobank/shared/ai/openai';
 import { aiCommandUsageMsg, sorryTryToRequestLaterMsg } from '@photobank/shared/constants';
 
 describe('parseAiPrompt', () => {

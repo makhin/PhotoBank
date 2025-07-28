@@ -3,7 +3,7 @@ import {
   aiCommandUsageMsg,
   sorryTryToRequestLaterMsg,
 } from '@photobank/shared/constants';
-import { createChatCompletion } from '@photobank/shared/api/openai';
+import { createChatCompletion } from '@photobank/shared/ai/openai';
 
 export function parseAiPrompt(text?: string): string | null {
     if (!text) return null;
