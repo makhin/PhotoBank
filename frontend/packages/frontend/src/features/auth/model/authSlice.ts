@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { LoginRequestDto } from '@photobank/shared/generated';
 import { AuthService } from '@photobank/shared/generated';
-import { setAuthToken } from '@photobank/shared/api/auth';
+import { setAuthToken } from '@photobank/shared/auth';
 import { invalidCredentialsMsg } from '@photobank/shared/constants';
 
 interface AuthState {

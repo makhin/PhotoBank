@@ -25,7 +25,7 @@ describe('auth utilities', () => {
   });
 
   it('sets and gets token without browser', async () => {
-    const auth = await import('../src/api/auth');
+    const auth = await import('../src/auth');
     auth.setAuthToken('abc');
     expect(auth.getAuthToken()).toBe('abc');
   });
@@ -37,7 +37,7 @@ describe('auth utilities', () => {
     global.window = { localStorage: storage };
     // @ts-ignore
     global.localStorage = storage;
-    const auth = await import('../src/api/auth');
+    const auth = await import('../src/auth');
     auth.setAuthToken('token');
     expect(auth.getAuthToken()).toBe('token');
     expect(global.window.localStorage.getItem('photobank_token')).toBe('token');
@@ -50,7 +50,7 @@ describe('auth utilities', () => {
     global.window = { localStorage: storage };
     // @ts-ignore
     global.localStorage = storage;
-    const auth = await import('../src/api/auth');
+    const auth = await import('../src/auth');
     auth.setAuthToken('tok');
     auth.clearAuthToken();
     expect(auth.getAuthToken()).toBeNull();
@@ -64,7 +64,7 @@ describe('auth utilities', () => {
     global.window = { localStorage: storage };
     // @ts-ignore
     global.localStorage = storage;
-    const auth = await import('../src/api/auth');
+    const auth = await import('../src/auth');
     expect(auth.getAuthToken()).toBe('init');
   });
 

@@ -19,7 +19,7 @@ describe('authSlice', () => {
       AuthService: { postApiAuthLogin: loginMock },
       OpenAPI: {},
     }));
-    vi.doMock('@photobank/shared/api/auth', () => ({ setAuthToken: setToken }));
+    vi.doMock('@photobank/shared/auth', () => ({ setAuthToken: setToken }));
     const { loginUser } = await import('../src/features/auth/model/authSlice');
     const dispatch = vi.fn();
     const getState = vi.fn();

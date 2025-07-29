@@ -1,7 +1,7 @@
 import { Bot } from "grammy";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import { AuthService } from "@photobank/shared/generated";
-import { setAuthToken } from "@photobank/shared/api/auth";
+import { setAuthToken } from "@photobank/shared/auth";
 import { setImpersonateUser, configureApi } from "./openapi";
 import { configureAzureOpenAI } from "@photobank/shared/ai/openai";
 import {

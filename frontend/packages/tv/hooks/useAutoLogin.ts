@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { AuthService } from '@photobank/shared/generated';
-import { setAuthToken } from '@photobank/shared/api/auth';
+import { setAuthToken } from '@photobank/shared/auth';
 
 import {API_EMAIL, API_PASSWORD} from '../config';
 

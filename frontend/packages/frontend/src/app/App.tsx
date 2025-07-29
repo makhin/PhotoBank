@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 
 import { ThemeProvider } from '@/app/providers/ThemeProvider.tsx';
 import NavBar from '@/components/NavBar.tsx';
-import { getAuthToken } from '@photobank/shared/api/auth';
+import { getAuthToken } from '@photobank/shared/auth';
 import type { AppDispatch, RootState } from '@/app/store.ts';
 import { loadMetadata } from '@/features/meta/model/metaSlice.ts';
 import { AppRoutes } from '@/routes/AppRoutes.tsx';
