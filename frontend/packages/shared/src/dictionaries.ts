@@ -1,14 +1,19 @@
-import { PersonsService, TagsService } from "@photobank/shared/generated";
-import { unknownPersonLabel } from "@photobank/shared/constants";
+import { PersonsService, TagsService } from '@photobank/shared/generated';
+import { unknownPersonLabel } from '@photobank/shared/constants';
+import type { PersonDto, TagDto } from '@photobank/shared/generated';
 
 let tagMap = new Map<number, string>();
 let personMap = new Map<number, string>();
+let tagList: TagDto[] = [];
+let personList: PersonDto[] = [];
 let storageMap = new Map<number, string>();
 let pathMap = new Map<number, string>();
 
 export async function loadDictionaries() {
-    tagMap = new Map((await TagsService.getApiTags()).map(tag => [tag.id, tag.name]));
-    personMap = new Map((await PersonsService.getApiPersons()).map(p => [p.id, p.name]));
+    tagList = await TagsService.getApiTags();
+    tagMap = new Map(tagList.map(tag => [tag.id, tag.name]));
+    personList = await PersonsService.getApiPersons();
+    personMap = new Map(personList.map(p => [p.id, p.name]));
 //    storageMap = new Map((await getAllStorages()).map(p => [p.id, p.name]));
 //    pathMap = new Map((await getAllPaths()).map(p => [p.storageId, p.path]));
 }
@@ -17,9 +22,17 @@ export function getTagName(id: number): string {
     return tagMap.get(id) ?? `#${id}`;
 }
 
+export function getAllTags(): TagDto[] {
+    return tagList;
+}
+
 export function getPersonName(id: number | null | undefined): string {
     if (id === null || id === undefined) return unknownPersonLabel;
     return personMap.get(id) ?? `ID ${id}`;
+}
+
+export function getAllPersons(): PersonDto[] {
+    return personList;
 }
 
 export function getStorageName(id: number): string {
