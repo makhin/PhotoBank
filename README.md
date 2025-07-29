@@ -76,6 +76,15 @@ VITE_AZURE_OPENAI_KEY=your_key
 VITE_AZURE_OPENAI_DEPLOYMENT=gpt-4
 ```
 
+### Android TV клиент
+
+```bash
+cd Photobank.Ts/packages/tv
+pnpm install
+pnpm start # запускает Metro-сервер
+pnpm android # сборка и запуск на эмуляторе или устройстве
+```
+
 ### MAUI/Blazor клиент
 
 ```bash
@@ -188,6 +197,15 @@ API_BASE_URL=http://localhost:5066
 VITE_AZURE_OPENAI_ENDPOINT=https://example.openai.azure.com
 VITE_AZURE_OPENAI_KEY=your_key
 VITE_AZURE_OPENAI_DEPLOYMENT=gpt-4
+```
+
+### Android TV client
+
+```bash
+cd Photobank.Ts/packages/tv
+pnpm install
+pnpm start # start Metro bundler
+pnpm android # build and run on emulator or device
 ```
 
 ### MAUI/Blazor client
