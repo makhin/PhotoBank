@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { aiCommand, parseAiPrompt } from '../src/commands/ai';
 import * as openai from '@photobank/shared/ai/openai';
+import * as dict from '@photobank/shared/dictionaries';
 import { aiCommandUsageMsg, sorryTryToRequestLaterMsg } from '@photobank/shared/constants';
 
 describe('parseAiPrompt', () => {
@@ -22,17 +23,24 @@ describe('aiCommand', () => {
 
   it('replies with fallback when API fails', async () => {
     const ctx = { reply: vi.fn(), message: { text: '/ai test' } } as any;
-    vi.spyOn(openai, 'createChatCompletion').mockRejectedValue(new Error('fail'));
+    vi.spyOn(openai, 'parseQueryWithOpenAI').mockRejectedValue(new Error('fail'));
     await aiCommand(ctx);
     expect(ctx.reply).toHaveBeenCalledWith(sorryTryToRequestLaterMsg);
   });
 
-  it('sends assistant message on success', async () => {
+  it('sends filter dto string on success', async () => {
     const ctx = { reply: vi.fn(), message: { text: '/ai test' } } as any;
-    vi.spyOn(openai, 'createChatCompletion').mockResolvedValue({
-      choices: [{ message: { role: 'assistant', content: 'hi' } }],
-    } as any);
+    vi.spyOn(openai, 'parseQueryWithOpenAI').mockResolvedValue({
+      persons: ['Alice'],
+      tags: ['portrait'],
+      dateFrom: new Date('2020-01-01T00:00:00Z'),
+      dateTo: null,
+    });
+    vi.spyOn(dict, 'findBestPersonId').mockReturnValue(1);
+    vi.spyOn(dict, 'findBestTagId').mockReturnValue(10);
     await aiCommand(ctx);
-    expect(ctx.reply).toHaveBeenCalledWith('hi');
+    expect(ctx.reply).toHaveBeenCalledWith(
+      JSON.stringify({ persons: [1], tags: [10], takenDateFrom: '2020-01-01T00:00:00.000Z' }, null, 2)
+    );
   });
 });
