@@ -1,8 +1,16 @@
-export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5066';
-export const BOT_TOKEN: string = import.meta.env.VITE_BOT_TOKEN || '';
-export const API_EMAIL: string = import.meta.env.VITE_API_EMAIL || '';
-export const API_PASSWORD: string = import.meta.env.VITE_API_PASSWORD || '';
-export const AZURE_OPENAI_ENDPOINT: string = import.meta.env.VITE_AZURE_OPENAI_ENDPOINT || '';
-export const AZURE_OPENAI_KEY: string = import.meta.env.VITE_AZURE_OPENAI_KEY || '';
-export const AZURE_OPENAI_DEPLOYMENT: string = import.meta.env.VITE_AZURE_OPENAI_DEPLOYMENT || '';
-export const AZURE_OPENAI_API_VERSION: string = import.meta.env.VITE_AZURE_OPENAI_API_VERSION || '';
+export const API_BASE_URL: string =
+  import.meta.env.VITE_API_BASE_URL || import.meta.env.API_BASE_URL || 'http://localhost:5066';
+export const BOT_TOKEN: string =
+  import.meta.env.VITE_BOT_TOKEN || import.meta.env.BOT_TOKEN || '';
+export const API_EMAIL: string =
+  import.meta.env.VITE_API_EMAIL || import.meta.env.API_EMAIL || '';
+export const API_PASSWORD: string =
+  import.meta.env.VITE_API_PASSWORD || import.meta.env.API_PASSWORD || '';
+export const AZURE_OPENAI_ENDPOINT: string =
+  import.meta.env.VITE_AZURE_OPENAI_ENDPOINT || import.meta.env.AZURE_OPENAI_ENDPOINT || '';
+export const AZURE_OPENAI_KEY: string =
+  import.meta.env.VITE_AZURE_OPENAI_KEY || import.meta.env.AZURE_OPENAI_KEY || '';
+export const AZURE_OPENAI_DEPLOYMENT: string =
+  import.meta.env.VITE_AZURE_OPENAI_DEPLOYMENT || import.meta.env.AZURE_OPENAI_DEPLOYMENT || '';
+export const AZURE_OPENAI_API_VERSION: string =
+  import.meta.env.VITE_AZURE_OPENAI_API_VERSION || import.meta.env.AZURE_OPENAI_API_VERSION || '';
