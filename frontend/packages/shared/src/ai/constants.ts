@@ -14,6 +14,7 @@ export const SYSTEM_PROMPT = `
 Требования:
 - НИЧЕГО, кроме JSON.
 - Если пользователь пишет «летом 2019», верни dateFrom=2019-06-01, dateTo=2019-08-31.
+- Если пользователь пишет «в январе 2019 года», верни dateFrom=2019-01-01, dateTo=2019-01-31.
 - "после <год>" => dateFrom = "<год>-01-01", dateTo = null.
 - "до <год>" => dateFrom = null, dateTo = "<год>-12-31".
 - Не добавляй тегов, которых нет во фразе (кроме перевода на английский).
@@ -47,6 +48,19 @@ export const FEW_SHOTS: Array<ChatCompletionMessageParam> = [
       tags: [],
       dateFrom: "2010-01-01",
       dateTo: null
+    })
+  },
+  {
+    role: "user",
+    content: "Портреты Саши и Даши в июле 2020 года на фоне моря и гор",
+  },
+  {
+    role: "assistant",
+    content: JSON.stringify({
+      persons: ["Саша", "Даша"],
+      tags: ["sea", "mountains", "portrait"],
+      dateFrom: "2020-07-01",
+      dateTo: "2020-07-31"
     })
   }
 ];

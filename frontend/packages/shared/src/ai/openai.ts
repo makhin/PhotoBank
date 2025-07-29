@@ -1,15 +1,14 @@
 import AzureOpenAI from 'openai';
-import zodToJsonSchema from 'zod-to-json-schema';
 import { ChatCompletionMessageParam } from 'openai/src/resources/chat/completions/completions';
 
 import { FEW_SHOTS, SYSTEM_PROMPT } from '@photobank/shared/ai/constants';
 
-import { PhotoFilter, PhotoFilterSchema } from './filter';
+import { PhotoFilter, PhotoFilterSchema, photoFilterSchemaForLLM } from './filter';
 
 let client: AzureOpenAI | null = null;
 
 export function configureAzureOpenAI(options: { endpoint:string , apiKey:string, deployment:string, apiVersion:string }): void {
-  client = new AzureOpenAI(options);
+  client = new AzureOpenAI({...options, dangerouslyAllowBrowser: true});
 }
 
 export async function createChatCompletion(text: string): Promise<string> {
@@ -35,8 +34,6 @@ export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
       throw new Error('Azure OpenAI is not configured');
   }
 
-  const fullSchema = zodToJsonSchema(PhotoFilterSchema);
-
   const messages: Array<ChatCompletionMessageParam> = [
     { role: 'system', content: SYSTEM_PROMPT },
     ...FEW_SHOTS,
@@ -52,13 +49,15 @@ export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
       type: 'json_schema',
       json_schema: {
         name: 'PhotoFilter',
-        schema: fullSchema,
+        schema: photoFilterSchemaForLLM,
         strict: true,
       },
     },
   });
 
   const content = response.choices[0].message.content ?? '{}';
+
+  console.log(content);
 
   return PhotoFilterSchema.parse(JSON.parse(content));
 }

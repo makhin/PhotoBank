@@ -58,7 +58,6 @@ configureAzureOpenAI({
   deployment: AZURE_OPENAI_DEPLOYMENT,
   apiVersion: AZURE_OPENAI_API_VERSION,
 });
-
 bot.command(
   "start",
   (ctx) => ctx.reply(welcomeBotMsg),

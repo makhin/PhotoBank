@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   envDir: path.resolve(__dirname, '../../../'),
-  envPrefix: ['VITE_', 'BOT_', 'API_'],
+  envPrefix: ['VITE_'],
   plugins: [react(), tailwindcss()],
   server: {
     host: '0.0.0.0',

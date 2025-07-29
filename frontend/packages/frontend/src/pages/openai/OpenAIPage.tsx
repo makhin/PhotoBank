@@ -5,8 +5,7 @@ import {
   openAiPromptPlaceholder,
 } from '@photobank/shared/constants';
 import {
-  createChatCompletion,
-  configureAzureOpenAI,
+  configureAzureOpenAI, parseQueryWithOpenAI,
 } from '@photobank/shared/ai/openai';
 
 import {
@@ -49,9 +48,9 @@ export default function OpenAIPage() {
     setLoading(true);
     setError(null);
     try {
-      const reply = await createChatCompletion(input);
-      const aiMsg: ChatMessage = { role: 'assistant', content: reply };
-      setMessages((msgs) => [...newMessages, aiMsg]);
+      const reply = await parseQueryWithOpenAI(input);
+      const aiMsg: ChatMessage = { role: 'assistant', content: JSON.stringify(reply, null, 2) };
+      setMessages(() => [...newMessages, aiMsg]);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);

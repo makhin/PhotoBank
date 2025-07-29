@@ -19,11 +19,8 @@ export async function aiCommand(ctx: Context) {
     return;
   }
   try {
-    const res = await createChatCompletion({
-      messages: [{ role: 'user', content: prompt }],
-    });
-    const reply = res.choices[0]?.message.content;
-    await ctx.reply(reply ?? sorryTryToRequestLaterMsg);
+    const response = await createChatCompletion(prompt);
+        await ctx.reply(response ?? sorryTryToRequestLaterMsg);
   } catch (err) {
     console.error(err);
     await ctx.reply(sorryTryToRequestLaterMsg);
