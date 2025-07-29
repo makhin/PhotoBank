@@ -3,10 +3,7 @@ import {useNavigate} from 'react-router-dom';
 import {useForm} from 'react-hook-form';
 import {z} from 'zod';
 import {zodResolver} from '@hookform/resolvers/zod';
-import {
-  AuthService,
-  UsersService,
-} from '@photobank/shared/generated';
+import { AuthService } from '@photobank/shared/generated';
 import { clearAuthToken } from '@photobank/shared/auth';
 
 import {Button} from '@/components/ui/button';

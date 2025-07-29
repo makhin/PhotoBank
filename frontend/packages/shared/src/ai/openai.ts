@@ -1,9 +1,10 @@
 import AzureOpenAI from 'openai';
-import { ChatCompletionMessageParam } from 'openai/src/resources/chat/completions/completions';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions/completions.mjs';
 
 import { FEW_SHOTS, SYSTEM_PROMPT } from '@photobank/shared/ai/constants';
 
-import { PhotoFilter, PhotoFilterSchema, photoFilterSchemaForLLM } from './filter';
+import type { PhotoFilter } from './filter';
+import { PhotoFilterSchema, photoFilterSchemaForLLM } from './filter';
 
 let client: AzureOpenAI | null = null;
 
