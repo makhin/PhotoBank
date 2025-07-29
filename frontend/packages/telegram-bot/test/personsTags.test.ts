@@ -2,12 +2,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { sendTagsPage } from '../src/commands/tags';
 import { sendPersonsPage } from '../src/commands/persons';
 import { tagsCallbackPattern, personsCallbackPattern } from '../src/patterns';
-import * as api from '@photobank/shared/generated';
+import * as dict from '@photobank/shared/dictionaries';
 
 describe('sendTagsPage', () => {
   it('filters by prefix and paginates', async () => {
     const tags = Array.from({ length: 11 }, (_, i) => ({ id: i + 1, name: `ba${String(i).padStart(2, '0')}` }));
-    vi.spyOn(api.TagsService, 'getApiTags').mockResolvedValue(tags as any);
+    vi.spyOn(dict, 'getAllTags').mockReturnValue(tags as any);
     const ctx = { reply: vi.fn() } as any;
     await sendTagsPage(ctx, 'ba', 2);
     expect(ctx.reply).toHaveBeenCalled();
@@ -20,7 +20,7 @@ describe('sendTagsPage', () => {
 describe('sendPersonsPage', () => {
   it('filters by prefix and paginates', async () => {
     const persons = Array.from({ length: 12 }, (_, i) => ({ id: i + 1, name: `al${String(i).padStart(2, '0')}` }));
-    vi.spyOn(api.PersonsService, 'getApiPersons').mockResolvedValue(persons as any);
+    vi.spyOn(dict, 'getAllPersons').mockReturnValue(persons as any);
     const ctx = { reply: vi.fn() } as any;
     await sendPersonsPage(ctx, 'al', 2);
     expect(ctx.reply).toHaveBeenCalled();
@@ -34,7 +34,7 @@ describe('sendPersonsPage', () => {
       { id: 0, name: 'skip' },
       { id: 1, name: 'al00' },
     ];
-    vi.spyOn(api.PersonsService, 'getApiPersons').mockResolvedValue(persons as any);
+    vi.spyOn(dict, 'getAllPersons').mockReturnValue(persons as any);
     const ctx = { reply: vi.fn() } as any;
     await sendPersonsPage(ctx, 'a', 1);
     expect(ctx.reply).toHaveBeenCalled();
