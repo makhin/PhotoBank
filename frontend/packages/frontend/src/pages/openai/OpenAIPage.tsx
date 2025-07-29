@@ -1,10 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   openAiPageTitle,
   openAiSendButton,
   openAiPromptPlaceholder,
 } from '@photobank/shared/constants';
-import type { ChatMessage } from '@photobank/shared/ai/openai';
+import {
+  createChatCompletion,
+  configureAzureOpenAI,
+} from '@photobank/shared/ai/openai';
+
+import {
+  AZURE_OPENAI_ENDPOINT,
+  AZURE_OPENAI_KEY,
+  AZURE_OPENAI_DEPLOYMENT,
+  AZURE_OPENAI_API_VERSION,
+} from '@/config.ts';
+
+type ChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,7 +31,16 @@ export default function OpenAIPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sendMessage = () => {
+  useEffect(() => {
+    configureAzureOpenAI({
+      endpoint: AZURE_OPENAI_ENDPOINT,
+      apiKey: AZURE_OPENAI_KEY,
+      deployment: AZURE_OPENAI_DEPLOYMENT,
+      apiVersion: AZURE_OPENAI_API_VERSION,
+    });
+  }, []);
+
+  const sendMessage = async () => {
     if (!input.trim()) return;
     const userMsg: ChatMessage = { role: 'user', content: input };
     const newMessages = [...messages, userMsg];
@@ -24,7 +48,16 @@ export default function OpenAIPage() {
     setInput('');
     setLoading(true);
     setError(null);
-    setLoading(false);
+    try {
+      const reply = await createChatCompletion(input);
+      const aiMsg: ChatMessage = { role: 'assistant', content: reply };
+      setMessages((msgs) => [...newMessages, aiMsg]);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
