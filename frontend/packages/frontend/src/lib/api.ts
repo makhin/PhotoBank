@@ -1,5 +1,5 @@
 import { OpenAPI } from '@photobank/shared/generated';
-import { getAuthToken } from '@photobank/shared/api/auth';
+import { getAuthToken } from '@photobank/shared/auth';
 
 export function configureApi(baseUrl: string) {
   OpenAPI.BASE = baseUrl;

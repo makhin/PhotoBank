@@ -1,4 +1,4 @@
-import { getAuthToken } from '../api/auth';
+import { getAuthToken } from '../auth';
 import { AuthService } from '../generated';
 
 export const checkIsAdmin = async (): Promise<boolean> => {

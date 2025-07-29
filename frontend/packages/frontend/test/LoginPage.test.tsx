@@ -20,7 +20,7 @@ const renderPage = async (loginMock: any) => {
     AuthService: { postApiAuthLogin: loginMock },
     OpenAPI: {},
   }));
-  vi.doMock('@photobank/shared/api/auth', () => ({ setAuthToken: vi.fn() }));
+  vi.doMock('@photobank/shared/auth', () => ({ setAuthToken: vi.fn() }));
   const { default: LoginPage } = await import('../src/pages/auth/LoginPage');
   const store = configureStore({ reducer: { metadata: metaReducer, auth: authReducer } });
   render(

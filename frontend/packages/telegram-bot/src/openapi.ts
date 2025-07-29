@@ -1,5 +1,5 @@
 import { OpenAPI } from '@photobank/shared/generated';
-import { getAuthToken } from '@photobank/shared/api/auth';
+import { getAuthToken } from '@photobank/shared/auth';
 
 let impersonateUser: string | null = null;
 export function setImpersonateUser(username: string | null | undefined) {

@@ -7,7 +7,7 @@ import {
   AuthService,
   UsersService,
 } from '@photobank/shared/generated';
-import { clearAuthToken } from '@photobank/shared/api/auth';
+import { clearAuthToken } from '@photobank/shared/auth';
 
 import {Button} from '@/components/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';

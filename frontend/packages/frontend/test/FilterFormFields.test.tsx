@@ -26,7 +26,7 @@ const renderWithRoles = async (roles: any[]) => {
     console.log('getUserRoles called with', roles);
     return Promise.resolve(roles);
   });
-  vi.doMock('@photobank/shared/api/auth', () => ({
+  vi.doMock('@photobank/shared/auth', () => ({
     getAuthToken: () => 'token',
   }));
   vi.doMock('@photobank/shared/generated', () => ({

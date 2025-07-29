@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { getAuthToken } from '@photobank/shared/api/auth';
+import { getAuthToken } from '@photobank/shared/auth';
 
 export default function RequireAuth() {
   const location = useLocation();
