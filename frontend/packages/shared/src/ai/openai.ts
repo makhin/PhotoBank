@@ -35,7 +35,7 @@ export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
       throw new Error('Azure OpenAI is not configured');
   }
 
-  const fullSchema = zodToJsonSchema(PhotoFilterSchema, 'PhotoFilter');
+  const fullSchema = zodToJsonSchema(PhotoFilterSchema);
 
   const messages: Array<ChatCompletionMessageParam> = [
     { role: 'system', content: SYSTEM_PROMPT },
@@ -52,7 +52,7 @@ export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
       type: 'json_schema',
       json_schema: {
         name: 'PhotoFilter',
-        schema: fullSchema.definitions?.PhotoFilter || fullSchema,
+        schema: fullSchema,
         strict: true,
       },
     },
