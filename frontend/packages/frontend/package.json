@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "HOST=0.0.0.0 react-scripts start",
-    "dev": "vite",
+    "dev": "dotenv -e ../../../.env -- vite",
     "build": "tsc -b && vite build",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,scss,html,json}\"",
@@ -60,6 +60,7 @@
     "@typescript-eslint/parser": "^8.38.0",
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/ui": "^3.2.4",
+    "dotenv-cli": "^9.0.0",
     "eslint": "^9.31.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
