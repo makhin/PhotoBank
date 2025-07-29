@@ -29,9 +29,6 @@ const renderWithRoles = async (roles: any[]) => {
   vi.doMock('@photobank/shared/api/auth', () => ({
     getAuthToken: () => 'token',
   }));
-  vi.doMock('@photobank/shared/api', () => ({
-    getUserRoles,
-  }));
   vi.doMock('@photobank/shared/generated', () => ({
     AuthService: { getApiAuthRoles: getUserRoles },
     OpenAPI: {},

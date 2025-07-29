@@ -2,7 +2,7 @@ import { Bot } from "grammy";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import { AuthService } from "@photobank/shared/generated";
 import { setAuthToken } from "@photobank/shared/api/auth";
-import { setImpersonateUser, setApiBaseUrl } from "@photobank/shared/api/client";
+import { setImpersonateUser, configureApi } from "./openapi";
 import { configureAzureOpenAI } from "@photobank/shared/ai/openai";
 import {
   captionMissingMsg,
@@ -40,7 +40,7 @@ bot.use(async (ctx, next) => {
 
 registerPhotoRoutes(bot);
 
-setApiBaseUrl(API_BASE_URL);
+configureApi(API_BASE_URL);
 
 const loginRes = await AuthService.postApiAuthLogin({
   email: API_EMAIL,

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { getAuthToken } from '@photobank/shared/api';
+import { getAuthToken } from '@photobank/shared/api/auth';
 import { useIsAdmin } from '@photobank/shared';
 import { Button } from '@/components/ui/button';
 import {

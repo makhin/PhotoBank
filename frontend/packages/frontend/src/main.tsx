@@ -2,7 +2,7 @@ import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import { API_BASE_URL } from '@/config.ts';
-import { setApiBaseUrl } from '@photobank/shared/api';
+import { configureApi } from './lib/api';
 
 import { store } from '@/app/store';
 
@@ -11,7 +11,7 @@ import App from './app/App.tsx';
 import './index.css';
 
 function start() {
-  setApiBaseUrl(API_BASE_URL);
+  configureApi(API_BASE_URL);
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   ReactDOM.createRoot(document.getElementById('root')!).render(
