@@ -5,7 +5,10 @@ import {
   apiCredentialsNotDefinedError,
   botTokenNotDefinedError,
 } from '@photobank/shared/constants';
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// Load environment variables from the project root when running locally.
+// __dirname points to `packages/telegram-bot/src` during development,
+// so climb up to the repository root to locate the `.env` file.
+dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
 
 export const BOT_TOKEN: string = process.env.BOT_TOKEN || '';
 if (!BOT_TOKEN) throw new Error(botTokenNotDefinedError);

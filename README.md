@@ -3,7 +3,7 @@
 Проект состоит из нескольких модулей:
 
 - **PhotoBank.Api** – ASP.NET Core веб‑API.
-- **Photobank.Ts** – monorepo на Node.js (frontend, telegram‑bot и общие библиотеки).
+- **frontend** – monorepo на Node.js (frontend, telegram‑bot и общие библиотеки).
 - **PhotoBank.MAUI.Blazor** – кросс‑платформенное приложение на .NET MAUI.
 - **Photobank.ServerBlazorApp** – серверное Blazor‑приложение.
 - **PhotoBank.Console** – консольные утилиты.
@@ -42,7 +42,7 @@ dotnet swagger tofile --output swagger.json PhotoBank.Api/bin/Debug/net9.0/Photo
 ### Фронтенд
 
 ```bash
-cd Photobank.Ts
+cd frontend
 pnpm install
 pnpm dev
 ```
@@ -59,7 +59,7 @@ VITE_API_BASE_URL=http://localhost:5066
 ### Телеграм‑бот
 
 ```bash
-cd Photobank.Ts
+cd frontend
 pnpm install
 pnpm bot
 ```
@@ -97,7 +97,7 @@ dotnet test PhotoBank.Backend.sln
 Для пакетов Node.js:
 
 ```bash
-cd Photobank.Ts
+cd frontend
 pnpm -r test
 ```
 
@@ -119,7 +119,7 @@ docker compose up --build
 The project is composed of several modules:
 
 - **PhotoBank.Api** – ASP.NET Core web API.
-- **Photobank.Ts** – Node.js monorepo (frontend, Telegram bot and shared libraries).
+- **frontend** – Node.js monorepo (frontend, Telegram bot and shared libraries).
 - **PhotoBank.MAUI.Blazor** – cross-platform .NET MAUI app.
 - **Photobank.ServerBlazorApp** – server-side Blazor application.
 - **PhotoBank.Console** – command-line utilities.
@@ -156,7 +156,7 @@ dotnet swagger tofile --output swagger.json PhotoBank.Api/bin/Debug/net9.0/Photo
 ### Frontend
 
 ```bash
-cd Photobank.Ts
+cd frontend
 pnpm install
 pnpm dev
 ```
@@ -173,7 +173,7 @@ If needed, you can specify the Azure OpenAI version via
 ### Telegram bot
 
 ```bash
-cd Photobank.Ts
+cd frontend
 pnpm install
 pnpm bot
 ```
@@ -210,7 +210,7 @@ dotnet test PhotoBank.Backend.sln
 For Node.js packages:
 
 ```bash
-cd Photobank.Ts
+cd frontend
 pnpm -r test
 ```
 
