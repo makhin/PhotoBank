@@ -1,14 +1,3 @@
-import type {
-  LoginRequestDto,
-  LoginResponseDto,
-  RegisterRequestDto,
-  UserDto,
-  UpdateUserDto,
-  ClaimDto,
-  RoleDto,
-} from '../generated';
-import { AuthService } from '../generated';
-
 const AUTH_TOKEN_KEY = 'photobank_token';
 let authToken: string | null = null;
 

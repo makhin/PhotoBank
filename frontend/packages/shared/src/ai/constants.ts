@@ -1,4 +1,4 @@
-import { ChatCompletionMessageParam } from 'openai/src/resources/chat/completions/completions';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions/completions.mjs';
 
 export const SYSTEM_PROMPT = `
 Ты парсер пользовательских фраз о поиске фотографий.
