@@ -25,5 +25,5 @@ export const API_BASE_URL: string =
 export const AZURE_OPENAI_ENDPOINT: string = process.env.VITE_AZURE_OPENAI_ENDPOINT || '';
 export const AZURE_OPENAI_KEY: string = process.env.VITE_AZURE_OPENAI_KEY || '';
 export const AZURE_OPENAI_DEPLOYMENT: string = process.env.VITE_AZURE_OPENAI_DEPLOYMENT || '';
-export const AZURE_OPENAI_API_VERSION: string | undefined = process.env.VITE_AZURE_OPENAI_API_VERSION;
+export const AZURE_OPENAI_API_VERSION: string = process.env.VITE_AZURE_OPENAI_API_VERSION || '';
 

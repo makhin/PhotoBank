@@ -6,79 +6,33 @@ import { FEW_SHOTS, SYSTEM_PROMPT } from '@photobank/shared/ai/constants';
 
 import { PhotoFilter, PhotoFilterSchema } from './filter';
 
-export interface AzureOpenAIConfig {
-  endpoint: string; // e.g. https://my-resource.openai.azure.com
-  apiKey: string;
-  deployment: string;
-  apiVersion?: string;
-}
-
-const DEFAULT_API_VERSION = '2024-04-01-preview';
-
-let config: AzureOpenAIConfig | null = null;
 let client: AzureOpenAI | null = null;
 
-export function configureAzureOpenAI(cfg: AzureOpenAIConfig): void {
-  config = { ...cfg, apiVersion: cfg.apiVersion ?? DEFAULT_API_VERSION };
-  client = new AzureOpenAI({
-    endpoint: config.endpoint,
-    apiKey: config.apiKey,
-    deployment: config.deployment,
-    apiVersion: config.apiVersion,
-  });
+export function configureAzureOpenAI(options: { endpoint:string , apiKey:string, deployment:string, apiVersion:string }): void {
+  client = new AzureOpenAI(options);
 }
 
-export interface ChatMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-export interface ChatCompletionRequest {
-  messages: ChatMessage[];
-  temperature?: number;
-  max_tokens?: number;
-}
-
-export interface ChatCompletionResponse {
-  id: string;
-  choices: Array<{ message: ChatMessage }>;
-  [key: string]: unknown;
-}
-
-export async function createChatCompletion(
-  request: ChatCompletionRequest,
-): Promise<ChatCompletionResponse> {
+export async function createChatCompletion(text: string): Promise<string> {
   if (!client) {
-    if (!config) {
       throw new Error('Azure OpenAI is not configured');
-    }
-    client = new AzureOpenAI({
-      endpoint: config.endpoint,
-      apiKey: config.apiKey,
-      deployment: config.deployment,
-      apiVersion: config.apiVersion,
-    });
   }
 
   const response = await client.chat.completions.create({
-    ...request,
-    model: config?.deployment,
+    messages: [{role: 'user', content: text }],
+    temperature: 1,
+    top_p: 1,
+    model: 'gpt-4o',
+    response_format: {
+      type: 'text',
+    },
   });
 
-  return response as unknown as ChatCompletionResponse;
+  return  response.choices[0].message.content ?? '';
 }
 
 export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
   if (!client) {
-    if (!config) {
       throw new Error('Azure OpenAI is not configured');
-    }
-    client = new AzureOpenAI({
-      endpoint: config.endpoint,
-      apiKey: config.apiKey,
-      deployment: config.deployment,
-      apiVersion: config.apiVersion,
-    });
   }
 
   const fullSchema = zodToJsonSchema(PhotoFilterSchema, 'PhotoFilter');
@@ -93,7 +47,7 @@ export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
     messages: messages,
     temperature: 1,
     top_p: 1,
-    model: config?.deployment || 'gpt-4o',
+    model: 'gpt-4o',
     response_format: {
       type: 'json_schema',
       json_schema: {
