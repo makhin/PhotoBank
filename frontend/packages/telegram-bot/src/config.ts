@@ -1,6 +1,10 @@
 // packages/telegram-bot/src/config.ts
 import * as dotenv from 'dotenv';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Node.js ESM does not provide __dirname, recreate it from import.meta.url
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import {
   apiCredentialsNotDefinedError,
   botTokenNotDefinedError,
