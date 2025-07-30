@@ -2,13 +2,13 @@ import { Bot } from "grammy";
 import { loadDictionaries } from "@photobank/shared/dictionaries";
 import { AuthService } from "@photobank/shared/generated";
 import { setAuthToken } from "@photobank/shared/auth";
-import { setImpersonateUser, configureApi } from "./openapi";
 import { configureAzureOpenAI } from "@photobank/shared/ai/openai";
 import {
   captionMissingMsg,
   welcomeBotMsg,
 } from "@photobank/shared/constants";
 
+import { setImpersonateUser, configureApi } from "./openapi";
 import {
   BOT_TOKEN,
   API_EMAIL,

@@ -12,6 +12,7 @@ import {
 } from '@photobank/shared/dictionaries';
 import type { FilterDto } from '@photobank/shared/generated';
 import { getFilterHash } from '@photobank/shared/index';
+
 import { sendPhotosPage } from './photosPage';
 
 export const aiFilters = new Map<string, FilterDto>();
