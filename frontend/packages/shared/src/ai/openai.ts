@@ -58,7 +58,5 @@ export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
 
   const content = response.choices[0].message.content ?? '{}';
 
-  console.log(content);
-
   return PhotoFilterSchema.parse(JSON.parse(content));
 }
