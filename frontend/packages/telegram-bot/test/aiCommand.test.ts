@@ -4,7 +4,12 @@ import * as openai from '@photobank/shared/ai/openai';
 import * as dict from '@photobank/shared/dictionaries';
 import * as photosApi from '@photobank/shared/generated';
 import * as utils from '@photobank/shared/index';
-import { aiCommandUsageMsg, sorryTryToRequestLaterMsg, searchPhotosEmptyMsg } from '@photobank/shared/constants';
+import {
+  aiCommandUsageMsg,
+  aiFilterEmptyMsg,
+  sorryTryToRequestLaterMsg,
+  searchPhotosEmptyMsg,
+} from '@photobank/shared/constants';
 
 describe('parseAiPrompt', () => {
   it('parses prompt from command', () => {
@@ -25,7 +30,9 @@ describe('aiCommand', () => {
 
   it('replies with fallback when API fails', async () => {
     const ctx = { reply: vi.fn(), message: { text: '/ai test' } } as any;
-    vi.spyOn(openai, 'parseQueryWithOpenAI').mockRejectedValue(new Error('fail'));
+    vi.spyOn(openai, 'parseQueryWithOpenAI').mockRejectedValue(
+      new Error('fail')
+    );
     await aiCommand(ctx);
     expect(ctx.reply).toHaveBeenCalledWith(sorryTryToRequestLaterMsg);
   });
@@ -59,5 +66,23 @@ describe('aiCommand', () => {
       })
     );
     expect(ctx.reply).toHaveBeenCalledWith(searchPhotosEmptyMsg);
+  });
+
+  it('warns when filter is empty', async () => {
+    const ctx = { reply: vi.fn(), message: { text: '/ai empty' } } as any;
+    vi.spyOn(openai, 'parseQueryWithOpenAI').mockResolvedValue({
+      persons: [],
+      tags: [],
+      dateFrom: null,
+      dateTo: null,
+    });
+    const hashSpy = vi.spyOn(utils, 'getFilterHash');
+    aiFilters.clear();
+
+    await aiCommand(ctx);
+
+    expect(hashSpy).not.toHaveBeenCalled();
+    expect(aiFilters.size).toBe(0);
+    expect(ctx.reply).toHaveBeenCalledWith(aiFilterEmptyMsg);
   });
 });

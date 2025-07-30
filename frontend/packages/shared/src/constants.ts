@@ -1,39 +1,43 @@
 import type { FilterDto } from '@photobank/shared/generated';
 
 export const DEFAULT_PHOTO_FILTER: FilterDto = {
-    thisDay: true,
-    skip: 0,
-    top: 10,
+  thisDay: true,
+  skip: 0,
+  top: 10,
 } as const;
 
-export const getPhotoErrorMsg = "🚫 Не удалось получить фото.";
-export const getProfileErrorMsg = "🚫 Не удалось получить профиль пользователя.";
-export const sorryTryToRequestLaterMsg = "🚫 Извините, попробуйте позже.";
-export const apiErrorMsg = "API error:";
+export const getPhotoErrorMsg = '🚫 Не удалось получить фото.';
+export const getProfileErrorMsg =
+  '🚫 Не удалось получить профиль пользователя.';
+export const sorryTryToRequestLaterMsg = '🚫 Извините, попробуйте позже.';
+export const apiErrorMsg = 'API error:';
 
 // Telegram bot messages
-export const welcomeBotMsg = "Добро пожаловать. Запущен и работает!";
-export const captionMissingMsg = "Без подписи.";
-export const unknownMessageReplyMsg = "Получил другое сообщение!";
-export const photoCommandUsageMsg = "❗ Используй: /photo <id>";
-export const photoNotFoundMsg = "❌ Фото не найдено.";
-export const subscribeCommandUsageMsg = "❗ Используй: /subscribe HH:MM";
-export const searchCommandUsageMsg = "❗ Используй: /search <caption>";
-export const aiCommandUsageMsg = "❗ Используй: /ai <prompt>";
-export const todaysPhotosEmptyMsg = "📭 Сегодняшних фото пока нет.";
-export const searchPhotosEmptyMsg = "📭 По вашему запросу фото не найдены.";
+export const welcomeBotMsg = 'Добро пожаловать. Запущен и работает!';
+export const captionMissingMsg = 'Без подписи.';
+export const unknownMessageReplyMsg = 'Получил другое сообщение!';
+export const photoCommandUsageMsg = '❗ Используй: /photo <id>';
+export const photoNotFoundMsg = '❌ Фото не найдено.';
+export const subscribeCommandUsageMsg = '❗ Используй: /subscribe HH:MM';
+export const searchCommandUsageMsg = '❗ Используй: /search <caption>';
+export const aiCommandUsageMsg = '❗ Используй: /ai <prompt>';
+export const aiFilterEmptyMsg =
+  '⚠️ Не удалось определить фильтр по запросу. Попробуйте уточнить.';
+export const todaysPhotosEmptyMsg = '📭 Сегодняшних фото пока нет.';
+export const searchPhotosEmptyMsg = '📭 По вашему запросу фото не найдены.';
 export const notRegisteredMsg =
-  "⚠️ Ваш телеграм не зарегистрирован. Обратитесь к администратору.";
-export const unknownYearLabel = "Неизвестный год";
-export const unknownPersonLabel = "Неизвестный";
-export const prevPageText = "◀ Назад";
-export const nextPageText = "Вперёд ▶";
-export const rolesLabel = "Роли:";
-export const rolesEmptyLabel = "Роли отсутствуют.";
-export const claimsLabel = "Права пользователя:";
-export const claimsEmptyLabel = "Права пользователя отсутствуют.";
-export const botTokenNotDefinedError = "BOT_TOKEN is not defined";
-export const apiCredentialsNotDefinedError = "API_EMAIL or API_PASSWORD is not defined";
+  '⚠️ Ваш телеграм не зарегистрирован. Обратитесь к администратору.';
+export const unknownYearLabel = 'Неизвестный год';
+export const unknownPersonLabel = 'Неизвестный';
+export const prevPageText = '◀ Назад';
+export const nextPageText = 'Вперёд ▶';
+export const rolesLabel = 'Роли:';
+export const rolesEmptyLabel = 'Роли отсутствуют.';
+export const claimsLabel = 'Права пользователя:';
+export const claimsEmptyLabel = 'Права пользователя отсутствуют.';
+export const botTokenNotDefinedError = 'BOT_TOKEN is not defined';
+export const apiCredentialsNotDefinedError =
+  'API_EMAIL or API_PASSWORD is not defined';
 
 // frontend shared constants
 export const METADATA_CACHE_KEY = 'photobank_metadata_cache';
@@ -121,7 +125,6 @@ export const loginButtonText = 'Login';
 export const registerTitle = 'Register';
 export const registerButtonText = 'Register';
 
-
 // Logout page
 export const loggingOutMsg = 'Logging out...';
 
@@ -152,7 +155,8 @@ export const adultScoreLabel = 'Adult Score';
 export const racyScoreLabel = 'Racy Score';
 export const detectedFacesTitle = 'Detected Faces';
 export const showFaceBoxesLabel = 'Show face boxes';
-export const hoverFaceHint = 'Hover over the blue boxes on the image to see face details.';
+export const hoverFaceHint =
+  'Hover over the blue boxes on the image to see face details.';
 
 // Profile page
 export const myProfileTitle = 'My Profile';
