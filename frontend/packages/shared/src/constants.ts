@@ -14,6 +14,16 @@ export const apiErrorMsg = 'API error:';
 
 // Telegram bot messages
 export const welcomeBotMsg = 'Добро пожаловать. Запущен и работает!';
+export const helpBotMsg = `Доступные команды:
+/thisday [страница] \u2013 показать фото этого дня
+/search <caption> \u2013 поиск по подписи
+/ai <prompt> \u2013 поиск с помощью ИИ
+/photo <id> \u2013 показать фото по идентификатору
+/profile \u2013 информация о профиле
+/subscribe HH:MM \u2013 ежедневная рассылка /thisday
+/tags [prefix] \u2013 список тегов
+/persons [prefix] \u2013 список персон
+\nЛюбое сообщение без команды обрабатывается как запрос /ai.`;
 export const captionMissingMsg = 'Без подписи.';
 export const unknownMessageReplyMsg = 'Получил другое сообщение!';
 export const photoCommandUsageMsg = '❗ Используй: /photo <id>';
