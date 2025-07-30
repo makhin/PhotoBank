@@ -5,6 +5,7 @@ import { photoNotFoundMsg, prevPageText, nextPageText } from "@photobank/shared/
 
 export const photoMessages = new Map<number, number>();
 export const currentPagePhotos = new Map<number, { page: number; ids: number[] }>();
+export const captionCache = new Map<number, string>();
 
 export async function deletePhotoMessage(ctx: Context) {
     const chatId = ctx.chat?.id;

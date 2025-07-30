@@ -19,7 +19,8 @@ import {
   AZURE_OPENAI_DEPLOYMENT,
   AZURE_OPENAI_API_VERSION,
 } from "./config";
-import { sendThisDayPage, thisDayCommand, captionCache } from "./commands/thisday";
+import { sendThisDayPage, thisDayCommand } from "./commands/thisday";
+import { captionCache } from "./photo";
 import { sendSearchPage, searchCommand } from "./commands/search";
 import { aiCommand, sendAiPage } from "./commands/ai";
 import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
