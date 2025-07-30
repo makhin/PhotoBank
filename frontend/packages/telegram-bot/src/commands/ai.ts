@@ -45,8 +45,8 @@ export async function sendAiPage(
   });
 }
 
-export async function aiCommand(ctx: Context) {
-  const prompt = parseAiPrompt(ctx.message?.text);
+export async function aiCommand(ctx: Context, promptOverride?: string) {
+  const prompt = promptOverride ?? parseAiPrompt(ctx.message?.text);
   if (!prompt) {
     await ctx.reply(aiCommandUsageMsg);
     return;

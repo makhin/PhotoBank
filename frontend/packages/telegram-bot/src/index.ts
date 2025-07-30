@@ -133,5 +133,11 @@ bot.callbackQuery(/^ai:(\d+):([\w-]+)$/, withRegistered(async (ctx) => {
   await sendAiPage(ctx, hash, page, true);
 }));
 
+bot.on('message:text', withRegistered(async (ctx) => {
+  const text = ctx.message?.text;
+  if (!text || text.startsWith('/')) return;
+  await aiCommand(ctx, text);
+}));
+
 bot.start();
 initSubscriptionScheduler(bot);
