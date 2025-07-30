@@ -76,6 +76,8 @@ VITE_AZURE_OPENAI_KEY=your_key
 VITE_AZURE_OPENAI_DEPLOYMENT=gpt-4
 ```
 
+По умолчанию любое текстовое сообщение без команды обрабатывается как запрос `/ai`, поэтому достаточно просто отправить текст с описанием запроса.
+
 ### MAUI/Blazor клиент
 
 ```bash
@@ -189,6 +191,9 @@ VITE_AZURE_OPENAI_ENDPOINT=https://example.openai.azure.com
 VITE_AZURE_OPENAI_KEY=your_key
 VITE_AZURE_OPENAI_DEPLOYMENT=gpt-4
 ```
+
+Any plain text message sent to the bot is interpreted as an `/ai` request, so you
+can simply type a query without the command prefix.
 
 ### MAUI/Blazor client
 
