@@ -23,6 +23,7 @@ import { sendThisDayPage, thisDayCommand } from "./commands/thisday";
 import { captionCache } from "./photo";
 import { sendSearchPage, searchCommand } from "./commands/search";
 import { aiCommand, sendAiPage } from "./commands/ai";
+import { helpCommand } from "./commands/help";
 import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
 import { tagsCommand, sendTagsPage } from "./commands/tags";
 import { personsCommand, sendPersonsPage } from "./commands/persons";
@@ -63,6 +64,7 @@ bot.command(
   "start",
   (ctx) => ctx.reply(welcomeBotMsg),
 );
+bot.command("help", helpCommand);
 
 bot.command("thisday", withRegistered(thisDayCommand));
 bot.command("search", withRegistered(searchCommand));
