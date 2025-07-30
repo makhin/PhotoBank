@@ -1,11 +1,15 @@
 import { Context } from 'grammy';
 import {
   aiCommandUsageMsg,
+  aiFilterEmptyMsg,
   sorryTryToRequestLaterMsg,
   searchPhotosEmptyMsg,
 } from '@photobank/shared/constants';
 import { parseQueryWithOpenAI } from '@photobank/shared/ai/openai';
-import { findBestPersonId, findBestTagId } from '@photobank/shared/dictionaries';
+import {
+  findBestPersonId,
+  findBestTagId,
+} from '@photobank/shared/dictionaries';
 import type { FilterDto } from '@photobank/shared/generated';
 import { getFilterHash } from '@photobank/shared/index';
 import { sendPhotosPage } from './photosPage';
@@ -23,7 +27,7 @@ export async function sendAiPage(
   ctx: Context,
   hash: string,
   page: number,
-  edit = false,
+  edit = false
 ) {
   const filter = aiFilters.get(hash);
   if (!filter) {
@@ -61,6 +65,11 @@ export async function aiCommand(ctx: Context) {
 
     if (filter.dateFrom) dto.takenDateFrom = filter.dateFrom.toISOString();
     if (filter.dateTo) dto.takenDateTo = filter.dateTo.toISOString();
+
+    if (Object.keys(dto).length === 0) {
+      await ctx.reply(aiFilterEmptyMsg);
+      return;
+    }
 
     const hash = await getFilterHash(dto);
     aiFilters.set(hash, dto);
