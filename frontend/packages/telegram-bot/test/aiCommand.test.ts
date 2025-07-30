@@ -85,4 +85,26 @@ describe('aiCommand', () => {
     expect(aiFilters.size).toBe(0);
     expect(ctx.reply).toHaveBeenCalledWith(aiFilterEmptyMsg);
   });
+
+  it('accepts prompt override', async () => {
+    const ctx = { reply: vi.fn(), message: { text: 'test' } } as any;
+    const parseSpy = vi
+      .spyOn(openai, 'parseQueryWithOpenAI')
+      .mockResolvedValue({
+        persons: [],
+        tags: [],
+        dateFrom: null,
+        dateTo: null,
+      });
+    vi.spyOn(utils, 'getFilterHash').mockResolvedValue('hash');
+    vi.spyOn(photosApi.PhotosService, 'postApiPhotosSearch').mockResolvedValue({
+      count: 0,
+      photos: [],
+    } as any);
+    aiFilters.clear();
+
+    await aiCommand(ctx, 'cats');
+
+    expect(parseSpy).toHaveBeenCalledWith('cats');
+  });
 });
