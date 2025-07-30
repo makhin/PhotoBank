@@ -21,7 +21,7 @@ import {
 } from "./config";
 import { sendThisDayPage, thisDayCommand, captionCache } from "./commands/thisday";
 import { sendSearchPage, searchCommand } from "./commands/search";
-import { aiCommand } from "./commands/ai";
+import { aiCommand, sendAiPage } from "./commands/ai";
 import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
 import { tagsCommand, sendTagsPage } from "./commands/tags";
 import { personsCommand, sendPersonsPage } from "./commands/persons";
@@ -65,7 +65,7 @@ bot.command(
 
 bot.command("thisday", withRegistered(thisDayCommand));
 bot.command("search", withRegistered(searchCommand));
-bot.command("ai", aiCommand);
+bot.command("ai", withRegistered(aiCommand));
 
 bot.command("profile", profileCommand);
 
@@ -120,6 +120,16 @@ bot.callbackQuery(/^search:(\d+):(.+)$/, withRegistered(async (ctx) => {
   const caption = decodeURIComponent(ctx.match[2]);
   await ctx.answerCallbackQuery();
   await sendSearchPage(ctx, caption, page, true);
+}));
+
+bot.callbackQuery(/^ai:(\d+):([\w-]+)$/, withRegistered(async (ctx) => {
+  if (!ctx.match) {
+    throw new Error("Callback query match is undefined.");
+  }
+  const page = parseInt(ctx.match[1], 10);
+  const hash = ctx.match[2];
+  await ctx.answerCallbackQuery();
+  await sendAiPage(ctx, hash, page, true);
 }));
 
 bot.start();
