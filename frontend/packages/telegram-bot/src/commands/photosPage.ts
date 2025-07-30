@@ -105,7 +105,7 @@ export async function sendPhotosPage({
     });
 
   photoIds.forEach((id, index) => {
-    if (index % 5 === 0) keyboard.row();
+    if (index % 5 === 0 && index !== 0) keyboard.row();
     keyboard.text(String(index + 1), `photo:${id}`);
   });
 
