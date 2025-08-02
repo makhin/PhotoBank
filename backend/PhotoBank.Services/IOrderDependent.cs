@@ -2,7 +2,7 @@
 
 namespace PhotoBank.Services
 {
-    public interface IOrderDependant
+    public interface IOrderDependent
     {
         Type[] Dependencies { get; }
     }

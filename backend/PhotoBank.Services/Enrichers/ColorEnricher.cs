@@ -10,16 +10,14 @@ namespace PhotoBank.Services.Enrichers
         public EnricherType EnricherType => EnricherType.Color;
         public Type[] Dependencies => new[] { typeof(AnalyzeEnricher) };
 
-        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
+        public Task EnrichAsync(Photo photo, SourceDataDto sourceData)
         {
-            await Task.Run(() =>
-            {
-                photo.IsBW = sourceData.ImageAnalysis.Color.IsBWImg;
-                photo.AccentColor = sourceData.ImageAnalysis.Color.AccentColor;
-                photo.DominantColorBackground = sourceData.ImageAnalysis.Color.DominantColorBackground;
-                photo.DominantColorForeground = sourceData.ImageAnalysis.Color.DominantColorForeground;
-                photo.DominantColors = string.Join(",", sourceData.ImageAnalysis.Color.DominantColors);
-            });
+            photo.IsBW = sourceData.ImageAnalysis.Color.IsBWImg;
+            photo.AccentColor = sourceData.ImageAnalysis.Color.AccentColor;
+            photo.DominantColorBackground = sourceData.ImageAnalysis.Color.DominantColorBackground;
+            photo.DominantColorForeground = sourceData.ImageAnalysis.Color.DominantColorForeground;
+            photo.DominantColors = string.Join(",", sourceData.ImageAnalysis.Color.DominantColors);
+            return Task.CompletedTask;
         }
     }
 }

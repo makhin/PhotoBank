@@ -201,7 +201,7 @@ namespace PhotoBank.Services
                 return users.UserMatches;
             }
 
-            return await Task.FromResult(new List<UserMatch>()); ;
+            return new List<UserMatch>();
         }
     }
 }
