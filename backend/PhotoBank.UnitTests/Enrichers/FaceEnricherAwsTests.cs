@@ -12,6 +12,7 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Models;
+using PhotoBank.UnitTests;
 using Person = PhotoBank.DbContext.Models.Person;
 
 namespace PhotoBank.UnitTests.Enrichers
@@ -94,7 +95,7 @@ namespace PhotoBank.UnitTests.Enrichers
             photo.FaceIdentifyStatus.Should().Be(FaceIdentifyStatus.Detected);
         }
 
-        [Test]
+        [RaspberrySkipFact]
         public async Task EnrichAsync_ShouldAddFacesToPhoto_WhenFacesDetected()
         {
             // Arrange
@@ -117,7 +118,7 @@ namespace PhotoBank.UnitTests.Enrichers
             photo.Faces.Should().HaveCount(1);
         }
 
-        [Test]
+        [RaspberrySkipFact]
         public async Task EnrichAsync_ShouldIdentifyFaces_WhenFacesDetected()
         {
             // Arrange
