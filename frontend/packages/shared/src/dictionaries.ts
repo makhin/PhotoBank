@@ -1,21 +1,40 @@
-import { PersonsService, TagsService } from '@photobank/shared/generated';
+import {
+  PathsService,
+  PersonsService,
+  StoragesService,
+  TagsService,
+} from '@photobank/shared/generated';
 import { unknownPersonLabel } from '@photobank/shared/constants';
-import type { PersonDto, TagDto } from '@photobank/shared/generated';
+import type {
+  PathDto,
+  PersonDto,
+  StorageDto,
+  TagDto,
+} from '@photobank/shared/generated';
 
 let tagMap = new Map<number, string>();
 let personMap = new Map<number, string>();
 let tagList: TagDto[] = [];
 let personList: PersonDto[] = [];
+let storageList: StorageDto[] = [];
+let pathList: PathDto[] = [];
 let storageMap = new Map<number, string>();
-let pathMap = new Map<number, string>();
+let pathsMap = new Map<number, string[]>();
 
 export async function loadDictionaries() {
     tagList = await TagsService.getApiTags();
     tagMap = new Map(tagList.map(tag => [tag.id, tag.name]));
     personList = await PersonsService.getApiPersons();
     personMap = new Map(personList.map(p => [p.id, p.name]));
-//    storageMap = new Map((await getAllStorages()).map(p => [p.id, p.name]));
-//    pathMap = new Map((await getAllPaths()).map(p => [p.storageId, p.path]));
+    storageList = await StoragesService.getApiStorages();
+    storageMap = new Map(storageList.map((s) => [s.id, s.name]));
+    pathList = await PathsService.getApiPaths();
+    pathsMap = new Map();
+    for (const p of pathList) {
+        const arr = pathsMap.get(p.storageId) ?? [];
+        arr.push(p.path);
+        pathsMap.set(p.storageId, arr);
+    }
 }
 
 export function getTagName(id: number): string {
@@ -37,6 +56,10 @@ export function getAllPersons(): PersonDto[] {
 
 export function getStorageName(id: number): string {
     return storageMap.get(id) ?? `ID ${id}`;
+}
+
+export function getAllStoragesWithPaths(): Array<StorageDto & { paths: string[] }> {
+    return storageList.map((s) => ({ ...s, paths: pathsMap.get(s.id) ?? [] }));
 }
 
 function similarity(a: string, b: string): number {

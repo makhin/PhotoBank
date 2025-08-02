@@ -27,7 +27,8 @@ import { helpCommand } from "./commands/help";
 import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
 import { tagsCommand, sendTagsPage } from "./commands/tags";
 import { personsCommand, sendPersonsPage } from "./commands/persons";
-import { tagsCallbackPattern, personsCallbackPattern } from "./patterns";
+import { storagesCommand, sendStoragesPage } from "./commands/storages";
+import { tagsCallbackPattern, personsCallbackPattern, storagesCallbackPattern } from "./patterns";
 import { registerPhotoRoutes } from "./commands/photoRouter";
 import { profileCommand } from "./commands/profile";
 import { withRegistered } from './registration';
@@ -76,6 +77,7 @@ bot.command("subscribe", withRegistered(subscribeCommand));
 
 bot.command("tags", withRegistered(tagsCommand));
 bot.command("persons", withRegistered(personsCommand));
+bot.command("storages", withRegistered(storagesCommand));
 
 bot.callbackQuery(/^thisday:(\d+)$/, withRegistered(async (ctx) => {
   if (!ctx.match) {
@@ -113,6 +115,16 @@ bot.callbackQuery(personsCallbackPattern, withRegistered(async (ctx) => {
   const prefix = decodeURIComponent(ctx.match[2]);
   await ctx.answerCallbackQuery();
   await sendPersonsPage(ctx, prefix, page, true);
+}));
+
+bot.callbackQuery(storagesCallbackPattern, withRegistered(async (ctx) => {
+  if (!ctx.match) {
+    throw new Error("Callback query match is undefined.");
+  }
+  const page = parseInt(ctx.match[1], 10);
+  const prefix = decodeURIComponent(ctx.match[2]);
+  await ctx.answerCallbackQuery();
+  await sendStoragesPage(ctx, prefix, page, true);
 }));
 
 bot.callbackQuery(/^search:(\d+):(.+)$/, withRegistered(async (ctx) => {
