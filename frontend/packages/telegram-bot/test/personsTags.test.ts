@@ -60,6 +60,24 @@ describe('sendStoragesPage', () => {
     expect(text).toContain('p10');
     expect(text).toContain('Страница 2 из 2');
   });
+
+  it('limits number of paths per storage', async () => {
+    const storages = [
+      {
+        id: 1,
+        name: 'st00',
+        paths: Array.from({ length: 25 }, (_, i) => `p${i}`),
+      },
+    ];
+    vi.spyOn(dict, 'getAllStoragesWithPaths').mockReturnValue(storages as any);
+    const ctx = { reply: vi.fn() } as any;
+    await sendStoragesPage(ctx, '', 1);
+    expect(ctx.reply).toHaveBeenCalled();
+    const text = ctx.reply.mock.calls[0][0];
+    expect(text).toContain('p19');
+    expect(text).not.toContain('p20');
+    expect(text).toContain('...');
+  });
 });
 
 describe('callback regex', () => {
