@@ -22,6 +22,7 @@ export const helpBotMsg = `Доступные команды:
 /profile \u2013 информация о профиле
 /subscribe HH:MM \u2013 ежедневная рассылка /thisday
 /tags [prefix] \u2013 список тегов
+/storages [prefix] \u2013 список хранилищ и путей
 /persons [prefix] \u2013 список персон
 \nЛюбое сообщение без команды обрабатывается как запрос /ai.`;
 export const captionMissingMsg = 'Без подписи.';

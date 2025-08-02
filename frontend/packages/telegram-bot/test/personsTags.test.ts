@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { sendTagsPage } from '../src/commands/tags';
 import { sendPersonsPage } from '../src/commands/persons';
-import { tagsCallbackPattern, personsCallbackPattern } from '../src/patterns';
+import { sendStoragesPage } from '../src/commands/storages';
+import { tagsCallbackPattern, personsCallbackPattern, storagesCallbackPattern } from '../src/patterns';
 import * as dict from '@photobank/shared/dictionaries';
 
 describe('sendTagsPage', () => {
@@ -43,6 +44,24 @@ describe('sendPersonsPage', () => {
   });
 });
 
+describe('sendStoragesPage', () => {
+  it('shows paths and paginates', async () => {
+    const storages = Array.from({ length: 11 }, (_, i) => ({
+      id: i + 1,
+      name: `st${String(i).padStart(2, '0')}`,
+      paths: [`p${i}`],
+    }));
+    vi.spyOn(dict, 'getAllStoragesWithPaths').mockReturnValue(storages as any);
+    const ctx = { reply: vi.fn() } as any;
+    await sendStoragesPage(ctx, 'st', 2);
+    expect(ctx.reply).toHaveBeenCalled();
+    const text = ctx.reply.mock.calls[0][0];
+    expect(text).toContain('st10');
+    expect(text).toContain('p10');
+    expect(text).toContain('Страница 2 из 2');
+  });
+});
+
 describe('callback regex', () => {
   it('matches empty prefix for tags', () => {
     const match = 'tags:2:'.match(tagsCallbackPattern);
@@ -53,6 +72,12 @@ describe('callback regex', () => {
   it('matches empty prefix for persons', () => {
     const match = 'persons:3:'.match(personsCallbackPattern);
     expect(match?.[1]).toBe('3');
+    expect(match?.[2]).toBe('');
+  });
+
+  it('matches empty prefix for storages', () => {
+    const match = 'storages:1:'.match(storagesCallbackPattern);
+    expect(match?.[1]).toBe('1');
     expect(match?.[2]).toBe('');
   });
 });
