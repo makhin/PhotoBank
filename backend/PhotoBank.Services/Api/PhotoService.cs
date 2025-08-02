@@ -28,11 +28,11 @@ public interface IPhotoService
 public class PhotoService : IPhotoService
 {
     private readonly IRepository<Photo> _photoRepository;
+    private readonly IRepository<Person> _personRepository;
     private readonly IRepository<Face> _faceRepository;
+    private readonly IRepository<Storage> _storageRepository;
     private readonly IMapper _mapper;
     private readonly IMemoryCache _cache;
-    private readonly Lazy<Task<IReadOnlyList<PersonDto>>> _persons;
-    private readonly Lazy<Task<IReadOnlyList<StorageDto>>> _storages;
     private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
     private readonly Lazy<Task<IReadOnlyList<PathDto>>> _paths;
 
@@ -52,19 +52,11 @@ public class PhotoService : IPhotoService
         IMemoryCache cache)
     {
         _photoRepository = photoRepository;
+        _personRepository = personRepository;
         _faceRepository = faceRepository;
+        _storageRepository = storageRepository;
         _mapper = mapper;
         _cache = cache;
-        _persons = new Lazy<Task<IReadOnlyList<PersonDto>>>(() =>
-                GetCachedAsync("persons", async () => (IReadOnlyList<PersonDto>)await personRepository.GetAll()
-                .OrderBy(p => p.Name)
-                .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
-                .ToListAsync()));
-        _storages = new Lazy<Task<IReadOnlyList<StorageDto>>>(() =>
-            GetCachedAsync("storages", async () => (IReadOnlyList<StorageDto>)await storageRepository.GetAll()
-                .OrderBy(p => p.Name)
-                .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
-                .ToListAsync()));
         _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
             GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
                 .OrderBy(p => p.Name)
@@ -161,11 +153,23 @@ public class PhotoService : IPhotoService
         return _mapper.Map<Photo, PhotoDto>(photo);
     }
 
-    public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync() => await _persons.Value;
+    public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync()
+    {
+        return await _personRepository.GetAll()
+            .OrderBy(p => p.Name)
+            .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+    }
 
     public async Task<IEnumerable<PathDto>> GetAllPathsAsync() => await _paths.Value;
 
-    public async Task<IEnumerable<StorageDto>> GetAllStoragesAsync() => await _storages.Value;
+    public async Task<IEnumerable<StorageDto>> GetAllStoragesAsync()
+    {
+        return await _storageRepository.GetAll()
+            .OrderBy(p => p.Name)
+            .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+    }
 
     public async Task<IEnumerable<TagDto>> GetAllTagsAsync() => await _tags.Value;
 
