@@ -5,7 +5,7 @@ using PhotoBank.Services.Models;
 
 namespace PhotoBank.Services.Enrichers
 {
-    public interface IEnricher: IOrderDependant
+    public interface IEnricher : IOrderDependent
     {
         Task EnrichAsync(Photo photo, SourceDataDto path);
         EnricherType EnricherType { get; }

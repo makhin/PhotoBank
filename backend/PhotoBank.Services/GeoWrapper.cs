@@ -33,16 +33,16 @@ namespace PhotoBank.Services
         {
             var x = (int)(imageWidth * boundingBox.Left / scale);
             var y = (int)(imageHeight * boundingBox.Top / scale);
-            var w = (int)(imageHeight * boundingBox.Height / scale);
-            var h = (int)(imageWidth * boundingBox.Width / scale);
+            var width = (int)(imageWidth * boundingBox.Width / scale);
+            var height = (int)(imageHeight * boundingBox.Height / scale);
 
             return GeometryFactory.CreatePolygon(
                 new[]
                 {
                     new Coordinate(x, y),
-                    new Coordinate(x + h, y),
-                    new Coordinate(x + h, y + w),
-                    new Coordinate(x, y + w),
+                    new Coordinate(x + width, y),
+                    new Coordinate(x + width, y + height),
+                    new Coordinate(x, y + height),
                     new Coordinate(x, y)
                 });
         }

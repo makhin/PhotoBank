@@ -64,12 +64,10 @@ namespace PhotoBank.Services
             services.AddTransient<IEnricher, ColorEnricher>();
             services.AddTransient<IEnricher, CaptionEnricher>();
             services.AddTransient<IEnricher, TagEnricher>();
-            services.AddTransient<IEnricher, CaptionEnricher>();
             services.AddTransient<IEnricher, ObjectPropertyEnricher>();
             services.AddTransient<IEnricher, AdultEnricher>();
             services.AddTransient<IEnricher, FaceEnricher>();
             services.AddTransient<IEnricher, FaceEnricherAws>();
-            services.AddTransient<IFacePreviewService, FacePreviewService>();
             services.AddTransient<IImageMetadataReaderWrapper, ImageMetadataReaderWrapper>();
 
             services.AddSingleton<IInsightFaceApiClient, InsightFaceApiClient.InsightFaceApiClient>();

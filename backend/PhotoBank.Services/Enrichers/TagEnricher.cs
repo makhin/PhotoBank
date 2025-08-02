@@ -17,39 +17,38 @@ namespace PhotoBank.Services.Enrichers
             _tagRepository = tagRepository;
         }
         public EnricherType EnricherType => EnricherType.Tag;
-        public Type[] Dependencies => new Type[1] {typeof(AnalyzeEnricher)};
+        public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
-        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
+        public Task EnrichAsync(Photo photo, SourceDataDto sourceData)
         {
-            await Task.Run(() =>
-            {
-                photo.PhotoTags = new List<PhotoTag>();
+            photo.PhotoTags = new List<PhotoTag>();
 
-                // Workaround for bug, when service returns the same tags
-                var tags = sourceData.ImageAnalysis.Tags.GroupBy(t => t.Name.ToLower()).Select(t =>
-                    new
-                    {
-                        Name = t.Key,
-                        Confidence = t.Max(v => v.Confidence)
-                    });
-
-                foreach (var tag in tags)
+            // Workaround for bug, when service returns the same tags
+            var tags = sourceData.ImageAnalysis.Tags.GroupBy(t => t.Name.ToLower()).Select(t =>
+                new
                 {
-                    var tagModel = _tagRepository.GetByCondition(t => t.Name == tag.Name).FirstOrDefault() ?? new Tag
-                    {
-                        Name = tag.Name,
-                    };
+                    Name = t.Key,
+                    Confidence = t.Max(v => v.Confidence)
+                });
 
-                    var photoTag = new PhotoTag
-                    {
-                        Photo = photo,
-                        Tag = tagModel,
-                        Confidence = tag.Confidence
-                    };
+            foreach (var tag in tags)
+            {
+                var tagModel = _tagRepository.GetByCondition(t => t.Name == tag.Name).FirstOrDefault() ?? new Tag
+                {
+                    Name = tag.Name,
+                };
 
-                    photo.PhotoTags.Add(photoTag);
-                }
-            });
+                var photoTag = new PhotoTag
+                {
+                    Photo = photo,
+                    Tag = tagModel,
+                    Confidence = tag.Confidence
+                };
+
+                photo.PhotoTags.Add(photoTag);
+            }
+
+            return Task.CompletedTask;
         }
     }
 }

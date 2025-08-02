@@ -18,7 +18,20 @@ namespace PhotoBank.Services
 
     public class SyncService : ISyncService 
     {
-        private const string SupportedExtensions = "*.jpg,*.gif,*.png,*.bmp,*.jpe,*.jpeg,*.tiff,*.arw,*.crw,*.bmp,*.cr2,*.pdf";
+        private static readonly HashSet<string> SupportedExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".jpg",
+            ".gif",
+            ".png",
+            ".bmp",
+            ".jpe",
+            ".jpeg",
+            ".tiff",
+            ".arw",
+            ".crw",
+            ".cr2",
+            ".pdf"
+        };
         private readonly IRepository<File> _fileRepository;
 
         public SyncService(IRepository<File> fileRepository)
@@ -31,7 +44,7 @@ namespace PhotoBank.Services
             var folder = storage.Folder;
 
             var folderFiles = Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories)
-                .Where(s => SupportedExtensions.Contains(Path.GetExtension(s).ToLower()))
+                .Where(s => SupportedExtensions.Contains(Path.GetExtension(s)))
                 .ToList();
 
             var storageFiles = await _fileRepository.GetByCondition(f => f.Photo.Storage.Id == storage.Id)
