@@ -545,6 +545,10 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<double>("RacyScore")
                         .HasColumnType("float");
 
+                    b.Property<string>("ImageHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<string>("RelativePath")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");

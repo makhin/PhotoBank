@@ -9,6 +9,7 @@ using Microsoft.Extensions.Caching.Memory;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.ViewModel.Dto;
+using PhotoBank.Services;
 
 namespace PhotoBank.Services.Api;
 
@@ -21,6 +22,7 @@ public interface IPhotoService
     Task<IEnumerable<TagDto>> GetAllTagsAsync();
     Task<IEnumerable<PathDto>> GetAllPathsAsync();
     Task UpdateFaceAsync(int faceId, int personId);
+    Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold);
 }
 
 public class PhotoService : IPhotoService
@@ -177,6 +179,31 @@ public class PhotoService : IPhotoService
             PersonId = personId == -1 ? null : personId
         };
         await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentifiedWithConfidence, f => f.IdentityStatus);
+    }
+
+    public async Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold)
+    {
+        if (id.HasValue)
+        {
+            hash = await _photoRepository.GetByCondition(p => p.Id == id.Value)
+                .Select(p => p.ImageHash)
+                .SingleOrDefaultAsync();
+        }
+
+        if (string.IsNullOrEmpty(hash))
+        {
+            return Enumerable.Empty<PhotoItemDto>();
+        }
+
+        var photos = await _photoRepository.GetAll().AsNoTracking()
+            .Where(p => p.ImageHash != null && (!id.HasValue || p.Id != id.Value))
+            .ToListAsync();
+
+        var result = photos
+            .Where(p => ImageHashHelper.HammingDistance(hash, p.ImageHash) <= threshold)
+            .ToList();
+
+        return _mapper.Map<IEnumerable<PhotoItemDto>>(result);
     }
 }
 

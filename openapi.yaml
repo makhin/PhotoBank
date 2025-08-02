@@ -269,6 +269,38 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /api/photos/duplicates:
+    get:
+      tags:
+        - Photos
+      parameters:
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: hash
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: threshold
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 5
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PhotoItemDto'
   '/api/photos/{id}':
     get:
       tags:
