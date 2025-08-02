@@ -21,6 +21,7 @@ namespace PhotoBank.DbContext.DbContext
         public DbSet<PhotoTag> PhotoTags { get; set; }
         public DbSet<PhotoCategory> PhotoCategories { get; set; }
         public DbSet<Person> Persons { get; set; }
+        public DbSet<PersonGroup> PersonGroups { get; set; }
         public DbSet<File> Files { get; set; }
         public DbSet<PropertyName> PropertyNames { get; set; }
         public DbSet<Enricher> Enrichers { get; set; }
