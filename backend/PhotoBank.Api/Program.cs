@@ -7,7 +7,6 @@ using PhotoBank.Services;
 using PhotoBank.Api.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using Serilog.Events;
 using Serilog;
@@ -125,12 +124,6 @@ namespace PhotoBank.Api
             });
 
             var app = builder.Build();
-
-            using (var scope = app.Services.CreateScope())
-            {
-                var dbContext = scope.ServiceProvider.GetRequiredService<PhotoBankDbContext>();
-                dbContext.Database.Migrate();
-            }
 
             // Configure the HTTP request pipeline.
 //            if (app.Environment.IsDevelopment())
