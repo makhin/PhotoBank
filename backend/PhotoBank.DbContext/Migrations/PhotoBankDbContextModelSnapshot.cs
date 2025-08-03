@@ -18,7 +18,7 @@ namespace PhotoBank.DbContext.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "9.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -453,7 +453,7 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PersonGroup");
+                    b.ToTable("PersonGroups");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroupFace", b =>
@@ -519,6 +519,10 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<long?>("Height")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("ImageHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<bool>("IsAdultContent")
                         .HasColumnType("bit");
 
@@ -544,10 +548,6 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.Property<double>("RacyScore")
                         .HasColumnType("float");
-
-                    b.Property<string>("ImageHash")
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("RelativePath")
                         .HasMaxLength(255)
