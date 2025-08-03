@@ -61,9 +61,17 @@ namespace PhotoBank.Repositories
 
             if (user.HasClaim(c => c.Type == "AllowPersonGroup"))
             {
-                var groupIds = user.Claims.Where(c => c.Type == "AllowPersonGroup").Select(c => int.Parse(c.Value)).ToList();
+                var groupIds = user.Claims
+                    .Where(c => c.Type == "AllowPersonGroup")
+                    .Select(c => int.Parse(c.Value))
+                    .ToList();
+
                 rowAuthPoliciesContainer.Register<Person>(p =>
                     p.PersonGroups.Any(pg => groupIds.Contains(pg.Id)));
+
+                rowAuthPoliciesContainer.Register<Photo>(p =>
+                    !p.Faces.Any(f => f.PersonId == null ||
+                                      !f.Person.PersonGroups.Any(pg => groupIds.Contains(pg.Id))));
             }
 
             return rowAuthPoliciesContainer;
