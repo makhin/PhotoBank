@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { formatPhotoMessage } from '../src/utils/formatPhotoMessage';
-import type { PhotoDto } from '../src/generated';
+import { formatPhotoMessage } from '../src/formatPhotoMessage';
+import type { PhotoDto } from '@photobank/shared/generated';
 
 vi.mock('../src/dictionaries', () => ({
   getPersonName: (id: number | null | undefined) => id == null ? 'Неизвестный' : `Person ${id}`,

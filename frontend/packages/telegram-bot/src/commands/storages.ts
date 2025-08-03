@@ -1,5 +1,5 @@
 import { Context } from "grammy";
-import { getAllStoragesWithPaths } from '@photobank/shared/dictionaries';
+import { getAllStoragesWithPaths } from '../dictionaries';
 import { parsePrefix, sendNamedItemsPage } from "./helpers";
 
 const MAX_PATHS_PER_STORAGE = 20;

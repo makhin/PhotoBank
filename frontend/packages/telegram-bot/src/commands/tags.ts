@@ -1,5 +1,5 @@
 import { Context } from "grammy";
-import { getAllTags } from '@photobank/shared/dictionaries';
+import { getAllTags } from '../dictionaries';
 import { parsePrefix, sendNamedItemsPage } from "./helpers";
 
 export async function sendTagsPage(
