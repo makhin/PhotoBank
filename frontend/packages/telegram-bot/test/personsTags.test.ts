@@ -3,7 +3,7 @@ import { sendTagsPage } from '../src/commands/tags';
 import { sendPersonsPage } from '../src/commands/persons';
 import { sendStoragesPage } from '../src/commands/storages';
 import { tagsCallbackPattern, personsCallbackPattern, storagesCallbackPattern } from '../src/patterns';
-import * as dict from '@photobank/shared/dictionaries';
+import * as dict from '../src/dictionaries';
 
 describe('sendTagsPage', () => {
   it('filters by prefix and paginates', async () => {

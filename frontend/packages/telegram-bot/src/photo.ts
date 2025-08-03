@@ -1,6 +1,6 @@
 import { Context, InputFile, InlineKeyboard } from "grammy";
 import { PhotosService } from "@photobank/shared/generated";
-import { formatPhotoMessage } from "@photobank/shared/utils/formatPhotoMessage";
+import { formatPhotoMessage } from "./formatPhotoMessage";
 import { photoNotFoundMsg, prevPageText, nextPageText } from "@photobank/shared/constants";
 
 export const photoMessages = new Map<number, number>();

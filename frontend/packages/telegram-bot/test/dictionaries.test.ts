@@ -10,7 +10,7 @@ describe('dictionaries', () => {
     const getAllTags = vi.fn().mockResolvedValue([]);
     const getAllStorages = vi.fn().mockResolvedValue([]);
     const getAllPaths = vi.fn().mockResolvedValue([]);
-    vi.doMock('../src/generated', () => ({
+    vi.doMock('@photobank/shared/generated', () => ({
       PersonsService: { getApiPersons: getAllPersons },
       TagsService: { getApiTags: getAllTags },
       StoragesService: { getApiStorages: getAllStorages },
@@ -48,7 +48,7 @@ describe('dictionaries', () => {
     ]);
     const getAllStorages = vi.fn().mockResolvedValue([]);
     const getAllPaths = vi.fn().mockResolvedValue([]);
-    vi.doMock('../src/generated', () => ({
+    vi.doMock('@photobank/shared/generated', () => ({
       PersonsService: { getApiPersons: getAllPersons },
       TagsService: { getApiTags: getAllTags },
       StoragesService: { getApiStorages: getAllStorages },
@@ -66,7 +66,7 @@ describe('dictionaries', () => {
       { storageId: 1, path: '/a' },
       { storageId: 1, path: '/b' },
     ]);
-    vi.doMock('../src/generated', () => ({
+    vi.doMock('@photobank/shared/generated', () => ({
       PersonsService: { getApiPersons: vi.fn().mockResolvedValue([]) },
       TagsService: { getApiTags: vi.fn().mockResolvedValue([]) },
       StoragesService: { getApiStorages: getAllStorages },

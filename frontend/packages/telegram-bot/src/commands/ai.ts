@@ -9,7 +9,7 @@ import { parseQueryWithOpenAI } from '@photobank/shared/ai/openai';
 import {
   findBestPersonId,
   findBestTagId,
-} from '@photobank/shared/dictionaries';
+} from '../dictionaries';
 import type { FilterDto } from '@photobank/shared/generated';
 import { getFilterHash } from '@photobank/shared/index';
 

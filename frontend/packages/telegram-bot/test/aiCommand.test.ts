@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { aiCommand, parseAiPrompt, aiFilters } from '../src/commands/ai';
 import * as openai from '@photobank/shared/ai/openai';
-import * as dict from '@photobank/shared/dictionaries';
+import * as dict from '../src/dictionaries';
 import * as photosApi from '@photobank/shared/generated';
 import * as utils from '@photobank/shared/index';
 import {

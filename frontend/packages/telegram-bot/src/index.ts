@@ -1,5 +1,5 @@
 import { Bot } from "grammy";
-import { loadDictionaries } from "@photobank/shared/dictionaries";
+import { loadDictionaries, setDictionariesUser } from "./dictionaries";
 import { AuthService } from "@photobank/shared/generated";
 import { setAuthToken } from "@photobank/shared/auth";
 import { configureAzureOpenAI } from "@photobank/shared/ai/openai";
@@ -36,9 +36,11 @@ import { withRegistered } from './registration';
 const bot = new Bot(BOT_TOKEN);
 
 bot.use(async (ctx, next) => {
-  const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
-  setImpersonateUser(username);
-  await next();
+    const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
+    setImpersonateUser(username);
+    setDictionariesUser(username);
+    await loadDictionaries();
+    await next();
 });
 
 registerPhotoRoutes(bot);
@@ -49,11 +51,10 @@ const loginRes = await AuthService.postApiAuthLogin({
   email: API_EMAIL,
   password: API_PASSWORD,
 });
-if (!loginRes.token) {
-  throw new Error("Login failed: token is undefined.");
-}
-setAuthToken(loginRes.token, true);
-await loadDictionaries();
+  if (!loginRes.token) {
+    throw new Error("Login failed: token is undefined.");
+  }
+  setAuthToken(loginRes.token, true);
 
 configureAzureOpenAI({
   endpoint: AZURE_OPENAI_ENDPOINT,

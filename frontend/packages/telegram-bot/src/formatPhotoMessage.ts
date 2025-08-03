@@ -1,5 +1,5 @@
 import { PhotoDto } from "@photobank/shared/generated";
-import { getPersonName } from "@photobank/shared/dictionaries";
+import { getPersonName } from "./dictionaries";
 import { formatDate } from "@photobank/shared/index";
 import { Buffer } from "buffer";
 
