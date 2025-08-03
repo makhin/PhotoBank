@@ -4,12 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.ViewModel.Dto;
 using PhotoBank.Services;
+using System.IO;
 
 namespace PhotoBank.Services.Api;
 
@@ -23,6 +25,7 @@ public interface IPhotoService
     Task<IEnumerable<PathDto>> GetAllPathsAsync();
     Task UpdateFaceAsync(int faceId, int personId);
     Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold);
+    Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path);
 }
 
 public class PhotoService : IPhotoService
@@ -183,6 +186,49 @@ public class PhotoService : IPhotoService
             PersonId = personId == -1 ? null : personId
         };
         await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentifiedWithConfidence, f => f.IdentityStatus);
+    }
+
+    public async Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path)
+    {
+        if (files == null || !files.Any())
+            return;
+
+        var storage = await _storageRepository.GetAsync(storageId);
+        if (storage == null)
+            throw new ArgumentException($"Storage {storageId} not found", nameof(storageId));
+
+        var targetPath = Path.Combine(storage.Folder, path ?? string.Empty);
+
+        if (!Directory.Exists(targetPath))
+            Directory.CreateDirectory(targetPath);
+
+        foreach (var file in files)
+        {
+            var destination = Path.Combine(targetPath, file.FileName);
+
+            if (System.IO.File.Exists(destination))
+            {
+                var existing = new FileInfo(destination);
+                if (existing.Length == file.Length)
+                {
+                    continue; // same name and size, skip
+                }
+
+                var name = Path.GetFileNameWithoutExtension(file.FileName);
+                var extension = Path.GetExtension(file.FileName);
+                var index = 1;
+                string newFileName;
+                do
+                {
+                    newFileName = $"{name}_{index}{extension}";
+                    destination = Path.Combine(targetPath, newFileName);
+                    index++;
+                } while (System.IO.File.Exists(destination));
+            }
+
+            await using var stream = new FileStream(destination, FileMode.Create);
+            await file.CopyToAsync(stream);
+        }
     }
 
     public async Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold)

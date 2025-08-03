@@ -22,6 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PhotoBank.DbContext\PhotoBank.DbContext.csproj" />
     <ProjectReference Include="..\PhotoBank.InsightFace.Client\PhotoBank.InsightFaceApiClient.csproj" />
     <ProjectReference Include="..\PhotoBank.Repositories\PhotoBank.Repositories.csproj" />

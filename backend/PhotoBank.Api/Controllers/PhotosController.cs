@@ -35,6 +35,14 @@ namespace PhotoBank.Api.Controllers
             return Ok(photo);
         }
 
+        [HttpPost("upload")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> Upload([FromForm] List<IFormFile> files, [FromForm] int storageId, [FromForm] string path)
+        {
+            await photoService.UploadPhotosAsync(files, storageId, path);
+            return Ok();
+        }
+
         [HttpGet("duplicates")]
         [ProducesResponseType(typeof(IEnumerable<PhotoItemDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<PhotoItemDto>>> GetDuplicates([FromQuery] int? id, [FromQuery] string? hash, [FromQuery] int threshold = 5)
