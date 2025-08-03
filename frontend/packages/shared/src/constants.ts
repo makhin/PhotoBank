@@ -38,6 +38,9 @@ export const todaysPhotosEmptyMsg = '📭 Сегодняшних фото пок
 export const searchPhotosEmptyMsg = '📭 По вашему запросу фото не найдены.';
 export const notRegisteredMsg =
   '⚠️ Ваш телеграм не зарегистрирован. Обратитесь к администратору.';
+export const uploadSuccessMsg = '✅ Файлы загружены.';
+export const uploadFailedMsg = '🚫 Не удалось загрузить файлы.';
+export const uploadStorageId = 1;
 export const unknownYearLabel = 'Неизвестный год';
 export const unknownPersonLabel = 'Неизвестный';
 export const prevPageText = '◀ Назад';

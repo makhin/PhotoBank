@@ -29,6 +29,25 @@ export class PhotosService {
         });
     }
     /**
+     * @param formData
+     * @returns any OK
+     * @throws ApiError
+     */
+    public static postApiPhotosUpload(
+        formData?: {
+            files: Array<Blob>;
+            storageId: number;
+            path: string;
+        },
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/photos/upload',
+            formData: formData,
+            mediaType: 'multipart/form-data',
+        });
+    }
+    /**
      * @param id
      * @param hash
      * @param threshold

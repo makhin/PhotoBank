@@ -31,6 +31,7 @@ import { storagesCommand, sendStoragesPage } from "./commands/storages";
 import { tagsCallbackPattern, personsCallbackPattern, storagesCallbackPattern } from "./patterns";
 import { registerPhotoRoutes } from "./commands/photoRouter";
 import { profileCommand } from "./commands/profile";
+import { uploadCommand } from "./commands/upload";
 import { withRegistered } from './registration';
 
 const bot = new Bot(BOT_TOKEN);
@@ -75,6 +76,7 @@ bot.command("ai", withRegistered(aiCommand));
 bot.command("profile", profileCommand);
 
 bot.command("subscribe", withRegistered(subscribeCommand));
+bot.command("upload", withRegistered(uploadCommand));
 
 bot.command("tags", withRegistered(tagsCommand));
 bot.command("persons", withRegistered(personsCommand));
@@ -153,6 +155,9 @@ bot.on('message:text', withRegistered(async (ctx) => {
   if (!text || text.startsWith('/')) return;
   await aiCommand(ctx, text);
 }));
+
+bot.on('message:photo', withRegistered(uploadCommand));
+bot.on('message:document', withRegistered(uploadCommand));
 
 bot.start();
 initSubscriptionScheduler(bot);

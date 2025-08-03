@@ -269,6 +269,33 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /api/photos/upload:
+    post:
+      tags:
+        - Photos
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                storageId:
+                  type: integer
+                  format: int32
+                path:
+                  type: string
+              required:
+                - files
+                - storageId
+                - path
+      responses:
+        '200':
+          description: OK
   /api/photos/duplicates:
     get:
       tags:
