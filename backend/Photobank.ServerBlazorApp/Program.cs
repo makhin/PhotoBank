@@ -10,6 +10,7 @@ using System.Reflection;
 using PhotoBank.ServerBlazorApp.Components;
 using PhotoBank.Services;
 using Radzen;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace PhotoBank.ServerBlazorApp
 {
@@ -94,6 +95,12 @@ namespace PhotoBank.ServerBlazorApp
             });
 
             WebApplication app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<PhotoBankDbContext>();
+                dbContext.Database.Migrate();
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

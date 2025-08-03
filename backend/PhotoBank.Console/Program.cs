@@ -25,6 +25,13 @@ namespace PhotoBank.Console
 
             var services = ConfigureServices();
             var serviceProvider = services.BuildServiceProvider();
+
+            using (var scope = serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<PhotoBankDbContext>();
+                dbContext.Database.Migrate();
+            }
+
             var app = serviceProvider.GetService<App>();
             app?.Run().Wait();
             DisposeServices(serviceProvider);
