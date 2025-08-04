@@ -1,27 +1,39 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // helper to create a minimal localStorage mock
-const createStorage = (initial: Record<string, string> = {}) => {
-  const store: Record<string, string | undefined> = { ...initial };
+const createStorage = (initial: Record<string, string> = {}): Storage => {
+  const store: Record<string, string> = { ...initial };
   return {
-    getItem: (k: string) => (k in store ? store[k]! : null),
+    getItem: (k: string) => (k in store ? store[k] : null),
     setItem: (k: string, v: string) => {
       store[k] = v;
     },
     removeItem: (k: string) => {
-      delete store[k];
+      Reflect.deleteProperty(store, k);
+    },
+    clear: () => {
+      Object.keys(store).forEach((k) => Reflect.deleteProperty(store, k));
+    },
+    key: (index: number) => Object.keys(store)[index] ?? null,
+    get length() {
+      return Object.keys(store).length;
     },
   };
 };
+
+type GlobalWithStorage = typeof globalThis & {
+  window?: { localStorage: Storage };
+  localStorage?: Storage;
+};
+
+const globalWithStorage = globalThis as GlobalWithStorage;
 
 describe('auth utilities', () => {
   beforeEach(() => {
     vi.resetModules();
     // ensure a clean global
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (global as any).window;
-    // @ts-ignore
-    delete (global as any).localStorage;
+    delete globalWithStorage.window;
+    delete globalWithStorage.localStorage;
   });
 
   it('sets and gets token without browser', async () => {
@@ -31,39 +43,30 @@ describe('auth utilities', () => {
   });
 
   it('persists token to localStorage in browser', async () => {
-    // @ts-ignore
     const storage = createStorage();
-    // @ts-ignore
-    global.window = { localStorage: storage };
-    // @ts-ignore
-    global.localStorage = storage;
+    globalWithStorage.window = { localStorage: storage };
+    globalWithStorage.localStorage = storage;
     const auth = await import('../src/auth');
     auth.setAuthToken('token');
     expect(auth.getAuthToken()).toBe('token');
-    expect(global.window.localStorage.getItem('photobank_token')).toBe('token');
+    expect(globalWithStorage.window.localStorage.getItem('photobank_token')).toBe('token');
   });
 
   it('clears token and storage', async () => {
-    // @ts-ignore
     const storage = createStorage();
-    // @ts-ignore
-    global.window = { localStorage: storage };
-    // @ts-ignore
-    global.localStorage = storage;
+    globalWithStorage.window = { localStorage: storage };
+    globalWithStorage.localStorage = storage;
     const auth = await import('../src/auth');
     auth.setAuthToken('tok');
     auth.clearAuthToken();
     expect(auth.getAuthToken()).toBeNull();
-    expect(global.window.localStorage.getItem('photobank_token')).toBeNull();
+    expect(globalWithStorage.window.localStorage.getItem('photobank_token')).toBeNull();
   });
 
   it('loads token from storage on import', async () => {
-    // @ts-ignore
     const storage = createStorage({ photobank_token: 'init' });
-    // @ts-ignore
-    global.window = { localStorage: storage };
-    // @ts-ignore
-    global.localStorage = storage;
+    globalWithStorage.window = { localStorage: storage };
+    globalWithStorage.localStorage = storage;
     const auth = await import('../src/auth');
     expect(auth.getAuthToken()).toBe('init');
   });
