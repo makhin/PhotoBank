@@ -21,6 +21,7 @@ const renderPage = async (regMock: any) => {
     <MemoryRouter initialEntries={["/register"]}>
       <Routes>
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<div>Login</div>} />
       </Routes>
     </MemoryRouter>
   );
