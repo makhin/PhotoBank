@@ -269,65 +269,6 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-  /api/photos/upload:
-    post:
-      tags:
-        - Photos
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                files:
-                  type: array
-                  items:
-                    type: string
-                    format: binary
-                storageId:
-                  type: integer
-                  format: int32
-                path:
-                  type: string
-              required:
-                - files
-                - storageId
-                - path
-      responses:
-        '200':
-          description: OK
-  /api/photos/duplicates:
-    get:
-      tags:
-        - Photos
-      parameters:
-        - name: id
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-        - name: hash
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: threshold
-          in: query
-          required: false
-          schema:
-            type: integer
-            format: int32
-            default: 5
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PhotoItemDto'
   '/api/photos/{id}':
     get:
       tags:
@@ -364,6 +305,75 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /api/photos/upload:
+    post:
+      tags:
+        - Photos
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                storageId:
+                  type: integer
+                  format: int32
+                path:
+                  type: string
+            encoding:
+              files:
+                style: form
+              storageId:
+                style: form
+              path:
+                style: form
+      responses:
+        '200':
+          description: OK
+  /api/photos/duplicates:
+    get:
+      tags:
+        - Photos
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: hash
+          in: query
+          schema:
+            type: string
+        - name: threshold
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 5
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PhotoItemDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PhotoItemDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PhotoItemDto'
   /api/storages:
     get:
       tags:
