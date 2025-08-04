@@ -1,4 +1,12 @@
 import {useState} from "react";
+import type { PersonDto } from '@photobank/shared/generated';
+import {
+    unassignedLabel,
+    facePrefix,
+    searchPersonPlaceholder,
+    noPersonFoundText,
+    noneLabel,
+} from '@photobank/shared/constants';
 
 import {
     Popover,
@@ -13,14 +21,6 @@ import {
     CommandGroup,
     CommandItem,
 } from "@/components/ui/command";
-import type { PersonDto } from '@photobank/shared/generated';
-import {
-    unassignedLabel,
-    facePrefix,
-    searchPersonPlaceholder,
-    noPersonFoundText,
-    noneLabel,
-} from '@photobank/shared/constants';
 
 
 interface FacePersonSelectorProps {
@@ -72,7 +72,7 @@ export const FacePersonSelector = ({
                                 <CommandItem onSelect={() => { handleSelect(undefined); }}>
                                     {noneLabel}
                                 </CommandItem>
-                                {persons.slice(0, 10).map((person) => (
+                                {persons.map((person) => (
                                     <CommandItem
                                         key={person.id}
                                         value={person.name}
