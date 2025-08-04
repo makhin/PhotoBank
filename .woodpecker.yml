@@ -1,10 +1,8 @@
 matrix:
   PIPELINE_FILE:
-    - ".woodpecker.all.yml"
-    - ".woodpecker.api.yml"
-    - ".woodpecker.frontend.yml"
-    - ".woodpecker.telegram-bot.yml"
+    - .woodpecker.all.yml
+    - .woodpecker.api.yml
+    - .woodpecker.frontend.yml
+    - .woodpecker.telegram-bot.yml
 
-steps:
-  run-template:
-    template: ${PIPELINE_FILE}
+template: ${PIPELINE_FILE}
