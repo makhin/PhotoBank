@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 import type { GeoPointDto } from '../generated';
 
 /**
@@ -10,18 +11,21 @@ export async function getPlaceByGeoPoint(point: GeoPointDto): Promise<string> {
   const lat = point.latitude ?? 0;
   const lon = point.longitude ?? 0;
   try {
-    const res = await axios.get('https://nominatim.openstreetmap.org/reverse', {
-      params: {
-        format: 'json',
-        lat,
-        lon,
-      },
-      headers: {
-        'User-Agent': 'photobank',
-      },
-    });
+    const res = await axios.get<{ display_name?: string }>(
+      'https://nominatim.openstreetmap.org/reverse',
+      {
+        params: {
+          format: 'json',
+          lat,
+          lon,
+        },
+        headers: {
+          'User-Agent': 'photobank',
+        },
+      }
+    );
 
-    const name = res.data?.display_name as string | undefined;
+    const name = res.data.display_name;
     return name ?? `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
   } catch {
     return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;

@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+type GlobalWithWindow = typeof globalThis & { window?: unknown };
+const globalWithWindow = globalThis as GlobalWithWindow;
+
 describe('filterResultsCache', () => {
   beforeEach(() => {
     vi.resetModules();
     // ensure non-browser environment
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (global as any).window;
+    delete globalWithWindow.window;
   });
 
   it('stores and retrieves photos by hash', async () => {

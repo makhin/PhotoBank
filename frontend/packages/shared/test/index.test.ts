@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { formatDate, getGenderText } from '../src';
 import { format, parseISO } from 'date-fns';
+import { describe, expect, it } from 'vitest';
+
+import { formatDate, getGenderText } from '../src';
 
 // FormatDate tests
 
