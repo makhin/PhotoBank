@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie';
 import { LRUCache } from 'lru-cache';
+
 import { isBrowser } from '../utils/isBrowser';
 import type { PhotoDto } from '../generated';
 
@@ -30,15 +31,16 @@ if (isBrowser()) {
 export async function cachePhoto(photo: PhotoDto): Promise<void> {
   const cached = { ...photo, added: Date.now() };
   if (isBrowser()) {
-    await db!.photos.put(cached);
+    await db?.photos.put(cached);
   } else {
-    photoCache!.set(photo.id, cached);
+    photoCache?.set(photo.id, cached);
   }
 }
 
 export async function getCachedPhoto(id: number): Promise<CachedPhoto | undefined> {
   if (isBrowser()) {
-    return db!.photos.get(id);
+    if (!db) return Promise.resolve(undefined);
+    return db.photos.get(id);
   }
-  return Promise.resolve(photoCache!.get(id));
+  return Promise.resolve(photoCache?.get(id));
 }

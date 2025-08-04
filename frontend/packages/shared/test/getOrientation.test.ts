@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { getOrientation } from '../src/utils/getOrientation';
 
 describe('getOrientation', () => {

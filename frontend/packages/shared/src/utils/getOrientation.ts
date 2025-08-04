@@ -10,5 +10,5 @@ export function getOrientation(orientation?: number): string {
     8: 'Rotate 270°',
   };
   if (orientation === undefined) return 'unknown';
-  return map[orientation] ?? `unknown (${orientation})`;
+  return map[orientation] ?? `unknown (${String(orientation)})`;
 }
