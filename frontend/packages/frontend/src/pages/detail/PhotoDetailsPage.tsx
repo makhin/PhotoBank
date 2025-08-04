@@ -17,6 +17,7 @@ import {FaceOverlay} from "@/components/FaceOverlay.tsx";
 import type {RootState} from "@/app/store.ts";
 import {FacePersonSelector} from "@/components/FacePersonSelector.tsx";
 import {useIsAdmin} from '@photobank/shared';
+import { transformFaceBox } from '@/lib/faceBox';
 import {
     photoPropertiesTitle,
     nameLabel,
@@ -82,10 +83,18 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
 
     const imageNaturalSize = useMemo(() => {
         if (photo?.width && photo.height && photo.scale) {
-            return {width: photo.width * photo.scale, height: photo.height * photo.scale};
+            return { width: photo.width * photo.scale, height: photo.height * photo.scale };
         }
-        return {width: 0, height: 0};
+        return { width: 0, height: 0 };
     }, [photo]);
+
+    const displayImageNaturalSize = useMemo(() => {
+        let { width, height } = imageNaturalSize;
+        if (photo?.orientation === 6 || photo?.orientation === 8) {
+            [width, height] = [height, width];
+        }
+        return { width, height };
+    }, [imageNaturalSize, photo?.orientation]);
 
     const updateSizes = useCallback(() => {
         if (containerRef.current) {
@@ -100,8 +109,8 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
             }
 
             const calculatedSize = calculateImageSize(
-                imageNaturalSize.width,
-                imageNaturalSize.height,
+                displayImageNaturalSize.width,
+                displayImageNaturalSize.height,
                 newContainerSize.width,
                 newContainerSize.height
             );
@@ -110,7 +119,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                 setImageDisplaySize(calculatedSize);
             }
         }
-    }, [imageNaturalSize, containerSize, imageDisplaySize]);
+    }, [displayImageNaturalSize, containerSize, imageDisplaySize]);
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver(updateSizes);
@@ -146,17 +155,24 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
 
     const calculateFacePosition = (faceBox: FaceBoxDto) => {
         if (!imageDisplaySize.width || !imageDisplaySize.height) {
-            return {display: 'none'};
+            return { display: 'none' };
         }
 
-        const scale = imageDisplaySize.scale
+        const orientedBox = transformFaceBox(
+            faceBox,
+            photo?.orientation,
+            imageNaturalSize.width,
+            imageNaturalSize.height
+        );
+
+        const scale = imageDisplaySize.scale;
         const offsetLeft = (containerSize.width - imageDisplaySize.width) / 2;
         const offsetTop = (containerSize.height - imageDisplaySize.height) / 2;
 
-        const left = faceBox.left * scale + offsetLeft;
-        const top = faceBox.top * scale + offsetTop;
-        const width = faceBox.width * scale;
-        const height = faceBox.height * scale;
+        const left = orientedBox.left * scale + offsetLeft;
+        const top = orientedBox.top * scale + offsetTop;
+        const width = orientedBox.width * scale;
+        const height = orientedBox.height * scale;
 
         return {
             left: `${left.toString()}px`,
