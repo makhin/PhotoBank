@@ -3,13 +3,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import metaReducer from '../src/features/meta/model/metaSlice';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const photo = {
   id: 1,
   name: 'Test Photo',
-  previewImage: '',
+  previewImage: 'fakeImage',
   scale: 1,
   takenDate: '2024-01-01T00:00:00Z',
   faces: [
@@ -31,7 +30,6 @@ const photo = {
   orientation: 1,
   location: { latitude: 10, longitude: 20 },
 };
-
 vi.mock('../src/entities/photo/api.ts', () => ({
   useGetPhotoByIdQuery: () => ({ data: photo, error: undefined }),
   useUpdateFaceMutation: () => [vi.fn(), { isLoading: false }],
@@ -41,6 +39,8 @@ vi.mock('@photobank/shared', async () => {
   const actual = await vi.importActual<any>('@photobank/shared');
   return { ...actual, getPlaceByGeoPoint: vi.fn().mockResolvedValue('Nice place') };
 });
+
+import metaReducer from '../src/features/meta/model/metaSlice';
 
 class RO {
   observe() {}
