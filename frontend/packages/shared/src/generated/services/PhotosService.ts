@@ -29,15 +29,34 @@ export class PhotosService {
         });
     }
     /**
+     * @param id
+     * @returns PhotoDto OK
+     * @throws ApiError
+     */
+    public static getApiPhotos(
+        id: number,
+    ): CancelablePromise<PhotoDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/photos/{id}',
+            path: {
+                'id': id,
+            },
+            errors: {
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
      * @param formData
      * @returns any OK
      * @throws ApiError
      */
     public static postApiPhotosUpload(
         formData?: {
-            files: Array<Blob>;
-            storageId: number;
-            path: string;
+            files?: Array<Blob>;
+            storageId?: number;
+            path?: string;
         },
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
@@ -66,25 +85,6 @@ export class PhotosService {
                 'id': id,
                 'hash': hash,
                 'threshold': threshold,
-            },
-        });
-    }
-    /**
-     * @param id
-     * @returns PhotoDto OK
-     * @throws ApiError
-     */
-    public static getApiPhotos(
-        id: number,
-    ): CancelablePromise<PhotoDto> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/photos/{id}',
-            path: {
-                'id': id,
-            },
-            errors: {
-                404: `Not Found`,
             },
         });
     }

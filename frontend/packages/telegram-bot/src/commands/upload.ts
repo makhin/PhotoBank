@@ -4,9 +4,11 @@ import { PhotosService } from '@photobank/shared/generated';
 import {
   uploadFailedMsg,
   uploadSuccessMsg,
-  uploadStorageId,
+  uploadStorageName,
 } from '@photobank/shared/constants';
+
 import { BOT_TOKEN } from '../config';
+import { getStorageId } from '../dictionaries';
 
 async function fetchFileBuffer(ctx: Context, fileId: string, fileName: string) {
   const file = await ctx.api.getFile(fileId);
@@ -31,7 +33,7 @@ export async function uploadCommand(ctx: Context) {
         fetchFileBuffer(
           ctx,
           doc.file_id,
-          doc.file_name ?? doc.file_unique_id ?? 'file',
+          doc.file_name || doc.file_unique_id || 'file',
         ),
       );
     }
@@ -46,16 +48,18 @@ export async function uploadCommand(ctx: Context) {
       ({ buffer, name }) => new File([buffer], name),
     );
 
+    const storageId = getStorageId(uploadStorageName);
     const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
+
     await PhotosService.postApiPhotosUpload({
       files: uploadFiles,
-      storageId: uploadStorageId,
+      storageId: storageId,
       path: username,
     });
 
     await ctx.reply(uploadSuccessMsg);
   } catch (err) {
-    await ctx.reply(uploadFailedMsg);
+    await ctx.reply(uploadFailedMsg + (err instanceof Error ? `: ${err.message}` : ''));
   }
 }
 

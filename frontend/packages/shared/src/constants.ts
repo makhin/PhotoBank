@@ -40,7 +40,7 @@ export const notRegisteredMsg =
   '⚠️ Ваш телеграм не зарегистрирован. Обратитесь к администратору.';
 export const uploadSuccessMsg = '✅ Файлы загружены.';
 export const uploadFailedMsg = '🚫 Не удалось загрузить файлы.';
-export const uploadStorageId = 1;
+export const uploadStorageName = 'Telegram';
 export const unknownYearLabel = 'Неизвестный год';
 export const unknownPersonLabel = 'Неизвестный';
 export const prevPageText = '◀ Назад';
