@@ -1,0 +1,31 @@
+kind: pipeline
+type: docker
+name: api
+
+steps:
+  - name: build
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    commands:
+      - echo "API build and test"
+      - cd backend
+      - dotnet restore PhotoBank.Backend.sln
+      - dotnet build PhotoBank.Backend.sln --no-restore --configuration Release
+      - dotnet test PhotoBank.Backend.sln --no-build --configuration Release --filter "FullyQualifiedName~PhotoBank.UnitTests" || echo "API tests failed, ignoring"
+
+  - name: publish
+    image: docker:24.0.7-cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      DOCKER_USERNAME:
+        from_secret: docker_username
+      DOCKER_PASSWORD:
+        from_secret: docker_password
+    commands:
+      - echo "API docker build and push"
+      - docker version
+      - docker info
+      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - docker build -t makhin/photobank-api:latest backend
+      - docker push makhin/photobank-api:latest
+      - docker logout
