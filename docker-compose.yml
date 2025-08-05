@@ -1,30 +1,40 @@
 services:
   api:
-    build:
-      context: ./backend
     image: makhin/photobank-api:latest
+    env_file: .env
+    environment:
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
     ports:
       - "5066:5066"
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.frontend
     image: makhin/photobank-frontend:latest
+    env_file: .env
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+      - VITE_AZURE_OPENAI_API_VERSION=${VITE_AZURE_OPENAI_API_VERSION}
+      - VITE_AZURE_OPENAI_ENDPOINT=${VITE_AZURE_OPENAI_ENDPOINT}
+      - VITE_AZURE_OPENAI_KEY=${VITE_AZURE_OPENAI_KEY}
+      - VITE_AZURE_OPENAI_DEPLOYMENT=${VITE_AZURE_OPENAI_DEPLOYMENT}
     ports:
       - "5173:5173"
+    restart: unless-stopped
     depends_on:
       - api
 
   bot:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.bot
     image: makhin/photobank-bot:latest
+    env_file: .env
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
       - API_EMAIL=${API_EMAIL}
       - API_PASSWORD=${API_PASSWORD}
-      - API_BASE_URL=${API_BASE_URL}
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+      - VITE_AZURE_OPENAI_API_VERSION=${VITE_AZURE_OPENAI_API_VERSION}
+      - VITE_AZURE_OPENAI_ENDPOINT=${VITE_AZURE_OPENAI_ENDPOINT}
+      - VITE_AZURE_OPENAI_KEY=${VITE_AZURE_OPENAI_KEY}
+      - VITE_AZURE_OPENAI_DEPLOYMENT=${VITE_AZURE_OPENAI_DEPLOYMENT}
+    restart: unless-stopped
     depends_on:
       - api
+
