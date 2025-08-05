@@ -1,11 +1,9 @@
-name: api
-
 when:
   - event: [push, manual]
   - evaluate: |
-      !CI_WORKFLOW || CI_WORKFLOW == "" || 
-      CI_WORKFLOW == "api" ||
-      CI_WORKFLOW =~ "(^|,)api(,|$)"
+      "!CI_WORKFLOW || CI_WORKFLOW == '' ||
+       CI_WORKFLOW == 'api' ||
+       CI_WORKFLOW =~ '(^|,)api(,|$)'"
 
 steps:
   - name: build

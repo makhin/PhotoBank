@@ -1,11 +1,9 @@
-name: telegram-bot
-
 when:
   - event: [push, manual]
   - evaluate: |
-      !CI_WORKFLOW || CI_WORKFLOW == "" || 
-      CI_WORKFLOW == "bot" ||
-      CI_WORKFLOW =~ "(^|,)bot(,|$)"
+      "!CI_WORKFLOW || CI_WORKFLOW == '' || 
+      CI_WORKFLOW == 'bot' ||
+      CI_WORKFLOW =~ '(^|,)bot(,|$)'"
 
 steps:
   - name: build

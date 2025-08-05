@@ -1,11 +1,9 @@
-name: frontend
-
 when:
   - event: [push, manual]
   - evaluate: |
-      !CI_WORKFLOW || CI_WORKFLOW == "" || 
-      CI_WORKFLOW == "front" ||
-      CI_WORKFLOW =~ "(^|,)front(,|$)"
+      "!CI_WORKFLOW || CI_WORKFLOW == '' || 
+      CI_WORKFLOW == 'front' ||
+      CI_WORKFLOW =~ '(^|,)front(,|$)'"
 
 steps:
   - name: build
