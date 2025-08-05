@@ -1,6 +1,6 @@
 import { Context } from 'grammy';
 import axios from 'axios';
-import File from 'fetch-blob/file.js';
+import { File } from 'fetch-blob/file.js';
 import { PhotosService } from '@photobank/shared/generated';
 import {
   uploadFailedMsg,
