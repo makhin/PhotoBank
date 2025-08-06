@@ -2,8 +2,8 @@ steps:
   - name: build
     image: node:20-alpine
     when:
-      - event: [push, manual]
-      - path: ['frontend/packages/frontend/*', 'frontend/packages/shared/*']
+      event: [push, manual]
+      path: ['frontend/packages/frontend/*', 'frontend/packages/shared/*']
     environment:
       VITE_API_BASE_URL:
         from_secret: vite_api_base_url
@@ -18,8 +18,8 @@ steps:
   - name: publish
     image: docker:24.0.7-cli
     when:
-      - event: [push, manual]
-      - path: ['frontend/packages/frontend/*', 'frontend/packages/shared/*']
+      event: [push, manual]
+      path: ['frontend/packages/frontend/*', 'frontend/packages/shared/*']
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:

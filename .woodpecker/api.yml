@@ -2,8 +2,8 @@ steps:
   - name: build
     image: mcr.microsoft.com/dotnet/sdk:9.0
     when:
-      - event: [push, manual]
-      - path: 'backend/*'
+      event: [push, manual]
+      path: 'backend/*'
     commands:
       - echo "API build and test"
       - cd backend
@@ -14,8 +14,8 @@ steps:
   - name: publish
     image: docker:24.0.7-cli
     when:
-      - event: [push, manual]
-      - path: 'backend/*'
+      event: [push, manual]
+      path: 'backend/*'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
