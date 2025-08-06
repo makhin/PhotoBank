@@ -1,13 +1,10 @@
-when:
-  - event: [push, manual]
-  - evaluate: |
-      "!CI_WORKFLOW || CI_WORKFLOW == '' ||
-       CI_WORKFLOW == 'api' ||
-       CI_WORKFLOW =~ '(^|,)api(,|$)'"
-
 steps:
   - name: build
     image: mcr.microsoft.com/dotnet/sdk:9.0
+    when:
+      - event: [push, manual]
+      - path: 'backend/*'
+
     commands:
       - echo "API build and test"
       - cd backend

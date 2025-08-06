@@ -1,13 +1,10 @@
-when:
-  - event: [push, manual]
-  - evaluate: |
-      "!CI_WORKFLOW || CI_WORKFLOW == '' || 
-      CI_WORKFLOW == 'bot' ||
-      CI_WORKFLOW =~ '(^|,)bot(,|$)'"
-
 steps:
   - name: build
     image: node:20-alpine
+    when:
+      - event: [push, manual]
+      - path: ['frontend/packages/telegram-bot/*', 'frontend/packages/shared/*']
+
     environment:
       VITE_API_BASE_URL:
         from_secret: vite_api_base_url
