@@ -9,8 +9,8 @@ steps:
         from_secret: vite_api_base_url
     commands:
       - |
-        if git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | grep '^frontend/packages/frontend'; then
-          echo "Изменения в frontned — запускаем билд"
+        if git diff --name-only "${CI_COMMIT_BEFORE_SHA:-HEAD^}" "${CI_COMMIT_SHA:-HEAD}" | grep -q '^frontend/packages/frontend'; then
+          echo "Changes in frontend detected вЂ” running build"
           echo "Frontend install, build and test"
           cd frontend
           corepack enable
@@ -18,7 +18,7 @@ steps:
           pnpm --filter @photobank/frontend build
           pnpm --filter @photobank/frontend test || echo "Frontend tests failed, ignoring"
         else
-          echo "Нет изменений в frontend — пропускаем билд"
+          echo "No frontend changes вЂ” skipping build"
           exit 0
         fi
 
@@ -38,8 +38,8 @@ steps:
         from_secret: vite_api_base_url
     commands:
       - |
-        if git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | grep '^frontend/packages/frontend'; then
-          echo "Изменения в frontned — запускаем билд"
+        if git diff --name-only "${CI_COMMIT_BEFORE_SHA:-HEAD^}" "${CI_COMMIT_SHA:-HEAD}" | grep -q '^frontend/packages/frontend'; then
+          echo "Changes in frontend detected вЂ” running build"
           echo "Frontend docker build and push"
           docker version
           docker info
@@ -48,6 +48,6 @@ steps:
           docker push makhin/photobank-frontend:latest
           docker logout
         else
-          echo "Нет изменений в frontend — пропускаем билд"
+          echo "No frontend changes вЂ” skipping build"
           exit 0
         fi
