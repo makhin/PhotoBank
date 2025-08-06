@@ -5,18 +5,18 @@ steps:
       event: [cron, manual]
       path: 'backend/*'
     commands:
-      - |	
-      if git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | grep '^backend/'; then
-        echo "Изменения в backend — запускаем билд"
-        echo "API build and test"
-        cd backend
-        dotnet restore PhotoBank.Backend.sln
-        dotnet build PhotoBank.Backend.sln --no-restore --configuration Release
-        dotnet test PhotoBank.Backend.sln --no-build --configuration Release --filter "FullyQualifiedName~PhotoBank.UnitTests" || echo "API tests failed, ignoring"
-      else
-        echo "Нет изменений в backend — пропускаем билд"
-        exit 0
-      fi
+      - |
+        if git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | grep '^backend/'; then
+          echo "Изменения в backend — запускаем билд"
+          echo "API build and test"
+          cd backend
+          dotnet restore PhotoBank.Backend.sln
+          dotnet build PhotoBank.Backend.sln --no-restore --configuration Release
+          dotnet test PhotoBank.Backend.sln --no-build --configuration Release --filter "FullyQualifiedName~PhotoBank.UnitTests" || echo "API tests failed, ignoring"
+        else
+          echo "Нет изменений в backend — пропускаем билд"
+          exit 0
+        fi
 
   - name: publish
     image: docker:24.0.7-cli
@@ -32,17 +32,16 @@ steps:
         from_secret: docker_password
     commands:
       - |
-      if git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | grep '^backend/'; then
-        echo "Изменения в backend — запускаем билд"
-        echo "API docker build and push"
-        docker version
-        docker info
-        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-        docker build -t makhin/photobank-api:latest backend
-        docker push makhin/photobank-api:latest
-        docker logout
-      else
-        echo "Нет изменений в backend — пропускаем билд"
-        exit 0
-      fi
-
+        if git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | grep '^backend/'; then
+          echo "Изменения в backend — запускаем билд"
+          echo "API docker build and push"
+          docker version
+          docker info
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          docker build -t makhin/photobank-api:latest backend
+          docker push makhin/photobank-api:latest
+          docker logout
+        else
+          echo "Нет изменений в backend — пропускаем билд"
+          exit 0
+        fi
