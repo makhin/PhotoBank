@@ -9,8 +9,8 @@ steps:
         from_secret: vite_api_base_url
     commands:
       - |
-        if git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | grep '^frontend/packages/telegram-bot'; then
-          echo "Изменения в bot — запускаем билд"
+        if git diff --name-only "${CI_COMMIT_BEFORE_SHA:-HEAD^}" "${CI_COMMIT_SHA:-HEAD}" | grep -q '^frontend/packages/telegram-bot'; then
+          echo "Changes in bot detected вЂ” running build"
           echo "Telegram bot install, build and test"
           cd frontend
           corepack enable
@@ -18,7 +18,7 @@ steps:
           pnpm --filter @photobank/telegram-bot build
           pnpm --filter @photobank/telegram-bot test || echo "Telegram bot tests failed, ignoring"
         else
-          echo "Нет изменений в bot — пропускаем билд"
+          echo "No bot changes вЂ” skipping build"
           exit 0
         fi
 
@@ -36,8 +36,8 @@ steps:
         from_secret: docker_password
     commands:
       - |
-        if git diff --name-only $CI_COMMIT_BEFORE_SHA $CI_COMMIT_SHA | grep '^frontend/packages/telegram-bot'; then
-          echo "Изменения в bot — запускаем билд"
+        if git diff --name-only "${CI_COMMIT_BEFORE_SHA:-HEAD^}" "${CI_COMMIT_SHA:-HEAD}" | grep -q '^frontend/packages/telegram-bot'; then
+          echo "Changes in bot detected вЂ” running build"
           echo "Telegram bot docker build and push"
           docker version
           docker info
@@ -46,6 +46,6 @@ steps:
           docker push makhin/photobank-bot:latest
           docker logout
         else
-          echo "Нет изменений в bot — пропускаем билд"
+          echo "No bot changes вЂ” skipping build"
           exit 0
         fi
