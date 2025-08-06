@@ -1,7 +1,7 @@
 import { Context } from 'grammy';
 import axios from 'axios';
 import { File } from 'fetch-blob/file.js';
-import { PhotosService } from '@photobank/shared/generated';
+import { uploadPhotosAdapter } from '@photobank/shared';
 import {
   uploadFailedMsg,
   uploadSuccessMsg,
@@ -52,9 +52,9 @@ export async function uploadCommand(ctx: Context) {
     const storageId = getStorageId(uploadStorageName);
     const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
 
-    await PhotosService.postApiPhotosUpload({
+    await uploadPhotosAdapter({
       files: uploadFiles,
-      storageId: storageId,
+      storageId,
       path: username,
     });
 
