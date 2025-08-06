@@ -2,7 +2,7 @@ steps:
   - name: build
     image: node:20-alpine
     when:
-      event: [push, manual]
+      event: [cron, manual]
       path: ['frontend/packages/telegram-bot/*', 'frontend/packages/shared/*']
     environment:
       VITE_API_BASE_URL:
@@ -18,7 +18,7 @@ steps:
   - name: publish
     image: docker:24.0.7-cli
     when:
-      event: [push, manual]
+      event: [cron, manual]
       path: ['frontend/packages/telegram-bot/*', 'frontend/packages/shared/*']
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
