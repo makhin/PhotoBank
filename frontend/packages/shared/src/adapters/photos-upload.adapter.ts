@@ -25,8 +25,14 @@ export async function uploadPhotosAdapter(
     ...form.getHeaders(),
   };
 
-  if (OpenAPI.TOKEN) {
-    headers['Authorization'] = `Bearer ${String(OpenAPI.TOKEN)}`;
+  let token: string | undefined;
+  if (typeof OpenAPI.TOKEN === 'function') {
+    token = await OpenAPI.TOKEN({} as any);
+  } else {
+    token = OpenAPI.TOKEN;
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   return axios.post(`${OpenAPI.BASE}/api/photos/upload`, form, {
