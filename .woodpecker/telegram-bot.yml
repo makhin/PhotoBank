@@ -9,7 +9,7 @@ steps:
         from_secret: vite_api_base_url
     commands:
       - |
-        if git diff --name-only "${CI_COMMIT_BEFORE_SHA:-HEAD^}" "${CI_COMMIT_SHA:-HEAD}" | grep -q '^frontend/packages/telegram-bot'; then
+        if 1==1 then
           echo "Changes in bot detected — running build"
           echo "Telegram bot install, build and test"
           cd frontend
