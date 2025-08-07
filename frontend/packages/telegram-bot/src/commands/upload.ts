@@ -1,6 +1,5 @@
 import { Context } from 'grammy';
 import axios from 'axios';
-import { File } from 'fetch-blob/file.js';
 import { uploadPhotosAdapter } from '@photobank/shared';
 import {
   uploadFailedMsg,
@@ -44,10 +43,7 @@ export async function uploadCommand(ctx: Context) {
       return;
     }
 
-    const buffers = await Promise.all(files);
-    const uploadFiles = buffers.map(
-      ({ buffer, name }) => new File([buffer], name),
-    );
+    const uploadFiles = await Promise.all(files);
 
     const storageId = getStorageId(uploadStorageName);
     const username = ctx.from?.username ?? String(ctx.from?.id ?? '');

@@ -3,9 +3,11 @@ import FormData from 'form-data';
 
 import { OpenAPI } from '../generated';
 
+type UploadFile = { buffer: Buffer; name: string };
+
 export async function uploadPhotosAdapter(
   params: {
-    files: File[];
+    files: UploadFile[];
     storageId: number;
     path: string;
   }
@@ -13,8 +15,8 @@ export async function uploadPhotosAdapter(
   const { files, storageId, path } = params;
 
   const form = new FormData();
-  for (const file of files) {
-    form.append('files', file, file.name);
+  for (const { buffer, name } of files) {
+    form.append('files', buffer, name);
   }
   form.append('storageId', storageId.toString());
   form.append('path', path);
