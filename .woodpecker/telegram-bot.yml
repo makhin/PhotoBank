@@ -9,7 +9,6 @@ steps:
         from_secret: vite_api_base_url
     commands:
       - |
-        if 1==1 then
           echo "Changes in bot detected — running build"
           echo "Telegram bot install, build and test"
           cd frontend
@@ -17,10 +16,6 @@ steps:
           pnpm install --frozen-lockfile
           pnpm --filter @photobank/telegram-bot build
           pnpm --filter @photobank/telegram-bot test || echo "Telegram bot tests failed, ignoring"
-        else
-          echo "No bot changes — skipping build"
-          exit 0
-        fi
 
   - name: publish
     image: docker:24.0.7-cli
@@ -36,7 +31,6 @@ steps:
         from_secret: docker_password
     commands:
       - |
-        if git diff --name-only "${CI_COMMIT_BEFORE_SHA:-HEAD^}" "${CI_COMMIT_SHA:-HEAD}" | grep -q '^frontend/packages/telegram-bot'; then
           echo "Changes in bot detected — running build"
           echo "Telegram bot docker build and push"
           docker version
@@ -45,7 +39,3 @@ steps:
           docker build -f frontend/Dockerfile.bot -t makhin/photobank-bot:latest frontend
           docker push makhin/photobank-bot:latest
           docker logout
-        else
-          echo "No bot changes — skipping build"
-          exit 0
-        fi
