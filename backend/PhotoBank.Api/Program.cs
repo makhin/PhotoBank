@@ -32,7 +32,9 @@ namespace PhotoBank.Api
                 .MinimumLevel.Debug()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .Enrich.FromLogContext()
+                .WriteTo.Console()
                 .WriteTo.Debug()
+                .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
             var builder = WebApplication.CreateBuilder(args);
@@ -132,6 +134,7 @@ namespace PhotoBank.Api
                 app.UseSwaggerUI();
             }
 
+            app.UseSerilogRequestLogging();
             app.UseCors("AllowAll");
             // Disabled HTTPS redirection to ensure CORS headers are applied
             // correctly during local development when running over HTTP.
