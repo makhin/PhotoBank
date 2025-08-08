@@ -2,6 +2,7 @@ import axios from 'axios';
 import FormData from 'form-data';
 
 import { OpenAPI } from '../generated';
+import type { ApiRequestOptions } from '../generated/core/ApiRequestOptions';
 
 type UploadFile = { buffer: Buffer; name: string };
 
@@ -27,7 +28,11 @@ export async function uploadPhotosAdapter(
 
   let token: string | undefined;
   if (typeof OpenAPI.TOKEN === 'function') {
-    token = await OpenAPI.TOKEN({} as any);
+    const options: ApiRequestOptions = {
+      method: 'POST',
+      url: '/api/photos/upload',
+    };
+    token = await OpenAPI.TOKEN(options);
   } else {
     token = OpenAPI.TOKEN;
   }
