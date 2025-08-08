@@ -33,8 +33,15 @@ import { registerPhotoRoutes } from "./commands/photoRouter";
 import { profileCommand } from "./commands/profile";
 import { uploadCommand } from "./commands/upload";
 import { withRegistered } from './registration';
+import { logger } from './logger';
 
 const bot = new Bot(BOT_TOKEN);
+
+bot.use(async (ctx, next) => {
+  const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
+  logger.info(`update from ${username}: ${ctx.updateType}`);
+  await next();
+});
 
 bot.use(async (ctx, next) => {
     const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
@@ -42,6 +49,12 @@ bot.use(async (ctx, next) => {
     setDictionariesUser(username);
     await loadDictionaries();
     await next();
+});
+
+bot.catch((err) => {
+  const ctx = err.ctx;
+  const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
+  logger.error(`error handling update from ${username}`, err.error);
 });
 
 registerPhotoRoutes(bot);
@@ -160,4 +173,5 @@ bot.on('message:photo', withRegistered(uploadCommand));
 bot.on('message:document', withRegistered(uploadCommand));
 
 bot.start();
+logger.info('bot started');
 initSubscriptionScheduler(bot);

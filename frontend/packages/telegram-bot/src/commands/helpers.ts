@@ -1,5 +1,6 @@
 import { Context, InlineKeyboard } from "grammy";
 import { prevPageText, nextPageText } from "@photobank/shared/constants";
+import { logger } from "../logger";
 
 export const PAGE_SIZE = 10;
 
@@ -36,7 +37,7 @@ export async function sendNamedItemsPage<T extends NamedItem>({
   try {
     items = await fetchAll();
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     await ctx.reply(errorMsg);
     return;
   }

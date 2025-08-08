@@ -10,6 +10,7 @@ import type { FilterDto } from '@photobank/shared/generated';
 import { PhotosService } from '@photobank/shared/generated';
 import { firstNWords } from '@photobank/shared/index';
 import { captionCache, currentPagePhotos, deletePhotoMessage } from '../photo';
+import { logger } from '../logger';
 
 export const PHOTOS_PAGE_SIZE = 10;
 
@@ -47,7 +48,7 @@ export async function sendPhotosPage({
       skip,
     });
   } catch (err) {
-    console.error(apiErrorMsg, err);
+    logger.error(apiErrorMsg, err);
     await ctx.reply(sorryTryToRequestLaterMsg);
     return;
   }
