@@ -6,7 +6,7 @@ steps:
       path: 'backend/*'
     commands:
       - |
-        if 1==1; then
+        if "true"; then
           echo "Changes in backend detected — running build"
           echo "API build and test"
           cd backend
