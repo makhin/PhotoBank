@@ -9,6 +9,7 @@ import {
     claimsEmptyLabel,
     notRegisteredMsg,
 } from "@photobank/shared/constants";
+import { logger } from "../logger";
 
 export async function profileCommand(ctx: Context) {
     const username = ctx.from?.username ?? String(ctx.from?.id ?? "");
@@ -50,7 +51,7 @@ export async function profileCommand(ctx: Context) {
             await ctx.reply(notRegisteredMsg);
             return;
         }
-        console.error(apiErrorMsg, error);
+        logger.error(apiErrorMsg, error);
         await ctx.reply(getProfileErrorMsg);
     }
 }

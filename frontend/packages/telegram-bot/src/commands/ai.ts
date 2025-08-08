@@ -14,6 +14,7 @@ import type { FilterDto } from '@photobank/shared/generated';
 import { getFilterHash } from '@photobank/shared/index';
 
 import { sendPhotosPage } from './photosPage';
+import { logger } from '../logger';
 
 export const aiFilters = new Map<string, FilterDto>();
 
@@ -77,7 +78,7 @@ export async function aiCommand(ctx: Context, promptOverride?: string) {
 
     await sendAiPage(ctx, hash, 1);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     await ctx.reply(sorryTryToRequestLaterMsg);
   }
 }
