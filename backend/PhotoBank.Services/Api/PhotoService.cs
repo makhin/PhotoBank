@@ -7,6 +7,7 @@ using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.ViewModel.Dto;
@@ -38,6 +39,7 @@ public class PhotoService : IPhotoService
     private readonly IMemoryCache _cache;
     private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
     private readonly Lazy<Task<IReadOnlyList<PathDto>>> _paths;
+    private readonly ILogger<PhotoService> _logger;
 
     private static readonly MemoryCacheEntryOptions CacheOptions = new()
     {
@@ -52,7 +54,8 @@ public class PhotoService : IPhotoService
         IRepository<Storage> storageRepository,
         IRepository<Tag> tagRepository,
         IMapper mapper,
-        IMemoryCache cache)
+        IMemoryCache cache,
+        ILogger<PhotoService> logger)
     {
         _photoRepository = photoRepository;
         _personRepository = personRepository;
@@ -60,6 +63,7 @@ public class PhotoService : IPhotoService
         _storageRepository = storageRepository;
         _mapper = mapper;
         _cache = cache;
+        _logger = logger;
         _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
             GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
                 .OrderBy(p => p.Name)
@@ -190,27 +194,43 @@ public class PhotoService : IPhotoService
 
     public async Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path)
     {
-        if (files == null || !files.Any())
+        var fileList = files?.ToList() ?? new List<IFormFile>();
+        if (fileList.Count == 0)
+        {
+            _logger.LogWarning("No files provided for upload");
             return;
+        }
+
+        _logger.LogInformation("Starting upload of {Count} files to storage {StorageId} at {Path}", fileList.Count, storageId, path);
 
         var storage = await _storageRepository.GetAsync(storageId);
         if (storage == null)
+        {
+            _logger.LogError("Storage {StorageId} not found", storageId);
             throw new ArgumentException($"Storage {storageId} not found", nameof(storageId));
+        }
 
         var targetPath = Path.Combine(storage.Folder, path ?? string.Empty);
+        _logger.LogInformation("Resolved target path {TargetPath}", targetPath);
 
         if (!Directory.Exists(targetPath))
+        {
+            _logger.LogInformation("Creating directory {TargetPath}", targetPath);
             Directory.CreateDirectory(targetPath);
+        }
 
-        foreach (var file in files)
+        foreach (var file in fileList)
         {
             var destination = Path.Combine(targetPath, file.FileName);
+            _logger.LogInformation("Processing file {FileName} ({Size} bytes) -> {Destination}", file.FileName, file.Length, destination);
 
             if (System.IO.File.Exists(destination))
             {
                 var existing = new FileInfo(destination);
+                _logger.LogWarning("File {Destination} already exists with size {Size}", destination, existing.Length);
                 if (existing.Length == file.Length)
                 {
+                    _logger.LogInformation("Skipping file {FileName} because same size exists", file.FileName);
                     continue; // same name and size, skip
                 }
 
@@ -224,11 +244,23 @@ public class PhotoService : IPhotoService
                     destination = Path.Combine(targetPath, newFileName);
                     index++;
                 } while (System.IO.File.Exists(destination));
+                _logger.LogInformation("Renaming file to {NewFileName}", newFileName);
             }
 
-            await using var stream = new FileStream(destination, FileMode.Create);
-            await file.CopyToAsync(stream);
+            try
+            {
+                await using var stream = new FileStream(destination, FileMode.Create);
+                await file.CopyToAsync(stream);
+                _logger.LogInformation("Saved file {Destination}", destination);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save file {FileName} to {Destination}", file.FileName, destination);
+                throw;
+            }
         }
+
+        _logger.LogInformation("Finished uploading files to storage {StorageId}", storageId);
     }
 
     public async Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold)

@@ -32,7 +32,7 @@ steps:
         from_secret: docker_password
     commands:
       - |
-        if git diff --name-only "${CI_COMMIT_BEFORE_SHA:-HEAD^}" "${CI_COMMIT_SHA:-HEAD}" | grep -q '^backend/'; then
+        if "true" ; then
           echo "Changes in backend detected — running build"
           echo "API docker build and push"
           docker version
