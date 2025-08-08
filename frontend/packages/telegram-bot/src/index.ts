@@ -39,7 +39,8 @@ const bot = new Bot(BOT_TOKEN);
 
 bot.use(async (ctx, next) => {
   const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
-  logger.info(`update from ${username}: ${ctx.updateType}`);
+  const updateType = Object.keys(ctx.update).find(k => k !== 'update_id') ?? 'unknown';
+  logger.info(`update from ${username}: ${updateType}`);
   await next();
 });
 
