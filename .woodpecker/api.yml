@@ -6,7 +6,7 @@ steps:
       path: 'backend/*'
     commands:
       - |
-        if git diff --name-only "${CI_COMMIT_BEFORE_SHA:-HEAD^}" "${CI_COMMIT_SHA:-HEAD}" | grep -q '^backend/'; then
+        if 1 then
           echo "Changes in backend detected — running build"
           echo "API build and test"
           cd backend
