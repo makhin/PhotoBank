@@ -14,6 +14,12 @@ export async function uploadPhotosAdapter(
 ) {
   const { files, storageId, path } = params;
 
+  console.log('Preparing API upload', {
+    files: files.map(f => ({ name: f.name, size: f.buffer.length })),
+    storageId,
+    path,
+  });
+
   const form = new FormData();
   for (const { buffer, name } of files) {
     form.append('files', buffer, name);
@@ -35,7 +41,14 @@ export async function uploadPhotosAdapter(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  return axios.post(`${OpenAPI.BASE}/api/photos/upload`, form, {
-    headers,
-  });
+  try {
+    const res = await axios.post(`${OpenAPI.BASE}/api/photos/upload`, form, {
+      headers,
+    });
+    console.log('API upload response', res.status, res.statusText);
+    return res;
+  } catch (err) {
+    console.error('API upload failed', err);
+    throw err;
+  }
 }

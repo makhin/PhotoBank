@@ -5,6 +5,7 @@ using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace PhotoBank.Api.Controllers
 {
@@ -46,10 +47,19 @@ namespace PhotoBank.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> Upload([FromForm] List<IFormFile> files, [FromForm] int storageId, [FromForm] string path)
         {
-            logger.LogInformation("Uploading {Count} files to storage {StorageId} at {Path}", files.Count, storageId, path);
-            await photoService.UploadPhotosAsync(files, storageId, path);
-            logger.LogInformation("Uploaded {Count} files", files.Count);
-            return Ok();
+            var fileInfo = files.Select(f => $"{f.FileName} ({f.Length} bytes)").ToArray();
+            logger.LogInformation("Uploading {Count} files to storage {StorageId} at {Path}: {Files}", files.Count, storageId, path, fileInfo);
+            try
+            {
+                await photoService.UploadPhotosAsync(files, storageId, path);
+                logger.LogInformation("Uploaded {Count} files", files.Count);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error uploading files to storage {StorageId} at {Path}", storageId, path);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Upload failed");
+            }
         }
 
         [HttpGet("duplicates")]

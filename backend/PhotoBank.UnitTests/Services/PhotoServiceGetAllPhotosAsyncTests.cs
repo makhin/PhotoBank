@@ -8,6 +8,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
@@ -48,7 +49,9 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<Face>(provider),
                 new Repository<Storage>(provider),
                 new Repository<Tag>(provider),
-                _mapper, new MemoryCache(new MemoryCacheOptions()));
+                _mapper,
+                new MemoryCache(new MemoryCacheOptions()),
+                NullLogger<PhotoService>.Instance);
         }
 
         [Test]
