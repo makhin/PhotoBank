@@ -1,4 +1,6 @@
 using System.Reflection;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
@@ -117,7 +119,20 @@ namespace PhotoBank.Api
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.CustomOperationIds(apiDesc =>
+                {
+                    if (apiDesc.ActionDescriptor is ControllerActionDescriptor descriptor)
+                    {
+                        var controllerName = descriptor.ControllerName;
+                        var actionName = descriptor.ActionName;
+                        return $"{controllerName}_{actionName}";
+                    }
+
+                    return null;
+                });
+            });
 
             RegisterServicesForApi.Configure(builder.Services);
             builder.Services.AddAutoMapper(cfg =>
