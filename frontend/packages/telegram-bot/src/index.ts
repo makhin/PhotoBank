@@ -2,6 +2,7 @@ import { Bot } from "grammy";
 import { loadDictionaries, setDictionariesUser } from "./dictionaries";
 import { AuthService } from "@photobank/shared/generated";
 import { setAuthToken } from "@photobank/shared/auth";
+import { configureApiAuth } from "@photobank/shared/src/api/photobank/fetcher";
 import { configureAzureOpenAI } from "@photobank/shared/ai/openai";
 import {
   captionMissingMsg,
@@ -60,6 +61,7 @@ bot.catch((err) => {
 
 registerPhotoRoutes(bot);
 
+configureApiAuth(() => process.env.PHOTOBANK_BOT_TOKEN); // или сервисный JWT
 configureApi(API_BASE_URL);
 
 const loginRes = await AuthService.postApiAuthLogin({
