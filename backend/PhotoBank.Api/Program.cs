@@ -122,7 +122,8 @@ namespace PhotoBank.Api
             });
 
             builder.Services.AddProblemDetails();
-            builder.Services.AddHealthChecks();
+            builder.Services.AddHealthChecks()
+                .AddDbContextCheck<PhotoBankDbContext>("Database");
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
