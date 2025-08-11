@@ -1,4 +1,5 @@
 using System.Reflection;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Serilog.Events;
 using Serilog;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Serilog.Formatting.Compact;
 
 namespace PhotoBank.Api
 {
@@ -34,9 +38,10 @@ namespace PhotoBank.Api
                 .MinimumLevel.Debug()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .Enrich.FromLogContext()
-                .WriteTo.Console()
+                .WriteTo.Console(new RenderedCompactJsonFormatter())
                 .WriteTo.Debug()
-                .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day)
+                .WriteTo.File(new RenderedCompactJsonFormatter(), "Logs/log-.json",
+                    rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
             var builder = WebApplication.CreateBuilder(args);
@@ -116,6 +121,8 @@ namespace PhotoBank.Api
                 options.LowercaseUrls = true;
             });
 
+            builder.Services.AddProblemDetails();
+            builder.Services.AddHealthChecks();
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -149,6 +156,7 @@ namespace PhotoBank.Api
                 app.UseSwaggerUI();
             }
 
+            app.UseExceptionHandler();
             app.UseSerilogRequestLogging();
             app.UseCors("AllowAll");
             // Disabled HTTPS redirection to ensure CORS headers are applied
@@ -157,6 +165,8 @@ namespace PhotoBank.Api
             app.UseMiddleware<ImpersonationMiddleware>();
             app.UseAuthorization();
 
+            app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+            app.MapHealthChecks("/health/ready");
             app.MapControllers();
 
             Console.WriteLine("Run App!");
