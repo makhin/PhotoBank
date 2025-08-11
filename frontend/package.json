@@ -12,7 +12,8 @@
     "bot": "pnpm --filter telegram-bot start",
     "lint": "pnpm -r lint",
     "format": "pnpm -r format",
-    "test": "pnpm -r --workspace-concurrency=1 test"
+    "test": "pnpm -r --workspace-concurrency=1 test",
+    "generate:api": "orval --config ../orval.config.ts"
   },
   "keywords": [],
   "author": "",
@@ -33,9 +34,12 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-redux": "^0.1.0",
     "eslint-plugin-unused-imports": "^4.1.4",
+    "msw": "^2.10.4",
+    "orval": "^7.11.2",
     "prettier": "^3.6.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.38.0"
+    "typescript-eslint": "^8.38.0",
+    "zod": "^4.0.10"
   }
 }
