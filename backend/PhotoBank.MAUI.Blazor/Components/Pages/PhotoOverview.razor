@@ -115,11 +115,14 @@
         if (Filter.IsNotEmpty())
         {
             Filter.OrderBy = args.OrderBy;
-            Filter.Skip = args.Skip;
-            Filter.Top = args.Top;
+            if (args.Top.HasValue)
+            {
+                Filter.PageSize = args.Top.Value;
+                Filter.Page = args.Skip / args.Top.Value + 1;
+            }
             var queryResult = await RestService.GetPhotos(Filter);
-            photos = queryResult.Photos;
-            count = queryResult.Count;
+            photos = queryResult.Items;
+            count = queryResult.TotalCount;
         }
         else
         {

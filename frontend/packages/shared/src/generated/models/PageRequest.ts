@@ -2,6 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { PageResponseOfPhotoItemDto } from './PageResponseOfPhotoItemDto';
-export type QueryResult = PageResponseOfPhotoItemDto;
+export type PageRequest = {
+    page?: number;
+    pageSize?: number;
+};
 

@@ -14,6 +14,8 @@ export type { FilterDto } from './models/FilterDto';
 export type { GeoPointDto } from './models/GeoPointDto';
 export type { LoginRequestDto } from './models/LoginRequestDto';
 export type { LoginResponseDto } from './models/LoginResponseDto';
+export type { PageRequest } from './models/PageRequest';
+export type { PageResponseOfPhotoItemDto } from './models/PageResponseOfPhotoItemDto';
 export type { PathDto } from './models/PathDto';
 export type { PersonDto } from './models/PersonDto';
 export type { PersonItemDto } from './models/PersonItemDto';

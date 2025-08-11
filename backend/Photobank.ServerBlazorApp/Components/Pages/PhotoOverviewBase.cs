@@ -42,11 +42,14 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
             if (Filter.IsNotEmpty())
             {
                 Filter.OrderBy = args.OrderBy;
-                Filter.Skip = args.Skip;
-                Filter.Top = args.Top;
+                if (args.Top.HasValue)
+                {
+                    Filter.PageSize = args.Top.Value;
+                    Filter.Page = args.Skip / args.Top.Value + 1;
+                }
                 var queryResult = await PhotoService.GetAllPhotosAsync(Filter);
-                Count = queryResult.Count;
-                Photos = queryResult.Photos;
+                Count = queryResult.TotalCount;
+                Photos = queryResult.Items;
             }
             else
             {

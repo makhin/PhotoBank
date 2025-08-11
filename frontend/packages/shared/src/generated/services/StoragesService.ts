@@ -11,7 +11,7 @@ export class StoragesService {
      * @returns StorageDto OK
      * @throws ApiError
      */
-    public static getApiStorages(): CancelablePromise<Array<StorageDto>> {
+    public static storagesGetAll(): CancelablePromise<Array<StorageDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/storages',

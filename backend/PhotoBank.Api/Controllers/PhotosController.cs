@@ -21,7 +21,7 @@ namespace PhotoBank.Api.Controllers
         {
             logger.LogInformation("Searching photos with filter {@Filter}", request);
             var result = await photoService.GetAllPhotosAsync(request);
-            logger.LogInformation("Found {Count} photos", result.Count);
+            logger.LogInformation("Found {Count} photos", result.TotalCount);
             return Ok(result);
         }
 

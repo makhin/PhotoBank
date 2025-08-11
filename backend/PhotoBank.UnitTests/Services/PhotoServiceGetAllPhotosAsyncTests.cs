@@ -81,8 +81,8 @@ namespace PhotoBank.UnitTests.Services
             var result = await service.GetAllPhotosAsync(filter);
 
             // Assert
-            result.Count.Should().Be(2);
-            result.Photos.Should().HaveCount(2);
+            result.TotalCount.Should().Be(2);
+            result.Items.Should().HaveCount(2);
         }
 
         [Test]
@@ -123,8 +123,8 @@ namespace PhotoBank.UnitTests.Services
             var result = await service.GetAllPhotosAsync(filter);
 
             // Assert
-            result.Count.Should().Be(1);
-            result.Photos.Should().ContainSingle(p => p.Name == "bw");
+            result.TotalCount.Should().Be(1);
+            result.Items.Should().ContainSingle(p => p.Name == "bw");
         }
 
         [Ignore("Could not translated")]
@@ -170,8 +170,8 @@ namespace PhotoBank.UnitTests.Services
             var result = await service.GetAllPhotosAsync(filter);
 
             // Assert
-            result.Count.Should().Be(1);
-            result.Photos.Should().ContainSingle(p => p.Name == "withTag");
+            result.TotalCount.Should().Be(1);
+            result.Items.Should().ContainSingle(p => p.Name == "withTag");
         }
 
         [Ignore("Could not translated")]
@@ -236,8 +236,8 @@ namespace PhotoBank.UnitTests.Services
             var result = await service.GetAllPhotosAsync(filter);
 
             // Assert
-            result.Count.Should().Be(1);
-            result.Photos.Should().ContainSingle(p => p.Name == "all");
+            result.TotalCount.Should().Be(1);
+            result.Items.Should().ContainSingle(p => p.Name == "all");
         }
 
         [Ignore("Could not translated")]
@@ -302,8 +302,8 @@ namespace PhotoBank.UnitTests.Services
             var result = await service.GetAllPhotosAsync(filter);
 
             // Assert
-            result.Count.Should().Be(1);
-            result.Photos.Should().ContainSingle(p => p.Name == "both");
+            result.TotalCount.Should().Be(1);
+            result.Items.Should().ContainSingle(p => p.Name == "both");
         }
     }
 }

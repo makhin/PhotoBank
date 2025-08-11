@@ -52,7 +52,7 @@ export class PhotosService {
      * @returns any OK
      * @throws ApiError
      */
-    public static postApiPhotosUpload(
+    public static photosUpload(
         formData?: {
             files?: Array<Blob>;
             storageId?: number;
@@ -73,7 +73,7 @@ export class PhotosService {
      * @returns PhotoItemDto OK
      * @throws ApiError
      */
-    public static getApiPhotosDuplicates(
+    public static photosGetDuplicates(
         id?: number,
         hash?: string,
         threshold: number = 5,

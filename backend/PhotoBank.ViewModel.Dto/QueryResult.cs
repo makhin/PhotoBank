@@ -1,10 +1,6 @@
-﻿using System.Collections.Generic;
-
 namespace PhotoBank.ViewModel.Dto
 {
-    public class QueryResult
+    public class QueryResult : PageResponse<PhotoItemDto>
     {
-        public int Count { get; set; }
-        public IEnumerable<PhotoItemDto>? Photos { get; set; }
     }
 }

@@ -74,10 +74,11 @@ public class GetAllPhotosIntegrationTests
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
+            PageSize = 10000
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(5180);
-        result.Photos.Should().HaveCount(5180);
+        result.TotalCount.Should().Be(5180);
+        result.Items.Should().HaveCount(5180);
     }
 
     [Test]
@@ -87,11 +88,11 @@ public class GetAllPhotosIntegrationTests
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
-            Top = 10
+            PageSize = 10
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(5180);
-        result.Photos.Should().HaveCount(10);
+        result.TotalCount.Should().Be(5180);
+        result.Items.Should().HaveCount(10);
     }
 
     [Test]
@@ -101,12 +102,12 @@ public class GetAllPhotosIntegrationTests
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
-            Top = 10,
-            Skip = 10
+            PageSize = 10,
+            Page = 2
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(5180);
-        result.Photos.Should().HaveCount(10);
+        result.TotalCount.Should().Be(5180);
+        result.Items.Should().HaveCount(10);
     }
 
     [Test]
@@ -119,7 +120,7 @@ public class GetAllPhotosIntegrationTests
             IsBW = true
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(60);
+        result.TotalCount.Should().Be(60);
     }
 
     [Test]
@@ -132,7 +133,7 @@ public class GetAllPhotosIntegrationTests
             IsAdultContent = true
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(20);
+        result.TotalCount.Should().Be(20);
     }
 
     [Test]
@@ -145,7 +146,7 @@ public class GetAllPhotosIntegrationTests
             IsRacyContent = true
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(71);
+        result.TotalCount.Should().Be(71);
     }
 
     [Test]
@@ -158,7 +159,7 @@ public class GetAllPhotosIntegrationTests
             Storages = new []{3, 4}
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(1385);
+        result.TotalCount.Should().Be(1385);
     }
 
     [Test]
@@ -172,7 +173,7 @@ public class GetAllPhotosIntegrationTests
             RelativePath = "Test"
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(0);
+        result.TotalCount.Should().Be(0);
     }
 
     [Test]
@@ -185,7 +186,7 @@ public class GetAllPhotosIntegrationTests
             Tags = new []{ 3504 }
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(2462);
+        result.TotalCount.Should().Be(2462);
     }
 
     [Test]
@@ -198,7 +199,7 @@ public class GetAllPhotosIntegrationTests
             Persons = new[] { 1 }
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(401);
+        result.TotalCount.Should().Be(401);
     }
 
     [Test]
@@ -211,7 +212,7 @@ public class GetAllPhotosIntegrationTests
             Tags = new[] { 3504, 3505 }
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(2420);
+        result.TotalCount.Should().Be(2420);
     }
 
     [Test]
@@ -224,7 +225,7 @@ public class GetAllPhotosIntegrationTests
             Persons = new[] { 1, 2 }
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(104);
+        result.TotalCount.Should().Be(104);
     }
 
     [Test]
@@ -237,6 +238,6 @@ public class GetAllPhotosIntegrationTests
             Caption = "sky and grass"
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.Count.Should().Be(163);
+        result.TotalCount.Should().Be(163);
     }
 }

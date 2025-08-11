@@ -11,7 +11,7 @@ export class PersonsService {
      * @returns PersonDto OK
      * @throws ApiError
      */
-    public static getApiPersons(): CancelablePromise<Array<PersonDto>> {
+    public static personsGetAll(): CancelablePromise<Array<PersonDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/persons',

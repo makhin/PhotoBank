@@ -11,7 +11,7 @@ export class PathsService {
      * @returns PathDto OK
      * @throws ApiError
      */
-    public static getApiPaths(): CancelablePromise<Array<PathDto>> {
+    public static pathsGetAll(): CancelablePromise<Array<PathDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/paths',

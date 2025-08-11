@@ -2,7 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type FilterDto = {
+import type { PageRequest } from './PageRequest';
+export type FilterDto = (PageRequest & {
     storages?: Array<number> | null;
     isBW?: boolean | null;
     isAdultContent?: boolean | null;
@@ -16,7 +17,5 @@ export type FilterDto = {
     persons?: Array<number> | null;
     tags?: Array<number> | null;
     orderBy?: string | null;
-    skip?: number | null;
-    top?: number | null;
-};
+});
 

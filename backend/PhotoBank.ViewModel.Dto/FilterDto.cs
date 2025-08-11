@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace PhotoBank.ViewModel.Dto
 {
-    public class FilterDto
+    public class FilterDto : PageRequest
     {
         public IEnumerable<int>? Storages { get; set; }
         public bool? IsBW { get; set; }
@@ -20,8 +20,6 @@ namespace PhotoBank.ViewModel.Dto
         public IEnumerable<int>? Tags { get; set; }
 
         public string? OrderBy { get; set; }
-        public int? Skip { get; set; }
-        public int? Top { get; set; }
 
         public bool IsNotEmpty()
         {

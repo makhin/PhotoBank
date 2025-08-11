@@ -12,7 +12,7 @@ export class FacesService {
      * @returns any OK
      * @throws ApiError
      */
-    public static putApiFaces(
+    public static facesUpdate(
         requestBody?: UpdateFaceDto,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {

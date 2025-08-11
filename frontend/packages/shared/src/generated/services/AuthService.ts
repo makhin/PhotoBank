@@ -18,7 +18,7 @@ export class AuthService {
      * @returns LoginResponseDto OK
      * @throws ApiError
      */
-    public static postApiAuthLogin(
+    public static authLogin(
         requestBody?: LoginRequestDto,
     ): CancelablePromise<LoginResponseDto> {
         return __request(OpenAPI, {
@@ -36,7 +36,7 @@ export class AuthService {
      * @returns any OK
      * @throws ApiError
      */
-    public static postApiAuthRegister(
+    public static authRegister(
         requestBody?: RegisterRequestDto,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
@@ -53,7 +53,7 @@ export class AuthService {
      * @returns UserDto OK
      * @throws ApiError
      */
-    public static getApiAuthUser(): CancelablePromise<UserDto> {
+    public static authGetUser(): CancelablePromise<UserDto> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/auth/user',
@@ -64,7 +64,7 @@ export class AuthService {
      * @returns any OK
      * @throws ApiError
      */
-    public static putApiAuthUser(
+    public static authUpdateUser(
         requestBody?: UpdateUserDto,
     ): CancelablePromise<any> {
         return __request(OpenAPI, {
@@ -81,7 +81,7 @@ export class AuthService {
      * @returns ClaimDto OK
      * @throws ApiError
      */
-    public static getApiAuthClaims(): CancelablePromise<Array<ClaimDto>> {
+    public static authGetUserClaims(): CancelablePromise<Array<ClaimDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/auth/claims',
@@ -91,7 +91,7 @@ export class AuthService {
      * @returns RoleDto OK
      * @throws ApiError
      */
-    public static getApiAuthRoles(): CancelablePromise<Array<RoleDto>> {
+    public static authGetUserRoles(): CancelablePromise<Array<RoleDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/auth/roles',

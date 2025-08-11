@@ -13,7 +13,7 @@ export class UsersService {
      * @returns UserWithClaimsDto OK
      * @throws ApiError
      */
-    public static getApiAdminUsers(): CancelablePromise<Array<UserWithClaimsDto>> {
+    public static usersGetAll(): CancelablePromise<Array<UserWithClaimsDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/admin/users',
@@ -25,7 +25,7 @@ export class UsersService {
      * @returns any OK
      * @throws ApiError
      */
-    public static putApiAdminUsers(
+    public static usersUpdate(
         id: string,
         requestBody?: UpdateUserDto,
     ): CancelablePromise<any> {
@@ -49,7 +49,7 @@ export class UsersService {
      * @returns any OK
      * @throws ApiError
      */
-    public static putApiAdminUsersClaims(
+    public static usersSetClaims(
         id: string,
         requestBody?: Array<ClaimDto>,
     ): CancelablePromise<any> {
