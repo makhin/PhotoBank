@@ -242,7 +242,7 @@ paths:
     post:
       tags:
         - Photos
-      operationId: Photos_SearchPhotos
+      operationId: postApiPhotosSearch
       requestBody:
         content:
           application/json:
@@ -283,7 +283,7 @@ paths:
     get:
       tags:
         - Photos
-      operationId: Photos_GetPhoto
+      operationId: getApiPhotos
       parameters:
         - name: id
           in: path
@@ -628,71 +628,77 @@ components:
           minLength: 1
           type: string
       additionalProperties: false
-    FilterDto:
+    PageRequest:
       type: object
       properties:
-        storages:
-          type: array
-          items:
-            type: integer
-            format: int32
-          nullable: true
-        isBW:
-          type: boolean
-          nullable: true
-        isAdultContent:
-          type: boolean
-          nullable: true
-        isRacyContent:
-          type: boolean
-          nullable: true
-        relativePath:
-          type: string
-          nullable: true
-        paths:
-          type: array
-          items:
-            type: integer
-            format: int32
-          nullable: true
-        caption:
-          type: string
-          nullable: true
-        takenDateFrom:
-          type: string
-          format: date-time
-          nullable: true
-        takenDateTo:
-          type: string
-          format: date-time
-          nullable: true
-        thisDay:
-          type: boolean
-          nullable: true
-        persons:
-          type: array
-          items:
-            type: integer
-            format: int32
-          nullable: true
-        tags:
-          type: array
-          items:
-            type: integer
-            format: int32
-          nullable: true
-        orderBy:
-          type: string
-          nullable: true
-        skip:
+        page:
           type: integer
           format: int32
-          nullable: true
-        top:
+          default: 1
+        pageSize:
           type: integer
           format: int32
-          nullable: true
+          default: 10
       additionalProperties: false
+    FilterDto:
+      allOf:
+        - $ref: '#/components/schemas/PageRequest'
+        - type: object
+          properties:
+            storages:
+              type: array
+              items:
+                type: integer
+                format: int32
+              nullable: true
+            isBW:
+              type: boolean
+              nullable: true
+            isAdultContent:
+              type: boolean
+              nullable: true
+            isRacyContent:
+              type: boolean
+              nullable: true
+            relativePath:
+              type: string
+              nullable: true
+            paths:
+              type: array
+              items:
+                type: integer
+                format: int32
+              nullable: true
+            caption:
+              type: string
+              nullable: true
+            takenDateFrom:
+              type: string
+              format: date-time
+              nullable: true
+            takenDateTo:
+              type: string
+              format: date-time
+              nullable: true
+            thisDay:
+              type: boolean
+              nullable: true
+            persons:
+              type: array
+              items:
+                type: integer
+                format: int32
+              nullable: true
+            tags:
+              type: array
+              items:
+                type: integer
+                format: int32
+              nullable: true
+            orderBy:
+              type: string
+              nullable: true
+          additionalProperties: false
     GeoPointDto:
       type: object
       properties:
@@ -895,18 +901,24 @@ components:
           type: string
           nullable: true
       additionalProperties: { }
-    QueryResult:
+    PageResponseOfPhotoItemDto:
       type: object
       properties:
-        count:
+        totalCount:
           type: integer
           format: int32
-        photos:
+        items:
           type: array
           items:
             $ref: '#/components/schemas/PhotoItemDto'
           nullable: true
       additionalProperties: false
+    QueryResult:
+      allOf:
+        - $ref: '#/components/schemas/PageResponseOfPhotoItemDto'
+        - type: object
+          properties: { }
+          additionalProperties: false
     RegisterRequestDto:
       required:
         - email

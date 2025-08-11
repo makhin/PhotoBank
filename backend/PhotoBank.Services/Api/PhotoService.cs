@@ -132,17 +132,18 @@ public class PhotoService : IPhotoService
         var count = await query.CountAsync();
 
         // Execute the photos query next
+        var skip = (filter.Page - 1) * filter.PageSize;
         var photos = await query
             .OrderByDescending(p => p.TakenDate)
-            .Skip(filter.Skip ?? 0)
-            .Take(filter.Top ?? int.MaxValue)
+            .Skip(skip)
+            .Take(filter.PageSize)
             .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
         return new QueryResult
         {
-            Count = count,
-            Photos = photos
+            TotalCount = count,
+            Items = photos
         };
     }
 

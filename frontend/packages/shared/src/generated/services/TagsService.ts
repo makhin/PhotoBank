@@ -11,7 +11,7 @@ export class TagsService {
      * @returns TagDto OK
      * @throws ApiError
      */
-    public static getApiTags(): CancelablePromise<Array<TagDto>> {
+    public static tagsGetAll(): CancelablePromise<Array<TagDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/tags',
