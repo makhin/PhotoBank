@@ -5,8 +5,8 @@ import {
   configureApiAuth,
   configureApi,
   setImpersonateUser,
-} from "@photobank/shared/src/api/photobank/fetcher";
-import { authLogin } from "@photobank/shared/src/api/photobank";
+} from "@photobank/shared/api/photobank/fetcher";
+import { authLogin } from "@photobank/shared/api/photobank";
 import { configureAzureOpenAI } from "@photobank/shared/ai/openai";
 import {
   captionMissingMsg,

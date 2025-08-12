@@ -10,7 +10,7 @@ import {
   findBestPersonId,
   findBestTagId,
 } from '../dictionaries';
-import type { FilterDto } from '@photobank/shared/src/api/photobank';
+import type { FilterDto } from '@photobank/shared/api/photobank';
 import { getFilterHash } from '@photobank/shared/index';
 
 import { sendPhotosPage } from './photosPage';

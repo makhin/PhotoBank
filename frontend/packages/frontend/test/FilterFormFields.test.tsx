@@ -24,14 +24,13 @@ declare module '@testing-library/react' {
 const renderWithRoles = async (roles: any[]) => {
   const getUserRoles = vi.fn().mockImplementation(() => {
     console.log('getUserRoles called with', roles);
-    return Promise.resolve(roles);
+    return Promise.resolve({ data: roles });
   });
   vi.doMock('@photobank/shared/auth', () => ({
     getAuthToken: () => 'token',
   }));
-  vi.doMock('@photobank/shared/generated', () => ({
-    AuthService: { getApiAuthRoles: getUserRoles },
-    OpenAPI: {},
+  vi.doMock('@photobank/shared/api/photobank', () => ({
+    authGetUserRoles: getUserRoles,
   }));
 
   const { FilterFormFields } = await import('../src/components/FilterFormFields');

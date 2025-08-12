@@ -1,21 +1,26 @@
 import { describe, it, expect, vi } from 'vitest';
-import axios from 'axios';
-import { OpenAPI } from '../src/generated';
+import { configureApi, configureApiAuth } from '../src/api/photobank/fetcher';
 import { uploadPhotosAdapter } from '../src/adapters/photos-upload.adapter';
 
 describe('uploadPhotosAdapter', () => {
-  it('adds Authorization header when OpenAPI.TOKEN is resolver', async () => {
-    OpenAPI.TOKEN = async () => 'token123';
-    const post = vi.spyOn(axios, 'post').mockResolvedValue({} as any);
-
+  it('adds Authorization header when token provider is set', async () => {
+    configureApi('http://api');
+    configureApiAuth(() => 'token123');
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => null,
+    } as any);
+    // @ts-ignore
+    global.fetch = fetchMock;
     await uploadPhotosAdapter({
       files: [{ buffer: Buffer.from('data'), name: 'a.txt' }],
       storageId: 1,
       path: 'user',
     });
-
-    expect(post).toHaveBeenCalled();
-    const headers = post.mock.calls[0][2]?.headers as Record<string, string>;
-    expect(headers.Authorization).toBe('Bearer token123');
+    expect(fetchMock).toHaveBeenCalled();
+    const [, options] = fetchMock.mock.calls[0];
+    expect(options.headers.get('Authorization')).toBe('Bearer token123');
   });
 });

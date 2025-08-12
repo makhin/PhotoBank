@@ -1,4 +1,4 @@
-import type { PhotoDto } from "@photobank/shared/src/api/photobank";
+import type { PhotoDto } from "@photobank/shared/api/photobank";
 import { getPersonName } from "./dictionaries";
 import { formatDate } from "@photobank/shared/index";
 import { Buffer } from "buffer";

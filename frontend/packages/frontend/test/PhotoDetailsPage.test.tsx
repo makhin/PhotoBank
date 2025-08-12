@@ -30,7 +30,7 @@ const photo = {
   orientation: 1,
   location: { latitude: 10, longitude: 20 },
 };
-vi.mock('../src/entities/photo/api.ts', () => ({
+vi.mock('../src/shared/api.ts', () => ({
   useGetPhotoByIdQuery: () => ({ data: photo, error: undefined }),
   useUpdateFaceMutation: () => [vi.fn(), { isLoading: false }],
 }));

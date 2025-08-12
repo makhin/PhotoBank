@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import * as searchCommands from '../src/commands/search';
-import * as photosApi from '@photobank/shared/generated';
+import * as photosApi from '@photobank/shared/api/photobank';
 import { sorryTryToRequestLaterMsg, searchCommandUsageMsg } from '@photobank/shared/constants';
 
 describe('handleSearch', () => {
@@ -12,7 +12,7 @@ describe('handleSearch', () => {
 
   it('replies with fallback message on API failure', async () => {
     const ctx = { reply: vi.fn(), message: { text: '/search cats' } } as any;
-    vi.spyOn(photosApi.PhotosService, 'postApiPhotosSearch').mockRejectedValue(new Error('fail'));
+    vi.spyOn(photosApi, 'postApiPhotosSearch').mockRejectedValue(new Error('fail'));
     await searchCommands.handleSearch(ctx);
     expect(ctx.reply).toHaveBeenCalledWith(sorryTryToRequestLaterMsg);
   });
@@ -20,8 +20,8 @@ describe('handleSearch', () => {
   it('strips quotes around caption', async () => {
     const ctx = { reply: vi.fn(), message: { text: '/search "dog cat"' } } as any;
     const searchSpy = vi
-      .spyOn(photosApi.PhotosService, 'postApiPhotosSearch')
-      .mockResolvedValue({ count: 0, photos: [] } as any);
+      .spyOn(photosApi, 'postApiPhotosSearch')
+      .mockResolvedValue({ data: { count: 0, photos: [] } } as any);
 
     await searchCommands.handleSearch(ctx);
 

@@ -1,5 +1,5 @@
 import { Context } from 'grammy';
-import { authGetUser } from '@photobank/shared/src/api/photobank';
+import { authGetUser } from '@photobank/shared/api/photobank';
 import { notRegisteredMsg } from '@photobank/shared/constants';
 
 export async function ensureRegistered(ctx: Context): Promise<boolean> {

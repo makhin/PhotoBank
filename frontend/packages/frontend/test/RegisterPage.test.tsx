@@ -12,9 +12,8 @@ class RO {
 global.ResizeObserver = RO;
 
 const renderPage = async (regMock: any) => {
-  vi.doMock('@photobank/shared/generated', () => ({
-    AuthService: { postApiAuthRegister: regMock },
-    OpenAPI: {},
+  vi.doMock('../src/shared/api.ts', () => ({
+    useRegisterMutation: () => [regMock, { isLoading: false }],
   }));
   const { default: RegisterPage } = await import('../src/pages/auth/RegisterPage');
   render(
@@ -34,7 +33,9 @@ describe('RegisterPage', () => {
   });
 
   it('submits registration data', async () => {
-    const regMock = vi.fn().mockResolvedValue({});
+    const regMock = vi
+      .fn()
+      .mockReturnValue({ unwrap: () => Promise.resolve({}) });
     await renderPage(regMock);
     fireEvent.input(screen.getByLabelText('Email'), { target: { value: 'a@b.co' } });
     fireEvent.input(screen.getByLabelText('Password'), { target: { value: '123' } });

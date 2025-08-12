@@ -6,8 +6,8 @@ import {
   prevPageText,
   nextPageText,
 } from '@photobank/shared/constants';
-import type { FilterDto } from '@photobank/shared/src/api/photobank';
-import { postApiPhotosSearch } from '@photobank/shared/src/api/photobank';
+import type { FilterDto } from '@photobank/shared/api/photobank';
+import { postApiPhotosSearch } from '@photobank/shared/api/photobank';
 import { firstNWords } from '@photobank/shared/index';
 import { captionCache, currentPagePhotos, deletePhotoMessage } from '../photo';
 import { logger } from '../logger';

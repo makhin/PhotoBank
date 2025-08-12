@@ -35,16 +35,15 @@ describe('metaSlice', () => {
   });
 
   it('loadMetadata fetches when cache missing', async () => {
-    const getAllStorages = vi.fn().mockResolvedValue(payload.storages);
-    const getAllTags = vi.fn().mockResolvedValue(payload.tags);
-    const getAllPersons = vi.fn().mockResolvedValue(payload.persons);
-    const getAllPaths = vi.fn().mockResolvedValue(payload.paths);
-    vi.doMock('@photobank/shared/generated', () => ({
-      StoragesService: { getApiStorages: getAllStorages },
-      TagsService: { getApiTags: getAllTags },
-      PersonsService: { getApiPersons: getAllPersons },
-      PathsService: { getApiPaths: getAllPaths },
-      OpenAPI: {},
+    const getAllStorages = vi.fn().mockResolvedValue({ data: payload.storages });
+    const getAllTags = vi.fn().mockResolvedValue({ data: payload.tags });
+    const getAllPersons = vi.fn().mockResolvedValue({ data: payload.persons });
+    const getAllPaths = vi.fn().mockResolvedValue({ data: payload.paths });
+    vi.doMock('@photobank/shared/api/photobank', () => ({
+      storagesGetAll: getAllStorages,
+      tagsGetAll: getAllTags,
+      personsGetAll: getAllPersons,
+      pathsGetAll: getAllPaths,
     }));
     const { loadMetadata } = await import('../src/features/meta/model/metaSlice');
     const dispatch = vi.fn();
