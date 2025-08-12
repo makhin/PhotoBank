@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -15,6 +16,7 @@ using Serilog.Events;
 using Serilog;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog.Formatting.Compact;
 
 namespace PhotoBank.Api
@@ -121,9 +123,33 @@ namespace PhotoBank.Api
                 options.LowercaseUrls = true;
             });
 
-            builder.Services.AddProblemDetails();
+            builder.Services.AddProblemDetails(options =>
+            {
+                options.CustomizeProblemDetails = ctx =>
+                {
+                    var pd = ctx.ProblemDetails;
+                    pd.Instance ??= ctx.HttpContext.Request.Path;
+                    pd.Extensions["traceId"] = ctx.HttpContext.TraceIdentifier;
+                };
+
+                options.MapToStatusCode<ArgumentException>(StatusCodes.Status400BadRequest);
+                options.MapToStatusCode<UnauthorizedAccessException>(StatusCodes.Status401Unauthorized);
+                options.MapToStatusCode<KeyNotFoundException>(StatusCodes.Status404NotFound);
+                options.MapToStatusCode<NotImplementedException>(StatusCodes.Status501NotImplemented);
+
+                options.Map<DomainException>((ex, http) => new ProblemDetails
+                {
+                    Title = "Business rule violated",
+                    Detail = ex.Message,
+                    Status = StatusCodes.Status422UnprocessableEntity,
+                    Type = "https://httpstatuses.com/422",
+                    Instance = http.Request.Path
+                });
+            });
+
             builder.Services.AddHealthChecks()
-                .AddDbContextCheck<PhotoBankDbContext>("Database");
+                .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
+                .AddDbContextCheck<PhotoBankDbContext>("Database", tags: new[] { "ready" });
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -158,7 +184,15 @@ namespace PhotoBank.Api
             }
 
             app.UseExceptionHandler();
-            app.UseSerilogRequestLogging();
+            app.UseSerilogRequestLogging(opts =>
+            {
+                opts.EnrichDiagnosticContext = (diag, http) =>
+                {
+                    diag.Set("UserAgent", http.Request.Headers.UserAgent.ToString());
+                    diag.Set("RemoteIp", http.Connection.RemoteIpAddress?.ToString());
+                    diag.Set("RequestId", http.TraceIdentifier);
+                };
+            });
             app.UseCors("AllowAll");
             // Disabled HTTPS redirection to ensure CORS headers are applied
             // correctly during local development when running over HTTP.
@@ -166,12 +200,47 @@ namespace PhotoBank.Api
             app.UseMiddleware<ImpersonationMiddleware>();
             app.UseAuthorization();
 
-            app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
-            app.MapHealthChecks("/health/ready");
+            app.MapHealthChecks("/healthz/live", new HealthCheckOptions
+            {
+                Predicate = r => r.Tags.Contains("live"),
+                ResponseWriter = WriteHealthJson
+            });
+            app.MapHealthChecks("/healthz/ready", new HealthCheckOptions
+            {
+                Predicate = r => r.Tags.Contains("ready"),
+                ResponseWriter = WriteHealthJson
+            });
             app.MapControllers();
 
             Console.WriteLine("Run App!");
             app.Run();
+        }
+
+        private static Task WriteHealthJson(HttpContext ctx, HealthReport report)
+        {
+            ctx.Response.ContentType = "application/json; charset=utf-8";
+            var payload = new
+            {
+                status = report.Status.ToString(),
+                totalDurationMs = report.TotalDuration.TotalMilliseconds,
+                entries = report.Entries.ToDictionary(
+                    e => e.Key,
+                    e => new
+                    {
+                        status = e.Value.Status.ToString(),
+                        description = e.Value.Description,
+                        durationMs = e.Value.Duration.TotalMilliseconds,
+                        error = e.Value.Exception?.Message
+                    })
+            };
+            return ctx.Response.WriteAsJsonAsync(payload);
+        }
+    }
+
+    public sealed class DomainException : Exception
+    {
+        public DomainException(string message) : base(message)
+        {
         }
     }
 }
