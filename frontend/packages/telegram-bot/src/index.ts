@@ -6,7 +6,7 @@ import {
   configureApi,
   setImpersonateUser,
 } from "@photobank/shared/api/photobank/fetcher";
-import { authLogin } from "@photobank/shared/api/photobank";
+import { login } from "./services/auth";
 import { configureAzureOpenAI } from "@photobank/shared/ai/openai";
 import {
   captionMissingMsg,
@@ -38,6 +38,7 @@ import { profileCommand } from "./commands/profile";
 import { uploadCommand } from "./commands/upload";
 import { withRegistered } from './registration';
 import { logger } from './logger';
+import { handleBotError } from './errorHandler';
 
 const bot = new Bot(BOT_TOKEN);
 
@@ -56,21 +57,14 @@ bot.use(async (ctx, next) => {
     await next();
 });
 
-bot.catch((err) => {
-  const ctx = err.ctx;
-  const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
-  logger.error(`error handling update from ${username}`, err.error);
-});
+bot.catch(handleBotError);
 
 registerPhotoRoutes(bot);
 
 configureApiAuth(() => process.env.PHOTOBANK_BOT_TOKEN);
 configureApi(API_BASE_URL);
 
-const { data: loginRes } = await authLogin({
-  email: API_EMAIL,
-  password: API_PASSWORD,
-});
+const { data: loginRes } = await login(API_EMAIL, API_PASSWORD);
 if (!loginRes.token) {
   throw new Error("Login failed: token is undefined.");
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { openPhotoInline, photoMessages, currentPagePhotos } from '../src/photo';
-import * as photosApi from '@photobank/shared/api/photobank';
+import * as photoService from '../src/services/photo';
 
 const basePhoto = {
   id: 1,
@@ -20,7 +20,7 @@ beforeEach(() => {
 });
 
 it('sends new message and stores id', async () => {
-  vi.spyOn(photosApi, 'getApiPhotos').mockResolvedValue({ data: basePhoto } as any);
+  vi.spyOn(photoService, 'getPhoto').mockResolvedValue({ data: basePhoto } as any);
   const ctx = {
     chat: { id: 1 },
     replyWithPhoto: vi.fn().mockResolvedValue({ message_id: 42 }),
@@ -35,7 +35,7 @@ it('sends new message and stores id', async () => {
 });
 
 it('edits existing message when available', async () => {
-  vi.spyOn(photosApi, 'getApiPhotos').mockResolvedValue({ data: basePhoto } as any);
+  vi.spyOn(photoService, 'getPhoto').mockResolvedValue({ data: basePhoto } as any);
   photoMessages.set(1, 42);
   const ctx = {
     chat: { id: 1 },
@@ -51,7 +51,7 @@ it('edits existing message when available', async () => {
 });
 
 it('adds navigation buttons from current page list', async () => {
-  vi.spyOn(photosApi, 'getApiPhotos').mockResolvedValue({ data: basePhoto } as any);
+  vi.spyOn(photoService, 'getPhoto').mockResolvedValue({ data: basePhoto } as any);
   const ctx = {
     chat: { id: 1 },
     replyWithPhoto: vi.fn().mockResolvedValue({ message_id: 1 }),

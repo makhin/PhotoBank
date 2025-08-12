@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { sendAiPage, aiFilters } from '../src/commands/ai';
-import * as photosApi from '@photobank/shared/api/photobank';
+import * as photoService from '../src/services/photo';
 import * as photo from '../src/photo';
 
 const basePhoto = {
@@ -31,7 +31,7 @@ describe('sendAiPage', () => {
     aiFilters.set('hash', {} as any);
     photo.currentPagePhotos.set(1, { page: 1, ids: [1] });
     vi.spyOn(photo, 'deletePhotoMessage').mockResolvedValue();
-    vi.spyOn(photosApi, 'postApiPhotosSearch').mockResolvedValue({
+    vi.spyOn(photoService, 'searchPhotos').mockResolvedValue({
       data: { count: 1, photos: [basePhoto] },
     } as any);
 
@@ -49,7 +49,7 @@ describe('sendAiPage', () => {
     aiFilters.set('hash', {} as any);
     photo.currentPagePhotos.set(1, { page: 1, ids: [1] });
     vi.spyOn(photo, 'deletePhotoMessage').mockResolvedValue();
-    vi.spyOn(photosApi, 'postApiPhotosSearch').mockResolvedValue({
+    vi.spyOn(photoService, 'searchPhotos').mockResolvedValue({
       data: { count: 1, photos: [basePhoto] },
     } as any);
 
