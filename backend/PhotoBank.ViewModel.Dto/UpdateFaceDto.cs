@@ -1,7 +1,10 @@
+using System.Text.Json.Serialization;
+
 namespace PhotoBank.ViewModel.Dto;
 
+[JsonNumberHandling(JsonNumberHandling.Strict)]
 public class UpdateFaceDto
 {
-    public int FaceId { get; set; }
-    public int PersonId { get; set; }
+    public required int FaceId { get; init; }
+    public required int PersonId { get; init; }
 }
