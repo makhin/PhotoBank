@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using NetTopologySuite.Geometries;
 
@@ -13,6 +14,14 @@ namespace PhotoBank.DbContext.Models
         public bool? Gender { get; set; }
         public double? Smile { get; set; }
         public byte[] Image { get; set; }
+        [MaxLength(512)]
+        public string S3Key_Image { get; set; }
+        [MaxLength(128)]
+        public string S3ETag_Image { get; set; }
+        [MaxLength(64)]
+        public string Sha256_Image { get; set; }
+        public long? BlobSize_Image { get; set; }
+        public DateTime? MigratedAt_Image { get; set; }
         public PersonGroupFace PersonGroupFace { get; set; }
         public int? PersonId { get; set; }
         public Person Person { get; set; }

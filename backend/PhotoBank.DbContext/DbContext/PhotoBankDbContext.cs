@@ -35,7 +35,10 @@ namespace PhotoBank.DbContext.DbContext
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Photo>()
-                .HasIndex(p => new { p.Id });
+                .HasIndex(p => p.Id)
+                .HasDatabaseName("IX_Photos_NeedsMigration")
+                .HasFilter("[S3Key_Preview] IS NULL OR [S3Key_Thumbnail] IS NULL")
+                .IncludeProperties(p => new { p.S3Key_Preview, p.S3Key_Thumbnail });
 
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => new { p.Name, p.RelativePath });
@@ -111,6 +114,12 @@ namespace PhotoBank.DbContext.DbContext
 
             modelBuilder.Entity<Face>()
                 .HasIndex(p => new { p.PhotoId, p.Id, p.PersonId });
+
+            modelBuilder.Entity<Face>()
+                .HasIndex(p => p.Id)
+                .HasDatabaseName("IX_Faces_NeedsMigration")
+                .HasFilter("[S3Key_Image] IS NULL")
+                .IncludeProperties(p => new { p.S3Key_Image });
 
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => p.StorageId)
