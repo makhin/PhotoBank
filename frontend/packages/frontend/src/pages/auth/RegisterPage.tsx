@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { AuthService } from '@photobank/shared/generated';
+import { useRegisterMutation } from '@/shared/api.ts';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -31,6 +31,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [register] = useRegisterMutation();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: { email: '', password: '' },
@@ -38,7 +39,7 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await AuthService.postApiAuthRegister(data);
+      await register(data).unwrap();
       navigate('/login');
     } catch (e) {
       console.error(e);

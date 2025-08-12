@@ -40,6 +40,27 @@ export const photobankApi = createApi({
     getPersons: build.query<Api.PersonDto[], void>({
       queryFn: orvalQuery((_arg, opt) => Api.personsGetAll(opt).then((r) => r.data)),
     }),
+    updateFace: build.mutation<null, Api.UpdateFaceDto>({
+      queryFn: orvalMutation((body, opt) => Api.facesUpdate(body, opt).then((r) => r.data)),
+    }),
+    getAdminUsers: build.query<Api.UserWithClaimsDto[], void>({
+      queryFn: orvalQuery((_arg, opt) => Api.usersGetAll(opt).then((r) => r.data)),
+    }),
+    updateAdminUser: build.mutation<null, { id: string; data: Api.UpdateUserDto }>({
+      queryFn: orvalMutation(({ id, data }, opt) => Api.usersUpdate(id, data, opt).then((r) => r.data)),
+    }),
+    setUserClaims: build.mutation<null, { id: string; data: Api.ClaimDto[] }>({
+      queryFn: orvalMutation(({ id, data }, opt) => Api.usersSetClaims(id, data, opt).then((r) => r.data)),
+    }),
+    getStorages: build.query<Api.StorageDto[], void>({
+      queryFn: orvalQuery((_arg, opt) => Api.storagesGetAll(opt).then((r) => r.data)),
+    }),
+    getTags: build.query<Api.TagDto[], void>({
+      queryFn: orvalQuery((_arg, opt) => Api.tagsGetAll(opt).then((r) => r.data)),
+    }),
+    getPaths: build.query<Api.PathDto[], void>({
+      queryFn: orvalQuery((_arg, opt) => Api.pathsGetAll(opt).then((r) => r.data)),
+    }),
   }),
 });
 
@@ -55,4 +76,11 @@ export const {
   useUploadPhotosMutation,
   useGetDuplicatePhotosQuery,
   useGetPersonsQuery,
+  useUpdateFaceMutation,
+  useGetAdminUsersQuery,
+  useUpdateAdminUserMutation,
+  useSetUserClaimsMutation,
+  useGetStoragesQuery,
+  useGetTagsQuery,
+  useGetPathsQuery,
 } = photobankApi;

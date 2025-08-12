@@ -1,15 +1,19 @@
-import {useEffect, useState} from 'react';
+import {useEffect} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {useForm} from 'react-hook-form';
 import {z} from 'zod';
 import {zodResolver} from '@hookform/resolvers/zod';
-import { AuthService } from '@photobank/shared/generated';
 import { clearAuthToken } from '@photobank/shared/auth';
+import {
+  useGetUserQuery,
+  useGetUserRolesQuery,
+  useGetUserClaimsQuery,
+  useUpdateUserMutation,
+} from '@/shared/api.ts';
 
 import {Button} from '@/components/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
 import {Input} from '@/components/ui/input';
-import type { UserDto, RoleDto, ClaimDto } from '@photobank/shared/generated';
 import {
   myProfileTitle,
   emailPrefix,
@@ -30,9 +34,10 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function MyProfilePage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<UserDto | null>(null);
-  const [roles, setRoles] = useState<RoleDto[]>([]);
-  const [claims, setClaims] = useState<ClaimDto[]>([]);
+  const { data: user } = useGetUserQuery();
+  const { data: roles = [] } = useGetUserRolesQuery();
+  const { data: claims = [] } = useGetUserClaimsQuery();
+  const [updateUser] = useUpdateUserMutation();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -40,21 +45,14 @@ export default function MyProfilePage() {
   });
 
   useEffect(() => {
-    AuthService.getApiAuthUser()
-      .then((u) => {
-        setUser(u);
-        form.reset({ phoneNumber: u.phoneNumber ?? '', telegram: u.telegram ?? '' });
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-    AuthService.getApiAuthRoles().then(setRoles).catch(console.error);
-    AuthService.getApiAuthClaims().then(setClaims).catch(console.error);
-  }, [form]);
+    if (user) {
+      form.reset({ phoneNumber: user.phoneNumber ?? '', telegram: user.telegram ?? '' });
+    }
+  }, [user, form]);
 
   const onSubmit = async (data: FormData) => {
     try {
-      await AuthService.putApiAuthUser(data);
+      await updateUser(data).unwrap();
       navigate('/filter');
     } catch (e) {
       console.error(e);
