@@ -1,5 +1,9 @@
 import { Context } from "grammy";
-import { AuthService } from "@photobank/shared/generated";
+import {
+    authGetUser,
+    authGetUserRoles,
+    authGetUserClaims,
+} from "@photobank/shared/src/api/photobank";
 import {
     apiErrorMsg,
     getProfileErrorMsg,
@@ -14,11 +18,13 @@ import { logger } from "../logger";
 export async function profileCommand(ctx: Context) {
     const username = ctx.from?.username ?? String(ctx.from?.id ?? "");
     try {
-        await AuthService.getApiAuthUser();
-        const [roles, claims] = await Promise.all([
-            AuthService.getApiAuthRoles(),
-            AuthService.getApiAuthClaims(),
+        await authGetUser();
+        const [rolesRes, claimsRes] = await Promise.all([
+            authGetUserRoles(),
+            authGetUserClaims(),
         ]);
+        const roles = rolesRes.data;
+        const claims = claimsRes.data;
 
         const lines: string[] = [
             `👤 Пользователь: ${username}`,
@@ -47,7 +53,7 @@ export async function profileCommand(ctx: Context) {
 
         await ctx.reply(lines.join("\n"));
     } catch (error: any) {
-        if (error?.response?.status === 404) {
+        if (error instanceof Error && error.message.includes('404')) {
             await ctx.reply(notRegisteredMsg);
             return;
         }
