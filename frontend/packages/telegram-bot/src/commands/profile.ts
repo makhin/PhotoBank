@@ -3,7 +3,7 @@ import {
     authGetUser,
     authGetUserRoles,
     authGetUserClaims,
-} from "@photobank/shared/src/api/photobank";
+} from "@photobank/shared/api/photobank";
 import {
     apiErrorMsg,
     getProfileErrorMsg,

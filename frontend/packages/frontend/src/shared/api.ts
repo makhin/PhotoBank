@@ -1,5 +1,5 @@
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
-import * as Api from '@photobank/shared/src/api/photobank';
+import * as Api from '@photobank/shared/api/photobank';
 
 import { orvalQuery, orvalMutation } from './orvalAdapter';
 

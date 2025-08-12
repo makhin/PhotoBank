@@ -1,4 +1,4 @@
-import type { UserWithClaimsDto } from '@photobank/shared/generated';
+import type { UserWithClaimsDto } from '@photobank/shared/api/photobank';
 import { Button } from '@/components/ui/button';
 import {
   Form,

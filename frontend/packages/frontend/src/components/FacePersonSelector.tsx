@@ -1,5 +1,5 @@
 import {useState} from "react";
-import type { PersonDto } from '@photobank/shared/generated';
+import type { PersonDto } from '@photobank/shared/api/photobank';
 import {
     unassignedLabel,
     facePrefix,

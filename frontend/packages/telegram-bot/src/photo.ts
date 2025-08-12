@@ -1,5 +1,5 @@
 import { Context, InputFile, InlineKeyboard } from "grammy";
-import { getApiPhotos, type PhotoDto } from "@photobank/shared/src/api/photobank";
+import { getApiPhotos, type PhotoDto } from "@photobank/shared/api/photobank";
 import { formatPhotoMessage } from "./formatPhotoMessage";
 import { photoNotFoundMsg, prevPageText, nextPageText } from "@photobank/shared/constants";
 

@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { aiCommand, parseAiPrompt, aiFilters } from '../src/commands/ai';
 import * as openai from '@photobank/shared/ai/openai';
 import * as dict from '../src/dictionaries';
-import * as photosApi from '@photobank/shared/generated';
+import * as photosApi from '@photobank/shared/api/photobank';
 import * as utils from '@photobank/shared/index';
 import {
   aiCommandUsageMsg,
@@ -49,8 +49,8 @@ describe('aiCommand', () => {
     vi.spyOn(dict, 'findBestTagId').mockReturnValue(10);
     vi.spyOn(utils, 'getFilterHash').mockResolvedValue('hash');
     const searchSpy = vi
-      .spyOn(photosApi.PhotosService, 'postApiPhotosSearch')
-      .mockResolvedValue({ count: 0, photos: [] } as any);
+      .spyOn(photosApi, 'postApiPhotosSearch')
+      .mockResolvedValue({ data: { count: 0, photos: [] } } as any);
     aiFilters.clear();
 
     await aiCommand(ctx);
@@ -97,9 +97,8 @@ describe('aiCommand', () => {
         dateTo: null,
       });
     vi.spyOn(utils, 'getFilterHash').mockResolvedValue('hash');
-    vi.spyOn(photosApi.PhotosService, 'postApiPhotosSearch').mockResolvedValue({
-      count: 0,
-      photos: [],
+    vi.spyOn(photosApi, 'postApiPhotosSearch').mockResolvedValue({
+      data: { count: 0, photos: [] },
     } as any);
     aiFilters.clear();
 

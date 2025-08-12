@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
-import { PhotoItemDto, FilterDto, PhotoDto } from '@photobank/shared/generated';
-import { PhotosService } from "@photobank/shared/generated";
+import {
+  PhotoItemDto,
+  FilterDto,
+  PhotoDto,
+  postApiPhotosSearch,
+  getApiPhotos,
+} from '@photobank/shared/api/photobank';
 
 export const usePhotos = (filter: FilterDto | null) => {
   const [photos, setPhotos] = useState<PhotoItemDto[]>([]);
@@ -9,8 +14,8 @@ export const usePhotos = (filter: FilterDto | null) => {
   useEffect(() => {
     if (!filter) return;
     setLoading(true);
-       PhotosService.postApiPhotosSearch(filter)
-      .then((data) => { setPhotos(data.photos || []); })
+       postApiPhotosSearch(filter)
+      .then((res) => { setPhotos(res.data.photos || []); })
       .finally(() => { setLoading(false); });
   }, [filter]);
 
@@ -23,8 +28,8 @@ export const usePhotoById = (id: number) => {
 
   useEffect(() => {
     setLoading(true);
-    PhotosService.getApiPhotos(id)
-        .then((data) => { setPhoto(data); })
+    getApiPhotos(id)
+        .then((res) => { setPhoto(res.data); })
         .finally(() => { setLoading(false); });
   }, [id]);
 

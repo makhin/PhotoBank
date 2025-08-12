@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { PhotoItemDto } from '@photobank/shared/generated';
+import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 
 import { useSearchPhotosMutation } from '@/shared/api.ts';
 import { Button } from '@/components/ui/button';

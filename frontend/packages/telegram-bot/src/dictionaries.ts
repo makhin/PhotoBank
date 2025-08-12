@@ -3,13 +3,13 @@ import {
   personsGetAll,
   storagesGetAll,
   tagsGetAll,
-} from '@photobank/shared/src/api/photobank';
+} from '@photobank/shared/api/photobank';
 import { unknownPersonLabel } from '@photobank/shared/constants';
 import type {
   PersonDto,
   StorageDto,
   TagDto,
-} from '@photobank/shared/src/api/photobank';
+} from '@photobank/shared/api/photobank';
 
 type DictData = {
   tagMap: Map<number, string>;

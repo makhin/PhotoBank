@@ -10,7 +10,7 @@ import {Input} from '@/components/ui/input';
 import {Textarea} from '@/components/ui/textarea';
 import {ScrollArea} from '@/components/ui/scroll-area';
 import {Checkbox} from '@/components/ui/checkbox';
-import type { FaceBoxDto } from '@photobank/shared/generated';
+import type { FaceBoxDto } from '@photobank/shared/api/photobank';
 import {useGetPhotoByIdQuery, useUpdateFaceMutation} from "@/shared/api.ts";
 import {ScoreBar} from '@/components/ScoreBar';
 import {FaceOverlay} from "@/components/FaceOverlay.tsx";

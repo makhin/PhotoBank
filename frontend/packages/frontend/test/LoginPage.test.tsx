@@ -16,9 +16,8 @@ class RO {
 global.ResizeObserver = RO;
 
 const renderPage = async (loginMock: any) => {
-  vi.doMock('@photobank/shared/generated', () => ({
-    AuthService: { postApiAuthLogin: loginMock },
-    OpenAPI: {},
+  vi.doMock('@photobank/shared/api/photobank', () => ({
+    authLogin: loginMock,
   }));
   vi.doMock('@photobank/shared/auth', () => ({ setAuthToken: vi.fn() }));
   const { default: LoginPage } = await import('../src/pages/auth/LoginPage');
