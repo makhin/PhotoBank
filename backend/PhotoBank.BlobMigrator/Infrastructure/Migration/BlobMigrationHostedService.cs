@@ -221,8 +221,8 @@ public class BlobMigrationHostedService : BackgroundService
         // ключ
         var key = BuildKey(s3Prefix, id, ".jpg");
 
-        // если уже есть объект с метаданными sha256 — просто отмечаем
-        if (await ExistsWithSameHash(key, ct) is string etExisting)
+        // если уже есть объект с таким же sha256 — просто отмечаем
+        if (await ExistsWithSameHash(key, sha256, ct) is string etExisting)
         {
             await MarkMigrated(db, table, idColumn, id, keyColumn, etagColumn, shaColumn, sizeColumn, migratedAtColumn,
                 key, etExisting, sha256, size, ct);
@@ -296,18 +296,20 @@ public class BlobMigrationHostedService : BackgroundService
         }
     }
 
-    private async Task<string?> ExistsWithSameHash(string key, CancellationToken ct)
+    private async Task<string?> ExistsWithSameHash(string key, string sha256, CancellationToken ct)
     {
         try
         {
             var stat = await _minio.StatObjectAsync(new StatObjectArgs()
                 .WithBucket(_s3.Bucket).WithObject(key), ct);
 
-            if (stat.MetaData != null && stat.MetaData.TryGetValue("X-Amz-Meta-sha256", out var remoteSha) &&
-                !string.IsNullOrWhiteSpace(remoteSha))
+            if (stat.MetaData != null &&
+                stat.MetaData.TryGetValue("X-Amz-Meta-sha256", out var remoteSha) &&
+                string.Equals(remoteSha, sha256, StringComparison.OrdinalIgnoreCase))
             {
                 return stat.ETag;
             }
+
             return null;
         }
         catch (Minio.Exceptions.ObjectNotFoundException)
