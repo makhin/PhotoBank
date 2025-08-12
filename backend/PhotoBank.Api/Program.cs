@@ -18,6 +18,10 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog.Formatting.Compact;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using System.Text.Json.Serialization;
+using PhotoBank.Api.Validators;
 
 namespace PhotoBank.Api
 {
@@ -145,12 +149,36 @@ namespace PhotoBank.Api
                     Type = "https://httpstatuses.com/422",
                     Instance = http.Request.Path
                 });
+
+                options.Map<ValidationException>((ex, http) =>
+                    new ValidationProblemDetails(ex.Errors
+                        .GroupBy(e => e.PropertyName)
+                        .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray()))
+                    {
+                        Status = StatusCodes.Status400BadRequest,
+                        Type = "https://httpstatuses.com/400",
+                        Title = "Validation failed",
+                        Instance = http.Request.Path
+                    });
             });
 
             builder.Services.AddHealthChecks()
                 .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
                 .AddDbContextCheck<PhotoBankDbContext>("Database", tags: new[] { "ready" });
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+                });
+
+            builder.Services.AddFluentValidationAutoValidation();
+            builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestDtoValidator>();
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.InvalidModelStateResponseFactory = context =>
+                    new BadRequestObjectResult(new ValidationProblemDetails(context.ModelState));
+            });
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
