@@ -1,15 +1,15 @@
 import {
-  PathsService,
-  PersonsService,
-  StoragesService,
-  TagsService,
-} from '@photobank/shared/generated';
+  pathsGetAll,
+  personsGetAll,
+  storagesGetAll,
+  tagsGetAll,
+} from '@photobank/shared/src/api/photobank';
 import { unknownPersonLabel } from '@photobank/shared/constants';
 import type {
   PersonDto,
   StorageDto,
   TagDto,
-} from '@photobank/shared/generated';
+} from '@photobank/shared/src/api/photobank';
 
 type DictData = {
   tagMap: Map<number, string>;
@@ -44,13 +44,13 @@ function getDict(): DictData {
 
 export async function loadDictionaries() {
   if (cache.has(currentUser)) return;
-  const tagList = await TagsService.getApiTags();
+  const { data: tagList } = await tagsGetAll();
   const tagMap = new Map(tagList.map(tag => [tag.id, tag.name]));
-  const personList = await PersonsService.getApiPersons();
+  const { data: personList } = await personsGetAll();
   const personMap = new Map(personList.map(p => [p.id, p.name]));
-  const storageList = await StoragesService.getApiStorages();
+  const { data: storageList } = await storagesGetAll();
   const storageMap = new Map(storageList.map((s) => [s.id, s.name]));
-  const pathList = await PathsService.getApiPaths();
+  const { data: pathList } = await pathsGetAll();
   const pathsMap = new Map<number, string[]>();
   for (const p of pathList) {
     const arr = pathsMap.get(p.storageId) ?? [];

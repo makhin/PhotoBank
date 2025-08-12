@@ -6,8 +6,8 @@ import {
   prevPageText,
   nextPageText,
 } from '@photobank/shared/constants';
-import type { FilterDto } from '@photobank/shared/generated';
-import { PhotosService } from '@photobank/shared/generated';
+import type { FilterDto } from '@photobank/shared/src/api/photobank';
+import { postApiPhotosSearch } from '@photobank/shared/src/api/photobank';
 import { firstNWords } from '@photobank/shared/index';
 import { captionCache, currentPagePhotos, deletePhotoMessage } from '../photo';
 import { logger } from '../logger';
@@ -42,11 +42,12 @@ export async function sendPhotosPage({
   const skip = (page - 1) * PHOTOS_PAGE_SIZE;
   let queryResult;
   try {
-    queryResult = await PhotosService.postApiPhotosSearch({
+    const res = await postApiPhotosSearch({
       ...filter,
       top: PHOTOS_PAGE_SIZE,
       skip,
     });
+    queryResult = res.data;
   } catch (err) {
     logger.error(apiErrorMsg, err);
     await ctx.reply(sorryTryToRequestLaterMsg);
