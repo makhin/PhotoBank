@@ -1,0 +1,15 @@
+{
+  "BlobMigration": {
+    "Enabled": false,
+    "BatchSize": 200,
+    "Concurrency": 3,
+    "TempDir": "tmp-migrate"
+  },
+  "S3": {
+    "Endpoint": "http://127.0.0.1:9000",
+    "UseSsl": false,
+    "AccessKey": "minioadmin",
+    "SecretKey": "minioadmin",
+    "Bucket": "photobank"
+  }
+}
