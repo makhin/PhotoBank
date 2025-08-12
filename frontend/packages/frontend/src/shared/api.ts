@@ -1,30 +1,17 @@
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
 import * as Api from '@photobank/shared/src/api/photobank';
-import type { LoginRequestDto, LoginResponseDto } from '@photobank/shared/types';
+
+import { orvalQuery, orvalMutation } from './orvalAdapter';
 
 export const photobankApi = createApi({
   reducerPath: 'photobankApi',
   baseQuery: fakeBaseQuery<{ status: number; data?: unknown; problem?: unknown }>(),
   endpoints: (build) => ({
-    login: build.mutation<LoginResponseDto, LoginRequestDto>({
-      async queryFn(body) {
-        try {
-          const data = await Api.postApiAuthLogin(body);
-          return { data };
-        } catch (e: any) {
-          return { error: { status: e.status ?? 500, problem: e.problem, data: undefined } };
-        }
-      },
+    login: build.mutation<Api.LoginResponseDto, Api.LoginRequestDto>({
+      queryFn: orvalMutation((body, opt) => Api.authLogin(body, opt).then((r) => r.data)),
     }),
-    getPhotoById: build.query<Api.PhotoDto, string>({
-      async queryFn(id) {
-        try {
-          const data = await Api.getApiPhotosById({ id });
-          return { data };
-        } catch (e: any) {
-          return { error: { status: e.status ?? 500, problem: e.problem } };
-        }
-      },
+    getPhotoById: build.query<Api.PhotoDto, number>({
+      queryFn: orvalQuery((id, opt) => Api.getApiPhotos(id, opt).then((r) => r.data)),
     }),
     // add other endpoints similarly
   }),
