@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-import { UsersService } from '@photobank/shared/generated';
 import type { UserWithClaimsDto } from '@photobank/shared/generated';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +14,11 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { manageUsersTitle, saveUserButtonText, phoneNumberLabel, telegramLabel } from '@photobank/shared/constants';
+import {
+  useGetAdminUsersQuery,
+  useUpdateAdminUserMutation,
+  useSetUserClaimsMutation,
+} from '@/shared/api.ts';
 
 const schema = z.object({
   phoneNumber: z.string().optional(),
@@ -90,20 +93,18 @@ function UserEditor({ user, onSave }: UserEditorProps) {
 }
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<UserWithClaimsDto[]>([]);
-
-  useEffect(() => {
-    UsersService.getApiAdminUsers().then(setUsers).catch(console.error);
-  }, []);
+  const { data: users = [] } = useGetAdminUsersQuery();
+  const [updateUser] = useUpdateAdminUserMutation();
+  const [setClaims] = useSetUserClaimsMutation();
 
   const handleSave = async (id: string, data: FormData) => {
-    await UsersService.putApiAdminUsers(id, data);
+    await updateUser({ id, data }).unwrap();
     const claims = (data.claims ?? '').split('\n').filter(Boolean).map((l) => {
       const [type, value] = l.split(':');
       return { type: type.trim(), value: value.trim() };
     });
     if (claims.length) {
-      await UsersService.putApiAdminUsersClaims(id, claims);
+      await setClaims({ id, data: claims }).unwrap();
     }
   };
 

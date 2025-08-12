@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { PhotoItemDto } from '@photobank/shared/generated';
 
-import { useSearchPhotosMutation } from '@/entities/photo/api.ts';
+import { useSearchPhotosMutation } from '@/shared/api.ts';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { RootState } from '@/app/store.ts';
