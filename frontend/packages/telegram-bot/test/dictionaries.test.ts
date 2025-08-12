@@ -10,11 +10,11 @@ describe('dictionaries', () => {
     const getAllTags = vi.fn().mockResolvedValue({ data: [] });
     const getAllStorages = vi.fn().mockResolvedValue({ data: [] });
     const getAllPaths = vi.fn().mockResolvedValue({ data: [] });
-    vi.doMock('@photobank/shared/api/photobank', () => ({
-      personsGetAll: getAllPersons,
-      tagsGetAll: getAllTags,
-      storagesGetAll: getAllStorages,
-      pathsGetAll: getAllPaths,
+    vi.doMock('../src/services/dictionary', () => ({
+      fetchPersons: getAllPersons,
+      fetchTags: getAllTags,
+      fetchStorages: getAllStorages,
+      fetchPaths: getAllPaths,
     }));
     const dict = await import('../src/dictionaries');
     await dict.loadDictionaries();
@@ -52,11 +52,11 @@ describe('dictionaries', () => {
     });
     const getAllStorages = vi.fn().mockResolvedValue({ data: [] });
     const getAllPaths = vi.fn().mockResolvedValue({ data: [] });
-    vi.doMock('@photobank/shared/api/photobank', () => ({
-      personsGetAll: getAllPersons,
-      tagsGetAll: getAllTags,
-      storagesGetAll: getAllStorages,
-      pathsGetAll: getAllPaths,
+    vi.doMock('../src/services/dictionary', () => ({
+      fetchPersons: getAllPersons,
+      fetchTags: getAllTags,
+      fetchStorages: getAllStorages,
+      fetchPaths: getAllPaths,
     }));
     const dict = await import('../src/dictionaries');
     await dict.loadDictionaries();
@@ -72,11 +72,11 @@ describe('dictionaries', () => {
         { storageId: 1, path: '/b' },
       ],
     });
-    vi.doMock('@photobank/shared/api/photobank', () => ({
-      personsGetAll: vi.fn().mockResolvedValue({ data: [] }),
-      tagsGetAll: vi.fn().mockResolvedValue({ data: [] }),
-      storagesGetAll: getAllStorages,
-      pathsGetAll: getAllPaths,
+    vi.doMock('../src/services/dictionary', () => ({
+      fetchPersons: vi.fn().mockResolvedValue({ data: [] }),
+      fetchTags: vi.fn().mockResolvedValue({ data: [] }),
+      fetchStorages: getAllStorages,
+      fetchPaths: getAllPaths,
     }));
     const dict = await import('../src/dictionaries');
     await dict.loadDictionaries();

@@ -1,11 +1,8 @@
 import { Context } from 'grammy';
 import axios from 'axios';
-import { uploadPhotosAdapter } from '@photobank/shared';
-import {
-  uploadFailedMsg,
-  uploadSuccessMsg,
-  uploadStorageName,
-} from '@photobank/shared/constants';
+import { uploadFailedMsg, uploadSuccessMsg, uploadStorageName } from '@photobank/shared/constants';
+import { uploadPhotos } from '../services/photo';
+import { handleCommandError } from '../errorHandler';
 
 import { BOT_TOKEN } from '../config';
 import { getStorageId } from '../dictionaries';
@@ -48,7 +45,7 @@ export async function uploadCommand(ctx: Context) {
     const storageId = getStorageId(uploadStorageName);
     const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
 
-    await uploadPhotosAdapter({
+    await uploadPhotos({
       files: uploadFiles,
       storageId,
       path: username,
@@ -56,7 +53,8 @@ export async function uploadCommand(ctx: Context) {
 
     await ctx.reply(uploadSuccessMsg);
   } catch (err) {
-    await ctx.reply(uploadFailedMsg + (err instanceof Error ? `: ${err.message}` : ''));
+    await ctx.reply(uploadFailedMsg);
+    await handleCommandError(ctx, err);
   }
 }
 

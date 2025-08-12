@@ -1,16 +1,14 @@
 import { Context, InlineKeyboard } from 'grammy';
 import {
-  apiErrorMsg,
-  sorryTryToRequestLaterMsg,
   unknownYearLabel,
   prevPageText,
   nextPageText,
 } from '@photobank/shared/constants';
 import type { FilterDto } from '@photobank/shared/api/photobank';
-import { postApiPhotosSearch } from '@photobank/shared/api/photobank';
+import { searchPhotos } from '../services/photo';
+import { handleCommandError } from '../errorHandler';
 import { firstNWords } from '@photobank/shared/index';
 import { captionCache, currentPagePhotos, deletePhotoMessage } from '../photo';
-import { logger } from '../logger';
 
 export const PHOTOS_PAGE_SIZE = 10;
 
@@ -42,15 +40,14 @@ export async function sendPhotosPage({
   const skip = (page - 1) * PHOTOS_PAGE_SIZE;
   let queryResult;
   try {
-    const res = await postApiPhotosSearch({
+    const res = await searchPhotos({
       ...filter,
       top: PHOTOS_PAGE_SIZE,
       skip,
     });
     queryResult = res.data;
   } catch (err) {
-    logger.error(apiErrorMsg, err);
-    await ctx.reply(sorryTryToRequestLaterMsg);
+    await handleCommandError(ctx, err);
     return;
   }
 

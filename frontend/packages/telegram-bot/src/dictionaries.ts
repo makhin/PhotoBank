@@ -1,9 +1,9 @@
 import {
-  pathsGetAll,
-  personsGetAll,
-  storagesGetAll,
-  tagsGetAll,
-} from '@photobank/shared/api/photobank';
+  fetchPaths,
+  fetchPersons,
+  fetchStorages,
+  fetchTags,
+} from './services/dictionary';
 import { unknownPersonLabel } from '@photobank/shared/constants';
 import type {
   PersonDto,
@@ -44,13 +44,13 @@ function getDict(): DictData {
 
 export async function loadDictionaries() {
   if (cache.has(currentUser)) return;
-  const { data: tagList } = await tagsGetAll();
+  const { data: tagList } = await fetchTags();
   const tagMap = new Map(tagList.map(tag => [tag.id, tag.name]));
-  const { data: personList } = await personsGetAll();
+  const { data: personList } = await fetchPersons();
   const personMap = new Map(personList.map(p => [p.id, p.name]));
-  const { data: storageList } = await storagesGetAll();
+  const { data: storageList } = await fetchStorages();
   const storageMap = new Map(storageList.map((s) => [s.id, s.name]));
-  const { data: pathList } = await pathsGetAll();
+  const { data: pathList } = await fetchPaths();
   const pathsMap = new Map<number, string[]>();
   for (const p of pathList) {
     const arr = pathsMap.get(p.storageId) ?? [];
