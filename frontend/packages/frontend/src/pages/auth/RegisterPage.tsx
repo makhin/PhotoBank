@@ -3,6 +3,13 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
+import {
+  registerTitle,
+  emailLabel,
+  passwordLabel,
+  registerButtonText,
+} from '@photobank/shared/constants';
+
 import { useRegisterMutation } from '@/shared/api.ts';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,12 +21,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  registerTitle,
-  emailLabel,
-  passwordLabel,
-  registerButtonText,
-} from '@photobank/shared/constants';
 
 const formSchema = z.object({
   email: z.string().email(),

@@ -6,13 +6,13 @@ import {
   searchPhotosEmptyMsg,
 } from '@photobank/shared/constants';
 import { parseQueryWithOpenAI } from '@photobank/shared/ai/openai';
+import type { FilterDto } from '@photobank/shared/api/photobank';
+import { getFilterHash } from '@photobank/shared/index';
+
 import {
   findBestPersonId,
   findBestTagId,
 } from '../dictionaries';
-import type { FilterDto } from '@photobank/shared/api/photobank';
-import { getFilterHash } from '@photobank/shared/index';
-
 import { sendPhotosPage } from './photosPage';
 import { logger } from '../logger';
 
@@ -73,7 +73,7 @@ export async function aiCommand(ctx: Context, promptOverride?: string) {
       return;
     }
 
-    const hash = await getFilterHash(dto);
+    const hash = getFilterHash(dto);
     aiFilters.set(hash, dto);
 
     await sendAiPage(ctx, hash, 1);

@@ -1,15 +1,16 @@
-import {
-  fetchPaths,
-  fetchPersons,
-  fetchStorages,
-  fetchTags,
-} from './services/dictionary';
 import { unknownPersonLabel } from '@photobank/shared/constants';
 import type {
   PersonDto,
   StorageDto,
   TagDto,
 } from '@photobank/shared/api/photobank';
+
+import {
+  fetchPaths,
+  fetchPersons,
+  fetchStorages,
+  fetchTags,
+} from './services/dictionary';
 
 type DictData = {
   tagMap: Map<number, string>;

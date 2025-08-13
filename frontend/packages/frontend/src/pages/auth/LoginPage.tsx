@@ -3,14 +3,6 @@ import {useForm} from 'react-hook-form';
 import {useCallback} from 'react';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {z} from 'zod';
-import {loginUser, resetError} from '@/features/auth/model/authSlice.ts';
-import {useAppDispatch, useAppSelector} from '@/app/hook.ts';
-
-import {Button} from '@/components/ui/button';
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
-import {Checkbox} from '@/components/ui/checkbox';
-import {Input} from '@/components/ui/input';
-import {PasswordInput} from '@/components/ui/password-input';
 import {
   loginTitle,
   emailLabel,
@@ -18,6 +10,14 @@ import {
   stayLoggedInLabel,
   loginButtonText,
 } from '@photobank/shared/constants';
+
+import {loginUser, resetError} from '@/features/auth/model/authSlice.ts';
+import {useAppDispatch, useAppSelector} from '@/app/hook.ts';
+import {Button} from '@/components/ui/button';
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
+import {Checkbox} from '@/components/ui/checkbox';
+import {Input} from '@/components/ui/input';
+import {PasswordInput} from '@/components/ui/password-input';
 
 const formSchema = z.object({
   email: z.string().email(),

@@ -1,6 +1,7 @@
 import { Context } from 'grammy';
-import { getUser } from './services/auth';
 import { notRegisteredMsg } from '@photobank/shared/constants';
+
+import { getUser } from './services/auth';
 
 export async function ensureRegistered(ctx: Context): Promise<boolean> {
   try {

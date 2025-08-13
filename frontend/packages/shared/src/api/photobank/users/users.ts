@@ -10,7 +10,6 @@ import type {
   UpdateUserDto,
   UserWithClaimsDto
 } from '.././model';
-
 import { customFetcher } from '.././fetcher';
 
 export type usersGetAllResponse200 = {

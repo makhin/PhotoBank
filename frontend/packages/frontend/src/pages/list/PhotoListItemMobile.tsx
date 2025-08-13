@@ -1,15 +1,17 @@
 import { Calendar, User, Tag } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import PhotoPreview from './PhotoPreview';
-import PhotoFlags from '@/components/PhotoFlags';
-import MetadataBadgeList from '@/components/MetadataBadgeList';
 import { formatDate, firstNWords } from '@photobank/shared';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import {
   MAX_VISIBLE_PERSONS_SM,
   MAX_VISIBLE_TAGS_SM,
 } from '@photobank/shared/constants';
+
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import PhotoFlags from '@/components/PhotoFlags';
+import MetadataBadgeList from '@/components/MetadataBadgeList';
+
+import PhotoPreview from './PhotoPreview';
 
 export type PhotoListItemMobileProps = {
   photo: PhotoItemDto;

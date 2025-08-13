@@ -1,5 +1,4 @@
 import { Context } from "grammy";
-import { getUser, getUserRoles, getUserClaims } from "../services/auth";
 import {
     getProfileErrorMsg,
     rolesLabel,
@@ -8,6 +7,8 @@ import {
     claimsEmptyLabel,
     notRegisteredMsg,
 } from "@photobank/shared/constants";
+
+import { getUser, getUserRoles, getUserClaims } from "../services/auth";
 import { handleCommandError } from "../errorHandler";
 
 export async function profileCommand(ctx: Context) {
@@ -47,7 +48,7 @@ export async function profileCommand(ctx: Context) {
         }
 
         await ctx.reply(lines.join("\n"));
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof Error && error.message.includes('404')) {
             await ctx.reply(notRegisteredMsg);
             return;

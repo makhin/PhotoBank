@@ -1,6 +1,7 @@
 import { postApiPhotosSearch, getApiPhotos } from '@photobank/shared/api/photobank';
 import { uploadPhotosAdapter } from '@photobank/shared';
 import type { FilterDto } from '@photobank/shared/api/photobank';
+
 import { handleServiceError } from '../errorHandler';
 
 export async function searchPhotos(filter: FilterDto & { top?: number; skip?: number }) {

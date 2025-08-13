@@ -5,7 +5,8 @@ import {
   openAiPromptPlaceholder,
 } from '@photobank/shared/constants';
 import {
-  configureAzureOpenAI, parseQueryWithOpenAI,
+  configureAzureOpenAI,
+  parseQueryWithOpenAI,
 } from '@photobank/shared/ai/openai';
 
 import {
@@ -14,15 +15,14 @@ import {
   AZURE_OPENAI_DEPLOYMENT,
   AZURE_OPENAI_API_VERSION,
 } from '@/config.ts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
 };
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 
 export default function OpenAIPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -84,7 +84,7 @@ export default function OpenAIPage() {
               placeholder={openAiPromptPlaceholder}
               className="flex-1"
             />
-            <Button onClick={sendMessage} disabled={loading}>
+            <Button onClick={() => void sendMessage()} disabled={loading}>
               {loading ? '...' : openAiSendButton}
             </Button>
           </div>

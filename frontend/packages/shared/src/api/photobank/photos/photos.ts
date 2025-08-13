@@ -13,7 +13,6 @@ import type {
   PhotosUploadBody,
   ProblemDetails
 } from '.././model';
-
 import { customFetcher } from '.././fetcher';
 
 export type photosSearchPhotosResponse200 = {

@@ -1,7 +1,8 @@
 import type { PhotoDto } from "@photobank/shared/api/photobank";
-import { getPersonName } from "./dictionaries";
 import { formatDate } from "@photobank/shared/index";
 import { Buffer } from "buffer";
+
+import { getPersonName } from "./dictionaries";
 
 export function formatPhotoMessage(photo: PhotoDto): { caption: string, hasSpoiler: boolean, image?: Buffer } {
     const lines: string[] = [];

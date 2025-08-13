@@ -22,7 +22,11 @@ export default [
       'eslint.config.mjs',
     ],
   },
-  ...tseslint.configs.strictTypeChecked,
+  // The strictTypeChecked preset enables many "no-unsafe" rules that produce
+  // hundreds of false positives in our generated API clients and tests. The
+  // recommendedTypeChecked preset still leverages type information but keeps
+  // the rule set manageable for the codebase.
+  ...tseslint.configs.recommendedTypeChecked,
   {
     files: ['**/*.{ts,tsx}'],
     plugins: {
@@ -73,6 +77,16 @@ export default [
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       'no-undef': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
+      // Disable the family of `no-unsafe-*` rules for now. The generated API
+      // clients rely heavily on `any` types which trigger thousands of these
+      // warnings, making lint noise overwhelming.
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-redundant-type-constituents': 'off',
+      '@typescript-eslint/no-invalid-void-type': 'off',
     },
   },
   prettier,

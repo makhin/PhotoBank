@@ -4,6 +4,7 @@ import type {z} from 'zod';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
+import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton, loadingText } from '@photobank/shared/constants';
 
 import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
 import type { RootState } from '@/app/store.ts';
@@ -14,7 +15,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form } from '@/components/ui/form';
 import { formSchema } from '@/features/filter/lib/form-schema.ts';
 import { FilterFormFields } from '@/components/FilterFormFields.tsx';
-import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton, loadingText } from '@photobank/shared/constants';
 
 // Infer FormData type from formSchema to ensure compatibility
 type FormData = z.infer<typeof formSchema>;

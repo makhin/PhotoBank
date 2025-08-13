@@ -2,13 +2,13 @@
 import * as dotenv from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-// Node.js ESM does not provide __dirname, recreate it from import.meta.url
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import {
   apiCredentialsNotDefinedError,
   botTokenNotDefinedError,
 } from '@photobank/shared/constants';
+
+// Node.js ESM does not provide __dirname, recreate it from import.meta.url
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Load environment variables from the project root when running locally.
 // __dirname points to `packages/telegram-bot/src` during development,
 // so climb up to the repository root to locate the `.env` file.

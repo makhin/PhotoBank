@@ -5,9 +5,10 @@ import {
   nextPageText,
 } from '@photobank/shared/constants';
 import type { FilterDto } from '@photobank/shared/api/photobank';
+import { firstNWords } from '@photobank/shared/index';
+
 import { searchPhotos } from '../services/photo';
 import { handleCommandError } from '../errorHandler';
-import { firstNWords } from '@photobank/shared/index';
 import { captionCache, currentPagePhotos, deletePhotoMessage } from '../photo';
 
 export const PHOTOS_PAGE_SIZE = 10;
