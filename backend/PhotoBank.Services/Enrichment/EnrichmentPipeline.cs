@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,101 +8,102 @@ using PhotoBank.Services.Models;
 
 namespace PhotoBank.Services.Enrichment;
 
-/// <summary>
-/// Executes enrichers in dependency order with logging, cancellation and error handling.
-/// </summary>
 public sealed class EnrichmentPipeline : IEnrichmentPipeline
 {
-    private readonly IServiceProvider _rootProvider;
-    private readonly ILogger<EnrichmentPipeline> _logger;
-    private readonly EnrichmentPipelineOptions _options;
+    private readonly IServiceProvider _root;
+    private readonly Type[] _enricherTypes;
+    private readonly EnrichmentPipelineOptions _opts;
+    private readonly ILogger<EnrichmentPipeline> _log;
 
-    private readonly Type[] _orderedTypes;
-    private readonly Func<IServiceProvider, IEnricher>[] _factories;
-
-    public EnrichmentPipeline(
-        IServiceProvider rootProvider,
-        IEnumerable<Type> enricherTypes,
-        IOptions<EnrichmentPipelineOptions> options,
-        ILogger<EnrichmentPipeline> logger)
+    public EnrichmentPipeline(IServiceProvider root,
+                              IEnumerable<Type> enricherTypes,
+                              IOptions<EnrichmentPipelineOptions> opts,
+                              ILogger<EnrichmentPipeline> log)
     {
-        _rootProvider = rootProvider;
-        _logger = logger;
-        _options = options.Value;
-
-        var types = enricherTypes.Distinct().ToArray();
-        if (types.Length == 0)
-            throw new InvalidOperationException("No IEnricher implementations were provided to the pipeline.");
-
-        _orderedTypes = EnricherDependencyResolver.Sort(types, rootProvider);
-        _factories = _orderedTypes.Select(CreateFactory).ToArray();
-
-        _logger.LogInformation("EnrichmentPipeline initialized with {Count} enrichers: {Names}",
-            _orderedTypes.Length, string.Join(", ", _orderedTypes.Select(t => t.Name)));
+        _root = root;
+        _enricherTypes = enricherTypes.ToArray();
+        _opts = opts.Value;
+        _log = log;
     }
 
     public async Task RunAsync(Photo photo, SourceDataDto source, CancellationToken ct = default)
     {
-        using var scope = _rootProvider.CreateScope();
-        var sp = scope.ServiceProvider;
+        using var scope = _root.CreateScope();
+        var provider = scope.ServiceProvider;
 
-        for (var i = 0; i < _factories.Length; i++)
+        var ordered = TopoSort(_enricherTypes, provider);
+        foreach (var t in ordered)
         {
             ct.ThrowIfCancellationRequested();
 
-            var enricher = _factories[i](sp);
-            var stepName = enricher.GetType().Name;
+            var enricher = (IEnricher)provider.GetRequiredService(t);
+            var sw = _opts.LogTimings ? Stopwatch.StartNew() : null;
 
-            var sw = _options.LogTimings ? Stopwatch.StartNew() : null;
             try
             {
-                _logger.LogDebug("➡️ Starting enricher: {Step}", stepName);
                 await enricher.EnrichAsync(photo, source, ct);
-                if (_options.LogTimings)
-                    _logger.LogInformation("✅ {Step} completed in {Ms} ms", stepName, sw!.Elapsed.TotalMilliseconds);
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.LogWarning("⏹️ Pipeline canceled during {Step}", stepName);
-                throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Enricher {Step} failed", stepName);
-                if (!_options.ContinueOnError)
-                    throw;
+                _log.LogError(ex, "Enricher {Enricher} failed", t.Name);
+                if (!_opts.ContinueOnError) throw;
             }
             finally
             {
-                sw?.Stop();
+                if (sw is { })
+                    _log.LogInformation("Enricher {Enricher} took {Ms} ms", t.Name, sw.ElapsedMilliseconds);
             }
         }
     }
 
     public async Task RunBatchAsync(IEnumerable<(Photo photo, SourceDataDto source)> items, CancellationToken ct = default)
     {
-        var list = items as (Photo photo, SourceDataDto source)[] ?? items.ToArray();
-        if (list.Length == 0) return;
+        var arr = items.ToArray();
+        var dop = _opts.MaxDegreeOfParallelism.GetValueOrDefault(Environment.ProcessorCount);
+        _log.LogInformation("Batch enrichment: {Count} items, DOP={Dop}", arr.Length, dop);
 
-        var dop = _options.MaxDegreeOfParallelism.HasValue && _options.MaxDegreeOfParallelism > 0
-            ? _options.MaxDegreeOfParallelism.Value
-            : Environment.ProcessorCount;
-
-        _logger.LogInformation("Batch pipeline started for {Count} items with DOP={Dop}", list.Length, dop);
-
-        await Parallel.ForEachAsync(list, new ParallelOptions
-        {
-            CancellationToken = ct,
-            MaxDegreeOfParallelism = dop
-        }, async (item, token) =>
-        {
-            await RunAsync(item.photo, item.source, token);
-        });
-
-        _logger.LogInformation("Batch pipeline completed for {Count} items", list.Length);
+        await Parallel.ForEachAsync(arr, new ParallelOptions { MaxDegreeOfParallelism = dop, CancellationToken = ct },
+            async (it, token) => await RunAsync(it.photo, it.source, token));
     }
 
-    private static Func<IServiceProvider, IEnricher> CreateFactory(Type t) =>
-        sp => (IEnricher)sp.GetRequiredService(t);
-}
+    private static Type[] TopoSort(IReadOnlyList<Type> types, IServiceProvider sp)
+    {
+        // зависимости из интерфейса и [DependsOn]
+        var edges = new Dictionary<Type, HashSet<Type>>();
+        foreach (var t in types)
+        {
+            var deps = new HashSet<Type>(
+                ((IOrderDependent)sp.GetRequiredService(t)).Dependencies ?? Array.Empty<Type>());
 
+            foreach (var a in t.GetCustomAttributes(typeof(DependsOnAttribute), inherit: true).Cast<DependsOnAttribute>())
+                deps.Add(a.EnricherType);
+
+            edges[t] = deps;
+        }
+
+        var result = new List<Type>();
+        var temp = new HashSet<Type>();
+        var perm = new HashSet<Type>();
+
+        void Visit(Type v)
+        {
+            if (perm.Contains(v)) return;
+            if (temp.Contains(v))
+                throw new InvalidOperationException($"Dependency cycle detected around {v.Name}");
+
+            temp.Add(v);
+            foreach (var u in edges[v])
+            {
+                if (!edges.ContainsKey(u))
+                    throw new InvalidOperationException($"Unknown dependency {u.Name} of {v.Name}");
+                Visit(u);
+            }
+            temp.Remove(v);
+            perm.Add(v);
+            result.Add(v);
+        }
+
+        foreach (var t in types) Visit(t);
+        return result.ToArray();
+    }
+}
