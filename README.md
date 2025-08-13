@@ -86,6 +86,18 @@ dotnet build PhotoBank.MAUI.Blazor/PhotoBank.MAUI.Blazor.csproj
 dotnet run --project PhotoBank.MAUI.Blazor
 ```
 
+### Консольные утилиты
+
+```bash
+cd backend
+dotnet run --project PhotoBank.Console -- --storage 1
+```
+
+Опции:
+
+- `--storage`, `-s` – идентификатор хранилища;
+- `--no-register` – не регистрировать людей (по умолчанию регистрация включена).
+
 ### Тесты
 
 Для .NET проектов:
@@ -201,6 +213,18 @@ can simply type a query without the command prefix.
 dotnet build PhotoBank.MAUI.Blazor/PhotoBank.MAUI.Blazor.csproj
 dotnet run --project PhotoBank.MAUI.Blazor
 ```
+
+### Console
+
+```bash
+cd backend
+dotnet run --project PhotoBank.Console -- --storage 1
+```
+
+Options:
+
+- `--storage`, `-s` – storage ID;
+- `--no-register` – skip person registration (enabled by default).
 
 ### Tests
 
