@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
@@ -19,15 +20,17 @@ namespace PhotoBank.Console
         private readonly ILogger<App> _logger;
         private readonly ISyncService _syncService;
         private readonly IRecognitionService _recognitionService;
+        private readonly bool _checkDuplicates;
         private readonly object _progressLock = new();
 
-        public App(IPhotoProcessor photoProcessor, IRepository<Storage> storages, ILogger<App> logger, ISyncService syncService, IRecognitionService recognitionService)
+        public App(IPhotoProcessor photoProcessor, IRepository<Storage> storages, ILogger<App> logger, ISyncService syncService, IRecognitionService recognitionService, IConfiguration configuration)
         {
             _photoProcessor = photoProcessor;
             _storages = storages;
             _logger = logger;
             _syncService = syncService;
             _recognitionService = recognitionService;
+            _checkDuplicates = configuration.GetValue("CheckDuplicates", true);
         }
 
         public async Task RunAsync(ConsoleOptions options, CancellationToken token)
@@ -67,7 +70,7 @@ namespace PhotoBank.Console
             {
                 try
                 {
-                    if (await _photoProcessor.IsDuplicateAsync(storage, file))
+                    if (_checkDuplicates && await _photoProcessor.IsDuplicateAsync(storage, file))
                     {
                         Interlocked.Increment(ref duplicates);
                     }
