@@ -59,7 +59,7 @@ namespace PhotoBank.DbContext.Models
         public double AdultScore { get; set; }
         public bool IsRacyContent { get; set; }
         public double RacyScore { get; set; }
-        [MaxLength(64)]
+        [MaxLength(256)]
         public string ImageHash { get; set; }
         [MaxLength(255)]
         public string RelativePath { get; set; }

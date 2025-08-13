@@ -550,8 +550,8 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("ImageHash")
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("IsAdultContent")
                         .HasColumnType("bit");
