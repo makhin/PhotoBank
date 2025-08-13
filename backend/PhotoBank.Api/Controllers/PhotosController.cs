@@ -15,9 +15,9 @@ namespace PhotoBank.Api.Controllers
         : ControllerBase
     {
         [HttpPost("search")]
-        [ProducesResponseType(typeof(QueryResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PageResponse<PhotoItemDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<QueryResult>> SearchPhotos([FromBody] FilterDto request)
+        public async Task<ActionResult<PageResponse<PhotoItemDto>>> SearchPhotos([FromBody] FilterDto request)
         {
             logger.LogInformation("Searching photos with filter {@Filter}", request);
             var result = await photoService.GetAllPhotosAsync(request);

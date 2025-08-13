@@ -10,7 +10,7 @@ namespace PhotoBank.MAUI.Blazor.Services
         HttpClient _client;
         JsonSerializerOptions _serializerOptions;
 
-        public QueryResult result { get; private set; }
+        public PageResponse<PhotoItemDto> result { get; private set; }
 
         public RestService()
         {
@@ -27,9 +27,9 @@ namespace PhotoBank.MAUI.Blazor.Services
             };
         }
 
-        public async Task<QueryResult> GetPhotos(FilterDto request)
+        public async Task<PageResponse<PhotoItemDto>> GetPhotos(FilterDto request)
         {
-            result = new QueryResult();
+            result = new PageResponse<PhotoItemDto>();
 
             Uri uri = new Uri(string.Format(Constants.RestUrl, "GetPhotos"));
 
@@ -44,7 +44,7 @@ namespace PhotoBank.MAUI.Blazor.Services
                 if (response.IsSuccessStatusCode)
                 {
                     string responseContent = await response.Content.ReadAsStringAsync();
-                    result = JsonSerializer.Deserialize<QueryResult>(responseContent, _serializerOptions);
+                    result = JsonSerializer.Deserialize<PageResponse<PhotoItemDto>>(responseContent, _serializerOptions);
                 }
             }
             catch (Exception ex)

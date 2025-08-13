@@ -19,7 +19,7 @@ public class GetAllPhotosIntegrationTests
     private ServiceProvider _provider = null!;
     private IConfiguration _config = null!;
 
-    private async Task<QueryResult> MeasureGetAllPhotosAsync(FilterDto filter)
+    private async Task<PageResponse<PhotoItemDto>> MeasureGetAllPhotosAsync(FilterDto filter)
     {
         var service = _provider.GetRequiredService<IPhotoService>();
         var sw = Stopwatch.StartNew();

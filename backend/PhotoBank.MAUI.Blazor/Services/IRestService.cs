@@ -4,7 +4,7 @@ namespace PhotoBank.MAUI.Blazor.Services
 {
     internal interface IRestService
     {
-        Task<QueryResult> GetPhotos(FilterDto request);
+        Task<PageResponse<PhotoItemDto>> GetPhotos(FilterDto request);
         Task<PhotoDto> GetPhoto(int photoId);
         Task<IEnumerable<StorageDto>> GetStorages();
         Task<IEnumerable<PathDto>> GetPaths();
