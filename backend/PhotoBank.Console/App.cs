@@ -58,16 +58,24 @@ namespace PhotoBank.Console
             var total = fileList.Count;
             var processed = 0;
             var failed = 0;
+            var duplicates = 0;
 
             Console.WriteLine($"Processing {total} files...");
-            DisplayProgress(0, 0, total);
+            DisplayProgress(0, 0, 0, total);
 
             await Parallel.ForEachAsync(fileList, token, async (file, ct) =>
             {
                 try
                 {
-                    await _photoProcessor.AddPhotoAsync(storage, file);
-                    Interlocked.Increment(ref processed);
+                    if (await _photoProcessor.IsDuplicateAsync(storage, file))
+                    {
+                        Interlocked.Increment(ref duplicates);
+                    }
+                    else
+                    {
+                        await _photoProcessor.AddPhotoAsync(storage, file);
+                        Interlocked.Increment(ref processed);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -75,25 +83,25 @@ namespace PhotoBank.Console
                     Interlocked.Increment(ref failed);
                 }
 
-                DisplayProgress(Volatile.Read(ref processed), Volatile.Read(ref failed), total);
+                DisplayProgress(Volatile.Read(ref processed), Volatile.Read(ref failed), Volatile.Read(ref duplicates), total);
             });
 
             Console.WriteLine();
-            _logger.LogInformation("Processed {Processed} files with {Failed} failures", processed, failed);
+            _logger.LogInformation("Processed {Processed} files with {Failed} failures and {Duplicates} duplicates", processed, failed, duplicates);
             Console.WriteLine("Done");
         }
 
-        private void DisplayProgress(int processed, int failed, int total)
+        private void DisplayProgress(int processed, int failed, int duplicates, int total)
         {
             const int width = 40;
-            var completed = processed + failed;
+            var completed = processed + failed + duplicates;
             var percent = (double)completed / Math.Max(total, 1);
             var filled = (int)(percent * width);
             var bar = new string('#', filled).PadRight(width);
 
             lock (_progressLock)
             {
-                Console.Write($"\r[{bar}] {completed}/{total} files ({failed} failed)");
+                Console.Write($"\r[{bar}] {completed}/{total} files ({failed} failed, {duplicates} duplicates)");
             }
         }
     }
