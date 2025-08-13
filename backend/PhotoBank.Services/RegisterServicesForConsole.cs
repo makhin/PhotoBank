@@ -73,15 +73,26 @@ namespace PhotoBank.Services
             services.AddSingleton<IInsightFaceApiClient, InsightFaceApiClient.InsightFaceApiClient>();
             services.AddTransient<IRecognitionService, RecognitionService>();
 
-            services.AddTransient<EnricherResolver>(serviceProvider => repository =>
+            services.AddSingleton<EnricherResolver>(provider =>
             {
-                return repository.GetAll()
-                    .Where(e => e.IsActive)
-                    .Select(e => "PhotoBank.Services.Enrichers." + e.Name).AsEnumerable()
-                    .Select(Type.GetType)
-                    .Select(enricher => enricher != null
-                        ? (IEnricher) serviceProvider.GetService(enricher)
-                        : throw new NotSupportedException());
+                // Построим карту доступных энричеров один раз
+                var enricherTypes = typeof(IEnricher).Assembly
+                    .GetTypes()
+                    .Where(t => !t.IsAbstract && typeof(IEnricher).IsAssignableFrom(t))
+                    .ToDictionary(t => t.Name, t => t, StringComparer.OrdinalIgnoreCase);
+
+                return repository =>
+                {
+                    return repository.GetAll()
+                        .Where(e => e.IsActive)
+                        .AsEnumerable()
+                        .Select(e =>
+                        {
+                            if (!enricherTypes.TryGetValue(e.Name, out var type))
+                                throw new NotSupportedException($"Enricher '{e.Name}' not found in loaded assemblies.");
+                            return (IEnricher)provider.GetRequiredService(type);
+                        });
+                };
             });
         }
     }
