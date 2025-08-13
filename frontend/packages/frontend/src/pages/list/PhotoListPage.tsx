@@ -2,13 +2,6 @@ import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
-
-import { useSearchPhotosMutation } from '@/shared/api.ts';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import type { RootState } from '@/app/store.ts';
-import { useAppDispatch } from '@/app/hook.ts';
-import { setLastResult } from '@/features/photo/model/photoSlice.ts';
 import {
   photoGalleryTitle,
   filterButtonText,
@@ -21,7 +14,15 @@ import {
   colFlagsLabel,
   colDetailsLabel,
 } from '@photobank/shared/constants';
+
+import { useSearchPhotosMutation } from '@/shared/api.ts';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import type { RootState } from '@/app/store.ts';
+import { useAppDispatch } from '@/app/hook.ts';
+import { setLastResult } from '@/features/photo/model/photoSlice.ts';
 import PhotoDetailsModal from '@/components/PhotoDetailsModal';
+
 import PhotoListItemDesktop from './PhotoListItemDesktop';
 import PhotoListItemMobile from './PhotoListItemMobile';
 

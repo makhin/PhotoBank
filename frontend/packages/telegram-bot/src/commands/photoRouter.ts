@@ -1,6 +1,7 @@
-import { Bot, Context } from "grammy";
-import { sendPhotoById, openPhotoInline } from "../photo";
+import { Bot } from "grammy";
 import { photoCommandUsageMsg } from "@photobank/shared/constants";
+
+import { sendPhotoById, openPhotoInline } from "../photo";
 import { withRegistered } from '../registration';
 
 // Основная команда

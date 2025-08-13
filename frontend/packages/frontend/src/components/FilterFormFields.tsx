@@ -4,18 +4,7 @@ import {useSelector} from 'react-redux';
 import {ChevronDownIcon} from 'lucide-react';
 import * as React from "react";
 import {format} from 'date-fns';
-
-import {Input} from '@/components/ui/input';
-import {TriStateCheckbox} from '@/components/ui/tri-state-checkbox';
-import {MultiSelect} from '@/components/ui/multi-select';
-import {FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form';
-import type {FormData} from '@/features/filter/lib/form-schema.ts';
-import type {RootState} from '@/app/store.ts';
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
 import { useIsAdmin } from '@photobank/shared';
-
-import {Button} from './ui/button';
-import {Calendar} from './ui/calendar';
 import {
     captionLabel,
     captionPlaceholder,
@@ -35,6 +24,18 @@ import {
     racyContentLabel,
     thisDayLabel,
 } from '@photobank/shared/constants';
+
+import {Input} from '@/components/ui/input';
+import {TriStateCheckbox} from '@/components/ui/tri-state-checkbox';
+import {MultiSelect} from '@/components/ui/multi-select';
+import {FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form';
+import type {FormData} from '@/features/filter/lib/form-schema.ts';
+import type {RootState} from '@/app/store.ts';
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
+
+import {Button} from './ui/button';
+import {Calendar} from './ui/calendar';
+
 
 interface FilterFormFieldsProps {
     control: Control<FormData>;

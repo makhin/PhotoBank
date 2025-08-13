@@ -7,7 +7,6 @@
 import type {
   TagDto
 } from '.././model';
-
 import { customFetcher } from '.././fetcher';
 
 export type tagsGetAllResponse200 = {

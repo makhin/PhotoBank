@@ -1,4 +1,5 @@
 import { Context } from "grammy";
+
 import { getAllPersons } from '../dictionaries';
 import { parsePrefix, sendNamedItemsPage } from "./helpers";
 
@@ -11,12 +12,12 @@ export async function sendPersonsPage(
   await sendNamedItemsPage({
     ctx,
     command: "persons",
-    fetchAll: async () => getAllPersons(),
+    fetchAll: () => getAllPersons(),
     prefix,
     page,
     edit,
     errorMsg: "🚫 Не удалось получить список персон.",
-    filter: (p) => (p as any).id >= 1,
+    filter: (p: { id: number }) => p.id >= 1,
   });
 }
 

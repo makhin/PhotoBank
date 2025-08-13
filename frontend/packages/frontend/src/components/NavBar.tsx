@@ -1,7 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { getAuthToken } from '@photobank/shared/auth';
 import { useIsAdmin } from '@photobank/shared';
-import { Button } from '@/components/ui/button';
 import {
   navbarFilterLabel,
   navbarPhotosLabel,
@@ -12,6 +11,8 @@ import {
   navbarUsersLabel,
   navbarOpenAiLabel,
 } from '@photobank/shared/constants';
+
+import { Button } from '@/components/ui/button';
 
 export default function NavBar() {
   // useLocation to trigger re-render on route changes

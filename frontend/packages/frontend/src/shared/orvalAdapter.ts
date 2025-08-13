@@ -6,8 +6,18 @@ export function orvalQuery<TArg, TResult>(
     try {
       const data = await call(arg, { signal: api.signal });
       return { data };
-    } catch (e: any) {
-      return { error: { status: e.status ?? 500, data: e.problem ?? e.message ?? e } };
+    } catch (e: unknown) {
+      const err = e as {
+        status?: number;
+        problem?: unknown;
+        message?: unknown;
+      };
+      return {
+        error: {
+          status: err.status ?? 500,
+          data: err.problem ?? err.message ?? err,
+        },
+      };
     }
   };
 }

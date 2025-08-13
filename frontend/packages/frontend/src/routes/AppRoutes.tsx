@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+
 import RequireAuth from '@/app/RequireAuth.tsx';
 import RequireAdmin from '@/app/RequireAdmin.tsx';
-
 import PhotoListPage from '@/pages/list/PhotoListPage.tsx';
 import FilterPage from '@/pages/filter/FilterPage.tsx';
 import PhotoDetailsPage from '@/pages/detail/PhotoDetailsPage.tsx';

@@ -1,10 +1,12 @@
-import { Card, CardContent } from '@/components/ui/card';
 import { AlertTriangle } from 'lucide-react';
-import { useAppSelector } from '@/app/hook';
 import { botRunningText } from '@photobank/shared/constants';
 
+import { Card, CardContent } from '@/components/ui/card';
+import { useAppSelector } from '@/app/hook';
+import type { RootState } from '@/app/store.ts';
+
 export function StatusCard() {
-  const { lastError } = useAppSelector((s) => (s as any).bot);
+  const { lastError } = useAppSelector((s: RootState) => s.bot);
   return (
     <Card className="mx-auto mt-6 max-w-md">
       <CardContent>

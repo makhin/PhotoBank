@@ -7,7 +7,6 @@
 import type {
   UpdateFaceDto
 } from '.././model';
-
 import { customFetcher } from '.././fetcher';
 
 export type facesUpdateResponse200 = {

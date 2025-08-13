@@ -5,16 +5,6 @@ import {z} from 'zod';
 import {zodResolver} from '@hookform/resolvers/zod';
 import { clearAuthToken } from '@photobank/shared/auth';
 import {
-  useGetUserQuery,
-  useGetUserRolesQuery,
-  useGetUserClaimsQuery,
-  useUpdateUserMutation,
-} from '@/shared/api.ts';
-
-import {Button} from '@/components/ui/button';
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
-import {Input} from '@/components/ui/input';
-import {
   myProfileTitle,
   emailPrefix,
   phoneNumberLabel,
@@ -24,6 +14,16 @@ import {
   userClaimsTitle,
   logoutButtonText,
 } from '@photobank/shared/constants';
+
+import {
+  useGetUserQuery,
+  useGetUserRolesQuery,
+  useGetUserClaimsQuery,
+  useUpdateUserMutation,
+} from '@/shared/api.ts';
+import {Button} from '@/components/ui/button';
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
+import {Input} from '@/components/ui/input';
 
 const formSchema = z.object({
   phoneNumber: z.string().optional(),

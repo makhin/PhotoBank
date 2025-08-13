@@ -1,4 +1,9 @@
 import type { UserWithClaimsDto } from '@photobank/shared/api/photobank';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { manageUsersTitle, saveUserButtonText, phoneNumberLabel, telegramLabel } from '@photobank/shared/constants';
+
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -10,10 +15,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { manageUsersTitle, saveUserButtonText, phoneNumberLabel, telegramLabel } from '@photobank/shared/constants';
 import {
   useGetAdminUsersQuery,
   useUpdateAdminUserMutation,

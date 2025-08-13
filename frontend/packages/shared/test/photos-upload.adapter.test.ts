@@ -1,4 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
 import { configureApi, configureApiAuth } from '../src/api/photobank/fetcher';
 import { uploadPhotosAdapter } from '../src/adapters/photos-upload.adapter';
 
@@ -10,9 +11,9 @@ describe('uploadPhotosAdapter', () => {
       ok: true,
       status: 200,
       headers: new Headers(),
-      json: async () => null,
-    } as any);
-    // @ts-ignore
+      json: () => Promise.resolve(null),
+    } as unknown as Response);
+    // @ts-expect-error assign mock fetch
     global.fetch = fetchMock;
     await uploadPhotosAdapter({
       files: [{ buffer: Buffer.from('data'), name: 'a.txt' }],

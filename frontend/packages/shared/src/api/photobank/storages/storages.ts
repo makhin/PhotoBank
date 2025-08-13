@@ -7,7 +7,6 @@
 import type {
   StorageDto
 } from '.././model';
-
 import { customFetcher } from '.././fetcher';
 
 export type storagesGetAllResponse200 = {

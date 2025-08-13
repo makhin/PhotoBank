@@ -7,7 +7,6 @@
 import type {
   PersonDto
 } from '.././model';
-
 import { customFetcher } from '.././fetcher';
 
 export type personsGetAllResponse200 = {

@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { LoginRequestDto } from '@photobank/shared/api/photobank';
 import { setAuthToken } from '@photobank/shared/auth';
 import { invalidCredentialsMsg } from '@photobank/shared/constants';
+
 import { photobankApi } from '@/shared/api.ts';
 
 interface AuthState {
@@ -20,7 +21,7 @@ export const loginUser = createAsyncThunk(
     try {
       const res = await dispatch(photobankApi.endpoints.login.initiate(data)).unwrap();
       setAuthToken(res.token!, data.rememberMe ?? true);
-    } catch (e) {
+    } catch {
       return rejectWithValue(invalidCredentialsMsg);
     }
   },

@@ -1,8 +1,9 @@
 import { Context, InputFile, InlineKeyboard } from "grammy";
 import type { PhotoDto } from "@photobank/shared/api/photobank";
+import { photoNotFoundMsg, prevPageText, nextPageText } from "@photobank/shared/constants";
+
 import { getPhoto } from "./services/photo";
 import { formatPhotoMessage } from "./formatPhotoMessage";
-import { photoNotFoundMsg, prevPageText, nextPageText } from "@photobank/shared/constants";
 
 export const photoMessages = new Map<number, number>();
 export const currentPagePhotos = new Map<number, { page: number; ids: number[] }>();

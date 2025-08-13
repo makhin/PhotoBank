@@ -2,20 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { formatDate, getOrientation, getPlaceByGeoPoint } from '@photobank/shared';
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {Badge} from '@/components/ui/badge';
-import {Label} from '@/components/ui/label';
-import {Input} from '@/components/ui/input';
-import {Textarea} from '@/components/ui/textarea';
-import {ScrollArea} from '@/components/ui/scroll-area';
-import {Checkbox} from '@/components/ui/checkbox';
 import type { FaceBoxDto } from '@photobank/shared/api/photobank';
-import {useGetPhotoByIdQuery, useUpdateFaceMutation} from "@/shared/api.ts";
-import {ScoreBar} from '@/components/ScoreBar';
-import {FaceOverlay} from "@/components/FaceOverlay.tsx";
-import type {RootState} from "@/app/store.ts";
-import {FacePersonSelector} from "@/components/FacePersonSelector.tsx";
 import {useIsAdmin} from '@photobank/shared';
 import {
     photoPropertiesTitle,
@@ -37,6 +24,20 @@ import {
     showFaceBoxesLabel,
     hoverFaceHint,
 } from '@photobank/shared/constants';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {Badge} from '@/components/ui/badge';
+import {Label} from '@/components/ui/label';
+import {Input} from '@/components/ui/input';
+import {Textarea} from '@/components/ui/textarea';
+import {ScrollArea} from '@/components/ui/scroll-area';
+import {Checkbox} from '@/components/ui/checkbox';
+import {useGetPhotoByIdQuery, useUpdateFaceMutation} from "@/shared/api.ts";
+import {ScoreBar} from '@/components/ScoreBar';
+import {FaceOverlay} from "@/components/FaceOverlay.tsx";
+import type {RootState} from "@/app/store.ts";
+import {FacePersonSelector} from "@/components/FacePersonSelector.tsx";
+
 
 const calculateImageSize = (naturalWidth: number, naturalHeight: number, containerWidth: number, containerHeight: number) => {
     if (naturalWidth <= containerWidth && naturalHeight <= containerHeight) {
@@ -366,14 +367,14 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                                         personId={face.personId ?? undefined}
                                                         persons={persons}
                                                         disabled={!showFaceBoxes || !isAdmin}
-                                                        onChange={(personId) =>
-                                                            updateFace({
-                                                                faceId: face.id,
-                                                                personId: personId ?? -1,
-                                                            })
-                                                        }
-                                                    />
-                                                );
+                                                          onChange={(personId) => {
+                                                              void updateFace({
+                                                                  faceId: face.id,
+                                                                  personId: personId ?? -1,
+                                                              });
+                                                          }}
+                                                      />
+                                                  );
                                             })}
                                         </div>
                                     </CardContent>

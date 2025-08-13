@@ -1,8 +1,5 @@
 import {getGenderText} from '@photobank/shared';
-
 import type { FaceDto } from '@photobank/shared/api/photobank';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover.tsx';
-import { Label } from '@/components/ui/label.tsx';
 import {
     faceDetailsTitle,
     ageLabel,
@@ -11,6 +8,9 @@ import {
     attributesLabel,
     unknownLabel,
 } from '@photobank/shared/constants';
+
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover.tsx';
+import { Label } from '@/components/ui/label.tsx';
 
 import './FaceOverlay.css';
 

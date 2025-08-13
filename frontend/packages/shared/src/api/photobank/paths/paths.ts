@@ -7,7 +7,6 @@
 import type {
   PathDto
 } from '.././model';
-
 import { customFetcher } from '.././fetcher';
 
 export type pathsGetAllResponse200 = {

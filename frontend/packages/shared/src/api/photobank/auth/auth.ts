@@ -14,7 +14,6 @@ import type {
   UpdateUserDto,
   UserDto
 } from '.././model';
-
 import { customFetcher } from '.././fetcher';
 
 export type authLoginResponse200 = {

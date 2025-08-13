@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { describe, it, expect } from 'vitest';
 import { User } from 'lucide-react';
+
 import MetadataBadgeList from './MetadataBadgeList';
 
 describe('MetadataBadgeList', () => {
