@@ -6,6 +6,6 @@
  */
 
 export interface GeoPointDto {
-  latitude?: number;
-  longitude?: number;
+  latitude: number;
+  longitude: number;
 }

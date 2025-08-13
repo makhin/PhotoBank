@@ -4,7 +4,34 @@
  * PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
  * OpenAPI spec version: 1.0
  */
-import type { PageRequest } from './pageRequest';
-import type { FilterDtoAllOf } from './filterDtoAllOf';
 
-export type FilterDto = PageRequest & FilterDtoAllOf;
+export interface FilterDto {
+  page?: number;
+  pageSize?: number;
+  /** @nullable */
+  storages?: number[] | null;
+  /** @nullable */
+  isBW?: boolean | null;
+  /** @nullable */
+  isAdultContent?: boolean | null;
+  /** @nullable */
+  isRacyContent?: boolean | null;
+  /** @nullable */
+  relativePath?: string | null;
+  /** @nullable */
+  paths?: number[] | null;
+  /** @nullable */
+  caption?: string | null;
+  /** @nullable */
+  takenDateFrom?: string | null;
+  /** @nullable */
+  takenDateTo?: string | null;
+  /** @nullable */
+  thisDay?: boolean | null;
+  /** @nullable */
+  persons?: number[] | null;
+  /** @nullable */
+  tags?: number[] | null;
+  /** @nullable */
+  orderBy?: string | null;
+}
