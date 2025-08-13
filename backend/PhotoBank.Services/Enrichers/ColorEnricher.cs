@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Models;
@@ -10,7 +11,7 @@ namespace PhotoBank.Services.Enrichers
         public EnricherType EnricherType => EnricherType.Color;
         public Type[] Dependencies => new[] { typeof(AnalyzeEnricher) };
 
-        public Task EnrichAsync(Photo photo, SourceDataDto sourceData)
+        public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
             photo.IsBW = sourceData.ImageAnalysis.Color.IsBWImg;
             photo.AccentColor = sourceData.ImageAnalysis.Color.AccentColor;

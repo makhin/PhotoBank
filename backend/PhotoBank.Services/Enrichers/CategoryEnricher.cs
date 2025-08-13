@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
@@ -19,7 +20,7 @@ namespace PhotoBank.Services.Enrichers
         }
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
-        public Task EnrichAsync(Photo photo, SourceDataDto sourceData)
+        public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
             photo.PhotoCategories = new List<PhotoCategory>();
             foreach (var category in sourceData.ImageAnalysis.Categories)

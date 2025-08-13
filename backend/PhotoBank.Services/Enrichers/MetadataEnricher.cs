@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
@@ -26,7 +27,7 @@ namespace PhotoBank.Services.Enrichers
         public EnricherType EnricherType => EnricherType.Metadata;
         public Type[] Dependencies => new Type[1] { typeof(PreviewEnricher) };
 
-        public Task EnrichAsync(Photo photo, SourceDataDto sourceData)
+        public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
             var normalizedAbsolutePath = sourceData.AbsolutePath.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
             var normalizedStoragePath = photo.Storage.Folder.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);

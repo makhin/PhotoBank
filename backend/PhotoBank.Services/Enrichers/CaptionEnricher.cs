@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Models;
@@ -11,7 +12,7 @@ namespace PhotoBank.Services.Enrichers
         public EnricherType EnricherType => EnricherType.Caption;
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
-        public Task EnrichAsync(Photo photo, SourceDataDto sourceData)
+        public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
             photo.Captions = new List<Caption>();
             foreach (var caption in sourceData.ImageAnalysis.Description.Captions)

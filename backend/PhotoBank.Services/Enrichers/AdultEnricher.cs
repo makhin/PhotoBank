@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Models;
@@ -11,7 +12,7 @@ namespace PhotoBank.Services.Enrichers
 
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
-        public Task EnrichAsync(Photo photo, SourceDataDto sourceData)
+        public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
             photo.IsAdultContent = sourceData.ImageAnalysis.Adult.IsAdultContent;
             photo.AdultScore = sourceData.ImageAnalysis.Adult.AdultScore;

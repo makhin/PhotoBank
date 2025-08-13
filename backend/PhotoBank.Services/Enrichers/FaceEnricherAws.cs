@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Rekognition;
 using Amazon.Rekognition.Model;
@@ -29,7 +30,7 @@ namespace PhotoBank.Services.Enrichers
         public EnricherType EnricherType => EnricherType.Face;
         public Type[] Dependencies => new[] { typeof(PreviewEnricher), typeof(MetadataEnricher) };
 
-        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
+        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
             try
             {

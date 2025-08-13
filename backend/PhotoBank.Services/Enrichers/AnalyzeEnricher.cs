@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
@@ -16,7 +17,7 @@ public sealed class AnalyzeEnricher : IEnricher
     private readonly IComputerVisionClient _client;
 
     // 1) Не аллоцируем список на каждый инстанс
-    private static readonly IReadOnlyList<VisualFeatureTypes?> s_features = new VisualFeatureTypes?[]
+    private static readonly IList<VisualFeatureTypes?> s_features = new VisualFeatureTypes?[]
     {
         VisualFeatureTypes.Categories,
         VisualFeatureTypes.Description,
@@ -40,7 +41,7 @@ public sealed class AnalyzeEnricher : IEnricher
 
     public Type[] Dependencies => s_dependencies;
 
-    public async Task EnrichAsync(Photo photo, SourceDataDto source)
+    public async Task EnrichAsync(Photo photo, SourceDataDto source, CancellationToken cancellationToken = default)
     {
         if (photo is null) throw new ArgumentNullException(nameof(photo));
         if (source is null) throw new ArgumentNullException(nameof(source));

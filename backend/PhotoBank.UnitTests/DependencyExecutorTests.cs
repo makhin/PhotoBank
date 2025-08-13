@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
@@ -14,7 +15,7 @@ namespace PhotoBank.UnitTests
     {
         public abstract EnricherType EnricherType { get; }
         public abstract Type[] Dependencies { get; }
-        public async Task EnrichAsync(Photo photo, SourceDataDto path)
+        public async Task EnrichAsync(Photo photo, SourceDataDto path, CancellationToken cancellationToken = default)
         {
             Debug.WriteLine($"{this.GetType().Name} started at {DateTime.Now}");
             Console.WriteLine($"{this.GetType().Name} started at {DateTime.Now}");
