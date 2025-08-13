@@ -41,40 +41,44 @@ namespace PhotoBank.Services
 
         public async Task<IEnumerable<string>> SyncStorage(Storage storage)
         {
-            var folder = storage.Folder;
+            // Files on disk relative to storage folder
+            var folderFiles = new HashSet<string>(
+                Directory.EnumerateFiles(storage.Folder, "*", SearchOption.AllDirectories)
+                    .Where(f => SupportedExtensions.Contains(Path.GetExtension(f)))
+                    .Select(p => Path.GetRelativePath(storage.Folder, p)),
+                StringComparer.OrdinalIgnoreCase);
 
-            var folderFiles = Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories)
-                .Where(s => SupportedExtensions.Contains(Path.GetExtension(s)))
-                .ToList();
-
-            var storageFiles = await _fileRepository.GetByCondition(f => f.Photo.Storage.Id == storage.Id)
-                .Include(f => f.Photo).Select(f => new
+            // Files in DB
+            var storageFiles = await _fileRepository
+                .GetByCondition(f => f.Photo.Storage.Id == storage.Id)
+                .Include(f => f.Photo)
+                .Select(f => new
                 {
-                    f.Id, 
-                    Path = Path.Combine(folder, f.Photo.RelativePath, f.Name), 
+                    f.Id,
+                    Path = Path.Combine(f.Photo.RelativePath ?? string.Empty, f.Name),
                     f.IsDeleted
-                }).ToListAsync();
+                })
+                .ToListAsync();
 
-            foreach (var storageFile in storageFiles)
+            // Alive files in DB
+            var dbAlive = new HashSet<string>(
+                storageFiles.Where(sf => !sf.IsDeleted).Select(sf => sf.Path),
+                StringComparer.OrdinalIgnoreCase);
+
+            // Reactivate: file marked deleted but present on disk
+            foreach (var sf in storageFiles.Where(sf => sf.IsDeleted))
             {
-                if (!folderFiles.Contains(storageFile.Path) && !storageFile.IsDeleted)
+                if (folderFiles.Contains(sf.Path))
                 {
-                    var file = await _fileRepository.GetAsync(storageFile.Id);
-                    file.IsDeleted = true;
-                    await _fileRepository.UpdateAsync(file);
-                    continue;
-                }
-
-                if (folderFiles.Contains(storageFile.Path) && storageFile.IsDeleted)
-                {
-                    var file = await _fileRepository.GetAsync(storageFile.Id);
+                    var file = await _fileRepository.GetAsync(sf.Id);
                     file.IsDeleted = false;
                     await _fileRepository.UpdateAsync(file);
                 }
             }
 
-            var result = folderFiles.Where(ff => !storageFiles.Where(sf => !sf.IsDeleted).Select(sf => sf.Path).Contains(ff)).ToList();
-            return result;
+            // New files: exist on disk but not in DB
+            var newFiles = folderFiles.Except(dbAlive, StringComparer.OrdinalIgnoreCase).ToList();
+            return newFiles;
         }
     }
 }
