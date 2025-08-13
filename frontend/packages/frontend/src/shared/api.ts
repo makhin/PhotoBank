@@ -28,7 +28,7 @@ export const photobankApi = createApi({
     getUserRoles: build.query<Api.RoleDto[], void>({
       queryFn: orvalQuery((_arg, opt) => Api.authGetUserRoles(opt).then((r) => r.data)),
     }),
-    searchPhotos: build.mutation<Api.QueryResult, Api.FilterDto>({
+    searchPhotos: build.mutation<Api.PageResponseOfPhotoItemDto, Api.FilterDto>({
       queryFn: orvalMutation((body, opt) => Api.postApiPhotosSearch(body, opt).then((r) => r.data)),
     }),
     uploadPhotos: build.mutation<null, Api.PhotosUploadBody>({

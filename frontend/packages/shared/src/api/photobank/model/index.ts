@@ -23,8 +23,6 @@ export * from './photoItemDto';
 export * from './photosGetDuplicatesParams';
 export * from './photosUploadBody';
 export * from './problemDetails';
-export * from './queryResult';
-export * from './queryResultAllOf';
 export * from './registerRequestDto';
 export * from './roleDto';
 export * from './storageDto';

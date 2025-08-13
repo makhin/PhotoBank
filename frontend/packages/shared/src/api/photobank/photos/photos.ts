@@ -6,18 +6,18 @@
  */
 import type {
   FilterDto,
+  PageResponseOfPhotoItemDto,
   PhotoDto,
   PhotoItemDto,
   PhotosGetDuplicatesParams,
   PhotosUploadBody,
-  ProblemDetails,
-  QueryResult
+  ProblemDetails
 } from '.././model';
 
 import { customFetcher } from '.././fetcher';
 
 export type postApiPhotosSearchResponse200 = {
-  data: QueryResult
+  data: PageResponseOfPhotoItemDto
   status: 200
 }
 

@@ -17,7 +17,7 @@ namespace PhotoBank.Services.Api;
 
 public interface IPhotoService
 {
-    Task<QueryResult> GetAllPhotosAsync(FilterDto filter);
+    Task<PageResponse<PhotoItemDto>> GetAllPhotosAsync(FilterDto filter);
     Task<PhotoDto> GetPhotoAsync(int id);
     Task<IEnumerable<PersonDto>> GetAllPersonsAsync();
     Task<IEnumerable<StorageDto>> GetAllStoragesAsync();
@@ -124,7 +124,7 @@ public class PhotoService : IPhotoService
         return query;
     }
 
-    public async Task<QueryResult> GetAllPhotosAsync(FilterDto filter)
+    public async Task<PageResponse<PhotoItemDto>> GetAllPhotosAsync(FilterDto filter)
     {
         var query = ApplyFilter(_photoRepository.GetAll().AsNoTracking().AsSplitQuery(), filter);
 
@@ -140,7 +140,7 @@ public class PhotoService : IPhotoService
             .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
-        return new QueryResult
+        return new PageResponse<PhotoItemDto>
         {
             TotalCount = count,
             Items = photos
