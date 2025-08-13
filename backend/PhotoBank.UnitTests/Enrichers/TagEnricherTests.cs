@@ -63,17 +63,22 @@ namespace PhotoBank.UnitTests.Enrichers
                 }
             };
 
+            _mockTagRepository.Setup(r => r.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<System.Func<Tag, bool>>>()
+                ))
+                .Returns(Enumerable.Empty<Tag>().AsQueryable());
+            _mockTagRepository.Setup(r => r.InsertAsync(It.IsAny<Tag>()))
+                .ReturnsAsync((Tag t) => t);
+
             // Act
             await _tagEnricher.EnrichAsync(photo, sourceData);
 
             // Assert
             photo.PhotoTags.Should().HaveCount(2);
-            photo.PhotoTags.Should().Contain(pt => pt.Tag.Name == "car" && pt.Confidence == 0.9);
-            photo.PhotoTags.Should().Contain(pt => pt.Tag.Name == "tree" && pt.Confidence == 0.8);
+            photo.PhotoTags.Should().Contain(pt => pt.Tag.Name == "Car" && pt.Confidence == 0.9);
+            photo.PhotoTags.Should().Contain(pt => pt.Tag.Name == "Tree" && pt.Confidence == 0.8);
         }
 
         [Test]
-        [Ignore("This test is not working")]
         public async Task EnrichAsync_ShouldInsertNewTagIfNotExists()
         {
             // Arrange
@@ -89,8 +94,11 @@ namespace PhotoBank.UnitTests.Enrichers
                 }
             };
 
-            _mockTagRepository.Setup(repo => repo.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<System.Func<Tag, bool>>>()))
+            _mockTagRepository.Setup(r => r.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<System.Func<Tag, bool>>>()
+                ))
                 .Returns(Enumerable.Empty<Tag>().AsQueryable());
+            _mockTagRepository.Setup(r => r.InsertAsync(It.IsAny<Tag>()))
+                .ReturnsAsync((Tag t) => t);
 
             // Act
             await _tagEnricher.EnrichAsync(photo, sourceData);

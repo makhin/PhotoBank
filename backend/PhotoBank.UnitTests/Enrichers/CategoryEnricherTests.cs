@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Linq.Expressions;
 using FluentAssertions;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Moq;
@@ -70,8 +71,15 @@ namespace PhotoBank.UnitTests.Enrichers
             var natureCategory = new Category { Name = "Nature" };
             var cityCategory = new Category { Name = "City" };
 
-            _mockCategoryRepository.Setup(repo => repo.GetAll())
-                .Returns((new List<Category> { natureCategory, cityCategory }).AsQueryable);
+            _mockCategoryRepository
+                .Setup(repo => repo.GetByCondition(It.IsAny<Expression<System.Func<Category, bool>>>() ))
+                .Returns((Expression<System.Func<Category, bool>> _) => new List<Category>
+                {
+                    natureCategory,
+                    cityCategory
+                }.AsQueryable());
+            _mockCategoryRepository.Setup(r => r.InsertAsync(It.IsAny<Category>()))
+                .ReturnsAsync((Category c) => c);
 
             // Act
             await _categoryEnricher.EnrichAsync(photo, sourceData);
@@ -80,6 +88,35 @@ namespace PhotoBank.UnitTests.Enrichers
             photo.PhotoCategories.Should().HaveCount(2);
             photo.PhotoCategories.Should().Contain(pc => pc.Category.Name == "Nature" && pc.Score == 0.95);
             photo.PhotoCategories.Should().Contain(pc => pc.Category.Name == "City" && pc.Score == 0.85);
+        }
+
+        [Test]
+        public async Task EnrichAsync_ShouldInsertNewCategoryIfNotExists()
+        {
+            // Arrange
+            var photo = new Photo();
+            var sourceData = new SourceDataDto
+            {
+                ImageAnalysis = new ImageAnalysis
+                {
+                    Categories = new List<Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models.Category>
+                    {
+                        new() { Name = "Beach", Score = 0.5 }
+                    }
+                }
+            };
+
+            _mockCategoryRepository
+                .Setup(r => r.GetByCondition(It.IsAny<Expression<System.Func<Category, bool>>>() ))
+                .Returns(Enumerable.Empty<Category>().AsQueryable());
+            _mockCategoryRepository.Setup(r => r.InsertAsync(It.IsAny<Category>()))
+                .ReturnsAsync((Category c) => c);
+
+            // Act
+            await _categoryEnricher.EnrichAsync(photo, sourceData);
+
+            // Assert
+            _mockCategoryRepository.Verify(r => r.InsertAsync(It.Is<Category>(c => c.Name == "Beach")), Times.Once);
         }
     }
 }
