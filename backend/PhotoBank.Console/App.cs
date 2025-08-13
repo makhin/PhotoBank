@@ -1,16 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
-using System.Collections.Generic;
-using System.IO;
+using PhotoBank.Services.Recognition;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PhotoBank.Console
 {
-    using PhotoBank.Services.Recognition;
     using System;
 
     public class App
@@ -30,42 +29,58 @@ namespace PhotoBank.Console
             _recognitionService = recognitionService;
         }
 
-        public async Task Run()
+        public async Task RunAsync(ConsoleOptions options, CancellationToken token)
         {
-            await _recognitionService.RegisterPersonsAsync();
-            //var storage = await _storages.GetAsync(7);
-            //await AddFilesAsync(storage);
+            if (options.RegisterPersons)
+            {
+                await _recognitionService.RegisterPersonsAsync();
+            }
+
+            if (options.StorageId.HasValue)
+            {
+                var storage = await _storages.GetAsync(options.StorageId.Value);
+                if (storage == null)
+                {
+                    _logger.LogError("Storage {StorageId} not found", options.StorageId);
+                }
+                else
+                {
+                    await AddFilesAsync(storage, token);
+                }
+            }
         }
 
-        private async Task AddFilesAsync(Storage storage)
+        private async Task AddFilesAsync(Storage storage, CancellationToken token)
         {
             var files = await _syncService.SyncStorage(storage);
-            var enumerable = files.ToList();
-            var count = enumerable.Count;
+            var fileList = files.ToList();
+            var total = fileList.Count;
+            var processed = 0;
+            var failed = 0;
 
-            foreach (var file in enumerable)
+            await Parallel.ForEachAsync(fileList, token, async (file, ct) =>
             {
                 try
                 {
                     await _photoProcessor.AddPhotoAsync(storage, file);
+                    Interlocked.Increment(ref processed);
                 }
                 catch (Exception e)
                 {
-                    _logger.Log(LogLevel.Debug, e, file);
+                    _logger.LogError(e, "Error processing {File}", file);
+                    Interlocked.Increment(ref failed);
                 }
 
-                if (count-- == 0)
-                {
-                    break;
-                }
-
+                var remaining = total - (processed + failed);
                 var savedColor = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine($"Count = {count}");
+                Console.WriteLine($"Remaining = {remaining}");
                 Console.ForegroundColor = savedColor;
-            }
+            });
 
+            _logger.LogInformation("Processed {Processed} files with {Failed} failures", processed, failed);
             Console.WriteLine("Done");
         }
     }
 }
+
