@@ -4,11 +4,10 @@
  * PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
  * OpenAPI spec version: 1.0
  */
+import type { PhotoItemDto } from './photoItemDto';
 
-export interface LoginRequestDto {
+export interface PhotoItemDtoPageResponse {
+  totalCount?: number;
   /** @nullable */
-  email: string | null;
-  /** @nullable */
-  password: string | null;
-  rememberMe: boolean;
+  items?: PhotoItemDto[] | null;
 }

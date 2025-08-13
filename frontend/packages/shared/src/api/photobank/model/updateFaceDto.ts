@@ -6,6 +6,6 @@
  */
 
 export interface UpdateFaceDto {
-  faceId?: number;
-  personId?: number;
+  faceId: number;
+  personId: number;
 }

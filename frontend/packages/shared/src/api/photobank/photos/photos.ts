@@ -6,9 +6,9 @@
  */
 import type {
   FilterDto,
-  PageResponseOfPhotoItemDto,
   PhotoDto,
   PhotoItemDto,
+  PhotoItemDtoPageResponse,
   PhotosGetDuplicatesParams,
   PhotosUploadBody,
   ProblemDetails
@@ -16,23 +16,23 @@ import type {
 
 import { customFetcher } from '.././fetcher';
 
-export type postApiPhotosSearchResponse200 = {
-  data: PageResponseOfPhotoItemDto
+export type photosSearchPhotosResponse200 = {
+  data: PhotoItemDtoPageResponse
   status: 200
 }
 
-export type postApiPhotosSearchResponse400 = {
+export type photosSearchPhotosResponse400 = {
   data: ProblemDetails
   status: 400
 }
     
-export type postApiPhotosSearchResponseComposite = postApiPhotosSearchResponse200 | postApiPhotosSearchResponse400;
+export type photosSearchPhotosResponseComposite = photosSearchPhotosResponse200 | photosSearchPhotosResponse400;
     
-export type postApiPhotosSearchResponse = postApiPhotosSearchResponseComposite & {
+export type photosSearchPhotosResponse = photosSearchPhotosResponseComposite & {
   headers: Headers;
 }
 
-export const getPostApiPhotosSearchUrl = () => {
+export const getPhotosSearchPhotosUrl = () => {
 
 
   
@@ -40,9 +40,9 @@ export const getPostApiPhotosSearchUrl = () => {
   return `/api/photos/search`
 }
 
-export const postApiPhotosSearch = async (filterDto: FilterDto, options?: RequestInit): Promise<postApiPhotosSearchResponse> => {
+export const photosSearchPhotos = async (filterDto: FilterDto, options?: RequestInit): Promise<photosSearchPhotosResponse> => {
   
-  return customFetcher<postApiPhotosSearchResponse>(getPostApiPhotosSearchUrl(),
+  return customFetcher<photosSearchPhotosResponse>(getPhotosSearchPhotosUrl(),
   {      
     ...options,
     method: 'POST',
@@ -53,23 +53,23 @@ export const postApiPhotosSearch = async (filterDto: FilterDto, options?: Reques
 );}
 
 
-export type getApiPhotosResponse200 = {
+export type photosGetPhotoResponse200 = {
   data: PhotoDto
   status: 200
 }
 
-export type getApiPhotosResponse404 = {
+export type photosGetPhotoResponse404 = {
   data: ProblemDetails
   status: 404
 }
     
-export type getApiPhotosResponseComposite = getApiPhotosResponse200 | getApiPhotosResponse404;
+export type photosGetPhotoResponseComposite = photosGetPhotoResponse200 | photosGetPhotoResponse404;
     
-export type getApiPhotosResponse = getApiPhotosResponseComposite & {
+export type photosGetPhotoResponse = photosGetPhotoResponseComposite & {
   headers: Headers;
 }
 
-export const getGetApiPhotosUrl = (id: number,) => {
+export const getPhotosGetPhotoUrl = (id: number,) => {
 
 
   
@@ -77,9 +77,9 @@ export const getGetApiPhotosUrl = (id: number,) => {
   return `/api/photos/${id}`
 }
 
-export const getApiPhotos = async (id: number, options?: RequestInit): Promise<getApiPhotosResponse> => {
+export const photosGetPhoto = async (id: number, options?: RequestInit): Promise<photosGetPhotoResponse> => {
   
-  return customFetcher<getApiPhotosResponse>(getGetApiPhotosUrl(id),
+  return customFetcher<photosGetPhotoResponse>(getPhotosGetPhotoUrl(id),
   {      
     ...options,
     method: 'GET'

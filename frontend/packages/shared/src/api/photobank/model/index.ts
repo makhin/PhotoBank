@@ -20,6 +20,7 @@ export * from './personDto';
 export * from './personItemDto';
 export * from './photoDto';
 export * from './photoItemDto';
+export * from './photoItemDtoPageResponse';
 export * from './photosGetDuplicatesParams';
 export * from './photosUploadBody';
 export * from './problemDetails';
