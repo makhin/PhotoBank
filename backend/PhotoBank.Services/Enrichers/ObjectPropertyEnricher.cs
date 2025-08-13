@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -12,6 +13,8 @@ namespace PhotoBank.Services.Enrichers
     public class ObjectPropertyEnricher : IEnricher
     {
         private readonly IRepository<PropertyName> _propertyNameRepository;
+        private readonly ConcurrentDictionary<string, Lazy<Task<PropertyName>>> _cache =
+            new(StringComparer.OrdinalIgnoreCase);
 
         public ObjectPropertyEnricher(IRepository<PropertyName> propertyNameRepository)
         {
@@ -26,17 +29,18 @@ namespace PhotoBank.Services.Enrichers
             photo.ObjectProperties = new List<ObjectProperty>();
             foreach (var detectedObject in sourceData.ImageAnalysis.Objects)
             {
-                var propertyName = _propertyNameRepository.GetByCondition(t => t.Name == detectedObject.ObjectProperty).FirstOrDefault();
-
-                if (propertyName == null)
-                {
-                    propertyName = new PropertyName
+                var propertyName = await _cache.GetOrAdd(detectedObject.ObjectProperty, name =>
+                    new Lazy<Task<PropertyName>>(async () =>
                     {
-                        Name = detectedObject.ObjectProperty,
-                    };
+                        var existing = _propertyNameRepository.GetByCondition(t => t.Name == name).FirstOrDefault();
+                        if (existing == null)
+                        {
+                            existing = new PropertyName { Name = name };
+                            await _propertyNameRepository.InsertAsync(existing);
+                        }
 
-                    await _propertyNameRepository.InsertAsync(propertyName);
-                }
+                        return existing;
+                    })).Value;
 
                 photo.ObjectProperties.Add(new ObjectProperty
                 {
