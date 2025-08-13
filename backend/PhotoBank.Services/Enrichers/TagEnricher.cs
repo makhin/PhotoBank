@@ -1,58 +1,66 @@
-﻿using System;
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Models;
 
 namespace PhotoBank.Services.Enrichers
 {
-    public class TagEnricher : IEnricher
+    public sealed class TagEnricher : IEnricher
     {
-        private readonly IRepository<Tag> _tagRepository;
-        private readonly ConcurrentDictionary<string, Tag> _cache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly IRepository<Tag> _repo;
 
-        public TagEnricher(IRepository<Tag> tagRepository)
+        public TagEnricher(IRepository<Tag> repo)
         {
-            _tagRepository = tagRepository;
+            _repo = repo;
         }
+
         public EnricherType EnricherType => EnricherType.Tag;
-        public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
-        public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
+        public Type[] Dependencies => new[] { typeof(AnalyzeEnricher) };
+
+        public async Task EnrichAsync(Photo photo, SourceDataDto src, CancellationToken ct = default)
         {
-            photo.PhotoTags = new List<PhotoTag>();
+            var incoming = src.ImageAnalysis.Tags
+                .Select(t => t.Name.Trim())
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
 
-            // Workaround for bug, when service returns the same tags
-            var tags = sourceData.ImageAnalysis.Tags.GroupBy(t => t.Name.ToLower()).Select(t =>
-                new
-                {
-                    Name = t.Key,
-                    Confidence = t.Max(v => v.Confidence)
-                });
-
-            foreach (var tag in tags)
+            var query = _repo.GetByCondition(t => incoming.Contains(t.Name));
+            List<Tag> existing;
+            try
             {
-                var tagModel = _cache.GetOrAdd(tag.Name, name =>
-                    _tagRepository.GetByCondition(t => t.Name == name).FirstOrDefault() ?? new Tag
-                    {
-                        Name = name,
-                    });
-
-                var photoTag = new PhotoTag
-                {
-                    Photo = photo,
-                    Tag = tagModel,
-                    Confidence = tag.Confidence
-                };
-
-                photo.PhotoTags.Add(photoTag);
+                existing = await query.ToListAsync(ct);
+            }
+            catch (InvalidOperationException)
+            {
+                existing = query.ToList();
             }
 
-            return Task.CompletedTask;
+            var map = existing.ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var name in incoming)
+            {
+                if (!map.TryGetValue(name, out var tag))
+                {
+                    tag = new Tag { Name = name };
+                    await _repo.InsertAsync(tag);
+                    map[name] = tag;
+                }
+            }
+
+            photo.PhotoTags ??= new List<PhotoTag>();
+
+            foreach (var tag in src.ImageAnalysis.Tags)
+            {
+                var tagModel = map[tag.Name];
+                photo.PhotoTags.Add(new PhotoTag { Photo = photo, Tag = tagModel, Confidence = tag.Confidence });
+            }
         }
     }
 }

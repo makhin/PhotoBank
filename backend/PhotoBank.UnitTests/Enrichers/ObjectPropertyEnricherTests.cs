@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Linq.Expressions;
 using FluentAssertions;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Moq;
@@ -66,12 +67,15 @@ namespace PhotoBank.UnitTests.Enrichers
             var carPropertyName = new PropertyName { Name = "Car" };
             var treePropertyName = new PropertyName { Name = "Tree" };
 
-            _mockPropertyNameRepository.Setup(repo => repo.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<System.Func<PropertyName, bool>>>()))
-                .Returns((System.Linq.Expressions.Expression<System.Func<PropertyName, bool>> predicate) =>
+            _mockPropertyNameRepository
+                .Setup(repo => repo.GetByCondition(It.IsAny<Expression<System.Func<PropertyName, bool>>>() ))
+                .Returns((Expression<System.Func<PropertyName, bool>> _) => new List<PropertyName>
                 {
-                    var propertyNames = new List<PropertyName> { carPropertyName, treePropertyName };
-                    return propertyNames.AsQueryable().Where(predicate).AsQueryable();
-                });
+                    carPropertyName,
+                    treePropertyName
+                }.AsQueryable());
+            _mockPropertyNameRepository.Setup(r => r.InsertAsync(It.IsAny<PropertyName>()))
+                .ReturnsAsync((PropertyName pn) => pn);
 
             // Act
             await _objectPropertyEnricher.EnrichAsync(photo, sourceData);
@@ -98,9 +102,10 @@ namespace PhotoBank.UnitTests.Enrichers
                 }
             };
 
-            _mockPropertyNameRepository.Setup(repo => repo.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<System.Func<PropertyName, bool>>>()))
+            _mockPropertyNameRepository
+                .Setup(repo => repo.GetByCondition(It.IsAny<Expression<System.Func<PropertyName, bool>>>() ))
                 .Returns(Enumerable.Empty<PropertyName>().AsQueryable());
-
+            
             // Act
             await _objectPropertyEnricher.EnrichAsync(photo, sourceData);
 

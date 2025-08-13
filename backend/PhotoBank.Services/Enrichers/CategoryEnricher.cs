@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Models;
@@ -14,35 +14,58 @@ namespace PhotoBank.Services.Enrichers
     public class CategoryEnricher : IEnricher
     {
         private readonly IRepository<Category> _categoryRepository;
-        private readonly ConcurrentDictionary<string, Category> _cache = new(StringComparer.OrdinalIgnoreCase);
         public EnricherType EnricherType => EnricherType.Category;
+
         public CategoryEnricher(IRepository<Category> categoryRepository)
         {
             _categoryRepository = categoryRepository;
         }
-        public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
-        public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
+        public Type[] Dependencies => new[] { typeof(AnalyzeEnricher) };
+
+        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
-            photo.PhotoCategories = new List<PhotoCategory>();
+            var incoming = sourceData.ImageAnalysis.Categories
+                .Select(c => c.Name.Trim())
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            var query = _categoryRepository.GetByCondition(c => incoming.Contains(c.Name));
+            List<Category> existing;
+            try
+            {
+                existing = await query.ToListAsync(cancellationToken);
+            }
+            catch (InvalidOperationException)
+            {
+                existing = query.ToList();
+            }
+
+            var map = existing.ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var name in incoming)
+            {
+                if (!map.TryGetValue(name, out var category))
+                {
+                    category = new Category { Name = name };
+                    await _categoryRepository.InsertAsync(category);
+                    map[name] = category;
+                }
+            }
+
+            photo.PhotoCategories ??= new List<PhotoCategory>();
+
             foreach (var category in sourceData.ImageAnalysis.Categories)
             {
-                var catModel = _cache.GetOrAdd(category.Name, name =>
-                    _categoryRepository.GetByCondition(t => t.Name == name).FirstOrDefault() ?? new Category
-                    {
-                        Name = name
-                    });
-
-                var photoCategory = new PhotoCategory()
+                var catModel = map[category.Name];
+                photo.PhotoCategories.Add(new PhotoCategory
                 {
                     Photo = photo,
                     Category = catModel,
                     Score = category.Score
-                };
-
-                photo.PhotoCategories.Add(photoCategory);
+                });
             }
-            return Task.CompletedTask;
         }
     }
 }
