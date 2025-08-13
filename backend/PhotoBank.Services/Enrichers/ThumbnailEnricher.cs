@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
@@ -28,7 +29,7 @@ public sealed class ThumbnailEnricher : IEnricher
         _client = client ?? throw new ArgumentNullException(nameof(client));
     }
 
-    public async Task EnrichAsync(Photo photo, SourceDataDto _)
+    public async Task EnrichAsync(Photo photo, SourceDataDto _, CancellationToken cancellationToken = default)
     {
         if (photo is null) throw new ArgumentNullException(nameof(photo));
         if (photo.PreviewImage is null || photo.PreviewImage.Length == 0)
@@ -87,11 +88,9 @@ public sealed class ThumbnailEnricher : IEnricher
                 // fallthrough to delay
             }
 
-            if (tryNo >= attempts) throw;
-
-            await Task.Delay(delay).ConfigureAwait(false);
-            delay = Math.Min(delay * 2, 4000); // экспоненциально до 4с
-        }
+              await Task.Delay(delay).ConfigureAwait(false);
+              delay = Math.Min(delay * 2, 4000); // экспоненциально до 4с
+          }
 
         static bool IsRetryable(HttpStatusCode? code) =>
             code is HttpStatusCode.TooManyRequests     // 429

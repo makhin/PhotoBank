@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
@@ -20,7 +21,7 @@ namespace PhotoBank.Services.Enrichers
         public EnricherType EnricherType => EnricherType.ObjectProperty;
         public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
 
-        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
+        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
             photo.ObjectProperties = new List<ObjectProperty>();
             foreach (var detectedObject in sourceData.ImageAnalysis.Objects)

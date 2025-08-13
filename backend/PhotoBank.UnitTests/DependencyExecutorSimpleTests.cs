@@ -22,7 +22,7 @@ namespace PhotoBank.UnitTests
         public abstract EnricherType EnricherType { get; }
         public abstract Type[] Dependencies { get; }
 
-        public Task EnrichAsync(Photo photo, SourceDataDto sourceData)
+        public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
             _log.Add(GetType().Name);
             return Task.CompletedTask;
@@ -65,7 +65,7 @@ namespace PhotoBank.UnitTests
         public Type[] Dependencies => Array.Empty<Type>();
         public Task Started => _started.Task;
 
-        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData)
+        public async Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
             _started.SetResult(true);
             await _release.Task;

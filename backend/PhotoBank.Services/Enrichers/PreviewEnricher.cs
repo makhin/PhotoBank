@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using ImageMagick;
 using PhotoBank.DbContext.Models;
@@ -18,7 +19,7 @@ namespace PhotoBank.Services.Enrichers
             _imageService = imageService;
         }
 
-        public async Task EnrichAsync(Photo photo, SourceDataDto source)
+        public async Task EnrichAsync(Photo photo, SourceDataDto source, CancellationToken cancellationToken = default)
         {
             using (var stream = new MemoryStream())
             {
