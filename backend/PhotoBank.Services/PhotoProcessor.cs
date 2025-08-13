@@ -16,6 +16,7 @@ namespace PhotoBank.Services
     public interface IPhotoProcessor
     {
         Task<int> AddPhotoAsync(Storage storage, string path);
+        Task<bool> IsDuplicateAsync(Storage storage, string path);
         Task AddFacesAsync(Storage storage);
         Task UpdatePhotosAsync(Storage storage);
     }
@@ -90,6 +91,12 @@ namespace PhotoBank.Services
             }
 
             return photo.Id;
+        }
+
+        public async Task<bool> IsDuplicateAsync(Storage storage, string path)
+        {
+            var duplicate = await VerifyDuplicates(storage, path);
+            return duplicate.DuplicateStatus == DuplicateStatus.FileExists;
         }
 
         public async Task AddFacesAsync(Storage storage)
