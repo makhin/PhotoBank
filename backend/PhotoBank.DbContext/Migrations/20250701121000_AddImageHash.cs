@@ -13,8 +13,8 @@ namespace PhotoBank.DbContext.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "ImageHash",
                 table: "Photos",
-                type: "nvarchar(64)",
-                maxLength: 64,
+                type: "nvarchar(256)",
+                maxLength: 256,
                 nullable: true);
         }
 
