@@ -19,6 +19,7 @@ namespace PhotoBank.Console
         private readonly ILogger<App> _logger;
         private readonly ISyncService _syncService;
         private readonly IRecognitionService _recognitionService;
+        private readonly object _progressLock = new();
 
         public App(IPhotoProcessor photoProcessor, IRepository<Storage> storages, ILogger<App> logger, ISyncService syncService, IRecognitionService recognitionService)
         {
@@ -58,6 +59,9 @@ namespace PhotoBank.Console
             var processed = 0;
             var failed = 0;
 
+            Console.WriteLine($"Processing {total} files...");
+            DisplayProgress(0, 0, total);
+
             await Parallel.ForEachAsync(fileList, token, async (file, ct) =>
             {
                 try
@@ -71,15 +75,26 @@ namespace PhotoBank.Console
                     Interlocked.Increment(ref failed);
                 }
 
-                var remaining = total - (processed + failed);
-                var savedColor = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine($"Remaining = {remaining}");
-                Console.ForegroundColor = savedColor;
+                DisplayProgress(Volatile.Read(ref processed), Volatile.Read(ref failed), total);
             });
 
+            Console.WriteLine();
             _logger.LogInformation("Processed {Processed} files with {Failed} failures", processed, failed);
             Console.WriteLine("Done");
+        }
+
+        private void DisplayProgress(int processed, int failed, int total)
+        {
+            const int width = 40;
+            var completed = processed + failed;
+            var percent = (double)completed / Math.Max(total, 1);
+            var filled = (int)(percent * width);
+            var bar = new string('#', filled).PadRight(width);
+
+            lock (_progressLock)
+            {
+                Console.Write($"\r[{bar}] {completed}/{total} files ({failed} failed)");
+            }
         }
     }
 }
