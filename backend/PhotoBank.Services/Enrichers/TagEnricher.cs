@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -12,6 +13,7 @@ namespace PhotoBank.Services.Enrichers
     public class TagEnricher : IEnricher
     {
         private readonly IRepository<Tag> _tagRepository;
+        private readonly ConcurrentDictionary<string, Tag> _cache = new(StringComparer.OrdinalIgnoreCase);
 
         public TagEnricher(IRepository<Tag> tagRepository)
         {
@@ -34,10 +36,11 @@ namespace PhotoBank.Services.Enrichers
 
             foreach (var tag in tags)
             {
-                var tagModel = _tagRepository.GetByCondition(t => t.Name == tag.Name).FirstOrDefault() ?? new Tag
-                {
-                    Name = tag.Name,
-                };
+                var tagModel = _cache.GetOrAdd(tag.Name, name =>
+                    _tagRepository.GetByCondition(t => t.Name == name).FirstOrDefault() ?? new Tag
+                    {
+                        Name = name,
+                    });
 
                 var photoTag = new PhotoTag
                 {
