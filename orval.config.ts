@@ -1,20 +1,18 @@
 import { defineConfig } from 'orval';
-
 export default defineConfig({
-  photobank: {
+  frontend: {
     input: './openapi.yaml',
     output: {
-      target: './frontend/packages/shared/src/api/photobank/index.ts',
-      schemas: './frontend/packages/shared/src/api/photobank/model',
-      mode: 'tags-split',
-      mock: true,
-      client: 'fetch',
-      override: {
-        mutator: {
-          path: './frontend/packages/shared/src/api/photobank/fetcher.ts',
-          name: 'customFetcher',
-        },
-      },
+      target: 'packages/shared/src/api-frontend.ts',
+      client: 'react-query',
+    },
+  },
+  bot: {
+    input: './openapi.yaml',
+    output: {
+      target: 'packages/telegram-bot/src/api/generated.ts',
+      client: 'axios',
+      override: { mutator: { path: './axios-instance.ts', name: 'photobankAxios' } },
     },
   },
 });
