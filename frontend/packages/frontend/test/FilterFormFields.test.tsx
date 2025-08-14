@@ -7,14 +7,6 @@ import metaReducer from '../src/features/meta/model/metaSlice';
 import { Form } from '../src/components/ui/form';
 import { describe, it, beforeEach, expect, vi } from 'vitest';
 
-class RO {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-// @ts-ignore
-global.ResizeObserver = RO;
-
 declare module '@testing-library/react' {
   interface RenderOptions {
     wrapper?: React.ComponentType;

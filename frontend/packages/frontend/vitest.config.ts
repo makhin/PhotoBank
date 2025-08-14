@@ -10,6 +10,9 @@ export default defineConfig({
     }
   },
   test: {
-    environment: 'jsdom'
+    environment: 'jsdom',
+    setupFiles: './test-setup.ts',
+    globals: true,
+    css: true
   }
 });
