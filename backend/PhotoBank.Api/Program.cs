@@ -127,40 +127,7 @@ namespace PhotoBank.Api
                 options.LowercaseUrls = true;
             });
 
-            builder.Services.AddProblemDetails(options =>
-            {
-                options.CustomizeProblemDetails = ctx =>
-                {
-                    var pd = ctx.ProblemDetails;
-                    pd.Instance ??= ctx.HttpContext.Request.Path;
-                    pd.Extensions["traceId"] = ctx.HttpContext.TraceIdentifier;
-                };
-
-                options.MapToStatusCode<ArgumentException>(StatusCodes.Status400BadRequest);
-                options.MapToStatusCode<UnauthorizedAccessException>(StatusCodes.Status401Unauthorized);
-                options.MapToStatusCode<KeyNotFoundException>(StatusCodes.Status404NotFound);
-                options.MapToStatusCode<NotImplementedException>(StatusCodes.Status501NotImplemented);
-
-                options.Map<DomainException>((ex, http) => new ProblemDetails
-                {
-                    Title = "Business rule violated",
-                    Detail = ex.Message,
-                    Status = StatusCodes.Status422UnprocessableEntity,
-                    Type = "https://httpstatuses.com/422",
-                    Instance = http.Request.Path
-                });
-
-                options.Map<ValidationException>((ex, http) =>
-                    new ValidationProblemDetails(ex.Errors
-                        .GroupBy(e => e.PropertyName)
-                        .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray()))
-                    {
-                        Status = StatusCodes.Status400BadRequest,
-                        Type = "https://httpstatuses.com/400",
-                        Title = "Validation failed",
-                        Instance = http.Request.Path
-                    });
-            });
+            builder.Services.AddProblemDetails();
 
             builder.Services.AddHealthChecks()
                 .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
