@@ -134,7 +134,13 @@ public sealed class BlobMigrationHostedService : IHostedService
             await DumpBlobToFileAsync(connStr, "Photos", "Preview", "Id", id, tmp, ct);
             try
             {
-                // при необходимости здесь можно прогнать MagickImage (мы лишь выставили лимиты в Program.cs)
+                using var image = new MagickImage(tmp);
+                image.Strip();                 // убрать метаданные
+                image.Quality = 82;            // компромисс качество/размер
+                image.Settings.Interlace = Interlace.Jpeg; // прогрессивный JPEG
+                image.Format = MagickFormat.Jpg;
+                image.Write(tmp);
+
                 var key = BuildKey("photos", id, "preview");
                 await UploadToS3Async(tmp, key, ct);
                 await db.Database.ExecuteSqlRawAsync(
