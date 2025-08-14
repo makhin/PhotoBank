@@ -94,6 +94,7 @@ describe('PhotoDetailsPage', () => {
     const placeLink = await screen.findByRole('link', { name: /Nice place/ });
     expect(placeLink).toBeTruthy();
     expect(placeLink.getAttribute('href')).toContain('10,20');
+    expect(placeLink.getAttribute('rel')).toBe('noopener noreferrer');
   });
 
   it('toggles face boxes visibility', async () => {
