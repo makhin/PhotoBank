@@ -1,391 +1,327 @@
-using System.Buffers;
 using System.Data;
-using System.Security.Cryptography;
+using System.Diagnostics;
+using System.Text;
+using ImageMagick;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Minio;
+using Minio.Exceptions;
 using Minio.DataModel.Args;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using PhotoBank.DbContext.DbContext;
-using ImageMagick;
 
-public sealed class BlobMigrationOptions
+public sealed class BlobMigrationHostedService : IHostedService
 {
-    public bool Enabled { get; set; } = false;
-    public int BatchSize { get; set; } = 200;
-    public int Concurrency { get; set; } = 3;
-    public string TempDir { get; set; } = "tmp-migrate";
-}
-
-public sealed class S3Options
-{
-    public string Endpoint { get; set; } = default!;
-    public bool UseSsl { get; set; }
-    public string AccessKey { get; set; } = default!;
-    public string SecretKey { get; set; } = default!;
-    public string Bucket { get; set; } = default!;
-}
-
-public class BlobMigrationHostedService : BackgroundService
-{
-    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IDbContextFactory<PhotoBankDbContext> _dbFactory;
     private readonly IMinioClient _minio;
     private readonly BlobMigrationOptions _opt;
     private readonly S3Options _s3;
+    private readonly ILogger<BlobMigrationHostedService> _log;
+    private readonly IConfiguration _cfg;
 
     public BlobMigrationHostedService(
-        IServiceScopeFactory scopeFactory,
+        IDbContextFactory<PhotoBankDbContext> dbFactory,
         IMinioClient minio,
         IOptions<BlobMigrationOptions> opt,
-        IOptions<S3Options> s3)
+        IOptions<S3Options> s3,
+        ILogger<BlobMigrationHostedService> log,
+        IConfiguration cfg)
     {
-        _scopeFactory = scopeFactory;
+        _dbFactory = dbFactory;
         _minio = minio;
         _opt = opt.Value;
         _s3 = s3.Value;
+        _log = log;
+        _cfg = cfg;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken ct)
+    public async Task StartAsync(CancellationToken ct)
     {
-        if (!_opt.Enabled) return;
-
-        Directory.CreateDirectory(_opt.TempDir);
-        await EnsureBucket(ct);
-
-        // Стратегия: Photos (Preview, Thumbnail), затем Faces (Image)
-        await MigratePhotos(ct);
-        await MigrateFaces(ct);
-    }
-
-    private async Task EnsureBucket(CancellationToken ct)
-    {
-        var exists = await _minio.BucketExistsAsync(new BucketExistsArgs().WithBucket(_s3.Bucket), ct);
-        if (!exists)
-            await _minio.MakeBucketAsync(new MakeBucketArgs().WithBucket(_s3.Bucket), ct);
-    }
-
-    private async Task MigratePhotos(CancellationToken ct)
-    {
-        while (!ct.IsCancellationRequested)
+        if (!_opt.Enabled)
         {
-            await using var scope = _scopeFactory.CreateAsyncScope();
-            var db = scope.ServiceProvider.GetRequiredService<PhotoBankDbContext>();
-
-            var ids = await db.Photos.AsNoTracking()
-                .Where(p => p.S3Key_Preview == null || p.S3Key_Thumbnail == null)
-                .OrderBy(p => p.Id)
-                .Select(p => p.Id)
-                .Take(_opt.BatchSize)
-                .ToListAsync(ct);
-
-            if (ids.Count == 0) break;
-
-            using var throttler = new SemaphoreSlim(_opt.Concurrency);
-            var tasks = ids.Select(async id =>
-            {
-                await throttler.WaitAsync(ct);
-                try { await MigratePhotoRow(db, id, ct); }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[Photos:{id}] {ex.Message}");
-                }
-                finally { throttler.Release(); }
-            }).ToArray();
-
-            await Task.WhenAll(tasks);
-        }
-    }
-
-    private async Task MigrateFaces(CancellationToken ct)
-    {
-        while (!ct.IsCancellationRequested)
-        {
-            await using var scope = _scopeFactory.CreateAsyncScope();
-            var db = scope.ServiceProvider.GetRequiredService<PhotoBankDbContext>();
-
-            var ids = await db.Faces.AsNoTracking()
-                .Where(f => f.S3Key_Image == null)
-                .OrderBy(f => f.Id)
-                .Select(f => f.Id)
-                .Take(_opt.BatchSize)
-                .ToListAsync(ct);
-
-            if (ids.Count == 0) break;
-
-            using var throttler = new SemaphoreSlim(_opt.Concurrency);
-            var tasks = ids.Select(async id =>
-            {
-                await throttler.WaitAsync(ct);
-                try { await MigrateFaceRow(db, id, ct); }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[Faces:{id}] {ex.Message}");
-                }
-                finally { throttler.Release(); }
-            }).ToArray();
-
-            await Task.WhenAll(tasks);
-        }
-    }
-
-    private static string ChooseContentType(string alias) =>
-        alias switch
-        {
-            "preview" => "image/jpeg",
-            "thumbnail" => "image/jpeg",
-            "face" => "image/jpeg",
-            _ => "application/octet-stream"
-        };
-
-    private string BuildKey(string prefix, int id, string? ext = ".jpg")
-        => $"{prefix}/{DateTime.UtcNow:yyyy/MM/dd}/{id}{ext}".Replace("//", "/");
-
-    // -------- Photos row --------
-    private async Task MigratePhotoRow(PhotoBankDbContext db, int id, CancellationToken ct)
-    {
-        // Берём имя файла (если есть)
-        var name = await db.Photos.AsNoTracking()
-            .Where(p => p.Id == id)
-            .Select(p => p.Name) // если у тебя поле называется иначе — поправь
-            .FirstOrDefaultAsync(ct);
-
-        // Мигрируем каждый блоб отдельно
-        await UploadColumn(
-            db, "dbo.Photos", "Id", id, "Preview",
-            keyColumn: "S3Key_Preview",
-            etagColumn: "S3ETag_Preview",
-            shaColumn: "Sha256_Preview",
-            sizeColumn: "BlobSize_Preview",
-            migratedAtColumn: "MigratedAt_Preview",
-            s3Prefix: "photos/preview",
-            alias: "preview",
-            originalName: name,
-            ct: ct);
-
-        await UploadColumn(
-            db, "dbo.Photos", "Id", id, "Thumbnail",
-            keyColumn: "S3Key_Thumbnail",
-            etagColumn: "S3ETag_Thumbnail",
-            shaColumn: "Sha256_Thumbnail",
-            sizeColumn: "BlobSize_Thumbnail",
-            migratedAtColumn: "MigratedAt_Thumbnail",
-            s3Prefix: "photos/thumbnail",
-            alias: "thumbnail",
-            originalName: name,
-            ct: ct);
-    }
-
-    // -------- Faces row --------
-    private async Task MigrateFaceRow(PhotoBankDbContext db, int id, CancellationToken ct)
-    {
-        await UploadColumn(
-            db, "dbo.Faces", "Id", id, "Image",
-            keyColumn: "S3Key_Image",
-            etagColumn: "S3ETag_Image",
-            shaColumn: "Sha256_Image",
-            sizeColumn: "BlobSize_Image",
-            migratedAtColumn: "MigratedAt_Image",
-            s3Prefix: "faces/image",
-            alias: "face",
-            originalName: null,
-            ct: ct);
-    }
-
-    // -------- Общий аплоад колонки --------
-    private async Task UploadColumn(
-        PhotoBankDbContext db,
-        string table, string idColumn, int id, string blobColumn,
-        string keyColumn, string etagColumn, string shaColumn, string sizeColumn, string migratedAtColumn,
-        string s3Prefix, string alias, string? originalName, CancellationToken ct)
-    {
-        // если уже мигрировано — выходим
-        var already = await db.Database.ExecuteScalarAsync(
-            $"SELECT {keyColumn} FROM {table} WITH (NOLOCK) WHERE {idColumn}=@id",
-            new SqlParameter("@id", SqlDbType.Int) { Value = id }, ct);
-        if (already is string s && !string.IsNullOrWhiteSpace(s)) return;
-
-        // есть ли blob вообще
-        var lenObj = await db.Database.ExecuteScalarAsync(
-            $"SELECT DATALENGTH([{blobColumn}]) FROM {table} WITH (NOLOCK) WHERE {idColumn}=@id",
-            new SqlParameter("@id", SqlDbType.Int) { Value = id }, ct);
-
-        var len = lenObj == DBNull.Value ? 0 : Convert.ToInt64(lenObj);
-        if (len <= 0) return;
-
-        // выгружаем во временный файл
-        var tmp = Path.Combine(_opt.TempDir, $"{table.Replace('.', '_')}_{id}_{blobColumn}.bin");
-        await DumpBlobToFile(db, table, idColumn, id, blobColumn, tmp, ct);
-
-        // сжимаем превью
-        if (alias == "preview")
-        {
-            using var image = new MagickImage(tmp);
-            image.Strip();
-            image.Quality = 82;
-            image.Settings.Interlace = Interlace.Jpeg;
-            image.Format = MagickFormat.Jpg;
-            await image.WriteAsync(tmp, ct);
-        }
-
-        // считаем sha256
-        var (sha256, size) = await ComputeHashAndSize(tmp, ct);
-
-        // ключ
-        var key = BuildKey(s3Prefix, id, ".jpg");
-
-        // если уже есть объект с таким же sha256 — просто отмечаем
-        if (await ExistsWithSameHash(key, sha256, ct) is string etExisting)
-        {
-            await MarkMigrated(db, table, idColumn, id, keyColumn, etagColumn, shaColumn, sizeColumn, migratedAtColumn,
-                key, etExisting, sha256, size, ct);
-            File.Delete(tmp);
+            _log.LogInformation("Blob migration is disabled. Exit.");
             return;
         }
 
-        // upload
-        await using (var fs = File.OpenRead(tmp))
-        {
-            var putArgs = new PutObjectArgs()
-                .WithBucket(_s3.Bucket)
-                .WithObject(key)
-                .WithStreamData(fs)
-                .WithObjectSize(fs.Length)
-                .WithContentType(ChooseContentType(alias))
-                .WithHeaders(new Dictionary<string, string>
-                {
-                    ["X-Amz-Meta-sha256"] = sha256,
-                    ["X-Amz-Meta-source-table"] = table,
-                    ["X-Amz-Meta-source-id"] = id.ToString(),
-                    ["X-Amz-Meta-alias"] = alias,
-                    ["X-Amz-Meta-original-name"] = originalName ?? ""
-                });
+        Directory.CreateDirectory(_opt.TempDir);
 
-            var resp = await _minio.PutObjectAsync(putArgs, ct);
-            await MarkMigrated(db, table, idColumn, id, keyColumn, etagColumn, shaColumn, sizeColumn, migratedAtColumn,
-                key, resp.Etag, sha256, size, ct);
-        }
+        await EnsureBucketAsync(ct);
 
-        File.Delete(tmp);
+        // Примеры двух прогонов — подстройте под свои реальные критерии выборки:
+        await MigratePhotosAsync(ct);
+        await MigrateFacesAsync(ct);
+
+        _log.LogInformation("Migration finished.");
     }
 
-    private async Task DumpBlobToFile(
-        PhotoBankDbContext db,
-        string table, string idColumn, int id, string blobColumn,
-        string file, CancellationToken ct)
+    public Task StopAsync(CancellationToken ct) => Task.CompletedTask;
+
+    // ---------------- Migration: Photos ----------------
+    private async Task MigratePhotosAsync(CancellationToken ct)
     {
-        await using var con = (SqlConnection)db.Database.GetDbConnection();
-        if (con.State != ConnectionState.Open) await con.OpenAsync(ct);
+        _log.LogInformation("Photos migration started...");
+        var sw = Stopwatch.StartNew();
+        int migrated = 0, skipped = 0, failed = 0;
 
-        await using var cmd = con.CreateCommand();
-        cmd.CommandText = $"SELECT [{blobColumn}] FROM {table} WITH (NOLOCK) WHERE {idColumn}=@id";
-        cmd.Parameters.Add(new SqlParameter("@id", SqlDbType.Int) { Value = id });
+        // Берем пачку id по условию (пример: где есть превью/thumbnail, но нет ключей в S3)
+        List<long> ids;
+        await using (var db = await _dbFactory.CreateDbContextAsync(ct))
+        {
+            ids = await db.Database.SqlQueryRaw<long>(
+                """
+                SELECT TOP({0}) p.Id
+                FROM Photos p WITH (NOLOCK)
+                WHERE (p.Preview IS NOT NULL AND (p.S3Key_Preview IS NULL OR p.S3Key_Preview = ''))
+                   OR (p.Thumbnail IS NOT NULL AND (p.S3Key_Thumbnail IS NULL OR p.S3Key_Thumbnail = ''))
+                ORDER BY p.Id
+                """, _opt.BatchSize
+            ).ToListAsync(ct);
+        }
 
-        await using var rdr = await cmd.ExecuteReaderAsync(CommandBehavior.SequentialAccess | CommandBehavior.SingleRow, ct);
-        if (!await rdr.ReadAsync(ct)) throw new InvalidOperationException($"{table}:{id} not found");
+        _log.LogInformation("Photos to process: {Count}", ids.Count);
 
-        await using var stream = rdr.GetStream(0);
-        await using var fs = File.Create(file);
+        using var throttler = new SemaphoreSlim(_opt.Concurrency);
+        var tasks = ids.Select(async id =>
+        {
+            await throttler.WaitAsync(ct);
+            try
+            {
+                await using var db = await _dbFactory.CreateDbContextAsync(ct);
+                var (ok, wasSkipped) = await MigratePhotoRowAsync(db, id, ct);
+                if (ok) Interlocked.Increment(ref migrated);
+                else if (wasSkipped) Interlocked.Increment(ref skipped);
+                else Interlocked.Increment(ref failed);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "Photos:{Id} failed", id);
+                Interlocked.Increment(ref failed);
+            }
+            finally
+            {
+                throttler.Release();
+            }
+        }).ToArray();
 
-        var buffer = ArrayPool<byte>.Shared.Rent(1024 * 1024);
+        await Task.WhenAll(tasks);
+
+        sw.Stop();
+        _log.LogInformation("Photos: migrated={Migrated}, skipped={Skipped}, failed={Failed} in {Elapsed}",
+            migrated, skipped, failed, sw.Elapsed);
+    }
+
+    private async Task<(bool ok, bool skipped)> MigratePhotoRowAsync(PhotoBankDbContext db, long id, CancellationToken ct)
+    {
+        // Выясняем, что конкретно надо мигрировать
+        var needPreview = await db.Database.SqlQueryRaw<int>(
+            """
+            SELECT CASE WHEN p.Preview IS NOT NULL AND (p.S3Key_Preview IS NULL OR p.S3Key_Preview='') THEN 1 ELSE 0 END
+            FROM Photos p WITH (NOLOCK) WHERE p.Id = {0}
+            """, id).FirstOrDefaultAsync(ct) == 1;
+
+        var needThumb = await db.Database.SqlQueryRaw<int>(
+            """
+            SELECT CASE WHEN p.Thumbnail IS NOT NULL AND (p.S3Key_Thumbnail IS NULL OR p.S3Key_Thumbnail='') THEN 1 ELSE 0 END
+            FROM Photos p WITH (NOLOCK) WHERE p.Id = {0}
+            """, id).FirstOrDefaultAsync(ct) == 1;
+
+        if (!needPreview && !needThumb) return (false, true);
+
+        var connStr = _cfg.GetConnectionString("DefaultConnection")!;
+        if (needPreview)
+        {
+            var tmp = Path.Combine(_opt.TempDir, $"photo_{id}_preview.bin");
+            await DumpBlobToFileAsync(connStr, "Photos", "Preview", "Id", id, tmp, ct);
+            try
+            {
+                // при необходимости здесь можно прогнать MagickImage (мы лишь выставили лимиты в Program.cs)
+                var key = BuildKey("photos", id, "preview");
+                await UploadToS3Async(tmp, key, ct);
+                await db.Database.ExecuteSqlRawAsync(
+                    "UPDATE Photos SET S3Key_Preview = {0} WHERE Id = {1}", [key, id], ct);
+            }
+            finally
+            {
+                SafeDelete(tmp);
+            }
+        }
+
+        if (needThumb)
+        {
+            var tmp = Path.Combine(_opt.TempDir, $"photo_{id}_thumb.bin");
+            await DumpBlobToFileAsync(connStr, "Photos", "Thumbnail", "Id", id, tmp, ct);
+            try
+            {
+                var key = BuildKey("photos", id, "thumbnail");
+                await UploadToS3Async(tmp, key, ct);
+                await db.Database.ExecuteSqlRawAsync(
+                    "UPDATE Photos SET S3Key_Thumbnail = {0} WHERE Id = {1}", [key, id], ct);
+            }
+            finally
+            {
+                SafeDelete(tmp);
+            }
+        }
+
+        return (true, false);
+    }
+
+    // ---------------- Migration: Faces ----------------
+    private async Task MigrateFacesAsync(CancellationToken ct)
+    {
+        _log.LogInformation("Faces migration started...");
+        var sw = Stopwatch.StartNew();
+        int migrated = 0, skipped = 0, failed = 0;
+
+        List<long> ids;
+        await using (var db = await _dbFactory.CreateDbContextAsync(ct))
+        {
+            ids = await db.Database.SqlQueryRaw<long>(
+                """
+                SELECT TOP({0}) f.Id
+                FROM Faces f WITH (NOLOCK)
+                WHERE f.Image IS NOT NULL AND (f.S3Key_Image IS NULL OR f.S3Key_Image = '')
+                ORDER BY f.Id
+                """, _opt.BatchSize
+            ).ToListAsync(ct);
+        }
+
+        _log.LogInformation("Faces to process: {Count}", ids.Count);
+
+        using var throttler = new SemaphoreSlim(_opt.Concurrency);
+        var tasks = ids.Select(async id =>
+        {
+            await throttler.WaitAsync(ct);
+            try
+            {
+                await using var db = await _dbFactory.CreateDbContextAsync(ct);
+                var (ok, wasSkipped) = await MigrateFaceRowAsync(db, id, ct);
+                if (ok) Interlocked.Increment(ref migrated);
+                else if (wasSkipped) Interlocked.Increment(ref skipped);
+                else Interlocked.Increment(ref failed);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "Faces:{Id} failed", id);
+                Interlocked.Increment(ref failed);
+            }
+            finally
+            {
+                throttler.Release();
+            }
+        }).ToArray();
+
+        await Task.WhenAll(tasks);
+
+        sw.Stop();
+        _log.LogInformation("Faces: migrated={Migrated}, skipped={Skipped}, failed={Failed} in {Elapsed}",
+            migrated, skipped, failed, sw.Elapsed);
+    }
+
+    private async Task<(bool ok, bool skipped)> MigrateFaceRowAsync(PhotoBankDbContext db, long id, CancellationToken ct)
+    {
+        var need = await db.Database.SqlQueryRaw<int>(
+            """
+            SELECT CASE WHEN f.Image IS NOT NULL AND (f.S3Key_Image IS NULL OR f.S3Key_Image='') THEN 1 ELSE 0 END
+            FROM Faces f WITH (NOLOCK) WHERE f.Id = {0}
+            """, id).FirstOrDefaultAsync(ct) == 1;
+
+        if (!need) return (false, true);
+
+        var connStr = _cfg.GetConnectionString("DefaultConnection")!;
+
+        var tmp = Path.Combine(_opt.TempDir, $"face_{id}.bin");
+        await DumpBlobToFileAsync(connStr, "Faces", "Image", "Id", id, tmp, ct);
         try
         {
-            int read;
-            while ((read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct)) > 0)
-            {
-                await fs.WriteAsync(buffer.AsMemory(0, read), ct);
-            }
+            var key = BuildKey("faces", id, "image");
+            await UploadToS3Async(tmp, key, ct);
+            await db.Database.ExecuteSqlRawAsync(
+                "UPDATE Faces SET S3Key_Image = {0} WHERE Id = {1}", [key, id], ct);
         }
         finally
         {
-            ArrayPool<byte>.Shared.Return(buffer);
+            SafeDelete(tmp);
         }
+
+        return (true, false);
     }
 
-    private static async Task<(string sha256, long size)> ComputeHashAndSize(string file, CancellationToken ct)
-    {
-        using var sha = SHA256.Create();
-        await using var fs = File.OpenRead(file);
+    // ---------------- Helpers ----------------
 
-        var buffer = ArrayPool<byte>.Shared.Rent(1024 * 1024);
-        long total = 0;
-        try
-        {
-            int read;
-            while ((read = await fs.ReadAsync(buffer.AsMemory(0, buffer.Length), ct)) > 0)
-            {
-                sha.TransformBlock(buffer, 0, read, null, 0);
-                total += read;
-            }
-            sha.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
-            var hex = Convert.ToHexString(sha.Hash!).ToLowerInvariant();
-            return (hex, total);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
-    }
-
-    private async Task<string?> ExistsWithSameHash(string key, string sha256, CancellationToken ct)
+    private async Task EnsureBucketAsync(CancellationToken ct)
     {
         try
         {
-            var stat = await _minio.StatObjectAsync(new StatObjectArgs()
-                .WithBucket(_s3.Bucket).WithObject(key), ct);
-
-            if (stat.MetaData != null &&
-                stat.MetaData.TryGetValue("X-Amz-Meta-sha256", out var remoteSha) &&
-                string.Equals(remoteSha, sha256, StringComparison.OrdinalIgnoreCase))
+            var exists = await _minio.BucketExistsAsync(new BucketExistsArgs().WithBucket(_s3.Bucket), ct);
+            if (!exists)
             {
-                return stat.ETag;
+                await _minio.MakeBucketAsync(new MakeBucketArgs().WithBucket(_s3.Bucket), ct);
+                _log.LogInformation("Bucket '{Bucket}' created.", _s3.Bucket);
             }
-
-            return null;
         }
-        catch (Minio.Exceptions.ObjectNotFoundException)
+        catch (MinioException ex)
         {
-            return null;
+            _log.LogError(ex, "EnsureBucket failed");
+            throw;
         }
     }
 
-    private async Task MarkMigrated(
-        PhotoBankDbContext db,
-        string table, string idColumn, int id,
-        string keyColumn, string etagColumn, string shaColumn, string sizeColumn, string migratedAtColumn,
-        string key, string etag, string sha256, long size, CancellationToken ct)
-    {
-        var sql = $@"
-UPDATE {table}
-   SET {keyColumn}=@k,
-       {etagColumn}=@e,
-       {shaColumn}=@s,
-       {sizeColumn}=@sz,
-       {migratedAtColumn}=SYSUTCDATETIME()
- WHERE {idColumn}=@id";
+    private static string BuildKey(string scope, long id, string alias)
+        => $"{scope}/{id:0000000000}/{alias}.bin";
 
-        await db.Database.ExecuteSqlRawAsync(sql,
-            new SqlParameter("@k", SqlDbType.NVarChar, 512) { Value = key },
-            new SqlParameter("@e", SqlDbType.NVarChar, 128) { Value = etag },
-            new SqlParameter("@s", SqlDbType.Char, 64) { Value = sha256 },
-            new SqlParameter("@sz", SqlDbType.BigInt) { Value = size },
-            new SqlParameter("@id", SqlDbType.Int) { Value = id }, ct);
+    private async Task UploadToS3Async(string filePath, string objectKey, CancellationToken ct)
+    {
+        var put = new PutObjectArgs()
+            .WithBucket(_s3.Bucket)
+            .WithObject(objectKey)
+            .WithFileName(filePath)
+            .WithContentType("application/octet-stream");
+        await _minio.PutObjectAsync(put, ct);
+        _log.LogDebug("Uploaded: {Key}", objectKey);
     }
-}
 
-// Небольшие помощники
-static class DbRawExtensions
-{
-    public static async Task<object?> ExecuteScalarAsync(this DatabaseFacade db, string sql, SqlParameter param, CancellationToken ct)
+    private static void SafeDelete(string path)
     {
-        await using var con = (SqlConnection)db.GetDbConnection();
-        if (con.State != ConnectionState.Open) await con.OpenAsync(ct);
+        try { if (File.Exists(path)) File.Delete(path); }
+        catch { /* suppress */ }
+    }
 
-        await using var cmd = con.CreateCommand();
-        cmd.CommandText = sql;
-        cmd.Parameters.Add(param);
-        return await cmd.ExecuteScalarAsync(ct);
+    /// <summary>
+    /// Потоково выгружает BLOB в файл (SequentialAccess), без загрузки всего в память.
+    /// </summary>
+    private static async Task DumpBlobToFileAsync(
+        string connectionString,
+        string table,
+        string column,
+        string keyColumn,
+        long keyValue,
+        string filePath,
+        CancellationToken ct)
+    {
+        await using var con = new SqlConnection(connectionString);
+        await con.OpenAsync(ct);
+
+        // Важно: SequentialAccess + GetBytes в цикле; WITH (NOLOCK) приемлемо для "неизменяемых" blob'ов
+        var sql = $"SELECT {column} FROM {table} WITH (NOLOCK) WHERE {keyColumn} = @id";
+        await using var cmd = new SqlCommand(sql, con);
+        cmd.Parameters.Add(new SqlParameter("@id", SqlDbType.BigInt) { Value = keyValue });
+
+        await using var reader = await cmd.ExecuteReaderAsync(CommandBehavior.SequentialAccess, ct);
+
+        if (!await reader.ReadAsync(ct))
+            throw new InvalidOperationException($"Row not found: {table}.{keyColumn}={keyValue}");
+
+        const int bufSize = 128 * 1024;
+        var buffer = new byte[bufSize];
+        long bytesRead;
+        long fieldOffset = 0;
+
+        await using var fs = File.Create(filePath);
+        while ((bytesRead = reader.GetBytes(0, fieldOffset, buffer, 0, buffer.Length)) > 0)
+        {
+            await fs.WriteAsync(buffer.AsMemory(0, (int)bytesRead), ct);
+            fieldOffset += bytesRead;
+        }
     }
 }
