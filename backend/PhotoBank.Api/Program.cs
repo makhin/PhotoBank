@@ -12,12 +12,11 @@ using PhotoBank.Api.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Serilog.Events;
-using Serilog;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Serilog.Formatting.Compact;
+using Serilog;
+using HealthChecks.UI.Client;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using System.Text.Json.Serialization;
@@ -31,35 +30,19 @@ namespace PhotoBank.Api
         {
             Console.WriteLine("Start App!");
 
-            IConfiguration configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile(
-                    $"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json",
-                    optional: true)
-                .AddEnvironmentVariables()
-                .Build();
-
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-                .Enrich.FromLogContext()
-                .WriteTo.Console(new RenderedCompactJsonFormatter())
-                .WriteTo.Debug()
-                .WriteTo.File(new RenderedCompactJsonFormatter(), "Logs/log-.json",
-                    rollingInterval: RollingInterval.Day)
-                .CreateLogger();
-
             var builder = WebApplication.CreateBuilder(args);
 
+            // Serilog из конфигурации
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .CreateLogger();
             builder.Host.UseSerilog();
 
             builder.WebHost.UseKestrel();
-
             builder.WebHost.UseUrls("http://0.0.0.0:5066");
 
             // Add services to the container.
-            var connectionString = configuration.GetConnectionString("DefaultConnection") ??
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
                                    throw new InvalidOperationException(
                                        "Connection string 'DefaultConnection' not found.");
 
@@ -96,7 +79,7 @@ namespace PhotoBank.Api
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<PhotoBankDbContext>();
 
-            var jwtSection = configuration.GetSection("Jwt");
+            var jwtSection = builder.Configuration.GetSection("Jwt");
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -163,8 +146,11 @@ namespace PhotoBank.Api
             });
 
             builder.Services.AddHealthChecks()
-                .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
-                .AddDbContextCheck<PhotoBankDbContext>("Database", tags: new[] { "ready" });
+                .AddSqlServer(
+                    connectionString: builder.Configuration.GetConnectionString("DefaultConnection")!,
+                    name: "sql",
+                    tags: new[] { "ready" },
+                    failureStatus: HealthStatus.Unhealthy);
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -211,7 +197,52 @@ namespace PhotoBank.Api
                 app.UseSwaggerUI();
             }
 
-            app.UseExceptionHandler();
+            // Корреляция по запросу (X-Correlation-Id)
+            app.Use(async (ctx, next) =>
+            {
+                const string header = "X-Correlation-Id";
+                if (!ctx.Request.Headers.TryGetValue(header, out var cid) || string.IsNullOrWhiteSpace(cid))
+                {
+                    cid = ctx.TraceIdentifier;
+                    ctx.Response.Headers[header] = cid;
+                }
+                Serilog.Context.LogContext.PushProperty("CorrelationId", cid.ToString());
+                await next();
+            });
+
+            // Глобальный обработчик исключений → RFC7807
+            app.UseExceptionHandler(errorApp =>
+            {
+                errorApp.Run(async context =>
+                {
+                    var feature = context.Features.Get<IExceptionHandlerFeature>();
+                    var ex = feature?.Error;
+
+                    var (status, title, type) = ex switch
+                    {
+                        UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized", "https://httpstatuses.io/401"),
+                        ArgumentException or InvalidOperationException => (StatusCodes.Status400BadRequest, "Bad Request", "https://httpstatuses.io/400"),
+                        Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, "Concurrency conflict", "https://httpstatuses.io/409"),
+                        Microsoft.EntityFrameworkCore.DbUpdateException => (StatusCodes.Status409Conflict, "Database update failed", "https://httpstatuses.io/409"),
+                        _ => (StatusCodes.Status500InternalServerError, "Server Error", "https://httpstatuses.io/500")
+                    };
+
+                    var problem = new ProblemDetails
+                    {
+                        Status = status,
+                        Title = title,
+                        Type = type,
+                        Detail = app.Environment.IsDevelopment() ? ex?.Message : "An error occurred.",
+                        Instance = context.Request.Path
+                    };
+                    problem.Extensions["traceId"] = context.TraceIdentifier;
+
+                    context.Response.ContentType = "application/problem+json";
+                    context.Response.StatusCode = status;
+                    await context.Response.WriteAsJsonAsync(problem);
+                });
+            });
+
             app.UseSerilogRequestLogging(opts =>
             {
                 opts.EnrichDiagnosticContext = (diag, http) =>
@@ -222,47 +253,34 @@ namespace PhotoBank.Api
                 };
             });
             app.UseCors("AllowAll");
+            app.UseRouting();
             // Disabled HTTPS redirection to ensure CORS headers are applied
             // correctly during local development when running over HTTP.
             app.UseAuthentication();
             app.UseMiddleware<ImpersonationMiddleware>();
             app.UseAuthorization();
 
-            app.MapHealthChecks("/healthz/live", new HealthCheckOptions
-            {
-                Predicate = r => r.Tags.Contains("live"),
-                ResponseWriter = WriteHealthJson
-            });
-            app.MapHealthChecks("/healthz/ready", new HealthCheckOptions
-            {
-                Predicate = r => r.Tags.Contains("ready"),
-                ResponseWriter = WriteHealthJson
-            });
             app.MapControllers();
+
+            // Health endpoints
+            app.MapHealthChecks(
+                builder.Configuration["HealthChecks:ReadinessPath"] ?? "/health",
+                new HealthCheckOptions
+                {
+                    Predicate = r => r.Tags.Contains("ready"),
+                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+                });
+            app.MapHealthChecks(
+                builder.Configuration["HealthChecks:LivenessPath"] ?? "/liveness",
+                new HealthCheckOptions
+                {
+                    Predicate = _ => false // только инфраструктура процесса
+                });
 
             Console.WriteLine("Run App!");
             app.Run();
         }
 
-        private static Task WriteHealthJson(HttpContext ctx, HealthReport report)
-        {
-            ctx.Response.ContentType = "application/json; charset=utf-8";
-            var payload = new
-            {
-                status = report.Status.ToString(),
-                totalDurationMs = report.TotalDuration.TotalMilliseconds,
-                entries = report.Entries.ToDictionary(
-                    e => e.Key,
-                    e => new
-                    {
-                        status = e.Value.Status.ToString(),
-                        description = e.Value.Description,
-                        durationMs = e.Value.Duration.TotalMilliseconds,
-                        error = e.Value.Exception?.Message
-                    })
-            };
-            return ctx.Response.WriteAsJsonAsync(payload);
-        }
     }
 
     public sealed class DomainException : Exception
