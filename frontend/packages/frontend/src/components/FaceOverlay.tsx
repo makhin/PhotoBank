@@ -9,8 +9,8 @@ import {
     unknownLabel,
 } from '@photobank/shared/constants';
 
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover.tsx';
-import { Label } from '@/components/ui/label.tsx';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover.tsx';
+import { Label } from '@/shared/ui/label.tsx';
 
 import './FaceOverlay.css';
 

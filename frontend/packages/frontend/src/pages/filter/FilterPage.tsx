@@ -8,9 +8,9 @@ import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton, loadingText }
 import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
 import { setFilter } from '@/features/photo/model/photoSlice.ts';
 import { loadMetadata } from '@/features/meta/model/metaSlice.ts';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form } from '@/components/ui/form';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Form } from '@/shared/ui/form';
 import { formSchema } from '@/features/filter/lib/form-schema.ts';
 import { FilterFormFields } from '@/components/FilterFormFields.tsx';
 

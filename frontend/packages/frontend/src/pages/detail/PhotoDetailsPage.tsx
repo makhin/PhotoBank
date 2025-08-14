@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { useAppSelector } from '@/app/hook.ts';
-import { formatDate, getOrientation, getPlaceByGeoPoint } from '@photobank/shared';
+import { formatDate, getOrientation, getPlaceByGeoPoint, useIsAdmin } from '@photobank/shared';
 import type { FaceBoxDto } from '@photobank/shared/api/photobank';
-import {useIsAdmin} from '@photobank/shared';
 import {
     photoPropertiesTitle,
     nameLabel,
@@ -25,17 +23,18 @@ import {
     hoverFaceHint,
 } from '@photobank/shared/constants';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {Badge} from '@/components/ui/badge';
-import {Label} from '@/components/ui/label';
-import {Input} from '@/components/ui/input';
-import {Textarea} from '@/components/ui/textarea';
-import {ScrollArea} from '@/components/ui/scroll-area';
-import {Checkbox} from '@/components/ui/checkbox';
-import {useGetPhotoByIdQuery, useUpdateFaceMutation} from "@/shared/api.ts";
-import {ScoreBar} from '@/components/ScoreBar';
-import {FaceOverlay} from "@/components/FaceOverlay.tsx";
-import {FacePersonSelector} from "@/components/FacePersonSelector.tsx";
+import { useGetPhotoByIdQuery, useUpdateFaceMutation } from '@/shared/api.ts';
+import { useAppSelector } from '@/app/hook.ts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
+import { Label } from '@/shared/ui/label';
+import { Input } from '@/shared/ui/input';
+import { Textarea } from '@/shared/ui/textarea';
+import { ScrollArea } from '@/shared/ui/scroll-area';
+import { Checkbox } from '@/shared/ui/checkbox';
+import { ScoreBar } from '@/components/ScoreBar';
+import { FaceOverlay } from '@/components/FaceOverlay.tsx';
+import { FacePersonSelector } from '@/components/FacePersonSelector.tsx';
 
 
 const calculateImageSize = (naturalWidth: number, naturalHeight: number, containerWidth: number, containerHeight: number) => {

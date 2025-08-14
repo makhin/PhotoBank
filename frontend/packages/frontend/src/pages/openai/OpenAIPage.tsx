@@ -15,9 +15,9 @@ import {
   AZURE_OPENAI_DEPLOYMENT,
   AZURE_OPENAI_API_VERSION,
 } from '@/config.ts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Textarea } from '@/shared/ui/textarea';
+import { Button } from '@/shared/ui/button';
 
 type ChatMessage = {
   role: 'user' | 'assistant';

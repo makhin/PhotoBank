@@ -11,7 +11,7 @@ import {
 } from '@photobank/shared/constants';
 
 import { useRegisterMutation } from '@/shared/api.ts';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 import {
   Form,
   FormControl,
@@ -19,8 +19,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from '@/shared/ui/form';
+import { Input } from '@/shared/ui/input';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -57,7 +57,7 @@ export default function RegisterPage() {
         </p>
       )}
       <Form {...form}>
-        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
+        { }
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}

@@ -13,11 +13,11 @@ import {
 
 import {loginUser, resetError} from '@/features/auth/model/authSlice.ts';
 import {useAppDispatch, useAppSelector} from '@/app/hook.ts';
-import {Button} from '@/components/ui/button';
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
-import {Checkbox} from '@/components/ui/checkbox';
-import {Input} from '@/components/ui/input';
-import {PasswordInput} from '@/components/ui/password-input';
+import {Button} from '@/shared/ui/button';
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/shared/ui/form';
+import {Checkbox} from '@/shared/ui/checkbox';
+import {Input} from '@/shared/ui/input';
+import {PasswordInput} from '@/shared/ui/password-input';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -65,7 +65,7 @@ export default function LoginPage() {
         </p>
       )}
       <Form {...form}>
-        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
+        { }
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}

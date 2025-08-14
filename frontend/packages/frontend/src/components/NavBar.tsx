@@ -12,7 +12,7 @@ import {
   navbarOpenAiLabel,
 } from '@photobank/shared/constants';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/ui/button';
 
 export default function NavBar() {
   // useLocation to trigger re-render on route changes

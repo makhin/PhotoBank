@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/shared/ui/badge';
 
 export type MetadataBadgeListProps = {
   icon: LucideIcon;

@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { useForm } from 'react-hook-form';
 import metaReducer from '../src/features/meta/model/metaSlice';
-import { Form } from '../src/components/ui/form';
+import { Form } from '../src/shared/ui/form';
 import { describe, it, beforeEach, expect, vi } from 'vitest';
 
 declare module '@testing-library/react' {
