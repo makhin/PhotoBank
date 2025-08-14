@@ -1,15 +1,9 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-class RO {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-// @ts-ignore
-global.ResizeObserver = RO;
 
 const renderPage = async (regMock: any) => {
   vi.doMock('../src/shared/api.ts', () => ({
@@ -37,9 +31,9 @@ describe('RegisterPage', () => {
       .fn()
       .mockReturnValue({ unwrap: () => Promise.resolve({}) });
     await renderPage(regMock);
-    fireEvent.input(screen.getByLabelText('Email'), { target: { value: 'a@b.co' } });
-    fireEvent.input(screen.getByLabelText('Password'), { target: { value: '123' } });
-    fireEvent.click(screen.getByRole('button', { name: /register/i }));
+    await userEvent.type(screen.getByLabelText('Email'), 'a@b.co');
+    await userEvent.type(screen.getByLabelText('Password'), '123');
+    await userEvent.click(screen.getByRole('button', { name: /register/i }));
     await waitFor(() => {
       expect(regMock).toHaveBeenCalledWith({ email: 'a@b.co', password: '123' });
     });

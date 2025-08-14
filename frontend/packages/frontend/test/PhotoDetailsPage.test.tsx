@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -37,18 +38,14 @@ vi.mock('../src/shared/api.ts', () => ({
 
 vi.mock('@photobank/shared', async () => {
   const actual = await vi.importActual<any>('@photobank/shared');
-  return { ...actual, getPlaceByGeoPoint: vi.fn().mockResolvedValue('Nice place') };
+  return {
+    ...actual,
+    getPlaceByGeoPoint: vi.fn().mockResolvedValue('Nice place'),
+    useIsAdmin: () => false,
+  };
 });
 
 import metaReducer from '../src/features/meta/model/metaSlice';
-
-class RO {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-// @ts-ignore
-global.ResizeObserver = RO;
 
 const renderPage = async () => {
   const store = configureStore({
@@ -87,9 +84,9 @@ describe('PhotoDetailsPage', () => {
 
   it('renders photo details', async () => {
     await renderPage();
-    expect(screen.getByText('Photo Properties')).toBeTruthy();
-    expect(screen.getByDisplayValue('Test Photo')).toBeTruthy();
-    expect(screen.getAllByDisplayValue('1').length).toBeGreaterThan(0);
+    expect(await screen.findByText('Photo Properties')).toBeTruthy();
+    expect(await screen.findByDisplayValue('Test Photo')).toBeTruthy();
+    expect((await screen.findAllByDisplayValue('1')).length).toBeGreaterThan(0);
     expect(screen.getByLabelText('Show face boxes')).toBeTruthy();
     const placeLink = await screen.findByRole('link', { name: /Nice place/ });
     expect(placeLink).toBeTruthy();
@@ -102,7 +99,7 @@ describe('PhotoDetailsPage', () => {
     const checkbox = screen.getByLabelText('Show face boxes');
     expect(checkbox.getAttribute('data-state')).toBe('unchecked');
     expect(document.querySelectorAll('.face-box').length).toBe(0);
-    fireEvent.click(checkbox);
+    await userEvent.click(checkbox);
     await waitFor(() => {
       expect(checkbox.getAttribute('data-state')).toBe('checked');
       expect(document.querySelectorAll('.face-box').length).toBeGreaterThan(0);

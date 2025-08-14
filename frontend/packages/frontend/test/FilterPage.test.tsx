@@ -14,14 +14,6 @@ vi.mock('@photobank/shared', async () => {
   return { ...actual, useIsAdmin: () => false };
 });
 
-class RO {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-// @ts-ignore
-global.ResizeObserver = RO;
-
 const initialMeta = {
   tags: [],
   persons: [],
