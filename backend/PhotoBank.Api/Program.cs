@@ -60,19 +60,26 @@ namespace PhotoBank.Api
 
             builder.Services.AddHttpContextAccessor();
 
-            builder.Services.AddDbContext<PhotoBankDbContext>(options =>
+            builder.Services.AddDbContextPool<PhotoBankDbContext>((sp, options) =>
             {
+                options
+                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+                    .EnableDetailedErrors(builder.Environment.IsDevelopment())
+                    .EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
+
                 options.UseLoggerFactory(LoggerFactory.Create(loggingBuilder => loggingBuilder.AddDebug()));
-                options.UseSqlServer(connectionString,
-                    optionsBuilder =>
+
+                options.UseSqlServer(
+                    connectionString,
+                    sql =>
                     {
-                        optionsBuilder.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName()
-                            .Name);
-                        optionsBuilder.UseNetTopologySuite();
-                        optionsBuilder.CommandTimeout(120);
+                        sql.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName().Name);
+                        sql.UseNetTopologySuite();
+                        sql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null);
+                        sql.CommandTimeout(60);
+                        sql.MaxBatchSize(128);
+                        sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     });
-                options.EnableSensitiveDataLogging();
-                options.EnableDetailedErrors();
             });
 
             builder.Services.AddDefaultIdentity<ApplicationUser>()
