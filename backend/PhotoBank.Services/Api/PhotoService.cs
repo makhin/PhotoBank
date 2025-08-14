@@ -62,11 +62,13 @@ public class PhotoService : IPhotoService
         _cache = cache;
         _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
             GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
+                .AsNoTracking()
                 .OrderBy(p => p.Name)
                 .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
                 .ToListAsync()));
         _paths = new Lazy<Task<IReadOnlyList<PathDto>>>(() =>
             GetCachedAsync("paths", async () => (IReadOnlyList<PathDto>)await photoRepository.GetAll()
+                .AsNoTracking()
                 .ProjectTo<PathDto>(_mapper.ConfigurationProvider)
                 .Distinct()
                 .OrderBy(p => p.Path)
@@ -152,7 +154,8 @@ public class PhotoService : IPhotoService
         var photo = await _photoRepository.GetAsync(id,
             q => q.Include(p => p.Faces).ThenInclude(f => f.Person)
                    .Include(p => p.Captions)
-                   .Include(p => p.PhotoTags).ThenInclude(t => t.Tag));
+                   .Include(p => p.PhotoTags).ThenInclude(t => t.Tag)
+                   .AsNoTrackingWithIdentityResolution());
 
         return _mapper.Map<Photo, PhotoDto>(photo);
     }
@@ -160,6 +163,7 @@ public class PhotoService : IPhotoService
     public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync()
     {
         return await _personRepository.GetAll()
+            .AsNoTracking()
             .OrderBy(p => p.Name)
             .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
@@ -170,6 +174,7 @@ public class PhotoService : IPhotoService
     public async Task<IEnumerable<StorageDto>> GetAllStoragesAsync()
     {
         return await _storageRepository.GetAll()
+            .AsNoTracking()
             .OrderBy(p => p.Name)
             .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
@@ -237,6 +242,7 @@ public class PhotoService : IPhotoService
         if (id.HasValue)
         {
             hash = await _photoRepository.GetByCondition(p => p.Id == id.Value)
+                .AsNoTracking()
                 .Select(p => p.ImageHash)
                 .SingleOrDefaultAsync();
         }

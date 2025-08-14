@@ -17,7 +17,7 @@ public class UsersController(UserManager<ApplicationUser> userManager) : Control
     [ProducesResponseType(typeof(IEnumerable<UserWithClaimsDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<UserWithClaimsDto>>> GetAllAsync()
     {
-        var users = await userManager.Users.ToListAsync();
+        var users = await userManager.Users.AsNoTracking().ToListAsync();
         var result = new List<UserWithClaimsDto>();
         foreach (var user in users)
         {
