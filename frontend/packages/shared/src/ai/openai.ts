@@ -1,5 +1,5 @@
-import AzureOpenAI from 'openai';
-import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions/completions.mjs';
+import { AzureOpenAI } from 'openai';
+import type { ChatCompletionMessageParam } from 'openai/resources';
 
 import { FEW_SHOTS, SYSTEM_PROMPT } from '@photobank/shared/ai/constants';
 
