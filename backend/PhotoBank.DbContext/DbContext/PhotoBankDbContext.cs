@@ -55,6 +55,9 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => new { p.IsRacyContent });
 
+            modelBuilder.Entity<Photo>()
+                .HasIndex(p => new { p.StorageId, p.TakenDate });
+
             modelBuilder.Entity<PhotoTag>()
                 .HasKey(t => new { t.PhotoId, t.TagId });
 
@@ -97,12 +100,12 @@ namespace PhotoBank.DbContext.DbContext
                 .HasOne(t => t.Face)
                 .WithOne(t => t.PersonGroupFace);
 
-            modelBuilder.Entity<File>()
-                .HasIndex(p => new { p.Name });
-
-            modelBuilder.Entity<File>()
-                .HasIndex(p => new { p.Name, p.PhotoId })
-                .IsUnique();
+            modelBuilder.Entity<File>(e =>
+            {
+                e.HasQueryFilter(f => !f.IsDeleted);
+                e.HasIndex(p => p.Name);
+                e.HasIndex(p => new { p.Name, p.PhotoId }).IsUnique();
+            });
 
             modelBuilder.Entity<Face>()
                 .HasIndex(p => p.IdentityStatus)
@@ -124,6 +127,13 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => p.StorageId)
                 .IncludeProperties(p => p.RelativePath);
+
+            modelBuilder.Entity<Tag>(e =>
+            {
+                e.HasIndex(x => x.Name)
+                    .HasDatabaseName("IX_Tag_Name")
+                    .IsClustered(false);
+            });
 
             modelBuilder.Entity<Enricher>()
                 .HasIndex(u => u.Name)
