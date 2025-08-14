@@ -35,11 +35,11 @@ namespace PhotoBank.Services.Enrichers
             List<Category> existing;
             try
             {
-                existing = await query.ToListAsync(cancellationToken);
+                existing = await query.AsNoTracking().ToListAsync(cancellationToken);
             }
             catch (InvalidOperationException)
             {
-                existing = query.ToList();
+                existing = query.AsNoTracking().ToList();
             }
 
             var map = existing.ToDictionary(c => c.Name, StringComparer.OrdinalIgnoreCase);

@@ -52,6 +52,7 @@ namespace PhotoBank.Services
             var storageFiles = await _fileRepository
                 .GetByCondition(f => f.Photo.Storage.Id == storage.Id)
                 .Include(f => f.Photo)
+                .AsNoTracking()
                 .Select(f => new
                 {
                     f.Id,

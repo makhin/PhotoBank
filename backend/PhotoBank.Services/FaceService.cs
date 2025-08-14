@@ -97,7 +97,7 @@ namespace PhotoBank.Services
                     await _faceClient.PersonGroup.CreateAsync(PersonGroupId, PersonGroupId, recognitionModel: RecognitionModel);
                 }
 
-                var dbPersons = await _personRepository.GetAll().ToListAsync();
+                var dbPersons = await _personRepository.GetAll().AsNoTracking().ToListAsync();
                 var servicePersons = await _faceClient.PersonGroupPerson.ListAsync(PersonGroupId);
 
                 foreach (var dbPerson in dbPersons)
@@ -135,7 +135,7 @@ namespace PhotoBank.Services
 
         public async Task SyncFacesToPersonAsync()
         {
-            var dbPersonGroupFaces = await _personGroupFaceRepository.GetAll().Include(p => p.Person).ToListAsync();
+            var dbPersonGroupFaces = await _personGroupFaceRepository.GetAll().Include(p => p.Person).AsNoTracking().ToListAsync();
 
             var groupBy = dbPersonGroupFaces.GroupBy(x => new { x.PersonId, x.Person.ExternalGuid }, p=> new { p.FaceId, p.ExternalGuid } ,
                 (key, g) => new { Key = key, Faces = g.ToList()});
@@ -187,6 +187,7 @@ namespace PhotoBank.Services
         {
             var dbFaces = await _faceRepository.GetAll()
                 .Include(f => f.PersonGroupFace)
+                .AsNoTracking()
                 .Where(f => f.PersonGroupFace == null)
                 .Take(1000).ToListAsync();
 
@@ -250,11 +251,12 @@ namespace PhotoBank.Services
                 .GetAll()
                 .Include(f => f.Person)
                 .Include(f => f.Photo)
+                .AsNoTrackingWithIdentityResolution()
                 .Where( f => f.Photo.StorageId == 9 && f.IdentityStatus == IdentityStatus.ForReprocessing)
                 .ProjectTo<FaceDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
-            _persons = await _personRepository.GetAll().ToListAsync();
+            _persons = await _personRepository.GetAll().AsNoTracking().ToListAsync();
 
             int currentMinute = DateTime.Now.Minute;
             int callCounter = 0;
@@ -369,6 +371,7 @@ namespace PhotoBank.Services
         {
             var photos = await _faceRepository
                 .GetAll()
+                .AsNoTracking()
                 .Take(100).Select(p => p.Image).ToListAsync();
 
             var persistedFaces = (await _faceClient.LargeFaceList.ListFacesAsync(AllFacesListId)).ToList();
@@ -423,7 +426,7 @@ namespace PhotoBank.Services
         /*
         public async Task FaceIdentityAsync(Face face)
         {
-            _persons ??= await _personRepository.GetAll().ToListAsync();
+            _persons ??= await _personRepository.GetAll().AsNoTracking().ToListAsync();
 
             try
             {

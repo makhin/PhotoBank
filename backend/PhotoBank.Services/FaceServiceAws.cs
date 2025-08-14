@@ -60,7 +60,7 @@ namespace PhotoBank.Services
                 _logger.LogCritical(e, "error");
             }
 
-            var dbPersons = await _personRepository.GetAll().ToListAsync();
+            var dbPersons = await _personRepository.GetAll().AsNoTracking().ToListAsync();
             var servicePersons = await _faceClient.ListUsersAsync(new ListUsersRequest
             {
                 CollectionId = PersonGroupId,
@@ -98,7 +98,7 @@ namespace PhotoBank.Services
 
         public async Task SyncFacesToPersonAsync()
         {
-            var dbPersonGroupFaces = await _personGroupFaceRepository.GetAll().Include(p => p.Person).ToListAsync();
+            var dbPersonGroupFaces = await _personGroupFaceRepository.GetAll().Include(p => p.Person).AsNoTracking().ToListAsync();
 
             var groupBy = dbPersonGroupFaces.GroupBy(x => new { x.PersonId }, p => new { p.FaceId, p.ExternalGuid },
                 (key, g) => new { Key = key, Faces = g.ToList() });

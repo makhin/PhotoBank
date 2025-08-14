@@ -104,6 +104,7 @@ namespace PhotoBank.Services
             var files = await _photoRepository
                 .GetAll()
                 .Include(p => p.Files)
+                .AsNoTracking()
                 .Where(p => p.StorageId == storage.Id && p.FaceIdentifyStatus == FaceIdentifyStatus.Undefined)
                 .Select(p => new PhotoFilePath
                 {
@@ -120,6 +121,7 @@ namespace PhotoBank.Services
         {
             var files = await _photoRepository
                 .GetAll()
+                .AsNoTracking()
                 .Where(p => p.StorageId == storage.Id && p.TakenDate == null)
                 .Select(p => new PhotoFilePath
                 {
