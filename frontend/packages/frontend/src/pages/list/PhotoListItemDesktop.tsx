@@ -6,8 +6,8 @@ import {
   MAX_VISIBLE_TAGS_LG,
 } from '@photobank/shared/constants';
 
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/shared/ui/card';
+import { Badge } from '@/shared/ui/badge';
 import PhotoFlags from '@/components/PhotoFlags';
 import MetadataBadgeList from '@/components/MetadataBadgeList';
 

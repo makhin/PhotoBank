@@ -1,7 +1,7 @@
 import { serviceInfoTitle } from '@photobank/shared/constants';
 
 import { API_BASE_URL } from '@/config.ts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { StatusCard } from '@/components/StatusCard';
 
 export default function ServiceInfoPage() {

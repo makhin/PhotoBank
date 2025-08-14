@@ -1,5 +1,5 @@
 import PhotoDetailsPage from '@/pages/detail/PhotoDetailsPage';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/shared/ui/dialog';
 
 interface PhotoDetailsModalProps {
     photoId: number | null;

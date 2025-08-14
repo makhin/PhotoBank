@@ -1,7 +1,7 @@
 import { AlertTriangle } from 'lucide-react';
 import { botRunningText } from '@photobank/shared/constants';
 
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/shared/ui/card';
 import { useAppSelector } from '@/app/hook';
 import type { RootState } from '@/app/store.ts';
 

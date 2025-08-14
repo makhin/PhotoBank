@@ -20,7 +20,7 @@ export const loginUser = createAsyncThunk(
   async (data: LoginRequestDto, { dispatch, rejectWithValue }) => {
     try {
       const res = await dispatch(photobankApi.endpoints.login.initiate(data)).unwrap();
-      setAuthToken(res.token!, data.rememberMe ?? true);
+      setAuthToken(res.token, data.rememberMe ?? true);
     } catch {
       return rejectWithValue(invalidCredentialsMsg);
     }

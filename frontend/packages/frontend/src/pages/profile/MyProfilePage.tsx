@@ -21,9 +21,9 @@ import {
   useGetUserClaimsQuery,
   useUpdateUserMutation,
 } from '@/shared/api.ts';
-import {Button} from '@/components/ui/button';
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/components/ui/form';
-import {Input} from '@/components/ui/input';
+import {Button} from '@/shared/ui/button';
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/shared/ui/form';
+import {Input} from '@/shared/ui/input';
 
 const formSchema = z.object({
   phoneNumber: z.string().optional(),
@@ -68,7 +68,7 @@ export default function MyProfilePage() {
             <span className="font-medium">{emailPrefix}</span> {user.email}
           </div>
           <Form {...form}>
-            {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
+            { }
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
               <FormField
                 control={form.control}

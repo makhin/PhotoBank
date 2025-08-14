@@ -12,15 +12,15 @@ import {
     Popover,
     PopoverTrigger,
     PopoverContent,
-} from "@/components/ui/popover";
-import {Button} from "@/components/ui/button";
+} from "@/shared/ui/popover";
+import {Button} from "@/shared/ui/button";
 import {
     Command,
     CommandInput,
     CommandEmpty,
     CommandGroup,
     CommandItem,
-} from "@/components/ui/command";
+} from "@/shared/ui/command";
 
 
 interface FacePersonSelectorProps {

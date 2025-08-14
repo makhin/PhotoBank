@@ -4,8 +4,8 @@ import { BrowserRouter } from 'react-router-dom';
 
 import { API_BASE_URL } from '@/config.ts';
 import { store } from '@/app/store';
+import { configureApi } from '@/shared/lib/api';
 
-import { configureApi } from './lib/api';
 import App from './app/App.tsx';
 
 import './index.css';

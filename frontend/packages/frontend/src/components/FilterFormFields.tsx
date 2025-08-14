@@ -1,6 +1,5 @@
 import type {Control} from 'react-hook-form';
 import {useWatch} from 'react-hook-form';
-import { useAppSelector } from '@/app/hook.ts';
 import {ChevronDownIcon} from 'lucide-react';
 import * as React from "react";
 import {format} from 'date-fns';
@@ -25,15 +24,15 @@ import {
     thisDayLabel,
 } from '@photobank/shared/constants';
 
-import {Input} from '@/components/ui/input';
-import {TriStateCheckbox} from '@/components/ui/tri-state-checkbox';
-import {MultiSelect} from '@/components/ui/multi-select';
-import {FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form';
+import { useAppSelector } from '@/app/hook.ts';
+import {Input} from '@/shared/ui/input';
+import {TriStateCheckbox} from '@/shared/ui/tri-state-checkbox';
+import {MultiSelect} from '@/shared/ui/multi-select';
+import {FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/shared/ui/form';
 import type {FormData} from '@/features/filter/lib/form-schema.ts';
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
-
-import {Button} from './ui/button';
-import {Calendar} from './ui/calendar';
+import {Popover, PopoverContent, PopoverTrigger} from "@/shared/ui/popover.tsx";
+import {Button} from '@/shared/ui/button';
+import {Calendar} from '@/shared/ui/calendar';
 
 
 interface FilterFormFieldsProps {

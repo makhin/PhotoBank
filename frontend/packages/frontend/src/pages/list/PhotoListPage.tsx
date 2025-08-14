@@ -15,8 +15,8 @@ import {
 } from '@photobank/shared/constants';
 
 import { useSearchPhotosMutation } from '@/shared/api.ts';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/shared/ui/button';
+import { ScrollArea } from '@/shared/ui/scroll-area';
 import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
 import { setLastResult } from '@/features/photo/model/photoSlice.ts';
 import PhotoDetailsModal from '@/components/PhotoDetailsModal';

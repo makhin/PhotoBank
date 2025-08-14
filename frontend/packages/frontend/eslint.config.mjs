@@ -10,7 +10,7 @@ import prettier from 'eslint-config-prettier';
 export default [
   {
     ignores: [
-      '**/src/components/ui/**',
+      '**/src/shared/ui/**',
       'node_modules',
       'dist',
       'build',
