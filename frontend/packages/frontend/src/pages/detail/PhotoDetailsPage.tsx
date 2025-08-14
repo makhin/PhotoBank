@@ -272,7 +272,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                             <a
                                                 href={`https://www.google.com/maps?q=${photo.location.latitude},${photo.location.longitude}`}
                                                 target="_blank"
-                                                rel="noreferrer"
+                                                rel="noopener noreferrer"
                                                 className="mt-1 block text-primary underline"
                                             >
                                                 {openInMapsText}: {placeName}
