@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PhotoBank.DbContext.DbContext;
+using ImageMagick;
 
 public sealed class BlobMigrationOptions
 {
@@ -214,9 +215,23 @@ public class BlobMigrationHostedService : BackgroundService
         var len = lenObj == DBNull.Value ? 0 : Convert.ToInt64(lenObj);
         if (len <= 0) return;
 
-        // выгружаем во временный файл + считаем sha256
+        // выгружаем во временный файл
         var tmp = Path.Combine(_opt.TempDir, $"{table.Replace('.', '_')}_{id}_{blobColumn}.bin");
-        var (sha256, size) = await DumpBlobToFileAndHash(db, table, idColumn, id, blobColumn, tmp, ct);
+        await DumpBlobToFile(db, table, idColumn, id, blobColumn, tmp, ct);
+
+        // сжимаем превью
+        if (alias == "preview")
+        {
+            using var image = new MagickImage(tmp);
+            image.Strip();
+            image.Quality = 82;
+            image.Settings.Interlace = Interlace.Jpeg;
+            image.Format = MagickFormat.Jpg;
+            await image.WriteAsync(tmp, ct);
+        }
+
+        // считаем sha256
+        var (sha256, size) = await ComputeHashAndSize(tmp, ct);
 
         // ключ
         var key = BuildKey(s3Prefix, id, ".jpg");
@@ -256,7 +271,7 @@ public class BlobMigrationHostedService : BackgroundService
         File.Delete(tmp);
     }
 
-    private async Task<(string sha256, long size)> DumpBlobToFileAndHash(
+    private async Task DumpBlobToFile(
         PhotoBankDbContext db,
         string table, string idColumn, int id, string blobColumn,
         string file, CancellationToken ct)
@@ -272,17 +287,35 @@ public class BlobMigrationHostedService : BackgroundService
         if (!await rdr.ReadAsync(ct)) throw new InvalidOperationException($"{table}:{id} not found");
 
         await using var stream = rdr.GetStream(0);
-        using var sha = SHA256.Create();
         await using var fs = File.Create(file);
 
         var buffer = ArrayPool<byte>.Shared.Rent(1024 * 1024);
-        long total = 0;
         try
         {
             int read;
             while ((read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct)) > 0)
             {
                 await fs.WriteAsync(buffer.AsMemory(0, read), ct);
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(buffer);
+        }
+    }
+
+    private static async Task<(string sha256, long size)> ComputeHashAndSize(string file, CancellationToken ct)
+    {
+        using var sha = SHA256.Create();
+        await using var fs = File.OpenRead(file);
+
+        var buffer = ArrayPool<byte>.Shared.Rent(1024 * 1024);
+        long total = 0;
+        try
+        {
+            int read;
+            while ((read = await fs.ReadAsync(buffer.AsMemory(0, buffer.Length), ct)) > 0)
+            {
                 sha.TransformBlock(buffer, 0, read, null, 0);
                 total += read;
             }

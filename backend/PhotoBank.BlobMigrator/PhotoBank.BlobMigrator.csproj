@@ -8,6 +8,7 @@
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
     <PackageReference Include="Minio" Version="6.0.5" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.7.0" />
   </ItemGroup>
 
   <PropertyGroup>
