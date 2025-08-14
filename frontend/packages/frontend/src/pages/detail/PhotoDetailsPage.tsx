@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useAppSelector } from '@/app/hook.ts';
 import { formatDate, getOrientation, getPlaceByGeoPoint } from '@photobank/shared';
 import type { FaceBoxDto } from '@photobank/shared/api/photobank';
 import {useIsAdmin} from '@photobank/shared';
@@ -35,7 +35,6 @@ import {Checkbox} from '@/components/ui/checkbox';
 import {useGetPhotoByIdQuery, useUpdateFaceMutation} from "@/shared/api.ts";
 import {ScoreBar} from '@/components/ScoreBar';
 import {FaceOverlay} from "@/components/FaceOverlay.tsx";
-import type {RootState} from "@/app/store.ts";
 import {FacePersonSelector} from "@/components/FacePersonSelector.tsx";
 
 
@@ -65,7 +64,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const [containerSize, setContainerSize] = useState({width: 0, height: 0});
     const [showFaceBoxes, setShowFaceBoxes] = useState(false);
     const [placeName, setPlaceName] = useState('');
-    const persons = useSelector((state: RootState) => state.metadata.persons);
+    const persons = useAppSelector((state) => state.metadata.persons);
     const isAdmin = useIsAdmin();
     const [updateFace] = useUpdateFaceMutation();
 

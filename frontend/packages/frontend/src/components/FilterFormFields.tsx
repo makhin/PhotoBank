@@ -1,6 +1,6 @@
 import type {Control} from 'react-hook-form';
 import {useWatch} from 'react-hook-form';
-import {useSelector} from 'react-redux';
+import { useAppSelector } from '@/app/hook.ts';
 import {ChevronDownIcon} from 'lucide-react';
 import * as React from "react";
 import {format} from 'date-fns';
@@ -30,7 +30,6 @@ import {TriStateCheckbox} from '@/components/ui/tri-state-checkbox';
 import {MultiSelect} from '@/components/ui/multi-select';
 import {FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form';
 import type {FormData} from '@/features/filter/lib/form-schema.ts';
-import type {RootState} from '@/app/store.ts';
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
 
 import {Button} from './ui/button';
@@ -46,21 +45,21 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
     const [openTo, setOpenTo] = React.useState(false)
     const isAdmin = useIsAdmin()
 
-    const tags = useSelector((state: RootState) => state.metadata.tags)
-    const persons = useSelector((state: RootState) => state.metadata.persons)
+    const tags = useAppSelector((state) => state.metadata.tags)
+    const persons = useAppSelector((state) => state.metadata.persons)
 
     const selectedStorageIds = useWatch({
         control,
         name: 'storages',
     });
 
-    const storages = useSelector(
-        (state: RootState) => state.metadata.storages
+    const storages = useAppSelector(
+        (state) => state.metadata.storages
     ).map((s) => {
         return {label: s.name, value: s.id.toString()};
     });
 
-    const filteredPaths = useSelector((state: RootState) => state.metadata.paths)
+    const filteredPaths = useAppSelector((state) => state.metadata.paths)
         .filter((p) =>
             !selectedStorageIds || selectedStorageIds.length === 0
                 ? true

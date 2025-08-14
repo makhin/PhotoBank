@@ -1,4 +1,3 @@
-import { useSelector } from 'react-redux';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
@@ -18,8 +17,7 @@ import {
 import { useSearchPhotosMutation } from '@/shared/api.ts';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { RootState } from '@/app/store.ts';
-import { useAppDispatch } from '@/app/hook.ts';
+import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
 import { setLastResult } from '@/features/photo/model/photoSlice.ts';
 import PhotoDetailsModal from '@/components/PhotoDetailsModal';
 
@@ -28,9 +26,9 @@ import PhotoListItemMobile from './PhotoListItemMobile';
 
 const PhotoListPage = () => {
   const dispatch = useAppDispatch();
-  const filter = useSelector((state: RootState) => state.photo.filter);
-  const persons = useSelector((state: RootState) => state.metadata.persons);
-  const tags = useSelector((state: RootState) => state.metadata.tags);
+  const filter = useAppSelector((state) => state.photo.filter);
+  const persons = useAppSelector((state) => state.metadata.persons);
+  const tags = useAppSelector((state) => state.metadata.tags);
 
   const personsMap = useMemo(
     () => Object.fromEntries(persons.map((p) => [p.id, p.name])),

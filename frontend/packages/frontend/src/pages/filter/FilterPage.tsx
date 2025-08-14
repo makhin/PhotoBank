@@ -2,12 +2,10 @@ import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import type {z} from 'zod';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton, loadingText } from '@photobank/shared/constants';
 
 import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
-import type { RootState } from '@/app/store.ts';
 import { setFilter } from '@/features/photo/model/photoSlice.ts';
 import { loadMetadata } from '@/features/meta/model/metaSlice.ts';
 import { Button } from '@/components/ui/button';
@@ -23,7 +21,7 @@ function FilterPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const savedFilter = useSelector((state: RootState) => state.photo.filter);
+  const savedFilter = useAppSelector((state) => state.photo.filter);
   const loaded = useAppSelector((s) => s.metadata.loaded);
   const loading = useAppSelector((s) => s.metadata.loading);
 
