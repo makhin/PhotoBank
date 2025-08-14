@@ -1,6 +1,6 @@
 import { photosUpload } from '../api/photobank';
 
-export type UploadFile = { buffer: Buffer; name: string };
+export type UploadFile = { data: BlobPart | ArrayBuffer | Uint8Array; name: string };
 
 export async function uploadPhotosAdapter(params: {
   files: UploadFile[];
@@ -8,6 +8,6 @@ export async function uploadPhotosAdapter(params: {
   path: string;
 }) {
   const { files, storageId, path } = params;
-  const blobs = files.map(({ buffer, name }) => new File([buffer], name));
+  const blobs = files.map(({ data, name }) => new File([data], name));
   await photosUpload({ files: blobs, storageId, path });
 }

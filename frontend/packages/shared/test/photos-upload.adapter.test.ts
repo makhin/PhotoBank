@@ -16,7 +16,7 @@ describe('uploadPhotosAdapter', () => {
     // @ts-expect-error assign mock fetch
     global.fetch = fetchMock;
     await uploadPhotosAdapter({
-      files: [{ buffer: Buffer.from('data'), name: 'a.txt' }],
+      files: [{ data: 'data', name: 'a.txt' }],
       storageId: 1,
       path: 'user',
     });

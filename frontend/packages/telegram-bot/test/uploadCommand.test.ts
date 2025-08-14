@@ -9,7 +9,7 @@ import { uploadCommand } from '../src/commands/upload';
 import { uploadSuccessMsg } from '@photobank/shared/constants';
 
 describe('uploadCommand', () => {
-  it('uploads photo buffers via adapter', async () => {
+  it('uploads photo data via adapter', async () => {
     const ctx: any = {
       api: { getFile: vi.fn().mockResolvedValue({ file_path: 'photo.jpg' }) },
       message: { photo: [{}, { file_id: '123', file_unique_id: 'uniq123' }] },
