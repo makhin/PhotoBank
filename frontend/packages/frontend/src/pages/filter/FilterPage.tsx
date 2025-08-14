@@ -86,8 +86,7 @@ function FilterPage() {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit((d) => { void onSubmit(d); })} className="space-y-6">
               <FilterFormFields control={form.control} />
               {/* Submit Button */}
               <Button type="submit" className="w-full">
