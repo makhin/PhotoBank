@@ -290,8 +290,8 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                     </CardHeader>
                                     <CardContent>
                                         <div className="flex flex-wrap gap-2">
-                                            {photo.tags.map((tag, index) => (
-                                                <Badge key={index} variant="secondary"
+                                            {photo.tags.map((tag) => (
+                                                <Badge key={tag} variant="secondary"
                                                        className="bg-secondary text-secondary-foreground">
                                                     {tag}
                                                 </Badge>
@@ -309,9 +309,9 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-2">
-                                            {photo.captions.map((caption, index) => (
+                                            {photo.captions.map((caption) => (
                                                 <Textarea
-                                                    key={index}
+                                                    key={caption}
                                                     value={caption}
                                                     readOnly
                                                     className="min-h-[60px] resize-none bg-muted"
@@ -362,7 +362,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                             {photo.faces.map((face, index) => {
                                                 return (
                                                     <FacePersonSelector
-                                                        key={index}
+                                                        key={face.id}
                                                         faceIndex={index}
                                                         personId={face.personId ?? undefined}
                                                         persons={persons}

@@ -22,8 +22,8 @@ const MetadataBadgeList = ({
   return (
     <div className="flex items-center gap-1 flex-wrap">
       <Icon className="w-3 h-3 text-muted-foreground" />
-      {items.slice(0, maxVisible).map((id, index) => (
-        <Badge key={index} variant={variant} className="text-xs">
+      {items.slice(0, maxVisible).map((id) => (
+        <Badge key={id} variant={variant} className="text-xs">
           {map[id] ?? id}
         </Badge>
       ))}
