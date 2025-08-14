@@ -17,6 +17,12 @@ export function formatPhotoMessage(photo: PhotoDto): { caption: string, hasSpoil
     if (photo.captions?.[0]) lines.push(`📝 ${photo.captions[0]}`);
     if (photo.tags?.length) lines.push(`🏷️ ${photo.tags.join(", ")}`);
 
+    if (photo.location) {
+        const { latitude, longitude } = photo.location;
+        const coords = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+        lines.push(`📍 <a href="https://www.google.com/maps?q=${latitude},${longitude}">${coords}</a>`);
+    }
+
     if (photo.faces?.length) {
         const people = photo.faces.map(f => getPersonName(f.personId));
         if (people.some(Boolean)) {

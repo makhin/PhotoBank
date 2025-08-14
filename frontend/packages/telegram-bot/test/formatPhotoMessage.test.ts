@@ -48,4 +48,14 @@ describe('formatPhotoMessage', () => {
     });
     expect(caption).toContain('👤 Неизвестный');
   });
+
+  it('adds geo point link when location is present', () => {
+    const { caption } = formatPhotoMessage({
+      ...basePhoto,
+      location: { latitude: 10, longitude: 20 },
+    });
+    expect(caption).toContain('📍');
+    expect(caption).toContain('https://www.google.com/maps?q=10,20');
+    expect(caption).toContain('10.00000, 20.00000');
+  });
 });
