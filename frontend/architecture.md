@@ -1,12 +1,40 @@
-# PhotoBank — Frontend Architecture
+# PhotoBank — Frontend Architecture (Short)
 
-> Target package: `packages/frontend` (React 18, Vite, Vitest 3.x, RTL, Redux Toolkit, shadcn/ui, pnpm monorepo). Aliases: `@ → src`, `@photobank/shared → ../shared/src`.
+> Target: `packages/frontend` (React 18, Vite, Vitest, RTL, Redux Toolkit, shadcn/ui, pnpm monorepo)
 
-## 1. Goals & Principles
-- **Modularity & Reuse:** UI из мелких, переиспользуемых, тестируемых блоков.
-- **Separation of Concerns:** Презентация ≠ бизнес-логика.
-- **Predictability:** Redux Toolkit для состояния, типизация через DTO и domain types.
-- **Testability:** RTL для поведения, Vitest для unit/integration, единый test setup.
-- **Sustainability:** Чёткие границы слоёв, единые правила именования, ESLint + Prettier.
+## Принципы
+- Модульность и переиспользуемость.
+- Разделение UI и бизнес-логики.
+- Единая структура и кодстайл.
+- Тестируемость и предсказуемость.
 
-## 2. High-Level Structure
+## Потоки данных
+- Redux Toolkit: slices, selectors, hooks в `features/*/model/`.
+- DTO из `@photobank/shared`.
+- Нормализация данных: `x ?? []`, `y ?? ''` вместо `undefined`.
+
+## UI
+- shadcn/ui для примитивов, обёртки в `shared/ui`.
+- Чистые компоненты без доступа к Redux.
+- Пример: `Button`, `Input`, `Pagination`, `EmptyState`.
+
+## Тесты
+- Vitest + RTL, `test-setup.ts` с шимами.
+- Unit: `shared/ui`, reducers, selectors.
+- Интеграция: `widgets`, сценарии фич.
+
+## Стили
+- Tailwind + shadcn/ui.
+- Варианты через props, без inline magic numbers.
+
+## PR-план
+1. Базовая структура + test-setup + UI-примитивы.
+2. Декомпозиция ключевых страниц.
+3. Покрытие тестами, чистка дублей.
+
+## Чеклист
+- [ ] Слои созданы
+- [ ] Test setup подключён
+- [ ] Страницы разбиты
+- [ ] Тесты зелёные
+- [ ] CI: lint, build, test + coverage
