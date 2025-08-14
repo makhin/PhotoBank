@@ -2,7 +2,7 @@ import Dexie, { type Table } from 'dexie';
 import { LRUCache } from 'lru-cache';
 
 import { isBrowser } from '../utils/isBrowser';
-import type { PhotoDto } from '../generated';
+import type { PhotoDto } from '../api/photobank/model';
 
 export interface CachedPhoto extends PhotoDto {
   added: number;

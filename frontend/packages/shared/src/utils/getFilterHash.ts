@@ -1,6 +1,6 @@
 import objectHash from 'object-hash';
 
-import type { FilterDto } from '../generated';
+import type { FilterDto } from '../api/photobank/model';
 
 /**
  * Creates a stable hash for a filter. Works in both Node.js and browser.
