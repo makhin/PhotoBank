@@ -60,8 +60,10 @@ namespace PhotoBank.Api
 
             builder.Services.AddHttpContextAccessor();
 
+            builder.Services.AddSingleton<DbTimingInterceptor>();
             builder.Services.AddDbContextPool<PhotoBankDbContext>((sp, options) =>
             {
+                options.AddInterceptors(sp.GetRequiredService<DbTimingInterceptor>());
                 options
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                     .EnableDetailedErrors(builder.Environment.IsDevelopment())
