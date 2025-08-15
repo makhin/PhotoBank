@@ -30,5 +30,4 @@ export const getTagsGetAllMockHandler = (overrideResponse?: TagDto[] | ((info: P
   })
 }
 export const getTagsMock = () => [
-  getTagsGetAllMockHandler()
-]
+  getTagsGetAllMockHandler()]

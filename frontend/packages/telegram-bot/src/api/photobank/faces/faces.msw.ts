@@ -22,5 +22,4 @@ export const getFacesUpdateMockHandler = (overrideResponse?: null | ((info: Para
   })
 }
 export const getFacesMock = () => [
-  getFacesUpdateMockHandler()
-]
+  getFacesUpdateMockHandler()]

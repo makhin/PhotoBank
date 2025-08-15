@@ -30,5 +30,4 @@ export const getPersonsGetAllMockHandler = (overrideResponse?: PersonDto[] | ((i
   })
 }
 export const getPersonsMock = () => [
-  getPersonsGetAllMockHandler()
-]
+  getPersonsGetAllMockHandler()]

@@ -4,6 +4,20 @@
  * PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
  * OpenAPI spec version: 1.0
  */
+import {
+  useMutation,
+  useQuery
+} from '@tanstack/react-query';
+import type {
+  MutationFunction,
+  QueryFunction,
+  QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
+} from '@tanstack/react-query';
+
 import type {
   FilterDto,
   PhotoDto,
@@ -12,8 +26,16 @@ import type {
   PhotosGetDuplicatesParams,
   PhotosUploadBody,
   ProblemDetails
-} from '.././model';
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 import { customFetcher } from '.././fetcher';
+
+type AwaitedInput<T> = PromiseLike<T> | T;
+
+      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
+
+
+
 
 export type photosSearchPhotosResponse200 = {
   data: PhotoItemDtoPageResponse
@@ -36,7 +58,7 @@ export const getPhotosSearchPhotosUrl = () => {
 
   
 
-  return `/api/photos/search`
+  return `/photos/search`
 }
 
 export const photosSearchPhotos = async (filterDto: FilterDto, options?: RequestInit): Promise<photosSearchPhotosResponse> => {
@@ -52,7 +74,51 @@ export const photosSearchPhotos = async (filterDto: FilterDto, options?: Request
 );}
 
 
-export type photosGetPhotoResponse200 = {
+
+
+export const getPhotosSearchPhotosMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof photosSearchPhotos>>, TError,{data: FilterDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof photosSearchPhotos>>, TError,{data: FilterDto}, TContext> => {
+
+const mutationKey = ['photosSearchPhotos'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof photosSearchPhotos>>, {data: FilterDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  photosSearchPhotos(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PhotosSearchPhotosMutationResult = NonNullable<Awaited<ReturnType<typeof photosSearchPhotos>>>
+    export type PhotosSearchPhotosMutationBody = FilterDto
+    export type PhotosSearchPhotosMutationError = ProblemDetails
+
+    export const usePhotosSearchPhotos = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof photosSearchPhotos>>, TError,{data: FilterDto}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof photosSearchPhotos>>,
+        TError,
+        {data: FilterDto},
+        TContext
+      > => {
+
+      const mutationOptions = getPhotosSearchPhotosMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    export type photosGetPhotoResponse200 = {
   data: PhotoDto
   status: 200
 }
@@ -73,7 +139,7 @@ export const getPhotosGetPhotoUrl = (id: number,) => {
 
   
 
-  return `/api/photos/${id}`
+  return `/photos/${id}`
 }
 
 export const photosGetPhoto = async (id: number, options?: RequestInit): Promise<photosGetPhotoResponse> => {
@@ -86,6 +152,51 @@ export const photosGetPhoto = async (id: number, options?: RequestInit): Promise
     
   }
 );}
+
+
+
+export const getPhotosGetPhotoQueryKey = (id?: number,) => {
+    return [`/photos/${id}`] as const;
+    }
+
+    
+export const getPhotosGetPhotoQueryOptions = <TData = Awaited<ReturnType<typeof photosGetPhoto>>, TError = ProblemDetails>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof photosGetPhoto>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPhotosGetPhotoQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof photosGetPhoto>>> = ({ signal }) => photosGetPhoto(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof photosGetPhoto>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type PhotosGetPhotoQueryResult = NonNullable<Awaited<ReturnType<typeof photosGetPhoto>>>
+export type PhotosGetPhotoQueryError = ProblemDetails
+
+
+
+export function usePhotosGetPhoto<TData = Awaited<ReturnType<typeof photosGetPhoto>>, TError = ProblemDetails>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof photosGetPhoto>>, TError, TData>, }
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getPhotosGetPhotoQueryOptions(id,options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
 
 
 export type photosUploadResponse200 = {
@@ -104,7 +215,7 @@ export const getPhotosUploadUrl = () => {
 
   
 
-  return `/api/photos/upload`
+  return `/photos/upload`
 }
 
 export const photosUpload = async (photosUploadBody: PhotosUploadBody, options?: RequestInit): Promise<photosUploadResponse> => {
@@ -130,7 +241,51 @@ if(photosUploadBody.path !== undefined) {
 );}
 
 
-export type photosGetDuplicatesResponse200 = {
+
+
+export const getPhotosUploadMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof photosUpload>>, TError,{data: PhotosUploadBody}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof photosUpload>>, TError,{data: PhotosUploadBody}, TContext> => {
+
+const mutationKey = ['photosUpload'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof photosUpload>>, {data: PhotosUploadBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  photosUpload(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PhotosUploadMutationResult = NonNullable<Awaited<ReturnType<typeof photosUpload>>>
+    export type PhotosUploadMutationBody = PhotosUploadBody
+    export type PhotosUploadMutationError = unknown
+
+    export const usePhotosUpload = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof photosUpload>>, TError,{data: PhotosUploadBody}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof photosUpload>>,
+        TError,
+        {data: PhotosUploadBody},
+        TContext
+      > => {
+
+      const mutationOptions = getPhotosUploadMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    export type photosGetDuplicatesResponse200 = {
   data: PhotoItemDto[]
   status: 200
 }
@@ -153,7 +308,7 @@ export const getPhotosGetDuplicatesUrl = (params?: PhotosGetDuplicatesParams,) =
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/photos/duplicates?${stringifiedParams}` : `/api/photos/duplicates`
+  return stringifiedParams.length > 0 ? `/photos/duplicates?${stringifiedParams}` : `/photos/duplicates`
 }
 
 export const photosGetDuplicates = async (params?: PhotosGetDuplicatesParams, options?: RequestInit): Promise<photosGetDuplicatesResponse> => {
@@ -166,5 +321,50 @@ export const photosGetDuplicates = async (params?: PhotosGetDuplicatesParams, op
     
   }
 );}
+
+
+
+export const getPhotosGetDuplicatesQueryKey = (params?: PhotosGetDuplicatesParams,) => {
+    return [`/photos/duplicates`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getPhotosGetDuplicatesQueryOptions = <TData = Awaited<ReturnType<typeof photosGetDuplicates>>, TError = unknown>(params?: PhotosGetDuplicatesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof photosGetDuplicates>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPhotosGetDuplicatesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof photosGetDuplicates>>> = ({ signal }) => photosGetDuplicates(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof photosGetDuplicates>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type PhotosGetDuplicatesQueryResult = NonNullable<Awaited<ReturnType<typeof photosGetDuplicates>>>
+export type PhotosGetDuplicatesQueryError = unknown
+
+
+
+export function usePhotosGetDuplicates<TData = Awaited<ReturnType<typeof photosGetDuplicates>>, TError = unknown>(
+ params?: PhotosGetDuplicatesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof photosGetDuplicates>>, TError, TData>, }
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getPhotosGetDuplicatesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
 
 

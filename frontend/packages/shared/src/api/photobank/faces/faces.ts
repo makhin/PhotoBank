@@ -4,10 +4,27 @@
  * PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
  * OpenAPI spec version: 1.0
  */
+import {
+  useMutation
+} from '@tanstack/react-query';
+import type {
+  MutationFunction,
+  UseMutationOptions,
+  UseMutationResult
+} from '@tanstack/react-query';
+
 import type {
   UpdateFaceDto
-} from '.././model';
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 import { customFetcher } from '.././fetcher';
+
+type AwaitedInput<T> = PromiseLike<T> | T;
+
+      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
+
+
+
 
 export type facesUpdateResponse200 = {
   data: null
@@ -25,7 +42,7 @@ export const getFacesUpdateUrl = () => {
 
   
 
-  return `/api/faces`
+  return `/faces`
 }
 
 export const facesUpdate = async (updateFaceDto: UpdateFaceDto, options?: RequestInit): Promise<facesUpdateResponse> => {
@@ -41,3 +58,48 @@ export const facesUpdate = async (updateFaceDto: UpdateFaceDto, options?: Reques
 );}
 
 
+
+
+export const getFacesUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceDto}, TContext> => {
+
+const mutationKey = ['facesUpdate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof facesUpdate>>, {data: UpdateFaceDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  facesUpdate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FacesUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof facesUpdate>>>
+    export type FacesUpdateMutationBody = UpdateFaceDto
+    export type FacesUpdateMutationError = unknown
+
+    export const useFacesUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceDto}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof facesUpdate>>,
+        TError,
+        {data: UpdateFaceDto},
+        TContext
+      > => {
+
+      const mutationOptions = getFacesUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    

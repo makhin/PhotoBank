@@ -4,10 +4,28 @@
  * PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
  * OpenAPI spec version: 1.0
  */
+import {
+  useQuery
+} from '@tanstack/react-query';
+import type {
+  QueryFunction,
+  QueryKey,
+  UseQueryOptions,
+  UseQueryResult
+} from '@tanstack/react-query';
+
 import type {
   PathDto
-} from '.././model';
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 import { customFetcher } from '.././fetcher';
+
+type AwaitedInput<T> = PromiseLike<T> | T;
+
+      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
+
+
+
 
 export type pathsGetAllResponse200 = {
   data: PathDto[]
@@ -25,7 +43,7 @@ export const getPathsGetAllUrl = () => {
 
   
 
-  return `/api/paths`
+  return `/paths`
 }
 
 export const pathsGetAll = async ( options?: RequestInit): Promise<pathsGetAllResponse> => {
@@ -38,5 +56,50 @@ export const pathsGetAll = async ( options?: RequestInit): Promise<pathsGetAllRe
     
   }
 );}
+
+
+
+export const getPathsGetAllQueryKey = () => {
+    return [`/paths`] as const;
+    }
+
+    
+export const getPathsGetAllQueryOptions = <TData = Awaited<ReturnType<typeof pathsGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof pathsGetAll>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPathsGetAllQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof pathsGetAll>>> = ({ signal }) => pathsGetAll(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof pathsGetAll>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type PathsGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof pathsGetAll>>>
+export type PathsGetAllQueryError = unknown
+
+
+
+export function usePathsGetAll<TData = Awaited<ReturnType<typeof pathsGetAll>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof pathsGetAll>>, TError, TData>, }
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getPathsGetAllQueryOptions(options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
 
 

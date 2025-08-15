@@ -30,5 +30,4 @@ export const getStoragesGetAllMockHandler = (overrideResponse?: StorageDto[] | (
   })
 }
 export const getStoragesMock = () => [
-  getStoragesGetAllMockHandler()
-]
+  getStoragesGetAllMockHandler()]
