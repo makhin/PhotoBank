@@ -1,76 +1,112 @@
 import type { Context, InputMediaPhoto } from 'grammy';
-import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import { formatDate } from '@photobank/shared/format';
 
-import { getCachedFileId, setCachedFileId } from '../cache/fileIdCache';
-import { getTagName } from '../dictionaries';
+import { throttled } from '../utils/limiter';
+import { getFileId, setFileId, delFileId } from '../cache/fileIdCache';
+import { logger } from '../utils/logger';
+import type { PhotoItemDto } from '../types';
+import { withTelegramRetry } from '../utils/retry';
 
-function buildCaption(photo: PhotoItemDto): string {
-  const parts: string[] = [];
-  parts.push(`📸 <b>${photo.name}</b>`);
-  if (photo.takenDate) {
-    parts.push(`📅 ${formatDate(photo.takenDate)}`);
-  }
-  if (photo.tags?.length) {
-    const tags = photo.tags
-      .map(t => getTagName(t.tagId))
-      .filter(Boolean)
-      .join(', ');
-    if (tags) parts.push(`🏷️ ${tags}`);
-  }
-  return parts.join('\n');
+function buildCaption(p: PhotoItemDto): string {
+  const parts = [p.name, p.takenDate ? formatDate(p.takenDate) : null];
+  return parts.filter(Boolean).join('\n');
 }
 
-export async function sendPhotoSmart(ctx: Context, photo: PhotoItemDto) {
-  const caption = buildCaption(photo);
-  const cached = getCachedFileId(photo.id);
-  if (cached) {
-    return ctx.replyWithPhoto(cached, { caption, parse_mode: 'HTML' });
+// Отправка одного фото с кэшем file_id
+export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
+  const cached = getFileId(p.id);
+  try {
+    const message = await withTelegramRetry(() =>
+      throttled(() =>
+        ctx.api.sendPhoto(
+          ctx.chat!.id,
+          cached ?? { url: p.previewUrl ?? p.originalUrl ?? '' },
+          { caption: buildCaption(p) },
+        ),
+      ),
+    );
+    const newId = message.photo?.at(-1)?.file_id || null;
+    if (newId && newId !== cached) setFileId(p.id, newId);
+    return message;
+  } catch (e: any) {
+    // Если кэшированный file_id внезапно протух — удаляем и пробуем разок URL
+    const code = e?.error_code;
+    const desc = e?.description ?? '';
+    if (cached && (code === 400 || desc.includes('wrong file identifier'))) {
+      delFileId(p.id);
+      logger.warn('file_id invalidated, retry with URL', { photoId: p.id });
+      const message = await withTelegramRetry(() =>
+        throttled(() =>
+          ctx.api.sendPhoto(
+            ctx.chat!.id,
+            { url: p.previewUrl ?? p.originalUrl ?? '' },
+            { caption: buildCaption(p) },
+          ),
+        ),
+      );
+      const newId = message.photo?.at(-1)?.file_id || null;
+      if (newId) setFileId(p.id, newId);
+      return message;
+    }
+    throw e;
   }
-  const msg = await ctx.replyWithPhoto({ url: photo.previewUrl ?? photo.originalUrl ?? '' }, {
-    caption,
-    parse_mode: 'HTML',
-  });
-  const fileId = msg.photo?.[msg.photo.length - 1]?.file_id;
-  if (fileId) setCachedFileId(photo.id, fileId);
-  return msg;
 }
 
+// Разбить массив на чанки по N
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+// Отправка альбомом (media group) с кэшем file_id
 export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
-  const chunks: PhotoItemDto[][] = [];
-  for (let i = 0; i < photos.length; i += 10) {
-    chunks.push(photos.slice(i, i + 10));
-  }
+  const groups = chunk(photos, 10); // Telegram лимит
+  const results: any[] = [];
 
-  for (const chunk of chunks) {
-    const media: InputMediaPhoto[] = chunk.map(photo => {
-      const caption = buildCaption(photo);
-      const cached = getCachedFileId(photo.id);
-      if (cached) {
-        return { type: 'photo', media: cached, caption, parse_mode: 'HTML' } as InputMediaPhoto;
-      }
+  for (const group of groups) {
+    const medias: InputMediaPhoto[] = group.map((p) => {
+      const cached = getFileId(p.id);
+      const media = cached ?? { url: p.previewUrl ?? p.originalUrl ?? '' };
       return {
         type: 'photo',
-        media: photo.previewUrl ?? photo.originalUrl ?? '',
-        caption,
-        parse_mode: 'HTML',
+        media,
+        caption: buildCaption(p),
       } as InputMediaPhoto;
     });
 
     try {
-      const res = await ctx.replyWithMediaGroup(media);
-      res.forEach((msg, idx) => {
-        const fileId = msg.photo?.[msg.photo.length - 1]?.file_id;
-        if (fileId) setCachedFileId(chunk[idx].id, fileId);
+      // mediaGroup нельзя редактировать, поэтому просто шлём и идём дальше
+      const msgs = await withTelegramRetry(() =>
+        throttled(() => ctx.api.sendMediaGroup(ctx.chat!.id, medias)),
+      );
+      // Сохранить file_id по всем элементам, где он появился
+      msgs.forEach((m, i) => {
+        const p = group[i];
+        const id = m.photo?.at(-1)?.file_id;
+        if (id) setFileId(p.id, id);
       });
-    } catch {
-      for (const [idx, m] of media.entries()) {
-        const msg = await ctx.replyWithPhoto(m.media, { caption: m.caption, parse_mode: 'HTML' });
-        const fileId = msg.photo?.[msg.photo.length - 1]?.file_id;
-        if (fileId) setCachedFileId(chunk[idx].id, fileId);
+      results.push(...msgs);
+    } catch (e: any) {
+      const code = e?.error_code;
+      const desc = e?.description ?? '';
+      logger.warn('sendMediaGroup failed, fallback to singles', { code, desc, count: group.length });
+
+      // Fallback: отправляем по одному, чтобы всё равно доставить пользователю
+      for (const p of group) {
+        try {
+          const msg = await sendPhotoSmart(ctx, p);
+          results.push(msg);
+        } catch (inner) {
+          // если даже одиночная упала — лог и продолжаем
+          logger.error('single send failed', inner);
+        }
       }
     }
 
-    await new Promise(r => setTimeout(r, 100));
+    // Между группами небольшая пауза
+    await new Promise((r) => setTimeout(r, 150));
   }
+
+  return results;
 }
