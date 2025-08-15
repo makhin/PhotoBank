@@ -68,17 +68,17 @@ public class GetAllPhotosIntegrationTests
     }
 
     [Test]
-    public async Task GetAllPhotosAsync_NoFilter_ReturnsAll()
+    public async Task GetAllPhotosAsync_NoFilter_ReturnsLimitedSet()
     {
         var filterDto = new FilterDto()
         {
             TakenDateFrom = new DateTime(2015, 1, 1),
             TakenDateTo = new DateTime(2016, 1, 1),
-            PageSize = 10000
+            PageSize = 10000 // Should be capped to MaxPageSize
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
         result.TotalCount.Should().Be(5180);
-        result.Items.Should().HaveCount(5180);
+        result.Items.Should().HaveCount(PageRequest.MaxPageSize);
     }
 
     [Test]

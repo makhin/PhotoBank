@@ -68,6 +68,7 @@ public class PhotoService : IPhotoService
             GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
                 .AsNoTracking()
                 .OrderBy(p => p.Name)
+                .ThenBy(p => p.Id)
                 .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
                 .ToListAsync()));
         _paths = new Lazy<Task<IReadOnlyList<PathDto>>>(() =>
@@ -76,6 +77,7 @@ public class PhotoService : IPhotoService
                 .ProjectTo<PathDto>(_mapper.ConfigurationProvider)
                 .Distinct()
                 .OrderBy(p => p.Path)
+                .ThenBy(p => p.StorageId)
                 .ToListAsync()));
     }
 
@@ -137,12 +139,16 @@ public class PhotoService : IPhotoService
         // Execute the count query first
         var count = await query.CountAsync();
 
+        // Cap page size to avoid large requests
+        var pageSize = Math.Min(filter.PageSize, PageRequest.MaxPageSize);
+
         // Execute the photos query next
-        var skip = (filter.Page - 1) * filter.PageSize;
+        var skip = (filter.Page - 1) * pageSize;
         var photos = await query
             .OrderByDescending(p => p.TakenDate)
+            .ThenBy(p => p.Id)
             .Skip(skip)
-            .Take(filter.PageSize)
+            .Take(pageSize)
             .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
@@ -164,6 +170,7 @@ public class PhotoService : IPhotoService
         return await _personRepository.GetAll()
             .AsNoTracking()
             .OrderBy(p => p.Name)
+            .ThenBy(p => p.Id)
             .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
     }
@@ -175,6 +182,7 @@ public class PhotoService : IPhotoService
         return await _storageRepository.GetAll()
             .AsNoTracking()
             .OrderBy(p => p.Name)
+            .ThenBy(p => p.Id)
             .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
     }
