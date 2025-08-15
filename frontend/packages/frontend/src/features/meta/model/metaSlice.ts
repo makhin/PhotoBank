@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import * as Api from '@photobank/shared/api/photobank';
 import type { PathDto, PersonDto, StorageDto, TagDto } from '@photobank/shared/api/photobank';
+import { unwrapOrThrow } from '@/shared/httpUtils';
 import {
   METADATA_CACHE_KEY,
   METADATA_CACHE_VERSION,
@@ -63,14 +64,14 @@ const initialState: MetadataState = {
     error: undefined,
 };
 
-export const loadMetadata = createAsyncThunk('metadata/load', async () => {
+export const loadMetadata = createAsyncThunk('metadata/load', async (_, { signal }) => {
     const fromCache = loadFromCache();
     if (fromCache) return fromCache;
 
-    const storages: StorageDto[] = await Api.storagesGetAll().then((r) => r.data);
-    const tags: TagDto[] = await Api.tagsGetAll().then((r) => r.data);
-    const persons: PersonDto[] = await Api.personsGetAll().then((r) => r.data);
-    const paths: PathDto[] = await Api.pathsGetAll().then((r) => r.data);
+    const storages: StorageDto[] = await unwrapOrThrow(Api.storagesGetAll({ signal }));
+    const tags: TagDto[] = await unwrapOrThrow(Api.tagsGetAll({ signal }));
+    const persons: PersonDto[] = await unwrapOrThrow(Api.personsGetAll({ signal }));
+    const paths: PathDto[] = await unwrapOrThrow(Api.pathsGetAll({ signal }));
 
     const result: MetadataPayload = {
         tags,

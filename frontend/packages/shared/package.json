@@ -17,6 +17,11 @@
     "./ai": {
       "types": "./dist/ai/index.d.ts",
       "import": "./dist/ai/index.js"
+    },
+    "./types/problem": {
+      "types": "./dist/types/problem.d.ts",
+      "import": "./dist/types/problem.js",
+      "default": "./dist/types/problem.js"
     }
   },
   "main": "./dist/index.js",

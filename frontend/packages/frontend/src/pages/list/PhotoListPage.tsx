@@ -49,29 +49,33 @@ const PhotoListPage = () => {
   const [detailsId, setDetailsId] = useState<number | null>(null);
 
   useEffect(() => {
-    searchPhotos({ ...filter })
-      .unwrap()
-      .then((result) => {
+    const promise = searchPhotos({ ...filter });
+    (async () => {
+      try {
+        const result = await promise.unwrap();
         const fetched = result.photos || [];
         setPhotos(fetched);
         setTotal(result.count || 0);
         setSkip(fetched.length);
         dispatch(setLastResult(fetched));
-      });
+      } catch {
+        // ignore for now
+      }
+    })();
+    return () => {
+      promise.abort();
+    };
   }, [searchPhotos, filter, dispatch]);
 
-  const loadMore = () => {
-    searchPhotos({ ...filter, skip })
-      .unwrap()
-      .then((result) => {
-        const newPhotos = result.photos || [];
-        const updated = [...photos, ...newPhotos];
-        const newSkip = skip + newPhotos.length;
-        setPhotos(updated);
-        setSkip(newSkip);
-        setTotal(result.count || 0);
-        dispatch(setLastResult(updated));
-      });
+  const loadMore = async () => {
+    const result = await searchPhotos({ ...filter, skip }).unwrap();
+    const newPhotos = result.photos || [];
+    const updated = [...photos, ...newPhotos];
+    const newSkip = skip + newPhotos.length;
+    setPhotos(updated);
+    setSkip(newSkip);
+    setTotal(result.count || 0);
+    dispatch(setLastResult(updated));
   };
 
   return (
@@ -136,7 +140,7 @@ const PhotoListPage = () => {
           </div>
           {photos.length < total && (
             <div className="flex justify-center mt-4">
-              <Button variant="outline" onClick={loadMore}>
+              <Button variant="outline" onClick={() => void loadMore()}>
                 {loadMoreButton}
               </Button>
             </div>
