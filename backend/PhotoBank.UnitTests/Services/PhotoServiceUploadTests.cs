@@ -45,6 +45,7 @@ namespace PhotoBank.UnitTests.Services
             await context.SaveChangesAsync();
 
             var service = new PhotoService(
+                context,
                 new Repository<Photo>(provider),
                 new Repository<Person>(provider),
                 new Repository<Face>(provider),
@@ -79,6 +80,7 @@ namespace PhotoBank.UnitTests.Services
             await context.SaveChangesAsync();
 
             var service = new PhotoService(
+                context,
                 new Repository<Photo>(provider),
                 new Repository<Person>(provider),
                 new Repository<Face>(provider),
@@ -117,6 +119,7 @@ namespace PhotoBank.UnitTests.Services
             await context.SaveChangesAsync();
 
             var service = new PhotoService(
+                context,
                 new Repository<Photo>(provider),
                 new Repository<Person>(provider),
                 new Repository<Face>(provider),
