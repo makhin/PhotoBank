@@ -1,1579 +1,1035 @@
-{
-  "openapi": "3.0.4",
-  "info": {
-    "title": "PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-    "version": "1.0"
-  },
-  "paths": {
-    "/api/auth/login": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "operationId": "Auth_Login",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequestDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequestDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginResponseDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginResponseDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginResponseDto"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/register": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "operationId": "Auth_Register",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterRequestDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterRequestDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterRequestDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/user": {
-      "get": {
-        "tags": [
-          "Auth"
-        ],
-        "operationId": "Auth_GetUser",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserDto"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Auth"
-        ],
-        "operationId": "Auth_UpdateUser",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/claims": {
-      "get": {
-        "tags": [
-          "Auth"
-        ],
-        "operationId": "Auth_GetUserClaims",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ClaimDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ClaimDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ClaimDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/auth/roles": {
-      "get": {
-        "tags": [
-          "Auth"
-        ],
-        "operationId": "Auth_GetUserRoles",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RoleDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RoleDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RoleDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/faces": {
-      "put": {
-        "tags": [
-          "Faces"
-        ],
-        "operationId": "Faces_Update",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateFaceDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateFaceDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateFaceDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/paths": {
-      "get": {
-        "tags": [
-          "Paths"
-        ],
-        "operationId": "Paths_GetAll",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PathDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PathDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PathDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/persons": {
-      "get": {
-        "tags": [
-          "Persons"
-        ],
-        "operationId": "Persons_GetAll",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PersonDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PersonDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PersonDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/photos/search": {
-      "post": {
-        "tags": [
-          "Photos"
-        ],
-        "operationId": "Photos_SearchPhotos",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FilterDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FilterDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/FilterDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/PhotoItemDtoPageResponse"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PhotoItemDtoPageResponse"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PhotoItemDtoPageResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/photos/{id}": {
-      "get": {
-        "tags": [
-          "Photos"
-        ],
-        "operationId": "Photos_GetPhoto",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/PhotoDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PhotoDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PhotoDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/photos/upload": {
-      "post": {
-        "tags": [
-          "Photos"
-        ],
-        "operationId": "Photos_Upload",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "files": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "format": "binary"
-                    }
-                  },
-                  "storageId": {
-                    "type": "integer",
-                    "format": "int32"
-                  },
-                  "path": {
-                    "type": "string"
-                  }
-                }
-              },
-              "encoding": {
-                "files": {
-                  "style": "form"
-                },
-                "storageId": {
-                  "style": "form"
-                },
-                "path": {
-                  "style": "form"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/photos/duplicates": {
-      "get": {
-        "tags": [
-          "Photos"
-        ],
-        "operationId": "Photos_GetDuplicates",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "hash",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "threshold",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 5
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PhotoItemDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PhotoItemDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PhotoItemDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/storages": {
-      "get": {
-        "tags": [
-          "Storages"
-        ],
-        "operationId": "Storages_GetAll",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/StorageDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/StorageDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/StorageDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/tags": {
-      "get": {
-        "tags": [
-          "Tags"
-        ],
-        "operationId": "Tags_GetAll",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TagDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TagDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TagDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/users": {
-      "get": {
-        "tags": [
-          "Users"
-        ],
-        "operationId": "Users_GetAll",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserWithClaimsDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserWithClaimsDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserWithClaimsDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/users/{id}": {
-      "put": {
-        "tags": [
-          "Users"
-        ],
-        "operationId": "Users_Update",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/admin/users/{id}/claims": {
-      "put": {
-        "tags": [
-          "Users"
-        ],
-        "operationId": "Users_SetClaims",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ClaimDto"
-                }
-              }
-            },
-            "text/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ClaimDto"
-                }
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ClaimDto"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "ClaimDto": {
-        "required": [
-          "type",
-          "value"
-        ],
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "nullable": true
-          },
-          "value": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "FaceBoxDto": {
-        "required": [
-          "height",
-          "left",
-          "top",
-          "width"
-        ],
-        "type": "object",
-        "properties": {
-          "top": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "left": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "width": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "height": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "FaceDto": {
-        "required": [
-          "faceBox",
-          "friendlyFaceAttributes"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "personId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "age": {
-            "type": "number",
-            "format": "double",
-            "nullable": true
-          },
-          "gender": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "faceAttributes": {
-            "type": "string",
-            "nullable": true
-          },
-          "faceBox": {
-            "$ref": "#/components/schemas/FaceBoxDto"
-          },
-          "friendlyFaceAttributes": {
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "FilterDto": {
-        "type": "object",
-        "properties": {
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32",
-            "maximum": 200,
-            "minimum": 1
-          },
-          "storages": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          },
-          "isBW": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "isAdultContent": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "isRacyContent": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "relativePath": {
-            "type": "string",
-            "nullable": true
-          },
-          "paths": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          },
-          "caption": {
-            "type": "string",
-            "nullable": true
-          },
-          "takenDateFrom": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "takenDateTo": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "thisDay": {
-            "type": "boolean",
-            "nullable": true
-          },
-          "persons": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
-            },
-            "nullable": true
-          },
-          "orderBy": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "GeoPointDto": {
-        "required": [
-          "latitude",
-          "longitude"
-        ],
-        "type": "object",
-        "properties": {
-          "latitude": {
-            "type": "number",
-            "format": "double"
-          },
-          "longitude": {
-            "type": "number",
-            "format": "double"
-          }
-        },
-        "additionalProperties": false
-      },
-      "LoginRequestDto": {
-        "required": [
-          "email",
-          "password",
-          "rememberMe"
-        ],
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "password": {
-            "type": "string",
-            "nullable": true
-          },
-          "rememberMe": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "LoginResponseDto": {
-        "required": [
-          "token"
-        ],
-        "type": "object",
-        "properties": {
-          "token": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "PathDto": {
-        "required": [
-          "path",
-          "storageId"
-        ],
-        "type": "object",
-        "properties": {
-          "storageId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "path": {
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "PersonDto": {
-        "required": [
-          "id",
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "name": {
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "PersonItemDto": {
-        "required": [
-          "personId"
-        ],
-        "type": "object",
-        "properties": {
-          "personId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "PhotoDto": {
-        "required": [
-          "id",
-          "name",
-          "previewImage"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "name": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "scale": {
-            "type": "number",
-            "format": "double"
-          },
-          "takenDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "previewImage": {
-            "type": "string",
-            "format": "byte"
-          },
-          "location": {
-            "$ref": "#/components/schemas/GeoPointDto"
-          },
-          "orientation": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "faces": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FaceDto"
-            },
-            "nullable": true
-          },
-          "captions": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "adultScore": {
-            "type": "number",
-            "format": "double"
-          },
-          "racyScore": {
-            "type": "number",
-            "format": "double"
-          },
-          "height": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "width": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "PhotoItemDto": {
-        "required": [
-          "id",
-          "name",
-          "relativePath",
-          "storageName",
-          "thumbnail"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "thumbnail": {
-            "type": "string",
-            "format": "byte"
-          },
-          "name": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "takenDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "isBW": {
-            "type": "boolean"
-          },
-          "isAdultContent": {
-            "type": "boolean"
-          },
-          "adultScore": {
-            "type": "number",
-            "format": "double"
-          },
-          "isRacyContent": {
-            "type": "boolean"
-          },
-          "racyScore": {
-            "type": "number",
-            "format": "double"
-          },
-          "storageName": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "relativePath": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TagItemDto"
-            },
-            "nullable": true
-          },
-          "persons": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PersonItemDto"
-            },
-            "nullable": true
-          },
-          "captions": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "PhotoItemDtoPageResponse": {
-        "type": "object",
-        "properties": {
-          "totalCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PhotoItemDto"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "ProblemDetails": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "nullable": true
-          },
-          "title": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "detail": {
-            "type": "string",
-            "nullable": true
-          },
-          "instance": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": { }
-      },
-      "RegisterRequestDto": {
-        "required": [
-          "email",
-          "password"
-        ],
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "password": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "RoleDto": {
-        "required": [
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "claims": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ClaimDto"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "StorageDto": {
-        "required": [
-          "id",
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "name": {
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "TagDto": {
-        "required": [
-          "id",
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "name": {
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "TagItemDto": {
-        "required": [
-          "tagId"
-        ],
-        "type": "object",
-        "properties": {
-          "tagId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateFaceDto": {
-        "required": [
-          "faceId",
-          "personId"
-        ],
-        "type": "object",
-        "properties": {
-          "faceId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "personId": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateUserDto": {
-        "type": "object",
-        "properties": {
-          "phoneNumber": {
-            "type": "string",
-            "nullable": true
-          },
-          "telegram": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "UserDto": {
-        "required": [
-          "email"
-        ],
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "phoneNumber": {
-            "type": "string",
-            "nullable": true
-          },
-          "telegram": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "UserWithClaimsDto": {
-        "required": [
-          "email",
-          "id"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "nullable": true
-          },
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "phoneNumber": {
-            "type": "string",
-            "nullable": true
-          },
-          "telegram": {
-            "type": "string",
-            "nullable": true
-          },
-          "claims": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ClaimDto"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      }
-    }
-  }
-}
+openapi: 3.0.4
+info:
+  title: 'PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'
+  version: '1.0'
+paths:
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      operationId: Auth_Login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestDto'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDto'
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/auth/register:
+    post:
+      tags:
+        - Auth
+      operationId: Auth_Register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequestDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequestDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequestDto'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/auth/user:
+    get:
+      tags:
+        - Auth
+      operationId: Auth_GetUser
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+    put:
+      tags:
+        - Auth
+      operationId: Auth_UpdateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDto'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/auth/claims:
+    get:
+      tags:
+        - Auth
+      operationId: Auth_GetUserClaims
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClaimDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClaimDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClaimDto'
+  /api/auth/roles:
+    get:
+      tags:
+        - Auth
+      operationId: Auth_GetUserRoles
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleDto'
+  /api/faces:
+    put:
+      tags:
+        - Faces
+      operationId: Faces_Update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFaceDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFaceDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/UpdateFaceDto'
+      responses:
+        '200':
+          description: OK
+  /api/paths:
+    get:
+      tags:
+        - Paths
+      operationId: Paths_GetAll
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PathDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PathDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PathDto'
+  /api/persons:
+    get:
+      tags:
+        - Persons
+      operationId: Persons_GetAll
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonDto'
+  /api/photos/search:
+    post:
+      tags:
+        - Photos
+      operationId: Photos_SearchPhotos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/FilterDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/FilterDto'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/PhotoItemDtoPageResponse'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoItemDtoPageResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/PhotoItemDtoPageResponse'
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  '/api/photos/{id}':
+    get:
+      tags:
+        - Photos
+      operationId: Photos_GetPhoto
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/PhotoDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/PhotoDto'
+        '404':
+          description: Not Found
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /api/photos/upload:
+    post:
+      tags:
+        - Photos
+      operationId: Photos_Upload
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                storageId:
+                  type: integer
+                  format: int32
+                path:
+                  type: string
+            encoding:
+              files:
+                style: form
+              storageId:
+                style: form
+              path:
+                style: form
+      responses:
+        '200':
+          description: OK
+  /api/photos/duplicates:
+    get:
+      tags:
+        - Photos
+      operationId: Photos_GetDuplicates
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: hash
+          in: query
+          schema:
+            type: string
+        - name: threshold
+          in: query
+          schema:
+            type: integer
+            format: int32
+            default: 5
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PhotoItemDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PhotoItemDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PhotoItemDto'
+  /api/storages:
+    get:
+      tags:
+        - Storages
+      operationId: Storages_GetAll
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StorageDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StorageDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StorageDto'
+  /api/tags:
+    get:
+      tags:
+        - Tags
+      operationId: Tags_GetAll
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TagDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TagDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TagDto'
+  /api/admin/users:
+    get:
+      tags:
+        - Users
+      operationId: Users_GetAll
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserWithClaimsDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserWithClaimsDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserWithClaimsDto'
+  '/api/admin/users/{id}':
+    put:
+      tags:
+        - Users
+      operationId: Users_Update
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserDto'
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not Found
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  '/api/admin/users/{id}/claims':
+    put:
+      tags:
+        - Users
+      operationId: Users_SetClaims
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClaimDto'
+          text/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClaimDto'
+          application/*+json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ClaimDto'
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not Found
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+components:
+  schemas:
+    ClaimDto:
+      required:
+        - type
+        - value
+      type: object
+      properties:
+        type:
+          type: string
+          nullable: true
+        value:
+          type: string
+          nullable: true
+      additionalProperties: false
+    FaceBoxDto:
+      required:
+        - height
+        - left
+        - top
+        - width
+      type: object
+      properties:
+        top:
+          type: integer
+          format: int32
+        left:
+          type: integer
+          format: int32
+        width:
+          type: integer
+          format: int32
+        height:
+          type: integer
+          format: int32
+      additionalProperties: false
+    FaceDto:
+      required:
+        - faceBox
+        - friendlyFaceAttributes
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        personId:
+          type: integer
+          format: int32
+          nullable: true
+        age:
+          type: number
+          format: double
+          nullable: true
+        gender:
+          type: boolean
+          nullable: true
+        faceAttributes:
+          type: string
+          nullable: true
+        faceBox:
+          $ref: '#/components/schemas/FaceBoxDto'
+        friendlyFaceAttributes:
+          minLength: 1
+          type: string
+      additionalProperties: false
+    FilterDto:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        storages:
+          type: array
+          items:
+            type: integer
+            format: int32
+          nullable: true
+        isBW:
+          type: boolean
+          nullable: true
+        isAdultContent:
+          type: boolean
+          nullable: true
+        isRacyContent:
+          type: boolean
+          nullable: true
+        relativePath:
+          type: string
+          nullable: true
+        paths:
+          type: array
+          items:
+            type: integer
+            format: int32
+          nullable: true
+        caption:
+          type: string
+          nullable: true
+        takenDateFrom:
+          type: string
+          format: date-time
+          nullable: true
+        takenDateTo:
+          type: string
+          format: date-time
+          nullable: true
+        thisDay:
+          type: boolean
+          nullable: true
+        persons:
+          type: array
+          items:
+            type: integer
+            format: int32
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: integer
+            format: int32
+          nullable: true
+        orderBy:
+          type: string
+          nullable: true
+      additionalProperties: false
+    GeoPointDto:
+      required:
+        - latitude
+        - longitude
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+      additionalProperties: false
+    LoginRequestDto:
+      required:
+        - email
+        - password
+        - rememberMe
+      type: object
+      properties:
+        email:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+        rememberMe:
+          type: boolean
+      additionalProperties: false
+    LoginResponseDto:
+      required:
+        - token
+      type: object
+      properties:
+        token:
+          type: string
+          nullable: true
+      additionalProperties: false
+    PathDto:
+      required:
+        - path
+        - storageId
+      type: object
+      properties:
+        storageId:
+          type: integer
+          format: int32
+        path:
+          minLength: 1
+          type: string
+      additionalProperties: false
+    PersonDto:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          minLength: 1
+          type: string
+      additionalProperties: false
+    PersonItemDto:
+      required:
+        - personId
+      type: object
+      properties:
+        personId:
+          type: integer
+          format: int32
+      additionalProperties: false
+    PhotoDto:
+      required:
+        - id
+        - name
+        - previewImage
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          minLength: 1
+          type: string
+        scale:
+          type: number
+          format: double
+        takenDate:
+          type: string
+          format: date-time
+          nullable: true
+        previewImage:
+          type: string
+          format: byte
+        location:
+          $ref: '#/components/schemas/GeoPointDto'
+        orientation:
+          type: integer
+          format: int32
+          nullable: true
+        faces:
+          type: array
+          items:
+            $ref: '#/components/schemas/FaceDto'
+          nullable: true
+        captions:
+          type: array
+          items:
+            type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+          nullable: true
+        adultScore:
+          type: number
+          format: double
+        racyScore:
+          type: number
+          format: double
+        height:
+          type: integer
+          format: int32
+        width:
+          type: integer
+          format: int32
+      additionalProperties: false
+    PhotoItemDto:
+      required:
+        - id
+        - name
+        - relativePath
+        - storageName
+        - thumbnail
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        thumbnail:
+          type: string
+          format: byte
+        name:
+          minLength: 1
+          type: string
+        takenDate:
+          type: string
+          format: date-time
+          nullable: true
+        isBW:
+          type: boolean
+        isAdultContent:
+          type: boolean
+        adultScore:
+          type: number
+          format: double
+        isRacyContent:
+          type: boolean
+        racyScore:
+          type: number
+          format: double
+        storageName:
+          minLength: 1
+          type: string
+        relativePath:
+          minLength: 1
+          type: string
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagItemDto'
+          nullable: true
+        persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonItemDto'
+          nullable: true
+        captions:
+          type: array
+          items:
+            type: string
+          nullable: true
+      additionalProperties: false
+    PhotoItemDtoPageResponse:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+          format: int32
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhotoItemDto'
+          nullable: true
+      additionalProperties: false
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        status:
+          type: integer
+          format: int32
+          nullable: true
+        detail:
+          type: string
+          nullable: true
+        instance:
+          type: string
+          nullable: true
+      additionalProperties: { }
+    RegisterRequestDto:
+      required:
+        - email
+        - password
+      type: object
+      properties:
+        email:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+      additionalProperties: false
+    RoleDto:
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        claims:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClaimDto'
+          nullable: true
+      additionalProperties: false
+    StorageDto:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          minLength: 1
+          type: string
+      additionalProperties: false
+    TagDto:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          minLength: 1
+          type: string
+      additionalProperties: false
+    TagItemDto:
+      required:
+        - tagId
+      type: object
+      properties:
+        tagId:
+          type: integer
+          format: int32
+      additionalProperties: false
+    UpdateFaceDto:
+      required:
+        - faceId
+        - personId
+      type: object
+      properties:
+        faceId:
+          type: integer
+          format: int32
+        personId:
+          type: integer
+          format: int32
+      additionalProperties: false
+    UpdateUserDto:
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+          nullable: true
+        telegram:
+          type: string
+          nullable: true
+      additionalProperties: false
+    UserDto:
+      required:
+        - email
+      type: object
+      properties:
+        email:
+          type: string
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+        telegram:
+          type: string
+          nullable: true
+      additionalProperties: false
+    UserWithClaimsDto:
+      required:
+        - email
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+        telegram:
+          type: string
+          nullable: true
+        claims:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClaimDto'
+          nullable: true
+      additionalProperties: false
