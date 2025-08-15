@@ -36,6 +36,10 @@ import { Checkbox } from '@/shared/ui/checkbox';
 import { ScoreBar } from '@/components/ScoreBar';
 import { FaceOverlay } from '@/components/FaceOverlay.tsx';
 import { FacePersonSelector } from '@/components/FacePersonSelector.tsx';
+import { useViewer } from '@/features/viewer/state';
+import { pushPhotoId } from '@/features/viewer/urlSync';
+import { Button } from '@/shared/ui/button';
+import { Maximize2 } from 'lucide-react';
 
 
 const calculateImageSize = (naturalWidth: number, naturalHeight: number, containerWidth: number, containerHeight: number) => {
@@ -177,13 +181,35 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                 {/* Main Photo Display */}
                 <div className="lg:col-span-2 h-full flex flex-col min-h-0">
                     <Card className="flex-1 overflow-hidden border-0 lg:border-r lg:rounded-none bg-background">
-                        <CardHeader className="pb-4 border-b border-border">
-                            <CardTitle className="text-2xl font-bold">
-                                {photo.name}
-                            </CardTitle>
-                            {photo.captions && photo.captions.length > 0 && (
-                                <p className="text-muted-foreground italic">{photo.captions[0]}</p>
-                            )}
+                        <CardHeader className="pb-4 border-b border-border flex items-center justify-between">
+                            <div>
+                                <CardTitle className="text-2xl font-bold">
+                                    {photo.name}
+                                </CardTitle>
+                                {photo.captions && photo.captions.length > 0 && (
+                                    <p className="text-muted-foreground italic">{photo.captions[0]}</p>
+                                )}
+                            </div>
+                            <Button
+                                size="icon"
+                                variant="ghost"
+                                aria-label="Open viewer"
+                                onClick={() => {
+                                    if (previewImageSrc) {
+                                        useViewer.getState().open([
+                                            {
+                                                id: photo.id,
+                                                src: previewImageSrc,
+                                                thumb: previewImageSrc,
+                                                title: photo.name,
+                                            },
+                                        ], 0);
+                                        pushPhotoId(photo.id);
+                                    }
+                                }}
+                            >
+                                <Maximize2 className="w-4 h-4" />
+                            </Button>
                         </CardHeader>
                         <CardContent className="p-0 flex-1 h-full min-h-0">
                             <div

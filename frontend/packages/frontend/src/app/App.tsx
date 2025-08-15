@@ -6,6 +6,7 @@ import NavBar from '@/components/NavBar.tsx';
 import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
 import { loadMetadata } from '@/features/meta/model/metaSlice.ts';
 import { AppRoutes } from '@/routes/AppRoutes.tsx';
+import Lightbox from '@/features/viewer/Lightbox';
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -22,6 +23,7 @@ export default function App() {
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       {loggedIn && <NavBar />}
       <AppRoutes />
+      <Lightbox />
     </ThemeProvider>
   );
 }

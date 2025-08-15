@@ -1,0 +1,63 @@
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Dialog, DialogContent } from '@/shared/ui/dialog';
+import ImageCanvas from './ImageCanvas';
+import { useViewer } from './state';
+import { useEffect } from 'react';
+import { prefetchAround } from './prefetch';
+
+const Lightbox = () => {
+  const { isOpen, items, index, close, next, prev } = useViewer();
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+      if (e.key === 'Escape') close();
+      if (e.key === 'ArrowRight') next();
+      if (e.key === 'ArrowLeft') prev();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isOpen, close, next, prev]);
+
+  useEffect(() => {
+    if (isOpen) prefetchAround(items, index);
+  }, [isOpen, items, index]);
+
+  if (!isOpen) return null;
+  const item = items[index];
+
+  return createPortal(
+    <Dialog open={isOpen} onOpenChange={(o) => !o && close()}>
+      <DialogContent className="p-0 bg-black/90 text-white max-w-none w-screen h-screen flex items-center justify-center" showCloseButton={false}>
+        <button aria-label="Close" className="absolute top-4 right-4 text-white" onClick={close}>
+          <X className="w-6 h-6" />
+        </button>
+        <button aria-label="Previous image" className="absolute left-4 top-1/2 -translate-y-1/2 text-white" onClick={prev}>
+          <ChevronLeft className="w-8 h-8" />
+        </button>
+        <button aria-label="Next image" className="absolute right-4 top-1/2 -translate-y-1/2 text-white" onClick={next}>
+          <ChevronRight className="w-8 h-8" />
+        </button>
+        <div className="absolute top-4 left-4 text-sm">
+          {index + 1} / {items.length}
+        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={item.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="max-w-full max-h-full"
+          >
+            <ImageCanvas src={item.src} alt={item.title} />
+          </motion.div>
+        </AnimatePresence>
+      </DialogContent>
+    </Dialog>,
+    document.body
+  );
+};
+
+export default Lightbox;
