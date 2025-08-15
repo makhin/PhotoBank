@@ -7,6 +7,7 @@ using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.ViewModel.Dto;
@@ -29,7 +30,8 @@ public interface IPhotoService
 }
 
 public class PhotoService : IPhotoService
-{
+{   
+    private readonly PhotoBankDbContext _db;
     private readonly IRepository<Photo> _photoRepository;
     private readonly IRepository<Person> _personRepository;
     private readonly IRepository<Face> _faceRepository;
@@ -46,6 +48,7 @@ public class PhotoService : IPhotoService
     };
 
     public PhotoService(
+        PhotoBankDbContext db,
         IRepository<Photo> photoRepository,
         IRepository<Person> personRepository,
         IRepository<Face> faceRepository,
@@ -54,6 +57,7 @@ public class PhotoService : IPhotoService
         IMapper mapper,
         IMemoryCache cache)
     {
+        _db = db;
         _photoRepository = photoRepository;
         _personRepository = personRepository;
         _faceRepository = faceRepository;
@@ -151,12 +155,7 @@ public class PhotoService : IPhotoService
 
     public async Task<PhotoDto> GetPhotoAsync(int id)
     {
-        var photo = await _photoRepository.GetAsync(id,
-            q => q.Include(p => p.Faces).ThenInclude(f => f.Person)
-                   .Include(p => p.Captions)
-                   .Include(p => p.PhotoTags).ThenInclude(t => t.Tag)
-                   .AsNoTrackingWithIdentityResolution());
-
+        var photo = await CompiledQueries.PhotoById(_db, id);
         return _mapper.Map<Photo, PhotoDto>(photo);
     }
 

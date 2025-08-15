@@ -42,7 +42,9 @@ namespace PhotoBank.UnitTests.Services
             var services = new ServiceCollection();
             services.AddDbContext<PhotoBankDbContext>(o => o.UseInMemoryDatabase(dbName));
             var provider = services.BuildServiceProvider();
+            var context = provider.GetRequiredService<PhotoBankDbContext>();
             return new PhotoService(
+                context,
                 new Repository<Photo>(provider),
                 new Repository<Person>(provider),
                 new Repository<Face>(provider),
