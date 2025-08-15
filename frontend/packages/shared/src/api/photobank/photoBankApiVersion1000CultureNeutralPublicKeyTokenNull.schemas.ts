@@ -123,7 +123,10 @@ export interface PhotoDto {
 
 export interface PhotoItemDto {
   id: number;
-  thumbnail: string;
+  thumbnail?: string;
+  thumbnailUrl?: string;
+  previewUrl?: string;
+  originalUrl?: string;
   /** @minLength 1 */
   name: string;
   /** @nullable */

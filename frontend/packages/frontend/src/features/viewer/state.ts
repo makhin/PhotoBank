@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 
-export interface ViewerItem { id: number; src: string; thumb?: string; title?: string; }
+export interface ViewerItem {
+  id: number;
+  preview: string;
+  original: string;
+  title?: string;
+}
 
 interface ViewerState {
   isOpen: boolean;

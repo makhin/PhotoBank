@@ -51,7 +51,12 @@ const Lightbox = () => {
             exit={{ opacity: 0 }}
             className="max-w-full max-h-full"
           >
-            <ImageCanvas src={item.src} alt={item.title} />
+            <ImageCanvas
+              thumbSrc={item.preview}
+              src={item.original}
+              alt={item.title}
+              fetchPriority="high"
+            />
           </motion.div>
         </AnimatePresence>
       </DialogContent>

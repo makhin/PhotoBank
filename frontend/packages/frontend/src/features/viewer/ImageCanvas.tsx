@@ -1,12 +1,15 @@
 import { useRef, useState, useEffect } from 'react';
+import SmartImage from '@/components/SmartImage';
 
 interface Props {
+  thumbSrc: string;
   src: string;
   alt?: string;
+  fetchPriority?: 'high' | 'auto' | 'low';
   onLoaded?: (w: number, h: number) => void;
 }
 
-const ImageCanvas = ({ src, alt, onLoaded }: Props) => {
+const ImageCanvas = ({ thumbSrc, src, alt, fetchPriority, onLoaded }: Props) => {
   const imgRef = useRef<HTMLImageElement>(null);
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
@@ -48,11 +51,14 @@ const ImageCanvas = ({ src, alt, onLoaded }: Props) => {
   };
 
   return (
-    <img
+    <SmartImage
       ref={imgRef}
+      thumbSrc={thumbSrc}
       src={src}
-      alt={alt}
-      onLoad={() => {
+      alt={alt || ''}
+      loading="eager"
+      fetchPriority={fetchPriority}
+      onLoadFull={() => {
         const img = imgRef.current;
         if (img) onLoaded?.(img.naturalWidth, img.naturalHeight);
       }}
