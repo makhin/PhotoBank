@@ -14,11 +14,11 @@ import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
 import { setLastResult } from '@/features/photo/model/photoSlice.ts';
 import PhotoDetailsModal from '@/components/PhotoDetailsModal';
 
-import PhotoListItemDesktop from './PhotoListItemDesktop';
 import PhotoListItemMobile from './PhotoListItemMobile';
 import VirtualPhotoList from './VirtualPhotoList';
-import PhotoListHeader from './PhotoListHeader';
 import PhotoListItemSkeleton from './PhotoListItemSkeleton';
+import EmptyState from '@/components/EmptyState';
+import { photoColumns } from './columns';
 
 const PhotoListPage = () => {
   const dispatch = useAppDispatch();
@@ -58,15 +58,22 @@ const PhotoListPage = () => {
   const loading = isLoading && photos.length === 0;
 
   const renderPhotoRow = useCallback(
-    (photo: PhotoItemDto) => (
-      <PhotoListItemDesktop
-        photo={photo}
-        personsMap={personsMap}
-        tagsMap={tagsMap}
-        onClick={() => handleOpenDetails(photo.id)}
-      />
-    ),
-    [personsMap, tagsMap, handleOpenDetails]
+    (photo: PhotoItemDto) => {
+      const handleClick = () => handleOpenDetails(photo.id);
+      return (
+        <div
+          className="grid grid-cols-12 gap-2 px-4 py-2 cursor-pointer hover:bg-muted/50"
+          onClick={handleClick}
+        >
+          {photoColumns.map((c) => (
+            <div key={c.id} className={c.width}>
+              {c.render(photo)}
+            </div>
+          ))}
+        </div>
+      );
+    },
+    [handleOpenDetails]
   );
 
   const renderSkeletonRow = useCallback(
@@ -134,13 +141,21 @@ const PhotoListPage = () => {
         <div className="p-6">
           {/* Desktop/Tablet View */}
           <div className="hidden lg:block">
-            <PhotoListHeader />
+            <div className="grid grid-cols-12 gap-4 mb-4 px-4 py-2 bg-muted/50 rounded-lg font-medium text-sm">
+              {photoColumns.map((c) => (
+                <div key={c.id} className={c.width}>
+                  {c.header}
+                </div>
+              ))}
+            </div>
             {loading ? (
               <VirtualPhotoList
                 photos={skeletonPhotos}
                 parentRef={scrollAreaRef}
                 renderRow={renderSkeletonRow}
               />
+            ) : photos.length === 0 ? (
+              <EmptyState text="No photos" />
             ) : (
               <VirtualPhotoList
                 photos={photos}
@@ -157,15 +172,19 @@ const PhotoListPage = () => {
                 ? skeletonPhotos.slice(0, 6).map((p) => (
                     <PhotoListItemSkeleton key={p.id} />
                   ))
-                : photos.map((photo) => (
-                    <PhotoListItemMobile
-                      key={photo.id}
-                      photo={photo}
-                      personsMap={personsMap}
-                      tagsMap={tagsMap}
-                      onClick={() => handleOpenDetails(photo.id)}
-                    />
-                  ))}
+                : photos.length === 0 ? (
+                    <EmptyState text="No photos" />
+                  ) : (
+                    photos.map((photo) => (
+                      <PhotoListItemMobile
+                        key={photo.id}
+                        photo={photo}
+                        personsMap={personsMap}
+                        tagsMap={tagsMap}
+                        onClick={() => handleOpenDetails(photo.id)}
+                      />
+                    ))
+                  )}
             </div>
           </div>
           {photos.length < total && (
