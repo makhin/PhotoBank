@@ -10,6 +10,8 @@ namespace PhotoBank.DbContext.Models
         [Required]
         public string Name { get; set; }
         public DateTime? DateOfBirth { get; set; }
+        public string? Provider { get; set; }  // "Azure" | "Aws" | "Local"
+        public string? ExternalId { get; set; } // строковый внешний ID провайдера
         public Guid ExternalGuid { get; set; }
         public IEnumerable<PersonGroupFace> PersonGroupFaces { get; set; }
         public IEnumerable<Face> Faces { get; set; }
