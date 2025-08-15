@@ -1,65 +1,191 @@
 import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
 import * as Api from '@photobank/shared/api/photobank';
-
-import { orvalQuery, orvalMutation } from './orvalAdapter';
+import { unwrapOrThrow } from './httpUtils';
+import type { ProblemDetailsError } from '@photobank/shared/types/problem';
 
 export const photobankApi = createApi({
   reducerPath: 'photobankApi',
-  baseQuery: fakeBaseQuery<{ status: number; data?: unknown; problem?: unknown }>(),
+  baseQuery: fakeBaseQuery<ProblemDetailsError>(),
   endpoints: (build) => ({
-    login: build.mutation<Api.LoginResponseDto, Api.LoginRequestDto>({
-      queryFn: orvalMutation((body, opt) => Api.authLogin(body, opt).then((r) => r.data)),
+    login: build.mutation<Api.LoginResponseDto, Api.LoginRequestDto, ProblemDetailsError>({
+      queryFn: async (body, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.authLogin(body, { signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    getPhotoById: build.query<Api.PhotoDto, number>({
-      queryFn: orvalQuery((id, opt) => Api.getApiPhotos(id, opt).then((r) => r.data)),
+    getPhotoById: build.query<Api.PhotoDto, number, ProblemDetailsError>({
+      queryFn: async (id, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.getApiPhotos(id, { signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    register: build.mutation<null, Api.RegisterRequestDto>({
-      queryFn: orvalMutation((body, opt) => Api.authRegister(body, opt).then((r) => r.data)),
+    register: build.mutation<null, Api.RegisterRequestDto, ProblemDetailsError>({
+      queryFn: async (body, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.authRegister(body, { signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    getUser: build.query<Api.UserDto, void>({
-      queryFn: orvalQuery((_arg, opt) => Api.authGetUser(opt).then((r) => r.data)),
+    getUser: build.query<Api.UserDto, void, ProblemDetailsError>({
+      queryFn: async (_arg, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.authGetUser({ signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    updateUser: build.mutation<null, Api.UpdateUserDto>({
-      queryFn: orvalMutation((body, opt) => Api.authUpdateUser(body, opt).then((r) => r.data)),
+    updateUser: build.mutation<null, Api.UpdateUserDto, ProblemDetailsError>({
+      queryFn: async (body, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.authUpdateUser(body, { signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    getUserClaims: build.query<Api.ClaimDto[], void>({
-      queryFn: orvalQuery((_arg, opt) => Api.authGetUserClaims(opt).then((r) => r.data)),
+    getUserClaims: build.query<Api.ClaimDto[], void, ProblemDetailsError>({
+      queryFn: async (_arg, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.authGetUserClaims({ signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    getUserRoles: build.query<Api.RoleDto[], void>({
-      queryFn: orvalQuery((_arg, opt) => Api.authGetUserRoles(opt).then((r) => r.data)),
+    getUserRoles: build.query<Api.RoleDto[], void, ProblemDetailsError>({
+      queryFn: async (_arg, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.authGetUserRoles({ signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    searchPhotos: build.mutation<Api.PageResponseOfPhotoItemDto, Api.FilterDto>({
-      queryFn: orvalMutation((body, opt) => Api.postApiPhotosSearch(body, opt).then((r) => r.data)),
+    searchPhotos: build.mutation<Api.PageResponseOfPhotoItemDto, Api.FilterDto, ProblemDetailsError>({
+      queryFn: async (body, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.postApiPhotosSearch(body, { signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    uploadPhotos: build.mutation<null, Api.PhotosUploadBody>({
-      queryFn: orvalMutation((body, opt) => Api.photosUpload(body, opt).then((r) => r.data)),
+    uploadPhotos: build.mutation<null, Api.PhotosUploadBody, ProblemDetailsError>({
+      queryFn: async (body, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.photosUpload(body, { signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    getDuplicatePhotos: build.query<Api.PhotoItemDto[], Api.PhotosGetDuplicatesParams | void>({
-      queryFn: orvalQuery((params, opt) => Api.photosGetDuplicates(params, opt).then((r) => r.data)),
+    getDuplicatePhotos: build.query<Api.PhotoItemDto[], Api.PhotosGetDuplicatesParams | void, ProblemDetailsError>({
+      queryFn: async (params, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.photosGetDuplicates(params, { signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    getPersons: build.query<Api.PersonDto[], void>({
-      queryFn: orvalQuery((_arg, opt) => Api.personsGetAll(opt).then((r) => r.data)),
+    getPersons: build.query<Api.PersonDto[], void, ProblemDetailsError>({
+      queryFn: async (_arg, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.personsGetAll({ signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    updateFace: build.mutation<null, Api.UpdateFaceDto>({
-      queryFn: orvalMutation((body, opt) => Api.facesUpdate(body, opt).then((r) => r.data)),
+    updateFace: build.mutation<null, Api.UpdateFaceDto, ProblemDetailsError>({
+      queryFn: async (body, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.facesUpdate(body, { signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    getAdminUsers: build.query<Api.UserWithClaimsDto[], void>({
-      queryFn: orvalQuery((_arg, opt) => Api.usersGetAll(opt).then((r) => r.data)),
+    getAdminUsers: build.query<Api.UserWithClaimsDto[], void, ProblemDetailsError>({
+      queryFn: async (_arg, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.usersGetAll({ signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    updateAdminUser: build.mutation<null, { id: string; data: Api.UpdateUserDto }>({
-      queryFn: orvalMutation(({ id, data }, opt) => Api.usersUpdate(id, data, opt).then((r) => r.data)),
+    updateAdminUser: build.mutation<null, { id: string; data: Api.UpdateUserDto }, ProblemDetailsError>({
+      queryFn: async ({ id, data }, api) => {
+        try {
+          const res = await unwrapOrThrow(Api.usersUpdate(id, data, { signal: api.signal }));
+          return { data: res };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    setUserClaims: build.mutation<null, { id: string; data: Api.ClaimDto[] }>({
-      queryFn: orvalMutation(({ id, data }, opt) => Api.usersSetClaims(id, data, opt).then((r) => r.data)),
+    setUserClaims: build.mutation<null, { id: string; data: Api.ClaimDto[] }, ProblemDetailsError>({
+      queryFn: async ({ id, data }, api) => {
+          try {
+            const res = await unwrapOrThrow(Api.usersSetClaims(id, data, { signal: api.signal }));
+            return { data: res };
+          } catch (err) {
+            return { error: err as ProblemDetailsError };
+          }
+      },
     }),
-    getStorages: build.query<Api.StorageDto[], void>({
-      queryFn: orvalQuery((_arg, opt) => Api.storagesGetAll(opt).then((r) => r.data)),
+    getStorages: build.query<Api.StorageDto[], void, ProblemDetailsError>({
+      queryFn: async (_arg, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.storagesGetAll({ signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    getTags: build.query<Api.TagDto[], void>({
-      queryFn: orvalQuery((_arg, opt) => Api.tagsGetAll(opt).then((r) => r.data)),
+    getTags: build.query<Api.TagDto[], void, ProblemDetailsError>({
+      queryFn: async (_arg, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.tagsGetAll({ signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
-    getPaths: build.query<Api.PathDto[], void>({
-      queryFn: orvalQuery((_arg, opt) => Api.pathsGetAll(opt).then((r) => r.data)),
+    getPaths: build.query<Api.PathDto[], void, ProblemDetailsError>({
+      queryFn: async (_arg, api) => {
+        try {
+          const data = await unwrapOrThrow(Api.pathsGetAll({ signal: api.signal }));
+          return { data };
+        } catch (err) {
+          return { error: err as ProblemDetailsError };
+        }
+      },
     }),
   }),
 });

@@ -136,11 +136,12 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
             setPlaceName('');
             return;
         }
-        let cancelled = false;
-        getPlaceByGeoPoint(photo.location).then((name) => {
-            if (!cancelled) setPlaceName(name);
-        });
-        return () => { cancelled = true; };
+        const controller = new AbortController();
+        (async () => {
+            const name = await getPlaceByGeoPoint(photo.location);
+            if (!controller.signal.aborted) setPlaceName(name);
+        })();
+        return () => { controller.abort(); };
     }, [photo?.location]);
 
     const calculateFacePosition = (faceBox: FaceBoxDto) => {
