@@ -48,7 +48,7 @@ namespace PhotoBank.Services
 
             services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
-            services.AddTransient<IFaceService, FaceServiceAdapter>();
+            services.AddTransient<IFaceService, FaceService>();
             services.AddTransient<IFacePreviewService, FacePreviewService>();
             services.AddTransient<IFaceServiceAws, FaceServiceAws>();
 
