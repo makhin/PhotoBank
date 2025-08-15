@@ -17,7 +17,7 @@ describe('dictionaries', () => {
       fetchPaths: getAllPaths,
     }));
     const dict = await import('../src/dictionaries');
-    await dict.loadDictionaries();
+    await dict.loadDictionaries({} as any);
     expect(dict.getPersonName(1)).toBe('John');
   });
 
@@ -59,7 +59,7 @@ describe('dictionaries', () => {
       fetchPaths: getAllPaths,
     }));
     const dict = await import('../src/dictionaries');
-    await dict.loadDictionaries();
+    await dict.loadDictionaries({} as any);
     expect(dict.findBestPersonId('Alic')).toBe(1);
     expect(dict.findBestTagId('ocean')).toBeUndefined();
   });
@@ -79,7 +79,7 @@ describe('dictionaries', () => {
       fetchPaths: getAllPaths,
     }));
     const dict = await import('../src/dictionaries');
-    await dict.loadDictionaries();
+    await dict.loadDictionaries({} as any);
     expect(dict.getAllStoragesWithPaths()).toEqual([
       { id: 1, name: 'S1', paths: ['/a', '/b'] },
     ]);

@@ -47,7 +47,7 @@ describe('aiCommand', () => {
     });
     vi.spyOn(dict, 'findBestPersonId').mockReturnValue(1);
     vi.spyOn(dict, 'findBestTagId').mockReturnValue(10);
-    vi.spyOn(utils, 'getFilterHash').mockResolvedValue('hash');
+    vi.spyOn(utils, 'getFilterHash').mockReturnValue('hash');
     const searchSpy = vi
       .spyOn(photoService, 'searchPhotos')
       .mockResolvedValue({ data: { count: 0, photos: [] } } as any);
@@ -57,6 +57,7 @@ describe('aiCommand', () => {
 
     expect(aiFilters.has('hash')).toBe(true);
     expect(searchSpy).toHaveBeenCalledWith(
+      ctx,
       expect.objectContaining({
         persons: [1],
         tags: [10],

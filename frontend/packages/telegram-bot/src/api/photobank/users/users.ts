@@ -13,37 +13,39 @@ import type {
 import { photobankAxios } from '../../axios-instance';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
   export const getUsers = () => {
 const usersGetAll = (
     
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<UserWithClaimsDto[]>(
       {url: `/admin/users`, method: 'GET'
     },
-      );
+      options);
     }
   const usersUpdate = (
     id: string,
     updateUserDto: UpdateUserDto,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/users/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateUserDto
     },
-      );
+      options);
     }
   const usersSetClaims = (
     id: string,
     claimDto: ClaimDto[],
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/users/${id}/claims`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: claimDto
     },
-      );
+      options);
     }
   return {usersGetAll,usersUpdate,usersSetClaims}};
 

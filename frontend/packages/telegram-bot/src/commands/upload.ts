@@ -45,7 +45,7 @@ export async function uploadCommand(ctx: Context) {
     const storageId = getStorageId(uploadStorageName);
     const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
 
-    await uploadPhotos({
+    await uploadPhotos(ctx, {
       files: uploadFiles,
       storageId,
       path: username,

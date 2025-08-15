@@ -26,6 +26,7 @@ describe('handleSearch', () => {
     await searchCommands.handleSearch(ctx);
 
     expect(searchSpy).toHaveBeenCalledWith(
+      ctx,
       expect.objectContaining({ caption: 'dog cat' }),
     );
   });

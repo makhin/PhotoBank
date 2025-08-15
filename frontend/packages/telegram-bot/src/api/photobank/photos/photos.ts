@@ -16,29 +16,31 @@ import type {
 import { photobankAxios } from '../../axios-instance';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
   export const getPhotos = () => {
 const photosSearchPhotos = (
     filterDto: FilterDto,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<PhotoItemDtoPageResponse>(
       {url: `/photos/search`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: filterDto
     },
-      );
+      options);
     }
   const photosGetPhoto = (
     id: number,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<PhotoDto>(
       {url: `/photos/${id}`, method: 'GET'
     },
-      );
+      options);
     }
   const photosUpload = (
     photosUploadBody: PhotosUploadBody,
- ) => {const formData = new FormData();
+ options?: SecondParameter<typeof photobankAxios>,) => {const formData = new FormData();
 if(photosUploadBody.files !== undefined) {
  photosUploadBody.files.forEach(value => formData.append(`files`, value));
  }
@@ -54,16 +56,16 @@ if(photosUploadBody.path !== undefined) {
       headers: {'Content-Type': 'multipart/form-data', },
        data: formData
     },
-      );
+      options);
     }
   const photosGetDuplicates = (
     params?: PhotosGetDuplicatesParams,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<PhotoItemDto[]>(
       {url: `/photos/duplicates`, method: 'GET',
         params
     },
-      );
+      options);
     }
   return {photosSearchPhotos,photosGetPhoto,photosUpload,photosGetDuplicates}};
 

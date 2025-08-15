@@ -11,6 +11,7 @@ import {
   fetchStorages,
   fetchTags,
 } from './services/dictionary';
+import type { Context } from 'grammy';
 
 type DictData = {
   tagMap: Map<number, string>;
@@ -25,8 +26,8 @@ type DictData = {
 const cache = new Map<string, DictData>();
 let currentUser = '';
 
-export function setDictionariesUser(username: string | null | undefined) {
-  currentUser = username ?? '';
+export function setDictionariesUser(userId: number | string | null | undefined) {
+  currentUser = String(userId ?? '');
 }
 
 function getDict(): DictData {
@@ -43,15 +44,15 @@ function getDict(): DictData {
   };
 }
 
-export async function loadDictionaries() {
+export async function loadDictionaries(ctx: Context) {
   if (cache.has(currentUser)) return;
-  const { data: tagList } = await fetchTags();
+  const { data: tagList } = await fetchTags(ctx);
   const tagMap = new Map(tagList.map(tag => [tag.id, tag.name]));
-  const { data: personList } = await fetchPersons();
+  const { data: personList } = await fetchPersons(ctx);
   const personMap = new Map(personList.map(p => [p.id, p.name]));
-  const { data: storageList } = await fetchStorages();
+  const { data: storageList } = await fetchStorages(ctx);
   const storageMap = new Map(storageList.map((s) => [s.id, s.name]));
-  const { data: pathList } = await fetchPaths();
+  const { data: pathList } = await fetchPaths(ctx);
   const pathsMap = new Map<number, string[]>();
   for (const p of pathList) {
     const arr = pathsMap.get(p.storageId) ?? [];

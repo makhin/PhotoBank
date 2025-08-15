@@ -22,9 +22,9 @@ export async function deletePhotoMessage(ctx: Context) {
     }
 }
 
-async function fetchPhoto(id: number): Promise<PhotoDto | null> {
+async function fetchPhoto(ctx: Context, id: number): Promise<PhotoDto | null> {
     try {
-        const { data } = await getPhoto(id);
+        const { data } = await getPhoto(ctx, id);
         return data;
     } catch {
         return null;
@@ -35,7 +35,7 @@ export async function sendPhotoById(ctx: Context, id: number) {
     let photo: PhotoDto;
 
     try {
-        const res = await getPhoto(id);
+        const res = await getPhoto(ctx, id);
         photo = res.data;
     } catch {
         await ctx.reply(photoNotFoundMsg);
@@ -58,7 +58,7 @@ export async function sendPhotoById(ctx: Context, id: number) {
 
 export async function openPhotoInline(ctx: Context, id: number) {
     const chatId = ctx.chat?.id;
-    const photo = await fetchPhoto(id);
+    const photo = await fetchPhoto(ctx, id);
     if (!photo) {
         await ctx.reply(photoNotFoundMsg);
         return;

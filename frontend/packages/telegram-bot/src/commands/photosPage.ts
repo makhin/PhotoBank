@@ -41,7 +41,7 @@ export async function sendPhotosPage({
   const skip = (page - 1) * PHOTOS_PAGE_SIZE;
   let queryResult;
   try {
-    const res = await searchPhotos({
+    const res = await searchPhotos(ctx, {
       ...filter,
       top: PHOTOS_PAGE_SIZE,
       skip,
