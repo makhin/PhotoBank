@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import axios from 'axios';
-import * as shared from '@photobank/shared';
 import * as dict from '../src/dictionaries';
+import * as photoService from '../src/services/photo';
 
 vi.mock('../src/config', () => ({ BOT_TOKEN: 'token' }));
 
@@ -20,12 +20,12 @@ describe('uploadCommand', () => {
     vi.spyOn(dict, 'getStorageId').mockReturnValue(1);
     vi.spyOn(axios, 'get').mockResolvedValue({ data: new ArrayBuffer(0) });
     const uploadSpy = vi
-      .spyOn(shared, 'uploadPhotosAdapter')
+      .spyOn(photoService, 'uploadPhotos')
       .mockResolvedValue({} as any);
 
     await uploadCommand(ctx);
 
-    expect(uploadSpy).toHaveBeenCalledWith({
+    expect(uploadSpy).toHaveBeenCalledWith(ctx, {
       files: [expect.objectContaining({ name: 'uniq123.jpg' })],
       storageId: 1,
       path: 'john',

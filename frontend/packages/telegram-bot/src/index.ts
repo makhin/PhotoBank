@@ -1,23 +1,13 @@
 import { Bot } from "grammy";
-import { setAuthToken } from "@photobank/shared/auth";
-import {
-  configureApiAuth,
-  configureApi,
-  setImpersonateUser,
-} from "@photobank/shared/api/photobank/fetcher";
 import { configureAzureOpenAI } from "@photobank/shared/ai/openai";
 import {
   captionMissingMsg,
   welcomeBotMsg,
 } from "@photobank/shared/constants";
 
-import { login } from "./services/auth";
 import { loadDictionaries, setDictionariesUser } from "./dictionaries";
 import {
   BOT_TOKEN,
-  API_EMAIL,
-  API_PASSWORD,
-  API_BASE_URL,
   AZURE_OPENAI_ENDPOINT,
   AZURE_OPENAI_KEY,
   AZURE_OPENAI_DEPLOYMENT,
@@ -50,25 +40,15 @@ bot.use(async (ctx, next) => {
 });
 
 bot.use(async (ctx, next) => {
-    const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
-    setImpersonateUser(username);
-    setDictionariesUser(username);
-    await loadDictionaries();
-    await next();
+  setDictionariesUser(ctx.from?.id);
+  await loadDictionaries(ctx);
+  await next();
 });
 
 bot.catch(handleBotError);
 
 registerPhotoRoutes(bot);
 
-configureApiAuth(() => process.env.PHOTOBANK_BOT_TOKEN);
-configureApi(API_BASE_URL);
-
-const { data: loginRes } = await login(API_EMAIL, API_PASSWORD);
-if (!loginRes.token) {
-  throw new Error("Login failed: token is undefined.");
-}
-setAuthToken(loginRes.token, true);
 
 configureAzureOpenAI({
   endpoint: AZURE_OPENAI_ENDPOINT,

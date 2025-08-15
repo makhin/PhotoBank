@@ -2,10 +2,7 @@
 import * as dotenv from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  apiCredentialsNotDefinedError,
-  botTokenNotDefinedError,
-} from '@photobank/shared/constants';
+import { botTokenNotDefinedError } from '@photobank/shared/constants';
 
 // Node.js ESM does not provide __dirname, recreate it from import.meta.url
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -17,14 +14,8 @@ dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
 export const BOT_TOKEN: string = process.env.BOT_TOKEN || '';
 if (!BOT_TOKEN) throw new Error(botTokenNotDefinedError);
 
-export const API_EMAIL: string = process.env.API_EMAIL || '';
-export const API_PASSWORD: string = process.env.API_PASSWORD || '';
-if (!API_EMAIL || !API_PASSWORD) {
-  throw new Error(apiCredentialsNotDefinedError);
-}
-
-export const API_BASE_URL: string =
-  process.env.VITE_API_BASE_URL || process.env.API_BASE_URL || 'http://localhost:5066';
+export const API_BASE_URL = process.env.API_BASE_URL!;
+export const BOT_SERVICE_KEY = process.env.BOT_SERVICE_KEY!;
 
 export const AZURE_OPENAI_ENDPOINT: string = process.env.VITE_AZURE_OPENAI_ENDPOINT || '';
 export const AZURE_OPENAI_KEY: string = process.env.VITE_AZURE_OPENAI_KEY || '';
