@@ -14,7 +14,7 @@ export default defineConfig({
         baseUrl: '/api',
       },
       // Если нужен единый baseUrl для fetch, можно добавить override.mutator с кастомным fetch
-      // override: { mutator: { path: 'frontend/packages/shared/src/api/fetcher.ts', name: 'fetcher' } },
+       override: { mutator: { path: 'frontend/packages/shared/src/api/photobank/fetcher.ts', name: 'fetcher' } },
     },
   },
 
