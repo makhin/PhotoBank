@@ -3,7 +3,8 @@ import {useNavigate} from 'react-router-dom';
 import {useForm} from 'react-hook-form';
 import {z} from 'zod';
 import {zodResolver} from '@hookform/resolvers/zod';
-import { clearAuthToken } from '@photobank/shared/auth';
+import { setAuthToken } from '@photobank/shared/auth';
+import { logger } from '@photobank/shared/utils/logger';
 import {
   myProfileTitle,
   emailPrefix,
@@ -55,7 +56,7 @@ export default function MyProfilePage() {
       await updateUser(data).unwrap();
       navigate('/filter');
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
   };
 
@@ -134,7 +135,7 @@ export default function MyProfilePage() {
         variant="secondary"
         className="w-full"
         onClick={() => {
-          clearAuthToken();
+          setAuthToken(null, true);
           navigate('/login');
         }}
       >

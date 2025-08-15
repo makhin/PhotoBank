@@ -1,4 +1,5 @@
 import PQueue from 'p-queue';
+import { ProblemDetailsError, HttpError, isProblemDetails } from '../../types/problem';
 
 let tokenProvider: (() => string | undefined | Promise<string | undefined>) | undefined;
 let baseUrl = '';
@@ -25,6 +26,7 @@ export function setImpersonateUser(username: string | null | undefined) {
 export async function customFetcher<T>(
   url: string,
   options: RequestInit = {},
+  signal?: AbortSignal,
 ): Promise<T> {
   return queue.add(async () => {
     const headers = new Headers(options.headers);
@@ -37,27 +39,40 @@ export async function customFetcher<T>(
     }
 
     for (let attempt = 0; attempt < 3; attempt++) {
-      const response = await fetch(`${baseUrl}${url}`, { ...options, headers });
-      const data = await response.json().catch(() => undefined);
+      try {
+        const response = await fetch(`${baseUrl}${url}`, { ...options, headers, signal });
+        const data = await response.json().catch(() => undefined);
 
-      if (response.ok) {
-        return { data, status: response.status, headers: response.headers } as T;
+        if (response.ok) {
+          return { data, status: response.status, headers: response.headers } as T;
+        }
+
+        if (isProblemDetails(data)) {
+          throw new ProblemDetailsError(data);
+        }
+
+        const err = new HttpError(response.status, {
+          url: `${baseUrl}${url}`,
+          method: options.method,
+          body: data,
+        });
+
+        if (response.status >= 500 && attempt < 2) {
+          const backoff = 2 ** attempt * 100 + Math.random() * 100;
+          await delay(backoff);
+          continue;
+        }
+        throw err;
+      } catch (e: any) {
+        if (e.name === 'AbortError') throw e;
+        if (attempt < 2 && (e instanceof TypeError || e instanceof HttpError && e.status >= 500)) {
+          const backoff = 2 ** attempt * 100 + Math.random() * 100;
+          await delay(backoff);
+          continue;
+        }
+        throw e;
       }
-
-      if (response.status === 429) {
-        const retryAfter = Number(response.headers.get('Retry-After') ?? '1') * 1000;
-        await delay(retryAfter + Math.random() * 1000);
-        continue;
-      }
-
-      if (attempt === 2) {
-        throw new Error(`Request failed with status ${response.status}`);
-      }
-
-      const backoff = (2 ** attempt) * 100 + Math.random() * 100;
-      await delay(backoff);
     }
-
     throw new Error('Request failed');
   });
 }

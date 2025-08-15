@@ -22,6 +22,16 @@
       "types": "./dist/types/problem.d.ts",
       "import": "./dist/types/problem.js",
       "default": "./dist/types/problem.js"
+    },
+    "./safeStorage": {
+      "types": "./dist/safeStorage.d.ts",
+      "import": "./dist/safeStorage.js",
+      "default": "./dist/safeStorage.js"
+    },
+    "./utils/logger": {
+      "types": "./dist/utils/logger.d.ts",
+      "import": "./dist/utils/logger.js",
+      "default": "./dist/utils/logger.js"
     }
   },
   "main": "./dist/index.js",

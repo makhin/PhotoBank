@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { formatDate, getOrientation, getPlaceByGeoPoint, useIsAdmin } from '@photobank/shared';
+import { logger } from '@photobank/shared/utils/logger';
 import type { FaceBoxDto } from '@photobank/shared/api/photobank';
 import {
     photoPropertiesTitle,
@@ -127,7 +128,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
 
     useEffect(() => {
         if (error) {
-            console.error("Ошибка загрузки фото:", error);
+            logger.error('Ошибка загрузки фото:', error);
         }
     }, [error]);
 

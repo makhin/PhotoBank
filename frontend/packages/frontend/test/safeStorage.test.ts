@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { safeStorage } from '../src/shared/safeStorage';
+import { safeStorage } from '@photobank/shared/safeStorage';
 
 const defineWindow = () => {
   const store: Record<string, string> = {};
