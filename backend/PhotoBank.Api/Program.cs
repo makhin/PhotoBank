@@ -161,6 +161,7 @@ namespace PhotoBank.Api
 
             builder.Services.AddFaceRecognition(builder.Configuration);
             builder.Services.AddScoped<UnifiedFaceService>();
+            builder.Services.AddScoped<IFaceService, FaceServiceAdapter>();
 
             RegisterServicesForApi.Configure(builder.Services);
             builder.Services.AddAutoMapper(cfg =>
