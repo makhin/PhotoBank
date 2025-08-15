@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 
 namespace PhotoBank.DbContext.DbContext
 {
@@ -32,6 +33,7 @@ namespace PhotoBank.DbContext.DbContext
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.ApplyConfigurationsFromAssembly(System.Reflection.Assembly.Load("PhotoBank.Services"));
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Photo>()
