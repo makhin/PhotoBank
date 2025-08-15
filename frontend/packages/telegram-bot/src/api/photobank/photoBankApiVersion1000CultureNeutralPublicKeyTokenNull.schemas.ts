@@ -179,6 +179,17 @@ export interface RoleDto {
   claims?: ClaimDto[] | null;
 }
 
+export interface TelegramExchangeRequest {
+  telegramUserId: number;
+  /** @nullable */
+  username?: string | null;
+}
+
+export interface TelegramExchangeResponse {
+  accessToken: string;
+  expiresIn: number;
+}
+
 export interface StorageDto {
   id: number;
   /** @minLength 1 */
@@ -204,7 +215,7 @@ export interface UpdateUserDto {
   /** @nullable */
   phoneNumber?: string | null;
   /** @nullable */
-  telegram?: string | null;
+  telegramUserId?: number | null;
 }
 
 export interface UserDto {
@@ -213,7 +224,7 @@ export interface UserDto {
   /** @nullable */
   phoneNumber?: string | null;
   /** @nullable */
-  telegram?: string | null;
+  telegramUserId?: number | null;
 }
 
 export interface UserWithClaimsDto {
@@ -224,7 +235,7 @@ export interface UserWithClaimsDto {
   /** @nullable */
   phoneNumber?: string | null;
   /** @nullable */
-  telegram?: string | null;
+  telegramUserId?: number | null;
   /** @nullable */
   claims?: ClaimDto[] | null;
 }

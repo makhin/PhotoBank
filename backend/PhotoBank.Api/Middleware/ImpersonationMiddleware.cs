@@ -23,9 +23,9 @@ public class ImpersonationMiddleware
         var userManager = context.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = context.RequestServices.GetRequiredService<RoleManager<IdentityRole>>();
 
-        if (context.Request.Headers.TryGetValue(HeaderName, out var username) && !string.IsNullOrWhiteSpace(username))
+        if (context.Request.Headers.TryGetValue(HeaderName, out var idValue) && long.TryParse(idValue, out var telegramUserId))
         {
-            var user = await userManager.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Telegram == username.ToString());
+            var user = await userManager.Users.AsNoTracking().FirstOrDefaultAsync(u => u.TelegramUserId == telegramUserId);
             if (user is not null)
             {
                 var userClaims = await userManager.GetClaimsAsync(user);
@@ -54,7 +54,7 @@ public class ImpersonationMiddleware
 
                 var claims = new List<Claim>(context.User.Claims)
                 {
-                    new Claim("ImpersonatedUser", username!)
+                    new Claim("ImpersonatedUser", idValue!)
                 };
                 claims.AddRange(impersonatedClaims);
                 var identity = new ClaimsIdentity(claims,

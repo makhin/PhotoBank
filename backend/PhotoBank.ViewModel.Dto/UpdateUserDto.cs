@@ -6,5 +6,5 @@ namespace PhotoBank.ViewModel.Dto;
 public class UpdateUserDto
 {
     public string? PhoneNumber { get; init; }
-    public string? Telegram { get; init; }
+    public long? TelegramUserId { get; init; }
 }
