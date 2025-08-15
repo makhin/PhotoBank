@@ -1,17 +1,10 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import {
   photoGalleryTitle,
   filterButtonText,
   loadMoreButton,
-  colIdLabel,
-  colPreviewLabel,
-  colNameLabel,
-  colDateLabel,
-  colStorageLabel,
-  colFlagsLabel,
-  colDetailsLabel,
 } from '@photobank/shared/constants';
 
 import { useSearchPhotosMutation } from '@/shared/api.ts';
@@ -23,6 +16,9 @@ import PhotoDetailsModal from '@/components/PhotoDetailsModal';
 
 import PhotoListItemDesktop from './PhotoListItemDesktop';
 import PhotoListItemMobile from './PhotoListItemMobile';
+import VirtualPhotoList from './VirtualPhotoList';
+import PhotoListHeader from './PhotoListHeader';
+import PhotoListItemSkeleton from './PhotoListItemSkeleton';
 
 const PhotoListPage = () => {
   const dispatch = useAppDispatch();
@@ -39,14 +35,44 @@ const PhotoListPage = () => {
     [tags]
   );
 
-  const [searchPhotos] = useSearchPhotosMutation();
-  const [photos, setPhotos] = useState<PhotoItemDto[]>([]);
+  const [searchPhotos, { isLoading }] = useSearchPhotosMutation();
+  const [rawPhotos, setRawPhotos] = useState<PhotoItemDto[]>([]);
   const [total, setTotal] = useState(0);
   const [skip, setSkip] = useState(filter.skip ?? 0);
   const navigate = useNavigate();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const [detailsId, setDetailsId] = useState<number | null>(null);
+  const photos = useMemo(() => rawPhotos ?? [], [rawPhotos]);
+  const skeletonPhotos = useMemo(
+    () =>
+      Array.from({ length: 15 }, (_, i) => ({
+        id: i,
+        thumbnail: '',
+        name: '',
+        storageName: '',
+        relativePath: '',
+      })) as PhotoItemDto[],
+    []
+  );
+  const loading = isLoading && photos.length === 0;
+
+  const renderPhotoRow = useCallback(
+    (photo: PhotoItemDto) => (
+      <PhotoListItemDesktop
+        photo={photo}
+        personsMap={personsMap}
+        tagsMap={tagsMap}
+        onClick={() => handleOpenDetails(photo.id)}
+      />
+    ),
+    [personsMap, tagsMap, handleOpenDetails]
+  );
+
+  const renderSkeletonRow = useCallback(
+    (_photo: PhotoItemDto) => <PhotoListItemSkeleton />,
+    []
+  );
 
   useEffect(() => {
     const promise = searchPhotos({ ...filter });
@@ -54,7 +80,7 @@ const PhotoListPage = () => {
       try {
         const result = await promise.unwrap();
         const fetched = result.photos || [];
-        setPhotos(fetched);
+        setRawPhotos(fetched);
         setTotal(result.count || 0);
         setSkip(fetched.length);
         dispatch(setLastResult(fetched));
@@ -67,16 +93,28 @@ const PhotoListPage = () => {
     };
   }, [searchPhotos, filter, dispatch]);
 
-  const loadMore = async () => {
+  const handleOpenDetails = useCallback((id: number) => {
+    setDetailsId(id);
+  }, []);
+
+  const handleFilterOpen = useCallback(() => {
+    navigate('/filter', { state: { useCurrentFilter: true } });
+  }, [navigate]);
+
+  const loadMore = useCallback(async () => {
     const result = await searchPhotos({ ...filter, skip }).unwrap();
     const newPhotos = result.photos || [];
-    const updated = [...photos, ...newPhotos];
+    const updated = [...rawPhotos, ...newPhotos];
     const newSkip = skip + newPhotos.length;
-    setPhotos(updated);
+    setRawPhotos(updated);
     setSkip(newSkip);
     setTotal(result.count || 0);
     dispatch(setLastResult(updated));
-  };
+  }, [searchPhotos, filter, skip, rawPhotos, dispatch]);
+
+  const handleDetailsOpenChange = useCallback((open: boolean) => {
+    if (!open) setDetailsId(null);
+  }, []);
 
   return (
     <div className="w-full h-screen flex flex-col bg-background">
@@ -87,55 +125,47 @@ const PhotoListPage = () => {
             {photos.length} of {total} photos
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            navigate('/filter', { state: { useCurrentFilter: true } });
-          }}
-        >
+        <Button variant="outline" onClick={handleFilterOpen}>
           {filterButtonText}
         </Button>
       </div>
 
-      <ScrollArea className="flex-1" ref={scrollAreaRef}>
+      <ScrollArea className="h-[calc(100vh-240px)]" ref={scrollAreaRef}>
         <div className="p-6">
           {/* Desktop/Tablet View */}
           <div className="hidden lg:block">
-            <div className="grid grid-cols-12 gap-4 mb-4 px-4 py-2 bg-muted/50 rounded-lg font-medium text-sm">
-              <div className="col-span-1">{colIdLabel}</div>
-              <div className="col-span-2">{colPreviewLabel}</div>
-              <div className="col-span-2">{colNameLabel}</div>
-              <div className="col-span-1">{colDateLabel}</div>
-              <div className="col-span-2">{colStorageLabel}</div>
-              <div className="col-span-1">{colFlagsLabel}</div>
-              <div className="col-span-3">{colDetailsLabel}</div>
-            </div>
-
-            <div className="space-y-3">
-              {photos.map((photo) => (
-                <PhotoListItemDesktop
-                  key={photo.id}
-                  photo={photo}
-                  personsMap={personsMap}
-                  tagsMap={tagsMap}
-                  onClick={() => setDetailsId(photo.id)}
-                />
-              ))}
-            </div>
+            <PhotoListHeader />
+            {loading ? (
+              <VirtualPhotoList
+                photos={skeletonPhotos}
+                parentRef={scrollAreaRef}
+                renderRow={renderSkeletonRow}
+              />
+            ) : (
+              <VirtualPhotoList
+                photos={photos}
+                parentRef={scrollAreaRef}
+                renderRow={renderPhotoRow}
+              />
+            )}
           </div>
 
           {/* Mobile View */}
           <div className="lg:hidden">
             <div className="grid gap-4 sm:grid-cols-2">
-              {photos.map((photo) => (
-                <PhotoListItemMobile
-                  key={photo.id}
-                  photo={photo}
-                  personsMap={personsMap}
-                  tagsMap={tagsMap}
-                  onClick={() => setDetailsId(photo.id)}
-                />
-              ))}
+              {loading
+                ? skeletonPhotos.slice(0, 6).map((p) => (
+                    <PhotoListItemSkeleton key={p.id} />
+                  ))
+                : photos.map((photo) => (
+                    <PhotoListItemMobile
+                      key={photo.id}
+                      photo={photo}
+                      personsMap={personsMap}
+                      tagsMap={tagsMap}
+                      onClick={() => handleOpenDetails(photo.id)}
+                    />
+                  ))}
             </div>
           </div>
           {photos.length < total && (
@@ -149,9 +179,7 @@ const PhotoListPage = () => {
       </ScrollArea>
       <PhotoDetailsModal
         photoId={detailsId}
-        onOpenChange={(open) => {
-          if (!open) setDetailsId(null);
-        }}
+        onOpenChange={handleDetailsOpenChange}
       />
     </div>
   );
