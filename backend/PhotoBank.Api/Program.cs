@@ -9,6 +9,7 @@ using PhotoBank.DbContext.Models;
 using Microsoft.AspNetCore.Identity;
 using PhotoBank.Services;
 using PhotoBank.Api.Middleware;
+using PhotoBank.Services.FaceRecognition;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -157,6 +158,10 @@ namespace PhotoBank.Api
                     return null;
                 });
             });
+
+            builder.Services.AddFaceRecognition(builder.Configuration);
+            builder.Services.AddScoped<UnifiedFaceService>();
+            builder.Services.AddScoped<IFaceService, FaceService>();
 
             RegisterServicesForApi.Configure(builder.Services);
             builder.Services.AddAutoMapper(cfg =>
