@@ -1,5 +1,6 @@
 import { Calendar, User, Tag } from 'lucide-react';
-import { formatDate, firstNWords } from '@photobank/shared';
+import { firstNWords } from '@photobank/shared';
+import { formatDate } from '@photobank/shared/format';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import {
   MAX_VISIBLE_PERSONS_LG,

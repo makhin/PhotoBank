@@ -32,6 +32,11 @@
       "types": "./dist/utils/logger.d.ts",
       "import": "./dist/utils/logger.js",
       "default": "./dist/utils/logger.js"
+    },
+    "./format": {
+      "types": "./dist/format/index.d.ts",
+      "import": "./dist/format/index.js",
+      "default": "./dist/format/index.js"
     }
   },
   "main": "./dist/index.js",
