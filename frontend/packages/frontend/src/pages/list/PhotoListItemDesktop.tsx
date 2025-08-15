@@ -12,8 +12,10 @@ import { Badge } from '@/shared/ui/badge';
 import PhotoFlags from '@/components/PhotoFlags';
 import MetadataBadgeList from '@/components/MetadataBadgeList';
 
-import PhotoPreview from './PhotoPreview';
+import SmartImage from '@/components/SmartImage';
 import { memo, useMemo, useEvent } from 'react';
+import { useInView } from '@/hooks/useInView';
+import { usePrefetchOnHover } from '@/hooks/useImagePrefetch';
 
 export type PhotoListItemDesktopProps = {
   photo: PhotoItemDto;
@@ -50,10 +52,28 @@ const PhotoListItemDesktop = ({
     [photo.storageName, photo.relativePath]
   );
 
+  const [ref, inView] = useInView<HTMLDivElement>();
+  const prefetchHandlers = usePrefetchOnHover([
+    photo.originalUrl ?? '',
+  ]);
+
+  const base = photo.previewUrl;
+  const srcSet = base
+    ? [
+        `${base}?w=480 480w`,
+        `${base}?w=960 960w`,
+        `${base}?w=1440 1440w`,
+      ].join(', ')
+    : undefined;
+  const sizes = base
+    ? '(max-width: 640px) 480px, (max-width: 1024px) 960px, 1440px'
+    : undefined;
+
   return (
     <Card
       className="p-4 mb-3 hover:shadow-md transition-shadow cursor-pointer"
       onClick={handleClick}
+      {...prefetchHandlers}
     >
       <div className="grid grid-cols-12 gap-4 items-center">
         <div className="col-span-1">
@@ -63,11 +83,18 @@ const PhotoListItemDesktop = ({
         </div>
 
         <div className="col-span-2">
-          <PhotoPreview
-            thumbnail={photo.thumbnail}
-            alt={photo.name}
-            className="w-16 h-16"
-          />
+          <div ref={ref} className="w-16 h-16">
+            {inView && (
+              <SmartImage
+                alt={photo.name}
+                thumbSrc={photo.thumbnailUrl ?? ''}
+                src={photo.previewUrl ?? ''}
+                srcSet={srcSet}
+                sizes={sizes}
+                className="w-full h-full rounded-lg"
+              />
+            )}
+          </div>
         </div>
 
         <div className="col-span-2">

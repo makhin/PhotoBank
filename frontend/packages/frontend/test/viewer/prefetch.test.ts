@@ -3,9 +3,9 @@ import { prefetchAround } from '@/features/viewer/prefetch';
 describe('prefetchAround', () => {
   it('loads adjacent images', () => {
     const items = [
-      { id: 1, src: 'a' },
-      { id: 2, src: 'b' },
-      { id: 3, src: 'c' },
+      { id: 1, preview: 'a_p', original: 'a_o' },
+      { id: 2, preview: 'b_p', original: 'b_o' },
+      { id: 3, preview: 'c_p', original: 'c_o' },
     ];
     const loaded: string[] = [];
     // @ts-ignore
@@ -15,8 +15,11 @@ describe('prefetchAround', () => {
       }
     };
     prefetchAround(items, 1);
-    expect(loaded).toContain('a');
-    expect(loaded).toContain('c');
-    expect(loaded).not.toContain('b');
+    expect(loaded).toContain('a_p');
+    expect(loaded).toContain('a_o');
+    expect(loaded).toContain('c_p');
+    expect(loaded).toContain('c_o');
+    expect(loaded).not.toContain('b_p');
+    expect(loaded).not.toContain('b_o');
   });
 });
