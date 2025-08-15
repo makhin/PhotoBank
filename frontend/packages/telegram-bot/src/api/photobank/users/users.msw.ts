@@ -52,5 +52,4 @@ export const getUsersSetClaimsMockHandler = (overrideResponse?: null | ((info: P
 export const getUsersMock = () => [
   getUsersGetAllMockHandler(),
   getUsersUpdateMockHandler(),
-  getUsersSetClaimsMockHandler()
-]
+  getUsersSetClaimsMockHandler()]

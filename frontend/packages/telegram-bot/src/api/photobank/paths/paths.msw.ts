@@ -30,5 +30,4 @@ export const getPathsGetAllMockHandler = (overrideResponse?: PathDto[] | ((info:
   })
 }
 export const getPathsMock = () => [
-  getPathsGetAllMockHandler()
-]
+  getPathsGetAllMockHandler()]

@@ -71,5 +71,4 @@ export const getPhotosMock = () => [
   getPhotosSearchPhotosMockHandler(),
   getPhotosGetPhotoMockHandler(),
   getPhotosUploadMockHandler(),
-  getPhotosGetDuplicatesMockHandler()
-]
+  getPhotosGetDuplicatesMockHandler()]

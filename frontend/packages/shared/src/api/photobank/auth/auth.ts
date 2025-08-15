@@ -4,6 +4,20 @@
  * PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
  * OpenAPI spec version: 1.0
  */
+import {
+  useMutation,
+  useQuery
+} from '@tanstack/react-query';
+import type {
+  MutationFunction,
+  QueryFunction,
+  QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
+} from '@tanstack/react-query';
+
 import type {
   ClaimDto,
   LoginRequestDto,
@@ -13,8 +27,16 @@ import type {
   RoleDto,
   UpdateUserDto,
   UserDto
-} from '.././model';
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 import { customFetcher } from '.././fetcher';
+
+type AwaitedInput<T> = PromiseLike<T> | T;
+
+      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
+
+
+
 
 export type authLoginResponse200 = {
   data: LoginResponseDto
@@ -37,7 +59,7 @@ export const getAuthLoginUrl = () => {
 
   
 
-  return `/api/auth/login`
+  return `/auth/login`
 }
 
 export const authLogin = async (loginRequestDto: LoginRequestDto, options?: RequestInit): Promise<authLoginResponse> => {
@@ -53,7 +75,51 @@ export const authLogin = async (loginRequestDto: LoginRequestDto, options?: Requ
 );}
 
 
-export type authRegisterResponse200 = {
+
+
+export const getAuthLoginMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext> => {
+
+const mutationKey = ['authLogin'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authLogin>>, {data: LoginRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  authLogin(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AuthLoginMutationResult = NonNullable<Awaited<ReturnType<typeof authLogin>>>
+    export type AuthLoginMutationBody = LoginRequestDto
+    export type AuthLoginMutationError = ProblemDetails
+
+    export const useAuthLogin = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof authLogin>>,
+        TError,
+        {data: LoginRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAuthLoginMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    export type authRegisterResponse200 = {
   data: null
   status: 200
 }
@@ -74,7 +140,7 @@ export const getAuthRegisterUrl = () => {
 
   
 
-  return `/api/auth/register`
+  return `/auth/register`
 }
 
 export const authRegister = async (registerRequestDto: RegisterRequestDto, options?: RequestInit): Promise<authRegisterResponse> => {
@@ -90,7 +156,51 @@ export const authRegister = async (registerRequestDto: RegisterRequestDto, optio
 );}
 
 
-export type authGetUserResponse200 = {
+
+
+export const getAuthRegisterMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authRegister>>, TError,{data: RegisterRequestDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof authRegister>>, TError,{data: RegisterRequestDto}, TContext> => {
+
+const mutationKey = ['authRegister'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authRegister>>, {data: RegisterRequestDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  authRegister(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AuthRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof authRegister>>>
+    export type AuthRegisterMutationBody = RegisterRequestDto
+    export type AuthRegisterMutationError = ProblemDetails
+
+    export const useAuthRegister = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authRegister>>, TError,{data: RegisterRequestDto}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof authRegister>>,
+        TError,
+        {data: RegisterRequestDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAuthRegisterMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    export type authGetUserResponse200 = {
   data: UserDto
   status: 200
 }
@@ -106,7 +216,7 @@ export const getAuthGetUserUrl = () => {
 
   
 
-  return `/api/auth/user`
+  return `/auth/user`
 }
 
 export const authGetUser = async ( options?: RequestInit): Promise<authGetUserResponse> => {
@@ -119,6 +229,51 @@ export const authGetUser = async ( options?: RequestInit): Promise<authGetUserRe
     
   }
 );}
+
+
+
+export const getAuthGetUserQueryKey = () => {
+    return [`/auth/user`] as const;
+    }
+
+    
+export const getAuthGetUserQueryOptions = <TData = Awaited<ReturnType<typeof authGetUser>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUser>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAuthGetUserQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUser>>> = ({ signal }) => authGetUser(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authGetUser>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AuthGetUserQueryResult = NonNullable<Awaited<ReturnType<typeof authGetUser>>>
+export type AuthGetUserQueryError = unknown
+
+
+
+export function useAuthGetUser<TData = Awaited<ReturnType<typeof authGetUser>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUser>>, TError, TData>, }
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAuthGetUserQueryOptions(options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
 
 
 export type authUpdateUserResponse200 = {
@@ -142,7 +297,7 @@ export const getAuthUpdateUserUrl = () => {
 
   
 
-  return `/api/auth/user`
+  return `/auth/user`
 }
 
 export const authUpdateUser = async (updateUserDto: UpdateUserDto, options?: RequestInit): Promise<authUpdateUserResponse> => {
@@ -158,7 +313,51 @@ export const authUpdateUser = async (updateUserDto: UpdateUserDto, options?: Req
 );}
 
 
-export type authGetUserClaimsResponse200 = {
+
+
+export const getAuthUpdateUserMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authUpdateUser>>, TError,{data: UpdateUserDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof authUpdateUser>>, TError,{data: UpdateUserDto}, TContext> => {
+
+const mutationKey = ['authUpdateUser'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authUpdateUser>>, {data: UpdateUserDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  authUpdateUser(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AuthUpdateUserMutationResult = NonNullable<Awaited<ReturnType<typeof authUpdateUser>>>
+    export type AuthUpdateUserMutationBody = UpdateUserDto
+    export type AuthUpdateUserMutationError = ProblemDetails
+
+    export const useAuthUpdateUser = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authUpdateUser>>, TError,{data: UpdateUserDto}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof authUpdateUser>>,
+        TError,
+        {data: UpdateUserDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAuthUpdateUserMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    export type authGetUserClaimsResponse200 = {
   data: ClaimDto[]
   status: 200
 }
@@ -174,7 +373,7 @@ export const getAuthGetUserClaimsUrl = () => {
 
   
 
-  return `/api/auth/claims`
+  return `/auth/claims`
 }
 
 export const authGetUserClaims = async ( options?: RequestInit): Promise<authGetUserClaimsResponse> => {
@@ -187,6 +386,51 @@ export const authGetUserClaims = async ( options?: RequestInit): Promise<authGet
     
   }
 );}
+
+
+
+export const getAuthGetUserClaimsQueryKey = () => {
+    return [`/auth/claims`] as const;
+    }
+
+    
+export const getAuthGetUserClaimsQueryOptions = <TData = Awaited<ReturnType<typeof authGetUserClaims>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUserClaims>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAuthGetUserClaimsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUserClaims>>> = ({ signal }) => authGetUserClaims(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authGetUserClaims>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AuthGetUserClaimsQueryResult = NonNullable<Awaited<ReturnType<typeof authGetUserClaims>>>
+export type AuthGetUserClaimsQueryError = unknown
+
+
+
+export function useAuthGetUserClaims<TData = Awaited<ReturnType<typeof authGetUserClaims>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUserClaims>>, TError, TData>, }
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAuthGetUserClaimsQueryOptions(options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
 
 
 export type authGetUserRolesResponse200 = {
@@ -205,7 +449,7 @@ export const getAuthGetUserRolesUrl = () => {
 
   
 
-  return `/api/auth/roles`
+  return `/auth/roles`
 }
 
 export const authGetUserRoles = async ( options?: RequestInit): Promise<authGetUserRolesResponse> => {
@@ -218,5 +462,50 @@ export const authGetUserRoles = async ( options?: RequestInit): Promise<authGetU
     
   }
 );}
+
+
+
+export const getAuthGetUserRolesQueryKey = () => {
+    return [`/auth/roles`] as const;
+    }
+
+    
+export const getAuthGetUserRolesQueryOptions = <TData = Awaited<ReturnType<typeof authGetUserRoles>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUserRoles>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAuthGetUserRolesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUserRoles>>> = ({ signal }) => authGetUserRoles(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authGetUserRoles>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AuthGetUserRolesQueryResult = NonNullable<Awaited<ReturnType<typeof authGetUserRoles>>>
+export type AuthGetUserRolesQueryError = unknown
+
+
+
+export function useAuthGetUserRoles<TData = Awaited<ReturnType<typeof authGetUserRoles>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUserRoles>>, TError, TData>, }
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAuthGetUserRolesQueryOptions(options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
 
 

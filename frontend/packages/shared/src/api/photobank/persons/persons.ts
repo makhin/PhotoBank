@@ -4,10 +4,28 @@
  * PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
  * OpenAPI spec version: 1.0
  */
+import {
+  useQuery
+} from '@tanstack/react-query';
+import type {
+  QueryFunction,
+  QueryKey,
+  UseQueryOptions,
+  UseQueryResult
+} from '@tanstack/react-query';
+
 import type {
   PersonDto
-} from '.././model';
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 import { customFetcher } from '.././fetcher';
+
+type AwaitedInput<T> = PromiseLike<T> | T;
+
+      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
+
+
+
 
 export type personsGetAllResponse200 = {
   data: PersonDto[]
@@ -25,7 +43,7 @@ export const getPersonsGetAllUrl = () => {
 
   
 
-  return `/api/persons`
+  return `/persons`
 }
 
 export const personsGetAll = async ( options?: RequestInit): Promise<personsGetAllResponse> => {
@@ -38,5 +56,50 @@ export const personsGetAll = async ( options?: RequestInit): Promise<personsGetA
     
   }
 );}
+
+
+
+export const getPersonsGetAllQueryKey = () => {
+    return [`/persons`] as const;
+    }
+
+    
+export const getPersonsGetAllQueryOptions = <TData = Awaited<ReturnType<typeof personsGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof personsGetAll>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPersonsGetAllQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof personsGetAll>>> = ({ signal }) => personsGetAll(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof personsGetAll>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type PersonsGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof personsGetAll>>>
+export type PersonsGetAllQueryError = unknown
+
+
+
+export function usePersonsGetAll<TData = Awaited<ReturnType<typeof personsGetAll>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof personsGetAll>>, TError, TData>, }
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getPersonsGetAllQueryOptions(options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
 
 

@@ -4,13 +4,35 @@
  * PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
  * OpenAPI spec version: 1.0
  */
+import {
+  useMutation,
+  useQuery
+} from '@tanstack/react-query';
+import type {
+  MutationFunction,
+  QueryFunction,
+  QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
+} from '@tanstack/react-query';
+
 import type {
   ClaimDto,
   ProblemDetails,
   UpdateUserDto,
   UserWithClaimsDto
-} from '.././model';
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 import { customFetcher } from '.././fetcher';
+
+type AwaitedInput<T> = PromiseLike<T> | T;
+
+      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
+
+
+
 
 export type usersGetAllResponse200 = {
   data: UserWithClaimsDto[]
@@ -28,7 +50,7 @@ export const getUsersGetAllUrl = () => {
 
   
 
-  return `/api/admin/users`
+  return `/admin/users`
 }
 
 export const usersGetAll = async ( options?: RequestInit): Promise<usersGetAllResponse> => {
@@ -41,6 +63,51 @@ export const usersGetAll = async ( options?: RequestInit): Promise<usersGetAllRe
     
   }
 );}
+
+
+
+export const getUsersGetAllQueryKey = () => {
+    return [`/admin/users`] as const;
+    }
+
+    
+export const getUsersGetAllQueryOptions = <TData = Awaited<ReturnType<typeof usersGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof usersGetAll>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersGetAllQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersGetAll>>> = ({ signal }) => usersGetAll(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersGetAll>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type UsersGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof usersGetAll>>>
+export type UsersGetAllQueryError = unknown
+
+
+
+export function useUsersGetAll<TData = Awaited<ReturnType<typeof usersGetAll>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof usersGetAll>>, TError, TData>, }
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getUsersGetAllQueryOptions(options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
 
 
 export type usersUpdateResponse200 = {
@@ -69,7 +136,7 @@ export const getUsersUpdateUrl = (id: string,) => {
 
   
 
-  return `/api/admin/users/${id}`
+  return `/admin/users/${id}`
 }
 
 export const usersUpdate = async (id: string,
@@ -86,7 +153,51 @@ export const usersUpdate = async (id: string,
 );}
 
 
-export type usersSetClaimsResponse200 = {
+
+
+export const getUsersUpdateMutationOptions = <TError = ProblemDetails | ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersUpdate>>, TError,{id: string;data: UpdateUserDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof usersUpdate>>, TError,{id: string;data: UpdateUserDto}, TContext> => {
+
+const mutationKey = ['usersUpdate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersUpdate>>, {id: string;data: UpdateUserDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  usersUpdate(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof usersUpdate>>>
+    export type UsersUpdateMutationBody = UpdateUserDto
+    export type UsersUpdateMutationError = ProblemDetails | ProblemDetails
+
+    export const useUsersUpdate = <TError = ProblemDetails | ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersUpdate>>, TError,{id: string;data: UpdateUserDto}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof usersUpdate>>,
+        TError,
+        {id: string;data: UpdateUserDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUsersUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    export type usersSetClaimsResponse200 = {
   data: null
   status: 200
 }
@@ -112,7 +223,7 @@ export const getUsersSetClaimsUrl = (id: string,) => {
 
   
 
-  return `/api/admin/users/${id}/claims`
+  return `/admin/users/${id}/claims`
 }
 
 export const usersSetClaims = async (id: string,
@@ -129,3 +240,48 @@ export const usersSetClaims = async (id: string,
 );}
 
 
+
+
+export const getUsersSetClaimsMutationOptions = <TError = ProblemDetails | ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersSetClaims>>, TError,{id: string;data: ClaimDto[]}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof usersSetClaims>>, TError,{id: string;data: ClaimDto[]}, TContext> => {
+
+const mutationKey = ['usersSetClaims'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersSetClaims>>, {id: string;data: ClaimDto[]}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  usersSetClaims(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersSetClaimsMutationResult = NonNullable<Awaited<ReturnType<typeof usersSetClaims>>>
+    export type UsersSetClaimsMutationBody = ClaimDto[]
+    export type UsersSetClaimsMutationError = ProblemDetails | ProblemDetails
+
+    export const useUsersSetClaims = <TError = ProblemDetails | ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersSetClaims>>, TError,{id: string;data: ClaimDto[]}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof usersSetClaims>>,
+        TError,
+        {id: string;data: ClaimDto[]},
+        TContext
+      > => {
+
+      const mutationOptions = getUsersSetClaimsMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    

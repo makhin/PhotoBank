@@ -97,5 +97,4 @@ export const getAuthMock = () => [
   getAuthGetUserMockHandler(),
   getAuthUpdateUserMockHandler(),
   getAuthGetUserClaimsMockHandler(),
-  getAuthGetUserRolesMockHandler()
-]
+  getAuthGetUserRolesMockHandler()]

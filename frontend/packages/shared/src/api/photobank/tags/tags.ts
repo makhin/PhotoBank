@@ -4,10 +4,28 @@
  * PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
  * OpenAPI spec version: 1.0
  */
+import {
+  useQuery
+} from '@tanstack/react-query';
+import type {
+  QueryFunction,
+  QueryKey,
+  UseQueryOptions,
+  UseQueryResult
+} from '@tanstack/react-query';
+
 import type {
   TagDto
-} from '.././model';
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 import { customFetcher } from '.././fetcher';
+
+type AwaitedInput<T> = PromiseLike<T> | T;
+
+      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
+
+
+
 
 export type tagsGetAllResponse200 = {
   data: TagDto[]
@@ -25,7 +43,7 @@ export const getTagsGetAllUrl = () => {
 
   
 
-  return `/api/tags`
+  return `/tags`
 }
 
 export const tagsGetAll = async ( options?: RequestInit): Promise<tagsGetAllResponse> => {
@@ -38,5 +56,50 @@ export const tagsGetAll = async ( options?: RequestInit): Promise<tagsGetAllResp
     
   }
 );}
+
+
+
+export const getTagsGetAllQueryKey = () => {
+    return [`/tags`] as const;
+    }
+
+    
+export const getTagsGetAllQueryOptions = <TData = Awaited<ReturnType<typeof tagsGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof tagsGetAll>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTagsGetAllQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof tagsGetAll>>> = ({ signal }) => tagsGetAll(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof tagsGetAll>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type TagsGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof tagsGetAll>>>
+export type TagsGetAllQueryError = unknown
+
+
+
+export function useTagsGetAll<TData = Awaited<ReturnType<typeof tagsGetAll>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof tagsGetAll>>, TError, TData>, }
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getTagsGetAllQueryOptions(options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
 
 
