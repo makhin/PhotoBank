@@ -2,8 +2,10 @@ openapi: 3.0.4
 info:
   title: 'PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null'
   version: '1.0'
+servers:
+  - url: /api
 paths:
-  /api/auth/login:
+  /auth/login:
     post:
       tags:
         - Auth
@@ -44,7 +46,7 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-  /api/auth/register:
+  /auth/register:
     post:
       tags:
         - Auth
@@ -75,7 +77,7 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-  /api/auth/user:
+  /auth/user:
     get:
       tags:
         - Auth
@@ -123,7 +125,7 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-  /api/auth/claims:
+  /auth/claims:
     get:
       tags:
         - Auth
@@ -147,7 +149,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ClaimDto'
-  /api/auth/roles:
+  /auth/roles:
     get:
       tags:
         - Auth
@@ -171,7 +173,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/RoleDto'
-  /api/faces:
+  /faces:
     put:
       tags:
         - Faces
@@ -190,7 +192,7 @@ paths:
       responses:
         '200':
           description: OK
-  /api/paths:
+  /paths:
     get:
       tags:
         - Paths
@@ -214,7 +216,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PathDto'
-  /api/persons:
+  /persons:
     get:
       tags:
         - Persons
@@ -238,7 +240,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PersonDto'
-  /api/photos/search:
+  /photos/search:
     post:
       tags:
         - Photos
@@ -279,7 +281,7 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-  '/api/photos/{id}':
+  '/photos/{id}':
     get:
       tags:
         - Photos
@@ -316,7 +318,7 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-  /api/photos/upload:
+  /photos/upload:
     post:
       tags:
         - Photos
@@ -347,7 +349,7 @@ paths:
       responses:
         '200':
           description: OK
-  /api/photos/duplicates:
+  /photos/duplicates:
     get:
       tags:
         - Photos
@@ -387,7 +389,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PhotoItemDto'
-  /api/storages:
+  /storages:
     get:
       tags:
         - Storages
@@ -411,7 +413,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StorageDto'
-  /api/tags:
+  /tags:
     get:
       tags:
         - Tags
@@ -435,7 +437,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/TagDto'
-  /api/admin/users:
+  /admin/users:
     get:
       tags:
         - Users
@@ -459,7 +461,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserWithClaimsDto'
-  '/api/admin/users/{id}':
+  '/admin/users/{id}':
     put:
       tags:
         - Users
@@ -508,7 +510,7 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-  '/api/admin/users/{id}/claims':
+  '/admin/users/{id}/claims':
     put:
       tags:
         - Users
