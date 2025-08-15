@@ -3,7 +3,7 @@ export default defineConfig({
   frontend: {
     input: './openapi.yaml',
     output: {
-      target: 'packages/shared/src/api-frontend.ts',
+      target: 'frontend/packages/shared/src/api/photobank',
       client: 'react-query',
  mode: 'tags-split',
     },
@@ -11,10 +11,10 @@ export default defineConfig({
   bot: {
     input: './openapi.yaml',
     output: {
-      target: 'packages/telegram-bot/src/api/generated.ts',
+      target: 'frontend/packages/telegram-bot/src/api/photobank',
       client: 'axios',
  mode: 'tags-split',
-      override: { mutator: { path: './axios-instance.ts', name: 'photobankAxios' } },
+      override: { mutator: { path: 'frontend/packages/telegram-bot/src/api/axios-instance.ts', name: 'photobankAxios' } },
     },
   },
 });
