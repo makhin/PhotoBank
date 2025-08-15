@@ -12,6 +12,7 @@ import {
 
 import { useRegisterMutation } from '@/shared/api.ts';
 import { Button } from '@/shared/ui/button';
+import { logger } from '@photobank/shared/utils/logger';
 import {
   Form,
   FormControl,
@@ -43,7 +44,7 @@ export default function RegisterPage() {
       await register(data).unwrap();
       navigate('/login');
     } catch (e) {
-      console.error(e);
+      logger.error(e);
       setErrorMessage('Failed to register');
     }
   };

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
-import { namespacedStorage } from '../../shared/safeStorage';
+import { namespacedStorage } from '@photobank/shared/safeStorage';
 
 type Theme = 'dark' | 'light' | 'system';
 

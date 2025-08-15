@@ -7,7 +7,7 @@ import {
   METADATA_CACHE_VERSION,
 } from '@photobank/shared/constants';
 
-import { namespacedStorage } from '../../../shared/safeStorage';
+import { namespacedStorage } from '@photobank/shared/safeStorage';
 
 interface MetadataPayload {
     tags: TagDto[];

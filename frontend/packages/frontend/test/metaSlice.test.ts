@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { namespacedStorage } from '../src/shared/safeStorage';
+import { namespacedStorage } from '@photobank/shared/safeStorage';
 
 const payload = {
   tags: [{ id: 1, name: 't' }],

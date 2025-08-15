@@ -1,41 +1,42 @@
-const AUTH_TOKEN_KEY = 'photobank_token';
-let authToken: string | null = null;
+import { namespacedStorage } from '../safeStorage';
 
-export const getAuthToken = () => authToken;
+const localStore = namespacedStorage('auth', 'local');
+const sessionStore = namespacedStorage('auth', 'session');
 
-export const setAuthToken = (token: string, remember = true) => {
-  authToken = token;
-  if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
-    const hasSession = typeof window.sessionStorage !== 'undefined';
-    const storage = remember || !hasSession ? window.localStorage : window.sessionStorage;
-    storage.setItem(AUTH_TOKEN_KEY, token);
-    if (hasSession) {
-      const other = storage === window.localStorage ? window.sessionStorage : window.localStorage;
-      other.removeItem(AUTH_TOKEN_KEY);
+let token: string | null = null;
+let initialized = false;
+let onChange: ((t: string | null) => void) | undefined;
+
+function init() {
+  if (initialized) return;
+  initialized = true;
+  token = localStore.get<string>('token') ?? sessionStore.get<string>('token');
+}
+
+export function getAuthToken(): string | null {
+  init();
+  return token;
+}
+
+export function setAuthToken(newToken: string | null, persist: boolean): void {
+  init();
+  token = newToken;
+  if (newToken) {
+    if (persist) {
+      localStore.set('token', newToken);
+      sessionStore.remove('token');
+    } else {
+      sessionStore.set('token', newToken);
+      localStore.remove('token');
     }
+  } else {
+    localStore.remove('token');
+    sessionStore.remove('token');
   }
-};
+  onChange?.(token);
+}
 
-export const clearAuthToken = () => {
-  authToken = null;
-  if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
-    window.localStorage.removeItem(AUTH_TOKEN_KEY);
-  }
-};
-
-export const loadAuthToken = () => {
-  if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
-    const saved =
-      window.localStorage.getItem(AUTH_TOKEN_KEY) ??
-      (typeof window.sessionStorage !== 'undefined'
-        ? window.sessionStorage.getItem(AUTH_TOKEN_KEY)
-        : null);
-    if (saved) {
-      authToken = saved;
-    }
-  }
-};
-
-// Immediately load token when running in browser environment
-loadAuthToken();
-
+export function configureAuth({ onChange: cb }: { onChange?: (token: string | null) => void } = {}): void {
+  onChange = cb;
+  init();
+}

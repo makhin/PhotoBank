@@ -38,7 +38,7 @@ describe('auth utilities', () => {
 
   it('sets and gets token without browser', async () => {
     const auth = await import('../src/auth');
-    auth.setAuthToken('abc');
+    auth.setAuthToken('abc', true);
     expect(auth.getAuthToken()).toBe('abc');
   });
 
@@ -47,9 +47,9 @@ describe('auth utilities', () => {
     globalWithStorage.window = { localStorage: storage };
     globalWithStorage.localStorage = storage;
     const auth = await import('../src/auth');
-    auth.setAuthToken('token');
+    auth.setAuthToken('token', true);
     expect(auth.getAuthToken()).toBe('token');
-    expect(globalWithStorage.window.localStorage.getItem('photobank_token')).toBe('token');
+    expect(globalWithStorage.window.localStorage.getItem('auth:token')).toBe('token');
   });
 
   it('clears token and storage', async () => {
@@ -57,14 +57,14 @@ describe('auth utilities', () => {
     globalWithStorage.window = { localStorage: storage };
     globalWithStorage.localStorage = storage;
     const auth = await import('../src/auth');
-    auth.setAuthToken('tok');
-    auth.clearAuthToken();
+    auth.setAuthToken('tok', true);
+    auth.setAuthToken(null, true);
     expect(auth.getAuthToken()).toBeNull();
-    expect(globalWithStorage.window.localStorage.getItem('photobank_token')).toBeNull();
+    expect(globalWithStorage.window.localStorage.getItem('auth:token')).toBeNull();
   });
 
   it('loads token from storage on import', async () => {
-    const storage = createStorage({ photobank_token: 'init' });
+    const storage = createStorage({ 'auth:token': 'init' });
     globalWithStorage.window = { localStorage: storage };
     globalWithStorage.localStorage = storage;
     const auth = await import('../src/auth');
