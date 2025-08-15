@@ -1,4 +1,3 @@
-import { Bot } from "grammy";
 import { configureAzureOpenAI } from "@photobank/shared/ai/openai";
 import {
   captionMissingMsg,
@@ -7,12 +6,12 @@ import {
 
 import { loadDictionaries, setDictionariesUser } from "./dictionaries";
 import {
-  BOT_TOKEN,
   AZURE_OPENAI_ENDPOINT,
   AZURE_OPENAI_KEY,
   AZURE_OPENAI_DEPLOYMENT,
   AZURE_OPENAI_API_VERSION,
 } from "./config";
+import { bot } from './bot';
 import { sendThisDayPage, thisDayCommand } from "./commands/thisday";
 import { captionCache } from "./photo";
 import { sendSearchPage, searchCommand } from "./commands/search";
@@ -29,8 +28,8 @@ import { uploadCommand } from "./commands/upload";
 import { withRegistered } from './registration';
 import { logger } from './logger';
 import { handleBotError } from './errorHandler';
-
-const bot = new Bot(BOT_TOKEN);
+import './handlers/inline';
+import './handlers/deeplink';
 
 bot.use(async (ctx, next) => {
   const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
