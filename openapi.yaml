@@ -173,6 +173,65 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/RoleDto'
+  /auth/telegram/exchange:
+    post:
+      tags:
+        - Auth
+      operationId: Auth_TelegramExchange
+      parameters:
+        - name: X-Service-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelegramExchangeRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/TelegramExchangeRequest'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/TelegramExchangeRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/TelegramExchangeResponse'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelegramExchangeResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/TelegramExchangeResponse'
+        '401':
+          description: Unauthorized
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: Forbidden
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /faces:
     put:
       tags:
@@ -938,6 +997,30 @@ components:
             $ref: '#/components/schemas/ClaimDto'
           nullable: true
       additionalProperties: false
+    TelegramExchangeRequest:
+      required:
+        - telegramUserId
+      type: object
+      properties:
+        telegramUserId:
+          type: integer
+          format: int64
+        username:
+          type: string
+          nullable: true
+      additionalProperties: false
+    TelegramExchangeResponse:
+      required:
+        - accessToken
+        - expiresIn
+      type: object
+      properties:
+        accessToken:
+          type: string
+        expiresIn:
+          type: integer
+          format: int32
+      additionalProperties: false
     StorageDto:
       required:
         - id
@@ -992,8 +1075,9 @@ components:
         phoneNumber:
           type: string
           nullable: true
-        telegram:
-          type: string
+        telegramUserId:
+          type: integer
+          format: int64
           nullable: true
       additionalProperties: false
     UserDto:
@@ -1007,8 +1091,9 @@ components:
         phoneNumber:
           type: string
           nullable: true
-        telegram:
-          type: string
+        telegramUserId:
+          type: integer
+          format: int64
           nullable: true
       additionalProperties: false
     UserWithClaimsDto:
@@ -1026,8 +1111,9 @@ components:
         phoneNumber:
           type: string
           nullable: true
-        telegram:
-          type: string
+        telegramUserId:
+          type: integer
+          format: int64
           nullable: true
         claims:
           type: array

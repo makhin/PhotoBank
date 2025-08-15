@@ -216,8 +216,8 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Telegram")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<long?>("TelegramUserId")
+                        .HasColumnType("bigint");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -235,6 +235,10 @@ namespace PhotoBank.DbContext.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("TelegramUserId")
+                        .IsUnique()
+                        .HasFilter("[TelegramUserId] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });

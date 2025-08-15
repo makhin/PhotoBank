@@ -27,7 +27,7 @@ public class UsersController(UserManager<ApplicationUser> userManager) : Control
                 Id = user.Id,
                 Email = user.Email ?? string.Empty,
                 PhoneNumber = user.PhoneNumber,
-                Telegram = user.Telegram,
+                TelegramUserId = user.TelegramUserId,
                 Claims = claims.Select(c => new ClaimDto { Type = c.Type, Value = c.Value })
             });
         }
@@ -45,7 +45,7 @@ public class UsersController(UserManager<ApplicationUser> userManager) : Control
             return NotFound();
 
         user.PhoneNumber = dto.PhoneNumber;
-        user.Telegram = dto.Telegram;
+        user.TelegramUserId = dto.TelegramUserId;
         var result = await userManager.UpdateAsync(user);
         if (!result.Succeeded)
             return BadRequest(result.Errors);

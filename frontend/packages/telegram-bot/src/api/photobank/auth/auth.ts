@@ -10,6 +10,8 @@ import type {
   LoginResponseDto,
   RegisterRequestDto,
   RoleDto,
+  TelegramExchangeRequest,
+  TelegramExchangeResponse,
   UpdateUserDto,
   UserDto
 } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
@@ -73,7 +75,17 @@ const authLogin = (
     },
       );
     }
-  return {authLogin,authRegister,authGetUser,authUpdateUser,authGetUserClaims,authGetUserRoles}};
+  const authTelegramExchange = (
+    telegramExchangeRequest: TelegramExchangeRequest,
+ ) => {
+      return photobankAxios<TelegramExchangeResponse>(
+      {url: `/auth/telegram/exchange`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: telegramExchangeRequest
+    },
+      );
+    }
+  return {authLogin,authRegister,authGetUser,authUpdateUser,authGetUserClaims,authGetUserRoles,authTelegramExchange}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -85,3 +97,4 @@ export type AuthGetUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof
 export type AuthUpdateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authUpdateUser']>>>
 export type AuthGetUserClaimsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetUserClaims']>>>
 export type AuthGetUserRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetUserRoles']>>>
+export type AuthTelegramExchangeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authTelegramExchange']>>>

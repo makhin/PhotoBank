@@ -36,6 +36,13 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.ApplyConfigurationsFromAssembly(System.Reflection.Assembly.Load("PhotoBank.Services"));
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<ApplicationUser>(b =>
+            {
+                b.HasIndex(u => u.TelegramUserId)
+                    .IsUnique()
+                    .HasFilter("[TelegramUserId] IS NOT NULL");
+            });
+
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => p.Id)
                 .HasDatabaseName("IX_Photos_NeedsMigration")

@@ -9,7 +9,7 @@ public class UpdateUserDtoValidator : AbstractValidator<UpdateUserDto>
     {
         RuleFor(x => x.PhoneNumber)
             .Matches(@"^[0-9+()\- ]*$").When(x => x.PhoneNumber is not null);
-        RuleFor(x => x.Telegram)
-            .MaximumLength(32).When(x => x.Telegram is not null);
+        RuleFor(x => x.TelegramUserId)
+            .GreaterThan(0).When(x => x.TelegramUserId.HasValue);
     }
 }

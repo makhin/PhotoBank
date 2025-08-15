@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
@@ -17,7 +19,8 @@ public class AuthController(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
     RoleManager<IdentityRole> roleManager,
-    ITokenService tokenService) : ControllerBase
+    ITokenService tokenService,
+    IConfiguration configuration) : ControllerBase
 {
     [HttpPost("login")]
     [AllowAnonymous]
@@ -79,7 +82,7 @@ public class AuthController(
         {
             Email = user.Email ?? string.Empty,
             PhoneNumber = user.PhoneNumber,
-            Telegram = user.Telegram
+            TelegramUserId = user.TelegramUserId
         });
     }
 
@@ -97,13 +100,39 @@ public class AuthController(
         if (user == null)
             return NotFound();
 
-        user.PhoneNumber = dto.PhoneNumber;
-        user.Telegram = dto.Telegram;
+        user.PhoneNumber = dto.PhoneNumber ?? user.PhoneNumber;
+        user.TelegramUserId = dto.TelegramUserId;
         var result = await userManager.UpdateAsync(user);
         if (!result.Succeeded)
             return BadRequest(result.Errors);
 
         return Ok();
+    }
+
+    public record TelegramExchangeRequest(long TelegramUserId, string? Username);
+    public record TelegramExchangeResponse(string AccessToken, int ExpiresIn);
+
+    [HttpPost("telegram/exchange")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(TelegramExchangeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> TelegramExchange([FromBody] TelegramExchangeRequest req)
+    {
+        var configuredKey = configuration["Auth:Telegram:ServiceKey"];
+        var presentedKey = Request.Headers["X-Service-Key"].ToString();
+        if (string.IsNullOrWhiteSpace(configuredKey) || presentedKey != configuredKey)
+            return Unauthorized(Problem(title: "Unauthorized", statusCode: 401, detail: "Invalid service key"));
+
+        var user = await userManager.Users.FirstOrDefaultAsync(u => u.TelegramUserId == req.TelegramUserId);
+        if (user is null)
+            return StatusCode(StatusCodes.Status403Forbidden,
+                Problem(title: "Telegram not linked", statusCode: 403, detail: "Ask admin to link your Telegram"));
+
+        var token = tokenService.CreateToken(user, rememberMe: false);
+        var expiresIn = 3600;
+
+        return Ok(new TelegramExchangeResponse(token, expiresIn));
     }
 
     [HttpGet("claims")]
