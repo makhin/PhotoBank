@@ -5,6 +5,7 @@ export default defineConfig({
     output: {
       target: 'packages/shared/src/api-frontend.ts',
       client: 'react-query',
+ mode: 'tags-split',
     },
   },
   bot: {
@@ -12,6 +13,7 @@ export default defineConfig({
     output: {
       target: 'packages/telegram-bot/src/api/generated.ts',
       client: 'axios',
+ mode: 'tags-split',
       override: { mutator: { path: './axios-instance.ts', name: 'photobankAxios' } },
     },
   },
