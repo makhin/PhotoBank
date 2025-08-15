@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import {
   photoGalleryTitle,
@@ -13,6 +13,8 @@ import { ScrollArea } from '@/shared/ui/scroll-area';
 import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
 import { setLastResult } from '@/features/photo/model/photoSlice.ts';
 import PhotoDetailsModal from '@/components/PhotoDetailsModal';
+import { useViewer } from '@/features/viewer/state';
+import { pushPhotoId, readPhotoId, clearPhotoId } from '@/features/viewer/urlSync';
 
 import PhotoListItemMobile from './PhotoListItemMobile';
 import VirtualPhotoList from './VirtualPhotoList';
@@ -40,10 +42,21 @@ const PhotoListPage = () => {
   const [total, setTotal] = useState(0);
   const [skip, setSkip] = useState(filter.skip ?? 0);
   const navigate = useNavigate();
+  const location = useLocation();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const [detailsId, setDetailsId] = useState<number | null>(null);
   const photos = useMemo(() => rawPhotos ?? [], [rawPhotos]);
+  const viewerItems = useMemo(
+    () =>
+      photos.map((p) => ({
+        id: p.id,
+        src: `data:image/jpeg;base64,${p.thumbnail}`,
+        thumb: `data:image/jpeg;base64,${p.thumbnail}`,
+        title: p.name,
+      })),
+    [photos]
+  );
   const skeletonPhotos = useMemo(
     () =>
       Array.from({ length: 15 }, (_, i) => ({
@@ -66,14 +79,29 @@ const PhotoListPage = () => {
           onClick={handleClick}
         >
           {photoColumns.map((c) => (
-            <div key={c.id} className={c.width}>
+            <div
+              key={c.id}
+              className={c.width}
+              onClick={
+                c.id === 'preview'
+                  ? (e) => {
+                      e.stopPropagation();
+                      const index = photos.findIndex((p) => p.id === photo.id);
+                      if (index >= 0) {
+                        useViewer.getState().open(viewerItems, index);
+                        pushPhotoId(photo.id);
+                      }
+                    }
+                  : undefined
+              }
+            >
               {c.render(photo)}
             </div>
           ))}
         </div>
       );
     },
-    [handleOpenDetails]
+    [handleOpenDetails, photos, viewerItems]
   );
 
   const renderSkeletonRow = useCallback(
@@ -99,6 +127,23 @@ const PhotoListPage = () => {
       promise.abort();
     };
   }, [searchPhotos, filter, dispatch]);
+
+  useEffect(() => {
+    const id = readPhotoId(location.search);
+    if (id && photos.length > 0) {
+      const index = photos.findIndex((p) => p.id === id);
+      if (index >= 0) {
+        useViewer.getState().open(viewerItems, index);
+      }
+    }
+  }, [location.search, photos, viewerItems]);
+
+  useEffect(() => {
+    const unsubscribe = useViewer.subscribe((s) => s.isOpen, (open) => {
+      if (!open) clearPhotoId();
+    });
+    return unsubscribe;
+  }, []);
 
   const handleOpenDetails = useCallback((id: number) => {
     setDetailsId(id);
