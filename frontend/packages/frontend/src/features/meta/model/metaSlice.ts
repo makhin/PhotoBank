@@ -6,6 +6,8 @@ import {
   METADATA_CACHE_VERSION,
 } from '@photobank/shared/constants';
 
+import { namespacedStorage } from '../../../shared/safeStorage';
+
 interface MetadataPayload {
     tags: TagDto[];
     persons: PersonDto[];
@@ -21,23 +23,33 @@ interface MetadataState extends Omit<MetadataPayload, 'version'> {
     error?: string;
 }
 
+const store = namespacedStorage('meta');
+
 const loadFromCache = (): MetadataPayload | null => {
-    try {
-        const raw = localStorage.getItem(METADATA_CACHE_KEY);
-        if (!raw) return null;
-        const parsed: MetadataPayload = JSON.parse(raw) as MetadataPayload;
-        return parsed.version === METADATA_CACHE_VERSION ? parsed : null;
-    } catch {
+    const cached = store.get<MetadataPayload>(METADATA_CACHE_KEY);
+    if (!cached) return null;
+    if (cached.version !== METADATA_CACHE_VERSION) {
+        store.remove(METADATA_CACHE_KEY);
         return null;
     }
+    const { tags, persons, paths, storages } = cached;
+    if (
+        !Array.isArray(tags) ||
+        !Array.isArray(persons) ||
+        !Array.isArray(paths) ||
+        !Array.isArray(storages)
+    ) {
+        return null;
+    }
+    return cached;
 };
 
 const saveToCache = (data: MetadataPayload) => {
-    try {
-        localStorage.setItem(METADATA_CACHE_KEY, JSON.stringify(data));
-    } catch {
-        console.error('saveToCache error');
+    if (data.version !== METADATA_CACHE_VERSION) {
+        store.remove(METADATA_CACHE_KEY);
+        return;
     }
+    store.set(METADATA_CACHE_KEY, data);
 };
 
 const initialState: MetadataState = {
@@ -76,7 +88,7 @@ export const metadataSlice = createSlice({
     initialState,
     reducers: {
         clearCache(state) {
-            localStorage.removeItem(METADATA_CACHE_KEY);
+            store.remove(METADATA_CACHE_KEY);
             state.loaded = false;
         },
     },

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { namespacedStorage } from '../src/shared/safeStorage';
 
 const payload = {
   tags: [{ id: 1, name: 't' }],
@@ -9,6 +10,7 @@ const payload = {
 };
 
 const cacheKey = 'photobank_metadata_cache';
+const store = namespacedStorage('meta');
 
 describe('metaSlice', () => {
   beforeEach(() => {
@@ -19,14 +21,14 @@ describe('metaSlice', () => {
 
   it('clearCache removes cache and resets flag', async () => {
     const { clearCache, default: reducer } = await import('../src/features/meta/model/metaSlice');
-    localStorage.setItem(cacheKey, 'test');
-    const state = reducer({ loaded: true } as any, clearCache());
-    expect(localStorage.getItem(cacheKey)).toBeNull();
+    store.set(cacheKey, 'test');
+    const state = reducer({ loaded: true } as unknown as Parameters<typeof reducer>[0], clearCache());
+    expect(store.get<string>(cacheKey)).toBeNull();
     expect(state.loaded).toBe(false);
   });
 
   it('loadMetadata returns cached payload', async () => {
-    localStorage.setItem(cacheKey, JSON.stringify(payload));
+    store.set(cacheKey, payload);
     const { loadMetadata } = await import('../src/features/meta/model/metaSlice');
     const dispatch = vi.fn();
     const getState = vi.fn();
@@ -51,6 +53,6 @@ describe('metaSlice', () => {
     const result = await loadMetadata()(dispatch, getState, undefined);
     expect(getAllStorages).toHaveBeenCalled();
     expect(result.payload).toEqual(payload);
-    expect(JSON.parse(localStorage.getItem(cacheKey)!)).toEqual(payload);
+    expect(store.get<typeof payload>(cacheKey)).toEqual(payload);
   });
 });
