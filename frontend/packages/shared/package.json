@@ -45,10 +45,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -b",
-    "test": "vitest run",
-    "lint": "eslint . --ext .ts,.tsx",
-    "format": "prettier --write \"**/*.{ts,tsx,json,md}\""
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.85.3",
