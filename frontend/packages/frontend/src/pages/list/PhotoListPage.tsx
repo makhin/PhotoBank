@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import {
   photoGalleryTitle,
@@ -11,11 +11,16 @@ import { usePhotosSearchPhotos } from '@photobank/shared/api/photobank';
 import { Button } from '@/shared/ui/button';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { useAppDispatch, useAppSelector } from '@/app/hook';
-import { setLastResult } from '@/features/photo/model/photoSlice';
+import { setLastResult, setFilter } from '@/features/photo/model/photoSlice';
 import PhotoDetailsModal from '@/components/PhotoDetailsModal';
 import { useViewer } from '@/features/viewer/state';
 import { pushPhotoId, readPhotoId, clearPhotoId } from '@/features/viewer/urlSync';
 import EmptyState from '@/components/EmptyState';
+import {
+  serializeFilter,
+  deserializeFilter,
+  filterDtoToFormData,
+} from '@/shared/lib/filter-url';
 
 import PhotoListItemMobile from './PhotoListItemMobile';
 import VirtualPhotoList from './VirtualPhotoList';
@@ -27,6 +32,8 @@ const PhotoListPage = () => {
   const filter = useAppSelector((state) => state.photo.filter);
   const persons = useAppSelector((state) => state.metadata.persons);
   const tags = useAppSelector((state) => state.metadata.tags);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [initialized, setInitialized] = useState(false);
 
   const personsMap = useMemo(
     () => Object.fromEntries(persons.map((p) => [p.id, p.name])),
@@ -74,6 +81,28 @@ const PhotoListPage = () => {
     []
   );
   const loading = isLoading && photos.length === 0;
+
+  useEffect(() => {
+    const encoded = searchParams.get('filter');
+    if (encoded) {
+      const parsed = deserializeFilter(encoded);
+      if (parsed) {
+        dispatch(setFilter(parsed));
+      }
+    }
+    setInitialized(true);
+  }, [searchParams, dispatch]);
+
+  useEffect(() => {
+    if (!initialized) return;
+    const encoded = serializeFilter(filterDtoToFormData(filter));
+    const current = searchParams.get('filter');
+    if (encoded !== current) {
+      const params = new URLSearchParams(searchParams);
+      params.set('filter', encoded);
+      setSearchParams(params, { replace: true });
+    }
+  }, [filter, initialized, searchParams, setSearchParams]);
 
   const renderPhotoRow = useCallback(
     (photo: PhotoItemDto) => {
@@ -134,6 +163,7 @@ const PhotoListPage = () => {
   );
 
   useEffect(() => {
+    if (!initialized) return;
     let cancelled = false;
     (async () => {
       try {
@@ -151,7 +181,7 @@ const PhotoListPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [searchPhotos, filter, dispatch, pageSize]);
+  }, [searchPhotos, filter, dispatch, pageSize, initialized]);
 
   useEffect(() => {
     const id = readPhotoId(location.search);
