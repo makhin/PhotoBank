@@ -5,8 +5,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton, loadingText } from '@photobank/shared/constants';
 
+import * as Api from '@photobank/shared/api/photobank/photos/photos';
+import type { FilterDto } from '@photobank/shared/api/photobank';
 import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
-import { setFilter } from '@/features/photo/model/photoSlice.ts';
+import { setFilter, setLastResult } from '@/features/photo/model/photoSlice.ts';
 import { loadMetadata } from '@/features/meta/model/metaSlice.ts';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -24,6 +26,7 @@ function FilterPage() {
   const savedFilter = useAppSelector((state) => state.photo.filter);
   const loaded = useAppSelector((s) => s.metadata.loaded);
   const loading = useAppSelector((s) => s.metadata.loading);
+  const searchPhotos = Api.usePhotosSearchPhotos();
 
   useEffect(() => {
     if (!loaded && !loading) {
@@ -53,7 +56,7 @@ function FilterPage() {
   });
 
   const onSubmit = (data: FormData) => {
-    const filter = {
+    const filter: FilterDto = {
       caption: data.caption,
       storages: data.storages?.map(Number),
       paths: data.paths?.map(Number),
@@ -67,10 +70,22 @@ function FilterPage() {
       takenDateTo: data.dateTo?.toISOString(),
       skip: 0,
       top: 10,
-    } as const;
+    };
 
-    dispatch(setFilter(filter));
-    navigate('/photos');
+    searchPhotos.mutate(
+      { data: filter },
+      {
+        onSuccess: (page) => {
+          const photos = page.data.items ?? [];
+          dispatch(setFilter(filter));
+          dispatch(setLastResult(photos));
+          navigate('/photos');
+        },
+        onError: () => {
+          // handle error if needed
+        },
+      }
+    );
   };
 
   if (!loaded) {
