@@ -2,8 +2,8 @@ import type { FilterDto } from './api/photobank';
 
 export const DEFAULT_PHOTO_FILTER: FilterDto = {
   thisDay: true,
-  skip: 0,
-  top: 10,
+  page: 1,
+  pageSize: 10,
 } as const;
 
 export const getPhotoErrorMsg = '🚫 Не удалось получить фото.';

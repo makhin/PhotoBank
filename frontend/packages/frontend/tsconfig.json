@@ -5,7 +5,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@photobank/shared/*": ["../shared/src/*"]
-    }
+    },
+    "types": ["vite/client", "vitest/globals", "node", "react"]
   },
   "include": ["src", "test-setup.ts", "vite.config.ts", "vitest.config.ts"]
 }

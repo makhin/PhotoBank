@@ -14,7 +14,7 @@ import {
   AZURE_OPENAI_KEY,
   AZURE_OPENAI_DEPLOYMENT,
   AZURE_OPENAI_API_VERSION,
-} from '@/config.ts';
+} from '@/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Textarea } from '@/shared/ui/textarea';
 import { Button } from '@/shared/ui/button';

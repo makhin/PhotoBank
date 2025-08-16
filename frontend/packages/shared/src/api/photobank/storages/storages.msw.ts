@@ -14,6 +14,8 @@ import {
   http
 } from 'msw';
 
+import type { StorageDto } from '../model/storageDto';
+
 
 export const getStoragesGetAllResponseMock = (): StorageDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}})})))
 
