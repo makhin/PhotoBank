@@ -12,7 +12,7 @@ export async function sendPersonsPage(
   await sendNamedItemsPage({
     ctx,
     command: "persons",
-      fetchAll: () => getAllPersons(),
+    fetchAll: () => Promise.resolve(getAllPersons()),
     prefix,
     page,
     edit,

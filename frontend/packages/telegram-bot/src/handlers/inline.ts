@@ -51,38 +51,40 @@ bot.on('inline_query', async (ctx) => {
 
     const nextOffset = items.length === PAGE_SIZE ? String(offset + PAGE_SIZE) : '';
 
-      await ctx.answerInlineQuery(
-        results,
-        {
-          is_personal: true,
-          cache_time: 5,
-          next_offset: nextOffset,
-          switch_pm_text: undefined,
-          switch_pm_parameter: undefined,
-        } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
-      );
+    await ctx.answerInlineQuery(
+      results,
+      {
+        is_personal: true,
+        cache_time: 5,
+        next_offset: nextOffset,
+      } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
+    );
   } catch (e) {
-      if (e instanceof ProblemDetailsError && e.problem.status === 403) {
-        await ctx.answerInlineQuery(
-          [],
-          {
-            is_personal: true,
-            cache_time: 0,
-            switch_pm_text: 'Привяжите аккаунт, чтобы искать фото',
-            switch_pm_parameter: 'link',
-          } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
-        );
-        return;
-      }
-      logger.warn('inline_query error', e);
+    if (e instanceof ProblemDetailsError && e.problem.status === 403) {
       await ctx.answerInlineQuery(
         [],
         {
           is_personal: true,
           cache_time: 0,
-          switch_pm_text: 'Не удалось выполнить поиск (повторить?)',
-          switch_pm_parameter: 'help',
+          button: {
+            text: 'Привяжите аккаунт, чтобы искать фото',
+            start_parameter: 'link',
+          },
         } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
       );
+      return;
     }
+    logger.warn('inline_query error', e);
+    await ctx.answerInlineQuery(
+      [],
+      {
+        is_personal: true,
+        cache_time: 0,
+        button: {
+          text: 'Не удалось выполнить поиск (повторить?)',
+          start_parameter: 'help',
+        },
+      } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
+    );
+  }
 });
