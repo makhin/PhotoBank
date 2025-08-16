@@ -3,7 +3,7 @@ import { botRunningText } from '@photobank/shared/constants';
 
 import { Card, CardContent } from '@/shared/ui/card';
 import { useAppSelector } from '@/app/hook';
-import type { RootState } from '@/app/store.ts';
+import type { RootState } from '@/app/store';
 
 export function StatusCard() {
   const { lastError } = useAppSelector((s: RootState) => s.bot);

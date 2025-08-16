@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 
 vi.mock('./usePhotoVirtual');
 
@@ -36,7 +36,7 @@ test('renders only a subset of items', async () => {
   const parentRef = createRef<HTMLDivElement>();
   const photos = createPhotos(50);
 
-  (usePhotoVirtual as unknown as vi.Mock).mockReturnValue({
+  (usePhotoVirtual as unknown as Mock).mockReturnValue({
     virtualizer: { measureElement: vi.fn() },
     items: makeItems(Math.min(photos.length, 10)) as any,
     totalSize: 112 * Math.min(photos.length, 10),

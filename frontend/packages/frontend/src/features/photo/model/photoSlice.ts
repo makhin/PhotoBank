@@ -3,7 +3,7 @@ import type {
   FilterDto,
   PhotoItemDto,
 } from '@photobank/shared/api/photobank';
-import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants.ts';
+import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants';
 
 interface PhotoState {
   filter: FilterDto;

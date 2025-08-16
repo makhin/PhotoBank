@@ -26,7 +26,7 @@ import {
 } from '@photobank/shared/constants';
 
 import { useFacesUpdate } from '@photobank/shared/api/photobank';
-import { useAppSelector } from '@/app/hook.ts';
+import { useAppSelector } from '@/app/hook';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import { Label } from '@/shared/ui/label';
@@ -35,8 +35,8 @@ import { Textarea } from '@/shared/ui/textarea';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { Checkbox } from '@/shared/ui/checkbox';
 import { ScoreBar } from '@/components/ScoreBar';
-import { FaceOverlay } from '@/components/FaceOverlay.tsx';
-import { FacePersonSelector } from '@/components/FacePersonSelector.tsx';
+import { FaceOverlay } from '@/components/FaceOverlay';
+import { FacePersonSelector } from '@/components/FacePersonSelector';
 import { useViewer } from '@/features/viewer/state';
 import { pushPhotoId } from '@/features/viewer/urlSync';
 import { Button } from '@/shared/ui/button';
@@ -80,19 +80,20 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const {data: photo, error} = PhotosApi.usePhotosGetPhoto(photoId, {
         query: {enabled: photoId !== 0}
     });
+    const photoData = photo as any;
 
     const formattedTakenDate = useMemo(() =>
-        photo?.takenDate ? formatDate(photo.takenDate) : '',
-    [photo?.takenDate]);
+        photoData?.takenDate ? formatDate(photoData.takenDate) : '',
+    [photoData?.takenDate]);
 
-    const previewImageSrc = photo?.previewImage && `data:image/jpeg;base64,${photo.previewImage}`;
+    const previewImageSrc = photoData?.previewImage && `data:image/jpeg;base64,${photoData.previewImage}`;
 
     const imageNaturalSize = useMemo(() => {
-        if (photo?.width && photo.height && photo.scale) {
-            return {width: photo.width * photo.scale, height: photo.height * photo.scale};
+        if (photoData?.width && photoData.height && photoData.scale) {
+            return {width: photoData.width * photoData.scale, height: photoData.height * photoData.scale};
         }
         return {width: 0, height: 0};
-    }, [photo]);
+    }, [photoData]);
 
     const updateSizes = useCallback(() => {
         if (containerRef.current) {
@@ -140,17 +141,17 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     }, [error]);
 
     useEffect(() => {
-        if (!photo?.location) {
+        if (!photoData?.location) {
             setPlaceName('');
             return;
         }
         const controller = new AbortController();
         (async () => {
-            const name = await getPlaceByGeoPoint(photo.location);
+            const name = await getPlaceByGeoPoint(photoData.location);
             if (!controller.signal.aborted) setPlaceName(name);
         })();
         return () => { controller.abort(); };
-    }, [photo?.location]);
+    }, [photoData?.location]);
 
     const calculateFacePosition = (faceBox: FaceBoxDto) => {
         if (!imageDisplaySize.width || !imageDisplaySize.height) {
@@ -187,10 +188,10 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                         <CardHeader className="pb-4 border-b border-border flex items-center justify-between">
                             <div>
                                 <CardTitle className="text-2xl font-bold">
-                                    {photo.name}
+                                    {photoData.name}
                                 </CardTitle>
-                                {photo.captions && photo.captions.length > 0 && (
-                                    <p className="text-muted-foreground italic">{photo.captions[0]}</p>
+                                {photoData.captions && photoData.captions.length > 0 && (
+                                    <p className="text-muted-foreground italic">{photoData.captions[0]}</p>
                                 )}
                             </div>
                             <Button
@@ -201,13 +202,13 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                     if (previewImageSrc) {
                                         useViewer.getState().open([
                                             {
-                                                id: photo.id,
+                                                id: photoData.id,
                                                 src: previewImageSrc,
                                                 thumb: previewImageSrc,
-                                                title: photo.name,
+                                                title: photoData.name,
                                             },
                                         ], 0);
-                                        pushPhotoId(photo.id);
+                                        pushPhotoId(photoData.id);
                                     }
                                 }}
                             >
@@ -222,11 +223,11 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                 <img
                                     loading="lazy"
                                     src={previewImageSrc}
-                                    alt={photo.name}
+                                    alt={photoData.name}
                                     className="max-h-full max-w-full object-contain"
                                 />
-                                {showFaceBoxes &&
-                                    photo.faces?.map((face, index) => (
+                                  {showFaceBoxes &&
+                                      photoData.faces?.map((face, index) => (
                                         <FaceOverlay
                                             key={face.id}
                                             face={face}
@@ -250,13 +251,13 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                 <CardContent className="space-y-3">
                                     <div>
                                         <Label className="text-muted-foreground text-xs">{nameLabel}</Label>
-                                        <Input value={photo.name} readOnly className="mt-1 bg-muted"/>
+                                        <Input value={photoData.name} readOnly className="mt-1 bg-muted"/>
                                     </div>
 
-                                    {photo.id && (
+                                    {photoData.id && (
                                         <div>
                                             <Label className="text-muted-foreground text-xs">{idLabel}</Label>
-                                            <Input value={photo.id.toString()} readOnly className="mt-1 bg-muted"/>
+                                            <Input value={photoData.id.toString()} readOnly className="mt-1 bg-muted"/>
                                         </div>
                                     )}
 
@@ -265,41 +266,41 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                         <Input value={formattedTakenDate} readOnly className="mt-1 bg-muted"/>
                                     </div>
 
-                                    {photo.width && photo.height && (
+                                    {photoData.width && photoData.height && (
                                         <div className="grid grid-cols-2 gap-2">
                                             <div>
                                                 <Label className="text-muted-foreground text-xs">{widthLabel}</Label>
-                                                <Input value={`${photo.width.toString()}px`} readOnly
+                                                <Input value={`${photoData.width.toString()}px`} readOnly
                                                        className="mt-1 bg-muted"/>
                                             </div>
                                             <div>
                                                 <Label className="text-muted-foreground text-xs">{heightLabel}</Label>
-                                                <Input value={`${photo.height.toString()}px`} readOnly
+                                                <Input value={`${photoData.height.toString()}px`} readOnly
                                                        className="mt-1 bg-muted"/>
                                             </div>
                                         </div>
                                     )}
 
-                                    {photo.scale && (
+                                    {photoData.scale && (
                                         <div>
                                             <Label className="text-muted-foreground text-xs">{scaleLabel}</Label>
-                                            <Input value={photo.scale.toString()} readOnly className="mt-1 bg-muted"/>
+                                            <Input value={photoData.scale.toString()} readOnly className="mt-1 bg-muted"/>
                                         </div>
                                     )}
 
-                                    {photo.orientation && (
+                                    {photoData.orientation && (
                                         <div>
                                             <Label className="text-muted-foreground text-xs">{orientationLabel}</Label>
-                                            <Input value={getOrientation(photo.orientation ?? undefined)} readOnly
+                                            <Input value={getOrientation(photoData.orientation ?? undefined)} readOnly
                                                    className="mt-1 bg-muted"/>
                                         </div>
                                     )}
 
-                                    {photo.location && placeName && (
+                                    {photoData.location && placeName && (
                                         <div>
                                             <Label className="text-muted-foreground text-xs">{locationLabel}</Label>
                                             <a
-                                                href={`https://www.google.com/maps?q=${photo.location.latitude},${photo.location.longitude}`}
+                                                href={`https://www.google.com/maps?q=${photoData.location.latitude},${photoData.location.longitude}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="mt-1 block text-primary underline"
@@ -312,14 +313,14 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                             </Card>
 
                             {/* Tags Section */}
-                            {photo.tags && photo.tags.length > 0 && (
+                            {photoData.tags && photoData.tags.length > 0 && (
                                 <Card className="bg-card border-border">
                                     <CardHeader className="pb-3">
                                         <CardTitle className="text-lg">{tagsTitle}</CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="flex flex-wrap gap-2">
-                                            {photo.tags.map((tag) => (
+                                            {photoData.tags.map((tag) => (
                                                 <Badge key={tag} variant="secondary"
                                                        className="bg-secondary text-secondary-foreground">
                                                     {tag}
@@ -331,14 +332,14 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                             )}
 
                             {/* Captions Section */}
-                            {photo.captions && photo.captions.length > 0 && (
+                            {photoData.captions && photoData.captions.length > 0 && (
                                 <Card className="bg-card border-border">
                                     <CardHeader className="pb-3">
                                         <CardTitle className="text-lg">{captionsTitle}</CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-2">
-                                            {photo.captions.map((caption) => (
+                                            {photoData.captions.map((caption) => (
                                                 <Textarea
                                                     key={caption}
                                                     value={caption}
@@ -355,21 +356,21 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                 <CardHeader className="pb-3">
                                     <CardTitle className="text-lg">{contentAnalysisTitle}</CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-3">
-                                    <ScoreBar label={adultScoreLabel} score={photo.adultScore}
-                                              colorClass="bg-orange-500"/>
-                                    <ScoreBar label={racyScoreLabel} score={photo.racyScore}
-                                              colorClass="bg-red-500"/>
+                                  <CardContent className="space-y-3">
+                                      <ScoreBar label={adultScoreLabel} score={photoData.adultScore}
+                                                colorClass="bg-orange-500"/>
+                                      <ScoreBar label={racyScoreLabel} score={photoData.racyScore}
+                                                colorClass="bg-red-500"/>
                                 </CardContent>
                             </Card>
 
                             {/* Faces Summary */}
-                            {photo.faces && photo.faces.length > 0 && (
+                              {photoData.faces && photoData.faces.length > 0 && (
                                 <Card className="bg-card border-border">
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="text-lg">
-                                            {detectedFacesTitle} ({photo.faces.length})
+                                              {detectedFacesTitle} ({photoData.faces.length})
                                         </CardTitle>
                                         <div className="flex items-center space-x-2">
                                             <Checkbox
@@ -387,8 +388,8 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                         <p className="text-sm text-muted-foreground mb-3">
                                             {hoverFaceHint}
                                         </p>
-                                        <div className="space-y-2">
-                                            {photo.faces.map((face, index) => {
+                                          <div className="space-y-2">
+                                              {photoData.faces.map((face, index) => {
                                                 return (
                                                     <FacePersonSelector
                                                         key={face.id}

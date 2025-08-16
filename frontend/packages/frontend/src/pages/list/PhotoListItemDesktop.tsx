@@ -13,7 +13,7 @@ import PhotoFlags from '@/components/PhotoFlags';
 import MetadataBadgeList from '@/components/MetadataBadgeList';
 
 import SmartImage from '@/components/SmartImage';
-import { memo, useMemo, useEvent } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { useInView } from '@/hooks/useInView';
 import { usePrefetchOnHover } from '@/hooks/useImagePrefetch';
 
@@ -30,7 +30,9 @@ const PhotoListItemDesktop = ({
   tagsMap,
   onClick,
 }: PhotoListItemDesktopProps) => {
-  const handleClick = useEvent(onClick);
+  const handleClick = useCallback(() => {
+    onClick();
+  }, [onClick]);
   const caption = useMemo(
     () => firstNWords(photo.captions?.[0] ?? '', 5),
     [photo.captions]
