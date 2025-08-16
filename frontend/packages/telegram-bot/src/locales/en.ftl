@@ -1,0 +1,12 @@
+help = Available commands:\n/thisday [page] – show photos of this day\n/search <caption> – search by caption\n/ai <prompt> – AI search\n/photo <id> – show photo by ID\n/profile – profile info\n/subscribe HH:MM – daily /thisday digest\n/tags [prefix] – list tags\n/storages [prefix] – list storages and paths\n/persons [prefix] – list persons\n\nAny message without command is treated as an /ai request.
+cmd-start = Start the bot
+cmd-help = Help
+cmd-thisday = Today's photos
+cmd-search = Search by caption
+cmd-ai = AI search
+cmd-profile = Profile info
+cmd-subscribe = Subscribe to daily /thisday
+cmd-tags = List tags
+cmd-persons = List persons
+cmd-storages = List storages
+cmd-upload = Upload files

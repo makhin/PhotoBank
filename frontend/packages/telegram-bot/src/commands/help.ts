@@ -1,7 +1,6 @@
-import { Context } from 'grammy';
-import { helpBotMsg } from '@photobank/shared/constants';
+import type { MyContext } from '../i18n';
 
-export async function helpCommand(ctx: Context) {
-  await ctx.reply(helpBotMsg);
+export async function helpCommand(ctx: MyContext) {
+  await ctx.reply(ctx.t('help'));
 }
 

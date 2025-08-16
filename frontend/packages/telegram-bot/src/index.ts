@@ -30,6 +30,33 @@ import { logger } from './logger';
 import { handleBotError } from './errorHandler';
 import './handlers/inline';
 import './handlers/deeplink';
+import { i18n } from './i18n';
+
+const privateCommands = (lang: string) => [
+  { command: 'start', description: i18n.t(lang, 'cmd-start') },
+  { command: 'help', description: i18n.t(lang, 'cmd-help') },
+  { command: 'thisday', description: i18n.t(lang, 'cmd-thisday') },
+  { command: 'search', description: i18n.t(lang, 'cmd-search') },
+  { command: 'ai', description: i18n.t(lang, 'cmd-ai') },
+  { command: 'profile', description: i18n.t(lang, 'cmd-profile') },
+  { command: 'subscribe', description: i18n.t(lang, 'cmd-subscribe') },
+  { command: 'tags', description: i18n.t(lang, 'cmd-tags') },
+  { command: 'persons', description: i18n.t(lang, 'cmd-persons') },
+  { command: 'storages', description: i18n.t(lang, 'cmd-storages') },
+  { command: 'upload', description: i18n.t(lang, 'cmd-upload') },
+];
+
+const groupCommands = (lang: string) => [
+  { command: 'help', description: i18n.t(lang, 'cmd-help') },
+  { command: 'thisday', description: i18n.t(lang, 'cmd-thisday') },
+];
+
+bot.use(i18n.middleware());
+bot.use(async (ctx, next) => {
+  const lang = ctx.from?.language_code?.split('-')[0];
+  if (lang) ctx.i18n.locale(lang);
+  await next();
+});
 
 bot.use(async (ctx, next) => {
   const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
@@ -150,6 +177,23 @@ bot.on('message:text', withRegistered(async (ctx) => {
 
 bot.on('message:photo', withRegistered(uploadCommand));
 bot.on('message:document', withRegistered(uploadCommand));
+
+await bot.api.setMyCommands(privateCommands('en'), {
+  scope: { type: 'all_private_chats' },
+  language_code: 'en',
+});
+await bot.api.setMyCommands(privateCommands('ru'), {
+  scope: { type: 'all_private_chats' },
+  language_code: 'ru',
+});
+await bot.api.setMyCommands(groupCommands('en'), {
+  scope: { type: 'all_group_chats' },
+  language_code: 'en',
+});
+await bot.api.setMyCommands(groupCommands('ru'), {
+  scope: { type: 'all_group_chats' },
+  language_code: 'ru',
+});
 
 bot.start();
 logger.info('bot started');
