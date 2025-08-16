@@ -6,16 +6,16 @@ import {
   filterButtonText,
   loadMoreButton,
 } from '@photobank/shared/constants';
-import { usePhotosSearchPhotos } from '@photobank/shared/api/photobank';
 
-import { Button } from '@/shared/ui/button';
-import { ScrollArea } from '@/shared/ui/scroll-area';
+import { useInfinitePhotos } from '@/features/photo/useInfinitePhotos';
 import { useAppDispatch, useAppSelector } from '@/app/hook';
 import { setLastResult } from '@/features/photo/model/photoSlice';
-import PhotoDetailsModal from '@/components/PhotoDetailsModal';
 import { useViewer } from '@/features/viewer/state';
 import { pushPhotoId, readPhotoId, clearPhotoId } from '@/features/viewer/urlSync';
 import EmptyState from '@/components/EmptyState';
+import PhotoDetailsModal from '@/components/PhotoDetailsModal';
+import { Button } from '@/shared/ui/button';
+import { ScrollArea } from '@/shared/ui/scroll-area';
 
 import PhotoListItemMobile from './PhotoListItemMobile';
 import VirtualPhotoList from './VirtualPhotoList';
@@ -37,21 +37,23 @@ const PhotoListPage = () => {
     [tags]
   );
 
-  const { mutateAsync: searchPhotos, isPending: isLoading } = usePhotosSearchPhotos();
-  type PhotosPage = { items?: PhotoItemDto[]; totalCount?: number };
-  const [rawPhotos, setRawPhotos] = useState<PhotoItemDto[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(filter.page ?? 1);
-  const pageSize = filter.pageSize ?? 10;
+  const {
+    items: photos,
+    total,
+    fetchNextPage,
+    hasNextPage,
+    isLoading,
+    isFetchingNextPage,
+  } = useInfinitePhotos(filter);
   const navigate = useNavigate();
   const location = useLocation();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const [detailsId, setDetailsId] = useState<number | null>(null);
   const handleOpenDetails = useCallback((id: number) => {
     setDetailsId(id);
   }, []);
-  const photos = useMemo(() => rawPhotos ?? [], [rawPhotos]);
   const viewerItems = useMemo(
     () =>
       photos.map((p) => ({
@@ -134,24 +136,8 @@ const PhotoListPage = () => {
   );
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const result = (await searchPhotos({ data: { ...filter, page: 1, pageSize } })) as { data: PhotosPage };
-        if (cancelled) return;
-        const fetched: PhotoItemDto[] = result.data.items ?? [];
-        setRawPhotos(fetched);
-        setTotal(result.data.totalCount ?? 0);
-        setPage(1);
-        dispatch(setLastResult(fetched));
-      } catch {
-        // ignore for now
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [searchPhotos, filter, dispatch, pageSize]);
+    dispatch(setLastResult(photos));
+  }, [photos, dispatch]);
 
   useEffect(() => {
     const id = readPhotoId(location.search);
@@ -174,16 +160,23 @@ const PhotoListPage = () => {
     navigate('/filter', { state: { useCurrentFilter: true } });
   }, [navigate]);
 
-  const loadMore = useCallback(async () => {
-    const nextPage = page + 1;
-    const result = (await searchPhotos({ data: { ...filter, page: nextPage, pageSize } })) as { data: PhotosPage };
-    const newPhotos: PhotoItemDto[] = result.data.items ?? [];
-    const updated = [...rawPhotos, ...newPhotos];
-    setRawPhotos(updated);
-    setPage(nextPage);
-    setTotal(result.data.totalCount ?? 0);
-    dispatch(setLastResult(updated));
-  }, [searchPhotos, filter, page, rawPhotos, dispatch, pageSize]);
+  useEffect(() => {
+    const element = sentinelRef.current;
+    const root = scrollAreaRef.current ?? undefined;
+    if (!element || !root) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { root }
+    );
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   const handleDetailsOpenChange = useCallback((open: boolean) => {
     if (!open) setDetailsId(null);
@@ -253,13 +246,18 @@ const PhotoListPage = () => {
                   )}
             </div>
           </div>
-          {photos.length < total && (
+          {hasNextPage && (
             <div className="flex justify-center mt-4">
-              <Button variant="outline" onClick={() => void loadMore()}>
+              <Button
+                variant="outline"
+                onClick={() => void fetchNextPage()}
+                disabled={!hasNextPage || isFetchingNextPage}
+              >
                 {loadMoreButton}
               </Button>
             </div>
           )}
+          <div ref={sentinelRef} />
         </div>
       </ScrollArea>
       <PhotoDetailsModal
