@@ -10,8 +10,8 @@ import {
 import { usePhotosSearchPhotos } from '@photobank/shared/api/photobank';
 import { Button } from '@/shared/ui/button';
 import { ScrollArea } from '@/shared/ui/scroll-area';
-import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
-import { setLastResult } from '@/features/photo/model/photoSlice.ts';
+import { useAppDispatch, useAppSelector } from '@/app/hook';
+import { setLastResult } from '@/features/photo/model/photoSlice';
 import PhotoDetailsModal from '@/components/PhotoDetailsModal';
 import { useViewer } from '@/features/viewer/state';
 import { pushPhotoId, readPhotoId, clearPhotoId } from '@/features/viewer/urlSync';
@@ -40,12 +40,16 @@ const PhotoListPage = () => {
   const { mutateAsync: searchPhotos, isPending: isLoading } = usePhotosSearchPhotos();
   const [rawPhotos, setRawPhotos] = useState<PhotoItemDto[]>([]);
   const [total, setTotal] = useState(0);
-  const [skip, setSkip] = useState(filter.skip ?? 0);
+  const [page, setPage] = useState(filter.page ?? 1);
+  const pageSize = filter.pageSize ?? 10;
   const navigate = useNavigate();
   const location = useLocation();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const [detailsId, setDetailsId] = useState<number | null>(null);
+  const handleOpenDetails = useCallback((id: number) => {
+    setDetailsId(id);
+  }, []);
   const photos = useMemo(() => rawPhotos ?? [], [rawPhotos]);
   const viewerItems = useMemo(
     () =>
@@ -113,12 +117,12 @@ const PhotoListPage = () => {
     let cancelled = false;
     (async () => {
       try {
-        const result = await searchPhotos({ data: { ...filter } });
+        const result = await searchPhotos({ data: { ...filter, page: 1, pageSize } });
         if (cancelled) return;
-        const fetched = result.data?.photos || [];
+        const fetched = result.data?.items ?? [];
         setRawPhotos(fetched);
-        setTotal(result.data?.count || 0);
-        setSkip(fetched.length);
+        setTotal(result.data?.totalCount ?? 0);
+        setPage(1);
         dispatch(setLastResult(fetched));
       } catch {
         // ignore for now
@@ -127,7 +131,7 @@ const PhotoListPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [searchPhotos, filter, dispatch]);
+  }, [searchPhotos, filter, dispatch, pageSize]);
 
   useEffect(() => {
     const id = readPhotoId(location.search);
@@ -140,14 +144,10 @@ const PhotoListPage = () => {
   }, [location.search, photos, viewerItems]);
 
   useEffect(() => {
-    const unsubscribe = useViewer.subscribe((s) => s.isOpen, (open) => {
-      if (!open) clearPhotoId();
+    const unsubscribe = useViewer.subscribe((s) => {
+      if (!s.isOpen) clearPhotoId();
     });
     return unsubscribe;
-  }, []);
-
-  const handleOpenDetails = useCallback((id: number) => {
-    setDetailsId(id);
   }, []);
 
   const handleFilterOpen = useCallback(() => {
@@ -155,15 +155,15 @@ const PhotoListPage = () => {
   }, [navigate]);
 
   const loadMore = useCallback(async () => {
-    const result = await searchPhotos({ data: { ...filter, skip } });
-    const newPhotos = result.data?.photos || [];
+    const nextPage = page + 1;
+    const result = await searchPhotos({ data: { ...filter, page: nextPage, pageSize } });
+    const newPhotos = result.data?.items ?? [];
     const updated = [...rawPhotos, ...newPhotos];
-    const newSkip = skip + newPhotos.length;
     setRawPhotos(updated);
-    setSkip(newSkip);
-    setTotal(result.data?.count || 0);
+    setPage(nextPage);
+    setTotal(result.data?.totalCount ?? 0);
     dispatch(setLastResult(updated));
-  }, [searchPhotos, filter, skip, rawPhotos, dispatch]);
+  }, [searchPhotos, filter, page, rawPhotos, dispatch, pageSize]);
 
   const handleDetailsOpenChange = useCallback((open: boolean) => {
     if (!open) setDetailsId(null);
