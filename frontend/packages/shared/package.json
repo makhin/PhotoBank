@@ -41,7 +41,9 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -b",
     "test": "vitest run",
@@ -49,6 +51,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\""
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.85.3",
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
     "dexie": "^4.0.11",

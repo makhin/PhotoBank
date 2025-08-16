@@ -1,6 +1,7 @@
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
+import { QueryProvider } from '@/app/providers/QueryProvider.tsx';
 
 import { API_BASE_URL } from '@/config.ts';
 import { store } from '@/app/store';
@@ -15,11 +16,13 @@ function start() {
 
    
   ReactDOM.createRoot(document.getElementById('root')!).render(
-    <Provider store={store}>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </Provider>,
+    <QueryProvider>
+      <Provider store={store}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </Provider>
+    </QueryProvider>,
   );
 }
 
