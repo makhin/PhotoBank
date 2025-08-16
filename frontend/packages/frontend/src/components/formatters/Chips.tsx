@@ -1,5 +1,6 @@
 import { memo, useCallback, useMemo } from 'react';
 import { formatList } from '@photobank/shared/format';
+
 import { Badge } from '@/shared/ui/badge';
 
 interface ChipsProps {

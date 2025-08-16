@@ -24,8 +24,9 @@ import {
     showFaceBoxesLabel,
     hoverFaceHint,
 } from '@photobank/shared/constants';
-
 import { useFacesUpdate } from '@photobank/shared/api/photobank';
+import { Maximize2 } from 'lucide-react';
+
 import { useAppSelector } from '@/app/hook';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
@@ -40,7 +41,6 @@ import { FacePersonSelector } from '@/components/FacePersonSelector';
 import { useViewer } from '@/features/viewer/state';
 import { pushPhotoId } from '@/features/viewer/urlSync';
 import { Button } from '@/shared/ui/button';
-import { Maximize2 } from 'lucide-react';
 
 
 const calculateImageSize = (naturalWidth: number, naturalHeight: number, containerWidth: number, containerHeight: number) => {
@@ -314,7 +314,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                         <div>
                                             <Label className="text-muted-foreground text-xs">{locationLabel}</Label>
                                               <a
-                                                  href={`https://www.google.com/maps?q=${photoData.location!.latitude},${photoData.location!.longitude}`}
+                                                  href={`https://www.google.com/maps?q=${photoData.location.latitude},${photoData.location.longitude}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="mt-1 block text-primary underline"

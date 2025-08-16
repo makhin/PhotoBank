@@ -1,10 +1,12 @@
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect } from 'react';
+
 import { Dialog, DialogContent } from '@/shared/ui/dialog';
+
 import ImageCanvas from './ImageCanvas';
 import { useViewer } from './state';
-import { useEffect } from 'react';
 import { prefetchAround } from './prefetch';
 
 const Lightbox = () => {

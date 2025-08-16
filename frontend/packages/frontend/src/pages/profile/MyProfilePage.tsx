@@ -15,13 +15,13 @@ import {
   userClaimsTitle,
   logoutButtonText,
 } from '@photobank/shared/constants';
-
 import {
   useAuthGetUser,
   useAuthGetUserRoles,
   useAuthGetUserClaims,
   useAuthUpdateUser,
 } from '@photobank/shared/api/photobank';
+
 import {Button} from '@/shared/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/shared/ui/form';
 import {Input} from '@/shared/ui/input';
@@ -36,11 +36,11 @@ type FormData = z.infer<typeof formSchema>;
 export default function MyProfilePage() {
   const navigate = useNavigate();
   const { data: userResp } = useAuthGetUser();
-  const user = (userResp as any)?.data;
+  const user = userResp?.data;
   const { data: rolesResp } = useAuthGetUserRoles();
-  const roles = (rolesResp as any)?.data ?? [];
+  const roles = rolesResp?.data ?? [];
   const { data: claimsResp } = useAuthGetUserClaims();
-  const claims = (claimsResp as any)?.data ?? [];
+  const claims = claimsResp?.data ?? [];
   const { mutateAsync: updateUser } = useAuthUpdateUser();
 
   const form = useForm<FormData>({
@@ -73,7 +73,12 @@ export default function MyProfilePage() {
           </div>
           <Form {...form}>
             { }
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+              <form
+                onSubmit={(e) => {
+                  void form.handleSubmit((data) => onSubmit(data))(e);
+                }}
+                className="space-y-4 mt-4"
+              >
               <FormField
                 control={form.control}
                 name="phoneNumber"

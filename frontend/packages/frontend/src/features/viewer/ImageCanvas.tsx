@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
+
 import SmartImage from '@/components/SmartImage';
 
 interface Props {

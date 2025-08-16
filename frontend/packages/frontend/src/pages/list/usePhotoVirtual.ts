@@ -20,7 +20,7 @@ export const usePhotoVirtual = ({
       const viewport = parent.querySelector<HTMLElement>(
         '[data-slot="scroll-area-viewport"]'
       );
-      return viewport ?? (parent as HTMLElement);
+      return viewport ?? (parent);
     },
     estimateSize: estimateSize ?? (() => 112),
     overscan: 8,

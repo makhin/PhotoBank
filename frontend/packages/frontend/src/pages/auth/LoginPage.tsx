@@ -13,6 +13,7 @@ import {
 } from '@photobank/shared/constants';
 import * as AuthApi from '@photobank/shared/api/photobank/auth/auth';
 import { setAuthToken } from '@photobank/shared/auth';
+
 import { Button } from '@/shared/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
 import { Checkbox } from '@/shared/ui/checkbox';
@@ -71,7 +72,12 @@ export default function LoginPage() {
         </p>
       )}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            void form.handleSubmit((data) => onSubmit(data))(e);
+          }}
+          className="space-y-4"
+        >
           <FormField
             control={form.control}
             name="email"

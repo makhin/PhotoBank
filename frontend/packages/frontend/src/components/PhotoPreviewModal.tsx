@@ -1,11 +1,11 @@
 import { previewModalFallbackTitle, loadingText } from '@photobank/shared/constants';
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import {
     usePhotosGetPhoto,
     getPhotosGetPhotoQueryKey,
     type photosGetPhotoResponse200,
 } from '@photobank/shared/api/photobank';
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 
 interface PhotoPreviewModalProps {
     photoId: number | null;

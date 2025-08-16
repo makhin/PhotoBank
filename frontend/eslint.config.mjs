@@ -20,6 +20,13 @@ export default [
       'cjs',
       'esm',
       'eslint.config.mjs',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/*.spec.ts',
+      '**/*.spec.tsx',
+      '**/*.msw.ts',
+      '**/src/mocks/**',
+      '**/api/photobank/**',
     ],
   },
   // The strictTypeChecked preset enables many "no-unsafe" rules that produce

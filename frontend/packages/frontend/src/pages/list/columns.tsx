@@ -9,7 +9,9 @@ import {
   colStorageLabel,
   colDetailsLabel,
 } from '@photobank/shared/constants';
+
 import FlagIcon from '@/components/formatters/FlagIcon';
+
 import PreviewCell from './PreviewCell';
 import RowActions from './RowActions';
 

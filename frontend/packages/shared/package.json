@@ -61,7 +61,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "eslint src --ext .ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.85.3",

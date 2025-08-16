@@ -9,10 +9,10 @@ import {
   passwordLabel,
   registerButtonText,
 } from '@photobank/shared/constants';
-
 import { useAuthRegister } from '@photobank/shared/api/photobank';
-import { Button } from '@/shared/ui/button';
 import { logger } from '@photobank/shared/utils/logger';
+
+import { Button } from '@/shared/ui/button';
 import {
   Form,
   FormControl,
@@ -59,7 +59,12 @@ export default function RegisterPage() {
       )}
       <Form {...form}>
         { }
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            void form.handleSubmit((data) => onSubmit(data))(e);
+          }}
+          className="space-y-4"
+        >
           <FormField
             control={form.control}
             name="email"

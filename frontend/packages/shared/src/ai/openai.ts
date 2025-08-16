@@ -2,7 +2,6 @@ import { AzureOpenAI } from 'openai';
 import type { ChatCompletionMessageParam } from 'openai/resources';
 
 import { FEW_SHOTS, SYSTEM_PROMPT } from './constants';
-
 import type { PhotoFilter } from './filter';
 import { PhotoFilterSchema, photoFilterSchemaForLLM } from './filter';
 

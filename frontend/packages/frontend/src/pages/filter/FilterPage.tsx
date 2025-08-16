@@ -4,9 +4,9 @@ import type {z} from 'zod';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton, loadingText } from '@photobank/shared/constants';
-
 import * as Api from '@photobank/shared/api/photobank/photos/photos';
 import type { FilterDto, PhotoItemDto } from '@photobank/shared/api/photobank';
+
 import { useAppDispatch, useAppSelector } from '@/app/hook';
 import { setFilter, setLastResult } from '@/features/photo/model/photoSlice';
 import { loadMetadata } from '@/features/meta/model/metaSlice';
@@ -99,15 +99,20 @@ function FilterPage() {
           <CardTitle>{filterFormTitle}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit((d) => { void onSubmit(d); })} className="space-y-6">
-              <FilterFormFields control={form.control} />
-              {/* Submit Button */}
-              <Button type="submit" className="w-full">
-                {applyFiltersButton}
-              </Button>
-            </form>
-          </Form>
+            <Form {...form}>
+              <form
+                onSubmit={(e) => {
+                  void form.handleSubmit((d) => onSubmit(d))(e);
+                }}
+                className="space-y-6"
+              >
+                <FilterFormFields control={form.control} />
+                {/* Submit Button */}
+                <Button type="submit" className="w-full">
+                  {applyFiltersButton}
+                </Button>
+              </form>
+            </Form>
         </CardContent>
       </Card>
   );
