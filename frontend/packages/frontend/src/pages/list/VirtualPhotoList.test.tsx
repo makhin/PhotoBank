@@ -5,6 +5,21 @@ import { vi } from 'vitest';
 
 vi.mock('./usePhotoVirtual');
 
+// Стабилизируем мок: возвращаем корректную форму virtual items
+const makeItems = (n: number) =>
+  Array.from({ length: n }, (_, i) => {
+    const size = 112;
+    const start = i * size;
+    return {
+      key: i,
+      index: i,
+      start,
+      size,
+      end: start + size,
+      lane: 0,
+    };
+  });
+
 import VirtualPhotoList from './VirtualPhotoList';
 import { usePhotoVirtual } from './usePhotoVirtual';
 
@@ -21,15 +36,10 @@ test('renders only a subset of items', async () => {
   const parentRef = createRef<HTMLDivElement>();
   const photos = createPhotos(50);
 
-  const mockedUsePhotoVirtual = vi.mocked(usePhotoVirtual);
-  mockedUsePhotoVirtual.mockReturnValue({
-    items: Array.from({ length: 5 }, (_, index) => ({
-      index,
-      size: 112,
-      start: index * 112,
-    })),
-    totalSize: 5600,
+  (usePhotoVirtual as unknown as vi.Mock).mockReturnValue({
     virtualizer: { measureElement: vi.fn() },
+    items: makeItems(Math.min(photos.length, 10)) as any,
+    totalSize: 112 * Math.min(photos.length, 10),
   });
 
   render(
