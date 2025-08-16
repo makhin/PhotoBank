@@ -57,6 +57,9 @@ export const apiCredentialsNotDefinedError =
 export const METADATA_CACHE_KEY = 'photobank_metadata_cache';
 export const METADATA_CACHE_VERSION = 1;
 
+export const PHOTO_FILTER_STORAGE_VERSION = 1;
+export const PHOTO_FILTER_STORAGE_KEY = `photobank_photo_filter_v${PHOTO_FILTER_STORAGE_VERSION}`;
+
 export const MAX_VISIBLE_PERSONS_LG = 3;
 export const MAX_VISIBLE_TAGS_LG = 3;
 
