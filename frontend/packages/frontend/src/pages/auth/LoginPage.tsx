@@ -22,7 +22,7 @@ import { PasswordInput } from '@/shared/ui/password-input';
 const formSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
-  rememberMe: z.boolean().optional(),
+  rememberMe: z.boolean(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -42,7 +42,7 @@ export default function LoginPage() {
   const login = AuthApi.useAuthLogin({
     mutation: {
       onSuccess: (resp, variables) => {
-        setAuthToken(resp.data.token!, variables.data.rememberMe ?? true);
+        setAuthToken(resp.data.token! as string, variables.data.rememberMe);
         navigate('/filter');
       },
       onError: () => setError(invalidCredentialsMsg),
@@ -83,7 +83,7 @@ export default function LoginPage() {
                     {...field}
                     type="email"
                     onChange={(e) => {
-                      field.onChange(e);
+                      field.onChange(e.target.value);
                       handleFieldChange();
                     }}
                   />
@@ -102,7 +102,7 @@ export default function LoginPage() {
                   <PasswordInput
                     {...field}
                     onChange={(e) => {
-                      field.onChange(e);
+                      field.onChange(e.target.value);
                       handleFieldChange();
                     }}
                   />
@@ -120,7 +120,7 @@ export default function LoginPage() {
                   <Checkbox
                     checked={field.value}
                     onCheckedChange={(v) => {
-                      field.onChange(v);
+                      field.onChange(v === true);
                       handleFieldChange();
                     }}
                     id="rememberMe"

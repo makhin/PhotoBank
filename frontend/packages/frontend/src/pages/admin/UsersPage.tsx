@@ -94,7 +94,8 @@ function UserEditor({ user, onSave }: UserEditorProps) {
 }
 
 export default function UsersPage() {
-  const { data: users = [] } = useUsersGetAll();
+  const { data: usersResp } = useUsersGetAll();
+  const users = usersResp?.data ?? [];
   const { mutateAsync: updateUser } = useUsersUpdate();
   const { mutateAsync: setClaims } = useUsersSetClaims();
 
