@@ -10,5 +10,12 @@
     "types": ["vitest/globals"]
   },
   "references": [{ "path": "../shared" }],
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/**/*.msw.ts",
+    "src/**/__mocks__/**",
+    "src/**/*.mock.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts"
+  ]
 }
