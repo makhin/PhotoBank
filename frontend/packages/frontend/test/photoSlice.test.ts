@@ -4,7 +4,6 @@ import reducer, {
   removeSelectedPhoto,
   setFilter,
   resetFilter,
-  setLastResult,
 } from '../src/features/photo/model/photoSlice';
 import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants';
 
@@ -24,12 +23,6 @@ describe('photoSlice', () => {
     expect(state.selectedPhotos).toEqual([1, 2]);
     state = reducer(state, removeSelectedPhoto(1));
     expect(state.selectedPhotos).toEqual([2]);
-  });
-
-  it('updates last result', () => {
-    const photos = [{ id: 5 } as any];
-    const state = reducer(undefined, setLastResult(photos));
-    expect(state.lastResult).toBe(photos);
   });
 });
 

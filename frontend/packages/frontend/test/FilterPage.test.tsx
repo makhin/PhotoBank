@@ -31,7 +31,7 @@ const renderPage = async (preloaded: any) => {
     reducer: { metadata: metaReducer, photo: photoReducer },
     preloadedState: {
       metadata: { ...initialMeta, ...preloaded },
-      photo: { filter: { ...DEFAULT_PHOTO_FILTER }, selectedPhotos: [], lastResult: [] },
+      photo: { filter: { ...DEFAULT_PHOTO_FILTER }, selectedPhotos: [] },
     },
   });
 

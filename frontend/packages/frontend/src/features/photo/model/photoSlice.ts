@@ -1,20 +1,15 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type {
-  FilterDto,
-  PhotoItemDto,
-} from '@photobank/shared/api/photobank';
+import type { FilterDto } from '@photobank/shared/api/photobank';
 import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants';
 
 interface PhotoState {
   filter: FilterDto;
   selectedPhotos: number[];
-  lastResult: PhotoItemDto[];
 }
 
 const initialState: PhotoState = {
   filter: { ...DEFAULT_PHOTO_FILTER },
   selectedPhotos: [],
-  lastResult: [],
 };
 
 const photoSlice = createSlice({
@@ -40,9 +35,6 @@ const photoSlice = createSlice({
         (id) => id !== action.payload
       );
     },
-    setLastResult(state, action: PayloadAction<PhotoItemDto[]>) {
-      state.lastResult = action.payload;
-    },
   },
 });
 
@@ -52,7 +44,6 @@ export const {
   setSelectedPhotos,
   addSelectedPhoto,
   removeSelectedPhoto,
-  setLastResult,
 } = photoSlice.actions;
 
 export default photoSlice.reducer;
