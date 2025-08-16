@@ -1,6 +1,6 @@
 # PhotoBank — Frontend Architecture (Short)
 
-> Target: `packages/frontend` (React 18, Vite, Vitest, RTL, Redux Toolkit, shadcn/ui, pnpm monorepo)
+> Target: `packages/frontend` (React 19, React Query 5, Vite, Vitest, RTL, Redux Toolkit, shadcn/ui, pnpm monorepo)
 
 ## Принципы
 - Модульность и переиспользуемость.
@@ -9,7 +9,9 @@
 - Тестируемость и предсказуемость.
 
 ## Потоки данных
-- Redux Toolkit: slices, selectors, hooks в `features/*/model/`.
+- React Query 5: серверное состояние, поиск — через `useInfiniteQuery`.
+- filter ↔ URL, персист в `localStorage`.
+- Redux Toolkit только для auth/meta/filter: slices, selectors, hooks в `features/*/model/`.
 - DTO из `@photobank/shared`.
 - Нормализация данных: `x ?? []`, `y ?? ''` вместо `undefined`.
 
