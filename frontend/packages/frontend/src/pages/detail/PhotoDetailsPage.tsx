@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { formatDate, getOrientation, getPlaceByGeoPoint, useIsAdmin } from '@photobank/shared';
 import { logger } from '@photobank/shared/utils/logger';
 import type { FaceBoxDto } from '@photobank/shared/api/photobank';
+import * as PhotosApi from '@photobank/shared/api/photobank/photos/photos';
 import {
     photoPropertiesTitle,
     nameLabel,
@@ -24,7 +25,7 @@ import {
     hoverFaceHint,
 } from '@photobank/shared/constants';
 
-import { useGetPhotoByIdQuery, useUpdateFaceMutation } from '@/shared/api.ts';
+import { useUpdateFaceMutation } from '@/shared/api.ts';
 import { useAppSelector } from '@/app/hook.ts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
@@ -76,7 +77,9 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
 
     const {id} = useParams<{ id: string }>();
     const photoId = propPhotoId ?? (id ? +id : 0);
-    const {data: photo, error} = useGetPhotoByIdQuery(photoId, { skip: photoId === 0 });
+    const {data: photo, error} = PhotosApi.usePhotosGetPhoto(photoId, {
+        query: {enabled: photoId !== 0}
+    });
 
     const formattedTakenDate = useMemo(() =>
         photo?.takenDate ? formatDate(photo.takenDate) : '',
