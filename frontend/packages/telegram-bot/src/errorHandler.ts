@@ -11,7 +11,7 @@ export function handleBotError(err: BotError<Context>) {
 }
 
 export async function handleCommandError(ctx: Context, error: unknown) {
-  if (error instanceof ProblemDetailsError && error.status === 403) {
+  if (error instanceof ProblemDetailsError && error.problem.status === 403) {
     await ctx.reply(
       'Ваш Telegram не привязан к аккаунту PhotoBank. Обратитесь к администратору.',
     );

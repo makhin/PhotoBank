@@ -12,7 +12,7 @@ export async function sendTagsPage(
   await sendNamedItemsPage({
     ctx,
     command: "tags",
-    fetchAll: () => getAllTags(),
+    fetchAll: async () => getAllTags(),
     prefix,
     page,
     edit,

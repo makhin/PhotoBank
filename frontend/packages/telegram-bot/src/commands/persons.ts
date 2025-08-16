@@ -12,12 +12,12 @@ export async function sendPersonsPage(
   await sendNamedItemsPage({
     ctx,
     command: "persons",
-    fetchAll: () => getAllPersons(),
+    fetchAll: async () => getAllPersons(),
     prefix,
     page,
     edit,
     errorMsg: "🚫 Не удалось получить список персон.",
-    filter: (p: { id: number }) => p.id >= 1,
+    filter: (p) => p.id >= 1,
   });
 }
 

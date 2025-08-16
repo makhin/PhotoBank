@@ -23,12 +23,13 @@ bot.on('inline_query', async (ctx) => {
       top: PAGE_SIZE,
     });
 
-    const items = resp.data.photos ?? resp.data.items ?? resp.data ?? [];
+    const data: any = resp.data as any;
+    const items = data.photos ?? data.items ?? resp.data ?? [];
     const results: InlineQueryResult[] = items.map((p): InlineQueryResultPhoto => ({
       type: 'photo',
       id: String(p.id),
       photo_url: p.previewUrl ?? p.originalUrl ?? '',
-      thumb_url: p.thumbnailUrl ?? p.previewUrl ?? p.originalUrl ?? '',
+      thumbnail_url: p.thumbnailUrl ?? p.previewUrl ?? p.originalUrl ?? '',
       title: p.name ?? `#${p.id}`,
       description: [
         formatDate(p.takenDate),
@@ -41,29 +42,38 @@ bot.on('inline_query', async (ctx) => {
 
     const nextOffset = items.length === PAGE_SIZE ? String(offset + PAGE_SIZE) : '';
 
-    await ctx.answerInlineQuery(results, {
-      is_personal: true,
-      cache_time: 5,
-      next_offset: nextOffset,
-      switch_pm_text: undefined,
-      switch_pm_parameter: undefined,
-    });
-  } catch (e) {
-    if (e instanceof ProblemDetailsError && e.status === 403) {
-      await ctx.answerInlineQuery([], {
+    await ctx.answerInlineQuery(
+      results,
+      {
         is_personal: true,
-        cache_time: 0,
-        switch_pm_text: 'Привяжите аккаунт, чтобы искать фото',
-        switch_pm_parameter: 'link',
-      });
+        cache_time: 5,
+        next_offset: nextOffset,
+        switch_pm_text: undefined,
+        switch_pm_parameter: undefined,
+      } as any,
+    );
+  } catch (e) {
+    if (e instanceof ProblemDetailsError && e.problem.status === 403) {
+      await ctx.answerInlineQuery(
+        [],
+        {
+          is_personal: true,
+          cache_time: 0,
+          switch_pm_text: 'Привяжите аккаунт, чтобы искать фото',
+          switch_pm_parameter: 'link',
+        } as any,
+      );
       return;
     }
     logger.warn('inline_query error', e);
-    await ctx.answerInlineQuery([], {
-      is_personal: true,
-      cache_time: 0,
-      switch_pm_text: 'Не удалось выполнить поиск (повторить?)',
-      switch_pm_parameter: 'help',
-    });
+    await ctx.answerInlineQuery(
+      [],
+      {
+        is_personal: true,
+        cache_time: 0,
+        switch_pm_text: 'Не удалось выполнить поиск (повторить?)',
+        switch_pm_parameter: 'help',
+      } as any,
+    );
   }
 });

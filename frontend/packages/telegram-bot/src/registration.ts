@@ -9,7 +9,7 @@ export async function ensureRegistered(ctx: Context): Promise<boolean> {
     await ensureUserAccessToken(ctx);
     return true;
   } catch (err) {
-    if (err instanceof ProblemDetailsError && err.status === 403) {
+    if (err instanceof ProblemDetailsError && err.problem.status === 403) {
       await ctx.reply(
         'Ваш Telegram не привязан к аккаунту PhotoBank. Обратитесь к администратору.',
       );
