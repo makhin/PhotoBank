@@ -34,7 +34,7 @@ export async function uploadPhotos(
   options: { files: UploadFile[]; storageId: number; path: string },
 ) {
   const { files, storageId, path } = options;
-  const blobs = files.map(({ data, name }) => new File([data], name));
+  const blobs = files.map(({ data, name }) => new File([data as BlobPart], name));
   try {
     return await photosUpload({ files: blobs, storageId, path }, ctx);
   } catch (err) {

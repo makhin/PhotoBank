@@ -14,10 +14,10 @@ import { handleCommandError } from "../errorHandler";
 export async function profileCommand(ctx: Context) {
     const username = ctx.from?.username ?? String(ctx.from?.id ?? "");
     try {
-        await getUser();
+        await getUser(ctx);
         const [rolesRes, claimsRes] = await Promise.all([
-            getUserRoles(),
-            getUserClaims(),
+            getUserRoles(ctx),
+            getUserClaims(ctx),
         ]);
         const roles = rolesRes.data;
         const claims = claimsRes.data;

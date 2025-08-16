@@ -1,4 +1,5 @@
-import type { Context, InputMediaPhoto } from 'grammy';
+import type { Context } from 'grammy';
+import type { InputMediaPhoto, Message } from 'grammy/types';
 import { formatDate } from '@photobank/shared/format';
 
 import { throttled } from '../utils/limiter';
@@ -16,15 +17,15 @@ function buildCaption(p: PhotoItemDto): string {
 export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
   const cached = getFileId(p.id);
   try {
-    const message = await withTelegramRetry(() =>
+    const message = (await withTelegramRetry(() =>
       throttled(() =>
         ctx.api.sendPhoto(
           ctx.chat!.id,
-          cached ?? { url: p.previewUrl ?? p.originalUrl ?? '' },
+          cached ?? (p.previewUrl ?? p.originalUrl ?? ''),
           { caption: buildCaption(p) },
         ),
       ),
-    );
+    )) as Message.PhotoMessage;
     const newId = message.photo?.at(-1)?.file_id || null;
     if (newId && newId !== cached) setFileId(p.id, newId);
     return message;
@@ -35,15 +36,15 @@ export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
     if (cached && (code === 400 || desc.includes('wrong file identifier'))) {
       delFileId(p.id);
       logger.warn('file_id invalidated, retry with URL', { photoId: p.id });
-      const message = await withTelegramRetry(() =>
-        throttled(() =>
-          ctx.api.sendPhoto(
-            ctx.chat!.id,
-            { url: p.previewUrl ?? p.originalUrl ?? '' },
-            { caption: buildCaption(p) },
+        const message = (await withTelegramRetry(() =>
+          throttled(() =>
+            ctx.api.sendPhoto(
+              ctx.chat!.id,
+              p.previewUrl ?? p.originalUrl ?? '',
+              { caption: buildCaption(p) },
+            ),
           ),
-        ),
-      );
+        )) as Message.PhotoMessage;
       const newId = message.photo?.at(-1)?.file_id || null;
       if (newId) setFileId(p.id, newId);
       return message;
@@ -67,7 +68,7 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
   for (const group of groups) {
     const medias: InputMediaPhoto[] = group.map((p) => {
       const cached = getFileId(p.id);
-      const media = cached ?? { url: p.previewUrl ?? p.originalUrl ?? '' };
+      const media = cached ?? (p.previewUrl ?? p.originalUrl ?? '');
       return {
         type: 'photo',
         media,
@@ -77,9 +78,9 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
 
     try {
       // mediaGroup нельзя редактировать, поэтому просто шлём и идём дальше
-      const msgs = await withTelegramRetry(() =>
+      const msgs = (await withTelegramRetry(() =>
         throttled(() => ctx.api.sendMediaGroup(ctx.chat!.id, medias)),
-      );
+      )) as Message.PhotoMessage[];
       // Сохранить file_id по всем элементам, где он появился
       msgs.forEach((m, i) => {
         const p = group[i];
