@@ -15,6 +15,8 @@ export type SmartImageProps = Omit<
   fetchPriority?: 'high' | 'auto' | 'low';
   decoding?: 'async' | 'auto' | 'sync';
   loading?: 'eager' | 'lazy';
+  width?: number | string;
+  height?: number | string;
 };
 
 const SmartImage = React.memo(
@@ -28,9 +30,11 @@ const SmartImage = React.memo(
         sizes,
         className,
         onLoadFull,
-        fetchPriority = 'auto',
+        fetchPriority = 'low',
         decoding = 'async',
         loading = 'lazy',
+        width,
+        height,
         ...imgProps
       },
       ref
@@ -53,6 +57,8 @@ const SmartImage = React.memo(
           <img
             src={thumbSrc}
             alt={alt}
+            width={width}
+            height={height}
             className={clsx(
               'absolute inset-0 w-full h-full object-cover transition-all duration-300',
               loaded ? 'opacity-0 blur-none scale-100' : 'opacity-100 blur-md scale-105'
@@ -65,6 +71,8 @@ const SmartImage = React.memo(
             srcSet={srcSet}
             sizes={sizes}
             alt={alt}
+            width={width}
+            height={height}
             loading={loading}
             decoding={decoding}
             fetchPriority={fetchPriority}
