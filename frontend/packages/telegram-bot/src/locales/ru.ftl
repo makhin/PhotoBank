@@ -1,0 +1,12 @@
+help = Доступные команды:\n/thisday [страница] – показать фото этого дня\n/search <caption> – поиск по подписи\n/ai <prompt> – поиск с помощью ИИ\n/photo <id> – показать фото по идентификатору\n/profile – информация о профиле\n/subscribe HH:MM – ежедневная рассылка /thisday\n/tags [prefix] – список тегов\n/storages [prefix] – список хранилищ и путей\n/persons [prefix] – список персон\n\nЛюбое сообщение без команды обрабатывается как запрос /ai.
+cmd-start = Запустить бота
+cmd-help = Помощь
+cmd-thisday = Фото этого дня
+cmd-search = Поиск по подписи
+cmd-ai = Поиск с помощью ИИ
+cmd-profile = Информация о профиле
+cmd-subscribe = Подписка на ежедневное /thisday
+cmd-tags = Список тегов
+cmd-persons = Список персон
+cmd-storages = Список хранилищ
+cmd-upload = Загрузка файлов
