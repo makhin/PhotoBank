@@ -1,9 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
 
-import metaReducer from '@/features/meta/model/metaSlice.ts';
-import photoReducer from '@/features/photo/model/photoSlice.ts';
-import botReducer from '@/features/bot/model/botSlice.ts';
-import authReducer from '@/features/auth/model/authSlice.ts';
+import metaReducer from '@/features/meta/model/metaSlice';
+import photoReducer from '@/features/photo/model/photoSlice';
+import botReducer from '@/features/bot/model/botSlice';
+import authReducer from '@/features/auth/model/authSlice';
 
 export const store = configureStore({
   reducer: {

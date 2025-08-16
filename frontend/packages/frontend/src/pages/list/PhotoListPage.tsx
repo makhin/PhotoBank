@@ -38,6 +38,7 @@ const PhotoListPage = () => {
   );
 
   const { mutateAsync: searchPhotos, isPending: isLoading } = usePhotosSearchPhotos();
+  type PhotosPage = { items?: PhotoItemDto[]; totalCount?: number };
   const [rawPhotos, setRawPhotos] = useState<PhotoItemDto[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(filter.page ?? 1);
@@ -117,11 +118,11 @@ const PhotoListPage = () => {
     let cancelled = false;
     (async () => {
       try {
-        const result = await searchPhotos({ data: { ...filter, page: 1, pageSize } });
+        const result = (await searchPhotos({ data: { ...filter, page: 1, pageSize } })) as { data: PhotosPage };
         if (cancelled) return;
-        const fetched = result.data?.items ?? [];
+        const fetched: PhotoItemDto[] = result.data.items ?? [];
         setRawPhotos(fetched);
-        setTotal(result.data?.totalCount ?? 0);
+        setTotal(result.data.totalCount ?? 0);
         setPage(1);
         dispatch(setLastResult(fetched));
       } catch {
@@ -156,12 +157,12 @@ const PhotoListPage = () => {
 
   const loadMore = useCallback(async () => {
     const nextPage = page + 1;
-    const result = await searchPhotos({ data: { ...filter, page: nextPage, pageSize } });
-    const newPhotos = result.data?.items ?? [];
+    const result = (await searchPhotos({ data: { ...filter, page: nextPage, pageSize } })) as { data: PhotosPage };
+    const newPhotos: PhotoItemDto[] = result.data.items ?? [];
     const updated = [...rawPhotos, ...newPhotos];
     setRawPhotos(updated);
     setPage(nextPage);
-    setTotal(result.data?.totalCount ?? 0);
+    setTotal(result.data.totalCount ?? 0);
     dispatch(setLastResult(updated));
   }, [searchPhotos, filter, page, rawPhotos, dispatch, pageSize]);
 

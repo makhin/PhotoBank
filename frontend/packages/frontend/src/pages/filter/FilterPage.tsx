@@ -6,18 +6,19 @@ import { useEffect } from 'react';
 import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton, loadingText } from '@photobank/shared/constants';
 
 import * as Api from '@photobank/shared/api/photobank/photos/photos';
-import type { FilterDto } from '@photobank/shared/api/photobank';
-import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
-import { setFilter, setLastResult } from '@/features/photo/model/photoSlice.ts';
-import { loadMetadata } from '@/features/meta/model/metaSlice.ts';
+import type { FilterDto, PhotoItemDto } from '@photobank/shared/api/photobank';
+import { useAppDispatch, useAppSelector } from '@/app/hook';
+import { setFilter, setLastResult } from '@/features/photo/model/photoSlice';
+import { loadMetadata } from '@/features/meta/model/metaSlice';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Form } from '@/shared/ui/form';
-import { formSchema } from '@/features/filter/lib/form-schema.ts';
-import { FilterFormFields } from '@/components/FilterFormFields.tsx';
+import { formSchema } from '@/features/filter/lib/form-schema';
+import { FilterFormFields } from '@/components/FilterFormFields';
 
 // Infer FormData type from formSchema to ensure compatibility
 type FormData = z.infer<typeof formSchema>;
+type PhotosPage = { items?: PhotoItemDto[]; totalCount?: number };
 
 function FilterPage() {
   const dispatch = useAppDispatch();
@@ -68,24 +69,24 @@ function FilterPage() {
       thisDay: data.thisDay,
       takenDateFrom: data.dateFrom?.toISOString(),
       takenDateTo: data.dateTo?.toISOString(),
-      skip: 0,
-      top: 10,
+      page: 1,
+      pageSize: 10,
     };
 
-    searchPhotos.mutate(
-      { data: filter },
-      {
-        onSuccess: (page) => {
-          const photos = page.data.items ?? [];
-          dispatch(setFilter(filter));
-          dispatch(setLastResult(photos));
-          navigate('/photos');
-        },
-        onError: () => {
-          // handle error if needed
-        },
-      }
-    );
+      searchPhotos.mutate(
+        { data: filter },
+        {
+          onSuccess: (page) => {
+            const photos = (page.data as PhotosPage).items ?? [];
+            dispatch(setFilter(filter));
+            dispatch(setLastResult(photos));
+            navigate('/photos');
+          },
+          onError: () => {
+            // handle error if needed
+          },
+        }
+      );
   };
 
   if (!loaded) {

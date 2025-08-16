@@ -24,13 +24,13 @@ import {
     thisDayLabel,
 } from '@photobank/shared/constants';
 
-import { useAppSelector } from '@/app/hook.ts';
+import { useAppSelector } from '@/app/hook';
 import {Input} from '@/shared/ui/input';
 import {TriStateCheckbox} from '@/shared/ui/tri-state-checkbox';
 import {MultiSelect} from '@/shared/ui/multi-select';
 import {FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/shared/ui/form';
-import type {FormData} from '@/features/filter/lib/form-schema.ts';
-import {Popover, PopoverContent, PopoverTrigger} from "@/shared/ui/popover.tsx";
+import type {FormData} from '@/features/filter/lib/form-schema';
+import {Popover, PopoverContent, PopoverTrigger} from "@/shared/ui/popover";
 import {Button} from '@/shared/ui/button';
 import {Calendar} from '@/shared/ui/calendar';
 

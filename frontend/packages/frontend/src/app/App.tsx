@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import { getAuthToken } from '@photobank/shared/auth';
 
-import { ThemeProvider } from '@/app/providers/ThemeProvider.tsx';
-import NavBar from '@/components/NavBar.tsx';
-import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
-import { loadMetadata } from '@/features/meta/model/metaSlice.ts';
-import { AppRoutes } from '@/routes/AppRoutes.tsx';
+import { ThemeProvider } from '@/app/providers/ThemeProvider';
+import NavBar from '@/components/NavBar';
+import { useAppDispatch, useAppSelector } from '@/app/hook';
+import { loadMetadata } from '@/features/meta/model/metaSlice';
+import { AppRoutes } from '@/routes/AppRoutes';
 import Lightbox from '@/features/viewer/Lightbox';
 
 export default function App() {
