@@ -1,14 +1,22 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { FilterDto } from '@photobank/shared/api/photobank';
-import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants';
+import {
+  DEFAULT_PHOTO_FILTER,
+  PHOTO_FILTER_STORAGE_KEY,
+} from '@photobank/shared/constants';
+import { namespacedStorage } from '@photobank/shared/safeStorage';
 
 interface PhotoState {
   filter: FilterDto;
   selectedPhotos: number[];
 }
 
+const store = namespacedStorage('photo');
+
 const initialState: PhotoState = {
-  filter: { ...DEFAULT_PHOTO_FILTER },
+  filter: store.get<FilterDto>(PHOTO_FILTER_STORAGE_KEY) ?? {
+    ...DEFAULT_PHOTO_FILTER,
+  },
   selectedPhotos: [],
 };
 
