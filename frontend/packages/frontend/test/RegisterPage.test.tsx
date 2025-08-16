@@ -6,8 +6,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 
 const renderPage = async (regMock: any) => {
-  vi.doMock('../src/shared/api.ts', () => ({
-    useRegisterMutation: () => [regMock, { isLoading: false }],
+  vi.doMock('@photobank/shared/api/photobank', () => ({
+    useAuthRegister: () => ({ mutateAsync: regMock, isPending: false }),
   }));
   const { default: RegisterPage } = await import('../src/pages/auth/RegisterPage');
   render(
@@ -27,15 +27,13 @@ describe('RegisterPage', () => {
   });
 
   it('submits registration data', async () => {
-    const regMock = vi
-      .fn()
-      .mockReturnValue({ unwrap: () => Promise.resolve({}) });
+    const regMock = vi.fn().mockResolvedValue({ data: {} });
     await renderPage(regMock);
     await userEvent.type(screen.getByLabelText('Email'), 'a@b.co');
     await userEvent.type(screen.getByLabelText('Password'), '123');
     await userEvent.click(screen.getByRole('button', { name: /register/i }));
     await waitFor(() => {
-      expect(regMock).toHaveBeenCalledWith({ email: 'a@b.co', password: '123' });
+      expect(regMock).toHaveBeenCalledWith({ data: { email: 'a@b.co', password: '123' } });
     });
   });
 });

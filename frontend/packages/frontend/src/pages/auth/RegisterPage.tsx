@@ -10,7 +10,7 @@ import {
   registerButtonText,
 } from '@photobank/shared/constants';
 
-import { useRegisterMutation } from '@/shared/api.ts';
+import { useAuthRegister } from '@photobank/shared/api/photobank';
 import { Button } from '@/shared/ui/button';
 import { logger } from '@photobank/shared/utils/logger';
 import {
@@ -33,7 +33,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [register] = useRegisterMutation();
+  const { mutateAsync: register } = useAuthRegister();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: { email: '', password: '' },
@@ -41,7 +41,7 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await register(data).unwrap();
+      await register({ data });
       navigate('/login');
     } catch (e) {
       logger.error(e);

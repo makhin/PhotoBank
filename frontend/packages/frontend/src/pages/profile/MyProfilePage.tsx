@@ -17,11 +17,11 @@ import {
 } from '@photobank/shared/constants';
 
 import {
-  useGetUserQuery,
-  useGetUserRolesQuery,
-  useGetUserClaimsQuery,
-  useUpdateUserMutation,
-} from '@/shared/api.ts';
+  useAuthGetUser,
+  useAuthGetUserRoles,
+  useAuthGetUserClaims,
+  useAuthUpdateUser,
+} from '@photobank/shared/api/photobank';
 import {Button} from '@/shared/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/shared/ui/form';
 import {Input} from '@/shared/ui/input';
@@ -35,10 +35,10 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function MyProfilePage() {
   const navigate = useNavigate();
-  const { data: user } = useGetUserQuery();
-  const { data: roles = [] } = useGetUserRolesQuery();
-  const { data: claims = [] } = useGetUserClaimsQuery();
-  const [updateUser] = useUpdateUserMutation();
+  const { data: user } = useAuthGetUser();
+  const { data: roles = [] } = useAuthGetUserRoles();
+  const { data: claims = [] } = useAuthGetUserClaims();
+  const { mutateAsync: updateUser } = useAuthUpdateUser();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -53,7 +53,7 @@ export default function MyProfilePage() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await updateUser(data).unwrap();
+      await updateUser({ data });
       navigate('/filter');
     } catch (e) {
       logger.error(e);
