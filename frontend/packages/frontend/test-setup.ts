@@ -1,3 +1,6 @@
+import { setupServer } from 'msw/node';
+import { handlers } from './src/mocks/handlers';
+
 import '@testing-library/jest-dom/vitest';
 
 class ResizeObserver {
@@ -37,3 +40,8 @@ Object.defineProperty(globalThis, 'HTMLCanvasElement', {
     getContext() { return null; }
   },
 });
+
+const server = setupServer(...handlers);
+beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
