@@ -1,23 +1,23 @@
-import {useNavigate} from 'react-router-dom';
-import {useForm} from 'react-hook-form';
-import {useCallback} from 'react';
-import {zodResolver} from '@hookform/resolvers/zod';
-import {z} from 'zod';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { useCallback, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   loginTitle,
   emailLabel,
   passwordLabel,
   stayLoggedInLabel,
   loginButtonText,
+  invalidCredentialsMsg,
 } from '@photobank/shared/constants';
-
-import {loginUser, resetError} from '@/features/auth/model/authSlice.ts';
-import {useAppDispatch, useAppSelector} from '@/app/hook.ts';
-import {Button} from '@/shared/ui/button';
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/shared/ui/form';
-import {Checkbox} from '@/shared/ui/checkbox';
-import {Input} from '@/shared/ui/input';
-import {PasswordInput} from '@/shared/ui/password-input';
+import * as AuthApi from '@photobank/shared/api/photobank/auth/auth';
+import { setAuthToken } from '@photobank/shared/auth';
+import { Button } from '@/shared/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
+import { Checkbox } from '@/shared/ui/checkbox';
+import { Input } from '@/shared/ui/input';
+import { PasswordInput } from '@/shared/ui/password-input';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -29,8 +29,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const {loading, error} = useAppSelector((s) => s.auth);
+  const [error, setError] = useState<string | null>(null);
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -40,21 +39,28 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = useCallback(
-    async (data: FormData) => {
-      const result = await dispatch(loginUser(data));
-      if (loginUser.fulfilled.match(result)) {
+  const login = AuthApi.useAuthLogin({
+    mutation: {
+      onSuccess: (resp, variables) => {
+        setAuthToken(resp.data.token!, variables.data.rememberMe ?? true);
         navigate('/filter');
-      }
+      },
+      onError: () => setError(invalidCredentialsMsg),
     },
-    [dispatch, navigate],
+  });
+
+  const onSubmit = useCallback(
+    (data: FormData) => {
+      login.mutate({ data });
+    },
+    [login],
   );
 
   const handleFieldChange = useCallback(() => {
     if (error) {
-      dispatch(resetError());
+      setError(null);
     }
-  }, [dispatch, error]);
+  }, [error]);
 
   return (
     <div className="w-full max-w-sm mx-auto p-4">
@@ -65,7 +71,6 @@ export default function LoginPage() {
         </p>
       )}
       <Form {...form}>
-        { }
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
@@ -127,8 +132,8 @@ export default function LoginPage() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? '...' : loginButtonText}
+          <Button type="submit" className="w-full" disabled={login.isPending}>
+            {login.isPending ? '...' : loginButtonText}
           </Button>
         </form>
       </Form>

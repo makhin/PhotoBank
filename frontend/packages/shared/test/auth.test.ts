@@ -49,7 +49,7 @@ describe('auth utilities', () => {
     const auth = await import('../src/auth');
     auth.setAuthToken('token', true);
     expect(auth.getAuthToken()).toBe('token');
-    expect(globalWithStorage.window.localStorage.getItem('auth:token')).toBe('token');
+    expect(globalWithStorage.window.localStorage.getItem('auth:token')).toBe('"token"');
   });
 
   it('clears token and storage', async () => {
@@ -64,7 +64,7 @@ describe('auth utilities', () => {
   });
 
   it('loads token from storage on import', async () => {
-    const storage = createStorage({ 'auth:token': 'init' });
+    const storage = createStorage({ 'auth:token': '"init"' });
     globalWithStorage.window = { localStorage: storage };
     globalWithStorage.localStorage = storage;
     const auth = await import('../src/auth');
