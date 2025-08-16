@@ -1,4 +1,4 @@
-import { configureApi, customFetcher } from '@photobank/shared/api/photobank/fetcher';
+import { configureApi, customFetcher } from '@photobank/shared/api/photobank';
 
 configureApi(process.env.API_BASE_URL ?? '');
 
@@ -8,7 +8,7 @@ type ExchangeBody = { telegramUserId: number; username: string | null };
 
 export async function exchangeTelegramUserToken(telegramUserId: number, username?: string) {
   const body: ExchangeBody = { telegramUserId, username: username ?? null };
-  const res = await customFetcher<{ accessToken: string; expiresIn: number }>(
+  const res = await customFetcher<{ data: { accessToken: string; expiresIn: number } }>(
     '/auth/telegram/exchange',
     {
       method: 'POST',

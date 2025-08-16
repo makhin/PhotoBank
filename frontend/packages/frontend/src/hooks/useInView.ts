@@ -21,7 +21,7 @@ export function useInView<T extends Element>(
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [opts.root, opts.rootMargin, opts.threshold]);
+  }, [opts]);
 
   return [ref, inView];
 }

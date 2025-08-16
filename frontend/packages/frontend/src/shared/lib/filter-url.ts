@@ -1,15 +1,13 @@
-import { Buffer } from 'buffer';
-import type { FormData } from '@/features/filter/lib/form-schema';
-import { formSchema } from '@/features/filter/lib/form-schema';
+import { formSchema, type FormData } from '@/features/filter/lib/form-schema';
 
 const toBase64 = (json: string) =>
   typeof window === 'undefined'
-    ? Buffer.from(json, 'utf-8').toString('base64')
+    ? globalThis.Buffer.from(json, 'utf-8').toString('base64')
     : window.btoa(json);
 
 const fromBase64 = (encoded: string) =>
   typeof window === 'undefined'
-    ? Buffer.from(encoded, 'base64').toString('utf-8')
+    ? globalThis.Buffer.from(encoded, 'base64').toString('utf-8')
     : window.atob(encoded);
 
 export const serializeFilter = (data: FormData): string => {
