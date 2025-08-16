@@ -7,7 +7,6 @@ import {
 } from '@photobank/shared/constants';
 import { namespacedStorage } from '@photobank/shared/safeStorage';
 
-import { unwrapOrThrow } from '@/shared/httpUtils';
 
 interface MetadataPayload {
     tags: TagDto[];
@@ -68,10 +67,10 @@ export const loadMetadata = createAsyncThunk('metadata/load', async (_, { signal
     const fromCache = loadFromCache();
     if (fromCache) return fromCache;
 
-    const storages: StorageDto[] = await unwrapOrThrow(Api.storagesGetAll({ signal }));
-    const tags: TagDto[] = await unwrapOrThrow(Api.tagsGetAll({ signal }));
-    const persons: PersonDto[] = await unwrapOrThrow(Api.personsGetAll({ signal }));
-    const paths: PathDto[] = await unwrapOrThrow(Api.pathsGetAll({ signal }));
+    const storages = (await Api.storagesGetAll({ signal })).data;
+    const tags = (await Api.tagsGetAll({ signal })).data;
+    const persons = (await Api.personsGetAll({ signal })).data;
+    const paths = (await Api.pathsGetAll({ signal })).data;
 
     const result: MetadataPayload = {
         tags,
