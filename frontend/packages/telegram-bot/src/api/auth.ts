@@ -1,21 +1,23 @@
-import { ProblemDetailsError } from '@photobank/shared/types/problem';
+import { configureApi, customFetcher } from '@photobank/shared/api/photobank/fetcher';
 
-const API_BASE_URL = process.env.API_BASE_URL;
-const BOT_SERVICE_KEY = process.env.BOT_SERVICE_KEY;
+configureApi(process.env.API_BASE_URL ?? '');
+
+const serviceKey = process.env.BOT_SERVICE_KEY ?? '';
+
+type ExchangeBody = { telegramUserId: number; username: string | null };
 
 export async function exchangeTelegramUserToken(telegramUserId: number, username?: string) {
-  const res = await fetch(`${API_BASE_URL}/api/auth/telegram/exchange`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Service-Key': BOT_SERVICE_KEY,
+  const body: ExchangeBody = { telegramUserId, username: username ?? null };
+  const res = await customFetcher<{ accessToken: string; expiresIn: number }>(
+    '/auth/telegram/exchange',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Service-Key': serviceKey,
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify({ telegramUserId, username: username ?? null }),
-  });
-  if (!res.ok) {
-    const problem = await res.json().catch(() => null);
-    if (problem?.title && problem?.status) throw new ProblemDetailsError(problem);
-    throw new Error(`HTTP ${res.status}`);
-  }
-  return res.json() as Promise<{ accessToken: string; expiresIn: number }>;
+  );
+  return res.data;
 }
