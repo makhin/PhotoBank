@@ -4,29 +4,26 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "tsx src/index.ts",
-    "dev": "tsx watch --inspect-brk=9229 src/index.ts",
-    "test": "vitest run",
-    "lint": "eslint src --ext .ts",
-    "format": "prettier --write \"**/*.{ts,tsx}\""
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "test": "vitest run"
   },
   "dependencies": {
     "@grammyjs/conversations": "^2.1.0",
     "@grammyjs/runner": "^1.0.4",
     "@photobank/shared": "workspace:*",
     "axios": "^1.11.0",
-    "fetch-blob": "^4.0.0",
+    "bottleneck": "^2.19.5",
     "dotenv": "^17.2.1",
+    "fetch-blob": "^4.0.0",
     "grammy": "^1.37.0",
     "lru-cache": "^11.1.0",
     "p-retry": "^6.2.1",
-    "bottleneck": "^2.19.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "ts-node-dev": "^2.0.0",
-    "tsx": "^4.20.3",
-    "typescript": "^5.8.3",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   }
 }

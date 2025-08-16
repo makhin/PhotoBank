@@ -1,8 +1,14 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "composite": true,
     "outDir": "dist",
-    "module": "ESNext"
+    "rootDir": "src",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "target": "ES2022",
+    "types": ["vitest/globals"]
   },
-  "include": ["src", "test"]
+  "references": [{ "path": "../shared" }],
+  "include": ["src"]
 }
