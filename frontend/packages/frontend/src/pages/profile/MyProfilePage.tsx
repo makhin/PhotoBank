@@ -35,9 +35,12 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function MyProfilePage() {
   const navigate = useNavigate();
-  const { data: user } = useAuthGetUser();
-  const { data: roles = [] } = useAuthGetUserRoles();
-  const { data: claims = [] } = useAuthGetUserClaims();
+  const { data: userResp } = useAuthGetUser();
+  const user = (userResp as any)?.data;
+  const { data: rolesResp } = useAuthGetUserRoles();
+  const roles = (rolesResp as any)?.data ?? [];
+  const { data: claimsResp } = useAuthGetUserClaims();
+  const claims = (claimsResp as any)?.data ?? [];
   const { mutateAsync: updateUser } = useAuthUpdateUser();
 
   const form = useForm<FormData>({

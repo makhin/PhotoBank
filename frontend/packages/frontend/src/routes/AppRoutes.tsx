@@ -1,8 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
-import RequireAuth from '@/app/RequireAuth.tsx';
-import RequireAdmin from '@/app/RequireAdmin.tsx';
+import RequireAuth from '@/app/RequireAuth';
+import RequireAdmin from '@/app/RequireAdmin';
 
 const PhotoListPage = lazy(() => import('@/pages/list/PhotoListPage'));
 const FilterPage = lazy(() => import('@/pages/filter/FilterPage'));

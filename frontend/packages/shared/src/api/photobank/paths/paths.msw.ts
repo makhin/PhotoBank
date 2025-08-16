@@ -14,6 +14,8 @@ import {
   http
 } from 'msw';
 
+import type { PathDto } from '../model/pathDto';
+
 
 export const getPathsGetAllResponseMock = (): PathDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({storageId: faker.number.int({min: undefined, max: undefined}), path: faker.string.alpha({length: {min: 1, max: 20}})})))
 

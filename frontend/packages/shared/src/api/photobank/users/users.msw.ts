@@ -14,6 +14,8 @@ import {
   http
 } from 'msw';
 
+import type { UserWithClaimsDto } from '../model/userWithClaimsDto';
+
 
 export const getUsersGetAllResponseMock = (): UserWithClaimsDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), phoneNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), telegramUserId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), null]), undefined]), claims: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({type: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null])})), undefined])})))
 

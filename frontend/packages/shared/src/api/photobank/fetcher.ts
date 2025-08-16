@@ -28,7 +28,7 @@ export async function customFetcher<T>(
   options: RequestInit = {},
   signal?: AbortSignal,
 ): Promise<T> {
-  return queue.add(async () => {
+  return queue.add(async (): Promise<T> => {
     const headers = new Headers(options.headers);
     if (tokenProvider) {
       const token = await tokenProvider();
@@ -74,5 +74,5 @@ export async function customFetcher<T>(
       }
     }
     throw new Error('Request failed');
-  });
+  }) as Promise<T>;
 }

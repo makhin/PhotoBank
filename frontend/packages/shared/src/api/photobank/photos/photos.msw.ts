@@ -14,6 +14,10 @@ import {
   http
 } from 'msw';
 
+import type { PhotoDto } from '../model/photoDto';
+import type { PhotoItemDto } from '../model/photoItemDto';
+import type { PhotoItemDtoPageResponse } from '../model/photoItemDtoPageResponse';
+
 
 export const getPhotosSearchPhotosResponseMock = (overrideResponse: Partial< PhotoItemDtoPageResponse > = {}): PhotoItemDtoPageResponse => ({totalCount: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), items: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.number.int({min: undefined, max: undefined}), thumbnail: faker.string.alpha({length: {min: 10, max: 20}}), name: faker.string.alpha({length: {min: 1, max: 20}}), takenDate: faker.helpers.arrayElement([faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, null]), undefined]), isBW: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), isAdultContent: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), adultScore: faker.helpers.arrayElement([faker.number.float({min: undefined, max: undefined, fractionDigits: 2}), undefined]), isRacyContent: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), racyScore: faker.helpers.arrayElement([faker.number.float({min: undefined, max: undefined, fractionDigits: 2}), undefined]), storageName: faker.string.alpha({length: {min: 1, max: 20}}), relativePath: faker.string.alpha({length: {min: 1, max: 20}}), tags: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({tagId: faker.number.int({min: undefined, max: undefined})})), undefined]), persons: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({personId: faker.number.int({min: undefined, max: undefined})})), undefined]), captions: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), undefined])})), undefined]), ...overrideResponse})
 
