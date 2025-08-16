@@ -1,7 +1,11 @@
 import { previewModalFallbackTitle, loadingText } from '@photobank/shared/constants';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
-import { usePhotosGetPhoto } from '@photobank/shared/api/photobank';
+import {
+    usePhotosGetPhoto,
+    getPhotosGetPhotoQueryKey,
+    type photosGetPhotoResponse200,
+} from '@photobank/shared/api/photobank';
 
 interface PhotoPreviewModalProps {
     photoId: number | null;
@@ -9,8 +13,12 @@ interface PhotoPreviewModalProps {
 }
 
 const PhotoPreviewModal = ({ photoId, onOpenChange }: PhotoPreviewModalProps) => {
-    const { data: photo, isFetching } = usePhotosGetPhoto(photoId ?? 0, {
-        query: { enabled: photoId !== null },
+    const { data: photo, isFetching } = usePhotosGetPhoto<photosGetPhotoResponse200['data']>(photoId ?? 0, {
+        query: {
+            enabled: photoId !== null,
+            queryKey: getPhotosGetPhotoQueryKey(photoId ?? 0),
+            select: (resp) => (resp as photosGetPhotoResponse200).data,
+        },
     });
 
     return (
