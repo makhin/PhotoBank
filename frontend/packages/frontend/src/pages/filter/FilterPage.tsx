@@ -5,10 +5,10 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton, loadingText } from '@photobank/shared/constants';
 import * as Api from '@photobank/shared/api/photobank/photos/photos';
-import type { FilterDto, PhotoItemDto } from '@photobank/shared/api/photobank';
+import type { FilterDto } from '@photobank/shared/api/photobank';
 
 import { useAppDispatch, useAppSelector } from '@/app/hook';
-import { setFilter, setLastResult } from '@/features/photo/model/photoSlice';
+import { setFilter } from '@/features/photo/model/photoSlice';
 import { loadMetadata } from '@/features/meta/model/metaSlice';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -19,8 +19,6 @@ import { serializeFilter, deserializeFilter } from '@/shared/lib/filter-url';
 
 // Infer FormData type from formSchema to ensure compatibility
 type FormData = z.infer<typeof formSchema>;
-type PhotosPage = { items?: PhotoItemDto[]; totalCount?: number };
-
 function FilterPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -106,10 +104,8 @@ function FilterPage() {
     searchPhotos.mutate(
       { data: filter },
       {
-        onSuccess: (page) => {
-          const photos = (page.data as PhotosPage).items ?? [];
+        onSuccess: () => {
           dispatch(setFilter(filter));
-          dispatch(setLastResult(photos));
           navigate(`/photos?filter=${encodeURIComponent(encoded)}`);
         },
         onError: () => {

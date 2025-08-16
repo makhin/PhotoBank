@@ -9,7 +9,7 @@ import {
 
 import { useInfinitePhotos } from '@/features/photo/useInfinitePhotos';
 import { useAppDispatch, useAppSelector } from '@/app/hook';
-import { setLastResult, setFilter } from '@/features/photo/model/photoSlice';
+import { setFilter } from '@/features/photo/model/photoSlice';
 import { useViewer } from '@/features/viewer/state';
 import { pushPhotoId, readPhotoId, clearPhotoId } from '@/features/viewer/urlSync';
 import EmptyState from '@/components/EmptyState';
@@ -161,10 +161,6 @@ const PhotoListPage = () => {
     (_photo: PhotoItemDto) => <PhotoListItemSkeleton />,
     []
   );
-
-  useEffect(() => {
-    dispatch(setLastResult(photos));
-  }, [photos, dispatch]);
 
   useEffect(() => {
     const id = readPhotoId(location.search);
