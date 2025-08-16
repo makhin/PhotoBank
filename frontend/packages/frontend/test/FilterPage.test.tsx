@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import metaReducer from '../src/features/meta/model/metaSlice';
 import photoReducer from '../src/features/photo/model/photoSlice';
 import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants';
@@ -34,16 +35,20 @@ const renderPage = async (preloaded: any) => {
     },
   });
 
+  const queryClient = new QueryClient();
+
   const { default: FilterPage } = await import('../src/pages/filter/FilterPage');
 
   render(
-    <Provider store={store}>
-      <MemoryRouter initialEntries={["/filter"]}>
-        <Routes>
-          <Route path="/filter" element={<FilterPage />} />
-        </Routes>
-      </MemoryRouter>
-    </Provider>
+    <QueryClientProvider client={queryClient}>
+      <Provider store={store}>
+        <MemoryRouter initialEntries={["/filter"]}>
+          <Routes>
+            <Route path="/filter" element={<FilterPage />} />
+          </Routes>
+        </MemoryRouter>
+      </Provider>
+    </QueryClientProvider>
   );
 
   return store;
@@ -51,7 +56,6 @@ const renderPage = async (preloaded: any) => {
 
 describe('FilterPage', () => {
   beforeEach(() => {
-    vi.resetModules();
     vi.clearAllMocks();
   });
 
