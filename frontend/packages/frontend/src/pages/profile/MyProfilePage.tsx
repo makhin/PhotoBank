@@ -28,7 +28,7 @@ import {Input} from '@/shared/ui/input';
 
 const formSchema = z.object({
   phoneNumber: z.string().optional(),
-  telegram: z.string().optional(),
+  telegramUserId: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -45,18 +45,28 @@ export default function MyProfilePage() {
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: { phoneNumber: '', telegram: '' },
+    defaultValues: { phoneNumber: '', telegramUserId: '' },
   });
 
   useEffect(() => {
     if (user) {
-      form.reset({ phoneNumber: user.phoneNumber ?? '', telegram: user.telegram ?? '' });
+      form.reset({
+        phoneNumber: user.phoneNumber ?? '',
+        telegramUserId: user.telegramUserId ? String(user.telegramUserId) : '',
+      });
     }
   }, [user, form]);
 
   const onSubmit = async (data: FormData) => {
     try {
-      await updateUser({ data });
+      await updateUser({
+        data: {
+          phoneNumber: data.phoneNumber,
+          telegramUserId: data.telegramUserId
+            ? Number(data.telegramUserId)
+            : undefined,
+        },
+      });
       navigate('/filter');
     } catch (e) {
       logger.error(e);
@@ -94,7 +104,7 @@ export default function MyProfilePage() {
               />
               <FormField
                 control={form.control}
-                name="telegram"
+                name="telegramUserId"
                 render={({field}) => (
                   <FormItem>
                     <FormLabel>{telegramLabel}</FormLabel>
