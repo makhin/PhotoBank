@@ -11,11 +11,16 @@ import App from './app/App.tsx';
 
 import './index.css';
 
-function start() {
+async function start() {
   configureApi(API_BASE_URL);
 
-   
-  ReactDOM.createRoot(document.getElementById('root')!).render(
+  if (import.meta.env.DEV) {
+    const { worker } = await import('./mocks/browser');
+    await worker.start({ onUnhandledRequest: 'bypass' });
+  }
+
+  const root = document.getElementById('root')!;
+  ReactDOM.createRoot(root).render(
     <QueryProvider>
       <Provider store={store}>
         <BrowserRouter>
