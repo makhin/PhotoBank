@@ -1,5 +1,6 @@
-import type { ViewerItem } from './state';
 import { prefetch } from '@/hooks/useImagePrefetch';
+
+import type { ViewerItem } from './state';
 
 export const prefetchAround = (
   items: ViewerItem[],

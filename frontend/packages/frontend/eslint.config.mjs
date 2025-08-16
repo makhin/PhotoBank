@@ -22,6 +22,12 @@ export default [
       'cjs',
       'esm',
       'eslint.config.mjs',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/*.spec.ts',
+      '**/*.spec.tsx',
+      '**/*.msw.ts',
+      '**/mocks/**',
     ],
   },
   // Use the recommended type-checked ruleset; the strict preset causes

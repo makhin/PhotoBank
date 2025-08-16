@@ -6,8 +6,8 @@ import {
   filterButtonText,
   loadMoreButton,
 } from '@photobank/shared/constants';
-
 import { usePhotosSearchPhotos } from '@photobank/shared/api/photobank';
+
 import { Button } from '@/shared/ui/button';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { useAppDispatch, useAppSelector } from '@/app/hook';
@@ -15,11 +15,11 @@ import { setLastResult } from '@/features/photo/model/photoSlice';
 import PhotoDetailsModal from '@/components/PhotoDetailsModal';
 import { useViewer } from '@/features/viewer/state';
 import { pushPhotoId, readPhotoId, clearPhotoId } from '@/features/viewer/urlSync';
+import EmptyState from '@/components/EmptyState';
 
 import PhotoListItemMobile from './PhotoListItemMobile';
 import VirtualPhotoList from './VirtualPhotoList';
 import PhotoListItemSkeleton from './PhotoListItemSkeleton';
-import EmptyState from '@/components/EmptyState';
 import { photoColumns } from './columns';
 
 const PhotoListPage = () => {
@@ -78,36 +78,55 @@ const PhotoListPage = () => {
   const renderPhotoRow = useCallback(
     (photo: PhotoItemDto) => {
       const handleClick = () => handleOpenDetails(photo.id);
-      return (
-        <div
-          className="grid grid-cols-12 gap-2 px-4 py-2 cursor-pointer hover:bg-muted/50"
-          onClick={handleClick}
-        >
-          {photoColumns.map((c) => (
-            <div
-              key={c.id}
-              className={c.width}
-              onClick={
-                c.id === 'preview'
-                  ? (e) => {
-                      e.stopPropagation();
-                      const index = photos.findIndex((p) => p.id === photo.id);
-                      if (index >= 0) {
-                        useViewer.getState().open(viewerItems, index);
-                        pushPhotoId(photo.id);
-                      }
-                    }
-                  : undefined
+        return (
+          <div
+            role="button"
+            tabIndex={0}
+            className="grid grid-cols-12 gap-2 px-4 py-2 cursor-pointer hover:bg-muted/50"
+            onClick={handleClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleClick();
               }
-            >
-              {c.render(photo)}
-            </div>
-          ))}
-        </div>
-      );
-    },
-    [handleOpenDetails, photos, viewerItems]
-  );
+            }}
+          >
+            {photoColumns.map((c) => (
+              <div
+                key={c.id}
+                className={c.width}
+                {...(c.id === 'preview'
+                  ? {
+                      role: 'button',
+                      tabIndex: 0,
+                      onClick: (e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        const index = photos.findIndex((p) => p.id === photo.id);
+                        if (index >= 0) {
+                          useViewer.getState().open(viewerItems, index);
+                          pushPhotoId(photo.id);
+                        }
+                      },
+                      onKeyDown: (e: React.KeyboardEvent) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.stopPropagation();
+                          const index = photos.findIndex((p) => p.id === photo.id);
+                          if (index >= 0) {
+                            useViewer.getState().open(viewerItems, index);
+                            pushPhotoId(photo.id);
+                          }
+                        }
+                      },
+                    }
+                  : {})}
+              >
+                {c.render(photo)}
+              </div>
+            ))}
+          </div>
+        );
+      },
+      [handleOpenDetails, photos, viewerItems]
+    );
 
   const renderSkeletonRow = useCallback(
     (_photo: PhotoItemDto) => <PhotoListItemSkeleton />,

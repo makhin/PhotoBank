@@ -3,6 +3,11 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { manageUsersTitle, saveUserButtonText, phoneNumberLabel, telegramLabel } from '@photobank/shared/constants';
+import {
+  useUsersGetAll,
+  useUsersUpdate,
+  useUsersSetClaims,
+} from '@photobank/shared/api/photobank';
 
 import { Button } from '@/shared/ui/button';
 import {
@@ -15,11 +20,6 @@ import {
 } from '@/shared/ui/form';
 import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
-import {
-  useUsersGetAll,
-  useUsersUpdate,
-  useUsersSetClaims,
-} from '@photobank/shared/api/photobank';
 
 const schema = z.object({
   phoneNumber: z.string().optional(),
@@ -46,7 +46,12 @@ function UserEditor({ user, onSave }: UserEditorProps) {
       <h2 className="font-semibold">{user.email}</h2>
       <Form {...form}>
         { }
-        <form onSubmit={form.handleSubmit((d) => onSave(user.id!, d))} className="space-y-4">
+        <form
+          onSubmit={(e) => {
+            void form.handleSubmit((d) => onSave(user.id!, d))(e);
+          }}
+          className="space-y-4"
+        >
           <FormField
             control={form.control}
             name="phoneNumber"

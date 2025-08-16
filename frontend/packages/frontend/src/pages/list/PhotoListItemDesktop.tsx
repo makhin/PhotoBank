@@ -6,14 +6,13 @@ import {
   MAX_VISIBLE_PERSONS_LG,
   MAX_VISIBLE_TAGS_LG,
 } from '@photobank/shared/constants';
+import { memo, useMemo, useCallback } from 'react';
 
 import { Card } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import PhotoFlags from '@/components/PhotoFlags';
 import MetadataBadgeList from '@/components/MetadataBadgeList';
-
 import SmartImage from '@/components/SmartImage';
-import { memo, useMemo, useCallback } from 'react';
 import { useInView } from '@/hooks/useInView';
 import { usePrefetchOnHover } from '@/hooks/useImagePrefetch';
 

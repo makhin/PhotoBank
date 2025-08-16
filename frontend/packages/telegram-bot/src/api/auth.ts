@@ -1,7 +1,7 @@
 import { ProblemDetailsError } from '@photobank/shared/types/problem';
 
-const API_BASE_URL = process.env.API_BASE_URL!;
-const BOT_SERVICE_KEY = process.env.BOT_SERVICE_KEY!;
+const API_BASE_URL = process.env.API_BASE_URL;
+const BOT_SERVICE_KEY = process.env.BOT_SERVICE_KEY;
 
 export async function exchangeTelegramUserToken(telegramUserId: number, username?: string) {
   const res = await fetch(`${API_BASE_URL}/api/auth/telegram/exchange`, {

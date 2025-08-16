@@ -1,8 +1,8 @@
 const isDev =
   // node / jest / vite build
-  (typeof process !== 'undefined' && (process as any).env && (process as any).env.NODE_ENV !== 'production') ||
+  (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') ||
   // browser vite
-  (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.DEV === true);
+  (typeof import.meta !== 'undefined' && import.meta.env?.DEV === true);
 export const logger = {
   debug: (...a: unknown[]) => { if (isDev) console.debug(...a); },
   warn:  (...a: unknown[]) => { if (isDev) console.warn(...a);  },

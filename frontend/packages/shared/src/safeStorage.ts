@@ -36,7 +36,9 @@ function createSafe(storage: Storage | undefined): SafeStorage {
 
 function getStorage(type: 'localStorage' | 'sessionStorage'): Storage | undefined {
   try {
-    return typeof window !== 'undefined' ? (window as any)[type] : undefined;
+      return typeof window !== 'undefined'
+        ? (window as Record<'localStorage' | 'sessionStorage', Storage>)[type]
+        : undefined;
   } catch {
     return undefined;
   }

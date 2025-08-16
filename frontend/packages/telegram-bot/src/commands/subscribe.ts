@@ -37,7 +37,7 @@ export function initSubscriptionScheduler(bot: Bot) {
         if (t === current) {
           const ctxLike = {
             message: { text: "/thisday" },
-            reply: (text: string, opts?: Record<string, unknown>) => bot.api.sendMessage(chatId, text, opts as Record<string, unknown>),
+            reply: (text: string, opts?: Record<string, unknown>) => bot.api.sendMessage(chatId, text, opts),
           } as unknown as Context;
           await sendThisDayPage(ctxLike, 1);
         }

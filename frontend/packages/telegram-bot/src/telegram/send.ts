@@ -20,31 +20,32 @@ export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
     const message = (await withTelegramRetry(() =>
       throttled(() =>
         ctx.api.sendPhoto(
-          ctx.chat!.id,
+          ctx.chat.id,
           cached ?? (p.previewUrl ?? p.originalUrl ?? ''),
           { caption: buildCaption(p) },
         ),
       ),
-    )) as Message.PhotoMessage;
+    ));
     const newId = message.photo?.at(-1)?.file_id || null;
     if (newId && newId !== cached) setFileId(p.id, newId);
     return message;
-  } catch (e: any) {
-    // Если кэшированный file_id внезапно протух — удаляем и пробуем разок URL
-    const code = e?.error_code;
-    const desc = e?.description ?? '';
+    } catch (e: unknown) {
+      // Если кэшированный file_id внезапно протух — удаляем и пробуем разок URL
+      const err = e as { error_code?: number; description?: string };
+      const code = err.error_code;
+      const desc = err.description ?? '';
     if (cached && (code === 400 || desc.includes('wrong file identifier'))) {
       delFileId(p.id);
       logger.warn('file_id invalidated, retry with URL', { photoId: p.id });
         const message = (await withTelegramRetry(() =>
           throttled(() =>
             ctx.api.sendPhoto(
-              ctx.chat!.id,
+              ctx.chat.id,
               p.previewUrl ?? p.originalUrl ?? '',
               { caption: buildCaption(p) },
             ),
           ),
-        )) as Message.PhotoMessage;
+        ));
       const newId = message.photo?.at(-1)?.file_id || null;
       if (newId) setFileId(p.id, newId);
       return message;
@@ -63,7 +64,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
 // Отправка альбомом (media group) с кэшем file_id
 export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
   const groups = chunk(photos, 10); // Telegram лимит
-  const results: any[] = [];
+    const results: Message[] = [];
 
   for (const group of groups) {
     const medias: InputMediaPhoto[] = group.map((p) => {
@@ -79,7 +80,7 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
     try {
       // mediaGroup нельзя редактировать, поэтому просто шлём и идём дальше
       const msgs = (await withTelegramRetry(() =>
-        throttled(() => ctx.api.sendMediaGroup(ctx.chat!.id, medias)),
+        throttled(() => ctx.api.sendMediaGroup(ctx.chat.id, medias)),
       )) as Message.PhotoMessage[];
       // Сохранить file_id по всем элементам, где он появился
       msgs.forEach((m, i) => {
@@ -88,10 +89,11 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
         if (id) setFileId(p.id, id);
       });
       results.push(...msgs);
-    } catch (e: any) {
-      const code = e?.error_code;
-      const desc = e?.description ?? '';
-      logger.warn('sendMediaGroup failed, fallback to singles', { code, desc, count: group.length });
+      } catch (e: unknown) {
+        const err = e as { error_code?: number; description?: string };
+        const code = err.error_code;
+        const desc = err.description ?? '';
+        logger.warn('sendMediaGroup failed, fallback to singles', { code, desc, count: group.length });
 
       // Fallback: отправляем по одному, чтобы всё равно доставить пользователю
       for (const p of group) {

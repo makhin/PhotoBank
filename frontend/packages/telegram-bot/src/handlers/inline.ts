@@ -17,14 +17,23 @@ bot.on('inline_query', async (ctx) => {
   try {
     await ensureUserAccessToken(ctx);
 
-    const resp = await searchPhotos(ctx, {
-      caption: q,
-      skip: offset,
-      top: PAGE_SIZE,
-    });
+      const resp = await searchPhotos(ctx, {
+        caption: q,
+        skip: offset,
+        top: PAGE_SIZE,
+      });
 
-    const data: any = resp.data as any;
-    const items = data.photos ?? data.items ?? resp.data ?? [];
+      type Photo = {
+        id: number;
+        name?: string | null;
+        previewUrl?: string | null;
+        originalUrl?: string | null;
+        thumbnailUrl?: string | null;
+        takenDate?: string | null;
+        tags?: { tagId: number }[];
+      };
+      const data = resp.data as { photos?: Photo[]; items?: Photo[] };
+      const items = data.photos ?? data.items ?? [];
     const results: InlineQueryResult[] = items.map((p): InlineQueryResultPhoto => ({
       type: 'photo',
       id: String(p.id),
@@ -42,38 +51,38 @@ bot.on('inline_query', async (ctx) => {
 
     const nextOffset = items.length === PAGE_SIZE ? String(offset + PAGE_SIZE) : '';
 
-    await ctx.answerInlineQuery(
-      results,
-      {
-        is_personal: true,
-        cache_time: 5,
-        next_offset: nextOffset,
-        switch_pm_text: undefined,
-        switch_pm_parameter: undefined,
-      } as any,
-    );
+      await ctx.answerInlineQuery(
+        results,
+        {
+          is_personal: true,
+          cache_time: 5,
+          next_offset: nextOffset,
+          switch_pm_text: undefined,
+          switch_pm_parameter: undefined,
+        } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
+      );
   } catch (e) {
-    if (e instanceof ProblemDetailsError && e.problem.status === 403) {
+      if (e instanceof ProblemDetailsError && e.problem.status === 403) {
+        await ctx.answerInlineQuery(
+          [],
+          {
+            is_personal: true,
+            cache_time: 0,
+            switch_pm_text: 'Привяжите аккаунт, чтобы искать фото',
+            switch_pm_parameter: 'link',
+          } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
+        );
+        return;
+      }
+      logger.warn('inline_query error', e);
       await ctx.answerInlineQuery(
         [],
         {
           is_personal: true,
           cache_time: 0,
-          switch_pm_text: 'Привяжите аккаунт, чтобы искать фото',
-          switch_pm_parameter: 'link',
-        } as any,
+          switch_pm_text: 'Не удалось выполнить поиск (повторить?)',
+          switch_pm_parameter: 'help',
+        } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
       );
-      return;
     }
-    logger.warn('inline_query error', e);
-    await ctx.answerInlineQuery(
-      [],
-      {
-        is_personal: true,
-        cache_time: 0,
-        switch_pm_text: 'Не удалось выполнить поиск (повторить?)',
-        switch_pm_parameter: 'help',
-      } as any,
-    );
-  }
 });

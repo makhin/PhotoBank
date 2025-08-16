@@ -1,8 +1,8 @@
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
-import { QueryProvider } from '@/app/providers/QueryProvider';
 
+import { QueryProvider } from '@/app/providers/QueryProvider';
 import { API_BASE_URL } from '@/config';
 import { store } from '@/app/store';
 import { configureApi } from '@/shared/lib/api';

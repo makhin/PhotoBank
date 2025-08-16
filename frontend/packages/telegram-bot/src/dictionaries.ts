@@ -4,6 +4,7 @@ import type {
   StorageDto,
   TagDto,
 } from '@photobank/shared/api/photobank';
+import type { Context } from 'grammy';
 
 import {
   fetchPaths,
@@ -11,7 +12,6 @@ import {
   fetchStorages,
   fetchTags,
 } from './services/dictionary';
-import type { Context } from 'grammy';
 
 type DictData = {
   tagMap: Map<number, string>;
