@@ -1,7 +1,7 @@
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import type {z} from 'zod';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton, loadingText } from '@photobank/shared/constants';
 import * as Api from '@photobank/shared/api/photobank/photos/photos';
@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Form } from '@/shared/ui/form';
 import { formSchema } from '@/features/filter/lib/form-schema';
 import { FilterFormFields } from '@/components/FilterFormFields';
+import { serializeFilter, deserializeFilter } from '@/shared/lib/filter-url';
 
 // Infer FormData type from formSchema to ensure compatibility
 type FormData = z.infer<typeof formSchema>;
@@ -24,6 +25,7 @@ function FilterPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const savedFilter = useAppSelector((state) => state.photo.filter);
   const loaded = useAppSelector((s) => s.metadata.loaded);
   const loading = useAppSelector((s) => s.metadata.loading);
@@ -56,6 +58,32 @@ function FilterPage() {
     defaultValues: useCurrentFilter ? savedDefaults : { ...DEFAULT_FORM_VALUES },
   });
 
+  useEffect(() => {
+    const encoded = searchParams.get('filter');
+    if (encoded) {
+      const parsed = deserializeFilter(encoded);
+      if (parsed) {
+        form.reset(parsed);
+        const filter: FilterDto = {
+          caption: parsed.caption,
+          storages: parsed.storages?.map(Number),
+          paths: parsed.paths?.map(Number),
+          persons: parsed.persons?.map(Number),
+          tags: parsed.tags?.map(Number),
+          isBW: parsed.isBW,
+          isAdultContent: parsed.isAdultContent,
+          isRacyContent: parsed.isRacyContent,
+          thisDay: parsed.thisDay,
+          takenDateFrom: parsed.dateFrom?.toISOString(),
+          takenDateTo: parsed.dateTo?.toISOString(),
+          page: 1,
+          pageSize: 10,
+        };
+        dispatch(setFilter(filter));
+      }
+    }
+  }, [searchParams, dispatch, form]);
+
   const onSubmit = (data: FormData) => {
     const filter: FilterDto = {
       caption: data.caption,
@@ -73,20 +101,22 @@ function FilterPage() {
       pageSize: 10,
     };
 
-      searchPhotos.mutate(
-        { data: filter },
-        {
-          onSuccess: (page) => {
-            const photos = (page.data as PhotosPage).items ?? [];
-            dispatch(setFilter(filter));
-            dispatch(setLastResult(photos));
-            navigate('/photos');
-          },
-          onError: () => {
-            // handle error if needed
-          },
-        }
-      );
+    const encoded = serializeFilter(data);
+
+    searchPhotos.mutate(
+      { data: filter },
+      {
+        onSuccess: (page) => {
+          const photos = (page.data as PhotosPage).items ?? [];
+          dispatch(setFilter(filter));
+          dispatch(setLastResult(photos));
+          navigate(`/photos?filter=${encodeURIComponent(encoded)}`);
+        },
+        onError: () => {
+          // handle error if needed
+        },
+      }
+    );
   };
 
   if (!loaded) {

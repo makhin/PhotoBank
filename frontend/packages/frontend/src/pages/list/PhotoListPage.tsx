@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import type { PhotoItemDto } from '@photobank/shared/api/photobank';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import type { FilterDto, PhotoItemDto } from '@photobank/shared/api/photobank';
 import {
   photoGalleryTitle,
   filterButtonText,
@@ -9,13 +9,14 @@ import {
 
 import { useInfinitePhotos } from '@/features/photo/useInfinitePhotos';
 import { useAppDispatch, useAppSelector } from '@/app/hook';
-import { setLastResult } from '@/features/photo/model/photoSlice';
+import { setLastResult, setFilter } from '@/features/photo/model/photoSlice';
 import { useViewer } from '@/features/viewer/state';
 import { pushPhotoId, readPhotoId, clearPhotoId } from '@/features/viewer/urlSync';
 import EmptyState from '@/components/EmptyState';
 import PhotoDetailsModal from '@/components/PhotoDetailsModal';
 import { Button } from '@/shared/ui/button';
 import { ScrollArea } from '@/shared/ui/scroll-area';
+import { deserializeFilter } from '@/shared/lib/filter-url';
 
 import PhotoListItemMobile from './PhotoListItemMobile';
 import VirtualPhotoList from './VirtualPhotoList';
@@ -27,6 +28,7 @@ const PhotoListPage = () => {
   const filter = useAppSelector((state) => state.photo.filter);
   const persons = useAppSelector((state) => state.metadata.persons);
   const tags = useAppSelector((state) => state.metadata.tags);
+  const [searchParams] = useSearchParams();
 
   const personsMap = useMemo(
     () => Object.fromEntries(persons.map((p) => [p.id, p.name])),
@@ -76,6 +78,31 @@ const PhotoListPage = () => {
     []
   );
   const loading = isLoading && photos.length === 0;
+
+  useEffect(() => {
+    const encoded = searchParams.get('filter');
+    if (encoded) {
+      const parsed = deserializeFilter(encoded);
+      if (parsed) {
+        const urlFilter: FilterDto = {
+          caption: parsed.caption,
+          storages: parsed.storages?.map(Number),
+          paths: parsed.paths?.map(Number),
+          persons: parsed.persons?.map(Number),
+          tags: parsed.tags?.map(Number),
+          isBW: parsed.isBW,
+          isAdultContent: parsed.isAdultContent,
+          isRacyContent: parsed.isRacyContent,
+          thisDay: parsed.thisDay,
+          takenDateFrom: parsed.dateFrom?.toISOString(),
+          takenDateTo: parsed.dateTo?.toISOString(),
+          page: 1,
+          pageSize: 10,
+        };
+        dispatch(setFilter(urlFilter));
+      }
+    }
+  }, [searchParams, dispatch]);
 
   const renderPhotoRow = useCallback(
     (photo: PhotoItemDto) => {
