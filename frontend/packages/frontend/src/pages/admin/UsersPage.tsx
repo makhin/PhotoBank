@@ -16,10 +16,10 @@ import {
 import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
 import {
-  useGetAdminUsersQuery,
-  useUpdateAdminUserMutation,
-  useSetUserClaimsMutation,
-} from '@/shared/api.ts';
+  useUsersGetAll,
+  useUsersUpdate,
+  useUsersSetClaims,
+} from '@photobank/shared/api/photobank';
 
 const schema = z.object({
   phoneNumber: z.string().optional(),
@@ -94,18 +94,18 @@ function UserEditor({ user, onSave }: UserEditorProps) {
 }
 
 export default function UsersPage() {
-  const { data: users = [] } = useGetAdminUsersQuery();
-  const [updateUser] = useUpdateAdminUserMutation();
-  const [setClaims] = useSetUserClaimsMutation();
+  const { data: users = [] } = useUsersGetAll();
+  const { mutateAsync: updateUser } = useUsersUpdate();
+  const { mutateAsync: setClaims } = useUsersSetClaims();
 
   const handleSave = async (id: string, data: FormData) => {
-    await updateUser({ id, data }).unwrap();
+    await updateUser({ id, data });
     const claims = (data.claims ?? '').split('\n').filter(Boolean).map((l) => {
       const [type, value] = l.split(':');
       return { type: type.trim(), value: value.trim() };
     });
     if (claims.length) {
-      await setClaims({ id, data: claims }).unwrap();
+      await setClaims({ id, data: claims });
     }
   };
 

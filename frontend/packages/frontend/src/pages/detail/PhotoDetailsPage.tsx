@@ -25,7 +25,7 @@ import {
     hoverFaceHint,
 } from '@photobank/shared/constants';
 
-import { useUpdateFaceMutation } from '@/shared/api.ts';
+import { useFacesUpdate } from '@photobank/shared/api/photobank';
 import { useAppSelector } from '@/app/hook.ts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
@@ -71,7 +71,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const [placeName, setPlaceName] = useState('');
     const persons = useAppSelector((state) => state.metadata.persons);
     const isAdmin = useIsAdmin();
-    const [updateFace] = useUpdateFaceMutation();
+    const { mutateAsync: updateFace } = useFacesUpdate();
 
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -398,8 +398,10 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                                         disabled={!showFaceBoxes || !isAdmin}
                                                           onChange={(personId) => {
                                                               void updateFace({
-                                                                  faceId: face.id,
-                                                                  personId: personId ?? -1,
+                                                                  data: {
+                                                                      faceId: face.id,
+                                                                      personId: personId ?? -1,
+                                                                  },
                                                               });
                                                           }}
                                                       />

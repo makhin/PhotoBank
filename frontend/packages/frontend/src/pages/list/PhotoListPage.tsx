@@ -7,7 +7,7 @@ import {
   loadMoreButton,
 } from '@photobank/shared/constants';
 
-import { useSearchPhotosMutation } from '@/shared/api.ts';
+import { usePhotosSearchPhotos } from '@photobank/shared/api/photobank';
 import { Button } from '@/shared/ui/button';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { useAppDispatch, useAppSelector } from '@/app/hook.ts';
@@ -37,7 +37,7 @@ const PhotoListPage = () => {
     [tags]
   );
 
-  const [searchPhotos, { isLoading }] = useSearchPhotosMutation();
+  const { mutateAsync: searchPhotos, isPending: isLoading } = usePhotosSearchPhotos();
   const [rawPhotos, setRawPhotos] = useState<PhotoItemDto[]>([]);
   const [total, setTotal] = useState(0);
   const [skip, setSkip] = useState(filter.skip ?? 0);
@@ -110,13 +110,14 @@ const PhotoListPage = () => {
   );
 
   useEffect(() => {
-    const promise = searchPhotos({ ...filter });
+    let cancelled = false;
     (async () => {
       try {
-        const result = await promise.unwrap();
-        const fetched = result.photos || [];
+        const result = await searchPhotos({ data: { ...filter } });
+        if (cancelled) return;
+        const fetched = result.data?.photos || [];
         setRawPhotos(fetched);
-        setTotal(result.count || 0);
+        setTotal(result.data?.count || 0);
         setSkip(fetched.length);
         dispatch(setLastResult(fetched));
       } catch {
@@ -124,7 +125,7 @@ const PhotoListPage = () => {
       }
     })();
     return () => {
-      promise.abort();
+      cancelled = true;
     };
   }, [searchPhotos, filter, dispatch]);
 
@@ -154,13 +155,13 @@ const PhotoListPage = () => {
   }, [navigate]);
 
   const loadMore = useCallback(async () => {
-    const result = await searchPhotos({ ...filter, skip }).unwrap();
-    const newPhotos = result.photos || [];
+    const result = await searchPhotos({ data: { ...filter, skip } });
+    const newPhotos = result.data?.photos || [];
     const updated = [...rawPhotos, ...newPhotos];
     const newSkip = skip + newPhotos.length;
     setRawPhotos(updated);
     setSkip(newSkip);
-    setTotal(result.count || 0);
+    setTotal(result.data?.count || 0);
     dispatch(setLastResult(updated));
   }, [searchPhotos, filter, skip, rawPhotos, dispatch]);
 

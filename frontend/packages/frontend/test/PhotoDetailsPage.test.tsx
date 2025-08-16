@@ -31,9 +31,11 @@ const photo = {
   orientation: 1,
   location: { latitude: 10, longitude: 20 },
 };
-vi.mock('../src/shared/api.ts', () => ({
-  useGetPhotoByIdQuery: () => ({ data: photo, error: undefined }),
-  useUpdateFaceMutation: () => [vi.fn(), { isLoading: false }],
+vi.mock('@photobank/shared/api/photobank/photos/photos', () => ({
+  usePhotosGetPhoto: () => ({ data: photo, error: undefined }),
+}));
+vi.mock('@photobank/shared/api/photobank', () => ({
+  useFacesUpdate: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 vi.mock('@photobank/shared', async () => {
