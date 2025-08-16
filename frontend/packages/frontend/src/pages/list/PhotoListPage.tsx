@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import type { FilterDto, PhotoItemDto } from '@photobank/shared/api/photobank';
+import type { FilterDto } from '@photobank/shared/api/photobank';
+import type { PhotoItemDto } from '@photobank/shared/api/photobank/model/photoItemDto';
 import {
   photoGalleryTitle,
   filterButtonText,

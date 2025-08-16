@@ -7,3 +7,4 @@ export * from './storages/storages';
 export * from './tags/tags';
 export * from './users/users';
 export * from './model';
+export * from './fetcher';

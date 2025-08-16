@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+
 import { Button } from '@/shared/ui/button';
 
 interface Props {

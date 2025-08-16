@@ -54,7 +54,7 @@ const groupCommands = (lang: string) => [
 bot.use(i18n.middleware());
 bot.use(async (ctx, next) => {
   const lang = ctx.from?.language_code?.split('-')[0];
-  if (lang) ctx.i18n.locale(lang);
+  if (lang) ctx.i18n.useLocale(lang);
   await next();
 });
 

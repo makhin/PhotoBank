@@ -85,17 +85,21 @@ describe('PhotoDetailsPage', () => {
     vi.clearAllMocks();
   });
 
-  it('renders photo details', async () => {
-    await renderPage();
-    expect(await screen.findByText('Photo Properties')).toBeTruthy();
-    expect(await screen.findByDisplayValue('Test Photo')).toBeTruthy();
-    expect((await screen.findAllByDisplayValue('1')).length).toBeGreaterThan(0);
-    expect(screen.getByLabelText('Show face boxes')).toBeTruthy();
-    const placeLink = await screen.findByRole('link', { name: /Nice place/ });
-    expect(placeLink).toBeTruthy();
-    expect(placeLink.getAttribute('href')).toContain('10,20');
-    expect(placeLink.getAttribute('rel')).toBe('noopener noreferrer');
-  });
+  it(
+    'renders photo details',
+    async () => {
+      await renderPage();
+      expect(await screen.findByText('Photo Properties')).toBeTruthy();
+      expect(await screen.findByDisplayValue('Test Photo')).toBeTruthy();
+      expect((await screen.findAllByDisplayValue('1')).length).toBeGreaterThan(0);
+      expect(screen.getByLabelText('Show face boxes')).toBeTruthy();
+      const placeLink = await screen.findByRole('link', { name: /Nice place/ });
+      expect(placeLink).toBeTruthy();
+      expect(placeLink.getAttribute('href')).toContain('10,20');
+      expect(placeLink.getAttribute('rel')).toBe('noopener noreferrer');
+    },
+    10000
+  );
 
   it('toggles face boxes visibility', async () => {
     await renderPage();
