@@ -1,11 +1,12 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useIsAdmin } from '@photobank/shared';
+import * as AuthApi from '@photobank/shared/api/photobank/auth/auth';
 
 export default function RequireAdmin() {
   const location = useLocation();
-  const isAdmin = useIsAdmin();
+  const { data: roles, isLoading } = AuthApi.useAuthGetUserRoles();
 
-  if (isAdmin === null) return null;
+  if (isLoading) return null;
+  const isAdmin = roles?.data.some((r) => r.name === 'Administrator');
   if (!isAdmin) return <Navigate to="/filter" state={{ from: location }} replace />;
   return <Outlet />;
 }

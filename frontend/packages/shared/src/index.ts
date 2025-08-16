@@ -37,7 +37,6 @@ export const firstNWords = (sentence: string, count: number): string => {
   return words.slice(0, count).join(' ') + '... ';
 };
 
-export { checkIsAdmin } from './utils/admin';
 export { useIsAdmin } from './hooks/useIsAdmin';
 export { getPlaceByGeoPoint } from './utils/geocode';
 export { uploadPhotosAdapter } from './adapters/photos-upload.adapter';

@@ -1,22 +1,8 @@
-import { useEffect, useState } from 'react';
-
-import { checkIsAdmin } from '../utils/admin';
+import * as AuthApi from '../api/photobank/auth/auth';
 
 export const useIsAdmin = (): boolean | null => {
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const v = await checkIsAdmin();
-        if (!cancelled) setIsAdmin(v);
-      } catch {
-        if (!cancelled) setIsAdmin(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-  return isAdmin;
+  const { data: roles, isLoading, isError } = AuthApi.useAuthGetUserRoles();
+  if (isLoading) return null;
+  if (isError) return false;
+  return roles?.data.some((r) => r.name === 'Administrator') ?? false;
 };
