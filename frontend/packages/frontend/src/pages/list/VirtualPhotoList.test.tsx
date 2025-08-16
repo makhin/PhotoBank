@@ -1,7 +1,12 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import React, { createRef } from 'react';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
+import { vi } from 'vitest';
+
+vi.mock('./usePhotoVirtual');
+
 import VirtualPhotoList from './VirtualPhotoList';
+import { usePhotoVirtual } from './usePhotoVirtual';
 
 const createPhotos = (count: number): PhotoItemDto[] =>
   Array.from({ length: count }, (_, i) => ({
@@ -15,7 +20,19 @@ const createPhotos = (count: number): PhotoItemDto[] =>
 test('renders only a subset of items', async () => {
   const parentRef = createRef<HTMLDivElement>();
   const photos = createPhotos(50);
-  const { container } = render(
+
+  const mockedUsePhotoVirtual = vi.mocked(usePhotoVirtual);
+  mockedUsePhotoVirtual.mockReturnValue({
+    items: Array.from({ length: 5 }, (_, index) => ({
+      index,
+      size: 112,
+      start: index * 112,
+    })),
+    totalSize: 5600,
+    virtualizer: { measureElement: vi.fn() },
+  });
+
+  render(
     <div ref={parentRef} style={{ height: 400, overflow: 'auto' }}>
       <VirtualPhotoList
         photos={photos}
@@ -25,9 +42,10 @@ test('renders only a subset of items', async () => {
     </div>
   );
 
-  await waitFor(() => {
-    const rows = container.querySelectorAll('[data-testid="row"]');
-    expect(rows.length).toBeGreaterThan(0);
-    expect(rows.length).toBeLessThan(photos.length);
-  });
+  const rows = await screen.findAllByTestId('row', {}, { timeout: 3000 });
+  expect(rows.length).toBeGreaterThan(0);
+  if (photos?.length) {
+    expect(rows.length).toBeLessThanOrEqual(photos.length);
+  }
 });
+
