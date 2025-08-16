@@ -33,6 +33,7 @@ const photo = {
 };
 vi.mock('@photobank/shared/api/photobank/photos/photos', () => ({
   usePhotosGetPhoto: () => ({ data: photo, error: undefined }),
+  getPhotosGetPhotoQueryKey: vi.fn(),
 }));
 vi.mock('@photobank/shared/api/photobank', () => ({
   useFacesUpdate: () => ({ mutateAsync: vi.fn(), isPending: false }),
