@@ -1,23 +1,22 @@
 import { useEffect, useState } from "react";
 import {
   PhotoItemDto,
-  FilterDto,
   PhotoDto,
   postApiPhotosSearch,
   getApiPhotos,
 } from '@photobank/shared/api/photobank';
+import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants';
 
-export const usePhotos = (filter: FilterDto | null) => {
+export const usePhotos = () => {
   const [photos, setPhotos] = useState<PhotoItemDto[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!filter) return;
     let ignore = false;
     (async () => {
       setLoading(true);
       try {
-        const res = await postApiPhotosSearch(filter);
+        const res = await postApiPhotosSearch(DEFAULT_PHOTO_FILTER);
         if (!ignore) setPhotos(res.data.photos || []);
       } finally {
         if (!ignore) setLoading(false);
@@ -26,7 +25,7 @@ export const usePhotos = (filter: FilterDto | null) => {
     return () => {
       ignore = true;
     };
-  }, [filter]);
+  }, []);
 
   return { photos, loading };
 };
