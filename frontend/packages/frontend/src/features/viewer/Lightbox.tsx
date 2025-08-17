@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect } from 'react';
 
-import { Dialog, DialogContent } from '@/shared/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/dialog';
 
 import ImageCanvas from './ImageCanvas';
 import { useViewer } from './state';
@@ -33,6 +33,8 @@ const Lightbox = () => {
   return createPortal(
     <Dialog open={isOpen} onOpenChange={(o) => !o && close()}>
       <DialogContent className="p-0 bg-black/90 text-white max-w-none w-screen h-screen flex items-center justify-center" showCloseButton={false}>
+        <DialogTitle className="sr-only">Lightbox</DialogTitle>
+        <DialogDescription className="sr-only">Image viewer</DialogDescription>
         <button aria-label="Close" className="absolute top-4 right-4 text-white" onClick={close}>
           <X className="w-6 h-6" />
         </button>

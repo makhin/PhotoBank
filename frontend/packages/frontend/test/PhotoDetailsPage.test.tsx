@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -88,7 +88,9 @@ describe('PhotoDetailsPage', () => {
   it(
     'renders photo details',
     async () => {
-      await renderPage();
+      await act(async () => {
+        await renderPage();
+      });
       expect(await screen.findByText('Photo Properties')).toBeTruthy();
       expect(await screen.findByDisplayValue('Test Photo')).toBeTruthy();
       expect((await screen.findAllByDisplayValue('1')).length).toBeGreaterThan(0);
@@ -102,7 +104,9 @@ describe('PhotoDetailsPage', () => {
   );
 
   it('toggles face boxes visibility', async () => {
-    await renderPage();
+    await act(async () => {
+      await renderPage();
+    });
     const checkbox = screen.getByLabelText('Show face boxes');
     expect(checkbox.getAttribute('data-state')).toBe('unchecked');
     expect(document.querySelectorAll('.face-box').length).toBe(0);
