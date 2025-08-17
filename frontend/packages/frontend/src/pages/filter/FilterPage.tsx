@@ -1,9 +1,10 @@
-import {useForm} from 'react-hook-form';
-import {zodResolver} from '@hookform/resolvers/zod';
-import type {z} from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { z } from 'zod';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { DEFAULT_FORM_VALUES, filterFormTitle, applyFiltersButton, loadingText } from '@photobank/shared/constants';
+import { DEFAULT_FORM_VALUES } from '@photobank/shared/constants';
+import { useTranslation } from 'react-i18next';
 import * as Api from '@photobank/shared/api/photobank/photos/photos';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 
@@ -28,6 +29,7 @@ function FilterPage() {
   const loaded = useAppSelector((s) => s.metadata.loaded);
   const loading = useAppSelector((s) => s.metadata.loading);
   const searchPhotos = Api.usePhotosSearchPhotos();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!loaded && !loading) {
@@ -117,13 +119,13 @@ function FilterPage() {
   };
 
   if (!loaded) {
-    return <p className="p-4">{loadingText}</p>;
+    return <p className="p-4">{t('loadingText')}</p>;
   }
 
   return (
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle>{filterFormTitle}</CardTitle>
+          <CardTitle>{t('filterFormTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
             <Form {...form}>
@@ -136,7 +138,7 @@ function FilterPage() {
                 <FilterFormFields control={form.control} />
                 {/* Submit Button */}
                 <Button type="submit" className="w-full">
-                  {applyFiltersButton}
+                  {t('applyFiltersButton')}
                 </Button>
               </form>
             </Form>

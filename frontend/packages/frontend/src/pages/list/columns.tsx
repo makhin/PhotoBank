@@ -1,15 +1,7 @@
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import { formatDate } from '@photobank/shared/format';
-import {
-  colDateLabel,
-  colFlagsLabel,
-  colIdLabel,
-  colNameLabel,
-  colPreviewLabel,
-  colStorageLabel,
-  colDetailsLabel,
-} from '@photobank/shared/constants';
 
+import i18n from '@/shared/config/i18n';
 import FlagIcon from '@/components/formatters/FlagIcon';
 
 import PreviewCell from './PreviewCell';
@@ -27,13 +19,13 @@ export interface Column<T> {
 export const photoColumns: Column<PhotoItemDto>[] = [
   {
     id: 'id',
-    header: colIdLabel,
+    header: i18n.t('colIdLabel'),
     width: 'col-span-1',
     render: (r) => r.id,
   },
   {
     id: 'preview',
-    header: colPreviewLabel,
+    header: i18n.t('colPreviewLabel'),
     width: 'col-span-2',
     render: (r) => (
       <PreviewCell thumbnail={r.thumbnail} alt={r.name} className="w-16 h-16" />
@@ -41,31 +33,31 @@ export const photoColumns: Column<PhotoItemDto>[] = [
   },
   {
     id: 'name',
-    header: colNameLabel,
+    header: i18n.t('colNameLabel'),
     width: 'col-span-2',
     render: (r) => <span className="truncate">{r.name}</span>,
   },
   {
     id: 'date',
-    header: colDateLabel,
+    header: i18n.t('colDateLabel'),
     width: 'col-span-1',
     render: (r) => formatDate(r.takenDate),
   },
   {
     id: 'storage',
-    header: colStorageLabel,
+    header: i18n.t('colStorageLabel'),
     width: 'col-span-2',
     render: (r) => r.storageName,
   },
   {
     id: 'flags',
-    header: colFlagsLabel,
+    header: i18n.t('colFlagsLabel'),
     width: 'col-span-1',
     render: (r) => <FlagIcon value={r.isBW} />,
   },
   {
     id: 'details',
-    header: colDetailsLabel,
+    header: i18n.t('colDetailsLabel'),
     width: 'col-span-3',
     render: (r) => <RowActions id={r.id} />,
   },

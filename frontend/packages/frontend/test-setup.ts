@@ -2,6 +2,7 @@ import { setupServer } from 'msw/node';
 import { handlers } from './src/mocks/handlers';
 
 import '@testing-library/jest-dom/vitest';
+import './src/shared/config/i18n';
 
 class ResizeObserver {
   observe() {}

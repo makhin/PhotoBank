@@ -1,28 +1,10 @@
-import type {Control} from 'react-hook-form';
-import {useWatch} from 'react-hook-form';
-import {ChevronDownIcon} from 'lucide-react';
-import * as React from "react";
-import {format} from 'date-fns';
+import type { Control } from 'react-hook-form';
+import { useWatch } from 'react-hook-form';
+import { ChevronDownIcon } from 'lucide-react';
+import * as React from 'react';
+import { format } from 'date-fns';
 import { useIsAdmin } from '@photobank/shared';
-import {
-    captionLabel,
-    captionPlaceholder,
-    dateFromLabel,
-    selectDatePlaceholder,
-    dateToLabel,
-    storagesLabel,
-    selectStoragesPlaceholder,
-    pathsLabel,
-    selectPathsPlaceholder,
-    personsLabel,
-    selectPersonsPlaceholder,
-    tagsLabel,
-    selectTagsPlaceholder,
-    blackWhiteLabel,
-    adultContentLabel,
-    racyContentLabel,
-    thisDayLabel,
-} from '@photobank/shared/constants';
+import { useTranslation } from 'react-i18next';
 
 import { useAppSelector } from '@/app/hook';
 import {Input} from '@/shared/ui/input';
@@ -43,6 +25,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
     const [openFrom, setOpenFrom] = React.useState(false)
     const [openTo, setOpenTo] = React.useState(false)
     const isAdmin = useIsAdmin()
+    const { t } = useTranslation();
 
     const tags = useAppSelector((state) => state.metadata.tags)
     const persons = useAppSelector((state) => state.metadata.persons)
@@ -83,9 +66,9 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                         name="caption"
                         render={({field}) => (
                             <FormItem className="flex flex-col">
-                                <FormLabel>{captionLabel}</FormLabel>
+                                <FormLabel>{t('captionLabel')}</FormLabel>
                                 <FormControl>
-                                    <Input placeholder={captionPlaceholder} {...field} />
+                                    <Input placeholder={t('captionPlaceholder')} {...field} />
                                 </FormControl>
                                 <FormMessage/>
                             </FormItem>
@@ -99,7 +82,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                         name="dateFrom"
                         render={({field}) => (
                             <FormItem className="flex flex-col">
-                                <FormLabel>{dateFromLabel}</FormLabel>
+                                <FormLabel>{t('dateFromLabel')}</FormLabel>
                                 <FormControl>
                                     <Popover open={openFrom} onOpenChange={setOpenFrom}>
                                         <PopoverTrigger asChild>
@@ -109,7 +92,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                                 className="w-48 justify-between font-normal"
                                                 onClick={() => { setOpenFrom(true); }}
                                             >
-                                                {field.value ? formatDate(field.value) : selectDatePlaceholder}
+                                                {field.value ? formatDate(field.value) : t('selectDatePlaceholder')}
                                                 <ChevronDownIcon/>
                                             </Button>
                                         </PopoverTrigger>
@@ -139,7 +122,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                         name="dateTo"
                         render={({field}) => (
                             <FormItem className="flex flex-col">
-                                <FormLabel>{dateToLabel}</FormLabel>
+                                <FormLabel>{t('dateToLabel')}</FormLabel>
                                 <FormControl>
                                     <Popover open={openTo} onOpenChange={setOpenTo}>
                                         <PopoverTrigger asChild>
@@ -149,7 +132,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                                 className="w-48 justify-between font-normal"
                                                 onClick={() => { setOpenTo(true); }}
                                             >
-                                                {field.value ? formatDate(field.value) : selectDatePlaceholder}
+                                                {field.value ? formatDate(field.value) : t('selectDatePlaceholder')}
                                                 <ChevronDownIcon/>
                                             </Button>
                                         </PopoverTrigger>
@@ -179,13 +162,13 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     name="storages"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel>{storagesLabel}</FormLabel>
+                            <FormLabel>{t('storagesLabel')}</FormLabel>
                             <FormControl>
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
                                     options={storages}
-                                    placeholder={selectStoragesPlaceholder}
+                                    placeholder={t('selectStoragesPlaceholder')}
                                 />
                             </FormControl>
                             <FormMessage/>
@@ -198,13 +181,13 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     name="paths"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel>{pathsLabel}</FormLabel>
+                            <FormLabel>{t('pathsLabel')}</FormLabel>
                             <FormControl>
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
                                     options={filteredPaths}
-                                    placeholder={selectPathsPlaceholder}
+                                    placeholder={t('selectPathsPlaceholder')}
                                     disabled={!selectedStorageIds || selectedStorageIds.length === 0}
                                 />
                             </FormControl>
@@ -218,13 +201,13 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     name="persons"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel>{personsLabel}</FormLabel>
+                            <FormLabel>{t('personsLabel')}</FormLabel>
                             <FormControl>
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
                                     options={persons.map(person => ({ label: person.name, value: person.id.toString() }))}
-                                    placeholder={selectPersonsPlaceholder}
+                                    placeholder={t('selectPersonsPlaceholder')}
                                 />
                             </FormControl>
                             <FormMessage/>
@@ -237,13 +220,13 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     name="tags"
                     render={({field}) => (
                         <FormItem>
-                            <FormLabel>{tagsLabel}</FormLabel>
+                            <FormLabel>{t('tagsLabel')}</FormLabel>
                             <FormControl>
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
                                     options={tags.map(tag => ({ label: tag.name, value: tag.id.toString() }))}
-                                    placeholder={selectTagsPlaceholder}
+                                    placeholder={t('selectTagsPlaceholder')}
                                 />
                             </FormControl>
                             <FormMessage/>
@@ -266,7 +249,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                 />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                                <FormLabel>{blackWhiteLabel}</FormLabel>
+                                <FormLabel>{t('blackWhiteLabel')}</FormLabel>
                             </div>
                         </FormItem>
                     )}
@@ -285,7 +268,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                     />
                                 </FormControl>
                                 <div className="space-y-1 leading-none">
-                                    <FormLabel>{adultContentLabel}</FormLabel>
+                                    <FormLabel>{t('adultContentLabel')}</FormLabel>
                                 </div>
                             </FormItem>
                         )}
@@ -305,7 +288,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                     />
                                 </FormControl>
                                 <div className="space-y-1 leading-none">
-                                    <FormLabel>{racyContentLabel}</FormLabel>
+                                    <FormLabel>{t('racyContentLabel')}</FormLabel>
                                 </div>
                             </FormItem>
                         )}
@@ -324,7 +307,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                 />
                             </FormControl>
                             <div className="space-y-1 leading-none">
-                                <FormLabel>{thisDayLabel}</FormLabel>
+                                <FormLabel>{t('thisDayLabel')}</FormLabel>
                             </div>
                         </FormItem>
                     )}

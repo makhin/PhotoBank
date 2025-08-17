@@ -1,13 +1,6 @@
 import { useEffect, useState } from 'react';
-import {
-  openAiPageTitle,
-  openAiSendButton,
-  openAiPromptPlaceholder,
-} from '@photobank/shared/constants';
-import {
-  configureAzureOpenAI,
-  parseQueryWithOpenAI,
-} from '@photobank/shared/ai/openai';
+import { configureAzureOpenAI, parseQueryWithOpenAI } from '@photobank/shared/ai/openai';
+import { useTranslation } from 'react-i18next';
 
 import {
   AZURE_OPENAI_ENDPOINT,
@@ -29,6 +22,7 @@ export default function OpenAIPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     configureAzureOpenAI({
@@ -63,14 +57,14 @@ export default function OpenAIPage() {
     <div className="p-4 space-y-4">
       <Card className="w-full max-w-2xl mx-auto space-y-4">
         <CardHeader>
-          <CardTitle>{openAiPageTitle}</CardTitle>
+          <CardTitle>{t('openAiPageTitle')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             {messages.map((m, i) => (
               <div key={i} className="whitespace-pre-wrap">
                 <span className="font-bold mr-1">
-                  {m.role === 'user' ? 'You:' : 'AI:'}
+                  {m.role === 'user' ? t('openAiUserPrefix') : t('openAiAssistantPrefix')}
                 </span>
                 {m.content}
               </div>
@@ -81,11 +75,11 @@ export default function OpenAIPage() {
             <Textarea
               value={input}
               onChange={(e) => { setInput(e.target.value); }}
-              placeholder={openAiPromptPlaceholder}
+              placeholder={t('openAiPromptPlaceholder')}
               className="flex-1"
             />
             <Button onClick={() => void sendMessage()} disabled={loading}>
-              {loading ? '...' : openAiSendButton}
+              {loading ? '...' : t('openAiSendButton')}
             </Button>
           </div>
         </CardContent>

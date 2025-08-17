@@ -2,11 +2,7 @@ import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank/model/photoItemDto';
-import {
-  photoGalleryTitle,
-  filterButtonText,
-  loadMoreButton,
-} from '@photobank/shared/constants';
+import { useTranslation } from 'react-i18next';
 
 import { useInfinitePhotos } from '@/features/photo/useInfinitePhotos';
 import { useAppDispatch, useAppSelector } from '@/app/hook';
@@ -27,6 +23,7 @@ import { photoColumns } from './columns';
 const PhotoListPage = () => {
   const dispatch = useAppDispatch();
   const filter = useAppSelector((state) => state.photo.filter);
+  const { t } = useTranslation();
   const persons = useAppSelector((state) => state.metadata.persons);
   const tags = useAppSelector((state) => state.metadata.tags);
   const [searchParams] = useSearchParams();
@@ -210,13 +207,13 @@ const PhotoListPage = () => {
     <div className="w-full h-screen flex flex-col bg-background">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{photoGalleryTitle}</h1>
+          <h1 className="text-3xl font-bold">{t('photoGalleryTitle')}</h1>
           <p className="text-muted-foreground mt-2">
             {photos.length} of {total} photos
           </p>
         </div>
         <Button variant="outline" onClick={handleFilterOpen}>
-          {filterButtonText}
+          {t('filterButtonText')}
         </Button>
       </div>
 
@@ -277,7 +274,7 @@ const PhotoListPage = () => {
                 onClick={() => void fetchNextPage()}
                 disabled={!hasNextPage || isFetchingNextPage}
               >
-                {loadMoreButton}
+                {t('loadMoreButton')}
               </Button>
             </div>
           )}

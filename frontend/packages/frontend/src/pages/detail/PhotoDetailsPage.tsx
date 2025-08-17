@@ -4,28 +4,9 @@ import { formatDate, getOrientation, getPlaceByGeoPoint, useIsAdmin } from '@pho
 import { logger } from '@photobank/shared/utils/logger';
 import type { FaceBoxDto } from '@photobank/shared/api/photobank';
 import * as PhotosApi from '@photobank/shared/api/photobank/photos/photos';
-import {
-    photoPropertiesTitle,
-    nameLabel,
-    idLabel,
-    takenDateLabel,
-    widthLabel,
-    heightLabel,
-    scaleLabel,
-    orientationLabel,
-    locationLabel,
-    openInMapsText,
-    tagsTitle,
-    captionsTitle,
-    contentAnalysisTitle,
-    adultScoreLabel,
-    racyScoreLabel,
-    detectedFacesTitle,
-    showFaceBoxesLabel,
-    hoverFaceHint,
-} from '@photobank/shared/constants';
 import { useFacesUpdate } from '@photobank/shared/api/photobank';
 import { Maximize2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useAppSelector } from '@/app/hook';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -72,6 +53,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const persons = useAppSelector((state) => state.metadata.persons);
     const isAdmin = useIsAdmin();
     const { mutateAsync: updateFace } = useFacesUpdate();
+    const { t } = useTranslation();
 
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -257,35 +239,35 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                         <div className="p-4 space-y-4">
                             <Card className="bg-card border-border">
                                 <CardHeader className="pb-3">
-                                    <CardTitle className="text-lg">{photoPropertiesTitle}</CardTitle>
+                                    <CardTitle className="text-lg">{t('photoPropertiesTitle')}</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
                                     <div>
-                                          <Label className="text-muted-foreground text-xs">{nameLabel}</Label>
+                                          <Label className="text-muted-foreground text-xs">{t('nameLabel')}</Label>
                                           <Input value={photoData.name} readOnly className="mt-1 bg-muted"/>
                                     </div>
 
                                     {photoData.id && (
                                         <div>
-                                            <Label className="text-muted-foreground text-xs">{idLabel}</Label>
+                                            <Label className="text-muted-foreground text-xs">{t('idLabel')}</Label>
                                             <Input value={photoData.id.toString()} readOnly className="mt-1 bg-muted"/>
                                         </div>
                                     )}
 
                                     <div>
-                                        <Label className="text-muted-foreground text-xs">{takenDateLabel}</Label>
+                                        <Label className="text-muted-foreground text-xs">{t('takenDateLabel')}</Label>
                                         <Input value={formattedTakenDate} readOnly className="mt-1 bg-muted"/>
                                     </div>
 
                                       {photoData.width && photoData.height && (
                                         <div className="grid grid-cols-2 gap-2">
                                             <div>
-                                                <Label className="text-muted-foreground text-xs">{widthLabel}</Label>
+                                                <Label className="text-muted-foreground text-xs">{t('widthLabel')}</Label>
                                                 <Input value={`${photoData.width.toString()}px`} readOnly
                                                        className="mt-1 bg-muted"/>
                                             </div>
                                             <div>
-                                                <Label className="text-muted-foreground text-xs">{heightLabel}</Label>
+                                                <Label className="text-muted-foreground text-xs">{t('heightLabel')}</Label>
                                                 <Input value={`${photoData.height.toString()}px`} readOnly
                                                        className="mt-1 bg-muted"/>
                                             </div>
@@ -294,14 +276,14 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
 
                                       {photoData.scale && (
                                         <div>
-                                            <Label className="text-muted-foreground text-xs">{scaleLabel}</Label>
+                                            <Label className="text-muted-foreground text-xs">{t('scaleLabel')}</Label>
                                             <Input value={photoData.scale.toString()} readOnly className="mt-1 bg-muted"/>
                                         </div>
                                     )}
 
                                       {photoData.orientation && (
                                         <div>
-                                            <Label className="text-muted-foreground text-xs">{orientationLabel}</Label>
+                                            <Label className="text-muted-foreground text-xs">{t('orientationLabel')}</Label>
                                               <Input
                                                   value={getOrientation(photoData.orientation)}
                                                   readOnly
@@ -312,14 +294,14 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
 
                                       {photoData.location && placeName && (
                                         <div>
-                                            <Label className="text-muted-foreground text-xs">{locationLabel}</Label>
+                                            <Label className="text-muted-foreground text-xs">{t('locationLabel')}</Label>
                                               <a
                                                   href={`https://www.google.com/maps?q=${photoData.location.latitude},${photoData.location.longitude}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="mt-1 block text-primary underline"
                                             >
-                                                {openInMapsText}: {placeName}
+                                                {t('openInMapsText')}: {placeName}
                                             </a>
                                         </div>
                                     )}
@@ -330,7 +312,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                             {photoData.tags && photoData.tags.length > 0 && (
                                 <Card className="bg-card border-border">
                                     <CardHeader className="pb-3">
-                                        <CardTitle className="text-lg">{tagsTitle}</CardTitle>
+                                        <CardTitle className="text-lg">{t('tagsTitle')}</CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="flex flex-wrap gap-2">
@@ -349,7 +331,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                             {photoData.captions && photoData.captions.length > 0 && (
                                 <Card className="bg-card border-border">
                                     <CardHeader className="pb-3">
-                                        <CardTitle className="text-lg">{captionsTitle}</CardTitle>
+                                        <CardTitle className="text-lg">{t('captionsTitle')}</CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-2">
@@ -368,16 +350,16 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
 
                             <Card className="bg-card border-border">
                                 <CardHeader className="pb-3">
-                                    <CardTitle className="text-lg">{contentAnalysisTitle}</CardTitle>
+                                    <CardTitle className="text-lg">{t('contentAnalysisTitle')}</CardTitle>
                                 </CardHeader>
                                   <CardContent className="space-y-3">
                                         <ScoreBar
-                                            label={adultScoreLabel}
+                                            label={t('adultScoreLabel')}
                                             score={photoData.adultScore ?? 0}
                                             colorClass="bg-orange-500"
                                         />
                                         <ScoreBar
-                                            label={racyScoreLabel}
+                                            label={t('racyScoreLabel')}
                                             score={photoData.racyScore ?? 0}
                                             colorClass="bg-red-500"
                                         />
@@ -390,7 +372,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center justify-between">
                                         <CardTitle className="text-lg">
-                                              {detectedFacesTitle} ({photoData.faces.length})
+                                              {t('detectedFacesTitle')} ({photoData.faces.length})
                                         </CardTitle>
                                         <div className="flex items-center space-x-2">
                                             <Checkbox
@@ -399,14 +381,14 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                                 onCheckedChange={(v) => setShowFaceBoxes(!!v)}
                                             />
                                             <Label htmlFor="show-face-boxes" className="text-sm">
-                                                {showFaceBoxesLabel}
+                                                {t('showFaceBoxesLabel')}
                                             </Label>
                                         </div>
                                     </div>
                                 </CardHeader>
                                     <CardContent>
                                         <p className="text-sm text-muted-foreground mb-3">
-                                            {hoverFaceHint}
+                                            {t('hoverFaceHint')}
                                         </p>
                                           <div className="space-y-2">
                                                 {photoData.faces.map((face, index) => {

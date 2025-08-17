@@ -6,6 +6,7 @@ import { QueryProvider } from '@/app/providers/QueryProvider';
 import { API_BASE_URL } from '@/config';
 import { store } from '@/app/store';
 import { configureApi } from '@/shared/lib/api';
+import { I18nProvider } from '@/app/providers/I18nProvider';
 
 import App from './app/App';
 
@@ -24,7 +25,9 @@ async function start() {
     <QueryProvider>
       <Provider store={store}>
         <BrowserRouter>
-          <App />
+          <I18nProvider>
+            <App />
+          </I18nProvider>
         </BrowserRouter>
       </Provider>
     </QueryProvider>,

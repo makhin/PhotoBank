@@ -1,12 +1,6 @@
-import {useState} from "react";
+import { useState } from 'react';
 import type { PersonDto } from '@photobank/shared/api/photobank';
-import {
-    unassignedLabel,
-    facePrefix,
-    searchPersonPlaceholder,
-    noPersonFoundText,
-    noneLabel,
-} from '@photobank/shared/constants';
+import { useTranslation } from 'react-i18next';
 
 import {
     Popover,
@@ -40,9 +34,10 @@ export const FacePersonSelector = ({
                                    }: FacePersonSelectorProps) => {
     const [open, setOpen] = useState(false);
     const [selectedId, setSelectedId] = useState<number | undefined>(personId);
+    const { t } = useTranslation();
 
     const selectedName =
-        persons.find((p) => p.id === selectedId)?.name ?? unassignedLabel;
+        persons.find((p) => p.id === selectedId)?.name ?? t('unassignedLabel');
 
     const handleSelect = (id: number | undefined) => {
         setSelectedId(id);
@@ -53,7 +48,7 @@ export const FacePersonSelector = ({
     return (
         <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-                <span className="font-medium">{facePrefix} {faceIndex + 1}:</span>
+                <span className="font-medium">{t('facePrefix')} {faceIndex + 1}:</span>
                 <Popover open={open} onOpenChange={setOpen}>
                     <PopoverTrigger asChild>
                         <Button
@@ -66,11 +61,11 @@ export const FacePersonSelector = ({
                     </PopoverTrigger>
                     <PopoverContent className="w-[200px] p-0">
                         <Command>
-                            <CommandInput placeholder={searchPersonPlaceholder}/>
-                            <CommandEmpty>{noPersonFoundText}</CommandEmpty>
+                            <CommandInput placeholder={t('searchPersonPlaceholder')}/>
+                            <CommandEmpty>{t('noPersonFoundText')}</CommandEmpty>
                             <CommandGroup>
                                 <CommandItem onSelect={() => { handleSelect(undefined); }}>
-                                    {noneLabel}
+                                    {t('noneLabel')}
                                 </CommandItem>
                                 {persons.map((person) => (
                                     <CommandItem

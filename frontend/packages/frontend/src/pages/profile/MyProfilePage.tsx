@@ -1,20 +1,11 @@
-import {useEffect} from 'react';
-import {useNavigate} from 'react-router-dom';
-import {useForm} from 'react-hook-form';
-import {z} from 'zod';
-import {zodResolver} from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { setAuthToken } from '@photobank/shared/auth';
 import { logger } from '@photobank/shared/utils/logger';
-import {
-  myProfileTitle,
-  emailPrefix,
-  phoneNumberLabel,
-  telegramLabel,
-  saveButtonText,
-  rolesTitle,
-  userClaimsTitle,
-  logoutButtonText,
-} from '@photobank/shared/constants';
+import { useTranslation } from 'react-i18next';
 import {
   useAuthGetUser,
   useAuthGetUserRoles,
@@ -35,6 +26,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function MyProfilePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { data: userResp } = useAuthGetUser();
   const user = userResp?.data;
   const { data: rolesResp } = useAuthGetUserRoles();
@@ -75,11 +67,11 @@ export default function MyProfilePage() {
 
   return (
     <div className="w-full max-w-md mx-auto p-4 space-y-4">
-      <h1 className="text-2xl font-bold">{myProfileTitle}</h1>
+      <h1 className="text-2xl font-bold">{t('myProfileTitle')}</h1>
       {user && (
         <div className="space-y-2">
           <div>
-            <span className="font-medium">{emailPrefix}</span> {user.email}
+            <span className="font-medium">{t('emailPrefix')}</span> {user.email}
           </div>
           <Form {...form}>
             { }
@@ -94,7 +86,7 @@ export default function MyProfilePage() {
                 name="phoneNumber"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>{phoneNumberLabel}</FormLabel>
+                    <FormLabel>{t('phoneNumberLabel')}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -107,7 +99,7 @@ export default function MyProfilePage() {
                 name="telegramUserId"
                 render={({field}) => (
                   <FormItem>
-                    <FormLabel>{telegramLabel}</FormLabel>
+                    <FormLabel>{t('telegramLabel')}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -115,12 +107,12 @@ export default function MyProfilePage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">{saveButtonText}</Button>
+              <Button type="submit" className="w-full">{t('saveButtonText')}</Button>
             </form>
           </Form>
           {roles.length > 0 && (
             <div>
-              <h2 className="font-medium">{rolesTitle}</h2>
+              <h2 className="font-medium">{t('rolesTitle')}</h2>
               <ul className="list-disc list-inside space-y-1 ml-4">
                 {roles.map((r) => (
                   <li key={r.name}>
@@ -139,7 +131,7 @@ export default function MyProfilePage() {
           )}
           {claims.length > 0 && (
             <div>
-              <h2 className="font-medium">{userClaimsTitle}</h2>
+              <h2 className="font-medium">{t('userClaimsTitle')}</h2>
               <ul className="list-disc list-inside ml-4 space-y-1">
                 {claims.map((c, idx) => (
                   <li key={idx}>{c.type}: {c.value}</li>
@@ -157,7 +149,7 @@ export default function MyProfilePage() {
           navigate('/login');
         }}
       >
-        {logoutButtonText}
+        {t('logoutButtonText')}
       </Button>
     </div>
   );
