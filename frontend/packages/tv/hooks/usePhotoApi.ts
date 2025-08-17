@@ -7,7 +7,7 @@ import {
 } from '@photobank/shared/api/photobank';
 import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants';
 
-export const usePhotos = () => {
+export const usePhotos = (caption?: string) => {
   const [photos, setPhotos] = useState<PhotoItemDto[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -16,7 +16,8 @@ export const usePhotos = () => {
     (async () => {
       setLoading(true);
       try {
-        const res = await postApiPhotosSearch(DEFAULT_PHOTO_FILTER);
+        const filter = { ...DEFAULT_PHOTO_FILTER, caption };
+        const res = await postApiPhotosSearch(filter);
         if (!ignore) setPhotos(res.data.photos || []);
       } finally {
         if (!ignore) setLoading(false);
@@ -25,7 +26,7 @@ export const usePhotos = () => {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [caption]);
 
   return { photos, loading };
 };
