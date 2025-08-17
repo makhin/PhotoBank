@@ -54,7 +54,6 @@ export interface FilterDto {
   takenDateFrom?: string | null;
   /** @nullable */
   takenDateTo?: string | null;
-  /** @nullable */
   thisDay?: ThisDayDto;
   /** @nullable */
   persons?: number[] | null;
@@ -62,11 +61,6 @@ export interface FilterDto {
   tags?: number[] | null;
   /** @nullable */
   orderBy?: string | null;
-}
-
-export interface ThisDayDto {
-  day: number;
-  month: number;
 }
 
 export interface GeoPointDto {
@@ -184,17 +178,6 @@ export interface RoleDto {
   claims?: ClaimDto[] | null;
 }
 
-export interface TelegramExchangeRequest {
-  telegramUserId: number;
-  /** @nullable */
-  username?: string | null;
-}
-
-export interface TelegramExchangeResponse {
-  accessToken: string;
-  expiresIn: number;
-}
-
 export interface StorageDto {
   id: number;
   /** @minLength 1 */
@@ -209,6 +192,23 @@ export interface TagDto {
 
 export interface TagItemDto {
   tagId: number;
+}
+
+export interface TelegramExchangeRequest {
+  telegramUserId?: number;
+  /** @nullable */
+  username?: string | null;
+}
+
+export interface TelegramExchangeResponse {
+  /** @nullable */
+  accessToken?: string | null;
+  expiresIn?: number;
+}
+
+export interface ThisDayDto {
+  day?: number;
+  month?: number;
 }
 
 export interface UpdateFaceDto {

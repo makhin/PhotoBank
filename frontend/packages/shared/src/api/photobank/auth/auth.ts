@@ -359,6 +359,92 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions );
     }
+    export type authTelegramExchangeResponse200 = {
+  data: TelegramExchangeResponse
+  status: 200
+}
+
+export type authTelegramExchangeResponse401 = {
+  data: ProblemDetails
+  status: 401
+}
+
+export type authTelegramExchangeResponse403 = {
+  data: ProblemDetails
+  status: 403
+}
+    
+export type authTelegramExchangeResponseComposite = authTelegramExchangeResponse200 | authTelegramExchangeResponse401 | authTelegramExchangeResponse403;
+    
+export type authTelegramExchangeResponse = authTelegramExchangeResponseComposite & {
+  headers: Headers;
+}
+
+export const getAuthTelegramExchangeUrl = () => {
+
+
+  
+
+  return `/auth/telegram/exchange`
+}
+
+export const authTelegramExchange = async (telegramExchangeRequest: TelegramExchangeRequest, options?: RequestInit): Promise<authTelegramExchangeResponse> => {
+  
+  return customFetcher<authTelegramExchangeResponse>(getAuthTelegramExchangeUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      telegramExchangeRequest,)
+  }
+);}
+
+
+
+
+export const getAuthTelegramExchangeMutationOptions = <TError = ProblemDetails | ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext> => {
+
+const mutationKey = ['authTelegramExchange'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authTelegramExchange>>, {data: TelegramExchangeRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  authTelegramExchange(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AuthTelegramExchangeMutationResult = NonNullable<Awaited<ReturnType<typeof authTelegramExchange>>>
+    export type AuthTelegramExchangeMutationBody = TelegramExchangeRequest
+    export type AuthTelegramExchangeMutationError = ProblemDetails | ProblemDetails
+
+    export const useAuthTelegramExchange = <TError = ProblemDetails | ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof authTelegramExchange>>,
+        TError,
+        {data: TelegramExchangeRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getAuthTelegramExchangeMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
     export type authGetUserClaimsResponse200 = {
   data: ClaimDto[]
   status: 200
@@ -511,90 +597,3 @@ export function useAuthGetUserRoles<TData = Awaited<ReturnType<typeof authGetUse
 
 
 
-export type authTelegramExchangeResponse200 = {
-  data: TelegramExchangeResponse
-  status: 200
-}
-
-export type authTelegramExchangeResponse401 = {
-  data: ProblemDetails
-  status: 401
-}
-
-export type authTelegramExchangeResponse403 = {
-  data: ProblemDetails
-  status: 403
-}
-    
-export type authTelegramExchangeResponseComposite = authTelegramExchangeResponse200 | authTelegramExchangeResponse401 | authTelegramExchangeResponse403;
-    
-export type authTelegramExchangeResponse = authTelegramExchangeResponseComposite & {
-  headers: Headers;
-}
-
-export const getAuthTelegramExchangeUrl = () => {
-
-
-  
-
-  return `/auth/telegram/exchange`
-}
-
-export const authTelegramExchange = async (telegramExchangeRequest: TelegramExchangeRequest, options?: RequestInit): Promise<authTelegramExchangeResponse> => {
-  
-  return customFetcher<authTelegramExchangeResponse>(getAuthTelegramExchangeUrl(),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      telegramExchangeRequest,)
-  }
-);}
-
-
-
-
-export const getAuthTelegramExchangeMutationOptions = <TError = ProblemDetails | ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext> => {
-
-const mutationKey = ['authTelegramExchange'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authTelegramExchange>>, {data: TelegramExchangeRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  authTelegramExchange(data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthTelegramExchangeMutationResult = NonNullable<Awaited<ReturnType<typeof authTelegramExchange>>>
-    export type AuthTelegramExchangeMutationBody = TelegramExchangeRequest
-    export type AuthTelegramExchangeMutationError = ProblemDetails | ProblemDetails
-
-    export const useAuthTelegramExchange = <TError = ProblemDetails | ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext>, }
- ): UseMutationResult<
-        Awaited<ReturnType<typeof authTelegramExchange>>,
-        TError,
-        {data: TelegramExchangeRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getAuthTelegramExchangeMutationOptions(options);
-
-      return useMutation(mutationOptions );
-    }
-    
