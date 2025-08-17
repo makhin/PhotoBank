@@ -125,65 +125,11 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-  /auth/claims:
-    get:
-      tags:
-        - Auth
-      operationId: Auth_GetUserClaims
-      responses:
-        '200':
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ClaimDto'
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ClaimDto'
-            text/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ClaimDto'
-  /auth/roles:
-    get:
-      tags:
-        - Auth
-      operationId: Auth_GetUserRoles
-      responses:
-        '200':
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RoleDto'
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RoleDto'
-            text/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RoleDto'
   /auth/telegram/exchange:
     post:
       tags:
         - Auth
       operationId: Auth_TelegramExchange
-      parameters:
-        - name: X-Service-Key
-          in: header
-          required: false
-          schema:
-            type: string
       requestBody:
         content:
           application/json:
@@ -232,6 +178,54 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /auth/claims:
+    get:
+      tags:
+        - Auth
+      operationId: Auth_GetUserClaims
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClaimDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClaimDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClaimDto'
+  /auth/roles:
+    get:
+      tags:
+        - Auth
+      operationId: Auth_GetUserRoles
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoleDto'
   /faces:
     put:
       tags:
@@ -735,7 +729,6 @@ components:
           nullable: true
         thisDay:
           $ref: '#/components/schemas/ThisDayDto'
-          nullable: true
         persons:
           type: array
           items:
@@ -751,19 +744,6 @@ components:
         orderBy:
           type: string
           nullable: true
-      additionalProperties: false
-    ThisDayDto:
-      required:
-        - day
-        - month
-      type: object
-      properties:
-        day:
-          type: integer
-          format: int32
-        month:
-          type: integer
-          format: int32
       additionalProperties: false
     GeoPointDto:
       required:
@@ -1010,30 +990,6 @@ components:
             $ref: '#/components/schemas/ClaimDto'
           nullable: true
       additionalProperties: false
-    TelegramExchangeRequest:
-      required:
-        - telegramUserId
-      type: object
-      properties:
-        telegramUserId:
-          type: integer
-          format: int64
-        username:
-          type: string
-          nullable: true
-      additionalProperties: false
-    TelegramExchangeResponse:
-      required:
-        - accessToken
-        - expiresIn
-      type: object
-      properties:
-        accessToken:
-          type: string
-        expiresIn:
-          type: integer
-          format: int32
-      additionalProperties: false
     StorageDto:
       required:
         - id
@@ -1069,6 +1025,36 @@ components:
           type: integer
           format: int32
       additionalProperties: false
+    TelegramExchangeRequest:
+      type: object
+      properties:
+        telegramUserId:
+          type: integer
+          format: int64
+        username:
+          type: string
+          nullable: true
+      additionalProperties: false
+    TelegramExchangeResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          nullable: true
+        expiresIn:
+          type: integer
+          format: int32
+      additionalProperties: false
+    ThisDayDto:
+      type: object
+      properties:
+        day:
+          type: integer
+          format: int32
+        month:
+          type: integer
+          format: int32
+      additionalProperties: false
     UpdateFaceDto:
       required:
         - faceId
@@ -1094,7 +1080,7 @@ components:
           nullable: true
         telegramSendTimeUtc:
           type: string
-          format: time
+          format: date-span
           nullable: true
       additionalProperties: false
     UserDto:
@@ -1114,7 +1100,7 @@ components:
           nullable: true
         telegramSendTimeUtc:
           type: string
-          format: time
+          format: date-span
           nullable: true
       additionalProperties: false
     UserWithClaimsDto:
@@ -1138,7 +1124,7 @@ components:
           nullable: true
         telegramSendTimeUtc:
           type: string
-          format: time
+          format: date-span
           nullable: true
         claims:
           type: array
