@@ -1,6 +1,7 @@
 import { BotError, Context } from 'grammy';
-import { apiErrorMsg, sorryTryToRequestLaterMsg } from '@photobank/shared/constants';
+import { apiErrorMsg } from '@photobank/shared/constants';
 import { ProblemDetailsError } from '@photobank/shared/types/problem';
+import type { MyContext } from './i18n';
 
 import { logger } from './logger';
 
@@ -10,15 +11,13 @@ export function handleBotError(err: BotError<Context>) {
   logger.error(`error handling update from ${username}`, err.error);
 }
 
-export async function handleCommandError(ctx: Context, error: unknown) {
+export async function handleCommandError(ctx: MyContext, error: unknown) {
   if (error instanceof ProblemDetailsError && error.problem.status === 403) {
-    await ctx.reply(
-      'Ваш Telegram не привязан к аккаунту PhotoBank. Обратитесь к администратору.',
-    );
+    await ctx.reply(ctx.t('not-registered'));
     return;
   }
   logger.error(apiErrorMsg, error);
-  await ctx.reply(sorryTryToRequestLaterMsg);
+  await ctx.reply(ctx.t('sorry-try-later'));
 }
 
 export function handleServiceError(error: unknown) {

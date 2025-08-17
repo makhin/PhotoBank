@@ -1,4 +1,4 @@
-import { Context } from 'grammy';
+import type { MyContext } from '../i18n';
 
 import { getAllStoragesWithPaths } from '../dictionaries';
 import { parsePrefix, sendNamedItemsPage } from './helpers';
@@ -6,7 +6,7 @@ import { parsePrefix, sendNamedItemsPage } from './helpers';
 const MAX_PATHS_PER_STORAGE = 20;
 
 export async function sendStoragesPage(
-  ctx: Context,
+  ctx: MyContext,
   prefix: string,
   page: number,
   edit = false
@@ -27,11 +27,11 @@ export async function sendStoragesPage(
     prefix,
     page,
     edit,
-    errorMsg: '🚫 Не удалось получить список хранилищ.',
+    errorMsg: ctx.t('storages-error'),
   });
 }
 
-export async function storagesCommand(ctx: Context) {
+export async function storagesCommand(ctx: MyContext) {
   const prefix = parsePrefix(ctx.message?.text);
   await sendStoragesPage(ctx, prefix, 1);
 }

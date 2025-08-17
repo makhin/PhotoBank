@@ -1,10 +1,10 @@
-import { unknownPersonLabel } from '@photobank/shared/constants';
 import type {
   PersonDto,
   StorageDto,
   TagDto,
 } from '@photobank/shared/api/photobank';
-import type { Context } from 'grammy';
+import type { MyContext } from './i18n';
+import { i18n } from './i18n';
 
 import {
   fetchPaths,
@@ -25,9 +25,11 @@ type DictData = {
 
 const cache = new Map<string, DictData>();
 let currentUser = '';
+let currentLocale = 'en';
 
-export function setDictionariesUser(userId: number | string | null | undefined) {
+export function setDictionariesUser(userId: number | string | null | undefined, locale?: string) {
   currentUser = String(userId ?? '');
+  if (locale) currentLocale = locale;
 }
 
 function getDict(): DictData {
@@ -44,7 +46,7 @@ function getDict(): DictData {
   };
 }
 
-export async function loadDictionaries(ctx: Context) {
+export async function loadDictionaries(ctx: MyContext) {
   if (cache.has(currentUser)) return;
   const { data: tagList } = await fetchTags(ctx);
   const tagMap = new Map(tagList.map(tag => [tag.id, tag.name]));
@@ -79,7 +81,7 @@ export function getAllTags(): TagDto[] {
 }
 
 export function getPersonName(id: number | null | undefined): string {
-  if (id === null || id === undefined) return unknownPersonLabel;
+  if (id === null || id === undefined) return i18n.t(currentLocale, 'unknown-person');
   return getDict().personMap.get(id) ?? `ID ${String(id)}`;
 }
 

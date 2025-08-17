@@ -5,7 +5,7 @@ type Val = string; // file_id
 
 const cache = new LRUCache<Key, Val>({
   max: 20_000,
-  ttl: 1000 * 60 * 60 * 24 * 14, // 14 дней
+  ttl: 1000 * 60 * 60 * 24 * 14, // 14 days
 });
 
 export function getFileId(photoId: number): string | undefined {

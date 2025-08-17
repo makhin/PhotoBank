@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { openPhotoInline, photoMessages, currentPagePhotos } from '../src/photo';
 import * as photoService from '../src/services/photo';
+import { i18n } from '../src/i18n';
 
 const basePhoto = {
   id: 1,
@@ -26,6 +27,7 @@ it('sends new message and stores id', async () => {
     replyWithPhoto: vi.fn().mockResolvedValue({ message_id: 42 }),
     reply: vi.fn(),
     api: { editMessageMedia: vi.fn(), editMessageCaption: vi.fn() },
+    t: (k: string, p?: any) => i18n.t('en', k, p),
   } as any;
   currentPagePhotos.set(1, { page: 1, ids: [1, 2] });
   await openPhotoInline(ctx, 1);
@@ -42,6 +44,7 @@ it('edits existing message when available', async () => {
     api: { editMessageMedia: vi.fn(), editMessageCaption: vi.fn() },
     replyWithPhoto: vi.fn().mockResolvedValue({ message_id: 43 }),
     reply: vi.fn(),
+    t: (k: string, p?: any) => i18n.t('en', k, p),
   } as any;
   currentPagePhotos.set(1, { page: 1, ids: [1, 2] });
   await openPhotoInline(ctx, 1);
@@ -57,6 +60,7 @@ it('adds navigation buttons from current page list', async () => {
     replyWithPhoto: vi.fn().mockResolvedValue({ message_id: 1 }),
     reply: vi.fn(),
     api: { editMessageMedia: vi.fn(), editMessageCaption: vi.fn() },
+    t: (k: string, p?: any) => i18n.t('en', k, p),
   } as any;
   currentPagePhotos.set(1, { page: 1, ids: [1, 2, 3] });
   await openPhotoInline(ctx, 2);

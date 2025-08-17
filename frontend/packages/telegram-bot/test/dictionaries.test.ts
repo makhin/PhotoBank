@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { i18n } from '../src/i18n';
 
 describe('dictionaries', () => {
   beforeEach(() => {
@@ -28,7 +29,7 @@ describe('dictionaries', () => {
 
   it('getPersonName returns unknown label for null', async () => {
     const dict = await import('../src/dictionaries');
-    expect(dict.getPersonName(null)).toBe('Неизвестный');
+    expect(dict.getPersonName(null)).toBe(i18n.t('en', 'unknown-person'));
   });
 
   it('getTagName and getStorageName fall back', async () => {

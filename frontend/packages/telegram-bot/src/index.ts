@@ -1,8 +1,4 @@
 import { configureAzureOpenAI } from "@photobank/shared/ai/openai";
-import {
-  captionMissingMsg,
-  welcomeBotMsg,
-} from "@photobank/shared/constants";
 
 import { loadDictionaries, setDictionariesUser } from "./dictionaries";
 import {
@@ -66,7 +62,7 @@ bot.use(async (ctx, next) => {
 });
 
 bot.use(async (ctx, next) => {
-  setDictionariesUser(ctx.from?.id);
+  setDictionariesUser(ctx.from?.id, ctx.i18n.locale());
   await loadDictionaries(ctx);
   await next();
 });
@@ -84,7 +80,7 @@ configureAzureOpenAI({
 });
 bot.command(
   "start",
-  (ctx) => ctx.reply(welcomeBotMsg),
+  (ctx) => ctx.reply(ctx.t('welcome')),
 );
 bot.command("help", helpCommand);
 
@@ -116,7 +112,7 @@ bot.callbackQuery(/^caption:(\d+)$/, withRegistered(async (ctx) => {
   }
   const id = parseInt(ctx.match[1], 10);
   const caption = captionCache.get(id);
-  await ctx.answerCallbackQuery(caption ?? captionMissingMsg);
+  await ctx.answerCallbackQuery(caption ?? ctx.t('caption-missing'));
 }));
 
 bot.callbackQuery(tagsCallbackPattern, withRegistered(async (ctx) => {

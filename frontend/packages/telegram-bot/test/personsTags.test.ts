@@ -4,37 +4,32 @@ import { sendPersonsPage } from '../src/commands/persons';
 import { sendStoragesPage } from '../src/commands/storages';
 import { tagsCallbackPattern, personsCallbackPattern, storagesCallbackPattern } from '../src/patterns';
 import * as dict from '../src/dictionaries';
-import {
-  firstPageText,
-  prevPageText,
-  nextPageText,
-  lastPageText,
-} from '@photobank/shared/constants';
+import { i18n } from '../src/i18n';
 
 describe('sendTagsPage', () => {
   it('filters by prefix and paginates', async () => {
     const tags = Array.from({ length: 11 }, (_, i) => ({ id: i + 1, name: `ba${String(i).padStart(2, '0')}` }));
     vi.spyOn(dict, 'getAllTags').mockReturnValue(tags as any);
-    const ctx = { reply: vi.fn() } as any;
+    const ctx = { reply: vi.fn(), t: (k: string, p?: any) => i18n.t('ru', k, p) } as any;
     await sendTagsPage(ctx, 'ba', 2);
     expect(ctx.reply).toHaveBeenCalled();
     const text = ctx.reply.mock.calls[0][0];
     expect(text).toContain('ba10');
-    expect(text).toContain('Страница 2 из 2');
+    expect(text).toContain(i18n.t('ru', 'page-info', { page: 2, total: 2 }));
   });
 
   it('shows navigation to first and last pages', async () => {
     const tags = Array.from({ length: 25 }, (_, i) => ({ id: i + 1, name: `t${i}` }));
     vi.spyOn(dict, 'getAllTags').mockReturnValue(tags as any);
-    const ctx = { reply: vi.fn() } as any;
+    const ctx = { reply: vi.fn(), t: (k: string, p?: any) => i18n.t('ru', k, p) } as any;
     await sendTagsPage(ctx, '', 2);
     const [, opts] = ctx.reply.mock.calls[0];
     const buttons = opts.reply_markup.inline_keyboard[0].map((b: any) => b.text);
     expect(buttons).toEqual([
-      firstPageText,
-      prevPageText,
-      nextPageText,
-      lastPageText,
+      i18n.t('ru', 'first-page'),
+      i18n.t('ru', 'prev-page'),
+      i18n.t('ru', 'next-page'),
+      i18n.t('ru', 'last-page'),
     ]);
   });
 });
@@ -43,12 +38,12 @@ describe('sendPersonsPage', () => {
   it('filters by prefix and paginates', async () => {
     const persons = Array.from({ length: 12 }, (_, i) => ({ id: i + 1, name: `al${String(i).padStart(2, '0')}` }));
     vi.spyOn(dict, 'getAllPersons').mockReturnValue(persons as any);
-    const ctx = { reply: vi.fn() } as any;
+    const ctx = { reply: vi.fn(), t: (k: string, p?: any) => i18n.t('ru', k, p) } as any;
     await sendPersonsPage(ctx, 'al', 2);
     expect(ctx.reply).toHaveBeenCalled();
     const text = ctx.reply.mock.calls[0][0];
     expect(text).toContain('al10');
-    expect(text).toContain('Страница 2 из 2');
+    expect(text).toContain(i18n.t('ru', 'page-info', { page: 2, total: 2 }));
   });
 
   it('skips persons with id below 1', async () => {
@@ -57,7 +52,7 @@ describe('sendPersonsPage', () => {
       { id: 1, name: 'al00' },
     ];
     vi.spyOn(dict, 'getAllPersons').mockReturnValue(persons as any);
-    const ctx = { reply: vi.fn() } as any;
+    const ctx = { reply: vi.fn(), t: (k: string, p?: any) => i18n.t('ru', k, p) } as any;
     await sendPersonsPage(ctx, 'a', 1);
     expect(ctx.reply).toHaveBeenCalled();
     const text = ctx.reply.mock.calls[0][0];
@@ -73,13 +68,13 @@ describe('sendStoragesPage', () => {
       paths: [`p${i}`],
     }));
     vi.spyOn(dict, 'getAllStoragesWithPaths').mockReturnValue(storages as any);
-    const ctx = { reply: vi.fn() } as any;
+    const ctx = { reply: vi.fn(), t: (k: string, p?: any) => i18n.t('ru', k, p) } as any;
     await sendStoragesPage(ctx, 'st', 2);
     expect(ctx.reply).toHaveBeenCalled();
     const text = ctx.reply.mock.calls[0][0];
     expect(text).toContain('st10');
     expect(text).toContain('p10');
-    expect(text).toContain('Страница 2 из 2');
+    expect(text).toContain(i18n.t('ru', 'page-info', { page: 2, total: 2 }));
   });
 
   it('limits number of paths per storage', async () => {
@@ -91,7 +86,7 @@ describe('sendStoragesPage', () => {
       },
     ];
     vi.spyOn(dict, 'getAllStoragesWithPaths').mockReturnValue(storages as any);
-    const ctx = { reply: vi.fn() } as any;
+    const ctx = { reply: vi.fn(), t: (k: string, p?: any) => i18n.t('ru', k, p) } as any;
     await sendStoragesPage(ctx, '', 1);
     expect(ctx.reply).toHaveBeenCalled();
     const text = ctx.reply.mock.calls[0][0];

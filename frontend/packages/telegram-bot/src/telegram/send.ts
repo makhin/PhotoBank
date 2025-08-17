@@ -13,7 +13,7 @@ function buildCaption(p: PhotoItemDto): string {
   return parts.filter(Boolean).join('\n');
 }
 
-// Отправка одного фото с кэшем file_id
+// Send a single photo with cached file_id
 export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
   const cached = getFileId(p.id);
   try {
@@ -30,7 +30,7 @@ export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
     if (newId && newId !== cached) setFileId(p.id, newId);
     return message;
     } catch (e: unknown) {
-      // Если кэшированный file_id внезапно протух — удаляем и пробуем разок URL
+      // If cached file_id expired, remove and retry with URL
       const err = e as { error_code?: number; description?: string };
       const code = err.error_code;
       const desc = err.description ?? '';
@@ -54,16 +54,16 @@ export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
   }
 }
 
-// Разбить массив на чанки по N
+// Split array into chunks of N
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
   return out;
 }
 
-// Отправка альбомом (media group) с кэшем file_id
+// Send album (media group) with cached file_id
 export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
-  const groups = chunk(photos, 10); // Telegram лимит
+  const groups = chunk(photos, 10); // Telegram limit
     const results: Message[] = [];
 
   for (const group of groups) {
@@ -78,11 +78,11 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
     });
 
     try {
-      // mediaGroup нельзя редактировать, поэтому просто шлём и идём дальше
+      // mediaGroup cannot be edited, so just send and continue
       const msgs = (await withTelegramRetry(() =>
         throttled(() => ctx.api.sendMediaGroup(ctx.chat.id, medias)),
       )) as Message.PhotoMessage[];
-      // Сохранить file_id по всем элементам, где он появился
+      // Save file_id for all items where it appears
       msgs.forEach((m, i) => {
         const p = group[i];
         const id = m.photo?.at(-1)?.file_id;
@@ -95,19 +95,19 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
         const desc = err.description ?? '';
         logger.warn('sendMediaGroup failed, fallback to singles', { code, desc, count: group.length });
 
-      // Fallback: отправляем по одному, чтобы всё равно доставить пользователю
+      // Fallback: send one by one to still deliver to user
       for (const p of group) {
         try {
           const msg = await sendPhotoSmart(ctx, p);
           results.push(msg);
         } catch (inner) {
-          // если даже одиночная упала — лог и продолжаем
+          // if even single send fails—log and continue
           logger.error('single send failed', inner);
         }
       }
     }
 
-    // Между группами небольшая пауза
+    // Small pause between groups
     await new Promise((r) => setTimeout(r, 150));
   }
 

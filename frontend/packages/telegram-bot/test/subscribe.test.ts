@@ -4,7 +4,7 @@ import { subscribeCommand, parseSubscribeTime, subscriptions } from '../src/comm
 vi.mock('../src/services/auth', () => ({
   updateUser: vi.fn().mockResolvedValue(undefined),
 }));
-import { subscribeCommandUsageMsg } from '@photobank/shared/constants';
+import { i18n } from '../src/i18n';
 
 describe('parseSubscribeTime', () => {
   it('parses valid time', () => {
@@ -18,14 +18,14 @@ describe('parseSubscribeTime', () => {
 
 describe('subscribeCommand', () => {
   it('replies with usage on wrong input', async () => {
-    const ctx = { reply: vi.fn(), message: { text: '/subscribe' }, chat: { id: 1 } } as any;
+    const ctx = { reply: vi.fn(), message: { text: '/subscribe' }, chat: { id: 1 }, t: (k: string) => i18n.t('en', k), i18n: { locale: () => 'en' } } as any;
     await subscribeCommand(ctx);
-    expect(ctx.reply).toHaveBeenCalledWith(subscribeCommandUsageMsg);
+    expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'subscribe-usage'));
   });
 
   it('stores subscription on valid input', async () => {
-    const ctx = { reply: vi.fn(), message: { text: '/subscribe 07:15' }, chat: { id: 42 } } as any;
+    const ctx = { reply: vi.fn(), message: { text: '/subscribe 07:15' }, chat: { id: 42 }, t: (k: string, p?: any) => i18n.t('en', k, p), i18n: { locale: () => 'en' } } as any;
     await subscribeCommand(ctx);
-    expect(subscriptions.get(42)).toBe('07:15');
+    expect(subscriptions.get(42)?.time).toBe('07:15');
   });
 });

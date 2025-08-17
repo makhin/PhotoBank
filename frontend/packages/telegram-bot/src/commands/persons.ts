@@ -1,10 +1,10 @@
-import { Context } from "grammy";
+import type { MyContext } from "../i18n";
 
 import { getAllPersons } from '../dictionaries';
 import { parsePrefix, sendNamedItemsPage } from "./helpers";
 
 export async function sendPersonsPage(
-  ctx: Context,
+  ctx: MyContext,
   prefix: string,
   page: number,
   edit = false,
@@ -16,12 +16,12 @@ export async function sendPersonsPage(
     prefix,
     page,
     edit,
-    errorMsg: "🚫 Не удалось получить список персон.",
+    errorMsg: ctx.t('persons-error'),
     filter: (p) => p.id >= 1,
   });
 }
 
-export async function personsCommand(ctx: Context) {
+export async function personsCommand(ctx: MyContext) {
   const prefix = parsePrefix(ctx.message?.text);
   await sendPersonsPage(ctx, prefix, 1);
 }

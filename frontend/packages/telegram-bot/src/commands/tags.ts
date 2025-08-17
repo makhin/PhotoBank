@@ -1,10 +1,10 @@
-import { Context } from "grammy";
+import type { MyContext } from "../i18n";
 
 import { getAllTags } from '../dictionaries';
 import { parsePrefix, sendNamedItemsPage } from "./helpers";
 
 export async function sendTagsPage(
-  ctx: Context,
+  ctx: MyContext,
   prefix: string,
   page: number,
   edit = false,
@@ -16,11 +16,11 @@ export async function sendTagsPage(
     prefix,
     page,
     edit,
-    errorMsg: "🚫 Не удалось получить список тегов.",
+    errorMsg: ctx.t('tags-error'),
   });
 }
 
-export async function tagsCommand(ctx: Context) {
+export async function tagsCommand(ctx: MyContext) {
   const prefix = parsePrefix(ctx.message?.text);
   await sendTagsPage(ctx, prefix, 1);
 }

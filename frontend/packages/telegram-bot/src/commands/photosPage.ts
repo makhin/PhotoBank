@@ -1,13 +1,7 @@
-import { Context, InlineKeyboard } from 'grammy';
-import {
-  unknownYearLabel,
-  firstPageText,
-  prevPageText,
-  nextPageText,
-  lastPageText,
-} from '@photobank/shared/constants';
+import { InlineKeyboard } from 'grammy';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 import { firstNWords } from '@photobank/shared/index';
+import type { MyContext } from '../i18n';
 
 import { searchPhotos } from '../services/photo';
 import { handleCommandError } from '../errorHandler';
@@ -16,7 +10,7 @@ import { captionCache, currentPagePhotos, deletePhotoMessage } from '../photo';
 export const PHOTOS_PAGE_SIZE = 10;
 
 export interface SendPhotosPageOptions {
-  ctx: Context;
+  ctx: MyContext;
   filter: FilterDto;
   page: number;
   edit?: boolean;
@@ -82,17 +76,17 @@ export async function sendPhotosPage({
   [...byYear.entries()]
     .sort(([a], [b]) => b - a)
     .forEach(([year, folders]) => {
-      sections.push(`\n📅 <b>${year || unknownYearLabel}</b>`);
+      sections.push(`\n📅 <b>${year || ctx.t('unknown-year')}</b>`);
       [...folders.entries()].forEach(([folder, photos]) => {
         sections.push(`📁 ${folder}`);
         photos.forEach((photo) => {
-          const title = photo.name.slice(0, 10) || 'Без названия';
+          const title = photo.name.slice(0, 10) || ctx.t('untitled');
           const peopleCount = photo.persons?.length ?? 0;
           const isAdult = photo.isAdultContent ? '🔞' : '';
           const isRacy = photo.isRacyContent ? '⚠️' : '';
 
           const metaParts: string[] = [];
-          if (peopleCount > 0) metaParts.push(`👥 ${peopleCount} чел.`);
+          if (peopleCount > 0) metaParts.push(ctx.t('people-count', { count: peopleCount }));
           if (isAdult) metaParts.push(isAdult);
           if (isRacy) metaParts.push(isRacy);
           const metaLine = metaParts.length ? `\n${metaParts.join(' ')}` : '';
@@ -117,15 +111,15 @@ export async function sendPhotosPage({
 
   keyboard.row();
 
-  sections.push(`\n📄 Страница ${page} из ${totalPages}`);
+  sections.push(`\n${ctx.t('page-info', { page, total: totalPages })}`);
 
   if (page > 1) {
-    keyboard.text(firstPageText, buildCallbackData(1));
-    keyboard.text(prevPageText, buildCallbackData(page - 1));
+    keyboard.text(ctx.t('first-page'), buildCallbackData(1));
+    keyboard.text(ctx.t('prev-page'), buildCallbackData(page - 1));
   }
   if (page < totalPages) {
-    keyboard.text(nextPageText, buildCallbackData(page + 1));
-    keyboard.text(lastPageText, buildCallbackData(totalPages));
+    keyboard.text(ctx.t('next-page'), buildCallbackData(page + 1));
+    keyboard.text(ctx.t('last-page'), buildCallbackData(totalPages));
   }
 
   const text = sections.join('\n');

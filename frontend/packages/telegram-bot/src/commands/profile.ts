@@ -1,17 +1,9 @@
-import { Context } from "grammy";
-import {
-    getProfileErrorMsg,
-    rolesLabel,
-    rolesEmptyLabel,
-    claimsLabel,
-    claimsEmptyLabel,
-    notRegisteredMsg,
-} from "@photobank/shared/constants";
+import type { MyContext } from "../i18n";
 
 import { getUser, getUserRoles, getUserClaims } from "../services/auth";
 import { handleCommandError } from "../errorHandler";
 
-export async function profileCommand(ctx: Context) {
+export async function profileCommand(ctx: MyContext) {
     const username = ctx.from?.username ?? String(ctx.from?.id ?? "");
     try {
         await getUser(ctx);
@@ -23,11 +15,11 @@ export async function profileCommand(ctx: Context) {
         const claims = claimsRes.data;
 
         const lines: string[] = [
-            `👤 Пользователь: ${username}`,
+            ctx.t('user-info', { username }),
         ];
 
         if (roles.length) {
-            lines.push(rolesLabel);
+            lines.push(ctx.t('roles-label'));
             for (const role of roles) {
                 lines.push(`- ${role.name}`);
                 for (const claim of role.claims) {
@@ -35,25 +27,25 @@ export async function profileCommand(ctx: Context) {
                 }
             }
         } else {
-            lines.push(rolesEmptyLabel);
+            lines.push(ctx.t('roles-empty'));
         }
 
         if (claims.length) {
-            lines.push(claimsLabel);
+            lines.push(ctx.t('claims-label'));
             for (const claim of claims) {
                 lines.push(`- ${claim.type}: ${claim.value}`);
             }
         } else {
-            lines.push(claimsEmptyLabel);
+            lines.push(ctx.t('claims-empty'));
         }
 
         await ctx.reply(lines.join("\n"));
     } catch (error: unknown) {
         if (error instanceof Error && error.message.includes('404')) {
-            await ctx.reply(notRegisteredMsg);
+            await ctx.reply(ctx.t('not-registered'));
             return;
         }
         await handleCommandError(ctx, error);
-        await ctx.reply(getProfileErrorMsg);
+        await ctx.reply(ctx.t('get-profile-error'));
     }
 }
