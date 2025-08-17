@@ -4,6 +4,7 @@
  * PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
  * OpenAPI spec version: 1.0
  */
+import type { ThisDayDto } from './thisDayDto';
 
 export interface FilterDto {
   page?: number;
@@ -27,7 +28,7 @@ export interface FilterDto {
   /** @nullable */
   takenDateTo?: string | null;
   /** @nullable */
-  thisDay?: boolean | null;
+  thisDay?: ThisDayDto | null;
   /** @nullable */
   persons?: number[] | null;
   /** @nullable */

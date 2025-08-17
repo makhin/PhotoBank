@@ -7,8 +7,6 @@ import type { FilterDto } from '../api/photobank/model';
  * Uses the `object-hash` package for consistent results.
  */
 export function getFilterHash(filter: FilterDto): string {
-  const now = new Date();
-
   // Normalize and sort filter keys
   const normalized: Record<string, unknown> = {};
   for (const key of Object.keys(filter).sort()) {
@@ -16,8 +14,7 @@ export function getFilterHash(filter: FilterDto): string {
     if (value === undefined) continue;
 
     if (key === 'thisDay' && value) {
-      normalized.day = now.getDate();
-      normalized.month = now.getMonth() + 1;
+      normalized.thisDay = value;
     } else {
       normalized[key] = value;
     }

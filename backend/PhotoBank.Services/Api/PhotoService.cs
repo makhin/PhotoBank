@@ -101,10 +101,10 @@ public class PhotoService : IPhotoService
             query = query.Where(p => p.TakenDate.HasValue && p.TakenDate >= filter.TakenDateFrom.Value);
         if (filter.TakenDateTo.HasValue)
             query = query.Where(p => p.TakenDate.HasValue && p.TakenDate <= filter.TakenDateTo.Value);
-        if (filter.ThisDay is true)
+        if (filter.ThisDay != null)
             query = query.Where(p => p.TakenDate.HasValue &&
-                                     p.TakenDate.Value.Day == DateTime.Today.Day &&
-                                     p.TakenDate.Value.Month == DateTime.Today.Month);
+                                     p.TakenDate.Value.Day == filter.ThisDay.Day &&
+                                     p.TakenDate.Value.Month == filter.ThisDay.Month);
         if (filter.Storages?.Any() == true)
         {
             var storages = filter.Storages.ToList();

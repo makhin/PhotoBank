@@ -1,7 +1,9 @@
 import type { FilterDto } from './api/photobank';
 
+const today = new Date();
+
 export const DEFAULT_PHOTO_FILTER: FilterDto = {
-  thisDay: true,
+  thisDay: { day: today.getDate(), month: today.getMonth() + 1 },
   page: 1,
   pageSize: 10,
 } as const;

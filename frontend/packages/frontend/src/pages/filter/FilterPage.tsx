@@ -46,7 +46,7 @@ function FilterPage() {
     isBW: savedFilter.isBW ?? undefined,
     isAdultContent: savedFilter.isAdultContent ?? undefined,
     isRacyContent: savedFilter.isRacyContent ?? undefined,
-    thisDay: savedFilter.thisDay ?? undefined,
+    thisDay: savedFilter.thisDay ? true : undefined,
     dateFrom: savedFilter.takenDateFrom ? new Date(savedFilter.takenDateFrom) : undefined,
     dateTo: savedFilter.takenDateTo ? new Date(savedFilter.takenDateTo) : undefined,
   };
@@ -71,7 +71,7 @@ function FilterPage() {
           isBW: parsed.isBW,
           isAdultContent: parsed.isAdultContent,
           isRacyContent: parsed.isRacyContent,
-          thisDay: parsed.thisDay,
+          thisDay: parsed.thisDay ? { day: new Date().getDate(), month: new Date().getMonth() + 1 } : undefined,
           takenDateFrom: parsed.dateFrom?.toISOString(),
           takenDateTo: parsed.dateTo?.toISOString(),
           page: 1,
@@ -83,6 +83,7 @@ function FilterPage() {
   }, [searchParams, dispatch, form]);
 
   const onSubmit = (data: FormData) => {
+    const now = new Date();
     const filter: FilterDto = {
       caption: data.caption,
       storages: data.storages?.map(Number),
@@ -92,7 +93,7 @@ function FilterPage() {
       isBW: data.isBW,
       isAdultContent: data.isAdultContent,
       isRacyContent: data.isRacyContent,
-      thisDay: data.thisDay,
+      thisDay: data.thisDay ? { day: now.getDate(), month: now.getMonth() + 1 } : undefined,
       takenDateFrom: data.dateFrom?.toISOString(),
       takenDateTo: data.dateTo?.toISOString(),
       page: 1,
