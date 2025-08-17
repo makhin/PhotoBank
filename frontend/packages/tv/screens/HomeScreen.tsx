@@ -1,18 +1,15 @@
 import React from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
-import { DEFAULT_PHOTO_FILTER } from '@photobank/shared/constants';
 
 import { PhotoRow } from '../components/PhotoRow';
 import { usePhotos } from '../hooks/usePhotoApi';
 
 export const HomeScreen = () => {
-    const { photos } = usePhotos(DEFAULT_PHOTO_FILTER);
+    const { photos } = usePhotos();
 
     return (
         <ScrollView style={styles.container}>
-            {photos.map((row, idx) => (
-                <PhotoRow key={idx} title={row.name} photos={photos} />
-            ))}
+            <PhotoRow title="Photos" photos={photos} />
         </ScrollView>
     );
 };

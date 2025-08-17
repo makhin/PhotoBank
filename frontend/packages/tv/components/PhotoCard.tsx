@@ -1,9 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, Image, StyleSheet, Text, View } from 'react-native';
+import { View, Image, StyleSheet, Text } from 'react-native';
 import { PhotoItemDto } from '@photobank/shared/api/photobank';
 
-export const PhotoCard = ({ photo, onPress }: { photo: PhotoItemDto; onPress: () => void }) => (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
+export const PhotoCard = ({ photo }: { photo: PhotoItemDto }) => (
+    <View style={styles.card}>
       <Image
           source={{ uri: `data:image/jpeg;base64,${photo.thumbnail}` }}
           style={styles.image}
@@ -16,7 +16,7 @@ export const PhotoCard = ({ photo, onPress }: { photo: PhotoItemDto; onPress: ()
               <Text style={styles.caption}>{photo.captions[0]}</Text>
           )}
       </View>
-    </TouchableOpacity>
+    </View>
 );
 
 const styles = StyleSheet.create({
