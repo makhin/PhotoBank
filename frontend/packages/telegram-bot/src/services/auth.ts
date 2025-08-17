@@ -3,9 +3,11 @@ import {
   authGetUser,
   authGetUserRoles,
   authGetUserClaims,
+  authUpdateUser,
   type authGetUserResponse,
   type authGetUserRolesResponse,
   type authGetUserClaimsResponse,
+  type UpdateUserDto,
 } from '@photobank/shared/api/photobank';
 
 import { ensureUserAccessToken } from '../auth';
@@ -25,4 +27,11 @@ export function getUserRoles(ctx: Context): Promise<authGetUserRolesResponse> {
 
 export function getUserClaims(ctx: Context): Promise<authGetUserClaimsResponse> {
   return authorized(ctx, authGetUserClaims);
+}
+
+export function updateUser(
+  ctx: Context,
+  dto: UpdateUserDto,
+): Promise<void> {
+  return authorized(ctx, (options) => authUpdateUser(dto, options));
 }

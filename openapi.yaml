@@ -1092,6 +1092,10 @@ components:
           type: integer
           format: int64
           nullable: true
+        telegramSendTimeUtc:
+          type: string
+          format: time
+          nullable: true
       additionalProperties: false
     UserDto:
       required:
@@ -1107,6 +1111,10 @@ components:
         telegramUserId:
           type: integer
           format: int64
+          nullable: true
+        telegramSendTimeUtc:
+          type: string
+          format: time
           nullable: true
       additionalProperties: false
     UserWithClaimsDto:
@@ -1127,6 +1135,10 @@ components:
         telegramUserId:
           type: integer
           format: int64
+          nullable: true
+        telegramSendTimeUtc:
+          type: string
+          format: time
           nullable: true
         claims:
           type: array

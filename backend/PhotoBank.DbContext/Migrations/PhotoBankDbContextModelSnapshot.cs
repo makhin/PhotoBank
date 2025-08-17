@@ -219,6 +219,9 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<long?>("TelegramUserId")
                         .HasColumnType("bigint");
 
+                    b.Property<TimeSpan?>("TelegramSendTimeUtc")
+                        .HasColumnType("time");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 

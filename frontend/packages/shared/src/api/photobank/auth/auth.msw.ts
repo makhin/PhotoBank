@@ -14,16 +14,10 @@ import {
   http
 } from 'msw';
 
-import type { ClaimDto } from '../model/claimDto';
-import type { LoginResponseDto } from '../model/loginResponseDto';
-import type { RoleDto } from '../model/roleDto';
-import type { UserDto } from '../model/userDto';
-import type { TelegramExchangeResponse } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
-
 
 export const getAuthLoginResponseMock = (overrideResponse: Partial< LoginResponseDto > = {}): LoginResponseDto => ({token: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), ...overrideResponse})
 
-export const getAuthGetUserResponseMock = (overrideResponse: Partial< UserDto > = {}): UserDto => ({email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), phoneNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), telegram: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null, undefined]), ...overrideResponse})
+export const getAuthGetUserResponseMock = (overrideResponse: Partial< UserDto > = {}): UserDto => ({email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), phoneNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), telegramUserId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), null]), undefined]), telegramSendTimeUtc: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), ...overrideResponse})
 
 export const getAuthGetUserClaimsResponseMock = (): ClaimDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({type: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null])})))
 

@@ -55,7 +55,7 @@ export interface FilterDto {
   /** @nullable */
   takenDateTo?: string | null;
   /** @nullable */
-  thisDay?: ThisDayDto | null;
+  thisDay?: ThisDayDto;
   /** @nullable */
   persons?: number[] | null;
   /** @nullable */
@@ -221,6 +221,8 @@ export interface UpdateUserDto {
   phoneNumber?: string | null;
   /** @nullable */
   telegramUserId?: number | null;
+  /** @nullable */
+  telegramSendTimeUtc?: string | null;
 }
 
 export interface UserDto {
@@ -230,6 +232,8 @@ export interface UserDto {
   phoneNumber?: string | null;
   /** @nullable */
   telegramUserId?: number | null;
+  /** @nullable */
+  telegramSendTimeUtc?: string | null;
 }
 
 export interface UserWithClaimsDto {
@@ -241,6 +245,8 @@ export interface UserWithClaimsDto {
   phoneNumber?: string | null;
   /** @nullable */
   telegramUserId?: number | null;
+  /** @nullable */
+  telegramSendTimeUtc?: string | null;
   /** @nullable */
   claims?: ClaimDto[] | null;
 }
