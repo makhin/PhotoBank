@@ -92,7 +92,7 @@ public class PhotoService : IPhotoService
         return values;
     }
 
-    private static IQueryable<Photo> ApplyFilter(IQueryable<Photo> query, FilterDto filter)
+    private IQueryable<Photo> ApplyFilter(IQueryable<Photo> query, FilterDto filter)
     {
         if (filter.IsBW is true) query = query.Where(p => p.IsBW);
         if (filter.IsAdultContent is true) query = query.Where(p => p.IsAdultContent);
@@ -119,14 +119,26 @@ public class PhotoService : IPhotoService
 
         if (filter.Persons?.Any() == true)
         {
-            var ids = filter.Persons.ToList();
-            query = query.Where(p => ids.All(id => p.Faces.Any(f => f.PersonId == id)));
+            var personIds = filter.Persons.ToList();
+            query =
+                from p in query
+                join f in _db.Faces on p.Id equals f.PhotoId
+                where f.PersonId != null && personIds.Contains(f.PersonId.Value)
+                group f by p into g
+                where g.Select(x => x.PersonId).Distinct().Count() == personIds.Count
+                select g.Key;
         }
 
         if (filter.Tags?.Any() == true)
         {
-            var ids = filter.Tags.ToList();
-            query = query.Where(p => ids.All(id => p.PhotoTags.Any(t => t.TagId == id)));
+            var tagIds = filter.Tags.ToList();
+            query =
+                from p in query
+                join pt in _db.PhotoTags on p.Id equals pt.PhotoId
+                where tagIds.Contains(pt.TagId)
+                group pt by p into g
+                where g.Select(x => x.TagId).Distinct().Count() == tagIds.Count
+                select g.Key;
         }
 
         return query;

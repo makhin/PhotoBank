@@ -74,6 +74,9 @@ namespace PhotoBank.DbContext.DbContext
                 .HasIndex(t => new { t.PhotoId });
 
             modelBuilder.Entity<PhotoTag>()
+                .HasIndex(x => new { x.TagId, x.PhotoId });
+
+            modelBuilder.Entity<PhotoTag>()
                 .HasOne(pt => pt.Photo)
                 .WithMany(p => p.PhotoTags)
                 .HasForeignKey(pt => pt.PhotoId);
@@ -123,6 +126,9 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Face>()
                 .HasIndex(p => p.PersonId)
                 .IncludeProperties(p => p.PhotoId);
+
+            modelBuilder.Entity<Face>()
+                .HasIndex(x => new { x.PersonId, x.PhotoId });
 
             modelBuilder.Entity<Face>()
                 .HasIndex(p => new { p.PhotoId, p.Id, p.PersonId });
