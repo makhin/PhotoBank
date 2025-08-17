@@ -1,8 +1,8 @@
 import { BotError, Context } from 'grammy';
 import { apiErrorMsg } from '@photobank/shared/constants';
 import { ProblemDetailsError } from '@photobank/shared/types/problem';
-import type { MyContext } from './i18n';
 
+import type { MyContext } from './i18n';
 import { logger } from './logger';
 
 export function handleBotError(err: BotError<Context>) {

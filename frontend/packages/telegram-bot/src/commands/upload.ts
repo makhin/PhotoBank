@@ -1,11 +1,11 @@
-import type { MyContext } from '../i18n';
 import axios from 'axios';
 import { uploadStorageName } from '@photobank/shared/constants';
 
-import { uploadPhotos } from '../services/photo';
-import { handleCommandError } from '../errorHandler';
 import { BOT_TOKEN } from '../config';
 import { getStorageId } from '../dictionaries';
+import { handleCommandError } from '../errorHandler';
+import type { MyContext } from '../i18n';
+import { uploadPhotos } from '../services/photo';
 
 async function fetchFile(ctx: MyContext, fileId: string, fileName: string) {
   const file = await ctx.api.getFile(fileId);

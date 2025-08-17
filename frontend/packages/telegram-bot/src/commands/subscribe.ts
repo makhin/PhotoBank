@@ -1,9 +1,9 @@
-import { Bot } from "grammy";
-import type { MyContext } from "../i18n";
-import { i18n } from "../i18n";
+import { Bot } from 'grammy';
 
-import { sendThisDayPage } from "./thisday";
-import { updateUser } from "../services/auth";
+import { updateUser } from '../services/auth';
+import type { MyContext } from '../i18n';
+import { i18n } from '../i18n';
+import { sendThisDayPage } from './thisday';
 
 export const subscriptions = new Map<number, { time: string; locale: string }>();
 
@@ -42,7 +42,7 @@ export function initSubscriptionScheduler(bot: Bot) {
             message: { text: "/thisday" },
             reply: (text: string, opts?: Record<string, unknown>) => bot.api.sendMessage(chatId, text, opts),
             t: (key: string, params?: Record<string, unknown>) => i18n.t(info.locale, key, params),
-            i18n: { locale: () => info.locale } as any,
+            i18n: { locale: () => info.locale } as unknown as MyContext['i18n'],
           } as unknown as MyContext;
           await sendThisDayPage(ctxLike, 1);
         }

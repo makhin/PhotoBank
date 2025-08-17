@@ -1,5 +1,4 @@
 import type { MyContext } from "../i18n";
-
 import { getAllPersons } from '../dictionaries';
 import { parsePrefix, sendNamedItemsPage } from "./helpers";
 

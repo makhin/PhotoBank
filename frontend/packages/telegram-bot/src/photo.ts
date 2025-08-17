@@ -1,9 +1,9 @@
-import { InputFile, InlineKeyboard } from "grammy";
-import type { PhotoDto } from "@photobank/shared/api/photobank";
-import type { MyContext } from "./i18n";
+import { InputFile, InlineKeyboard } from 'grammy';
+import type { PhotoDto } from '@photobank/shared/api/photobank';
 
-import { getPhoto } from "./services/photo";
-import { formatPhotoMessage } from "./formatPhotoMessage";
+import { formatPhotoMessage } from './formatPhotoMessage';
+import type { MyContext } from './i18n';
+import { getPhoto } from './services/photo';
 
 export const photoMessages = new Map<number, number>();
 export const currentPagePhotos = new Map<number, { page: number; ids: number[] }>();

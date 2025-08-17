@@ -1,5 +1,4 @@
 import type { MyContext } from '../i18n';
-
 import { getAllStoragesWithPaths } from '../dictionaries';
 import { parsePrefix, sendNamedItemsPage } from './helpers';
 

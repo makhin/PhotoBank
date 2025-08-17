@@ -1,7 +1,6 @@
-import type { MyContext } from "../i18n";
-
+import type { MyContext } from '../i18n';
 import { getAllTags } from '../dictionaries';
-import { parsePrefix, sendNamedItemsPage } from "./helpers";
+import { parsePrefix, sendNamedItemsPage } from './helpers';
 
 export async function sendTagsPage(
   ctx: MyContext,

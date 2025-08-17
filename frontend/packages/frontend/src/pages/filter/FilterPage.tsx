@@ -5,7 +5,6 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { DEFAULT_FORM_VALUES } from '@photobank/shared/constants';
 import { useTranslation } from 'react-i18next';
-import * as Api from '@photobank/shared/api/photobank/photos/photos';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 
 import { useAppDispatch, useAppSelector } from '@/app/hook';
@@ -28,7 +27,6 @@ function FilterPage() {
   const savedFilter = useAppSelector((state) => state.photo.filter);
   const loaded = useAppSelector((s) => s.metadata.loaded);
   const loading = useAppSelector((s) => s.metadata.loading);
-  const searchPhotos = Api.usePhotosSearchPhotos();
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -104,18 +102,8 @@ function FilterPage() {
 
     const encoded = serializeFilter(data);
 
-    searchPhotos.mutate(
-      { data: filter },
-      {
-        onSuccess: () => {
-          dispatch(setFilter(filter));
-          navigate(`/photos?filter=${encodeURIComponent(encoded)}`);
-        },
-        onError: () => {
-          // handle error if needed
-        },
-      }
-    );
+    dispatch(setFilter(filter));
+    navigate(`/photos?filter=${encodeURIComponent(encoded)}`);
   };
 
   if (!loaded) {
