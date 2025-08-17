@@ -55,13 +55,18 @@ export interface FilterDto {
   /** @nullable */
   takenDateTo?: string | null;
   /** @nullable */
-  thisDay?: boolean | null;
+  thisDay?: ThisDayDto | null;
   /** @nullable */
   persons?: number[] | null;
   /** @nullable */
   tags?: number[] | null;
   /** @nullable */
   orderBy?: string | null;
+}
+
+export interface ThisDayDto {
+  day: number;
+  month: number;
 }
 
 export interface GeoPointDto {

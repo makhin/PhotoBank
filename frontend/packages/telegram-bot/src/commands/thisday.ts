@@ -16,9 +16,10 @@ export async function handleThisDay(ctx: Context) {
 
 export const thisDayCommand = handleThisDay;
 export async function sendThisDayPage(ctx: Context, page: number, edit = false) {
+    const now = new Date();
     await sendPhotosPage({
         ctx,
-        filter: { thisDay: true },
+        filter: { thisDay: { day: now.getDate(), month: now.getMonth() + 1 } },
         page,
         edit,
         fallbackMessage: todaysPhotosEmptyMsg,

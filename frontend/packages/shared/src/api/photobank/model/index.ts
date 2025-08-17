@@ -33,3 +33,4 @@ export * from './updateFaceDto';
 export * from './updateUserDto';
 export * from './userDto';
 export * from './userWithClaimsDto';
+export * from './thisDayDto';

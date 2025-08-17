@@ -119,12 +119,12 @@ namespace PhotoBank.Tests.ViewModel.Dto
         }
 
         [Test]
-        public void IsNotEmpty_ShouldReturnTrue_WhenThisDayIsTrue()
+        public void IsNotEmpty_ShouldReturnTrue_WhenThisDayIsNotNull()
         {
             // Arrange
             var filterDto = new FilterDto
             {
-                ThisDay = true
+                ThisDay = new ThisDayDto { Day = 1, Month = 1 }
             };
 
             // Act

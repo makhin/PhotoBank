@@ -734,7 +734,7 @@ components:
           format: date-time
           nullable: true
         thisDay:
-          type: boolean
+          $ref: '#/components/schemas/ThisDayDto'
           nullable: true
         persons:
           type: array
@@ -751,6 +751,19 @@ components:
         orderBy:
           type: string
           nullable: true
+      additionalProperties: false
+    ThisDayDto:
+      required:
+        - day
+        - month
+      type: object
+      properties:
+        day:
+          type: integer
+          format: int32
+        month:
+          type: integer
+          format: int32
       additionalProperties: false
     GeoPointDto:
       required:
