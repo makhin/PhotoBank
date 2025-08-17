@@ -85,16 +85,13 @@ namespace PhotoBank.Repositories
 
         public async Task InsertRangeAsync(List<TTable> entities)
         {
-            await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 await _context.AddRangeAsync(entities);
                 await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
             }
             catch (DbUpdateException exception)
             {
-                await transaction.RollbackAsync();
                 Debug.WriteLine("An exception occurred: {0}, {1}", exception.InnerException, exception.Message);
                 throw new Exception("An error occurred; new record not saved");
             }
@@ -102,17 +99,14 @@ namespace PhotoBank.Repositories
 
         public async Task<TTable> InsertAsync(TTable entity)
         {
-            await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 await _context.AddAsync(entity);
                 await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
                 return entity;
             }
             catch (DbUpdateException exception)
             {
-                await transaction.RollbackAsync();
                 Debug.WriteLine("An exception occurred: {0}, {1}", exception.InnerException, exception.Message);
                 throw new Exception("An error occurred; new record not saved");
             }
@@ -126,17 +120,14 @@ namespace PhotoBank.Repositories
                 throw new Exception("An error occurred; record not found");
             }
 
-            await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 _entities.Update(entity);
                 await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
                 return entity;
             }
             catch (DbUpdateException exception)
             {
-                await transaction.RollbackAsync();
                 Debug.WriteLine("An exception occurred: {0}, {1}", exception.InnerException, exception.Message);
                 throw new Exception("An error occurred; record not updated");
             }
@@ -176,17 +167,14 @@ namespace PhotoBank.Repositories
                 throw new Exception("Record not found; not deleted");
             }
 
-            await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 _entities.Remove(entity);
                 var i = await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
                 return i;
             }
             catch (DbUpdateException exception)
             {
-                await transaction.RollbackAsync();
                 Debug.WriteLine("An exception occurred: {0}, {1}", exception.InnerException, exception.Message);
                 throw new Exception("An error occurred; not deleted");
             }
