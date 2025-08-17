@@ -4,6 +4,12 @@ import { sendPersonsPage } from '../src/commands/persons';
 import { sendStoragesPage } from '../src/commands/storages';
 import { tagsCallbackPattern, personsCallbackPattern, storagesCallbackPattern } from '../src/patterns';
 import * as dict from '../src/dictionaries';
+import {
+  firstPageText,
+  prevPageText,
+  nextPageText,
+  lastPageText,
+} from '@photobank/shared/constants';
 
 describe('sendTagsPage', () => {
   it('filters by prefix and paginates', async () => {
@@ -15,6 +21,21 @@ describe('sendTagsPage', () => {
     const text = ctx.reply.mock.calls[0][0];
     expect(text).toContain('ba10');
     expect(text).toContain('Страница 2 из 2');
+  });
+
+  it('shows navigation to first and last pages', async () => {
+    const tags = Array.from({ length: 25 }, (_, i) => ({ id: i + 1, name: `t${i}` }));
+    vi.spyOn(dict, 'getAllTags').mockReturnValue(tags as any);
+    const ctx = { reply: vi.fn() } as any;
+    await sendTagsPage(ctx, '', 2);
+    const [, opts] = ctx.reply.mock.calls[0];
+    const buttons = opts.reply_markup.inline_keyboard[0].map((b: any) => b.text);
+    expect(buttons).toEqual([
+      firstPageText,
+      prevPageText,
+      nextPageText,
+      lastPageText,
+    ]);
   });
 });
 

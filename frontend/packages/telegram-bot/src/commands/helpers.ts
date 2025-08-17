@@ -1,5 +1,10 @@
 import { Context, InlineKeyboard } from "grammy";
-import { prevPageText, nextPageText } from "@photobank/shared/constants";
+import {
+  firstPageText,
+  prevPageText,
+  nextPageText,
+  lastPageText,
+} from "@photobank/shared/constants";
 
 import { logger } from "../logger";
 
@@ -60,16 +65,26 @@ export async function sendNamedItemsPage<T extends NamedItem>({
   lines.push("", `📄 Страница ${pageIndex} из ${totalPages}`);
 
   const keyboard = new InlineKeyboard();
-  if (pageIndex > 1)
+  if (pageIndex > 1) {
+    keyboard.text(
+      firstPageText,
+      `${command}:1:${encodeURIComponent(prefix)}`,
+    );
     keyboard.text(
       prevPageText,
       `${command}:${pageIndex - 1}:${encodeURIComponent(prefix)}`,
     );
-  if (pageIndex < totalPages)
+  }
+  if (pageIndex < totalPages) {
     keyboard.text(
       nextPageText,
       `${command}:${pageIndex + 1}:${encodeURIComponent(prefix)}`,
     );
+    keyboard.text(
+      lastPageText,
+      `${command}:${totalPages}:${encodeURIComponent(prefix)}`,
+    );
+  }
 
   const text = lines.join("\n");
 
