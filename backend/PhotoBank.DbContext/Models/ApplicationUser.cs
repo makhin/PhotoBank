@@ -10,5 +10,6 @@ namespace PhotoBank.DbContext.Models
     public class ApplicationUser : IdentityUser
     {
         public long? TelegramUserId { get; set; }
+        public TimeSpan? TelegramSendTimeUtc { get; set; }
     }
 }

@@ -14,8 +14,6 @@ import {
   http
 } from 'msw';
 
-import type { PersonDto } from '../model/personDto';
-
 
 export const getPersonsGetAllResponseMock = (): PersonDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}})})))
 

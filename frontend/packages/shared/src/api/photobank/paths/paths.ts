@@ -73,7 +73,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof pathsGetAll>>> = ({ signal }) => pathsGetAll({ signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof pathsGetAll>>> = ({ signal }) => pathsGetAll(signal);
 
       
 

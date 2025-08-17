@@ -2,6 +2,7 @@ import { Bot, Context } from "grammy";
 import { subscribeCommandUsageMsg } from "@photobank/shared/constants";
 
 import { sendThisDayPage } from "./thisday";
+import { updateUser } from "../services/auth";
 
 export const subscriptions = new Map<number, string>();
 
@@ -24,15 +25,16 @@ export async function subscribeCommand(ctx: Context) {
     await ctx.reply("❌ Ошибка: невозможно определить чат.");
     return;
   }
+  await updateUser(ctx, { telegramSendTimeUtc: `${time}:00` });
   subscriptions.set(ctx.chat.id, time);
-  await ctx.reply(`✅ Подписка на ежедневную рассылку в ${time} оформлена.`);
+  await ctx.reply(`✅ Подписка на ежедневную рассылку в ${time} UTC оформлена.`);
 }
 
 export function initSubscriptionScheduler(bot: Bot) {
   setInterval(() => {
     (async () => {
       const now = new Date();
-      const current = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      const current = `${String(now.getUTCHours()).padStart(2, "0")}:${String(now.getUTCMinutes()).padStart(2, "0")}`;
       for (const [chatId, t] of subscriptions.entries()) {
         if (t === current) {
           const ctxLike = {

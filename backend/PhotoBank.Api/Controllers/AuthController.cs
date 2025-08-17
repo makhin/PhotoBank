@@ -82,7 +82,8 @@ public class AuthController(
         {
             Email = user.Email ?? string.Empty,
             PhoneNumber = user.PhoneNumber,
-            TelegramUserId = user.TelegramUserId
+            TelegramUserId = user.TelegramUserId,
+            TelegramSendTimeUtc = user.TelegramSendTimeUtc
         });
     }
 
@@ -102,6 +103,7 @@ public class AuthController(
 
         user.PhoneNumber = dto.PhoneNumber ?? user.PhoneNumber;
         user.TelegramUserId = dto.TelegramUserId;
+        user.TelegramSendTimeUtc = dto.TelegramSendTimeUtc ?? user.TelegramSendTimeUtc;
         var result = await userManager.UpdateAsync(user);
         if (!result.Succeeded)
             return BadRequest(result.Errors);

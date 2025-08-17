@@ -248,7 +248,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUser>>> = ({ signal }) => authGetUser({ signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUser>>> = ({ signal }) => authGetUser(signal);
 
       
 
@@ -405,7 +405,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUserClaims>>> = ({ signal }) => authGetUserClaims({ signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUserClaims>>> = ({ signal }) => authGetUserClaims(signal);
 
       
 
@@ -481,7 +481,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUserRoles>>> = ({ signal }) => authGetUserRoles({ signal });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUserRoles>>> = ({ signal }) => authGetUserRoles(signal);
 
       
 

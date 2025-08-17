@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { subscribeCommand, parseSubscribeTime, subscriptions } from '../src/commands/subscribe';
+
+vi.mock('../src/services/auth', () => ({
+  updateUser: vi.fn().mockResolvedValue(undefined),
+}));
 import { subscribeCommandUsageMsg } from '@photobank/shared/constants';
 
 describe('parseSubscribeTime', () => {
