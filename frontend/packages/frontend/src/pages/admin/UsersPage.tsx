@@ -2,7 +2,7 @@ import type { UserWithClaimsDto } from '@photobank/shared/api/photobank';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { manageUsersTitle, saveUserButtonText, phoneNumberLabel, telegramLabel } from '@photobank/shared/constants';
+import { useTranslation } from 'react-i18next';
 import {
   useUsersGetAll,
   useUsersUpdate,
@@ -35,6 +35,7 @@ interface UserEditorProps {
 }
 
 function UserEditor({ user, onSave }: UserEditorProps) {
+  const { t } = useTranslation();
   const defaultValues = {
     phoneNumber: user.phoneNumber ?? '',
     telegram: user.telegram ?? '',
@@ -57,7 +58,7 @@ function UserEditor({ user, onSave }: UserEditorProps) {
             name="phoneNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{phoneNumberLabel}</FormLabel>
+                <FormLabel>{t('phoneNumberLabel')}</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
@@ -70,7 +71,7 @@ function UserEditor({ user, onSave }: UserEditorProps) {
             name="telegram"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{telegramLabel}</FormLabel>
+                <FormLabel>{t('telegramLabel')}</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
@@ -91,7 +92,7 @@ function UserEditor({ user, onSave }: UserEditorProps) {
               </FormItem>
             )}
           />
-          <Button type="submit">{saveUserButtonText}</Button>
+          <Button type="submit">{t('saveUserButtonText')}</Button>
         </form>
       </Form>
     </div>
@@ -103,6 +104,7 @@ export default function UsersPage() {
   const users = usersResp?.data ?? [];
   const { mutateAsync: updateUser } = useUsersUpdate();
   const { mutateAsync: setClaims } = useUsersSetClaims();
+  const { t } = useTranslation();
 
   const handleSave = async (id: string, data: FormData) => {
     await updateUser({ id, data });
@@ -117,7 +119,7 @@ export default function UsersPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-6">
-      <h1 className="text-2xl font-bold">{manageUsersTitle}</h1>
+      <h1 className="text-2xl font-bold">{t('manageUsersTitle')}</h1>
       {users.map((u) => (
         <UserEditor key={u.id} user={u} onSave={handleSave} />
       ))}

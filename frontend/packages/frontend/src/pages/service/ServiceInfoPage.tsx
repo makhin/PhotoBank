@@ -1,10 +1,11 @@
-import { serviceInfoTitle } from '@photobank/shared/constants';
+import { useTranslation } from 'react-i18next';
 
 import { API_BASE_URL } from '@/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { StatusCard } from '@/components/StatusCard';
 
 export default function ServiceInfoPage() {
+  const { t } = useTranslation();
   const info = {
     mode: import.meta.env.MODE,
     apiBaseUrl: API_BASE_URL,
@@ -15,7 +16,7 @@ export default function ServiceInfoPage() {
     <div className="p-4 space-y-4">
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
-          <CardTitle>{serviceInfoTitle}</CardTitle>
+          <CardTitle>{t('serviceInfoTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="list-disc list-inside space-y-1">

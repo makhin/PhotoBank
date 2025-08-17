@@ -3,16 +3,9 @@ import { useForm } from 'react-hook-form';
 import { useCallback, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {
-  loginTitle,
-  emailLabel,
-  passwordLabel,
-  stayLoggedInLabel,
-  loginButtonText,
-  invalidCredentialsMsg,
-} from '@photobank/shared/constants';
 import * as AuthApi from '@photobank/shared/api/photobank/auth/auth';
 import { setAuthToken } from '@photobank/shared/auth';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/shared/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
@@ -31,6 +24,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function LoginPage() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const { t } = useTranslation();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -46,7 +40,7 @@ export default function LoginPage() {
         setAuthToken(resp.data.token! as string, variables.data.rememberMe);
         navigate('/filter');
       },
-      onError: () => setError(invalidCredentialsMsg),
+      onError: () => setError(t('invalidCredentialsMsg')),
     },
   });
 
@@ -65,7 +59,7 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-sm mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">{loginTitle}</h1>
+      <h1 className="text-2xl font-bold mb-4">{t('loginTitle')}</h1>
       {error && (
         <p className="text-destructive text-sm mb-2" role="alert">
           {error}
@@ -83,7 +77,7 @@ export default function LoginPage() {
             name="email"
             render={({field}) => (
               <FormItem>
-                <FormLabel>{emailLabel}</FormLabel>
+                <FormLabel>{t('emailLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -103,7 +97,7 @@ export default function LoginPage() {
             name="password"
             render={({field}) => (
               <FormItem>
-                <FormLabel>{passwordLabel}</FormLabel>
+                <FormLabel>{t('passwordLabel')}</FormLabel>
                 <FormControl>
                   <PasswordInput
                     {...field}
@@ -133,13 +127,13 @@ export default function LoginPage() {
                   />
                 </FormControl>
                 <FormLabel htmlFor="rememberMe" className="font-normal">
-                  {stayLoggedInLabel}
+                  {t('stayLoggedInLabel')}
                 </FormLabel>
               </FormItem>
             )}
           />
           <Button type="submit" className="w-full" disabled={login.isPending}>
-            {login.isPending ? '...' : loginButtonText}
+            {login.isPending ? '...' : t('loginButtonText')}
           </Button>
         </form>
       </Form>

@@ -1,17 +1,9 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getAuthToken } from '@photobank/shared/auth';
 import { useIsAdmin } from '@photobank/shared';
-import {
-  navbarFilterLabel,
-  navbarPhotosLabel,
-  navbarProfileLabel,
-  navbarLoginLabel,
-  navbarLogoutLabel,
-  navbarRegisterLabel,
-  navbarUsersLabel,
-  navbarOpenAiLabel,
-} from '@photobank/shared/constants';
 
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { Button } from '@/shared/ui/button';
 
 export default function NavBar() {
@@ -19,6 +11,7 @@ export default function NavBar() {
   useLocation();
   const loggedIn = Boolean(getAuthToken());
   const isAdmin = useIsAdmin();
+  const { t } = useTranslation();
 
   const linkClass = 'text-sm';
 
@@ -27,51 +20,54 @@ export default function NavBar() {
       <ul className="flex gap-4 items-center">
         <li>
           <Button variant="link" className={linkClass} asChild>
-            <NavLink to="/filter">{navbarFilterLabel}</NavLink>
+            <NavLink to="/filter">{t('navbarFilterLabel')}</NavLink>
           </Button>
         </li>
         <li>
           <Button variant="link" className={linkClass} asChild>
-            <NavLink to="/photos">{navbarPhotosLabel}</NavLink>
+            <NavLink to="/photos">{t('navbarPhotosLabel')}</NavLink>
           </Button>
         </li>
         <li>
           <Button variant="link" className={linkClass} asChild>
-            <NavLink to="/profile">{navbarProfileLabel}</NavLink>
+            <NavLink to="/profile">{t('navbarProfileLabel')}</NavLink>
           </Button>
         </li>
         <li>
           <Button variant="link" className={linkClass} asChild>
-            <NavLink to="/openai">{navbarOpenAiLabel}</NavLink>
+            <NavLink to="/openai">{t('navbarOpenAiLabel')}</NavLink>
           </Button>
         </li>
         {isAdmin && (
           <li>
             <Button variant="link" className={linkClass} asChild>
-              <NavLink to="/admin/users">{navbarUsersLabel}</NavLink>
+              <NavLink to="/admin/users">{t('navbarUsersLabel')}</NavLink>
             </Button>
           </li>
         )}
         {loggedIn ? (
           <li className="ml-auto">
             <Button variant="link" className={linkClass} asChild>
-              <NavLink to="/logout">{navbarLogoutLabel}</NavLink>
+              <NavLink to="/logout">{t('navbarLogoutLabel')}</NavLink>
             </Button>
           </li>
         ) : (
           <>
             <li className="ml-auto">
               <Button variant="link" className={linkClass} asChild>
-                <NavLink to="/login">{navbarLoginLabel}</NavLink>
+                <NavLink to="/login">{t('navbarLoginLabel')}</NavLink>
               </Button>
             </li>
             <li>
               <Button variant="link" className={linkClass} asChild>
-                <NavLink to="/register">{navbarRegisterLabel}</NavLink>
+                <NavLink to="/register">{t('navbarRegisterLabel')}</NavLink>
               </Button>
             </li>
           </>
         )}
+        <li>
+          <LanguageSwitcher />
+        </li>
       </ul>
     </nav>
   );

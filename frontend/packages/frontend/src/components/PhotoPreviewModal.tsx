@@ -1,9 +1,9 @@
-import { previewModalFallbackTitle, loadingText } from '@photobank/shared/constants';
 import {
     usePhotosGetPhoto,
     getPhotosGetPhotoQueryKey,
     type photosGetPhotoResponse200,
 } from '@photobank/shared/api/photobank';
+import { useTranslation } from 'react-i18next';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 
@@ -20,15 +20,16 @@ const PhotoPreviewModal = ({ photoId, onOpenChange }: PhotoPreviewModalProps) =>
             select: (resp) => (resp as photosGetPhotoResponse200).data,
         },
     });
+    const { t } = useTranslation();
 
     return (
         <Dialog open={photoId !== null} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-none w-screen h-screen top-0 left-0 translate-x-0 translate-y-0">
                 <DialogHeader>
-                    <DialogTitle>{photo?.name || previewModalFallbackTitle}</DialogTitle>
+                    <DialogTitle>{photo?.name || t('previewModalFallbackTitle')}</DialogTitle>
                 </DialogHeader>
                 {isFetching || !photo ? (
-                    <p className="p-4">{loadingText}</p>
+                    <p className="p-4">{t('loadingText')}</p>
                 ) : (
                     <img
                         src={`data:image/jpeg;base64,${photo.previewImage}`}

@@ -3,14 +3,9 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import {
-  registerTitle,
-  emailLabel,
-  passwordLabel,
-  registerButtonText,
-} from '@photobank/shared/constants';
 import { useAuthRegister } from '@photobank/shared/api/photobank';
 import { logger } from '@photobank/shared/utils/logger';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/shared/ui/button';
 import {
@@ -38,6 +33,7 @@ export default function RegisterPage() {
     resolver: zodResolver(formSchema),
     defaultValues: { email: '', password: '' },
   });
+  const { t } = useTranslation();
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -51,7 +47,7 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full max-w-sm mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">{registerTitle}</h1>
+      <h1 className="text-2xl font-bold mb-4">{t('registerTitle')}</h1>
       {errorMessage && (
         <p className="text-destructive text-sm mb-2" role="alert">
           {errorMessage}
@@ -70,7 +66,7 @@ export default function RegisterPage() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{emailLabel}</FormLabel>
+                <FormLabel>{t('emailLabel')}</FormLabel>
                 <FormControl>
                   <Input {...field} type="email" />
                 </FormControl>
@@ -83,7 +79,7 @@ export default function RegisterPage() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{passwordLabel}</FormLabel>
+                <FormLabel>{t('passwordLabel')}</FormLabel>
                 <FormControl>
                   <Input {...field} type="password" />
                 </FormControl>
@@ -92,7 +88,7 @@ export default function RegisterPage() {
             )}
           />
           <Button type="submit" className="w-full">
-            {registerButtonText}
+            {t('registerButtonText')}
           </Button>
         </form>
       </Form>
