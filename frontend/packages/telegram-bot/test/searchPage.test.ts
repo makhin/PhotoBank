@@ -2,6 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { sendSearchPage } from '../src/commands/search';
 import * as photoService from '../src/services/photo';
 import * as photo from '../src/photo';
+import {
+  firstPageText,
+  prevPageText,
+  nextPageText,
+  lastPageText,
+} from '@photobank/shared/constants';
 
 const basePhoto = {
   id: 1,
@@ -53,5 +59,25 @@ describe('sendSearchPage', () => {
     await sendSearchPage(ctx, 'cats', 1, true);
 
     expect(photo.deletePhotoMessage).not.toHaveBeenCalled();
+  });
+
+  it('adds first and last navigation buttons', async () => {
+    const ctx = { reply: vi.fn() } as any;
+    const photos = Array.from({ length: 10 }, (_, i) => ({ ...basePhoto, id: i + 1 }));
+    vi.spyOn(photoService, 'searchPhotos').mockResolvedValue({
+      data: { count: 30, photos },
+    } as any);
+
+    await sendSearchPage(ctx, 'cats', 2, false);
+
+    const [, opts] = ctx.reply.mock.calls[0];
+    const navRow = opts.reply_markup.inline_keyboard.at(-1);
+    const buttons = navRow.map((b: any) => b.text);
+    expect(buttons).toEqual([
+      firstPageText,
+      prevPageText,
+      nextPageText,
+      lastPageText,
+    ]);
   });
 });

@@ -1,8 +1,10 @@
 import { Context, InlineKeyboard } from 'grammy';
 import {
   unknownYearLabel,
+  firstPageText,
   prevPageText,
   nextPageText,
+  lastPageText,
 } from '@photobank/shared/constants';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 import { firstNWords } from '@photobank/shared/index';
@@ -117,8 +119,14 @@ export async function sendPhotosPage({
 
   sections.push(`\n📄 Страница ${page} из ${totalPages}`);
 
-  if (page > 1) keyboard.text(prevPageText, buildCallbackData(page - 1));
-  if (page < totalPages) keyboard.text(nextPageText, buildCallbackData(page + 1));
+  if (page > 1) {
+    keyboard.text(firstPageText, buildCallbackData(1));
+    keyboard.text(prevPageText, buildCallbackData(page - 1));
+  }
+  if (page < totalPages) {
+    keyboard.text(nextPageText, buildCallbackData(page + 1));
+    keyboard.text(lastPageText, buildCallbackData(totalPages));
+  }
 
   const text = sections.join('\n');
 
