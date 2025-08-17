@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Lightbox from '@/features/viewer/Lightbox';
 import { useViewer } from '@/features/viewer/state';
@@ -11,7 +11,9 @@ describe('Lightbox', () => {
       { id: 2, preview: 'b_p', original: 'b', title: 'b' },
       { id: 3, preview: 'c_p', original: 'c', title: 'c' },
     ];
-    useViewer.getState().open(items, 1);
+    act(() => {
+      useViewer.getState().open(items, 1);
+    });
     expect((await screen.findAllByAltText('b')).length).toBeGreaterThan(0);
     await userEvent.keyboard('{ArrowRight}');
     expect((await screen.findAllByAltText('c')).length).toBeGreaterThan(0);
