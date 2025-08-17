@@ -1,5 +1,4 @@
 import type { MyContext } from "../i18n";
-
 import { getUser, getUserRoles, getUserClaims } from "../services/auth";
 import { handleCommandError } from "../errorHandler";
 

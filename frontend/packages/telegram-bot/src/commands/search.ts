@@ -1,5 +1,4 @@
 import type { MyContext } from "../i18n";
-
 import { sendPhotosPage } from "./photosPage";
 
 function parseCaption(text?: string): string {

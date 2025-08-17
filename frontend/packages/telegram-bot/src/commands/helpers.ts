@@ -1,6 +1,6 @@
 import { InlineKeyboard } from "grammy";
-import type { MyContext } from "../i18n";
 
+import type { MyContext } from "../i18n";
 import { logger } from "../logger";
 
 export const PAGE_SIZE = 10;

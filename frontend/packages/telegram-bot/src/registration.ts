@@ -1,7 +1,7 @@
-import type { MyContext } from './i18n';
 import { ProblemDetailsError } from '@photobank/shared/types/problem';
 
 import { ensureUserAccessToken } from './auth';
+import type { MyContext } from './i18n';
 
 export async function ensureRegistered(ctx: MyContext): Promise<boolean> {
   try {

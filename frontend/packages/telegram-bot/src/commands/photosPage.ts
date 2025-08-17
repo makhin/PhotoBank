@@ -1,8 +1,8 @@
 import { InlineKeyboard } from 'grammy';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 import { firstNWords } from '@photobank/shared/index';
-import type { MyContext } from '../i18n';
 
+import type { MyContext } from '../i18n';
 import { searchPhotos } from '../services/photo';
 import { handleCommandError } from '../errorHandler';
 import { captionCache, currentPagePhotos, deletePhotoMessage } from '../photo';
