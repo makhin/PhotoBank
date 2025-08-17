@@ -1,12 +1,12 @@
 import Bottleneck from 'bottleneck';
 
-// Глобальный лимитер: не более 1 send в 200ms (примерно)
+// Global limiter: no more than 1 send every 200ms
 export const limiter = new Bottleneck({
   minTime: 200, // 5 ops/sec
-  maxConcurrent: 1, // последовательные отправки
+  maxConcurrent: 1, // sequential sends
 });
 
-// Обёртка для вызовов Telegram API
+// Wrapper for Telegram API calls
 export async function throttled<T>(fn: () => Promise<T>): Promise<T> {
   return limiter.schedule(fn);
 }

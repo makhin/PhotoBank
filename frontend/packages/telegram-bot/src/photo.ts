@@ -1,6 +1,6 @@
-import { Context, InputFile, InlineKeyboard } from "grammy";
+import { InputFile, InlineKeyboard } from "grammy";
 import type { PhotoDto } from "@photobank/shared/api/photobank";
-import { photoNotFoundMsg, prevPageText, nextPageText } from "@photobank/shared/constants";
+import type { MyContext } from "./i18n";
 
 import { getPhoto } from "./services/photo";
 import { formatPhotoMessage } from "./formatPhotoMessage";
@@ -9,7 +9,7 @@ export const photoMessages = new Map<number, number>();
 export const currentPagePhotos = new Map<number, { page: number; ids: number[] }>();
 export const captionCache = new Map<number, string>();
 
-export async function deletePhotoMessage(ctx: Context) {
+export async function deletePhotoMessage(ctx: MyContext) {
     const chatId = ctx.chat?.id;
     const messageId = chatId ? photoMessages.get(chatId) : undefined;
     if (chatId && messageId) {
@@ -22,7 +22,7 @@ export async function deletePhotoMessage(ctx: Context) {
     }
 }
 
-async function fetchPhoto(ctx: Context, id: number): Promise<PhotoDto | null> {
+async function fetchPhoto(ctx: MyContext, id: number): Promise<PhotoDto | null> {
     try {
         const { data } = await getPhoto(ctx, id);
         return data;
@@ -31,14 +31,14 @@ async function fetchPhoto(ctx: Context, id: number): Promise<PhotoDto | null> {
     }
 }
 
-export async function sendPhotoById(ctx: Context, id: number) {
+export async function sendPhotoById(ctx: MyContext, id: number) {
     let photo: PhotoDto;
 
     try {
         const res = await getPhoto(ctx, id);
         photo = res.data;
     } catch {
-        await ctx.reply(photoNotFoundMsg);
+        await ctx.reply(ctx.t('photo-not-found'));
         return;
     }
 
@@ -56,11 +56,11 @@ export async function sendPhotoById(ctx: Context, id: number) {
     }
 }
 
-export async function openPhotoInline(ctx: Context, id: number) {
+export async function openPhotoInline(ctx: MyContext, id: number) {
     const chatId = ctx.chat?.id;
     const photo = await fetchPhoto(ctx, id);
     if (!photo) {
-        await ctx.reply(photoNotFoundMsg);
+        await ctx.reply(ctx.t('photo-not-found'));
         return;
     }
 
@@ -72,8 +72,8 @@ export async function openPhotoInline(ctx: Context, id: number) {
         if (list) {
             const index = list.ids.indexOf(id);
             keyboard = new InlineKeyboard();
-            if (index > 0) keyboard.text(prevPageText, `photo_nav:${list.ids[index - 1]}`);
-            if (index < list.ids.length - 1) keyboard.text(nextPageText, `photo_nav:${list.ids[index + 1]}`);
+            if (index > 0) keyboard.text(ctx.t('prev-page'), `photo_nav:${list.ids[index - 1]}`);
+            if (index < list.ids.length - 1) keyboard.text(ctx.t('next-page'), `photo_nav:${list.ids[index + 1]}`);
             if (!keyboard.inline_keyboard.length) keyboard = undefined;
         }
     }

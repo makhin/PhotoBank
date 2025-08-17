@@ -1,5 +1,4 @@
-import { Context } from "grammy";
-import { todaysPhotosEmptyMsg } from "@photobank/shared/constants";
+import type { MyContext } from "../i18n";
 
 import { sendPhotosPage } from "./photosPage";
 
@@ -9,20 +8,20 @@ function parsePage(text?: string): number {
     return match ? parseInt(match[1], 10) || 1 : 1;
 }
 
-export async function handleThisDay(ctx: Context) {
+export async function handleThisDay(ctx: MyContext) {
     const page = parsePage(ctx.message?.text);
     await sendThisDayPage(ctx, page);
 }
 
 export const thisDayCommand = handleThisDay;
-export async function sendThisDayPage(ctx: Context, page: number, edit = false) {
+export async function sendThisDayPage(ctx: MyContext, page: number, edit = false) {
     const now = new Date();
     await sendPhotosPage({
         ctx,
         filter: { thisDay: { day: now.getDate(), month: now.getMonth() + 1 } },
         page,
         edit,
-        fallbackMessage: todaysPhotosEmptyMsg,
+        fallbackMessage: ctx.t('todays-photos-empty'),
         buildCallbackData: (p) => `thisday:${p}`,
     });
 }

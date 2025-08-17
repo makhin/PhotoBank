@@ -1,10 +1,4 @@
-import { Context } from 'grammy';
-import {
-  aiCommandUsageMsg,
-  aiFilterEmptyMsg,
-  sorryTryToRequestLaterMsg,
-  searchPhotosEmptyMsg,
-} from '@photobank/shared/constants';
+import type { MyContext } from '../i18n';
 import { parseQueryWithOpenAI } from '@photobank/shared/ai/openai';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 import { getFilterHash } from '@photobank/shared/index';
@@ -26,14 +20,14 @@ export function parseAiPrompt(text?: string): string | null {
 }
 
 export async function sendAiPage(
-  ctx: Context,
+  ctx: MyContext,
   hash: string,
   page: number,
   edit = false
 ) {
   const filter = aiFilters.get(hash);
   if (!filter) {
-    await ctx.reply(sorryTryToRequestLaterMsg);
+    await ctx.reply(ctx.t('sorry-try-later'));
     return;
   }
   await sendPhotosPage({
@@ -41,15 +35,15 @@ export async function sendAiPage(
     filter,
     page,
     edit,
-    fallbackMessage: searchPhotosEmptyMsg,
+    fallbackMessage: ctx.t('search-photos-empty'),
     buildCallbackData: (p) => `ai:${p}:${hash}`,
   });
 }
 
-export async function aiCommand(ctx: Context, promptOverride?: string) {
+export async function aiCommand(ctx: MyContext, promptOverride?: string) {
   const prompt = promptOverride ?? parseAiPrompt(ctx.message?.text);
   if (!prompt) {
-    await ctx.reply(aiCommandUsageMsg);
+    await ctx.reply(ctx.t('ai-usage'));
     return;
   }
   try {
@@ -69,7 +63,7 @@ export async function aiCommand(ctx: Context, promptOverride?: string) {
     if (filter.dateTo) dto.takenDateTo = filter.dateTo.toISOString();
 
     if (Object.keys(dto).length === 0) {
-      await ctx.reply(aiFilterEmptyMsg);
+      await ctx.reply(ctx.t('ai-filter-empty'));
       return;
     }
 
@@ -79,6 +73,6 @@ export async function aiCommand(ctx: Context, promptOverride?: string) {
     await sendAiPage(ctx, hash, 1);
   } catch (err) {
     logger.error(err);
-    await ctx.reply(sorryTryToRequestLaterMsg);
+    await ctx.reply(ctx.t('sorry-try-later'));
   }
 }

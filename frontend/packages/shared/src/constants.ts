@@ -8,54 +8,11 @@ export const DEFAULT_PHOTO_FILTER: FilterDto = {
   pageSize: 10,
 } as const;
 
-export const getPhotoErrorMsg = '🚫 Не удалось получить фото.';
-export const getProfileErrorMsg =
-  '🚫 Не удалось получить профиль пользователя.';
-export const sorryTryToRequestLaterMsg = '🚫 Извините, попробуйте позже.';
 export const apiErrorMsg = 'API error:';
-
-// Telegram bot messages
-export const welcomeBotMsg = 'Добро пожаловать. Запущен и работает!';
-export const helpBotMsg = `Доступные команды:
-/thisday [страница] \u2013 показать фото этого дня
-/search <caption> \u2013 поиск по подписи
-/ai <prompt> \u2013 поиск с помощью ИИ
-/photo <id> \u2013 показать фото по идентификатору
-/profile \u2013 информация о профиле
-/subscribe HH:MM \u2013 ежедневная рассылка /thisday
-/tags [prefix] \u2013 список тегов
-/storages [prefix] \u2013 список хранилищ и путей
-/persons [prefix] \u2013 список персон
-\nЛюбое сообщение без команды обрабатывается как запрос /ai.`;
-export const captionMissingMsg = 'Без подписи.';
-export const unknownMessageReplyMsg = 'Получил другое сообщение!';
-export const photoCommandUsageMsg = '❗ Используй: /photo <id>';
-export const photoNotFoundMsg = '❌ Фото не найдено.';
-export const subscribeCommandUsageMsg = '❗ Используй: /subscribe HH:MM';
-export const searchCommandUsageMsg = '❗ Используй: /search <caption>';
-export const aiCommandUsageMsg = '❗ Используй: /ai <prompt>';
-export const aiFilterEmptyMsg =
-  '⚠️ Не удалось определить фильтр по запросу. Попробуйте уточнить.';
-export const todaysPhotosEmptyMsg = '📭 Сегодняшних фото пока нет.';
-export const searchPhotosEmptyMsg = '📭 По вашему запросу фото не найдены.';
-export const notRegisteredMsg =
-  '⚠️ Ваш телеграм не зарегистрирован. Обратитесь к администратору.';
-export const uploadSuccessMsg = '✅ Файлы загружены.';
-export const uploadFailedMsg = '🚫 Не удалось загрузить файлы.';
-export const uploadStorageName = 'Telegram';
-export const unknownYearLabel = 'Неизвестный год';
-export const unknownPersonLabel = 'Неизвестный';
-export const firstPageText = '⏮ В начало';
-export const prevPageText = '◀ Назад';
-export const nextPageText = 'Вперёд ▶';
-export const lastPageText = 'В конец ⏭';
-export const rolesLabel = 'Роли:';
-export const rolesEmptyLabel = 'Роли отсутствуют.';
-export const claimsLabel = 'Права пользователя:';
-export const claimsEmptyLabel = 'Права пользователя отсутствуют.';
 export const botTokenNotDefinedError = 'BOT_TOKEN is not defined';
 export const apiCredentialsNotDefinedError =
   'API_EMAIL or API_PASSWORD is not defined';
+export const uploadStorageName = 'Telegram';
 
 // frontend shared constants
 export const METADATA_CACHE_KEY = 'photobank_metadata_cache';

@@ -6,7 +6,7 @@ import * as photoService from '../src/services/photo';
 vi.mock('../src/config', () => ({ BOT_TOKEN: 'token' }));
 
 import { uploadCommand } from '../src/commands/upload';
-import { uploadSuccessMsg } from '@photobank/shared/constants';
+import { i18n } from '../src/i18n';
 
 describe('uploadCommand', () => {
   it('uploads photo data via adapter', async () => {
@@ -15,6 +15,7 @@ describe('uploadCommand', () => {
       message: { photo: [{}, { file_id: '123', file_unique_id: 'uniq123' }] },
       reply: vi.fn(),
       from: { username: 'john' },
+      t: (k: string) => i18n.t('en', k),
     };
 
     vi.spyOn(dict, 'getStorageId').mockReturnValue(1);
@@ -30,7 +31,7 @@ describe('uploadCommand', () => {
       storageId: 1,
       path: 'john',
     });
-    expect(ctx.reply).toHaveBeenCalledWith(uploadSuccessMsg);
+    expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'upload-success'));
   });
 });
 

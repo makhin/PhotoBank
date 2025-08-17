@@ -1,8 +1,4 @@
-import { Context } from "grammy";
-import {
-  searchPhotosEmptyMsg,
-  searchCommandUsageMsg,
-} from "@photobank/shared/constants";
+import type { MyContext } from "../i18n";
 
 import { sendPhotosPage } from "./photosPage";
 
@@ -19,10 +15,10 @@ function parseCaption(text?: string): string {
   return caption;
 }
 
-export async function handleSearch(ctx: Context) {
+export async function handleSearch(ctx: MyContext) {
   const caption = parseCaption(ctx.message?.text);
   if (!caption) {
-    await ctx.reply(searchCommandUsageMsg);
+    await ctx.reply(ctx.t('search-usage'));
     return;
   }
   await sendSearchPage(ctx, caption, 1);
@@ -31,7 +27,7 @@ export async function handleSearch(ctx: Context) {
 export const searchCommand = handleSearch;
 
 export async function sendSearchPage(
-  ctx: Context,
+  ctx: MyContext,
   caption: string,
   page: number,
   edit = false,
@@ -41,7 +37,7 @@ export async function sendSearchPage(
     filter: { caption },
     page,
     edit,
-    fallbackMessage: searchPhotosEmptyMsg,
+    fallbackMessage: ctx.t('search-photos-empty'),
     buildCallbackData: (p) => `search:${p}:${encodeURIComponent(caption)}`,
   });
 }

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { sendAiPage, aiFilters } from '../src/commands/ai';
 import * as photoService from '../src/services/photo';
 import * as photo from '../src/photo';
+import { i18n } from '../src/i18n';
 
 const basePhoto = {
   id: 1,
@@ -27,6 +28,7 @@ describe('sendAiPage', () => {
       chat: { id: 1 },
       reply: vi.fn(),
       editMessageText: vi.fn().mockResolvedValue(undefined),
+      t: (k: string, p?: any) => i18n.t('en', k, p),
     } as any;
     aiFilters.set('hash', {} as any);
     photo.currentPagePhotos.set(1, { page: 1, ids: [1] });
@@ -45,6 +47,7 @@ describe('sendAiPage', () => {
       chat: { id: 1 },
       reply: vi.fn(),
       editMessageText: vi.fn().mockResolvedValue(undefined),
+      t: (k: string, p?: any) => i18n.t('en', k, p),
     } as any;
     aiFilters.set('hash', {} as any);
     photo.currentPagePhotos.set(1, { page: 1, ids: [1] });

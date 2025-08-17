@@ -2,12 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { sendSearchPage } from '../src/commands/search';
 import * as photoService from '../src/services/photo';
 import * as photo from '../src/photo';
-import {
-  firstPageText,
-  prevPageText,
-  nextPageText,
-  lastPageText,
-} from '@photobank/shared/constants';
+import { i18n } from '../src/i18n';
 
 const basePhoto = {
   id: 1,
@@ -32,6 +27,7 @@ describe('sendSearchPage', () => {
       chat: { id: 1 },
       reply: vi.fn(),
       editMessageText: vi.fn().mockResolvedValue(undefined),
+      t: (k: string, p?: any) => i18n.t('en', k, p),
     } as any;
     photo.currentPagePhotos.set(1, { page: 1, ids: [1] });
     vi.spyOn(photo, 'deletePhotoMessage').mockResolvedValue();
@@ -49,6 +45,7 @@ describe('sendSearchPage', () => {
       chat: { id: 1 },
       reply: vi.fn(),
       editMessageText: vi.fn().mockResolvedValue(undefined),
+      t: (k: string, p?: any) => i18n.t('en', k, p),
     } as any;
     photo.currentPagePhotos.set(1, { page: 1, ids: [1] });
     vi.spyOn(photo, 'deletePhotoMessage').mockResolvedValue();
@@ -62,7 +59,7 @@ describe('sendSearchPage', () => {
   });
 
   it('adds first and last navigation buttons', async () => {
-    const ctx = { reply: vi.fn() } as any;
+    const ctx = { reply: vi.fn(), t: (k: string, p?: any) => i18n.t('en', k, p) } as any;
     const photos = Array.from({ length: 10 }, (_, i) => ({ ...basePhoto, id: i + 1 }));
     vi.spyOn(photoService, 'searchPhotos').mockResolvedValue({
       data: { count: 30, photos },
@@ -74,10 +71,10 @@ describe('sendSearchPage', () => {
     const navRow = opts.reply_markup.inline_keyboard.at(-1);
     const buttons = navRow.map((b: any) => b.text);
     expect(buttons).toEqual([
-      firstPageText,
-      prevPageText,
-      nextPageText,
-      lastPageText,
+      i18n.t('en', 'first-page'),
+      i18n.t('en', 'prev-page'),
+      i18n.t('en', 'next-page'),
+      i18n.t('en', 'last-page'),
     ]);
   });
 });

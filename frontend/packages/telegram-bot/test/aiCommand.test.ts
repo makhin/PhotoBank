@@ -4,12 +4,7 @@ import * as openai from '@photobank/shared/ai/openai';
 import * as dict from '../src/dictionaries';
 import * as photoService from '../src/services/photo';
 import * as utils from '@photobank/shared/index';
-import {
-  aiCommandUsageMsg,
-  aiFilterEmptyMsg,
-  sorryTryToRequestLaterMsg,
-  searchPhotosEmptyMsg,
-} from '@photobank/shared/constants';
+import { i18n } from '../src/i18n';
 
 describe('parseAiPrompt', () => {
   it('parses prompt from command', () => {
@@ -23,22 +18,22 @@ describe('parseAiPrompt', () => {
 
 describe('aiCommand', () => {
   it('replies with usage on empty prompt', async () => {
-    const ctx = { reply: vi.fn(), message: { text: '/ai' } } as any;
+    const ctx = { reply: vi.fn(), message: { text: '/ai' }, t: (k: string, p?: any) => i18n.t('en', k, p) } as any;
     await aiCommand(ctx);
-    expect(ctx.reply).toHaveBeenCalledWith(aiCommandUsageMsg);
+    expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'ai-usage'));
   });
 
   it('replies with fallback when API fails', async () => {
-    const ctx = { reply: vi.fn(), message: { text: '/ai test' } } as any;
+    const ctx = { reply: vi.fn(), message: { text: '/ai test' }, t: (k: string, p?: any) => i18n.t('en', k, p) } as any;
     vi.spyOn(openai, 'parseQueryWithOpenAI').mockRejectedValue(
       new Error('fail')
     );
     await aiCommand(ctx);
-    expect(ctx.reply).toHaveBeenCalledWith(sorryTryToRequestLaterMsg);
+    expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'sorry-try-later'));
   });
 
   it('requests photos with parsed filter', async () => {
-    const ctx = { reply: vi.fn(), message: { text: '/ai test' } } as any;
+    const ctx = { reply: vi.fn(), message: { text: '/ai test' }, t: (k: string, p?: any) => i18n.t('en', k, p) } as any;
     vi.spyOn(openai, 'parseQueryWithOpenAI').mockResolvedValue({
       persons: ['Alice'],
       tags: ['portrait'],
@@ -66,11 +61,11 @@ describe('aiCommand', () => {
         skip: 0,
       })
     );
-    expect(ctx.reply).toHaveBeenCalledWith(searchPhotosEmptyMsg);
+    expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'search-photos-empty'));
   });
 
   it('warns when filter is empty', async () => {
-    const ctx = { reply: vi.fn(), message: { text: '/ai empty' } } as any;
+    const ctx = { reply: vi.fn(), message: { text: '/ai empty' }, t: (k: string, p?: any) => i18n.t('en', k, p) } as any;
     vi.spyOn(openai, 'parseQueryWithOpenAI').mockResolvedValue({
       persons: [],
       tags: [],
@@ -84,11 +79,11 @@ describe('aiCommand', () => {
 
     expect(hashSpy).not.toHaveBeenCalled();
     expect(aiFilters.size).toBe(0);
-    expect(ctx.reply).toHaveBeenCalledWith(aiFilterEmptyMsg);
+    expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'ai-filter-empty'));
   });
 
   it('accepts prompt override', async () => {
-    const ctx = { reply: vi.fn(), message: { text: 'test' } } as any;
+    const ctx = { reply: vi.fn(), message: { text: 'test' }, t: (k: string, p?: any) => i18n.t('en', k, p) } as any;
     const parseSpy = vi
       .spyOn(openai, 'parseQueryWithOpenAI')
       .mockResolvedValue({

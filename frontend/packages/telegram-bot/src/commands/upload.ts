@@ -1,13 +1,13 @@
-import { Context } from 'grammy';
+import type { MyContext } from '../i18n';
 import axios from 'axios';
-import { uploadFailedMsg, uploadSuccessMsg, uploadStorageName } from '@photobank/shared/constants';
+import { uploadStorageName } from '@photobank/shared/constants';
 
 import { uploadPhotos } from '../services/photo';
 import { handleCommandError } from '../errorHandler';
 import { BOT_TOKEN } from '../config';
 import { getStorageId } from '../dictionaries';
 
-async function fetchFile(ctx: Context, fileId: string, fileName: string) {
+async function fetchFile(ctx: MyContext, fileId: string, fileName: string) {
   const file = await ctx.api.getFile(fileId);
   if (!file.file_path) throw new Error('file path missing');
   const url = `https://api.telegram.org/file/bot${BOT_TOKEN}/${file.file_path}`;
@@ -15,7 +15,7 @@ async function fetchFile(ctx: Context, fileId: string, fileName: string) {
   return { data: res.data, name: fileName };
 }
 
-export async function uploadCommand(ctx: Context) {
+export async function uploadCommand(ctx: MyContext) {
   try {
     const files: Array<Promise<{ data: ArrayBuffer; name: string }>> = [];
 
@@ -36,7 +36,7 @@ export async function uploadCommand(ctx: Context) {
     }
 
     if (!files.length) {
-      await ctx.reply(uploadFailedMsg);
+      await ctx.reply(ctx.t('upload-failed'));
       return;
     }
 
@@ -51,9 +51,9 @@ export async function uploadCommand(ctx: Context) {
       path: username,
     });
 
-    await ctx.reply(uploadSuccessMsg);
+    await ctx.reply(ctx.t('upload-success'));
   } catch (err) {
-    await ctx.reply(uploadFailedMsg);
+    await ctx.reply(ctx.t('upload-failed'));
     await handleCommandError(ctx, err);
   }
 }

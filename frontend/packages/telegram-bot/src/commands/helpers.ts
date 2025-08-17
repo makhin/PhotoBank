@@ -1,10 +1,5 @@
-import { Context, InlineKeyboard } from "grammy";
-import {
-  firstPageText,
-  prevPageText,
-  nextPageText,
-  lastPageText,
-} from "@photobank/shared/constants";
+import { InlineKeyboard } from "grammy";
+import type { MyContext } from "../i18n";
 
 import { logger } from "../logger";
 
@@ -19,7 +14,7 @@ export function parsePrefix(text?: string): string {
 export interface NamedItem { name: string }
 
 export interface SendPageOptions<T extends NamedItem> {
-  ctx: Context;
+  ctx: MyContext;
   command: string;
   fetchAll: () => Promise<T[]>;
   prefix: string;
@@ -62,26 +57,26 @@ export async function sendNamedItemsPage<T extends NamedItem>({
   );
 
   const lines = slice.map((i) => `- ${i.name}`);
-  lines.push("", `📄 Страница ${pageIndex} из ${totalPages}`);
+  lines.push("", ctx.t('page-info', { page: pageIndex, total: totalPages }));
 
   const keyboard = new InlineKeyboard();
   if (pageIndex > 1) {
     keyboard.text(
-      firstPageText,
+      ctx.t('first-page'),
       `${command}:1:${encodeURIComponent(prefix)}`,
     );
     keyboard.text(
-      prevPageText,
+      ctx.t('prev-page'),
       `${command}:${pageIndex - 1}:${encodeURIComponent(prefix)}`,
     );
   }
   if (pageIndex < totalPages) {
     keyboard.text(
-      nextPageText,
+      ctx.t('next-page'),
       `${command}:${pageIndex + 1}:${encodeURIComponent(prefix)}`,
     );
     keyboard.text(
-      lastPageText,
+      ctx.t('last-page'),
       `${command}:${totalPages}:${encodeURIComponent(prefix)}`,
     );
   }

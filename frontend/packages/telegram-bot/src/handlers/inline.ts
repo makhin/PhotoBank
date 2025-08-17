@@ -7,10 +7,11 @@ import { ensureUserAccessToken } from '../auth';
 import { searchPhotos } from '../services/photo';
 import { getTagName } from '../dictionaries';
 import { logger } from '../logger';
+import type { MyContext } from '../i18n';
 
 const PAGE_SIZE = 20;
 
-bot.on('inline_query', async (ctx) => {
+bot.on('inline_query', async (ctx: MyContext) => {
   const q = (ctx.inlineQuery.query || '').trim();
   const offset = Number(ctx.inlineQuery.offset || '0') || 0;
 
@@ -67,7 +68,7 @@ bot.on('inline_query', async (ctx) => {
           is_personal: true,
           cache_time: 0,
           button: {
-            text: 'Привяжите аккаунт, чтобы искать фото',
+            text: ctx.t('inline-link-account'),
             start_parameter: 'link',
           },
         } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
@@ -81,7 +82,7 @@ bot.on('inline_query', async (ctx) => {
         is_personal: true,
         cache_time: 0,
         button: {
-          text: 'Не удалось выполнить поиск (повторить?)',
+          text: ctx.t('inline-search-failed'),
           start_parameter: 'help',
         },
       } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
