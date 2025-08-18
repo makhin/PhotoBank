@@ -9,7 +9,6 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.AccessControl;
 using Microsoft.AspNetCore.Identity;
 using PhotoBank.Services;
-using PhotoBank.Api.Middleware;
 using PhotoBank.Services.FaceRecognition;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -115,20 +114,9 @@ namespace PhotoBank.Api
                 };
             });
 
-            builder.Services.AddAuthorization(opts =>
-            {
-                opts.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
-                opts.AddPolicy("AllowToSeeAdultContent", policy =>
-                {
-                    policy.RequireClaim("AllowAdultContent", "True");
-                });
-                opts.AddPolicy("AllowToSeeRacyContent", policy =>
-                {
-                    policy.RequireClaim("AllowRacyContent", "True");
-                });
-            });
+
+            builder.Services.AddAuthorization();
+
             builder.Services.Configure<RouteOptions>(options =>
             {
                 options.LowercaseUrls = true;
@@ -255,7 +243,7 @@ namespace PhotoBank.Api
             // Disabled HTTPS redirection to ensure CORS headers are applied
             // correctly during local development when running over HTTP.
             app.UseAuthentication();
-            app.UseMiddleware<ImpersonationMiddleware>();
+            // имперсонификация удалена
             app.UseAuthorization();
 
             app.MapControllers();

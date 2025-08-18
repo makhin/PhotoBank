@@ -78,12 +78,7 @@ namespace PhotoBank.ServerBlazorApp
                 .AddDefaultTokenProviders()
                 .AddEntityFrameworkStores<PhotoBankDbContext>();
 
-            builder.Services.AddAuthorizationBuilder()
-                .AddPolicy("AllowToSeeAdultContent", policy => {
-                    policy.RequireClaim("AllowAdultContent", "True");
-                }).AddPolicy("AllowToSeeRacyContent", policy => {
-                    policy.RequireClaim("AllowRacyContent", "True");
-                });
+            builder.Services.AddAuthorization();
 
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
             RegisterServicesForConsole.Configure(builder.Services, configuration);
