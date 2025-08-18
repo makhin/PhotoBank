@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
+using PhotoBank.AccessControl;
 using Microsoft.AspNetCore.Identity;
 using PhotoBank.Services;
 using PhotoBank.Api.Middleware;
@@ -60,6 +61,7 @@ namespace PhotoBank.Api
             });
 
             builder.Services.AddHttpContextAccessor();
+            builder.Services.AddMemoryCache();
 
             builder.Services.AddSingleton<DbTimingInterceptor>();
             builder.Services.AddDbContextPool<PhotoBankDbContext>((sp, options) =>
@@ -85,6 +87,11 @@ namespace PhotoBank.Api
                     });
             });
 
+            builder.Services.AddDbContext<AccessControlDbContext>(opt =>
+            {
+                opt.UseSqlServer(connectionString);
+            });
+
             builder.Services.AddDefaultIdentity<ApplicationUser>()
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<PhotoBankDbContext>();
@@ -108,13 +115,20 @@ namespace PhotoBank.Api
                 };
             });
 
-            builder.Services.AddAuthorizationBuilder()
-                .AddPolicy("AllowToSeeAdultContent", policy => {
+            builder.Services.AddAuthorization(opts =>
+            {
+                opts.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+                opts.AddPolicy("AllowToSeeAdultContent", policy =>
+                {
                     policy.RequireClaim("AllowAdultContent", "True");
-                })
-                .AddPolicy("AllowToSeeRacyContent", policy => {
+                });
+                opts.AddPolicy("AllowToSeeRacyContent", policy =>
+                {
                     policy.RequireClaim("AllowRacyContent", "True");
                 });
+            });
             builder.Services.Configure<RouteOptions>(options =>
             {
                 options.LowercaseUrls = true;
@@ -168,6 +182,9 @@ namespace PhotoBank.Api
             {
                 cfg.AddProfile<MappingProfile>();
             });
+
+            builder.Services.AddScoped<IEffectiveAccessProvider, EffectiveAccessProvider>();
+            builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
             var app = builder.Build();
 
