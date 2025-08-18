@@ -6,7 +6,6 @@ using PhotoBank.AccessControl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace PhotoBank.DbContext.DbContext
 {
@@ -33,9 +32,6 @@ namespace PhotoBank.DbContext.DbContext
         public DbSet<File> Files { get; set; }
         public DbSet<PropertyName> PropertyNames { get; set; }
         public DbSet<Enricher> Enrichers { get; set; }
-        public DbSet<UserStorageAllow> UserStorageAllows => Set<UserStorageAllow>();
-        public DbSet<UserPersonGroupAllow> UserPersonGroupAllows => Set<UserPersonGroupAllow>();
-        public DbSet<UserDateRangeAllow> UserDateRangeAllows => Set<UserDateRangeAllow>();
 
         public PhotoBankDbContext(DbContextOptions<PhotoBankDbContext> options, ICurrentUser user) : base(options)
         {
@@ -170,14 +166,6 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Enricher>()
                 .HasIndex(u => u.Name)
                 .IsUnique();
-            modelBuilder.Entity<UserStorageAllow>().HasKey(x => new { x.UserId, x.StorageId });
-            modelBuilder.Entity<UserPersonGroupAllow>().HasKey(x => new { x.UserId, x.PersonGroupId });
-            modelBuilder.Entity<UserDateRangeAllow>().HasKey(x => new { x.UserId, x.FromDate, x.ToDate });
-            var dConv = new ValueConverter<DateOnly, DateTime>(
-                d => d.ToDateTime(TimeOnly.MinValue),
-                dt => DateOnly.FromDateTime(dt));
-            modelBuilder.Entity<UserDateRangeAllow>().Property(x => x.FromDate).HasConversion(dConv).HasColumnType("date");
-            modelBuilder.Entity<UserDateRangeAllow>().Property(x => x.ToDate).HasConversion(dConv).HasColumnType("date");
 
             // --- Global filter for Photo ---
             var isAdmin = _user.IsAdmin;
@@ -231,22 +219,4 @@ namespace PhotoBank.DbContext.DbContext
 
     }
 
-    public class UserStorageAllow
-    {
-        public string UserId { get; set; } = default!;
-        public int StorageId { get; set; }
-    }
-
-    public class UserPersonGroupAllow
-    {
-        public string UserId { get; set; } = default!;
-        public int PersonGroupId { get; set; }
-    }
-
-    public class UserDateRangeAllow
-    {
-        public string UserId { get; set; } = default!;
-        public DateOnly FromDate { get; set; }
-        public DateOnly ToDate { get; set; }
-    }
 }
