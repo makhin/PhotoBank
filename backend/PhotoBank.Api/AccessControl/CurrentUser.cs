@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace PhotoBank.Api.AccessControl;
+namespace PhotoBank.AccessControl;
 
 public sealed class CurrentUser : ICurrentUser
 {

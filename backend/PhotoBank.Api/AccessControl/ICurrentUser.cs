@@ -1,4 +1,4 @@
-namespace PhotoBank.Api.AccessControl;
+namespace PhotoBank.AccessControl;
 
 public interface ICurrentUser
 {
