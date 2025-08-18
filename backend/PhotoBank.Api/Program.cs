@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using PhotoBank.Services;
 using PhotoBank.Services.FaceRecognition;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Diagnostics;
@@ -107,7 +108,12 @@ namespace PhotoBank.Api
                 };
             });
 
-            builder.Services.AddAuthorization();
+            builder.Services.AddAuthorization(options =>
+            {
+                options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
             builder.Services.Configure<RouteOptions>(options =>
             {
                 options.LowercaseUrls = true;
