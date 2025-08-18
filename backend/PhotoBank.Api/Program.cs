@@ -177,7 +177,7 @@ namespace PhotoBank.Api
             });
 
             builder.Services.AddScoped<IEffectiveAccessProvider, EffectiveAccessProvider>();
-            builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+            builder.Services.AddScoped<PhotoBank.Api.AccessControl.ICurrentUser, PhotoBank.Api.AccessControl.CurrentUser>();
 
             var app = builder.Build();
 
