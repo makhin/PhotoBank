@@ -50,7 +50,6 @@ namespace PhotoBank.DbContext.DbContext
 
             modelBuilder.Entity<ApplicationUser>(b =>
             {
-                b.Property(x => x.CanSeeNsfw).HasDefaultValue(false);
                 b.HasIndex(u => u.TelegramUserId)
                     .IsUnique()
                     .HasFilter("[TelegramUserId] IS NOT NULL");
