@@ -202,7 +202,7 @@ namespace PhotoBank.DbContext.DbContext
                             p.TakenDate.Value.Date >= r.From.ToDateTime(TimeOnly.MinValue).Date &&
                             p.TakenDate.Value.Date <= r.To.ToDateTime(TimeOnly.MinValue).Date))
                     ) &&
-                    (canSeeNsfw || !p.IsAdultContent)
+                    (canSeeNsfw || (!p.IsAdultContent && !p.IsRacyContent))
                 ));
         }
 
