@@ -11,6 +11,5 @@ namespace PhotoBank.DbContext.Models
     {
         public long? TelegramUserId { get; set; }
         public TimeSpan? TelegramSendTimeUtc { get; set; }
-        public bool CanSeeNsfw { get; set; }
     }
 }
