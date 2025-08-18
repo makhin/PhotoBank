@@ -186,6 +186,14 @@ namespace PhotoBank.DbContext.DbContext
             var ranges = _user.AllowedDateRanges?.ToList() ?? new List<(DateOnly From, DateOnly To)>();
             var canSeeNsfw = _user.CanSeeNsfw;
 
+            // Storage — only allowed, admin sees all
+            modelBuilder.Entity<Storage>().HasQueryFilter(s =>
+                isAdmin || storages.Contains(s.Id));
+
+            // Person — only from allowed groups, admin sees all
+            modelBuilder.Entity<Person>().HasQueryFilter(p =>
+                isAdmin || p.PersonGroups.Any(pg => groups.Contains(pg.Id)));
+
             modelBuilder.Entity<Photo>().HasQueryFilter(p =>
                 isAdmin ||
                 (
