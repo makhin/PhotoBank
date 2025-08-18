@@ -3,11 +3,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Http;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Api;
+using PhotoBank.AccessControl;
 using PhotoBank.ViewModel.Dto;
 using System.Linq;
 using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace PhotoBank.Api.Controllers;
 
@@ -166,6 +169,15 @@ public class AuthController(
         }
 
         return Ok(roles);
+    }
+
+    [HttpGet("debug/effective-access")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> GetEffective([FromServices] IEffectiveAccessProvider eff, [FromServices] IHttpContextAccessor http)
+    {
+        var userId = http.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var data = await eff.GetAsync(userId, http.HttpContext!.User);
+        return Ok(data);
     }
 }
 
