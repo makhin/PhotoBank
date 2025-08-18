@@ -10,7 +10,7 @@ namespace PhotoBank.Api.Controllers.Admin;
 
 [Route("api/admin/[controller]")]
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Admin")]
 public class UsersController(UserManager<ApplicationUser> userManager) : ControllerBase
 {
     [HttpGet]
