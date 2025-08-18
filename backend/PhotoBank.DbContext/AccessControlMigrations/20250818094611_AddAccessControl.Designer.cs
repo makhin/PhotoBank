@@ -37,7 +37,7 @@ namespace PhotoBank.DbContext.AccessControlMigrations
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 
-                    b.Property<bool>("Flags_NsfwOnly")
+                    b.Property<bool>("Flags_CanSeeNsfw")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")

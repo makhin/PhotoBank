@@ -14,7 +14,7 @@ public class AccessProfile
     [MaxLength(512)]
     public string? Description { get; set; }
 
-    public bool Flags_NsfwOnly { get; set; }
+    public bool Flags_CanSeeNsfw { get; set; }
 
     public ICollection<AccessProfileStorageAllow> Storages { get; set; } = [];
     public ICollection<AccessProfilePersonGroupAllow> PersonGroups { get; set; } = [];
