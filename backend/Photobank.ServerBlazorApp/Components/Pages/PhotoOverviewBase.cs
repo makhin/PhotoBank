@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
 using Radzen;
@@ -12,10 +10,7 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
     {
         [Inject]
         public IPhotoService PhotoService { get; set; }
-        [Inject]
-        public IAuthorizationService AuthorizationService { get; set; }
-        [Inject]
-        public AuthenticationStateProvider AuthenticationStateProvider { get; set; }
+        
         public IEnumerable<PhotoItemDto>? Photos { get; set; }
         public IEnumerable<StorageDto>? Storages { get; set; }
         public IEnumerable<PersonDto>? Persons { get; set; }
@@ -70,12 +65,8 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
             Tags = await PhotoService.GetAllTagsAsync();
             Paths = await PhotoService.GetAllPathsAsync();
 
-            var authState = await AuthenticationStateProvider
-                .GetAuthenticationStateAsync();
-            var user = authState.User;
-
-            AllowAdultFilter = (await AuthorizationService.AuthorizeAsync(user, "AllowToSeeAdultContent")).Succeeded;
-            AllowRacyFilter = (await AuthorizationService.AuthorizeAsync(user, "AllowToSeeRacyContent")).Succeeded;            
+            AllowAdultFilter = true;
+            AllowRacyFilter = true;
         }
 
         protected async Task ApplyFilter(FilterDto filterDto)

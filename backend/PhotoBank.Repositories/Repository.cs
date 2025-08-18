@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PhotoBank.DbContext.DbContext;
@@ -32,7 +31,6 @@ namespace PhotoBank.Repositories
     {
         private readonly PhotoBankDbContext _context;
         private readonly DbSet<TTable> _entities;
-        private readonly IRowAuthPoliciesContainer _container;
 
         public Repository(IServiceProvider serviceProvider)
         {
@@ -40,21 +38,8 @@ namespace PhotoBank.Repositories
             _context = context;
             _entities = context.Set<TTable>();
         }
-        public Repository(IServiceProvider serviceProvider, IHttpContextAccessor httpContextAccessor) : this(serviceProvider)
-        {
-            _container = RowAuthPoliciesContainer.ConfigureRowAuthPolicies(httpContextAccessor);
-        }
-        public IQueryable<TTable> GetAll()
-        {
-            if (_container != null)
-            {
-                return _container.GetPolicies<TTable>()
-                .Aggregate<IRowAuthPolicy<TTable>, IQueryable<TTable>>(_entities,
-                    (current, policy) => current.Where(policy.Expression)).AsNoTracking();
-            }
 
-            return _entities.AsNoTracking();
-        }
+        public IQueryable<TTable> GetAll() => _entities.AsNoTracking();
 
         public IQueryable<TTable> GetByCondition(Expression<Func<TTable, bool>> predicate)
         {
