@@ -10,5 +10,5 @@ public interface ICurrentUser
     IReadOnlySet<int> AllowedStorageIds { get; }
     IReadOnlySet<int> AllowedPersonGroupIds { get; }
     IReadOnlyList<(DateOnly From, DateOnly To)> AllowedDateRanges { get; }
-    bool NsfwOnly { get; }
+    bool CanSeeNsfw { get; }
 }

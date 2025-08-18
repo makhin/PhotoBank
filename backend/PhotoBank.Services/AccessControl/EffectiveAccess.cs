@@ -10,7 +10,7 @@ public sealed record EffectiveAccess(
     IReadOnlySet<int> StorageIds,
     IReadOnlySet<int> PersonGroupIds,
     IReadOnlyList<(DateOnly From, DateOnly To)> DateRanges,
-    bool NsfwOnly,
+    bool CanSeeNsfw,
     bool IsAdmin);
 
 public interface IEffectiveAccessProvider

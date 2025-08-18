@@ -19,7 +19,7 @@ namespace PhotoBank.DbContext.AccessControlMigrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true),
                     Description = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
-                    Flags_NsfwOnly = table.Column<bool>(type: "bit", nullable: false)
+                    Flags_CanSeeNsfw = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {

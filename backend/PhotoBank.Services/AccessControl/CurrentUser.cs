@@ -12,7 +12,7 @@ public sealed class CurrentUser : ICurrentUser
     public IReadOnlySet<int> AllowedStorageIds { get; }
     public IReadOnlySet<int> AllowedPersonGroupIds { get; }
     public IReadOnlyList<(DateOnly From, DateOnly To)> AllowedDateRanges { get; }
-    public bool NsfwOnly { get; }
+    public bool CanSeeNsfw { get; }
 
     public CurrentUser(IHttpContextAccessor http, IEffectiveAccessProvider provider)
     {
@@ -26,6 +26,6 @@ public sealed class CurrentUser : ICurrentUser
         AllowedStorageIds = eff.StorageIds;
         AllowedPersonGroupIds = eff.PersonGroupIds;
         AllowedDateRanges = eff.DateRanges;
-        NsfwOnly = eff.NsfwOnly;
+        CanSeeNsfw = eff.CanSeeNsfw;
     }
 }

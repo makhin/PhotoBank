@@ -171,7 +171,7 @@ namespace PhotoBank.DbContext.DbContext
             var storages = _user.AllowedStorageIds?.ToHashSet() ?? new HashSet<int>();
             var groups = _user.AllowedPersonGroupIds?.ToHashSet() ?? new HashSet<int>();
             var ranges = _user.AllowedDateRanges?.ToList() ?? new List<(DateOnly From, DateOnly To)>();
-            var nsfwOnly = _user.NsfwOnly;
+            var canSeeNsfw = _user.CanSeeNsfw;
 
             modelBuilder.Entity<Photo>().HasQueryFilter(p =>
                 isAdmin ||
@@ -185,7 +185,7 @@ namespace PhotoBank.DbContext.DbContext
                     (p.TakenDate != null && ranges.Count > 0 &&
                         ranges.Any(r => p.TakenDate.Value.Date >= r.From.ToDateTime(TimeOnly.MinValue).Date &&
                                         p.TakenDate.Value.Date <= r.To.ToDateTime(TimeOnly.MinValue).Date)) &&
-                    (!nsfwOnly || p.IsAdultContent)
+                    (canSeeNsfw || !p.IsAdultContent)
                 ));
         }
 
@@ -201,7 +201,7 @@ namespace PhotoBank.DbContext.DbContext
             public IReadOnlySet<int> AllowedStorageIds => new HashSet<int>();
             public IReadOnlySet<int> AllowedPersonGroupIds => new HashSet<int>();
             public IReadOnlyList<(DateOnly From, DateOnly To)> AllowedDateRanges => new List<(DateOnly From, DateOnly To)>();
-            public bool NsfwOnly => false;
+            public bool CanSeeNsfw => true;
         }
 
     }

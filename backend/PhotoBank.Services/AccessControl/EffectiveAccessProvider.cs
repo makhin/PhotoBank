@@ -67,16 +67,16 @@ public sealed class EffectiveAccessProvider : IEffectiveAccessProvider
             .Select(x => new { x.FromDate, x.ToDate })
             .ToListAsync(ct);
 
-        var nsfwOnly = await _db.AccessProfiles
+        var canSeeNsfw = await _db.AccessProfiles
             .Where(p => profileIds.Contains(p.Id))
-            .Select(p => p.Flags_NsfwOnly)
+            .Select(p => p.Flags_CanSeeNsfw)
             .AnyAsync(x => x, ct);
 
         var eff = new EffectiveAccess(
             storages.ToHashSet(),
             groups.ToHashSet(),
             ranges.Select(r => (r.FromDate, r.ToDate)).ToList(),
-            nsfwOnly,
+            canSeeNsfw,
             false
         );
 
