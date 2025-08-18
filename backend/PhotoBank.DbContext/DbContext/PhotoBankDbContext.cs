@@ -191,13 +191,17 @@ namespace PhotoBank.DbContext.DbContext
                 (
                     (storages.Count > 0 && storages.Contains(p.StorageId)) &&
                     (
-                        !p.Faces.Any() ||
-                        p.Faces.Any(f => f.PersonId != null &&
+                        groups.Count == 0
+                        || !p.Faces.Any()
+                        || p.Faces.Any(f => f.PersonId != null &&
                             f.Person.PersonGroups.Any(pg => groups.Contains(pg.Id)))
                     ) &&
-                    (p.TakenDate != null && ranges.Count > 0 &&
-                        ranges.Any(r => p.TakenDate.Value.Date >= r.From.ToDateTime(TimeOnly.MinValue).Date &&
-                                        p.TakenDate.Value.Date <= r.To.ToDateTime(TimeOnly.MinValue).Date)) &&
+                    (
+                        ranges.Count == 0
+                        || (p.TakenDate != null && ranges.Any(r =>
+                            p.TakenDate.Value.Date >= r.From.ToDateTime(TimeOnly.MinValue).Date &&
+                            p.TakenDate.Value.Date <= r.To.ToDateTime(TimeOnly.MinValue).Date))
+                    ) &&
                     (canSeeNsfw || !p.IsAdultContent)
                 ));
         }
