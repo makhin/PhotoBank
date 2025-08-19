@@ -42,7 +42,7 @@ Object.defineProperty(globalThis, 'HTMLCanvasElement', {
   },
 });
 
-const server = setupServer(...(handlers as any));
+export const server = setupServer(...(handlers as any));
 beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
