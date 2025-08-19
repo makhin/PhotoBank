@@ -42,7 +42,17 @@ Object.defineProperty(globalThis, 'HTMLCanvasElement', {
   },
 });
 
-const server = setupServer(...(handlers as any));
-beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
+export const server = setupServer(...(handlers as any));
+beforeAll(() =>
+  server.listen({
+    onUnhandledRequest(request, print) {
+      if (request.url.pathname.startsWith('/assets')) {
+        return;
+      }
+
+      print.warning();
+    },
+  }),
+);
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
