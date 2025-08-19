@@ -5,7 +5,7 @@ using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.Api.Controllers;
 
-[Route("api/[controller]")]
+[Route("[controller]")]
 [ApiController]
 [Authorize]
 public class FacesController(IPhotoService photoService) : ControllerBase

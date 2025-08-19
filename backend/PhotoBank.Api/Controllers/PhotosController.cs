@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace PhotoBank.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [Authorize]
     [ApiController]
     public class PhotosController(ILogger<PhotosController> logger, IPhotoService photoService)
