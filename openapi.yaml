@@ -170,6 +170,25 @@ paths:
       responses:
         '200':
           description: OK
+    delete:
+      tags:
+        - AdminAccessProfiles
+      operationId: AdminAccessProfiles_UnassignRole
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
   /auth/login:
     post:
       tags:
@@ -687,6 +706,46 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserWithClaimsDto'
+    post:
+      tags:
+        - Users
+      operationId: Users_Create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/CreateUserDto'
+      responses:
+        '201':
+          description: Created
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/UserWithClaimsDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserWithClaimsDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/UserWithClaimsDto'
+        '400':
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   '/admin/users/{id}':
     put:
       tags:
@@ -726,6 +785,68 @@ paths:
                 $ref: '#/components/schemas/ProblemDetails'
         '400':
           description: Bad Request
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    delete:
+      tags:
+        - Users
+      operationId: Users_Delete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Not Found
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  '/admin/users/{id}/reset-password':
+    post:
+      tags:
+        - Users
+      operationId: Users_ResetPassword
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordDto'
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Not Found
           content:
             text/plain:
               schema:
@@ -781,6 +902,43 @@ paths:
                 $ref: '#/components/schemas/ProblemDetails'
         '400':
           description: Bad Request
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  '/admin/users/{id}/roles':
+    put:
+      tags:
+        - Users
+      operationId: Users_SetRoles
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetRolesDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/SetRolesDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/SetRolesDto'
+      responses:
+        '204':
+          description: No Content
+        '404':
+          description: Not Found
           content:
             text/plain:
               schema:
@@ -875,6 +1033,27 @@ components:
           nullable: true
         value:
           type: string
+          nullable: true
+      additionalProperties: false
+    CreateUserDto:
+      required:
+        - email
+        - password
+      type: object
+      properties:
+        email:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+        roles:
+          type: array
+          items:
+            type: string
           nullable: true
       additionalProperties: false
     FaceBoxDto:
@@ -1220,6 +1399,15 @@ components:
           type: string
           nullable: true
       additionalProperties: false
+    ResetPasswordDto:
+      required:
+        - newPassword
+      type: object
+      properties:
+        newPassword:
+          type: string
+          nullable: true
+      additionalProperties: false
     RoleDto:
       required:
         - name
@@ -1232,6 +1420,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ClaimDto'
+          nullable: true
+      additionalProperties: false
+    SetRolesDto:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            type: string
           nullable: true
       additionalProperties: false
     StorageDto:
