@@ -43,6 +43,7 @@ inline-link-account = Link your account to search photos
 inline-search-failed = Search failed (retry?)
 deeplink-not-linked = Your Telegram is not linked. Contact administrator to link.
 deeplink-inline-example = Example inline query: @botname cats, @botname date:2024
+start-linked = ✅ Your Telegram is linked.
 tags-error = 🚫 Failed to fetch tags.
 persons-error = 🚫 Failed to fetch persons.
 storages-error = 🚫 Failed to fetch storages.
