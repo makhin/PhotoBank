@@ -362,7 +362,6 @@ namespace PhotoBank.UnitTests.Services
                 IsAdmin = false,
                 AllowedStorageIds = new HashSet<int> { storage1.Id },
                 AllowedPersonGroupIds = new HashSet<int> { group1.Id },
-                AllowedDateRanges = new List<(DateOnly, DateOnly)> { (DateOnly.FromDateTime(new DateTime(2019, 1, 1)), DateOnly.FromDateTime(new DateTime(2021, 1, 1))) },
                 CanSeeNsfw = false
             };
 
@@ -373,6 +372,37 @@ namespace PhotoBank.UnitTests.Services
 
             result.TotalCount.Should().Be(2);
             result.Items.Select(p => p.Name).Should().BeEquivalentTo(new[] { "allowed", "noface" });
+        }
+
+        [Test]
+        public async Task GetAllPhotosAsync_UserWithoutProfile_ReturnsNoPhotos()
+        {
+            var dbName = Guid.NewGuid().ToString();
+            var services = new ServiceCollection();
+            services.AddDbContext<PhotoBankDbContext>(o => o.UseInMemoryDatabase(dbName));
+            var provider = services.BuildServiceProvider();
+            var context = provider.GetRequiredService<PhotoBankDbContext>();
+
+            var storage = new Storage { Name = "s1" };
+            context.Storages.Add(storage);
+            var group = new PersonGroup { Name = "g1" };
+            var person = new Person { Name = "p1", PersonGroups = new List<PersonGroup> { group } };
+            context.PersonGroups.Add(group);
+            context.Persons.Add(person);
+            await context.SaveChangesAsync();
+
+            var photo = new Photo { Storage = storage, StorageId = storage.Id, Name = "p", TakenDate = new DateTime(2020,1,1) };
+            photo.Faces = new List<Face> { new Face { Photo = photo, Person = person, PersonId = person.Id } };
+            context.Photos.Add(photo);
+            await context.SaveChangesAsync();
+
+            var currentUser = new TestCurrentUser { IsAdmin = false };
+            var service = CreateService(dbName, currentUser);
+
+            var result = await service.GetAllPhotosAsync(new FilterDto());
+
+            result.TotalCount.Should().Be(0);
+            result.Items.Should().BeEmpty();
         }
     }
 }
