@@ -84,12 +84,10 @@ public class AdminAccessProfilesController : ControllerBase
     [HttpDelete("{id:int}/assign-user/{userId}")]
     public async Task<ActionResult> UnassignUser(int id, string userId, CancellationToken ct)
     {
-        var rel = await _db.UserAccessProfiles.FirstOrDefaultAsync(x => x.UserId == userId && x.ProfileId == id, ct);
-        if (rel is null) return NotFound();
-
-        _db.UserAccessProfiles.Remove(rel);
+        var link = await _db.UserAccessProfiles.FirstOrDefaultAsync(x => x.ProfileId == id && x.UserId == userId, ct);
+        if (link is null) return NotFound();
+        _db.UserAccessProfiles.Remove(link);
         await _db.SaveChangesAsync(ct);
-        _eff.Invalidate(userId);
         return NoContent();
     }
 
@@ -105,6 +103,16 @@ public class AdminAccessProfilesController : ControllerBase
             await _db.SaveChangesAsync(ct);
         }
 
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}/assign-role/{roleId}")]
+    public async Task<ActionResult> UnassignRole(int id, string roleId, CancellationToken ct)
+    {
+        var link = await _db.RoleAccessProfiles.FirstOrDefaultAsync(x => x.ProfileId == id && x.RoleId == roleId, ct);
+        if (link is null) return NotFound();
+        _db.RoleAccessProfiles.Remove(link);
+        await _db.SaveChangesAsync(ct);
         return NoContent();
     }
 }
