@@ -26,7 +26,7 @@ export async function createChatCompletion(text: string): Promise<string> {
     },
   });
 
-  return  response.choices[0].message.content ?? '';
+  return response.choices?.[0]?.message?.content ?? '';
 }
 
 export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
@@ -55,7 +55,7 @@ export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
     },
   });
 
-  const content = response.choices[0].message.content ?? '{}';
+  const content = response.choices?.[0]?.message?.content ?? '{}';
 
   return PhotoFilterSchema.parse(JSON.parse(content));
 }
