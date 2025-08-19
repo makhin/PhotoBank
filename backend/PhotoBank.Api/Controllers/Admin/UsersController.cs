@@ -11,7 +11,7 @@ namespace PhotoBank.Api.Controllers.Admin;
 [Route("admin/[controller]")]
 [ApiController]
 [Authorize(Roles = "Admin")]
-public class UsersController(UserManager<ApplicationUser> userManager) : ControllerBase
+public class UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<UserWithClaimsDto>), StatusCodes.Status200OK)]
@@ -35,6 +35,34 @@ public class UsersController(UserManager<ApplicationUser> userManager) : Control
         return Ok(result);
     }
 
+    [HttpPost]
+    [ProducesResponseType(typeof(UserWithClaimsDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateAsync([FromBody] CreateUserDto dto)
+    {
+        var user = new ApplicationUser { UserName = dto.Email, Email = dto.Email, PhoneNumber = dto.PhoneNumber };
+        var result = await userManager.CreateAsync(user, dto.Password);
+        if (!result.Succeeded) return BadRequest(result.Errors);
+
+        if (dto.Roles?.Any() == true)
+        {
+            foreach (var role in dto.Roles.Distinct())
+                if (await roleManager.RoleExistsAsync(role))
+                    await userManager.AddToRoleAsync(user, role);
+        }
+
+        var created = new UserWithClaimsDto
+        {
+            Id = user.Id,
+            Email = user.Email!,
+            PhoneNumber = user.PhoneNumber,
+            TelegramUserId = user.TelegramUserId,
+            TelegramSendTimeUtc = user.TelegramSendTimeUtc,
+            Claims = Enumerable.Empty<ClaimDto>()
+        };
+        return CreatedAtAction(nameof(GetAllAsync), new { id = user.Id }, created);
+    }
+
     [HttpPut("{id}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -53,6 +81,32 @@ public class UsersController(UserManager<ApplicationUser> userManager) : Control
             return BadRequest(result.Errors);
 
         return Ok();
+    }
+
+    [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteAsync(string id)
+    {
+        var user = await userManager.FindByIdAsync(id);
+        if (user is null) return NotFound();
+        var r = await userManager.DeleteAsync(user);
+        if (!r.Succeeded) return BadRequest(r.Errors);
+        return NoContent();
+    }
+
+    [HttpPost("{id}/reset-password")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ResetPasswordAsync(string id, [FromBody] ResetPasswordDto dto)
+    {
+        var user = await userManager.FindByIdAsync(id);
+        if (user is null) return NotFound();
+
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        var r = await userManager.ResetPasswordAsync(user, token, dto.NewPassword);
+        if (!r.Succeeded) return BadRequest(r.Errors);
+        return NoContent();
     }
 
     [HttpPut("{id}/claims")]
@@ -75,5 +129,32 @@ public class UsersController(UserManager<ApplicationUser> userManager) : Control
             return BadRequest(addResult.Errors);
 
         return Ok();
+    }
+
+    [HttpPut("{id}/roles")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SetRolesAsync(string id, [FromBody] SetRolesDto dto)
+    {
+        var user = await userManager.FindByIdAsync(id);
+        if (user is null) return NotFound();
+
+        var current = await userManager.GetRolesAsync(user);
+        var toRemove = current.Except(dto.Roles).ToArray();
+        var toAdd = dto.Roles.Except(current).ToArray();
+
+        if (toRemove.Length > 0)
+        {
+            var rr = await userManager.RemoveFromRolesAsync(user, toRemove);
+            if (!rr.Succeeded) return BadRequest(rr.Errors);
+        }
+        foreach (var role in toAdd)
+            if (await roleManager.RoleExistsAsync(role))
+            {
+                var ar = await userManager.AddToRoleAsync(user, role);
+                if (!ar.Succeeded) return BadRequest(ar.Errors);
+            }
+
+        return NoContent();
     }
 }
