@@ -8,6 +8,10 @@
     "emitDeclarationOnly": false
   },
   "include": ["src"],
-  "exclude": ["src/**/*.msw.ts", "src/api/photobank/msw.ts"]
+  "exclude": [
+    "src/**/*.msw.ts",
+    "src/api/photobank/msw.ts",
+    "src/api/photobank/msw.scenarios.ts"
+  ]
 }
 
