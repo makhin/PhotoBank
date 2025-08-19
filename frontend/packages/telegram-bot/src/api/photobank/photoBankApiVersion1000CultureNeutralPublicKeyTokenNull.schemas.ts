@@ -4,6 +4,46 @@
  * PhotoBank.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
  * OpenAPI spec version: 1.0
  */
+export interface AccessProfile {
+  id?: number;
+  /**
+   * @maxLength 128
+   * @nullable
+   */
+  name?: string | null;
+  /**
+   * @maxLength 512
+   * @nullable
+   */
+  description?: string | null;
+  flags_CanSeeNsfw?: boolean;
+  /** @nullable */
+  storages?: AccessProfileStorageAllow[] | null;
+  /** @nullable */
+  personGroups?: AccessProfilePersonGroupAllow[] | null;
+  /** @nullable */
+  dateRanges?: AccessProfileDateRangeAllow[] | null;
+}
+
+export interface AccessProfileDateRangeAllow {
+  profileId?: number;
+  fromDate?: string;
+  toDate?: string;
+  profile?: AccessProfile;
+}
+
+export interface AccessProfilePersonGroupAllow {
+  profileId?: number;
+  personGroupId?: number;
+  profile?: AccessProfile;
+}
+
+export interface AccessProfileStorageAllow {
+  profileId?: number;
+  storageId?: number;
+  profile?: AccessProfile;
+}
+
 export interface ClaimDto {
   /** @nullable */
   type: string | null;

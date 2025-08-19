@@ -597,3 +597,79 @@ export function useAuthGetUserRoles<TData = Awaited<ReturnType<typeof authGetUse
 
 
 
+export type authGetEffectiveResponse200 = {
+  data: null
+  status: 200
+}
+    
+export type authGetEffectiveResponseComposite = authGetEffectiveResponse200;
+    
+export type authGetEffectiveResponse = authGetEffectiveResponseComposite & {
+  headers: Headers;
+}
+
+export const getAuthGetEffectiveUrl = () => {
+
+
+  
+
+  return `/auth/debug/effective-access`
+}
+
+export const authGetEffective = async ( options?: RequestInit): Promise<authGetEffectiveResponse> => {
+  
+  return customFetcher<authGetEffectiveResponse>(getAuthGetEffectiveUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getAuthGetEffectiveQueryKey = () => {
+    return [`/auth/debug/effective-access`] as const;
+    }
+
+    
+export const getAuthGetEffectiveQueryOptions = <TData = Awaited<ReturnType<typeof authGetEffective>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetEffective>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAuthGetEffectiveQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetEffective>>> = ({ signal }) => authGetEffective(signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authGetEffective>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AuthGetEffectiveQueryResult = NonNullable<Awaited<ReturnType<typeof authGetEffective>>>
+export type AuthGetEffectiveQueryError = unknown
+
+
+
+export function useAuthGetEffective<TData = Awaited<ReturnType<typeof authGetEffective>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetEffective>>, TError, TData>, }
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAuthGetEffectiveQueryOptions(options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
