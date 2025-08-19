@@ -1,4 +1,3 @@
-extern alias ServicesLib;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -11,7 +10,6 @@ using PhotoBank.ViewModel.Dto;
 using System.Diagnostics;
 using System;
 using System.Threading.Tasks;
-using AccessCurrentUser = ServicesLib.PhotoBank.AccessControl.ICurrentUser;
 
 namespace PhotoBank.IntegrationTests;
 
@@ -60,7 +58,6 @@ public class GetAllPhotosIntegrationTests
         {
             cfg.AddProfile<MappingProfile>();
         });
-        services.AddSingleton<AccessCurrentUser>(new TestCurrentUser());
         _provider = services.BuildServiceProvider();
     }
 
@@ -68,15 +65,6 @@ public class GetAllPhotosIntegrationTests
     public void TearDown()
     {
         _provider.Dispose();
-    }
-
-    private sealed class TestCurrentUser : AccessCurrentUser
-    {
-        public bool IsAdmin { get; init; } = true;
-        public IReadOnlySet<int> AllowedStorageIds { get; init; } = new HashSet<int>();
-        public IReadOnlySet<int> AllowedPersonGroupIds { get; init; } = new HashSet<int>();
-        public IReadOnlyList<(DateOnly From, DateOnly To)> AllowedDateRanges { get; init; } = new List<(DateOnly, DateOnly)>();
-        public bool CanSeeNsfw { get; init; } = true;
     }
 
     [Test]

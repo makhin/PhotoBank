@@ -1,8 +1,6 @@
-extern alias ServicesLib;
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using AutoMapper;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
@@ -15,7 +13,6 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
-using AccessCurrentUser = ServicesLib.PhotoBank.AccessControl.ICurrentUser;
 
 namespace PhotoBank.UnitTests.Services
 {
@@ -55,8 +52,7 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<Storage>(provider),
                 new Repository<Tag>(provider),
                 _mapper,
-                new MemoryCache(new MemoryCacheOptions()),
-                new TestCurrentUser { IsAdmin = true });
+                new MemoryCache(new MemoryCacheOptions()));
 
             var bytes = new byte[] { 1, 2, 3, 4 };
             await using var ms = new MemoryStream(bytes);
@@ -91,8 +87,7 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<Storage>(provider),
                 new Repository<Tag>(provider),
                 _mapper,
-                new MemoryCache(new MemoryCacheOptions()),
-                new TestCurrentUser { IsAdmin = true });
+                new MemoryCache(new MemoryCacheOptions()));
 
             var bytes = new byte[] { 1, 2, 3, 4 };
             await using var ms1 = new MemoryStream(bytes);
@@ -131,8 +126,7 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<Storage>(provider),
                 new Repository<Tag>(provider),
                 _mapper,
-                new MemoryCache(new MemoryCacheOptions()),
-                new TestCurrentUser { IsAdmin = true });
+                new MemoryCache(new MemoryCacheOptions()));
 
             var bytes1 = new byte[] { 1, 2, 3, 4 };
             await using var ms1 = new MemoryStream(bytes1);
@@ -152,14 +146,5 @@ namespace PhotoBank.UnitTests.Services
 
             Directory.Delete(tempFolder, true);
         }
-    }
-
-    internal sealed class TestCurrentUser : AccessCurrentUser
-    {
-        public bool IsAdmin { get; init; }
-        public IReadOnlySet<int> AllowedStorageIds { get; init; } = new HashSet<int>();
-        public IReadOnlySet<int> AllowedPersonGroupIds { get; init; } = new HashSet<int>();
-        public IReadOnlyList<(DateOnly From, DateOnly To)> AllowedDateRanges { get; init; } = new List<(DateOnly, DateOnly)>();
-        public bool CanSeeNsfw { get; init; } = true;
     }
 }
