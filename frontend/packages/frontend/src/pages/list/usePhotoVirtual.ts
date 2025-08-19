@@ -3,7 +3,7 @@ import { RefObject } from 'react';
 
 interface UsePhotoVirtualProps {
   count: number;
-  parentRef: RefObject<HTMLElement>;
+  parentRef: RefObject<HTMLElement | null>;
   estimateSize?: (index: number) => number;
 }
 

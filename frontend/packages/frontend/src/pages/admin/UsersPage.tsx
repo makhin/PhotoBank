@@ -108,10 +108,13 @@ export default function UsersPage() {
 
   const handleSave = async (id: string, data: FormData) => {
     await updateUser({ id, data });
-    const claims = (data.claims ?? '').split('\n').filter(Boolean).map((l) => {
-      const [type, value] = l.split(':');
-      return { type: type.trim(), value: value.trim() };
-    });
+    const claims = (data.claims ?? '')
+      .split('\n')
+      .filter(Boolean)
+      .map((l) => {
+        const [type = '', value = ''] = l.split(':');
+        return { type: type.trim(), value: value.trim() };
+      });
     if (claims.length) {
       await setClaims({ id, data: claims });
     }

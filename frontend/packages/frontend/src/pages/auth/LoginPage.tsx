@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useCallback, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import * as AuthApi from '@photobank/shared/api/photobank/auth/auth';
+import * as AuthApi from '@photobank/shared/api/photobank';
 import { setAuthToken } from '@photobank/shared/auth';
 import { useTranslation } from 'react-i18next';
 
@@ -36,8 +36,11 @@ export default function LoginPage() {
 
   const login = AuthApi.useAuthLogin({
     mutation: {
-      onSuccess: (resp, variables) => {
-        setAuthToken(resp.data.token! as string, variables.data.rememberMe);
+      onSuccess: (
+        resp: AuthApi.authLoginResponse,
+        variables: { data: AuthApi.LoginRequestDto }
+      ) => {
+        setAuthToken(resp.data.token! as string, variables.data.rememberMe ?? false);
         navigate('/filter');
       },
       onError: () => setError(t('invalidCredentialsMsg')),

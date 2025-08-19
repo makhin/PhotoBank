@@ -28,7 +28,7 @@ export const photoColumns: Column<PhotoItemDto>[] = [
     header: i18n.t('colPreviewLabel'),
     width: 'col-span-2',
     render: (r) => (
-      <PreviewCell thumbnail={r.thumbnail} alt={r.name} className="w-16 h-16" />
+      <PreviewCell thumbnail={r.thumbnail ?? ''} alt={r.name} className="w-16 h-16" />
     ),
   },
   {
@@ -41,7 +41,7 @@ export const photoColumns: Column<PhotoItemDto>[] = [
     id: 'date',
     header: i18n.t('colDateLabel'),
     width: 'col-span-1',
-    render: (r) => formatDate(r.takenDate),
+    render: (r) => formatDate(r.takenDate ?? ''),
   },
   {
     id: 'storage',

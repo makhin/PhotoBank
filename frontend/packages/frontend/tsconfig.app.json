@@ -29,13 +29,14 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ],
-      "@photobank/shared/*": [
-        "../shared/src/*"
       ]
     }
   },
   "include": [
     "src"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }

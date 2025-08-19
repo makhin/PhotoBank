@@ -5,8 +5,8 @@ export function useInView<T extends Element>(
     rootMargin: '400px 0px',
     threshold: 0.01,
   }
-): [React.RefObject<T>, boolean] {
-  const ref = useRef<T>(null);
+): [React.RefObject<T | null>, boolean] {
+  const ref = useRef<T | null>(null);
   const [inView, setInView] = useState(false);
 
   useEffect(() => {

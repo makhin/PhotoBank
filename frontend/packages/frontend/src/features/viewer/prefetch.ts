@@ -9,7 +9,9 @@ export const prefetchAround = (
 ) => {
   for (let i = Math.max(0, index - radius); i <= Math.min(items.length - 1, index + radius); i++) {
     if (i === index) continue;
-    prefetch(items[i].preview);
-    prefetch(items[i].original);
+    const item = items[i];
+    if (!item) continue;
+    prefetch(item.preview);
+    prefetch(item.original);
   }
 };

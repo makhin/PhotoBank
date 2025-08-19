@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { formatDate, getOrientation, getPlaceByGeoPoint, useIsAdmin } from '@photobank/shared';
 import { logger } from '@photobank/shared/utils/logger';
-import type { FaceBoxDto } from '@photobank/shared/api/photobank';
-import * as PhotosApi from '@photobank/shared/api/photobank/photos/photos';
+import type { FaceBoxDto, FaceDto } from '@photobank/shared/api/photobank';
+import * as PhotosApi from '@photobank/shared/api/photobank';
 import { useFacesUpdate } from '@photobank/shared/api/photobank';
 import { Maximize2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -316,7 +316,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                     </CardHeader>
                                     <CardContent>
                                         <div className="flex flex-wrap gap-2">
-                                            {photoData.tags.map((tag) => (
+                                            {photoData.tags.map((tag: string) => (
                                                 <Badge key={tag} variant="secondary"
                                                        className="bg-secondary text-secondary-foreground">
                                                     {tag}
@@ -335,7 +335,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-2">
-                                            {photoData.captions.map((caption) => (
+                                            {photoData.captions.map((caption: string) => (
                                                 <Textarea
                                                     key={caption}
                                                     value={caption}
@@ -391,7 +391,8 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                             {t('hoverFaceHint')}
                                         </p>
                                           <div className="space-y-2">
-                                                {photoData.faces.map((face, index) => {
+                                                {photoData.faces.map((face: FaceDto, index: number) => {
+                                                if (face.id === undefined) return null;
                                                 return (
                                                     <FacePersonSelector
                                                         key={face.id}
@@ -402,7 +403,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                                           onChange={(personId) => {
                                                               void updateFace({
                                                                   data: {
-                                                                      faceId: face.id,
+                                                                      faceId: face.id!,
                                                                       personId: personId ?? -1,
                                                                   },
                                                               });

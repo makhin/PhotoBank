@@ -1,3 +1,4 @@
+/// <reference path="./msw.d.ts" />
 import { getAuthMock } from '@photobank/shared/api/photobank/auth/auth.msw';
 import { getFacesMock } from '@photobank/shared/api/photobank/faces/faces.msw';
 import { getPhotosMock } from '@photobank/shared/api/photobank/photos/photos.msw';
