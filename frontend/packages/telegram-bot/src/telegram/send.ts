@@ -15,6 +15,9 @@ function buildCaption(p: PhotoItemDto): string {
 
 // Send a single photo with cached file_id
 export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
+  if (!ctx.chat) {
+    throw new Error('Chat not found');
+  }
   const cached = getFileId(p.id);
   try {
     const message = (await withTelegramRetry(() =>
@@ -63,6 +66,9 @@ function chunk<T>(arr: T[], size: number): T[][] {
 
 // Send album (media group) with cached file_id
 export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
+  if (!ctx.chat) {
+    throw new Error('Chat not found');
+  }
   const groups = chunk(photos, 10); // Telegram limit
     const results: Message[] = [];
 
@@ -84,7 +90,7 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
       )) as Message.PhotoMessage[];
       // Save file_id for all items where it appears
       msgs.forEach((m, i) => {
-        const p = group[i];
+        const p = group[i]!;
         const id = m.photo?.at(-1)?.file_id;
         if (id) setFileId(p.id, id);
       });

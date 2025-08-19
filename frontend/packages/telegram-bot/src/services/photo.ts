@@ -11,7 +11,7 @@ export async function searchPhotos(
   filter: FilterDto & { top?: number; skip?: number },
 ) {
   try {
-    return await photosSearchPhotos(filter, ctx);
+    return await photosSearchPhotos(filter as FilterDto, ctx);
   } catch (err) {
     handleServiceError(err);
     throw err;

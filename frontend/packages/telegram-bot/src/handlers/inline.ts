@@ -26,7 +26,7 @@ bot.on('inline_query', async (ctx: MyContext) => {
         cache_time: 2,
         switch_pm_text: ctx.t('deeplink-not-linked'),
         switch_pm_parameter: 'link',
-      },
+      } as any,
     );
     return;
   }
