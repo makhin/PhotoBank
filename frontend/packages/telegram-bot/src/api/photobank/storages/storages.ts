@@ -11,17 +11,15 @@ import type {
 import { photobankAxios } from '../../axios-instance';
 
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
 
   export const getStorages = () => {
 const storagesGetAll = (
     
- options?: SecondParameter<typeof photobankAxios>,) => {
+ ) => {
       return photobankAxios<StorageDto[]>(
       {url: `/storages`, method: 'GET'
     },
-      options);
+      );
     }
   return {storagesGetAll}};
 

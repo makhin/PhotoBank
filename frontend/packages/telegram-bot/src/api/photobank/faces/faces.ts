@@ -11,19 +11,17 @@ import type {
 import { photobankAxios } from '../../axios-instance';
 
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
 
   export const getFaces = () => {
 const facesUpdate = (
     updateFaceDto: UpdateFaceDto,
- options?: SecondParameter<typeof photobankAxios>,) => {
+ ) => {
       return photobankAxios<null>(
       {url: `/faces`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateFaceDto
     },
-      options);
+      );
     }
   return {facesUpdate}};
 
