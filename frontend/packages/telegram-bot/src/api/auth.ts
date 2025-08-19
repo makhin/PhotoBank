@@ -1,8 +1,10 @@
 import { configureApi, customFetcher } from '@photobank/shared/api/photobank';
 
+import { BOT_SERVICE_KEY } from '../config';
+
 configureApi(process.env.API_BASE_URL ?? '');
 
-const serviceKey = process.env.BOT_SERVICE_KEY ?? '';
+const serviceKey = BOT_SERVICE_KEY ?? '';
 
 type ExchangeBody = { telegramUserId: number; username: string | null };
 
