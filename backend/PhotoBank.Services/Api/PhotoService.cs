@@ -12,6 +12,7 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.ViewModel.Dto;
 using PhotoBank.Services;
+using PhotoBank.AccessControl;
 using System.IO;
 
 namespace PhotoBank.Services.Api;
@@ -40,6 +41,7 @@ public class PhotoService : IPhotoService
     private readonly IMemoryCache _cache;
     private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
     private readonly Lazy<Task<IReadOnlyList<PathDto>>> _paths;
+    private readonly ICurrentUser _currentUser;
 
     private static readonly MemoryCacheEntryOptions CacheOptions = new()
     {
@@ -55,7 +57,8 @@ public class PhotoService : IPhotoService
         IRepository<Storage> storageRepository,
         IRepository<Tag> tagRepository,
         IMapper mapper,
-        IMemoryCache cache)
+        IMemoryCache cache,
+        ICurrentUser currentUser)
     {
         _db = db;
         _photoRepository = photoRepository;
@@ -64,6 +67,7 @@ public class PhotoService : IPhotoService
         _storageRepository = storageRepository;
         _mapper = mapper;
         _cache = cache;
+        _currentUser = currentUser;
         _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
             GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
                 .AsNoTracking()
@@ -144,9 +148,54 @@ public class PhotoService : IPhotoService
         return query;
     }
 
+    private IQueryable<Photo> ApplyAccessControl(IQueryable<Photo> query)
+    {
+        if (_currentUser.IsAdmin) return query;
+
+        if (_currentUser.AllowedStorageIds.Count > 0)
+        {
+            var storages = _currentUser.AllowedStorageIds.ToList();
+            query = query.Where(p => storages.Contains(p.StorageId));
+        }
+        else
+        {
+            // no access to any storage
+            return query.Where(p => false);
+        }
+
+        if (_currentUser.AllowedDateRanges.Count > 0)
+        {
+            var ranges = _currentUser.AllowedDateRanges
+                .Select(r => new { From = r.From.ToDateTime(TimeOnly.MinValue), To = r.To.ToDateTime(TimeOnly.MaxValue) })
+                .ToList();
+            query = query.Where(p => p.TakenDate.HasValue && ranges.Any(r => p.TakenDate.Value >= r.From && p.TakenDate.Value <= r.To));
+        }
+
+        if (_currentUser.AllowedPersonGroupIds.Count > 0)
+        {
+            var allowedGroups = _currentUser.AllowedPersonGroupIds.ToList();
+            var faces = from f in _db.Faces
+                        where f.PersonId != null
+                        from pg in f.Person.PersonGroups
+                        select new { f.PhotoId, GroupId = pg.Id };
+
+            query = query.Where(p =>
+                !faces.Any(f => f.PhotoId == p.Id) ||
+                faces.Any(f => f.PhotoId == p.Id && allowedGroups.Contains(f.GroupId)));
+        }
+
+        if (!_currentUser.CanSeeNsfw)
+        {
+            query = query.Where(p => !p.IsAdultContent && !p.IsRacyContent);
+        }
+
+        return query;
+    }
+
     public async Task<PageResponse<PhotoItemDto>> GetAllPhotosAsync(FilterDto filter)
     {
         var query = ApplyFilter(_photoRepository.GetAll().AsNoTracking().AsSplitQuery(), filter);
+        query = ApplyAccessControl(query);
 
         // Execute the count query first
         var count = await query.CountAsync();
@@ -174,13 +223,32 @@ public class PhotoService : IPhotoService
     public async Task<PhotoDto> GetPhotoAsync(int id)
     {
         var photo = await CompiledQueries.PhotoById(_db, id);
+        if (photo == null) return null;
+
+        var query = ApplyAccessControl(_db.Photos.Where(p => p.Id == id));
+        var hasAccess = await query.AnyAsync();
+        if (!hasAccess) return null;
+
         return _mapper.Map<Photo, PhotoDto>(photo);
     }
 
     public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync()
     {
-        return await _personRepository.GetAll()
-            .AsNoTracking()
+        var query = _personRepository.GetAll().AsNoTracking();
+        if (!_currentUser.IsAdmin)
+        {
+            if (_currentUser.AllowedPersonGroupIds.Count > 0)
+            {
+                var groups = _currentUser.AllowedPersonGroupIds.ToList();
+                query = query.Where(p => p.PersonGroups.Any(pg => groups.Contains(pg.Id)));
+            }
+            else
+            {
+                return Enumerable.Empty<PersonDto>();
+            }
+        }
+
+        return await query
             .OrderBy(p => p.Name)
             .ThenBy(p => p.Id)
             .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
@@ -191,8 +259,21 @@ public class PhotoService : IPhotoService
 
     public async Task<IEnumerable<StorageDto>> GetAllStoragesAsync()
     {
-        return await _storageRepository.GetAll()
-            .AsNoTracking()
+        var query = _storageRepository.GetAll().AsNoTracking();
+        if (!_currentUser.IsAdmin)
+        {
+            if (_currentUser.AllowedStorageIds.Count > 0)
+            {
+                var storages = _currentUser.AllowedStorageIds.ToList();
+                query = query.Where(s => storages.Contains(s.Id));
+            }
+            else
+            {
+                return Enumerable.Empty<StorageDto>();
+            }
+        }
+
+        return await query
             .OrderBy(p => p.Name)
             .ThenBy(p => p.Id)
             .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
