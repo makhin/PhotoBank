@@ -38,5 +38,6 @@ export const firstNWords = (sentence: string, count: number): string => {
 };
 
 export { useIsAdmin } from './hooks/useIsAdmin';
+export { useCanSeeNsfw } from './hooks/useCanSeeNsfw';
 export { getPlaceByGeoPoint } from './utils/geocode';
 export { uploadPhotosAdapter } from './adapters/photos-upload.adapter';
