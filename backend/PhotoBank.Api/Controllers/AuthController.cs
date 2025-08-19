@@ -14,7 +14,7 @@ using System.Security.Claims;
 
 namespace PhotoBank.Api.Controllers;
 
-[Route("api/[controller]")]
+[Route("[controller]")]
 [ApiController]
 public class AuthController(
     UserManager<ApplicationUser> userManager,

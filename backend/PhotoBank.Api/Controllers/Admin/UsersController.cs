@@ -8,7 +8,7 @@ using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.Api.Controllers.Admin;
 
-[Route("api/admin/[controller]")]
+[Route("admin/[controller]")]
 [ApiController]
 [Authorize(Roles = "Admin")]
 public class UsersController(UserManager<ApplicationUser> userManager) : ControllerBase

@@ -6,7 +6,7 @@ using PhotoBank.AccessControl;
 namespace PhotoBank.Api.Controllers.Admin;
 
 [ApiController]
-[Route("api/admin/access-profiles")]
+[Route("admin/access-profiles")]
 [Authorize(Roles = "Admin")]
 public class AdminAccessProfilesController : ControllerBase
 {
