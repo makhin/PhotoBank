@@ -21,6 +21,7 @@ using HealthChecks.UI.Client;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using System.Text.Json.Serialization;
+using PhotoBank.Api.Swagger;
 using PhotoBank.Api.Validators;
 
 namespace PhotoBank.Api
@@ -164,6 +165,7 @@ namespace PhotoBank.Api
 
                     return null;
                 });
+                c.DocumentFilter<ServersDocumentFilter>();
             });
 
             builder.Services.AddFaceRecognition(builder.Configuration);
