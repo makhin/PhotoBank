@@ -80,7 +80,7 @@ public sealed class BlobMigrationHostedService : IHostedService
                    OR (p.Thumbnail IS NOT NULL AND (p.S3Key_Thumbnail IS NULL OR p.S3Key_Thumbnail = ''))
                 ORDER BY p.Id
                 """, _opt.BatchSize
-            ).AsNoTracking().ToListAsync(ct);
+            ).ToListAsync(ct);
         }
 
         _log.LogInformation("Photos to process: {Count}", ids.Count);
@@ -122,13 +122,13 @@ public sealed class BlobMigrationHostedService : IHostedService
             """
             SELECT CASE WHEN p.Preview IS NOT NULL AND (p.S3Key_Preview IS NULL OR p.S3Key_Preview='') THEN 1 ELSE 0 END
             FROM Photos p WITH (NOLOCK) WHERE p.Id = {0}
-            """, id).AsNoTracking().FirstOrDefaultAsync(ct) == 1;
+            """, id).FirstOrDefaultAsync(ct) == 1;
 
         var needThumb = await db.Database.SqlQueryRaw<int>(
             """
             SELECT CASE WHEN p.Thumbnail IS NOT NULL AND (p.S3Key_Thumbnail IS NULL OR p.S3Key_Thumbnail='') THEN 1 ELSE 0 END
             FROM Photos p WITH (NOLOCK) WHERE p.Id = {0}
-            """, id).AsNoTracking().FirstOrDefaultAsync(ct) == 1;
+            """, id).FirstOrDefaultAsync(ct) == 1;
 
         if (!needPreview && !needThumb) return (false, true);
 
@@ -194,7 +194,7 @@ public sealed class BlobMigrationHostedService : IHostedService
                 WHERE f.Image IS NOT NULL AND (f.S3Key_Image IS NULL OR f.S3Key_Image = '')
                 ORDER BY f.Id
                 """, _opt.BatchSize
-            ).AsNoTracking().ToListAsync(ct);
+            ).ToListAsync(ct);
         }
 
         _log.LogInformation("Faces to process: {Count}", ids.Count);
@@ -235,7 +235,7 @@ public sealed class BlobMigrationHostedService : IHostedService
             """
             SELECT CASE WHEN f.Image IS NOT NULL AND (f.S3Key_Image IS NULL OR f.S3Key_Image='') THEN 1 ELSE 0 END
             FROM Faces f WITH (NOLOCK) WHERE f.Id = {0}
-            """, id).AsNoTracking().FirstOrDefaultAsync(ct) == 1;
+            """, id).FirstOrDefaultAsync(ct) == 1;
 
         if (!need) return (false, true);
 

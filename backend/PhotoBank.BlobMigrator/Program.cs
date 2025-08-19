@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
@@ -43,7 +46,6 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
 
 // 6) Ограничения ресурсов для Magick.NET (безопасные лимиты по умолчанию — при необходимости поднимите)
 ResourceLimits.Memory = 256 * 1024 * 1024; // 256 MB
-ResourceLimits.Map    = 512 * 1024 * 1024; // 512 MB
 if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
     // На Linux иногда полезно ограничить ещё и Disk, чтобы Magick не лез во временный swap-файл.
