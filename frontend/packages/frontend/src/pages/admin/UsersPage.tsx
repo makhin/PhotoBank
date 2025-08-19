@@ -49,7 +49,7 @@ function UserEditor({ user, onSave }: UserEditorProps) {
         { }
         <form
           onSubmit={(e) => {
-            void form.handleSubmit((d) => onSave(user.id!, d))(e);
+            void form.handleSubmit((d) => onSave(user.id, d))(e);
           }}
           className="space-y-4"
         >
