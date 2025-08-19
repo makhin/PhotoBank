@@ -3,7 +3,7 @@
 Проект состоит из нескольких модулей:
 
 - **PhotoBank.Api** – ASP.NET Core веб‑API.
-- **frontend** – monorepo на Node.js (frontend, telegram‑bot и общие библиотеки).
+- **frontend** – monorepo на Node.js с приложением на TypeScript/React, Redux, Tailwind CSS, shadcn/ui и тестами на Vitest (frontend, telegram‑bot и общие библиотеки).
 - **PhotoBank.MAUI.Blazor** – кросс‑платформенное приложение на .NET MAUI.
 - **Photobank.ServerBlazorApp** – серверное Blazor‑приложение.
 - **PhotoBank.Console** – консольные утилиты.
@@ -40,6 +40,8 @@ dotnet swagger tofile --output swagger.json PhotoBank.Api/bin/Debug/net9.0/Photo
 ```
 
 ### Фронтенд
+
+Фронтенд написан на TypeScript и React, использует Redux для управления состоянием, Tailwind CSS и shadcn/ui для оформления, а тесты выполняются на Vitest.
 
 ```bash
 cd frontend
@@ -108,7 +110,7 @@ dotnet test PhotoBank.sln
 dotnet test PhotoBank.Backend.sln
 ```
 
-Для пакетов Node.js:
+Для пакетов Node.js (Vitest):
 
 ```bash
 cd frontend
@@ -133,7 +135,7 @@ docker compose up --build
 The project is composed of several modules:
 
 - **PhotoBank.Api** – ASP.NET Core web API.
-- **frontend** – Node.js monorepo (frontend, Telegram bot and shared libraries).
+- **frontend** – Node.js monorepo with a TypeScript/React app using Redux, Tailwind CSS and shadcn/ui, tested with Vitest (frontend, Telegram bot and shared libraries).
 - **PhotoBank.MAUI.Blazor** – cross-platform .NET MAUI app.
 - **Photobank.ServerBlazorApp** – server-side Blazor application.
 - **PhotoBank.Console** – command-line utilities.
@@ -168,6 +170,8 @@ dotnet swagger tofile --output swagger.json PhotoBank.Api/bin/Debug/net9.0/Photo
 ```
 
 ### Frontend
+
+The frontend is built with TypeScript and React, uses Redux for state management, Tailwind CSS and shadcn/ui for styling, and Vitest for testing.
 
 ```bash
 cd frontend
@@ -236,7 +240,7 @@ dotnet test PhotoBank.sln
 dotnet test PhotoBank.Backend.sln
 ```
 
-For Node.js packages:
+For Node.js packages (Vitest):
 
 ```bash
 cd frontend
