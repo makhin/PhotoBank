@@ -642,4 +642,81 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions );
     }
+    export type adminAccessProfilesUnassignRoleResponse200 = {
+  data: null
+  status: 200
+}
+    
+export type adminAccessProfilesUnassignRoleResponseComposite = adminAccessProfilesUnassignRoleResponse200;
+    
+export type adminAccessProfilesUnassignRoleResponse = adminAccessProfilesUnassignRoleResponseComposite & {
+  headers: Headers;
+}
+
+export const getAdminAccessProfilesUnassignRoleUrl = (id: number,
+    roleId: string,) => {
+
+
+  
+
+  return `/admin/access-profiles/${id}/assign-role/${roleId}`
+}
+
+export const adminAccessProfilesUnassignRole = async (id: number,
+    roleId: string, options?: RequestInit): Promise<adminAccessProfilesUnassignRoleResponse> => {
+  
+  return customFetcher<adminAccessProfilesUnassignRoleResponse>(getAdminAccessProfilesUnassignRoleUrl(id,roleId),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+
+export const getAdminAccessProfilesUnassignRoleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>, TError,{id: number;roleId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>, TError,{id: number;roleId: string}, TContext> => {
+
+const mutationKey = ['adminAccessProfilesUnassignRole'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>, {id: number;roleId: string}> = (props) => {
+          const {id,roleId} = props ?? {};
+
+          return  adminAccessProfilesUnassignRole(id,roleId,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminAccessProfilesUnassignRoleMutationResult = NonNullable<Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>>
+    
+    export type AdminAccessProfilesUnassignRoleMutationError = unknown
+
+    export const useAdminAccessProfilesUnassignRole = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>, TError,{id: number;roleId: string}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>,
+        TError,
+        {id: number;roleId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminAccessProfilesUnassignRoleMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
     

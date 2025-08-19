@@ -20,7 +20,10 @@ import type {
 
 import type {
   ClaimDto,
+  CreateUserDto,
   ProblemDetails,
+  ResetPasswordDto,
+  SetRolesDto,
   UpdateUserDto,
   UserWithClaimsDto
 } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
@@ -110,7 +113,88 @@ export function useUsersGetAll<TData = Awaited<ReturnType<typeof usersGetAll>>, 
 
 
 
-export type usersUpdateResponse200 = {
+export type usersCreateResponse201 = {
+  data: UserWithClaimsDto
+  status: 201
+}
+
+export type usersCreateResponse400 = {
+  data: ProblemDetails
+  status: 400
+}
+    
+export type usersCreateResponseComposite = usersCreateResponse201 | usersCreateResponse400;
+    
+export type usersCreateResponse = usersCreateResponseComposite & {
+  headers: Headers;
+}
+
+export const getUsersCreateUrl = () => {
+
+
+  
+
+  return `/admin/users`
+}
+
+export const usersCreate = async (createUserDto: CreateUserDto, options?: RequestInit): Promise<usersCreateResponse> => {
+  
+  return customFetcher<usersCreateResponse>(getUsersCreateUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createUserDto,)
+  }
+);}
+
+
+
+
+export const getUsersCreateMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersCreate>>, TError,{data: CreateUserDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof usersCreate>>, TError,{data: CreateUserDto}, TContext> => {
+
+const mutationKey = ['usersCreate'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersCreate>>, {data: CreateUserDto}> = (props) => {
+          const {data} = props ?? {};
+
+          return  usersCreate(data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersCreateMutationResult = NonNullable<Awaited<ReturnType<typeof usersCreate>>>
+    export type UsersCreateMutationBody = CreateUserDto
+    export type UsersCreateMutationError = ProblemDetails
+
+    export const useUsersCreate = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersCreate>>, TError,{data: CreateUserDto}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof usersCreate>>,
+        TError,
+        {data: CreateUserDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUsersCreateMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    export type usersUpdateResponse200 = {
   data: null
   status: 200
 }
@@ -194,6 +278,168 @@ const {mutation: mutationOptions} = options ?
       > => {
 
       const mutationOptions = getUsersUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    export type usersDeleteResponse204 = {
+  data: null
+  status: 204
+}
+
+export type usersDeleteResponse404 = {
+  data: ProblemDetails
+  status: 404
+}
+    
+export type usersDeleteResponseComposite = usersDeleteResponse204 | usersDeleteResponse404;
+    
+export type usersDeleteResponse = usersDeleteResponseComposite & {
+  headers: Headers;
+}
+
+export const getUsersDeleteUrl = (id: string,) => {
+
+
+  
+
+  return `/admin/users/${id}`
+}
+
+export const usersDelete = async (id: string, options?: RequestInit): Promise<usersDeleteResponse> => {
+  
+  return customFetcher<usersDeleteResponse>(getUsersDeleteUrl(id),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+
+export const getUsersDeleteMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersDelete>>, TError,{id: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof usersDelete>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['usersDelete'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersDelete>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  usersDelete(id,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof usersDelete>>>
+    
+    export type UsersDeleteMutationError = ProblemDetails
+
+    export const useUsersDelete = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersDelete>>, TError,{id: string}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof usersDelete>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getUsersDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    export type usersResetPasswordResponse204 = {
+  data: null
+  status: 204
+}
+
+export type usersResetPasswordResponse404 = {
+  data: ProblemDetails
+  status: 404
+}
+    
+export type usersResetPasswordResponseComposite = usersResetPasswordResponse204 | usersResetPasswordResponse404;
+    
+export type usersResetPasswordResponse = usersResetPasswordResponseComposite & {
+  headers: Headers;
+}
+
+export const getUsersResetPasswordUrl = (id: string,) => {
+
+
+  
+
+  return `/admin/users/${id}/reset-password`
+}
+
+export const usersResetPassword = async (id: string,
+    resetPasswordDto: ResetPasswordDto, options?: RequestInit): Promise<usersResetPasswordResponse> => {
+  
+  return customFetcher<usersResetPasswordResponse>(getUsersResetPasswordUrl(id),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      resetPasswordDto,)
+  }
+);}
+
+
+
+
+export const getUsersResetPasswordMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersResetPassword>>, TError,{id: string;data: ResetPasswordDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof usersResetPassword>>, TError,{id: string;data: ResetPasswordDto}, TContext> => {
+
+const mutationKey = ['usersResetPassword'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersResetPassword>>, {id: string;data: ResetPasswordDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  usersResetPassword(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof usersResetPassword>>>
+    export type UsersResetPasswordMutationBody = ResetPasswordDto
+    export type UsersResetPasswordMutationError = ProblemDetails
+
+    export const useUsersResetPassword = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersResetPassword>>, TError,{id: string;data: ResetPasswordDto}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof usersResetPassword>>,
+        TError,
+        {id: string;data: ResetPasswordDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUsersResetPasswordMutationOptions(options);
 
       return useMutation(mutationOptions );
     }
@@ -281,6 +527,88 @@ const {mutation: mutationOptions} = options ?
       > => {
 
       const mutationOptions = getUsersSetClaimsMutationOptions(options);
+
+      return useMutation(mutationOptions );
+    }
+    export type usersSetRolesResponse204 = {
+  data: null
+  status: 204
+}
+
+export type usersSetRolesResponse404 = {
+  data: ProblemDetails
+  status: 404
+}
+    
+export type usersSetRolesResponseComposite = usersSetRolesResponse204 | usersSetRolesResponse404;
+    
+export type usersSetRolesResponse = usersSetRolesResponseComposite & {
+  headers: Headers;
+}
+
+export const getUsersSetRolesUrl = (id: string,) => {
+
+
+  
+
+  return `/admin/users/${id}/roles`
+}
+
+export const usersSetRoles = async (id: string,
+    setRolesDto: SetRolesDto, options?: RequestInit): Promise<usersSetRolesResponse> => {
+  
+  return customFetcher<usersSetRolesResponse>(getUsersSetRolesUrl(id),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      setRolesDto,)
+  }
+);}
+
+
+
+
+export const getUsersSetRolesMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersSetRoles>>, TError,{id: string;data: SetRolesDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof usersSetRoles>>, TError,{id: string;data: SetRolesDto}, TContext> => {
+
+const mutationKey = ['usersSetRoles'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersSetRoles>>, {id: string;data: SetRolesDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  usersSetRoles(id,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersSetRolesMutationResult = NonNullable<Awaited<ReturnType<typeof usersSetRoles>>>
+    export type UsersSetRolesMutationBody = SetRolesDto
+    export type UsersSetRolesMutationError = ProblemDetails
+
+    export const useUsersSetRoles = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersSetRoles>>, TError,{id: string;data: SetRolesDto}, TContext>, }
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof usersSetRoles>>,
+        TError,
+        {id: string;data: SetRolesDto},
+        TContext
+      > => {
+
+      const mutationOptions = getUsersSetRolesMutationOptions(options);
 
       return useMutation(mutationOptions );
     }

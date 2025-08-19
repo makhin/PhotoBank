@@ -51,6 +51,17 @@ export interface ClaimDto {
   value: string | null;
 }
 
+export interface CreateUserDto {
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  password: string | null;
+  /** @nullable */
+  phoneNumber?: string | null;
+  /** @nullable */
+  roles?: string[] | null;
+}
+
 export interface FaceBoxDto {
   top: number;
   left: number;
@@ -211,11 +222,21 @@ export interface RegisterRequestDto {
   password: string | null;
 }
 
+export interface ResetPasswordDto {
+  /** @nullable */
+  newPassword: string | null;
+}
+
 export interface RoleDto {
   /** @nullable */
   name: string | null;
   /** @nullable */
   claims?: ClaimDto[] | null;
+}
+
+export interface SetRolesDto {
+  /** @nullable */
+  roles?: string[] | null;
 }
 
 export interface StorageDto {

@@ -103,6 +103,16 @@ export const getAdminAccessProfilesAssignRoleMockHandler = (overrideResponse?: n
       })
   })
 }
+
+export const getAdminAccessProfilesUnassignRoleMockHandler = (overrideResponse?: null | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<null> | null)) => {
+  return http.delete('/api/admin/access-profiles/:id/assign-role/:roleId', async (info) => {await delay(1000);
+  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+    return new HttpResponse(null,
+      { status: 200,
+        
+      })
+  })
+}
 export const getAdminAccessProfilesMock = () => [
   getAdminAccessProfilesListMockHandler(),
   getAdminAccessProfilesCreateMockHandler(),
@@ -111,5 +121,6 @@ export const getAdminAccessProfilesMock = () => [
   getAdminAccessProfilesDeleteMockHandler(),
   getAdminAccessProfilesAssignUserMockHandler(),
   getAdminAccessProfilesUnassignUserMockHandler(),
-  getAdminAccessProfilesAssignRoleMockHandler()
+  getAdminAccessProfilesAssignRoleMockHandler(),
+  getAdminAccessProfilesUnassignRoleMockHandler()
 ]

@@ -6,6 +6,9 @@
  */
 import type {
   ClaimDto,
+  CreateUserDto,
+  ResetPasswordDto,
+  SetRolesDto,
   UpdateUserDto,
   UserWithClaimsDto
 } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
@@ -13,46 +16,88 @@ import type {
 import { photobankAxios } from '../../axios-instance';
 
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
 
   export const getUsers = () => {
 const usersGetAll = (
     
- options?: SecondParameter<typeof photobankAxios>,) => {
+ ) => {
       return photobankAxios<UserWithClaimsDto[]>(
       {url: `/admin/users`, method: 'GET'
     },
-      options);
+      );
+    }
+  const usersCreate = (
+    createUserDto: CreateUserDto,
+ ) => {
+      return photobankAxios<UserWithClaimsDto>(
+      {url: `/admin/users`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createUserDto
+    },
+      );
     }
   const usersUpdate = (
     id: string,
     updateUserDto: UpdateUserDto,
- options?: SecondParameter<typeof photobankAxios>,) => {
+ ) => {
       return photobankAxios<null>(
       {url: `/admin/users/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateUserDto
     },
-      options);
+      );
+    }
+  const usersDelete = (
+    id: string,
+ ) => {
+      return photobankAxios<null>(
+      {url: `/admin/users/${id}`, method: 'DELETE'
+    },
+      );
+    }
+  const usersResetPassword = (
+    id: string,
+    resetPasswordDto: ResetPasswordDto,
+ ) => {
+      return photobankAxios<null>(
+      {url: `/admin/users/${id}/reset-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: resetPasswordDto
+    },
+      );
     }
   const usersSetClaims = (
     id: string,
     claimDto: ClaimDto[],
- options?: SecondParameter<typeof photobankAxios>,) => {
+ ) => {
       return photobankAxios<null>(
       {url: `/admin/users/${id}/claims`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: claimDto
     },
-      options);
+      );
     }
-  return {usersGetAll,usersUpdate,usersSetClaims}};
+  const usersSetRoles = (
+    id: string,
+    setRolesDto: SetRolesDto,
+ ) => {
+      return photobankAxios<null>(
+      {url: `/admin/users/${id}/roles`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setRolesDto
+    },
+      );
+    }
+  return {usersGetAll,usersCreate,usersUpdate,usersDelete,usersResetPassword,usersSetClaims,usersSetRoles}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
     type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 export type UsersGetAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersGetAll']>>>
+export type UsersCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersCreate']>>>
 export type UsersUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersUpdate']>>>
+export type UsersDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersDelete']>>>
+export type UsersResetPasswordResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersResetPassword']>>>
 export type UsersSetClaimsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersSetClaims']>>>
+export type UsersSetRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersSetRoles']>>>
