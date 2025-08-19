@@ -40,7 +40,7 @@ export async function customFetcher<T>(
 
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const response = await fetch(`${baseUrl}${url}`, { ...options, headers, signal });
+        const response = await fetch(`${baseUrl}${url}`, { ...options, headers, signal: signal ?? null });
         const data = await response.json().catch(() => undefined);
 
         if (response.ok) {
