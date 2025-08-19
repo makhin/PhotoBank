@@ -17,3 +17,5 @@ export const getPhotobankMock = () => [
   ...getTagsMock(),
   ...getUsersMock(),
 ];
+
+export const handlers = getPhotobankMock();
