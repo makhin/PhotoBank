@@ -4,8 +4,8 @@ import { photosSearchPhotos } from '@photobank/shared/api/photobank';
 import type {
   FilterDto,
   photosSearchPhotosResponse,
+  PhotoItemDto,
 } from '@photobank/shared/api/photobank';
-import type { PhotoItemDto } from '@photobank/shared/api/photobank/model/photoItemDto';
 
 export const useInfinitePhotos = (filter: FilterDto) => {
   const pageSize = filter.pageSize ?? 10;
@@ -14,7 +14,12 @@ export const useInfinitePhotos = (filter: FilterDto) => {
     queryKey: ['photos', filter],
     initialPageParam: 1,
     queryFn: ({ pageParam }) =>
-      photosSearchPhotos({ ...filter, page: pageParam as number, pageSize }),
+      photosSearchPhotos({
+        ...filter,
+        thisDay: filter.thisDay ?? undefined,
+        page: pageParam as number,
+        pageSize,
+      }),
     getNextPageParam: (lastPage, pages) => {
       const total = lastPage.status === 200 ? lastPage.data.totalCount ?? 0 : 0;
       const loaded = pages.reduce((sum, p) => {

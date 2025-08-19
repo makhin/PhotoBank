@@ -1,7 +1,7 @@
 import {
   configureApi as setBaseUrl,
   configureApiAuth,
-} from '@photobank/shared/api/photobank/fetcher';
+} from '@photobank/shared/api/photobank';
 import { getAuthToken } from '@photobank/shared/auth';
 
 export function configureApi(baseUrl: string) {

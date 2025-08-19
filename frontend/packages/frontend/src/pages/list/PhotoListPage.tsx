@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import type { FilterDto } from '@photobank/shared/api/photobank';
-import type { PhotoItemDto } from '@photobank/shared/api/photobank/model/photoItemDto';
+import type { FilterDto, PhotoItemDto } from '@photobank/shared/api/photobank';
 import { useTranslation } from 'react-i18next';
 
 import { useInfinitePhotos } from '@/features/photo/useInfinitePhotos';
@@ -187,7 +186,7 @@ const PhotoListPage = () => {
     if (!element || !root) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        if (entry && entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       },

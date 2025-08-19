@@ -6,7 +6,7 @@ import { usePhotoVirtual } from './usePhotoVirtual';
 
 interface VirtualPhotoListProps {
   photos: PhotoItemDto[];
-  parentRef: React.RefObject<HTMLElement>;
+  parentRef: React.RefObject<HTMLElement | null>;
   renderRow?: (photo: PhotoItemDto) => React.ReactNode;
   estimateSize?: (index: number) => number;
 }
@@ -40,6 +40,7 @@ const VirtualPhotoList = ({
     >
       {items.map((item) => {
         const photo = photos[item.index];
+        if (!photo) return null;
         return (
           <div
             key={photo.id}

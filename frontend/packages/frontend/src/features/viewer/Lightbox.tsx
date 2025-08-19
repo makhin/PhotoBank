@@ -29,6 +29,7 @@ const Lightbox = () => {
 
   if (!isOpen) return null;
   const item = items[index];
+  if (!item) return null;
 
   return createPortal(
     <Dialog open={isOpen} onOpenChange={(o) => !o && close()}>
