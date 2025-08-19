@@ -15,8 +15,7 @@ export const aiFilters = new Map<string, FilterDto>();
 export function parseAiPrompt(text?: string): string | null {
   if (!text) return null;
   const match = text.match(/^\/ai\s+([\s\S]+)/); // capture anything after /ai
-  if (!match) return null;
-  return match[1].trim();
+  return match?.[1]?.trim() ?? null;
 }
 
 export async function sendAiPage(

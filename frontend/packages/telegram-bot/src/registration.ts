@@ -2,6 +2,7 @@ import { ProblemDetailsError } from '@photobank/shared/types/problem';
 
 import { ensureUserAccessToken } from './auth';
 import type { MyContext } from './i18n';
+import type { MiddlewareFn } from 'grammy';
 
 export async function ensureRegistered(ctx: MyContext): Promise<boolean> {
   try {
@@ -17,10 +18,11 @@ export async function ensureRegistered(ctx: MyContext): Promise<boolean> {
   }
 }
 
-export function withRegistered(handler: (ctx: MyContext) => Promise<void>) {
-  return async (ctx: MyContext) => {
-    if (await ensureRegistered(ctx)) {
+export function withRegistered<T extends MyContext>(handler: (ctx: T) => Promise<void>): MiddlewareFn<T> {
+  return async (ctx, next) => {
+    if (await ensureRegistered(ctx as MyContext)) {
       await handler(ctx);
     }
+    return next();
   };
 }

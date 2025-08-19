@@ -26,12 +26,15 @@ export async function subscribeCommand(ctx: MyContext) {
     await ctx.reply(ctx.t('chat-undetermined'));
     return;
   }
-  await updateUser(ctx, { telegramSendTimeUtc: `${time}:00` });
-  subscriptions.set(ctx.chat.id, { time, locale: ctx.i18n.locale() });
+  await updateUser(ctx, { telegramSendTimeUtc: `${time}:00` } as unknown as any);
+  const locale = typeof (ctx.i18n as any).locale === 'function'
+    ? (ctx.i18n as any).locale()
+    : await ctx.i18n.getLocale();
+  subscriptions.set(ctx.chat.id, { time, locale });
   await ctx.reply(ctx.t('subscription-confirmed', { time }));
 }
 
-export function initSubscriptionScheduler(bot: Bot) {
+export function initSubscriptionScheduler(bot: Bot<MyContext>) {
   setInterval(() => {
     (async () => {
       const now = new Date();
@@ -41,8 +44,8 @@ export function initSubscriptionScheduler(bot: Bot) {
           const ctxLike = {
             message: { text: "/thisday" },
             reply: (text: string, opts?: Record<string, unknown>) => bot.api.sendMessage(chatId, text, opts),
-            t: (key: string, params?: Record<string, unknown>) => i18n.t(info.locale, key, params),
-            i18n: { locale: () => info.locale } as unknown as MyContext['i18n'],
+            t: (key: string, params?: Record<string, unknown>) => i18n.t(info.locale, key, params as any),
+            i18n: { getLocale: () => info.locale } as unknown as MyContext['i18n'],
           } as unknown as MyContext;
           await sendThisDayPage(ctxLike, 1);
         }

@@ -7,6 +7,7 @@ import {
   type authGetUserResponse,
   type authGetUserRolesResponse,
   type authGetUserClaimsResponse,
+  type authUpdateUserResponse,
   type UpdateUserDto,
 } from '@photobank/shared/api/photobank';
 
@@ -32,6 +33,6 @@ export function getUserClaims(ctx: Context): Promise<authGetUserClaimsResponse> 
 export function updateUser(
   ctx: Context,
   dto: UpdateUserDto,
-): Promise<void> {
+): Promise<authUpdateUserResponse> {
   return authorized(ctx, (options) => authUpdateUser(dto, options));
 }

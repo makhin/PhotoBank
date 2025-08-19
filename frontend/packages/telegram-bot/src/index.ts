@@ -62,7 +62,8 @@ bot.use(async (ctx, next) => {
 });
 
 bot.use(async (ctx, next) => {
-  setDictionariesUser(ctx.from?.id, ctx.i18n.locale());
+  const locale = await ctx.i18n.getLocale();
+  setDictionariesUser(ctx.from?.id, locale);
   await loadDictionaries(ctx);
   await next();
 });
@@ -98,7 +99,7 @@ bot.command("persons", withRegistered(personsCommand));
 bot.command("storages", withRegistered(storagesCommand));
 
 bot.callbackQuery(/^thisday:(\d+)$/, withRegistered(async (ctx) => {
-  if (!ctx.match) {
+  if (!ctx.match || typeof ctx.match === 'string') {
     throw new Error("Callback query match is undefined.");
   }
   const page = parseInt(ctx.match[1], 10);
@@ -107,7 +108,7 @@ bot.callbackQuery(/^thisday:(\d+)$/, withRegistered(async (ctx) => {
 }));
 
 bot.callbackQuery(/^caption:(\d+)$/, withRegistered(async (ctx) => {
-  if (!ctx.match) {
+  if (!ctx.match || typeof ctx.match === 'string') {
     throw new Error("Callback query match is undefined.");
   }
   const id = parseInt(ctx.match[1], 10);
@@ -116,7 +117,7 @@ bot.callbackQuery(/^caption:(\d+)$/, withRegistered(async (ctx) => {
 }));
 
 bot.callbackQuery(tagsCallbackPattern, withRegistered(async (ctx) => {
-  if (!ctx.match) {
+  if (!ctx.match || typeof ctx.match === 'string') {
     throw new Error("Callback query match is undefined.");
   }
   const page = parseInt(ctx.match[1], 10);
@@ -126,7 +127,7 @@ bot.callbackQuery(tagsCallbackPattern, withRegistered(async (ctx) => {
 }));
 
 bot.callbackQuery(personsCallbackPattern, withRegistered(async (ctx) => {
-  if (!ctx.match) {
+  if (!ctx.match || typeof ctx.match === 'string') {
     throw new Error("Callback query match is undefined.");
   }
   const page = parseInt(ctx.match[1], 10);
@@ -136,7 +137,7 @@ bot.callbackQuery(personsCallbackPattern, withRegistered(async (ctx) => {
 }));
 
 bot.callbackQuery(storagesCallbackPattern, withRegistered(async (ctx) => {
-  if (!ctx.match) {
+  if (!ctx.match || typeof ctx.match === 'string') {
     throw new Error("Callback query match is undefined.");
   }
   const page = parseInt(ctx.match[1], 10);
@@ -146,7 +147,7 @@ bot.callbackQuery(storagesCallbackPattern, withRegistered(async (ctx) => {
 }));
 
 bot.callbackQuery(/^search:(\d+):(.+)$/, withRegistered(async (ctx) => {
-  if (!ctx.match) {
+  if (!ctx.match || typeof ctx.match === 'string') {
     throw new Error("Callback query match is undefined.");
   }
   const page = parseInt(ctx.match[1], 10);
@@ -156,7 +157,7 @@ bot.callbackQuery(/^search:(\d+):(.+)$/, withRegistered(async (ctx) => {
 }));
 
 bot.callbackQuery(/^ai:(\d+):([\w-]+)$/, withRegistered(async (ctx) => {
-  if (!ctx.match) {
+  if (!ctx.match || typeof ctx.match === 'string') {
     throw new Error("Callback query match is undefined.");
   }
   const page = parseInt(ctx.match[1], 10);
