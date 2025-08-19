@@ -22,6 +22,6 @@
   <ItemGroup>
     <ProjectReference Include="..\PhotoBank.DbContext\PhotoBank.DbContext.csproj" />
     <ProjectReference Include="..\PhotoBank.Repositories\PhotoBank.Repositories.csproj" />
-    <ProjectReference Include="..\PhotoBank.Services\PhotoBank.Services.csproj" />
+    <ProjectReference Include="..\PhotoBank.Services\PhotoBank.Services.csproj" Aliases="global,ServicesLib" />
   </ItemGroup>
 </Project>
