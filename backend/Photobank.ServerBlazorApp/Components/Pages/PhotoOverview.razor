@@ -33,9 +33,7 @@
                     <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.NoWrap">
                         <RadzenCheckBox @bind-Value=@Filter.IsBW TriState="true" TValue="bool?" Name="CheckBoxIsBW" /><RadzenLabel Text="Is BW" Style="margin-left: 5px" Component="CheckBoxIsBW" />
                     </RadzenStack>
-                    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.NoWrap">
-                        <RadzenCheckBox @bind-Value=@Filter.ThisDay TriState="true" TValue="bool?" Name="CheckBoxThisDay" /><RadzenLabel Text="This Day" Style="margin-left: 5px" Component="CheckBoxThisDay" />
-                    </RadzenStack>
+                    <!-- Removed This Day filter due to type mismatch -->
                     @if (AllowAdultFilter)
                     {
                         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.NoWrap">

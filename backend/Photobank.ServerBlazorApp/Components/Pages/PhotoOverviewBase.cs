@@ -40,7 +40,7 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
                 if (args.Top.HasValue)
                 {
                     Filter.PageSize = args.Top.Value;
-                    Filter.Page = args.Skip / args.Top.Value + 1;
+                    Filter.Page = args.Skip.HasValue ? args.Skip.Value / args.Top.Value + 1 : 1;
                 }
                 var queryResult = await PhotoService.GetAllPhotosAsync(Filter);
                 Count = queryResult.TotalCount;
