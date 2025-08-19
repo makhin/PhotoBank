@@ -31,13 +31,15 @@ const photo = {
   orientation: 1,
   location: { latitude: 10, longitude: 20 },
 };
-vi.mock('@photobank/shared/api/photobank/photos/photos', () => ({
-  usePhotosGetPhoto: () => ({ data: photo, error: undefined }),
-  getPhotosGetPhotoQueryKey: vi.fn(),
-}));
-vi.mock('@photobank/shared/api/photobank', () => ({
-  useFacesUpdate: () => ({ mutateAsync: vi.fn(), isPending: false }),
-}));
+vi.mock('@photobank/shared/api/photobank', async () => {
+  const actual = await vi.importActual<any>('@photobank/shared/api/photobank');
+  return {
+    ...actual,
+    usePhotosGetPhoto: () => ({ data: photo, error: undefined }),
+    getPhotosGetPhotoQueryKey: vi.fn(),
+    useFacesUpdate: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  };
+});
 
 vi.mock('@photobank/shared', async () => {
   const actual = await vi.importActual<any>('@photobank/shared');
