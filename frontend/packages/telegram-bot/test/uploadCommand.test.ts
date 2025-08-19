@@ -3,7 +3,7 @@ import axios from 'axios';
 import * as dict from '../src/dictionaries';
 import * as photoService from '../src/services/photo';
 
-vi.mock('../src/config', () => ({ BOT_TOKEN: 'token' }));
+vi.mock('../src/config', () => ({ BOT_TOKEN: 'token', BOT_SERVICE_KEY: 'key' }));
 
 import { uploadCommand } from '../src/commands/upload';
 import { i18n } from '../src/i18n';
