@@ -32,11 +32,11 @@ public class TokenServiceTests
             UserName = "user"
         };
 
-        var claims = new[] { new Claim("AllowAdultContent", "True") };
+        var claims = new[] { new Claim("TestClaim", "True") };
 
         var token = service.CreateToken(user, false, claims);
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
-        Assert.That(jwt.Claims.Any(c => c.Type == "AllowAdultContent" && c.Value == "True"));
+        Assert.That(jwt.Claims.Any(c => c.Type == "TestClaim" && c.Value == "True"));
     }
 }

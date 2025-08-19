@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
+using PhotoBank.AccessControl;
 using Microsoft.AspNetCore.Identity;
 using PhotoBank.Services;
-using PhotoBank.Api.Middleware;
 using PhotoBank.Services.FaceRecognition;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -21,6 +21,7 @@ using HealthChecks.UI.Client;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using System.Text.Json.Serialization;
+using PhotoBank.Api.Swagger;
 using PhotoBank.Api.Validators;
 
 namespace PhotoBank.Api
@@ -60,6 +61,7 @@ namespace PhotoBank.Api
             });
 
             builder.Services.AddHttpContextAccessor();
+            builder.Services.AddMemoryCache();
 
             builder.Services.AddSingleton<DbTimingInterceptor>();
             builder.Services.AddDbContextPool<PhotoBankDbContext>((sp, options) =>
@@ -85,6 +87,11 @@ namespace PhotoBank.Api
                     });
             });
 
+            builder.Services.AddDbContext<AccessControlDbContext>(opt =>
+            {
+                opt.UseSqlServer(connectionString);
+            });
+
             builder.Services.AddDefaultIdentity<ApplicationUser>()
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<PhotoBankDbContext>();
@@ -108,13 +115,14 @@ namespace PhotoBank.Api
                 };
             });
 
-            builder.Services.AddAuthorizationBuilder()
-                .AddPolicy("AllowToSeeAdultContent", policy => {
-                    policy.RequireClaim("AllowAdultContent", "True");
-                })
-                .AddPolicy("AllowToSeeRacyContent", policy => {
-                    policy.RequireClaim("AllowRacyContent", "True");
-                });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+            });
+
             builder.Services.Configure<RouteOptions>(options =>
             {
                 options.LowercaseUrls = true;
@@ -157,6 +165,7 @@ namespace PhotoBank.Api
 
                     return null;
                 });
+                c.DocumentFilter<ServersDocumentFilter>();
             });
 
             builder.Services.AddFaceRecognition(builder.Configuration);
@@ -168,6 +177,9 @@ namespace PhotoBank.Api
             {
                 cfg.AddProfile<MappingProfile>();
             });
+
+            builder.Services.AddScoped<IEffectiveAccessProvider, EffectiveAccessProvider>();
+            builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
             var app = builder.Build();
 
@@ -238,7 +250,7 @@ namespace PhotoBank.Api
             // Disabled HTTPS redirection to ensure CORS headers are applied
             // correctly during local development when running over HTTP.
             app.UseAuthentication();
-            app.UseMiddleware<ImpersonationMiddleware>();
+            // имперсонификация удалена
             app.UseAuthorization();
 
             app.MapControllers();

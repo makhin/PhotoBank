@@ -105,6 +105,16 @@ export const getAuthGetUserRolesMockHandler = (overrideResponse?: RoleDto[] | ((
       })
   })
 }
+
+export const getAuthGetEffectiveMockHandler = (overrideResponse?: null | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<null> | null)) => {
+  return http.get('/api/auth/debug/effective-access', async (info) => {await delay(1000);
+  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+    return new HttpResponse(null,
+      { status: 200,
+        
+      })
+  })
+}
 export const getAuthMock = () => [
   getAuthLoginMockHandler(),
   getAuthRegisterMockHandler(),
@@ -112,4 +122,5 @@ export const getAuthMock = () => [
   getAuthUpdateUserMockHandler(),
   getAuthTelegramExchangeMockHandler(),
   getAuthGetUserClaimsMockHandler(),
-  getAuthGetUserRolesMockHandler()]
+  getAuthGetUserRolesMockHandler(),
+  getAuthGetEffectiveMockHandler()]

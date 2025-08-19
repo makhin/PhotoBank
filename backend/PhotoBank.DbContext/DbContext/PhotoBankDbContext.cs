@@ -2,6 +2,10 @@
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
+using PhotoBank.AccessControl;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace PhotoBank.DbContext.DbContext
 {
@@ -11,6 +15,8 @@ namespace PhotoBank.DbContext.DbContext
     public class PhotoBankDbContext : IdentityDbContext<ApplicationUser>
     {
         public static readonly ILoggerFactory PhotoBankLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
+
+    private readonly ICurrentUser _user;
 
         public DbSet<Storage> Storages { get; set; }
         public DbSet<Photo> Photos { get; set; }
@@ -27,8 +33,14 @@ namespace PhotoBank.DbContext.DbContext
         public DbSet<PropertyName> PropertyNames { get; set; }
         public DbSet<Enricher> Enrichers { get; set; }
 
+        public PhotoBankDbContext(DbContextOptions<PhotoBankDbContext> options, ICurrentUser user) : base(options)
+        {
+            _user = user;
+        }
+
         public PhotoBankDbContext(DbContextOptions<PhotoBankDbContext> options) : base(options)
         {
+            _user = new DummyCurrentUser();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -153,6 +165,40 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Enricher>()
                 .HasIndex(u => u.Name)
                 .IsUnique();
+
+            // --- Global filter for Photo ---
+            var isAdmin = _user.IsAdmin;
+            var storages = _user.AllowedStorageIds?.ToHashSet() ?? new HashSet<int>();
+            var groups = _user.AllowedPersonGroupIds?.ToHashSet() ?? new HashSet<int>();
+            var ranges = _user.AllowedDateRanges?.ToList() ?? new List<(DateOnly From, DateOnly To)>();
+            var canSeeNsfw = _user.CanSeeNsfw;
+
+            // Storage — only allowed, admin sees all
+            modelBuilder.Entity<Storage>().HasQueryFilter(s =>
+                isAdmin || storages.Contains(s.Id));
+
+            // Person — only from allowed groups, admin sees all
+            modelBuilder.Entity<Person>().HasQueryFilter(p =>
+                isAdmin || p.PersonGroups.Any(pg => groups.Contains(pg.Id)));
+
+            modelBuilder.Entity<Photo>().HasQueryFilter(p =>
+                isAdmin ||
+                (
+                    (storages.Count > 0 && storages.Contains(p.StorageId)) &&
+                    (
+                        groups.Count == 0
+                        || !p.Faces.Any()
+                        || p.Faces.Any(f => f.PersonId != null &&
+                            f.Person.PersonGroups.Any(pg => groups.Contains(pg.Id)))
+                    ) &&
+                    (
+                        ranges.Count == 0
+                        || (p.TakenDate != null && ranges.Any(r =>
+                            p.TakenDate.Value.Date >= r.From.ToDateTime(TimeOnly.MinValue).Date &&
+                            p.TakenDate.Value.Date <= r.To.ToDateTime(TimeOnly.MinValue).Date))
+                    ) &&
+                    (canSeeNsfw || (!p.IsAdultContent && !p.IsRacyContent))
+                ));
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -160,5 +206,16 @@ namespace PhotoBank.DbContext.DbContext
             optionsBuilder.UseLoggerFactory(PhotoBankLoggerFactory);
         }
 
+        private sealed class DummyCurrentUser : ICurrentUser
+        {
+            public string UserId => string.Empty;
+            public bool IsAdmin => true;
+            public IReadOnlySet<int> AllowedStorageIds => new HashSet<int>();
+            public IReadOnlySet<int> AllowedPersonGroupIds => new HashSet<int>();
+            public IReadOnlyList<(DateOnly From, DateOnly To)> AllowedDateRanges => new List<(DateOnly From, DateOnly To)>();
+            public bool CanSeeNsfw => true;
+        }
+
     }
+
 }

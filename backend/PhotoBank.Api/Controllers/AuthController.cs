@@ -3,17 +3,18 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Http;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Api;
+using PhotoBank.AccessControl;
 using PhotoBank.ViewModel.Dto;
-using PhotoBank.Api.Middleware;
 using System.Linq;
 using System.Collections.Generic;
 using System.Security.Claims;
 
 namespace PhotoBank.Api.Controllers;
 
-[Route("api/[controller]")]
+[Route("[controller]")]
 [ApiController]
 public class AuthController(
     UserManager<ApplicationUser> userManager,
@@ -70,11 +71,7 @@ public class AuthController(
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUser()
     {
-        var principal = HttpContext.Items.ContainsKey(ImpersonationMiddleware.ImpersonatedPrincipalKey) &&
-                        HttpContext.Items[ImpersonationMiddleware.ImpersonatedPrincipalKey] is ClaimsPrincipal impersonated
-            ? impersonated
-            : User;
-        var user = await userManager.GetUserAsync(principal);
+        var user = await userManager.GetUserAsync(User);
         if (user == null)
             return NotFound();
 
@@ -93,11 +90,7 @@ public class AuthController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto dto)
     {
-        var principal = HttpContext.Items.ContainsKey(ImpersonationMiddleware.ImpersonatedPrincipalKey) &&
-                        HttpContext.Items[ImpersonationMiddleware.ImpersonatedPrincipalKey] is ClaimsPrincipal impersonated
-            ? impersonated
-            : User;
-        var user = await userManager.GetUserAsync(principal);
+        var user = await userManager.GetUserAsync(User);
         if (user == null)
             return NotFound();
 
@@ -142,11 +135,7 @@ public class AuthController(
     [ProducesResponseType(typeof(IEnumerable<ClaimDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUserClaims()
     {
-        var principal = HttpContext.Items.ContainsKey(ImpersonationMiddleware.ImpersonatedPrincipalKey) &&
-                        HttpContext.Items[ImpersonationMiddleware.ImpersonatedPrincipalKey] is ClaimsPrincipal impersonated
-            ? impersonated
-            : User;
-        var user = await userManager.GetUserAsync(principal);
+        var user = await userManager.GetUserAsync(User);
         if (user == null)
             return NotFound();
 
@@ -160,11 +149,7 @@ public class AuthController(
     [ProducesResponseType(typeof(IEnumerable<RoleDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUserRoles()
     {
-        var principal = HttpContext.Items.ContainsKey(ImpersonationMiddleware.ImpersonatedPrincipalKey) &&
-                        HttpContext.Items[ImpersonationMiddleware.ImpersonatedPrincipalKey] is ClaimsPrincipal impersonated
-            ? impersonated
-            : User;
-        var user = await userManager.GetUserAsync(principal);
+        var user = await userManager.GetUserAsync(User);
         if (user == null)
             return NotFound();
 
@@ -184,6 +169,15 @@ public class AuthController(
         }
 
         return Ok(roles);
+    }
+
+    [HttpGet("debug/effective-access")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> GetEffective([FromServices] IEffectiveAccessProvider eff, [FromServices] IHttpContextAccessor http)
+    {
+        var userId = http.HttpContext!.User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var data = await eff.GetAsync(userId, http.HttpContext!.User);
+        return Ok(data);
     }
 }
 

@@ -87,7 +87,15 @@ const authLogin = (
     },
       options);
     }
-  return {authLogin,authRegister,authGetUser,authUpdateUser,authTelegramExchange,authGetUserClaims,authGetUserRoles}};
+  const authGetEffective = (
+    
+ options?: SecondParameter<typeof photobankAxios>,) => {
+      return photobankAxios<null>(
+      {url: `/auth/debug/effective-access`, method: 'GET'
+    },
+      options);
+    }
+  return {authLogin,authRegister,authGetUser,authUpdateUser,authTelegramExchange,authGetUserClaims,authGetUserRoles,authGetEffective}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -100,3 +108,4 @@ export type AuthUpdateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typ
 export type AuthTelegramExchangeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authTelegramExchange']>>>
 export type AuthGetUserClaimsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetUserClaims']>>>
 export type AuthGetUserRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetUserRoles']>>>
+export type AuthGetEffectiveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetEffective']>>>

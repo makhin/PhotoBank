@@ -15,40 +15,56 @@ bot.on('inline_query', async (ctx: MyContext) => {
   const q = (ctx.inlineQuery.query || '').trim();
   const offset = Number(ctx.inlineQuery.offset || '0') || 0;
 
+  // Авторизация для inline: если нет — мягко предлагаем /start link
   try {
     await ensureUserAccessToken(ctx);
+  } catch (e) {
+    await ctx.answerInlineQuery(
+      [],
+      {
+        is_personal: true,
+        cache_time: 2,
+        switch_pm_text: ctx.t('deeplink-not-linked'),
+        switch_pm_parameter: 'link',
+      },
+    );
+    return;
+  }
+  try {
+    const resp = await searchPhotos(ctx, {
+      caption: q,
+      skip: offset,
+      top: PAGE_SIZE,
+    });
 
-      const resp = await searchPhotos(ctx, {
-        caption: q,
-        skip: offset,
-        top: PAGE_SIZE,
-      });
+    type Photo = {
+      id: number;
+      name?: string | null;
+      previewUrl?: string | null;
+      originalUrl?: string | null;
+      thumbnailUrl?: string | null;
+      takenDate?: string | null;
+      tags?: { tagId: number }[];
+    };
+    const data = resp.data as { photos?: Photo[]; items?: Photo[] };
+    const items = data.photos ?? data.items ?? [];
 
-      type Photo = {
-        id: number;
-        name?: string | null;
-        previewUrl?: string | null;
-        originalUrl?: string | null;
-        thumbnailUrl?: string | null;
-        takenDate?: string | null;
-        tags?: { tagId: number }[];
-      };
-      const data = resp.data as { photos?: Photo[]; items?: Photo[] };
-      const items = data.photos ?? data.items ?? [];
-    const results: InlineQueryResult[] = items.map((p): InlineQueryResultPhoto => ({
-      type: 'photo',
-      id: String(p.id),
-      photo_url: p.previewUrl ?? p.originalUrl ?? '',
-      thumbnail_url: p.thumbnailUrl ?? p.previewUrl ?? p.originalUrl ?? '',
-      title: p.name ?? `#${p.id}`,
-      description: [
-        formatDate(p.takenDate),
-        (p.tags ?? []).slice(0, 3).map(t => getTagName(t.tagId)).join(', '),
-      ]
-        .filter(Boolean)
-        .join(' • '),
-      caption: `${p.name ?? ''}\n${formatDate(p.takenDate) ?? ''}`.trim(),
-    }));
+    const results: InlineQueryResult[] = items.map(
+      (p): InlineQueryResultPhoto => ({
+        type: 'photo',
+        id: String(p.id),
+        photo_url: p.previewUrl ?? p.originalUrl ?? '',
+        thumbnail_url: p.thumbnailUrl ?? p.previewUrl ?? p.originalUrl ?? '',
+        title: p.name ?? `#${p.id}`,
+        description: [
+          formatDate(p.takenDate),
+          (p.tags ?? []).slice(0, 3).map(t => getTagName(t.tagId)).join(', '),
+        ]
+          .filter(Boolean)
+          .join(' • '),
+        caption: `${p.name ?? ''}\n${formatDate(p.takenDate) ?? ''}`.trim(),
+      }),
+    );
 
     const nextOffset = items.length === PAGE_SIZE ? String(offset + PAGE_SIZE) : '';
 
