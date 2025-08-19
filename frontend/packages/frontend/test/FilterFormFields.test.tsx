@@ -23,6 +23,7 @@ const renderWithRoles = async (roles: any[]) => {
   }));
   vi.doMock('@photobank/shared/api/photobank', () => ({
     authGetUserRoles: getUserRoles,
+    useAuthGetUserClaims: () => ({ data: { data: [] }, isLoading: false, isError: false })
   }));
 
   const { FilterFormFields } = await import('../src/components/FilterFormFields');

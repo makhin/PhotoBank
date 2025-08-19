@@ -4,6 +4,7 @@ import { ChevronDownIcon } from 'lucide-react';
 import * as React from 'react';
 import { format } from 'date-fns';
 import { useIsAdmin } from '@photobank/shared';
+import { useCanSeeNsfw } from '@photobank/shared/hooks/useCanSeeNsfw';
 import { useTranslation } from 'react-i18next';
 
 import { useAppSelector } from '@/app/hook';
@@ -25,6 +26,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
     const [openFrom, setOpenFrom] = React.useState(false)
     const [openTo, setOpenTo] = React.useState(false)
     const isAdmin = useIsAdmin()
+    const canSeeNsfw = useCanSeeNsfw()
     const { t } = useTranslation();
 
     const tags = useAppSelector((state) => state.metadata.tags)
@@ -255,7 +257,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     )}
                 />
 
-                {isAdmin && (
+                {(canSeeNsfw || isAdmin) && (
                     <FormField
                         control={control}
                         name="isAdultContent"
@@ -275,7 +277,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                     />
                 )}
 
-                {isAdmin && (
+                {(canSeeNsfw || isAdmin) && (
                     <FormField
                         control={control}
                         name="isRacyContent"
