@@ -11,6 +11,7 @@ using PhotoBank.Services.Api;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.Recognition;
+using PhotoBank.AccessControl;
 using ApiKeyServiceClientCredentials = Microsoft.Azure.CognitiveServices.Vision.ComputerVision.ApiKeyServiceClientCredentials;
 
 namespace PhotoBank.Services
@@ -54,6 +55,7 @@ namespace PhotoBank.Services
 
             services.AddTransient<IPhotoProcessor, PhotoProcessor>();
             services.AddTransient<IPhotoService, PhotoService>();
+            services.AddSingleton<ICurrentUser, DummyCurrentUser>();
             services.AddTransient<IImageService, ImageService>();
             services.AddTransient<ISyncService, SyncService>();
 

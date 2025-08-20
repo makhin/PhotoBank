@@ -13,6 +13,7 @@ using PhotoBank.Repositories;
 using PhotoBank.ViewModel.Dto;
 using PhotoBank.Services;
 using System.IO;
+using PhotoBank.AccessControl;
 
 namespace PhotoBank.Services.Api;
 
@@ -40,6 +41,7 @@ public class PhotoService : IPhotoService
     private readonly IMemoryCache _cache;
     private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
     private readonly Lazy<Task<IReadOnlyList<PathDto>>> _paths;
+    private readonly ICurrentUser _currentUser;
 
     private static readonly MemoryCacheEntryOptions CacheOptions = new()
     {
@@ -55,7 +57,8 @@ public class PhotoService : IPhotoService
         IRepository<Storage> storageRepository,
         IRepository<Tag> tagRepository,
         IMapper mapper,
-        IMemoryCache cache)
+        IMemoryCache cache,
+        ICurrentUser currentUser)
     {
         _db = db;
         _photoRepository = photoRepository;
@@ -64,6 +67,7 @@ public class PhotoService : IPhotoService
         _storageRepository = storageRepository;
         _mapper = mapper;
         _cache = cache;
+        _currentUser = currentUser;
         _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
             GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
                 .AsNoTracking()
@@ -148,6 +152,13 @@ public class PhotoService : IPhotoService
     {
         var query = ApplyFilter(_photoRepository.GetAll().AsNoTracking().AsSplitQuery(), filter);
 
+        // Apply ACL for non-admin users
+        if (!_currentUser.IsAdmin)
+        {
+            var acl = BuildPhotoAcl(_currentUser);
+            query = query.ApplyAcl(acl);
+        }
+
         // Execute the count query first
         var count = await query.CountAsync();
 
@@ -158,7 +169,7 @@ public class PhotoService : IPhotoService
         var skip = (filter.Page - 1) * pageSize;
         var photos = await query
             .OrderByDescending(p => p.TakenDate)
-            .ThenBy(p => p.Id)
+            .ThenByDescending(p => p.Id)
             .Skip(skip)
             .Take(pageSize)
             .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
@@ -173,8 +184,28 @@ public class PhotoService : IPhotoService
 
     public async Task<PhotoDto> GetPhotoAsync(int id)
     {
-        var photo = await CompiledQueries.PhotoById(_db, id);
-        return _mapper.Map<Photo, PhotoDto>(photo);
+        if (_currentUser.IsAdmin)
+        {
+            var adminQuery = _db.Photos
+                .Include(p => p.PhotoTags).ThenInclude(pt => pt.Tag)
+                .Include(p => p.Faces).ThenInclude(f => f.Person).ThenInclude(per => per.PersonGroups)
+                .Include(p => p.Captions)
+                .AsSplitQuery();
+
+            var adminEntity = await adminQuery.FirstOrDefaultAsync(p => p.Id == id);
+            return adminEntity is null ? null : _mapper.Map<Photo, PhotoDto>(adminEntity);
+        }
+
+        var acl = BuildPhotoAcl(_currentUser);
+        var entity = await CompiledQueries.PhotoByIdWithAcl(
+            _db,
+            id,
+            acl.StorageIds,
+            acl.FromDate,
+            acl.ToDate,
+            acl.AllowedPersonGroupIds
+        );
+        return entity is null ? null : _mapper.Map<Photo, PhotoDto>(entity);
     }
 
     public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync()
@@ -280,6 +311,20 @@ public class PhotoService : IPhotoService
             .ToList();
 
         return _mapper.Map<IEnumerable<PhotoItemDto>>(result);
+    }
+
+    private static PhotoAclExtensions.PhotoAcl BuildPhotoAcl(ICurrentUser user)
+    {
+        var storageIds = user.AllowedStorageIds.Select(id => (long)id).ToArray();
+        var personGroupIds = user.AllowedPersonGroupIds.Select(id => (long)id).ToArray();
+        DateOnly? from = null;
+        DateOnly? to = null;
+        if (user.AllowedDateRanges.Count > 0)
+        {
+            from = user.AllowedDateRanges.Min(r => r.From);
+            to = user.AllowedDateRanges.Max(r => r.To);
+        }
+        return new PhotoAclExtensions.PhotoAcl(storageIds, from, to, personGroupIds);
     }
 }
 

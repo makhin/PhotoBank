@@ -15,6 +15,7 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
+using PhotoBank.AccessControl;
 
 namespace PhotoBank.UnitTests.Services
 {
@@ -50,7 +51,9 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<Face>(provider),
                 new Repository<Storage>(provider),
                 new Repository<Tag>(provider),
-                _mapper, new MemoryCache(new MemoryCacheOptions()));
+                _mapper,
+                new MemoryCache(new MemoryCacheOptions()),
+                new DummyCurrentUser());
         }
 
         [Test]
