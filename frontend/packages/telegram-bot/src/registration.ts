@@ -1,8 +1,8 @@
+import type { MiddlewareFn } from 'grammy';
 import { ProblemDetailsError } from '@photobank/shared/types/problem';
 
 import { ensureUserAccessToken } from './auth';
 import type { MyContext } from './i18n';
-import type { MiddlewareFn } from 'grammy';
 
 export async function ensureRegistered(ctx: MyContext): Promise<boolean> {
   try {
