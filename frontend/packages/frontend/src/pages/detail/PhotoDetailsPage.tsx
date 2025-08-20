@@ -133,9 +133,10 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
             setPlaceName('');
             return;
         }
+        const location = photoData.location;
         const controller = new AbortController();
         (async () => {
-            const name = await getPlaceByGeoPoint(photoData.location);
+            const name = await getPlaceByGeoPoint(location);
             if (!controller.signal.aborted) setPlaceName(name);
         })();
         return () => {

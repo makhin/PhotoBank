@@ -3,8 +3,7 @@ import { useWatch } from 'react-hook-form';
 import { ChevronDownIcon } from 'lucide-react';
 import * as React from 'react';
 import { format } from 'date-fns';
-import { useIsAdmin } from '@photobank/shared';
-import { useCanSeeNsfw } from '@photobank/shared/hooks/useCanSeeNsfw';
+import { useIsAdmin, useCanSeeNsfw } from '@photobank/shared';
 import { useTranslation } from 'react-i18next';
 
 import { useAppSelector } from '@/app/hook';

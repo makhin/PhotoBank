@@ -12,6 +12,7 @@ import {
   useAuthGetUserClaims,
   useAuthUpdateUser,
 } from '@photobank/shared/api/photobank';
+import type { ClaimDto } from '@photobank/shared/api/photobank';
 
 import {Button} from '@/shared/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/shared/ui/form';
@@ -119,9 +120,9 @@ export default function MyProfilePage() {
                     <span className="font-semibold">{r.name}</span>
                     {r.claims && r.claims.length > 0 && (
                       <ul className="list-disc list-inside ml-4">
-                        {r.claims?.map((c, idx) => (
-                          <li key={idx}>{c.type}: {c.value}</li>
-                        ))}
+                  {r.claims?.map((c: ClaimDto, idx: number) => (
+                    <li key={idx}>{c.type ?? ''}: {c.value ?? ''}</li>
+                  ))}
                       </ul>
                     )}
                   </li>
@@ -133,8 +134,8 @@ export default function MyProfilePage() {
             <div>
               <h2 className="font-medium">{t('userClaimsTitle')}</h2>
               <ul className="list-disc list-inside ml-4 space-y-1">
-                {claims.map((c, idx) => (
-                  <li key={idx}>{c.type}: {c.value}</li>
+                {claims.map((c: ClaimDto, idx: number) => (
+                  <li key={idx}>{c.type ?? ''}: {c.value ?? ''}</li>
                 ))}
               </ul>
             </div>
