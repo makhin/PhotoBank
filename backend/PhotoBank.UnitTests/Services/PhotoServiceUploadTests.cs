@@ -13,6 +13,7 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
+using PhotoBank.AccessControl;
 
 namespace PhotoBank.UnitTests.Services
 {
@@ -52,7 +53,8 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<Storage>(provider),
                 new Repository<Tag>(provider),
                 _mapper,
-                new MemoryCache(new MemoryCacheOptions()));
+                new MemoryCache(new MemoryCacheOptions()),
+                new DummyCurrentUser());
 
             var bytes = new byte[] { 1, 2, 3, 4 };
             await using var ms = new MemoryStream(bytes);
@@ -87,7 +89,8 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<Storage>(provider),
                 new Repository<Tag>(provider),
                 _mapper,
-                new MemoryCache(new MemoryCacheOptions()));
+                new MemoryCache(new MemoryCacheOptions()),
+                new DummyCurrentUser());
 
             var bytes = new byte[] { 1, 2, 3, 4 };
             await using var ms1 = new MemoryStream(bytes);
@@ -126,7 +129,8 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<Storage>(provider),
                 new Repository<Tag>(provider),
                 _mapper,
-                new MemoryCache(new MemoryCacheOptions()));
+                new MemoryCache(new MemoryCacheOptions()),
+                new DummyCurrentUser());
 
             var bytes1 = new byte[] { 1, 2, 3, 4 };
             await using var ms1 = new MemoryStream(bytes1);
