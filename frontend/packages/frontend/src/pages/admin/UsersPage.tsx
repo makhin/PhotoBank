@@ -30,7 +30,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 interface UserEditorProps {
-  user: UserWithClaimsDto;
+  user: UserWithClaimsDto & { id: string };
   onSave: (id: string, data: FormData) => Promise<void>;
 }
 
@@ -101,7 +101,9 @@ function UserEditor({ user, onSave }: UserEditorProps) {
 
 export default function UsersPage() {
   const { data: usersResp } = useUsersGetAll();
-  const users = usersResp?.data ?? [];
+  const users = (usersResp?.data ?? []).filter(
+    (u): u is UserWithClaimsDto & { id: string } => Boolean(u.id),
+  );
   const { mutateAsync: updateUser } = useUsersUpdate();
   const { mutateAsync: setClaims } = useUsersSetClaims();
   const { t } = useTranslation();
