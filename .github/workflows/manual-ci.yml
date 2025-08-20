@@ -23,6 +23,7 @@ jobs:
         with:
           node-version: ${{ inputs.node }}
           cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies (workspace)
         run: pnpm install --frozen-lockfile
