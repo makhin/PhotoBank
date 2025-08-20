@@ -23,7 +23,18 @@ namespace PhotoBank.ViewModel.Dto
 
         public bool IsNotEmpty()
         {
-            return (Storages != null && Storages.Any()) || (Persons!= null && Persons.Any()) || (Tags!= null && Tags.Any()) || IsBW.HasValue || IsAdultContent.HasValue || IsRacyContent.HasValue || ThisDay != null || TakenDateFrom.HasValue || TakenDateTo.HasValue || !string.IsNullOrEmpty(Caption);
+            return (Storages != null && Storages.Any())
+                   || (Persons != null && Persons.Any())
+                   || (Tags != null && Tags.Any())
+                   || (Paths != null && Paths.Any())
+                   || !string.IsNullOrEmpty(RelativePath)
+                   || IsBW.HasValue
+                   || IsAdultContent.HasValue
+                   || IsRacyContent.HasValue
+                   || ThisDay != null
+                   || TakenDateFrom.HasValue
+                   || TakenDateTo.HasValue
+                   || !string.IsNullOrEmpty(Caption);
         }
     }
 }
