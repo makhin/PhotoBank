@@ -42,7 +42,7 @@ const PhotoListItemMobile = ({
           <div className="font-medium truncate">{photo.name}</div>
           {photo.captions && photo.captions.length > 0 && (
             <div className="text-xs text-muted-foreground truncate">
-              {firstNWords(photo.captions[0], 5)}
+              {firstNWords(photo.captions[0]!, 5)}
             </div>
           )}
           <Badge variant="outline" className="font-mono text-xs mt-1">

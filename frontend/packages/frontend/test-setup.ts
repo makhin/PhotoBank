@@ -46,7 +46,8 @@ export const server = setupServer(...(handlers as any));
 beforeAll(() =>
   server.listen({
     onUnhandledRequest(request, print) {
-      if (request.url.pathname.startsWith('/assets')) {
+      const url = new URL(request.url);
+      if (url.pathname.startsWith('/assets')) {
         return;
       }
 
