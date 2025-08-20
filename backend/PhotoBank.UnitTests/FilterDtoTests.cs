@@ -71,6 +71,38 @@ namespace PhotoBank.Tests.ViewModel.Dto
         }
 
         [Test]
+        public void IsNotEmpty_ShouldReturnTrue_WhenPathsIsNotEmpty()
+        {
+            // Arrange
+            var filterDto = new FilterDto
+            {
+                Paths = new List<int> { 1 }
+            };
+
+            // Act
+            var result = filterDto.IsNotEmpty();
+
+            // Assert
+            result.Should().BeTrue();
+        }
+
+        [Test]
+        public void IsNotEmpty_ShouldReturnTrue_WhenRelativePathIsNotEmpty()
+        {
+            // Arrange
+            var filterDto = new FilterDto
+            {
+                RelativePath = "path"
+            };
+
+            // Act
+            var result = filterDto.IsNotEmpty();
+
+            // Assert
+            result.Should().BeTrue();
+        }
+
+        [Test]
         public void IsNotEmpty_ShouldReturnTrue_WhenIsBWIsTrue()
         {
             // Arrange
