@@ -1,0 +1,105 @@
+name: Manual CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      node:
+        description: Node.js version to use
+        required: false
+        default: '22'
+
+jobs:
+  install:
+    name: Install (workspace)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node }}
+          cache: 'pnpm'
+
+      - name: Install dependencies (workspace)
+        run: pnpm install --frozen-lockfile
+
+  verify:
+    name: Verify (${{ matrix.pkg }})
+    runs-on: ubuntu-latest
+    needs: install
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg:
+          - packages/shared
+          - packages/frontend
+          - packages/telegram-bot
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node }}
+          cache: 'pnpm'
+
+      - name: Install dependencies (reuse workspace lockfile)
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Lint / Typecheck / Test / Build
+        shell: bash
+        env:
+          PKG: ${{ matrix.pkg }}
+        run: |
+          set -euo pipefail
+          export CI=true
+
+          run_if_script() {
+            local dir="$1"
+            local script="$2"
+            node -e "const p=require('./${dir}/package.json'); process.exit(p.scripts && p.scripts['${script}'] ? 0 : 1)"
+          }
+
+          echo "▶ Working in ${PKG}"
+
+          if run_if_script "${PKG}" lint; then
+            pnpm -C "${PKG}" run lint
+          else
+            echo "• No 'lint' script in ${PKG}, skipping"
+          fi
+
+          if run_if_script "${PKG}" typecheck; then
+            pnpm -C "${PKG}" run typecheck
+          else
+            echo "• No 'typecheck' script in ${PKG}, skipping"
+          fi
+
+          if run_if_script "${PKG}" test:ci; then
+            pnpm -C "${PKG}" run test:ci -- --ci
+          elif run_if_script "${PKG}" test; then
+            pnpm -C "${PKG}" run test -- --ci
+          else
+            echo "• No 'test' scripts in ${PKG}, skipping"
+          fi
+
+          if run_if_script "${PKG}" build; then
+            pnpm -C "${PKG}" run build
+          else
+            echo "• No 'build' script in ${PKG}, skipping"
+          fi
+
+  summary:
+    name: Summary
+    runs-on: ubuntu-latest
+    needs: verify
+    steps:
+      - name: All package checks finished
+        run: echo "Done."
