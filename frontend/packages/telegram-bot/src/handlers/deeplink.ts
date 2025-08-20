@@ -1,7 +1,8 @@
+import { ProblemDetailsError } from '@photobank/shared/types/problem';
+
 import { bot } from '../bot';
 import type { MyContext } from '../i18n';
 import { ensureUserAccessToken } from '../auth';
-import { ProblemDetailsError } from '@photobank/shared/types/problem';
 
 bot.on('message', async (ctx: MyContext, next) => {
   const text = ctx.message?.text ?? '';

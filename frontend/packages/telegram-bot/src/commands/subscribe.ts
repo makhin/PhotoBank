@@ -1,4 +1,5 @@
 import { Bot } from 'grammy';
+import type { UpdateUserDto } from '@photobank/shared/api/photobank';
 
 import { updateUser } from '../services/auth';
 import type { MyContext } from '../i18n';
@@ -26,10 +27,11 @@ export async function subscribeCommand(ctx: MyContext) {
     await ctx.reply(ctx.t('chat-undetermined'));
     return;
   }
-  await updateUser(ctx, { telegramSendTimeUtc: `${time}:00` } as unknown as any);
-  const locale = typeof (ctx.i18n as any).locale === 'function'
-    ? (ctx.i18n as any).locale()
-    : await ctx.i18n.getLocale();
+  const dto: UpdateUserDto & { telegramSendTimeUtc: string } = {
+    telegramSendTimeUtc: `${time}:00`,
+  };
+  await updateUser(ctx, dto);
+  const locale = await ctx.i18n.getLocale();
   subscriptions.set(ctx.chat.id, { time, locale });
   await ctx.reply(ctx.t('subscription-confirmed', { time }));
 }
@@ -42,9 +44,10 @@ export function initSubscriptionScheduler(bot: Bot<MyContext>) {
       for (const [chatId, info] of subscriptions.entries()) {
         if (info.time === current) {
           const ctxLike = {
-            message: { text: "/thisday" },
-            reply: (text: string, opts?: Record<string, unknown>) => bot.api.sendMessage(chatId, text, opts),
-            t: (key: string, params?: Record<string, unknown>) => i18n.t(info.locale, key, params as any),
+            message: { text: '/thisday' },
+            reply: (text: string, opts?: Record<string, unknown>) =>
+              bot.api.sendMessage(chatId, text, opts),
+            t: (key: string) => i18n.t(info.locale, key),
             i18n: { getLocale: () => info.locale } as unknown as MyContext['i18n'],
           } as unknown as MyContext;
           await sendThisDayPage(ctxLike, 1);

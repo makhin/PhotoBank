@@ -7,6 +7,6 @@ export const limiter = new Bottleneck({
 });
 
 // Wrapper for Telegram API calls
-export async function throttled<T>(fn: () => Promise<T>): Promise<T> {
+export function throttled<T>(fn: () => Promise<T>): Promise<T> {
   return limiter.schedule(fn);
 }

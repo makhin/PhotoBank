@@ -18,7 +18,7 @@ bot.on('inline_query', async (ctx: MyContext) => {
   // Авторизация для inline: если нет — мягко предлагаем /start link
   try {
     await ensureUserAccessToken(ctx);
-  } catch (e) {
+  } catch {
     await ctx.answerInlineQuery(
       [],
       {
@@ -26,7 +26,7 @@ bot.on('inline_query', async (ctx: MyContext) => {
         cache_time: 2,
         switch_pm_text: ctx.t('deeplink-not-linked'),
         switch_pm_parameter: 'link',
-      } as any,
+      } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
     );
     return;
   }

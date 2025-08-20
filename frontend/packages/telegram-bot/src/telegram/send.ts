@@ -80,14 +80,14 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
         type: 'photo',
         media,
         caption: buildCaption(p),
-      } as InputMediaPhoto;
+      };
     });
 
     try {
       // mediaGroup cannot be edited, so just send and continue
-      const msgs = (await withTelegramRetry(() =>
+      const msgs = await withTelegramRetry(() =>
         throttled(() => ctx.api.sendMediaGroup(ctx.chat.id, medias)),
-      )) as Message.PhotoMessage[];
+      );
       // Save file_id for all items where it appears
       msgs.forEach((m, i) => {
         const p = group[i]!;
