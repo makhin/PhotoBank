@@ -1,0 +1,15 @@
+[profiles.frontend]
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[profiles.backend]
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[profiles.bot]
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[profiles.shared]
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
