@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       run_integration_tests:
-        description: "Run IntegrationTests as well"
+        description: "Run IntegrationTests as well (with coverage)"
         type: boolean
         required: false
         default: false
@@ -31,27 +31,62 @@ jobs:
       - name: Build (Release, no warn-as-error)
         run: dotnet build backend/PhotoBank.Backend.sln -c Release -p:TreatWarningsAsErrors=false --no-restore
 
-      # Юнит-тесты
-      - name: Test (Unit)
+      # --- Unit tests + coverage ---
+      - name: Test (Unit) with coverage
         run: |
           dotnet test backend/PhotoBank.UnitTests/PhotoBank.UnitTests.csproj \
             -c Release --no-build \
             --logger "trx;LogFileName=unittests.trx" \
-            --results-directory ./TestResults
+            --results-directory ./TestResults \
+            --collect:"XPlat Code Coverage"
 
-      # Интеграционные тесты — по флажку при запуске
-      - name: Test (Integration) - optional
+      # --- Integration tests + coverage (optional) ---
+      - name: Test (Integration) with coverage
         if: ${{ inputs.run_integration_tests == true }}
         run: |
           dotnet test backend/PhotoBank.IntegrationTests/PhotoBank.IntegrationTests.csproj \
             -c Release --no-build \
             --logger "trx;LogFileName=integration.trx" \
-            --results-directory ./TestResults
+            --results-directory ./TestResults \
+            --collect:"XPlat Code Coverage"
+
+      # --- Generate HTML report from Cobertura ---
+      - name: Install reportgenerator
+        run: dotnet tool update -g dotnet-reportgenerator-globaltool
+
+      - name: Merge & Generate coverage report (HTML)
+        shell: bash
+        run: |
+          export PATH="$HOME/.dotnet/tools:$PATH"
+
+          # Собираем все cobertura-файлы из TestResults
+          mapfile -t files < <(find ./TestResults -type f -name "coverage.cobertura.xml")
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No coverage files found"; exit 1
+          fi
+
+          # Сливаем в один отчет
+          inputs=$(IFS=';'; echo "${files[*]}")
+          reportgenerator \
+            -reports:"${inputs}" \
+            -targetdir:"./CoverageReport" \
+            -reporttypes:"Html;Cobertura" \
+            -assemblyfilters:"+PhotoBank.*;-*.Tests"
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-test-results
-          path: TestResults
-          if-no-files-found: ignore
+          path: |
+            TestResults/*.trx
+            TestResults/**/coverage.cobertura.xml
+          if-no-files-found: warn
+
+      - name: Upload coverage HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-html
+          path: CoverageReport
+          if-no-files-found: warn
