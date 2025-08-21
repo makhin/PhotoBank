@@ -1,5 +1,5 @@
 import type { Context } from "grammy";
-import type { FilterDto } from "@photobank/shared/api/photobank";
+import type { FilterDto } } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
 
 // ⚠️ проверь путь: файл, который ты прислал, называется dictionary.ts и лежит рядом с i18n.
 // Если другая структура — поправь импорт.
