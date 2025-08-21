@@ -7,6 +7,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   resolve: {
     alias: {
+      '@photobank/shared': resolve(__dirname, '../shared/src'),
+      '@photobank/shared/': resolve(__dirname, '../shared/src/'),
       '@photobank/shared/api/photobank/msw': resolve(
         __dirname,
         '../shared/src/api/photobank/msw.ts',
