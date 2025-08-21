@@ -1,46 +1,22 @@
 name: Manual Backend CI
 
 on:
-  workflow_dispatch:
-    inputs:
-      mode:
-        description: "Build mode: quick (API/libs) or full (entire solution)"
-        type: choice
-        options: [quick, full]
-        default: quick
+  workflow_dispatch: {}
 
 jobs:
   backend:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup .NET 9 SDK
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
           cache: true
           cache-dependency-path: backend/**/*.csproj
 
-      - name: Restore (solution)
+      - name: Restore
         run: dotnet restore backend/PhotoBank.Backend.sln
 
-      # Быстрый режим: собираем ключевые проекты по отдельности, не поднимая варнинги до ошибок
-      - name: Build (quick: API + libs)
-        if: ${{ inputs.mode == 'quick' }}
-        run: |
-          set -e
-          dotnet build backend/PhotoBank.DbContext/PhotoBank.DbContext.csproj -c Release -warnaserror- --no-restore
-          dotnet build backend/PhotoBank.Repositories/PhotoBank.Repositories.csproj -c Release -warnaserror- --no-restore
-          dotnet build backend/PhotoBank.Services/PhotoBank.Services.csproj     -c Release -warnaserror- --no-restore
-          dotnet build backend/PhotoBank.Api/PhotoBank.Api.csproj               -c Release -warnaserror- --no-restore
-
-      # Полный режим: пытаемся собрать целиком sln (может упасть из-за текущих ошибок)
-      - name: Build (full solution)
-        if: ${{ inputs.mode == 'full' }}
+      - name: Build (Release, no warn-as-error)
         run: dotnet build backend/PhotoBank.Backend.sln -c Release -warnaserror- --no-restore
-
-      # Тесты пока отключены по умолчанию, т.к. в них есть реальные ошибки.
-      # Включим их позже, когда починим сборку.
