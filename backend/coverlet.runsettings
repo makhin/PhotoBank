@@ -4,7 +4,7 @@
     <DataCollectors>
       <DataCollector friendlyName="XPlat Code Coverage">
         <Configuration>
-          <Format>opencover</Format>
+          <Format>cobertura</Format>
           <Exclude>[PhotoBank.ViewModel.Dto]*,[PhotoBank.DbContext]*</Exclude>
           <ExcludeByFile>**/Models/*.cs</ExcludeByFile>
           <ExcludeByFile>**/Models/**/*.cs</ExcludeByFile>
