@@ -18,13 +18,25 @@ describe('parseSubscribeTime', () => {
 
 describe('subscribeCommand', () => {
   it('replies with usage on wrong input', async () => {
-    const ctx = { reply: vi.fn(), message: { text: '/subscribe' }, chat: { id: 1 }, t: (k: string) => i18n.t('en', k), i18n: { locale: () => 'en' } } as any;
+    const ctx = {
+      reply: vi.fn(),
+      message: { text: '/subscribe' },
+      chat: { id: 1 },
+      t: (k: string) => i18n.t('en', k),
+      i18n: { getLocale: () => 'en' },
+    } as any;
     await subscribeCommand(ctx);
     expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'subscribe-usage'));
   });
 
   it('stores subscription on valid input', async () => {
-    const ctx = { reply: vi.fn(), message: { text: '/subscribe 07:15' }, chat: { id: 42 }, t: (k: string, p?: any) => i18n.t('en', k, p), i18n: { locale: () => 'en' } } as any;
+    const ctx = {
+      reply: vi.fn(),
+      message: { text: '/subscribe 07:15' },
+      chat: { id: 42 },
+      t: (k: string, p?: any) => i18n.t('en', k, p),
+      i18n: { getLocale: () => 'en' },
+    } as any;
     await subscribeCommand(ctx);
     expect(subscriptions.get(42)?.time).toBe('07:15');
   });
