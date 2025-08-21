@@ -4,6 +4,7 @@ import { getPaths } from '../api/photobank/paths/paths';
 import { getPersons } from '../api/photobank/persons/persons';
 import { getStorages } from '../api/photobank/storages/storages';
 import { getTags } from '../api/photobank/tags/tags';
+import { setRequestContext } from '../api/axios-instance';
 import { handleServiceError } from '../errorHandler';
 
 const { pathsGetAll } = getPaths();
@@ -13,7 +14,8 @@ const { tagsGetAll } = getTags();
 
 export async function fetchTags(ctx: Context) {
   try {
-    return await tagsGetAll(ctx);
+    setRequestContext(ctx);
+    return await tagsGetAll();
   } catch (err) {
     handleServiceError(err);
     throw err;
@@ -22,7 +24,8 @@ export async function fetchTags(ctx: Context) {
 
 export async function fetchPersons(ctx: Context) {
   try {
-    return await personsGetAll(ctx);
+    setRequestContext(ctx);
+    return await personsGetAll();
   } catch (err) {
     handleServiceError(err);
     throw err;
@@ -31,7 +34,8 @@ export async function fetchPersons(ctx: Context) {
 
 export async function fetchStorages(ctx: Context) {
   try {
-    return await storagesGetAll(ctx);
+    setRequestContext(ctx);
+    return await storagesGetAll();
   } catch (err) {
     handleServiceError(err);
     throw err;
@@ -40,7 +44,8 @@ export async function fetchStorages(ctx: Context) {
 
 export async function fetchPaths(ctx: Context) {
   try {
-    return await pathsGetAll(ctx);
+    setRequestContext(ctx);
+    return await pathsGetAll();
   } catch (err) {
     handleServiceError(err);
     throw err;

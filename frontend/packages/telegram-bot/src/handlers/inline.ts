@@ -24,8 +24,10 @@ bot.on('inline_query', async (ctx: MyContext) => {
       {
         is_personal: true,
         cache_time: 2,
-        switch_pm_text: ctx.t('deeplink-not-linked'),
-        switch_pm_parameter: 'link',
+        button: {
+          text: ctx.t('deeplink-not-linked'),
+          start_parameter: 'link',
+        },
       } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
     );
     return;
