@@ -19,6 +19,7 @@
     "bottleneck": "^2.19.5",
     "dotenv": "^17.2.1",
     "fetch-blob": "^4.0.0",
+    "date-fns": "^4.1.0",
     "grammy": "^1.37.0",
     "lru-cache": "^11.1.0",
     "p-retry": "^6.2.1",
