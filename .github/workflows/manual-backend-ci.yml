@@ -19,4 +19,4 @@ jobs:
         run: dotnet restore backend/PhotoBank.Backend.sln
 
       - name: Build (Release, no warn-as-error)
-        run: dotnet build backend/PhotoBank.Backend.sln -c Release -warnaserror- --no-restore
+        run: dotnet build backend/PhotoBank.Backend.sln -c Release -p:TreatWarningsAsErrors=false --no-restore
