@@ -1,14 +1,15 @@
 import type { Context } from "grammy";
-import type { FilterDto } } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
 
-// ⚠️ проверь путь: файл, который ты прислал, называется dictionary.ts и лежит рядом с i18n.
-// Если другая структура — поправь импорт.
+import type { MyContext } from "../i18n";
+import type {
+  FilterDto,
+} from "../api/photobank/photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas";
 import {
   setDictionariesUser,
   loadDictionaries,
   findBestPersonId,
   findBestTagId,
-} from "../dictionary";
+} from "../dictionaries";
 
 /** Черновик: как в прошлой версии — добавляем имена до резолва */
 export type FilterDraft = FilterDto & {
@@ -41,7 +42,7 @@ export async function resolveHumanNamesToIds(
   setDictionariesUser(userId, locale);
 
   // Подтянуть словари (кэшируется per-user внутри dictionary.ts)
-  await loadDictionaries(ctx as any);
+  await loadDictionaries(ctx as MyContext);
 
   const curTagIds = uniq(draft.tags ?? []);
   const curPersonIds = uniq(draft.persons ?? []);
@@ -60,11 +61,13 @@ export async function resolveHumanNamesToIds(
       .map((n) => findBestPersonId(n))
   ).filter((x): x is number => typeof x === "number");
 
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   const {
     tagNames: _dropTagNames,
     personNames: _dropPersonNames,
     ...rest
   } = draft;
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   return {
     ...rest,
