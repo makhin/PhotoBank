@@ -4,7 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NetTopologySuite.Geometries;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
@@ -40,56 +43,85 @@ public class UnifiedFaceServiceTests
     [Test]
     public async Task SyncPersonsAsync_UpsertsAndUpdatesRepository()
     {
-        var people = new List<Person>
-        {
-            new() { Id = 1, Name = "Alice", Provider = null },
-            new() { Id = 2, Name = "Bob", Provider = "Local" },
-            new() { Id = 3, Name = "Charlie", Provider = "Azure" }
-        }.AsQueryable();
-        _persons.Setup(r => r.GetAll()).Returns(people);
-        _persons.Setup(r => r.UpdateAsync(It.IsAny<Person>(), It.IsAny<System.Linq.Expressions.Expression<System.Func<Person, object>>[]>())).ReturnsAsync(1);
+        await using var ctx = TestDbFactory.CreateInMemory();
 
-        _provider.Setup(p => p.UpsertPersonsAsync(It.IsAny<IReadOnlyCollection<PersonSyncItem>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<int, string> { { 1, "ext1" }, { 2, "ext2" } });
+        var services = new ServiceCollection();
+        services.AddSingleton(ctx);
+        var sp = services.BuildServiceProvider();
 
-        await _service.SyncPersonsAsync();
+        var personsRepo = new Repository<Person>(sp);
+        var facesRepo = new Repository<Face>(sp);
+        var linksRepo = new Repository<PersonGroupFace>(sp);
 
-        _provider.Verify(p => p.UpsertPersonsAsync(It.Is<IReadOnlyCollection<PersonSyncItem>>(c => c.Count == 2 && c.Any(x => x.PersonId == 1) && c.Any(x => x.PersonId == 2)), It.IsAny<CancellationToken>()), Times.Once);
-        _persons.Verify(r => r.UpdateAsync(It.Is<Person>(p => p.Id == 1 && p.ExternalId == "ext1" && p.Provider == "Local"), It.IsAny<System.Linq.Expressions.Expression<System.Func<Person, object>>[]>()), Times.Once);
-        _persons.Verify(r => r.UpdateAsync(It.Is<Person>(p => p.Id == 2 && p.ExternalId == "ext2" && p.Provider == "Local"), It.IsAny<System.Linq.Expressions.Expression<System.Func<Person, object>>[]>()), Times.Once);
-        _persons.Verify(r => r.UpdateAsync(It.Is<Person>(p => p.Id == 3), It.IsAny<System.Linq.Expressions.Expression<System.Func<Person, object>>[]>()), Times.Never);
+        var provider = new Mock<IFaceProvider>(MockBehavior.Strict);
+        provider.SetupGet(p => p.Kind).Returns(FaceProviderKind.Local);
+        provider
+            .Setup(p => p.UpsertPersonsAsync(It.IsAny<IReadOnlyCollection<PersonSyncItem>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<int, string> { { 1, "ext1" } });
+
+        var service = new UnifiedFaceService(provider.Object, personsRepo, facesRepo, linksRepo, Mock.Of<ILogger<UnifiedFaceService>>());
+
+        ctx.Persons.AddRange(
+            new Person { Id = 1, Name = "Alice", ExternalId = null, Provider = null },
+            new Person { Id = 2, Name = "Bob", ExternalId = "ext-bob", Provider = "Other" }
+        );
+        await ctx.SaveChangesAsync();
+        ctx.ChangeTracker.Clear();
+
+        await service.SyncPersonsAsync();
+
+        provider.Verify(p => p.UpsertPersonsAsync(It.Is<IReadOnlyCollection<PersonSyncItem>>(c => c.Single().PersonId == 1), It.IsAny<CancellationToken>()), Times.Once);
+
+        var all = await ctx.Persons.AsNoTracking().ToListAsync();
+
+        Assert.That(all.Single(p => p.Id == 1).Provider, Is.EqualTo(provider.Object.Kind.ToString()));
+        Assert.That(all.Single(p => p.Id == 1).ExternalId, Is.EqualTo("ext1"));
+        Assert.That(all.Single(p => p.Id == 2).Provider, Is.EqualTo("Other"));
+        Assert.That(all.Single(p => p.Id == 2).ExternalId, Is.EqualTo("ext-bob"));
     }
 
     [Test]
     public async Task SyncFacesToPersonsAsync_LinksMissingFaces()
     {
-        var linkData = new List<PersonGroupFace>
-        {
-            new() { PersonId = 1, FaceId = 101, ExternalId = null },
-            new() { PersonId = 1, FaceId = 102, ExternalId = "have" },
-            new() { PersonId = 2, FaceId = 201, ExternalId = null }
-        }.AsQueryable();
-        _links.Setup(r => r.GetAll()).Returns(linkData);
-        _links.Setup(r => r.UpdateAsync(It.IsAny<PersonGroupFace>(), It.IsAny<System.Linq.Expressions.Expression<System.Func<PersonGroupFace, object>>[]>())).ReturnsAsync(1);
+        await using var ctx = TestDbFactory.CreateInMemory();
 
-        var faceData = new List<Face>
-        {
-            new() { Id = 101, Image = new byte[] { 1 } },
-            new() { Id = 201, Image = new byte[] { 2 } }
-        }.AsQueryable();
-        _faces.Setup(r => r.GetAll()).Returns(faceData);
+        var services = new ServiceCollection();
+        services.AddSingleton(ctx);
+        var sp = services.BuildServiceProvider();
 
-        _provider.Setup(p => p.LinkFacesToPersonAsync(1, It.IsAny<IReadOnlyCollection<FaceToLink>>(), It.IsAny<CancellationToken>()))
+        var personsRepo = new Repository<Person>(sp);
+        var facesRepo = new Repository<Face>(sp);
+        var linksRepo = new Repository<PersonGroupFace>(sp);
+
+        var provider = new Mock<IFaceProvider>(MockBehavior.Strict);
+        provider.SetupGet(p => p.Kind).Returns(FaceProviderKind.Local);
+        provider.Setup(p => p.LinkFacesToPersonAsync(1, It.IsAny<IReadOnlyCollection<FaceToLink>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<int, string> { { 101, "extA" } });
-        _provider.Setup(p => p.LinkFacesToPersonAsync(2, It.IsAny<IReadOnlyCollection<FaceToLink>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new Dictionary<int, string> { { 201, "extB" } });
 
-        await _service.SyncFacesToPersonsAsync();
+        var service = new UnifiedFaceService(provider.Object, personsRepo, facesRepo, linksRepo, Mock.Of<ILogger<UnifiedFaceService>>());
 
-        _provider.Verify(p => p.LinkFacesToPersonAsync(1, It.Is<IReadOnlyCollection<FaceToLink>>(l => l.Single().FaceId == 101), It.IsAny<CancellationToken>()), Times.Once);
-        _provider.Verify(p => p.LinkFacesToPersonAsync(2, It.Is<IReadOnlyCollection<FaceToLink>>(l => l.Single().FaceId == 201), It.IsAny<CancellationToken>()), Times.Once);
-        _links.Verify(r => r.UpdateAsync(It.Is<PersonGroupFace>(x => x.PersonId == 1 && x.FaceId == 101 && x.ExternalId == "extA" && x.Provider == "Local"), It.IsAny<System.Linq.Expressions.Expression<System.Func<PersonGroupFace, object>>[]>()), Times.Once);
-        _links.Verify(r => r.UpdateAsync(It.Is<PersonGroupFace>(x => x.PersonId == 2 && x.FaceId == 201 && x.ExternalId == "extB" && x.Provider == "Local"), It.IsAny<System.Linq.Expressions.Expression<System.Func<PersonGroupFace, object>>[]>()), Times.Once);
+        ctx.Persons.Add(new Person { Id = 1, Name = "Alice" });
+
+        ctx.Faces.AddRange(
+            new Face { Id = 101, PhotoId = 0, Image = new byte[] { 1 }, Rectangle = new Point(0, 0), S3Key_Image = string.Empty, S3ETag_Image = string.Empty, Sha256_Image = string.Empty, FaceAttributes = string.Empty },
+            new Face { Id = 102, PhotoId = 0, Image = new byte[] { 2 }, Rectangle = new Point(0, 0), S3Key_Image = string.Empty, S3ETag_Image = string.Empty, Sha256_Image = string.Empty, FaceAttributes = string.Empty }
+        );
+
+        var linkMissing = new PersonGroupFace { Id = -1, PersonId = 1, FaceId = 101, ExternalId = null, Provider = null };
+        var linkExists  = new PersonGroupFace { Id = -2, PersonId = 1, FaceId = 102, ExternalId = "have", Provider = "Local" };
+        ctx.Set<PersonGroupFace>().AddRange(linkMissing, linkExists);
+
+        await ctx.SaveChangesAsync();
+        ctx.ChangeTracker.Clear();
+
+        await service.SyncFacesToPersonsAsync();
+
+        provider.Verify(p => p.LinkFacesToPersonAsync(1, It.Is<IReadOnlyCollection<FaceToLink>>(l => l.Single().FaceId == 101), It.IsAny<CancellationToken>()), Times.Once);
+
+        var link101 = await ctx.Set<PersonGroupFace>().AsNoTracking().SingleAsync(l => l.PersonId == 1 && l.FaceId == 101);
+
+        Assert.That(link101.ExternalId, Is.EqualTo("extA"));
+        Assert.That(link101.Provider, Is.EqualTo(provider.Object.Kind.ToString()));
     }
 
     [Test]

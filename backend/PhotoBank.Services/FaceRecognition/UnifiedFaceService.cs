@@ -63,16 +63,18 @@ public sealed class UnifiedFaceService
     {
         var links = await _links.GetAll()
             .AsNoTracking()
-            .Select(l => new { l.PersonId, l.FaceId, l.ExternalId, l.Provider })
+            .Select(l => new { l.Id, l.PersonId, l.FaceId, l.ExternalId, l.Provider })
             .ToListAsync(ct);
 
         foreach (var group in links.GroupBy(l => l.PersonId))
         {
-            var missing = group.Where(g => string.IsNullOrEmpty(g.ExternalId)).Select(g => g.FaceId).ToArray();
-            if (missing.Length == 0) continue;
+            var missing = group.Where(g => string.IsNullOrEmpty(g.ExternalId)).ToList();
+            if (missing.Count == 0) continue;
+
+            var faceIds = missing.Select(m => m.FaceId).ToArray();
 
             var blobs = await _faces.GetAll()
-                .Where(f => missing.Contains(f.Id))
+                .Where(f => faceIds.Contains(f.Id))
                 .Select(f => new { f.Id, f.Image })
                 .ToListAsync(ct);
 
@@ -84,8 +86,11 @@ public sealed class UnifiedFaceService
             var map = await _provider.LinkFacesToPersonAsync(group.Key, toLink, ct);
             foreach (var (faceId, external) in map)
             {
+                var linkId = missing.Single(m => m.FaceId == faceId).Id;
+
                 await _links.UpdateAsync(new PersonGroupFace
                 {
+                    Id = linkId,
                     PersonId = group.Key,
                     FaceId = faceId,
                     ExternalId = external,
