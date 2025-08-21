@@ -9,16 +9,16 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
     {
         private readonly TooltipOptions _options = new() { Position = TooltipPosition.Bottom, Duration = 5000 };
         [Inject]
-        public IPhotoService PhotoDataService { get; set; }
-        [Inject] 
-        public TooltipService TooltipService { get; set; }
+        public IPhotoService PhotoDataService { get; set; } = default!;
+        [Inject]
+        public TooltipService TooltipService { get; set; } = default!;
         [Parameter]
-        public string PhotoId { get; set; }
-        protected PhotoDto Photo { get; set; }
-        protected IEnumerable<PersonDto> Persons { get; set; }
-        protected ElementReference[] MemberRef { get; set; }
+        public string PhotoId { get; set; } = default!;
+        protected PhotoDto? Photo { get; set; }
+        protected IEnumerable<PersonDto>? Persons { get; set; }
+        protected ElementReference[]? MemberRef { get; set; }
 
-        protected void ShowTooltipWithHtml(int i, string content) => TooltipService.Open(MemberRef[i], ds =>
+        protected void ShowTooltipWithHtml(int i, string content) => TooltipService.Open(MemberRef![i], ds =>
         {
             return builder =>
             {
@@ -38,7 +38,7 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
 
         protected string? GetPersonNameById(int? id)
         {
-            return !id.HasValue ? string.Empty : Persons.FirstOrDefault(p => p.Id == id)?.Name;
+            return !id.HasValue ? string.Empty : Persons?.FirstOrDefault(p => p.Id == id)?.Name;
         }
 
         protected async Task OnChangePersonAsync(int faceId, object personId)

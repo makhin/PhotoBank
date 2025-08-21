@@ -258,9 +258,6 @@ namespace PhotoBank.Services
 
             _persons = await _personRepository.GetAll().AsNoTracking().ToListAsync();
 
-            int currentMinute = DateTime.Now.Minute;
-            int callCounter = 0;
-
             foreach (var face in faces)
             {
                 try
@@ -270,7 +267,6 @@ namespace PhotoBank.Services
 
                     try
                     {
-                        //await SleepAsync();
                         detectedFaces = await DetectFacesAsync(face.Image);
                     }
                     catch (Exception e)
@@ -281,7 +277,6 @@ namespace PhotoBank.Services
                         continue;
                     }
 
-                    //await SleepAsync();
                     var identifyResults = await IdentifyAsync(detectedFaces.Select(f => f.FaceId).ToList());
 
                     if (!identifyResults.Any())
@@ -324,28 +319,6 @@ namespace PhotoBank.Services
                 }
             }
 
-            async Task SleepAsync()
-            {
-                const int callsPerMinute = 6000;
-                if (currentMinute == DateTime.Now.Minute && ++callCounter >= callsPerMinute)
-                {
-                    var millisecondsDelay = 60000 - DateTime.Now.Millisecond;
-                    var color = Console.ForegroundColor;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Sleep for {millisecondsDelay}");
-                    await Task.Delay(millisecondsDelay);
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"Resume");
-                    Console.ForegroundColor = color;
-                }
-
-                if (currentMinute < DateTime.Now.Minute)
-                {
-                    callCounter = 0;
-                }
-
-                currentMinute = DateTime.Now.Minute;
-            }
         }
 
         public async Task<IList<IdentifyResult>> IdentifyAsync(IList<Guid?> faceIds)
