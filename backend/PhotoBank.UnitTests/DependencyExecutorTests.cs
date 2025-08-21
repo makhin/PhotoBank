@@ -132,7 +132,7 @@ namespace PhotoBank.UnitTests
             var executor = new DependencyExecutor();
 
             // Act & Assert
-            await Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(enrichers, null, null));
+            Assert.DoesNotThrowAsync(async () => await executor.ExecuteAsync(enrichers, null, null));
         }
 
         [Test]
