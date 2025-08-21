@@ -9,7 +9,7 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
     public class PhotoOverviewBase: ComponentBase
     {
         [Inject]
-        public IPhotoService PhotoService { get; set; }
+        public IPhotoService PhotoService { get; set; } = default!;
         
         public IEnumerable<PhotoItemDto>? Photos { get; set; }
         public IEnumerable<StorageDto>? Storages { get; set; }
@@ -22,7 +22,7 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
         public bool AllowRacyFilter { get; set; }
         public bool IsLoading { get; set; }
 
-        protected RadzenDataGrid<PhotoItemDto> grid;
+        protected RadzenDataGrid<PhotoItemDto>? grid;
 
         public PhotoOverviewBase()
         {

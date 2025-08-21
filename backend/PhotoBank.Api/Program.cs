@@ -241,7 +241,7 @@ namespace PhotoBank.Api
                 opts.EnrichDiagnosticContext = (diag, http) =>
                 {
                     diag.Set("UserAgent", http.Request.Headers.UserAgent.ToString());
-                    diag.Set("RemoteIp", http.Connection.RemoteIpAddress?.ToString());
+                    diag.Set("RemoteIp", http.Connection.RemoteIpAddress?.ToString() ?? string.Empty);
                     diag.Set("RequestId", http.TraceIdentifier);
                 };
             });

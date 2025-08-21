@@ -17,8 +17,8 @@
                     </RadzenDropDown>
                     @if (Filter.Storages != null)
                     {
-                        <RadzenDropDown @bind-Value="Filter.RelativePath" AllowClear="true" Data="@(Paths.Where(o => Filter.Storages.Contains(o.StorageId) && !string.IsNullOrEmpty(o.Path)))" Style="width: 100%;" TextProperty="Path" ValueProperty="Path" Name="Paths">
-                        </RadzenDropDown>
+                    <RadzenDropDown @bind-Value="Filter.RelativePath" AllowClear="true" Data="@(Paths?.Where(o => Filter.Storages.Contains(o.StorageId) && !string.IsNullOrEmpty(o.Path)) ?? Enumerable.Empty<PathDto>())" Style="width: 100%;" TextProperty="Path" ValueProperty="Path" Name="Paths">
+                    </RadzenDropDown>
                     }
                 </RadzenStack>
                 
@@ -78,7 +78,7 @@
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="PhotoItemDto" Property="Thumbnail" Title="Thumbnail" Sortable="false" Filterable="false">
                 <Template Context="data">
-                    <img src="data:image;base64,@Convert.ToBase64String(data?.Thumbnail)" />
+                    <img src="data:image;base64,@Convert.ToBase64String(data?.Thumbnail ?? Array.Empty<byte>())" />
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="PhotoItemDto" Property="Name" Title="Name" />

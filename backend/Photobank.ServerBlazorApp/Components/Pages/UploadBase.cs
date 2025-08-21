@@ -6,7 +6,7 @@ namespace PhotoBank.ServerBlazorApp.Components.Pages
     public class UploadBase: ComponentBase
     {
         [Inject]
-        public NavigationManager NavigationManager { get; set; }
+        public NavigationManager NavigationManager { get; set; } = default!;
 
         public int Progress { get; set; }
 

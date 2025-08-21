@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.Drawing.Imaging;
 using ImageMagick;
+
+#pragma warning disable CA1416 // Validate platform compatibility
 
 namespace PhotoBank.Services
 {
@@ -25,3 +27,5 @@ namespace PhotoBank.Services
         }
     }
 }
+
+#pragma warning restore CA1416

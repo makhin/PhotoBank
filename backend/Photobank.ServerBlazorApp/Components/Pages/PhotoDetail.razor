@@ -7,7 +7,7 @@
 
 @if (Photo != null)
 {
-    <Title value="@Photo.Name"></Title>
+    <PageTitle>@Photo.Name</PageTitle>
 }
 
 <style type="text/css">
@@ -46,14 +46,14 @@
 else
 {
     <div class="wrapper">
-        <img src="data:image;base64,@Convert.ToBase64String(Photo.PreviewImage)" alt="@string.Join(" ", Photo.Captions)"/>
-        @for (var i = 0; i < Photo.Faces.Count; i++)
+        <img src="data:image;base64,@Convert.ToBase64String(Photo.PreviewImage ?? Array.Empty<byte>())" alt="@string.Join(" ", Photo.Captions ?? Array.Empty<string>())"/>
+        @for (var i = 0; i < (Photo.Faces?.Count ?? 0); i++)
         {
             var i2 = i;
-            var face = Photo.Faces[i];
+            var face = Photo.Faces![i];
             var faceBox = face.FaceBox;
             <div class="box" style="top: @($"{faceBox.Top}px"); left: @($"{faceBox.Left}px"); width: @($"{faceBox.Width}px"); height: @($"{faceBox.Height}px")"
-                 @ref="MemberRef[i2]" @onmouseover="@(args => ShowTooltipWithHtml(i2, face.FriendlyFaceAttributes))">
+                 @ref="MemberRef![i2]" @onmouseover="@(args => ShowTooltipWithHtml(i2, face.FriendlyFaceAttributes))">
                 <span>@((i + 1).ToString())</span><span>.</span>
             </div>
         }
@@ -64,7 +64,7 @@ else
                 <div>Name:</div>
                 <b>@Photo.Name</b>
                 <div style="margin-top:20px">Caption:</div>
-                @foreach (var caption in Photo.Captions)
+                @foreach (var caption in Photo.Captions ?? Array.Empty<string>())
                 {
                     <b>@caption</b>
                     <br />
@@ -72,16 +72,16 @@ else
                 <div style="margin-top:20px"></div>
                 <span>Adult Score: <strong>@Math.Round(Photo.AdultScore, 3)</strong>;</span>&nbsp;<span>Racy Score: <strong>@Math.Round(Photo.RacyScore, 3)</strong></span>
                 <div style="margin-top:20px">Tags:</div>
-                @foreach (var tag in Photo.Tags)
+                @foreach (var tag in Photo.Tags ?? Array.Empty<string>())
                 {
                     <span style="display:inline-block;color:#fff;margin:4px;padding:0 4px;border-radius:4px;background-color: #5319e7">@tag</span>
                 }
             </div>
             <div class="col-md-6">
                 <div>Faces:</div>
-                @for (var i = 0; i < Photo.Faces.Count; i++)
+                @for (var i = 0; i < (Photo.Faces?.Count ?? 0); i++)
                 {
-                    var face = Photo.Faces[i];
+                    var face = Photo.Faces![i];
                     <div>
                         <span>@((i + 1).ToString())&nbsp;@(face.Age.ToString())&nbsp;@(face.Gender.HasValue ? (face.Gender.Value && face.FaceAttributes != null ? "M" : "F") : string.Empty)</span>
                         <AuthorizeView Roles="User">
@@ -89,7 +89,7 @@ else
                         </AuthorizeView>
 
                         <AuthorizeView Roles="Administrator">
-                            <RadzenDropDown Data=@Persons @bind-Value=@face.PersonId TextProperty="Name" ValueProperty="Id" Change=@(args => OnChangePersonAsync(face.Id, args))/>
+                            <RadzenDropDown Data=@(Persons ?? Array.Empty<PersonDto>()) @bind-Value=@face.PersonId TextProperty="Name" ValueProperty="Id" Change=@(args => OnChangePersonAsync(face.Id, args))/>
                         </AuthorizeView>
                     </div>
                 }
