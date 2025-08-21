@@ -1,5 +1,8 @@
 import type { MyContext } from "../i18n";
-import type { FilterDto } from "@photobank/shared/api/photobank";
+
+import type {
+  FilterDto
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
 import { sendPhotosPage } from "./photosPage";
 
 import {
