@@ -20,7 +20,7 @@ export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
   }
   const cached = getFileId(p.id);
   try {
-    const message = (await withTelegramRetry(() =>
+    const message = await withTelegramRetry(() =>
       throttled(() =>
         ctx.api.sendPhoto(
           ctx.chat.id,
@@ -28,7 +28,7 @@ export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
           { caption: buildCaption(p) },
         ),
       ),
-    )) as Message.PhotoMessage;
+    );
     const newId = message.photo?.at(-1)?.file_id || null;
     if (newId && newId !== cached) setFileId(p.id, newId);
     return message;
