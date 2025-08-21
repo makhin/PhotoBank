@@ -125,17 +125,12 @@ namespace PhotoBank.Repositories
 
             foreach (var property in properties)
             {
-                var operand = ((UnaryExpression)property.Body).Operand;
-                string propertyName;
-
-                if (entity.GetType() == ((MemberExpression)operand).Member.ReflectedType)
+                string propertyName = property.Body switch
                 {
-                    propertyName = ((MemberExpression)operand).Member.Name;
-                }
-                else
-                {
-                    propertyName = ((MemberExpression)operand).Member.ReflectedType.Name + ((MemberExpression)operand).Member.Name;
-                }
+                    MemberExpression member => member.Member.Name,
+                    UnaryExpression unary when unary.Operand is MemberExpression member => member.Member.Name,
+                    _ => throw new InvalidOperationException("Invalid property expression")
+                };
 
                 entry.Property(propertyName).IsModified = true;
             }
@@ -145,7 +140,7 @@ namespace PhotoBank.Repositories
 
         public async Task<int> DeleteAsync(int id)
         {
-            var entity = await _entities.AsNoTracking().SingleOrDefaultAsync(m => m.Id == id);
+            var entity = await _entities.FindAsync(id);
 
             if (entity == null)
             {
@@ -155,8 +150,7 @@ namespace PhotoBank.Repositories
             try
             {
                 _entities.Remove(entity);
-                var i = await _context.SaveChangesAsync();
-                return i;
+                return await _context.SaveChangesAsync();
             }
             catch (DbUpdateException exception)
             {
