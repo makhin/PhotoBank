@@ -1,0 +1,56 @@
+name: Manual Backend CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_integration_tests:
+        description: "Run IntegrationTests as well"
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          cache: true
+          cache-dependency-path: backend/**/*.csproj
+
+      - name: Restore
+        run: dotnet restore backend/photobank.backend.sln
+
+      - name: Build (Release)
+        run: dotnet build backend/photobank.backend.sln -c Release --no-restore /warnaserror
+
+      - name: Run Unit Tests
+        run: |
+          dotnet test backend/photobank.backend.sln \
+            -c Release --no-build \
+            --filter "FullyQualifiedName~UnitTests" \
+            --logger "trx;LogFileName=unittests.trx" \
+            --results-directory ./TestResults
+
+      - name: Run Integration Tests (optional)
+        if: ${{ inputs.run_integration_tests == true }}
+        run: |
+          dotnet test backend/photobank.backend.sln \
+            -c Release --no-build \
+            --filter "FullyQualifiedName~IntegrationTests" \
+            --logger "trx;LogFileName=integration.trx" \
+            --results-directory ./TestResults
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: TestResults
+          if-no-files-found: ignore
