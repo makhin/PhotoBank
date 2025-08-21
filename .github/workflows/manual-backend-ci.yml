@@ -25,14 +25,14 @@ jobs:
           cache-dependency-path: backend/**/*.csproj
 
       - name: Restore
-        run: dotnet restore backend/photobank.backend.sln
+        run: dotnet restore backend/PhotoBank.Backend.sln
 
       - name: Build (Release)
-        run: dotnet build backend/photobank.backend.sln -c Release --no-restore /warnaserror
+        run: dotnet build backend/PhotoBank.Backend.sln -c Release --no-restore /warnaserror
 
       - name: Run Unit Tests
         run: |
-          dotnet test backend/photobank.backend.sln \
+          dotnet test backend/PhotoBank.Backend.sln \
             -c Release --no-build \
             --filter "FullyQualifiedName~UnitTests" \
             --logger "trx;LogFileName=unittests.trx" \
