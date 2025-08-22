@@ -107,9 +107,9 @@ export interface FilterDto {
   takenDateTo?: string | null;
   thisDay?: ThisDayDto;
   /** @nullable */
-  persons?: number[] | null;
+  personNames?: string[] | null;
   /** @nullable */
-  tags?: number[] | null;
+  tagNames?: string[] | null;
   /** @nullable */
   orderBy?: string | null;
 }
