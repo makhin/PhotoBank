@@ -10,7 +10,7 @@ import {
 import { bot } from './bot';
 import { sendThisDayPage, thisDayCommand } from "./commands/thisday";
 import { captionCache } from "./photo";
-import { sendSearchPage, searchCommand } from "./commands/search";
+import { sendSearchPage, searchCommand, decodeSearchCallback } from "./commands/search";
 import { aiCommand, sendAiPage } from "./commands/ai";
 import { helpCommand } from "./commands/help";
 import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
@@ -147,13 +147,17 @@ bot.callbackQuery(storagesCallbackPattern, withRegistered(async (ctx) => {
 }));
 
 bot.callbackQuery(/^search:(\d+):(.+)$/, withRegistered(async (ctx) => {
-  if (!ctx.match || typeof ctx.match === 'string') {
-    throw new Error("Callback query match is undefined.");
+  const data = ctx.callbackQuery?.data;
+  if (!data) {
+    throw new Error("Callback query data is undefined.");
   }
-  const page = parseInt(ctx.match[1], 10);
-  const caption = decodeURIComponent(ctx.match[2]);
+  const decoded = decodeSearchCallback(data);
+  if (!decoded) {
+    await ctx.answerCallbackQuery();
+    return;
+  }
   await ctx.answerCallbackQuery();
-  await sendSearchPage(ctx, caption, page, true);
+  await sendSearchPage(ctx, decoded.filter, decoded.page, true);
 }));
 
 bot.callbackQuery(/^ai:(\d+):([\w-]+)$/, withRegistered(async (ctx) => {

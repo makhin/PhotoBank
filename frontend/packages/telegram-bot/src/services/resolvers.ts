@@ -1,15 +1,13 @@
-import type { Context } from "grammy";
+import type { Context } from 'grammy';
+import type { FilterDto } from '@photobank/shared/api/photobank';
 
-import type { MyContext } from "../i18n";
-import type {
-  FilterDto,
-} from "../api/photobank/photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas";
+import type { MyContext } from '../i18n';
 import {
   setDictionariesUser,
   loadDictionaries,
   findBestPersonId,
   findBestTagId,
-} from "../dictionaries";
+} from '../dictionaries';
 
 /** Черновик: как в прошлой версии — добавляем имена до резолва */
 export type FilterDraft = FilterDto & {
