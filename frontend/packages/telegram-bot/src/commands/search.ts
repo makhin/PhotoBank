@@ -11,8 +11,6 @@ import type { FilterDto } from '@photobank/shared/api/photobank';
 
 import type { MyContext } from '../i18n';
 import { sendPhotosPage } from './photosPage';
-import type { FilterDraft } from '../services/resolvers';
-import { resolveHumanNamesToIds } from '../services/resolvers';
 
 /* ===================== токенизация ===================== */
 
@@ -127,23 +125,21 @@ function mapSortToOrderBy(sort?: "relevance" | "date_asc" | "date_desc"): string
   }
 }
 
-/* ===================== парсер → FilterDraft ===================== */
+/* ===================== парсер → FilterDto ===================== */
 /**
  * Поддержка:
  *  - caption: свободный текст
- *  - теги: #5, tag:7, tags:1,2,3, а также имена: #family, tags:family,kids
- *  - люди: @12, person:34, people:1,2,3, а также имена: @alice, people:alice,bob
+ *  - теги: #family, tags:family,kids
+ *  - люди: @alice, people:alice,bob
  *  - даты: date:A | date:A..B | одиночная/диапазон без ключа
  *  - before:/after:
  *  - sort:(relevance|date_asc|date_desc) → orderBy
  *
- * ⚠️ В черновике храним и ID, и имена. Перед запросом — резолвим имена в ID.
+ * ⚠️ В фильтре используем только имена.
  */
-function parseArgsToFilterDraft(raw: string): FilterDraft {
+function parseArgsToFilter(raw: string): FilterDto {
   const tokens = tokenize(raw);
 
-  const tagIds: number[] = [];
-  const personIds: number[] = [];
   const tagNames: string[] = [];
   const personNames: string[] = [];
 
@@ -158,25 +154,15 @@ function parseArgsToFilterDraft(raw: string): FilterDraft {
     const key = kRaw.toLowerCase();
     const val = hasColon ? vParts.join(":") : undefined;
 
-    // #... / @... (ID или имя)
+    // #... / @... (имена)
     if (!hasColon && t.startsWith("#")) {
       const body = t.slice(1).trim();
-      const n = Number(body);
-      if (Number.isInteger(n)) {
-        if (!tagIds.includes(n)) tagIds.push(n);
-      } else if (body) {
-        if (!tagNames.includes(body)) tagNames.push(body);
-      }
+      if (body && !tagNames.includes(body)) tagNames.push(body);
       continue;
     }
     if (!hasColon && t.startsWith("@")) {
       const body = t.slice(1).trim();
-      const n = Number(body);
-      if (Number.isInteger(n)) {
-        if (!personIds.includes(n)) personIds.push(n);
-      } else if (body) {
-        if (!personNames.includes(body)) personNames.push(body);
-      }
+      if (body && !personNames.includes(body)) personNames.push(body);
       continue;
     }
 
@@ -188,12 +174,7 @@ function parseArgsToFilterDraft(raw: string): FilterDraft {
             .split(",")
             .map((x) => x.trim().replace(/^#/, ""))
             .forEach((x) => {
-              const n = Number(x);
-              if (Number.isInteger(n)) {
-                if (!tagIds.includes(n)) tagIds.push(n);
-              } else if (x) {
-                if (!tagNames.includes(x)) tagNames.push(x);
-              }
+              if (x && !tagNames.includes(x)) tagNames.push(x);
             });
           continue;
         }
@@ -203,12 +184,7 @@ function parseArgsToFilterDraft(raw: string): FilterDraft {
             .split(",")
             .map((x) => x.trim().replace(/^@/, ""))
             .forEach((x) => {
-              const n = Number(x);
-              if (Number.isInteger(n)) {
-                if (!personIds.includes(n)) personIds.push(n);
-              } else if (x) {
-                if (!personNames.includes(x)) personNames.push(x);
-              }
+              if (x && !personNames.includes(x)) personNames.push(x);
             });
           continue;
         }
@@ -251,20 +227,20 @@ function parseArgsToFilterDraft(raw: string): FilterDraft {
 
   const caption = rest.join(" ").trim() || undefined;
 
-  const draft: FilterDraft = {
+  const filter: FilterDto = {
     caption,
-    tags: tagIds.length ? Array.from(new Set(tagIds)) : undefined,
-    persons: personIds.length ? Array.from(new Set(personIds)) : undefined,
     tagNames: tagNames.length ? Array.from(new Set(tagNames)) : undefined,
-    personNames: personNames.length ? Array.from(new Set(personNames)) : undefined,
+    personNames: personNames.length
+      ? Array.from(new Set(personNames))
+      : undefined,
     takenDateFrom,
     takenDateTo,
   };
 
   const orderBy = mapSortToOrderBy(sort);
-  if (orderBy) draft.orderBy = orderBy;
+  if (orderBy) filter.orderBy = orderBy;
 
-  return draft;
+  return filter;
 }
 
 /* ===================== callback_data кодек ===================== */
@@ -299,25 +275,20 @@ export async function handleSearch(ctx: MyContext) {
     return;
   }
 
-  const draft = parseArgsToFilterDraft(raw);
+  const filter = parseArgsToFilter(raw);
 
   const nothingSet =
-    !draft.caption &&
-    (!draft.tags || draft.tags.length === 0) &&
-    (!draft.persons || draft.persons.length === 0) &&
-    (!draft.tagNames || draft.tagNames.length === 0) &&
-    (!draft.personNames || draft.personNames.length === 0) &&
-    !draft.takenDateFrom &&
-    !draft.takenDateTo &&
-    !draft.orderBy;
+    !filter.caption &&
+    (!filter.tagNames || filter.tagNames.length === 0) &&
+    (!filter.personNames || filter.personNames.length === 0) &&
+    !filter.takenDateFrom &&
+    !filter.takenDateTo &&
+    !filter.orderBy;
 
   if (nothingSet) {
     await ctx.reply(ctx.t("search-usage"));
     return;
   }
-
-  // ✨ резолв имён по локальному dictionary (загрузка/кэш внутри)
-  const filter = await resolveHumanNamesToIds(ctx, draft);
 
   await sendSearchPage(ctx, filter, 1);
 }

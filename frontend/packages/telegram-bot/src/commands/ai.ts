@@ -3,10 +3,6 @@ import type { FilterDto } from '@photobank/shared/api/photobank';
 import { getFilterHash } from '@photobank/shared/index';
 
 import type { MyContext } from '../i18n';
-import {
-  findBestPersonId,
-  findBestTagId,
-} from '../dictionaries';
 import { sendPhotosPage } from './photosPage';
 import { logger } from '../logger';
 
@@ -47,21 +43,19 @@ export async function aiCommand(ctx: MyContext, promptOverride?: string) {
   }
   try {
     const filter = await parseQueryWithOpenAI(prompt);
-    const dto: FilterDto = {} as FilterDto;
-    const personIds = filter.persons
-      .map((name) => findBestPersonId(name))
-      .filter((id): id is number => typeof id === 'number');
-    if (personIds.length) dto.persons = personIds;
+    const dto: FilterDto = {};
 
-    const tagIds = filter.tags
-      .map((name) => findBestTagId(name))
-      .filter((id): id is number => typeof id === 'number');
-    if (tagIds.length) dto.tags = tagIds;
-
+    if (filter.personNames.length) dto.personNames = filter.personNames;
+    if (filter.tagNames.length) dto.tagNames = filter.tagNames;
     if (filter.dateFrom) dto.takenDateFrom = filter.dateFrom.toISOString();
     if (filter.dateTo) dto.takenDateTo = filter.dateTo.toISOString();
 
-    if (Object.keys(dto).length === 0) {
+    if (
+      !dto.personNames &&
+      !dto.tagNames &&
+      !dto.takenDateFrom &&
+      !dto.takenDateTo
+    ) {
       await ctx.reply(ctx.t('ai-filter-empty'));
       return;
     }
