@@ -6,7 +6,7 @@ export const SYSTEM_PROMPT = `
 
 {
   "personNames": string[],  // имена людей (как в базе), в том числе полные имена если есть
-  "tagNames": string[],     // ТОЛЬКО существительные в именительном падеже, переведи на английский
+  "tagNames": string[],     // ТОЛЬКО существительные в именительном падеже
   "dateFrom": "YYYY-MM-DD" | null,
   "dateTo": "YYYY-MM-DD" | null
 }
@@ -17,7 +17,7 @@ export const SYSTEM_PROMPT = `
 - Если пользователь пишет «в январе 2019 года», верни dateFrom=2019-01-01, dateTo=2019-01-31.
 - "после <год>" => dateFrom = "<год>-01-01", dateTo = null.
 - "до <год>" => dateFrom = null, dateTo = "<год>-12-31".
-- Не добавляй тегов, которых нет во фразе (кроме перевода на английский).
+- Не добавляй тегов, которых нет во фразе.
 - Если нет людей — personNames = [].
 - Если есть несколько людей — перечисли всех.
 - Пустые поля ставь в null или [] по схеме.
@@ -32,7 +32,7 @@ export const FEW_SHOTS: Array<ChatCompletionMessageParam> = [
     role: "assistant",
     content: JSON.stringify({
       personNames: ["Маша"],
-      tagNames: ["dacha"],
+      tagNames: ["дача"],
       dateFrom: "2019-06-01",
       dateTo: "2019-08-31"
     })
@@ -58,7 +58,7 @@ export const FEW_SHOTS: Array<ChatCompletionMessageParam> = [
     role: "assistant",
     content: JSON.stringify({
       personNames: ["Саша", "Даша"],
-      tagNames: ["sea", "mountains", "portrait"],
+      tagNames: ["море", "горы", "портрет"],
       dateFrom: "2020-07-01",
       dateTo: "2020-07-31"
     })
