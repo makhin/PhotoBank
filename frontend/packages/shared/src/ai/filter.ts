@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const PhotoFilterSchema = z.object({
-  persons: z.array(z.string()).default([]),
-  tags: z.array(z.string()).default([]),
+  personNames: z.array(z.string()).default([]),
+  tagNames: z.array(z.string()).default([]),
   dateFrom: z
     .string()
     .nullable()
@@ -27,18 +27,18 @@ export const PhotoFilterSchema = z.object({
 export const photoFilterSchemaForLLM = {
   type: 'object',
   properties: {
-    persons: {
+    personNames: {
       type: 'array',
       items: { type: 'string' },
     },
-    tags: {
+    tagNames: {
       type: 'array',
       items: { type: 'string' },
     },
     dateFrom: { type: 'string' },
     dateTo: { type: 'string' },
   },
-  required: ['persons', 'tags', 'dateFrom', 'dateTo'],
+  required: ['personNames', 'tagNames', 'dateFrom', 'dateTo'],
   additionalProperties: false,
 };
 

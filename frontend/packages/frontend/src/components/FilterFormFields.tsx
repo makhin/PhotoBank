@@ -199,38 +199,38 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
 
                 <FormField
                     control={control}
-                    name="persons"
-                    render={({field}) => (
+                    name="personNames"
+                    render={({ field }) => (
                         <FormItem>
                             <FormLabel>{t('personsLabel')}</FormLabel>
                             <FormControl>
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
-                                    options={persons.map(person => ({ label: person.name, value: person.id.toString() }))}
+                                    options={persons.map((person) => ({ label: person.name, value: person.name }))}
                                     placeholder={t('selectPersonsPlaceholder')}
                                 />
                             </FormControl>
-                            <FormMessage/>
+                            <FormMessage />
                         </FormItem>
                     )}
                 />
 
                 <FormField
                     control={control}
-                    name="tags"
-                    render={({field}) => (
+                    name="tagNames"
+                    render={({ field }) => (
                         <FormItem>
                             <FormLabel>{t('tagsLabel')}</FormLabel>
                             <FormControl>
                                 <MultiSelect
                                     value={field.value}
                                     onValueChange={field.onChange}
-                                    options={tags.map(tag => ({ label: tag.name, value: tag.id.toString() }))}
+                                    options={tags.map((tag) => ({ label: tag.name, value: tag.name }))}
                                     placeholder={t('selectTagsPlaceholder')}
                                 />
                             </FormControl>
-                            <FormMessage/>
+                            <FormMessage />
                         </FormItem>
                     )}
                 />

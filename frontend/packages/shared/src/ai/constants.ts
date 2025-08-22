@@ -5,8 +5,8 @@ export const SYSTEM_PROMPT = `
 Всегда возвращай СТРОГО ВАЛИДНЫЙ JSON по схеме:
 
 {
-  "persons": string[],      // имена людей (как в базе), в том числе полные имена если есть
-  "tags": string[],         // ТОЛЬКО существительные в именительном падеже, переведи на английский
+  "personNames": string[],  // имена людей (как в базе), в том числе полные имена если есть
+  "tagNames": string[],     // ТОЛЬКО существительные в именительном падеже, переведи на английский
   "dateFrom": "YYYY-MM-DD" | null,
   "dateTo": "YYYY-MM-DD" | null
 }
@@ -18,7 +18,7 @@ export const SYSTEM_PROMPT = `
 - "после <год>" => dateFrom = "<год>-01-01", dateTo = null.
 - "до <год>" => dateFrom = null, dateTo = "<год>-12-31".
 - Не добавляй тегов, которых нет во фразе (кроме перевода на английский).
-- Если нет людей — persons = [].
+- Если нет людей — personNames = [].
 - Если есть несколько людей — перечисли всех.
 - Пустые поля ставь в null или [] по схеме.
 `;
@@ -31,8 +31,8 @@ export const FEW_SHOTS: Array<ChatCompletionMessageParam> = [
   {
     role: "assistant",
     content: JSON.stringify({
-      persons: ["Маша"],
-      tags: ["dacha"],
+      personNames: ["Маша"],
+      tagNames: ["dacha"],
       dateFrom: "2019-06-01",
       dateTo: "2019-08-31"
     })
@@ -44,8 +44,8 @@ export const FEW_SHOTS: Array<ChatCompletionMessageParam> = [
   {
     role: "assistant",
     content: JSON.stringify({
-      persons: ["Вася Пупкин"],
-      tags: [],
+      personNames: ["Вася Пупкин"],
+      tagNames: [],
       dateFrom: "2010-01-01",
       dateTo: null
     })
@@ -57,8 +57,8 @@ export const FEW_SHOTS: Array<ChatCompletionMessageParam> = [
   {
     role: "assistant",
     content: JSON.stringify({
-      persons: ["Саша", "Даша"],
-      tags: ["sea", "mountains", "portrait"],
+      personNames: ["Саша", "Даша"],
+      tagNames: ["sea", "mountains", "portrait"],
       dateFrom: "2020-07-01",
       dateTo: "2020-07-31"
     })
