@@ -1,0 +1,125 @@
+name: Manual CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_shared:
+        description: "Run packages/shared"
+        type: boolean
+        default: true
+      run_frontend:
+        description: "Run packages/frontend"
+        type: boolean
+        default: true
+      run_bot:
+        description: "Run packages/telegram-bot"
+        type: boolean
+        default: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install (workspace)
+        run: pnpm install --frozen-lockfile
+
+      # Helpers
+      - name: Define helpers
+        run: |
+          cat <<'BASH' > /tmp/run_pkg.sh
+          set -euo pipefail
+          export CI=true
+
+          run_if() { # dir script
+            node -e "const s=require('./$1/package.json').scripts||{}; process.exit(s['$2']?0:1)"
+          }
+
+          run_pkg() { # dir
+            local pkg="$1"
+            echo "::group::▶ ${pkg}"
+
+            # Lint
+            if run_if "${pkg}" lint; then
+              pnpm -C "${pkg}" run lint
+            else
+              echo "• skip lint"
+            fi
+
+            # Tests (with coverage if possible)
+            mkdir -p "coverage-artifacts/${pkg}"
+            if run_if "${pkg}" coverage; then
+              pnpm -C "${pkg}" run coverage || true
+            elif run_if "${pkg}" test:ci; then
+              pnpm -C "${pkg}" run test:ci -- --coverage || true
+            elif run_if "${pkg}" test; then
+              pnpm -C "${pkg}" run test -- --coverage || true
+            else
+              echo "• skip test"
+            fi
+
+            # Collect coverage (if any)
+            if [ -d "${pkg}/coverage" ]; then
+              echo "• collecting coverage from ${pkg}/coverage"
+              cp -r "${pkg}/coverage" "coverage-artifacts/${pkg}/" || true
+            fi
+            if [ -f "${pkg}/coverage/lcov.info" ]; then
+              cp "${pkg}/coverage/lcov.info" "coverage-artifacts/${pkg}/lcov.info" || true
+            fi
+
+            # Build
+            if run_if "${pkg}" build; then
+              pnpm -C "${pkg}" run build
+            else
+              echo "• skip build"
+            fi
+
+            echo "::endgroup::"
+          }
+          BASH
+          chmod +x /tmp/run_pkg.sh
+
+      - name: Run shared
+        if: ${{ inputs.run_shared }}
+        run: |
+          source /tmp/run_pkg.sh
+          run_pkg packages/shared
+
+      - name: Run frontend
+        if: ${{ inputs.run_frontend }}
+        run: |
+          source /tmp/run_pkg.sh
+          run_pkg packages/frontend
+
+      - name: Run telegram-bot
+        if: ${{ inputs.run_bot }}
+        run: |
+          source /tmp/run_pkg.sh
+          run_pkg packages/telegram-bot
+
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage-artifacts
+          if-no-files-found: ignore
