@@ -5,7 +5,7 @@ export const SYSTEM_PROMPT = `
 Всегда возвращай СТРОГО ВАЛИДНЫЙ JSON по схеме:
 
 {
-  "personNames": string[],  // имена людей (как в базе), в том числе полные имена если есть
+  "personNames": string[],  // имена людей, в том числе полные имена, если есть
   "tagNames": string[],     // ТОЛЬКО существительные в именительном падеже
   "dateFrom": "YYYY-MM-DD" | null,
   "dateTo": "YYYY-MM-DD" | null
