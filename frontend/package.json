@@ -13,6 +13,7 @@
     "lint": "pnpm -r lint",
     "format": "pnpm -r format",
     "test": "pnpm -r --workspace-concurrency=1 test",
+    "test:coverage": "pnpm -r --workspace-concurrency=1 test:coverage",
     "generate:api": "orval --config ../orval.config.ts"
   },
   "keywords": [],

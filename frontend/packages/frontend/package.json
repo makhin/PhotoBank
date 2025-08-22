@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:ci": "vitest --run --reporter=dot --coverage",
+    "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui"
   },
   "eslintConfig": {
