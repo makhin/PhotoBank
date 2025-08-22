@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { aiCommand, parseAiPrompt, aiFilters } from '../src/commands/ai';
 import * as openai from '@photobank/shared/ai/openai';
-import * as dict from '../src/dictionaries';
 import * as photoService from '../src/services/photo';
 import * as utils from '@photobank/shared/index';
 import { i18n } from '../src/i18n';
@@ -35,13 +34,11 @@ describe('aiCommand', () => {
   it('requests photos with parsed filter', async () => {
     const ctx = { reply: vi.fn(), message: { text: '/ai test' }, t: (k: string, p?: any) => i18n.t('en', k, p) } as any;
     vi.spyOn(openai, 'parseQueryWithOpenAI').mockResolvedValue({
-      persons: ['Alice'],
-      tags: ['portrait'],
+      personNames: ['Alice'],
+      tagNames: ['portrait'],
       dateFrom: new Date('2020-01-01T00:00:00Z'),
       dateTo: null,
     });
-    vi.spyOn(dict, 'findBestPersonId').mockReturnValue(1);
-    vi.spyOn(dict, 'findBestTagId').mockReturnValue(10);
     vi.spyOn(utils, 'getFilterHash').mockReturnValue('hash');
     const searchSpy = vi
       .spyOn(photoService, 'searchPhotos')
@@ -54,8 +51,8 @@ describe('aiCommand', () => {
     expect(searchSpy).toHaveBeenCalledWith(
       ctx,
       expect.objectContaining({
-        persons: [1],
-        tags: [10],
+        personNames: ['Alice'],
+        tagNames: ['portrait'],
         takenDateFrom: '2020-01-01T00:00:00.000Z',
         top: 10,
         skip: 0,
@@ -67,8 +64,8 @@ describe('aiCommand', () => {
   it('warns when filter is empty', async () => {
     const ctx = { reply: vi.fn(), message: { text: '/ai empty' }, t: (k: string, p?: any) => i18n.t('en', k, p) } as any;
     vi.spyOn(openai, 'parseQueryWithOpenAI').mockResolvedValue({
-      persons: [],
-      tags: [],
+      personNames: [],
+      tagNames: [],
       dateFrom: null,
       dateTo: null,
     });
@@ -87,8 +84,8 @@ describe('aiCommand', () => {
     const parseSpy = vi
       .spyOn(openai, 'parseQueryWithOpenAI')
       .mockResolvedValue({
-        persons: [],
-        tags: [],
+        personNames: [],
+        tagNames: [],
         dateFrom: null,
         dateTo: null,
       });

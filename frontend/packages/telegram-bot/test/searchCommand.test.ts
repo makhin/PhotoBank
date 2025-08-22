@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import * as searchCommands from '../src/commands/search';
 import * as photoService from '../src/services/photo';
-import * as resolvers from '../src/services/resolvers';
 import { i18n } from '../src/i18n';
 
 describe('handleSearch', () => {
@@ -23,7 +22,6 @@ describe('handleSearch', () => {
       from: { id: 1 },
       t: (k: string) => i18n.t('en', k),
     } as any;
-    vi.spyOn(resolvers, 'resolveHumanNamesToIds').mockImplementation(async (_ctx, d) => d as any);
     vi.spyOn(photoService, 'searchPhotos').mockRejectedValue(new Error('fail'));
     await searchCommands.handleSearch(ctx);
     expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'sorry-try-later'));
@@ -36,7 +34,6 @@ describe('handleSearch', () => {
       from: { id: 1 },
       t: (k: string) => i18n.t('en', k),
     } as any;
-    vi.spyOn(resolvers, 'resolveHumanNamesToIds').mockImplementation(async (_ctx, d) => d as any);
     const searchSpy = vi
       .spyOn(photoService, 'searchPhotos')
       .mockResolvedValue({ data: { count: 0, photos: [] } } as any);
