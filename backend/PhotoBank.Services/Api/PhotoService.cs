@@ -31,16 +31,16 @@ public interface IPhotoService
 }
 
 public class PhotoService : IPhotoService
-{   
+{
     private readonly PhotoBankDbContext _db;
     private readonly IRepository<Photo> _photoRepository;
-    private readonly IRepository<Person> _personRepository;
     private readonly IRepository<Face> _faceRepository;
     private readonly IRepository<Storage> _storageRepository;
     private readonly IMapper _mapper;
     private readonly IMemoryCache _cache;
     private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
     private readonly Lazy<Task<IReadOnlyList<PathDto>>> _paths;
+    private readonly Lazy<Task<IReadOnlyList<PersonDto>>> _persons;
     private readonly ICurrentUser _currentUser;
 
     private static readonly MemoryCacheEntryOptions CacheOptions = new()
@@ -62,7 +62,6 @@ public class PhotoService : IPhotoService
     {
         _db = db;
         _photoRepository = photoRepository;
-        _personRepository = personRepository;
         _faceRepository = faceRepository;
         _storageRepository = storageRepository;
         _mapper = mapper;
@@ -82,6 +81,13 @@ public class PhotoService : IPhotoService
                 .Distinct()
                 .OrderBy(p => p.Path)
                 .ThenBy(p => p.StorageId)
+                .ToListAsync()));
+        _persons = new Lazy<Task<IReadOnlyList<PersonDto>>>(() =>
+            GetCachedAsync("persons", async () => (IReadOnlyList<PersonDto>)await personRepository.GetAll()
+                .AsNoTracking()
+                .OrderBy(p => p.Name)
+                .ThenBy(p => p.Id)
+                .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
                 .ToListAsync()));
     }
 
@@ -208,15 +214,7 @@ public class PhotoService : IPhotoService
         return entity is null ? null : _mapper.Map<Photo, PhotoDto>(entity);
     }
 
-    public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync()
-    {
-        return await _personRepository.GetAll()
-            .AsNoTracking()
-            .OrderBy(p => p.Name)
-            .ThenBy(p => p.Id)
-            .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
-            .ToListAsync();
-    }
+    public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync() => await _persons.Value;
 
     public async Task<IEnumerable<PathDto>> GetAllPathsAsync() => await _paths.Value;
 

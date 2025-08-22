@@ -64,7 +64,7 @@ namespace PhotoBank.Services
             services.AddOptions<TranslatorOptions>().Bind(configuration.GetSection("Translator"));
             services.AddHttpClient<ITranslatorService, TranslatorService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(100 * attempt)));
-            services.AddSingleton<ISearchFilterNormalizer, SearchFilterNormalizer>();
+            services.AddTransient<ISearchFilterNormalizer, SearchFilterNormalizer>();
 
             services.AddTransient<IEnricher, MetadataEnricher>();
             services.AddTransient<IEnricher, ThumbnailEnricher>();
