@@ -3,6 +3,7 @@ using FluentAssertions;
 using PhotoBank.ViewModel.Dto;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace PhotoBank.Tests.ViewModel.Dto
 {
@@ -55,12 +56,44 @@ namespace PhotoBank.Tests.ViewModel.Dto
         }
 
         [Test]
+        public void IsNotEmpty_ShouldReturnTrue_WhenPersonNamesIsNotEmpty()
+        {
+            // Arrange
+            var filterDto = new FilterDto
+            {
+                PersonNames = new[] { "John" }
+            };
+
+            // Act
+            var result = filterDto.IsNotEmpty();
+
+            // Assert
+            result.Should().BeTrue();
+        }
+
+        [Test]
         public void IsNotEmpty_ShouldReturnTrue_WhenTagsIsNotEmpty()
         {
             // Arrange
             var filterDto = new FilterDto
             {
                 Tags = new List<int> { 1 }
+            };
+
+            // Act
+            var result = filterDto.IsNotEmpty();
+
+            // Assert
+            result.Should().BeTrue();
+        }
+
+        [Test]
+        public void IsNotEmpty_ShouldReturnTrue_WhenTagNamesIsNotEmpty()
+        {
+            // Arrange
+            var filterDto = new FilterDto
+            {
+                TagNames = new[] { "Nature" }
             };
 
             // Act
@@ -212,6 +245,38 @@ namespace PhotoBank.Tests.ViewModel.Dto
 
             // Assert
             result.Should().BeTrue();
+        }
+
+        [Test]
+        public void Persons_ShouldBeIgnoredDuringSerialization()
+        {
+            var filterDto = new FilterDto
+            {
+                Persons = new List<int> { 1 }
+            };
+
+            var json = JsonSerializer.Serialize(filterDto, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+
+            json.Should().NotContain("persons").And.NotContain("Persons");
+        }
+
+        [Test]
+        public void Tags_ShouldBeIgnoredDuringSerialization()
+        {
+            var filterDto = new FilterDto
+            {
+                Tags = new List<int> { 1 }
+            };
+
+            var json = JsonSerializer.Serialize(filterDto, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+
+            json.Should().NotContain("tags").And.NotContain("Tags");
         }
     }
 }
