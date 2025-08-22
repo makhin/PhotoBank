@@ -1152,17 +1152,15 @@ components:
           nullable: true
         thisDay:
           $ref: '#/components/schemas/ThisDayDto'
-        persons:
+        personNames:
           type: array
           items:
-            type: integer
-            format: int32
+            type: string
           nullable: true
-        tags:
+        tagNames:
           type: array
           items:
-            type: integer
-            format: int32
+            type: string
           nullable: true
         orderBy:
           type: string
