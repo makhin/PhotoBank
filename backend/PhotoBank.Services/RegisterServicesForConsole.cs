@@ -12,6 +12,7 @@ using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.Recognition;
 using PhotoBank.Services.Translator;
+using PhotoBank.Services.Search;
 using PhotoBank.AccessControl;
 using ApiKeyServiceClientCredentials = Microsoft.Azure.CognitiveServices.Vision.ComputerVision.ApiKeyServiceClientCredentials;
 using Polly;
@@ -63,6 +64,7 @@ namespace PhotoBank.Services
             services.AddOptions<TranslatorOptions>().Bind(configuration.GetSection("Translator"));
             services.AddHttpClient<ITranslatorService, TranslatorService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(100 * attempt)));
+            services.AddSingleton<ISearchFilterNormalizer, SearchFilterNormalizer>();
 
             services.AddTransient<IEnricher, MetadataEnricher>();
             services.AddTransient<IEnricher, ThumbnailEnricher>();

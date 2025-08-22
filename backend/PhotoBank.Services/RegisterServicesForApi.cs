@@ -5,6 +5,7 @@ using PhotoBank.Repositories;
 using PhotoBank.Services.Api;
 using PhotoBank.AccessControl;
 using PhotoBank.Services.Translator;
+using PhotoBank.Services.Search;
 using Polly;
 
 namespace PhotoBank.Services
@@ -22,6 +23,7 @@ namespace PhotoBank.Services
             services.AddOptions<TranslatorOptions>().BindConfiguration("Translator");
             services.AddHttpClient<ITranslatorService, TranslatorService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(100 * attempt)));
+            services.AddSingleton<ISearchFilterNormalizer, SearchFilterNormalizer>();
         }
     }
 }
