@@ -51,6 +51,9 @@ namespace PhotoBank.Services
             CreateMap<Person, PersonDto>()
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
+            CreateMap<PersonGroup, PersonGroupDto>()
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
             CreateMap<Face, ViewModel.Dto.FaceDto>()
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.Person == null ? (int?)null : src.Person.Id))
                 .ForMember(dest => dest.FaceBox, opt => opt.MapFrom(src => FaceHelper.GetFaceBox(src.Rectangle, src.Photo)))

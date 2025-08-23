@@ -25,6 +25,11 @@ public interface IPhotoService
     Task<IEnumerable<StorageDto>> GetAllStoragesAsync();
     Task<IEnumerable<TagDto>> GetAllTagsAsync();
     Task<IEnumerable<PathDto>> GetAllPathsAsync();
+    Task<IEnumerable<PersonGroupDto>> GetAllPersonGroupsAsync();
+    Task<PersonGroupDto> CreatePersonGroupAsync(string name);
+    Task DeletePersonGroupAsync(int groupId);
+    Task AddPersonToGroupAsync(int groupId, int personId);
+    Task RemovePersonFromGroupAsync(int groupId, int personId);
     Task UpdateFaceAsync(int faceId, int personId);
     Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold);
     Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path);
@@ -36,11 +41,13 @@ public class PhotoService : IPhotoService
     private readonly IRepository<Photo> _photoRepository;
     private readonly IRepository<Face> _faceRepository;
     private readonly IRepository<Storage> _storageRepository;
+    private readonly IRepository<PersonGroup> _personGroupRepository;
     private readonly IMapper _mapper;
     private readonly IMemoryCache _cache;
     private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
     private readonly Lazy<Task<IReadOnlyList<PathDto>>> _paths;
     private readonly Lazy<Task<IReadOnlyList<PersonDto>>> _persons;
+    private readonly Lazy<Task<IReadOnlyList<PersonGroupDto>>> _personGroups;
     private readonly ICurrentUser _currentUser;
 
     private static readonly MemoryCacheEntryOptions CacheOptions = new()
@@ -56,6 +63,7 @@ public class PhotoService : IPhotoService
         IRepository<Face> faceRepository,
         IRepository<Storage> storageRepository,
         IRepository<Tag> tagRepository,
+        IRepository<PersonGroup> personGroupRepository,
         IMapper mapper,
         IMemoryCache cache,
         ICurrentUser currentUser)
@@ -64,6 +72,7 @@ public class PhotoService : IPhotoService
         _photoRepository = photoRepository;
         _faceRepository = faceRepository;
         _storageRepository = storageRepository;
+        _personGroupRepository = personGroupRepository;
         _mapper = mapper;
         _cache = cache;
         _currentUser = currentUser;
@@ -88,6 +97,13 @@ public class PhotoService : IPhotoService
                 .OrderBy(p => p.Name)
                 .ThenBy(p => p.Id)
                 .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
+                .ToListAsync()));
+        _personGroups = new Lazy<Task<IReadOnlyList<PersonGroupDto>>>(() =>
+            GetCachedAsync("persongroups", async () => (IReadOnlyList<PersonGroupDto>)await personGroupRepository.GetAll()
+                .AsNoTracking()
+                .OrderBy(pg => pg.Name)
+                .ThenBy(pg => pg.Id)
+                .ProjectTo<PersonGroupDto>(_mapper.ConfigurationProvider)
                 .ToListAsync()));
     }
 
@@ -229,6 +245,46 @@ public class PhotoService : IPhotoService
     }
 
     public async Task<IEnumerable<TagDto>> GetAllTagsAsync() => await _tags.Value;
+
+    public async Task<IEnumerable<PersonGroupDto>> GetAllPersonGroupsAsync() => await _personGroups.Value;
+
+    public async Task<PersonGroupDto> CreatePersonGroupAsync(string name)
+    {
+        var entity = await _personGroupRepository.InsertAsync(new PersonGroup { Name = name });
+        _cache.Remove("persongroups");
+        return _mapper.Map<PersonGroupDto>(entity);
+    }
+
+    public async Task DeletePersonGroupAsync(int groupId)
+    {
+        await _personGroupRepository.DeleteAsync(groupId);
+        _cache.Remove("persongroups");
+    }
+
+    public async Task AddPersonToGroupAsync(int groupId, int personId)
+    {
+        var person = await _db.Persons.Include(p => p.PersonGroups)
+            .SingleOrDefaultAsync(p => p.Id == personId) ?? throw new ArgumentException($"Person {personId} not found", nameof(personId));
+        var group = await _db.PersonGroups.FindAsync(groupId) ?? throw new ArgumentException($"Group {groupId} not found", nameof(groupId));
+
+        if (!person.PersonGroups.Any(pg => pg.Id == groupId))
+        {
+            person.PersonGroups.Add(group);
+            await _db.SaveChangesAsync();
+        }
+    }
+
+    public async Task RemovePersonFromGroupAsync(int groupId, int personId)
+    {
+        var person = await _db.Persons.Include(p => p.PersonGroups)
+            .SingleOrDefaultAsync(p => p.Id == personId) ?? throw new ArgumentException($"Person {personId} not found", nameof(personId));
+        var group = person.PersonGroups.FirstOrDefault(pg => pg.Id == groupId);
+        if (group != null)
+        {
+            person.PersonGroups.Remove(group);
+            await _db.SaveChangesAsync();
+        }
+    }
 
     public async Task UpdateFaceAsync(int faceId, int personId)
     {
