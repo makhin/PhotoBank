@@ -5,16 +5,23 @@
  * OpenAPI spec version: 1.0
  */
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
   MutationFunction,
+  QueryFunction,
+  QueryKey,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
-  UpdateFaceDto
+  FaceIdentityDto,
+  FacesGetParams,
+  UpdateFaceIdentityDto
 } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
 
 import { customFetcher } from '.././fetcher';
@@ -23,6 +30,89 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 
       type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
+
+
+
+export type facesGetResponse200 = {
+  data: FaceIdentityDto[]
+  status: 200
+}
+    
+export type facesGetResponseComposite = facesGetResponse200;
+    
+export type facesGetResponse = facesGetResponseComposite & {
+  headers: Headers;
+}
+
+export const getFacesGetUrl = (params?: FacesGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/faces?${stringifiedParams}` : `/faces`
+}
+
+export const facesGet = async (params?: FacesGetParams, options?: RequestInit): Promise<facesGetResponse> => {
+  
+  return customFetcher<facesGetResponse>(getFacesGetUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getFacesGetQueryKey = (params?: FacesGetParams,) => {
+    return [`/faces`, ...(params ? [params]: [])] as const;
+    }
+
+    
+export const getFacesGetQueryOptions = <TData = Awaited<ReturnType<typeof facesGet>>, TError = unknown>(params?: FacesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGet>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFacesGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGet>>> = ({ signal }) => facesGet(params, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof facesGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type FacesGetQueryResult = NonNullable<Awaited<ReturnType<typeof facesGet>>>
+export type FacesGetQueryError = unknown
+
+
+
+export function useFacesGet<TData = Awaited<ReturnType<typeof facesGet>>, TError = unknown>(
+ params?: FacesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGet>>, TError, TData>, }
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getFacesGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
 
 
 
@@ -45,7 +135,7 @@ export const getFacesUpdateUrl = () => {
   return `/faces`
 }
 
-export const facesUpdate = async (updateFaceDto: UpdateFaceDto, options?: RequestInit): Promise<facesUpdateResponse> => {
+export const facesUpdate = async (updateFaceIdentityDto: UpdateFaceIdentityDto, options?: RequestInit): Promise<facesUpdateResponse> => {
   
   return customFetcher<facesUpdateResponse>(getFacesUpdateUrl(),
   {      
@@ -53,7 +143,7 @@ export const facesUpdate = async (updateFaceDto: UpdateFaceDto, options?: Reques
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      updateFaceDto,)
+      updateFaceIdentityDto,)
   }
 );}
 
@@ -61,8 +151,8 @@ export const facesUpdate = async (updateFaceDto: UpdateFaceDto, options?: Reques
 
 
 export const getFacesUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceDto}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceDto}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceIdentityDto}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceIdentityDto}, TContext> => {
 
 const mutationKey = ['facesUpdate'];
 const {mutation: mutationOptions} = options ?
@@ -74,7 +164,7 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof facesUpdate>>, {data: UpdateFaceDto}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof facesUpdate>>, {data: UpdateFaceIdentityDto}> = (props) => {
           const {data} = props ?? {};
 
           return  facesUpdate(data,)
@@ -86,15 +176,15 @@ const {mutation: mutationOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type FacesUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof facesUpdate>>>
-    export type FacesUpdateMutationBody = UpdateFaceDto
+    export type FacesUpdateMutationBody = UpdateFaceIdentityDto
     export type FacesUpdateMutationError = unknown
 
     export const useFacesUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceIdentityDto}, TContext>, }
  ): UseMutationResult<
         Awaited<ReturnType<typeof facesUpdate>>,
         TError,
-        {data: UpdateFaceDto},
+        {data: UpdateFaceIdentityDto},
         TContext
       > => {
 
