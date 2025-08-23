@@ -26,7 +26,11 @@ public interface IPhotoService
     Task<IEnumerable<TagDto>> GetAllTagsAsync();
     Task<IEnumerable<PathDto>> GetAllPathsAsync();
     Task<IEnumerable<PersonGroupDto>> GetAllPersonGroupsAsync();
+    Task<PersonDto> CreatePersonAsync(string name);
+    Task<PersonDto> UpdatePersonAsync(int personId, string name);
+    Task DeletePersonAsync(int personId);
     Task<PersonGroupDto> CreatePersonGroupAsync(string name);
+    Task<PersonGroupDto> UpdatePersonGroupAsync(int groupId, string name);
     Task DeletePersonGroupAsync(int groupId);
     Task AddPersonToGroupAsync(int groupId, int personId);
     Task RemovePersonFromGroupAsync(int groupId, int personId);
@@ -42,6 +46,7 @@ public class PhotoService : IPhotoService
     private readonly IRepository<Face> _faceRepository;
     private readonly IRepository<Storage> _storageRepository;
     private readonly IRepository<PersonGroup> _personGroupRepository;
+    private readonly IRepository<Person> _personRepository;
     private readonly IMapper _mapper;
     private readonly IMemoryCache _cache;
     private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
@@ -73,6 +78,7 @@ public class PhotoService : IPhotoService
         _faceRepository = faceRepository;
         _storageRepository = storageRepository;
         _personGroupRepository = personGroupRepository;
+        _personRepository = personRepository;
         _mapper = mapper;
         _cache = cache;
         _currentUser = currentUser;
@@ -232,6 +238,27 @@ public class PhotoService : IPhotoService
 
     public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync() => await _persons.Value;
 
+    public async Task<PersonDto> CreatePersonAsync(string name)
+    {
+        var entity = await _personRepository.InsertAsync(new Person { Name = name });
+        _cache.Remove("persons");
+        return _mapper.Map<PersonDto>(entity);
+    }
+
+    public async Task<PersonDto> UpdatePersonAsync(int personId, string name)
+    {
+        var entity = new Person { Id = personId, Name = name };
+        await _personRepository.UpdateAsync(entity, p => p.Name);
+        _cache.Remove("persons");
+        return _mapper.Map<PersonDto>(entity);
+    }
+
+    public async Task DeletePersonAsync(int personId)
+    {
+        await _personRepository.DeleteAsync(personId);
+        _cache.Remove("persons");
+    }
+
     public async Task<IEnumerable<PathDto>> GetAllPathsAsync() => await _paths.Value;
 
     public async Task<IEnumerable<StorageDto>> GetAllStoragesAsync()
@@ -251,6 +278,14 @@ public class PhotoService : IPhotoService
     public async Task<PersonGroupDto> CreatePersonGroupAsync(string name)
     {
         var entity = await _personGroupRepository.InsertAsync(new PersonGroup { Name = name });
+        _cache.Remove("persongroups");
+        return _mapper.Map<PersonGroupDto>(entity);
+    }
+
+    public async Task<PersonGroupDto> UpdatePersonGroupAsync(int groupId, string name)
+    {
+        var entity = new PersonGroup { Id = groupId, Name = name };
+        await _personGroupRepository.UpdateAsync(entity, pg => pg.Name);
         _cache.Remove("persongroups");
         return _mapper.Map<PersonGroupDto>(entity);
     }
