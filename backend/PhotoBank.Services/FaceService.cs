@@ -36,7 +36,7 @@ namespace PhotoBank.Services
         private readonly IFaceClient _faceClient;
         private readonly IRepository<Face> _faceRepository;
         private readonly IRepository<DbContext.Models.Person> _personRepository;
-        private readonly IRepository<PersonGroupFace> _personGroupFaceRepository;
+        private readonly IRepository<PersonFace> _personFaceRepository;
         private readonly IRepository<Photo> _photoRepository;
         private readonly IMapper _mapper;
         private readonly ILogger<FaceService> _logger;
@@ -63,7 +63,7 @@ namespace PhotoBank.Services
         public FaceService(IFaceClient faceClient,
             IRepository<Face> faceRepository,
             IRepository<DbContext.Models.Person> personRepository,
-            IRepository<PersonGroupFace> personGroupFaceRepository,
+            IRepository<PersonFace> personFaceRepository,
             IRepository<Photo> photoRepository,
             IMapper mapper,
             ILogger<FaceService> logger)
@@ -71,7 +71,7 @@ namespace PhotoBank.Services
             this._faceClient = faceClient;
             _faceRepository = faceRepository;
             _personRepository = personRepository;
-            _personGroupFaceRepository = personGroupFaceRepository;
+            _personFaceRepository = personFaceRepository;
             _photoRepository = photoRepository;
             _mapper = mapper;
             _logger = logger;
@@ -135,9 +135,9 @@ namespace PhotoBank.Services
 
         public async Task SyncFacesToPersonAsync()
         {
-            var dbPersonGroupFaces = await _personGroupFaceRepository.GetAll().Include(p => p.Person).AsNoTracking().ToListAsync();
+            var dbPersonFaces = await _personFaceRepository.GetAll().Include(p => p.Person).AsNoTracking().ToListAsync();
 
-            var groupBy = dbPersonGroupFaces.GroupBy(x => new { x.PersonId, x.Person.ExternalGuid }, p=> new { p.FaceId, p.ExternalGuid } ,
+            var groupBy = dbPersonFaces.GroupBy(x => new { x.PersonId, x.Person.ExternalGuid }, p=> new { p.FaceId, p.ExternalGuid } ,
                 (key, g) => new { Key = key, Faces = g.ToList()});
 
             foreach (var dbPerson in groupBy)
@@ -157,9 +157,9 @@ namespace PhotoBank.Services
                         try
                         {
                             var face = await _faceClient.PersonGroupPerson.AddFaceFromStreamAsync(PersonGroupId, person.PersonId, stream, personFace.FaceId.ToString());
-                            var personGroupFace = dbPersonGroupFaces.Single(g => g.PersonId == dbPerson.Key.PersonId && g.FaceId == personFace.FaceId);
-                            personGroupFace.ExternalGuid = face.PersistedFaceId;
-                            await _personGroupFaceRepository.UpdateAsync(personGroupFace, pgf => pgf.ExternalGuid);
+                            var link = dbPersonFaces.Single(g => g.PersonId == dbPerson.Key.PersonId && g.FaceId == personFace.FaceId);
+                            link.ExternalGuid = face.PersistedFaceId;
+                            await _personFaceRepository.UpdateAsync(link, pgf => pgf.ExternalGuid);
                         }
                         catch (Exception e)
                         {
@@ -186,9 +186,9 @@ namespace PhotoBank.Services
         public async Task AddFacesToLargeFaceListAsync()
         {
             var dbFaces = await _faceRepository.GetAll()
-                .Include(f => f.PersonGroupFace)
+                .Include(f => f.PersonFace)
                 .AsNoTracking()
-                .Where(f => f.PersonGroupFace == null)
+                .Where(f => f.PersonFace == null)
                 .Take(1000).ToListAsync();
 
             LargeFaceList list = null;

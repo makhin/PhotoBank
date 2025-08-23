@@ -34,10 +34,10 @@ public interface IPhotoService
     Task DeletePersonGroupAsync(int groupId);
     Task AddPersonToGroupAsync(int groupId, int personId);
     Task RemovePersonFromGroupAsync(int groupId, int personId);
-    Task<IEnumerable<PersonGroupFaceDto>> GetAllPersonGroupFacesAsync();
-    Task<PersonGroupFaceDto> CreatePersonGroupFaceAsync(PersonGroupFaceDto dto);
-    Task<PersonGroupFaceDto> UpdatePersonGroupFaceAsync(int id, PersonGroupFaceDto dto);
-    Task DeletePersonGroupFaceAsync(int id);
+    Task<IEnumerable<PersonFaceDto>> GetAllPersonFacesAsync();
+    Task<PersonFaceDto> CreatePersonFaceAsync(PersonFaceDto dto);
+    Task<PersonFaceDto> UpdatePersonFaceAsync(int id, PersonFaceDto dto);
+    Task DeletePersonFaceAsync(int id);
     Task UpdateFaceAsync(int faceId, int personId);
     Task<IEnumerable<FaceIdentityDto>> GetFacesAsync(IdentityStatus? status, int? personId);
     Task UpdateFaceIdentityAsync(int faceId, IdentityStatus identityStatus, int? personId);
@@ -53,7 +53,7 @@ public class PhotoService : IPhotoService
     private readonly IRepository<Storage> _storageRepository;
     private readonly IRepository<PersonGroup> _personGroupRepository;
     private readonly IRepository<Person> _personRepository;
-    private readonly IRepository<PersonGroupFace> _personGroupFaceRepository;
+    private readonly IRepository<PersonFace> _personFaceRepository;
     private readonly IMapper _mapper;
     private readonly IMemoryCache _cache;
     private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
@@ -76,7 +76,7 @@ public class PhotoService : IPhotoService
         IRepository<Storage> storageRepository,
         IRepository<Tag> tagRepository,
         IRepository<PersonGroup> personGroupRepository,
-        IRepository<PersonGroupFace> personGroupFaceRepository,
+        IRepository<PersonFace> personFaceRepository,
         IMapper mapper,
         IMemoryCache cache,
         ICurrentUser currentUser)
@@ -86,7 +86,7 @@ public class PhotoService : IPhotoService
         _faceRepository = faceRepository;
         _storageRepository = storageRepository;
         _personGroupRepository = personGroupRepository;
-        _personGroupFaceRepository = personGroupFaceRepository;
+        _personFaceRepository = personFaceRepository;
         _personRepository = personRepository;
         _mapper = mapper;
         _cache = cache;
@@ -330,31 +330,31 @@ public class PhotoService : IPhotoService
         }
     }
 
-    public async Task<IEnumerable<PersonGroupFaceDto>> GetAllPersonGroupFacesAsync()
+    public async Task<IEnumerable<PersonFaceDto>> GetAllPersonFacesAsync()
     {
-        return await _personGroupFaceRepository.GetAll()
+        return await _personFaceRepository.GetAll()
             .AsNoTracking()
-            .ProjectTo<PersonGroupFaceDto>(_mapper.ConfigurationProvider)
+            .ProjectTo<PersonFaceDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
     }
 
-    public async Task<PersonGroupFaceDto> CreatePersonGroupFaceAsync(PersonGroupFaceDto dto)
+    public async Task<PersonFaceDto> CreatePersonFaceAsync(PersonFaceDto dto)
     {
-        var entity = _mapper.Map<PersonGroupFace>(dto);
-        var created = await _personGroupFaceRepository.InsertAsync(entity);
-        return _mapper.Map<PersonGroupFaceDto>(created);
+        var entity = _mapper.Map<PersonFace>(dto);
+        var created = await _personFaceRepository.InsertAsync(entity);
+        return _mapper.Map<PersonFaceDto>(created);
     }
 
-    public async Task<PersonGroupFaceDto> UpdatePersonGroupFaceAsync(int id, PersonGroupFaceDto dto)
+    public async Task<PersonFaceDto> UpdatePersonFaceAsync(int id, PersonFaceDto dto)
     {
-        var entity = _mapper.Map<PersonGroupFace>(dto);
-        await _personGroupFaceRepository.UpdateAsync(entity);
-        return _mapper.Map<PersonGroupFaceDto>(entity);
+        var entity = _mapper.Map<PersonFace>(dto);
+        await _personFaceRepository.UpdateAsync(entity);
+        return _mapper.Map<PersonFaceDto>(entity);
     }
 
-    public async Task DeletePersonGroupFaceAsync(int id)
+    public async Task DeletePersonFaceAsync(int id)
     {
-        await _personGroupFaceRepository.DeleteAsync(id);
+        await _personFaceRepository.DeleteAsync(id);
     }
 
     public async Task UpdateFaceAsync(int faceId, int personId)

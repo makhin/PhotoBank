@@ -26,7 +26,7 @@ namespace PhotoBank.Services
         private readonly AmazonRekognitionClient _faceClient;
         private readonly IRepository<Face> _faceRepository;
         private readonly IRepository<Person> _personRepository;
-        private readonly IRepository<PersonGroupFace> _personGroupFaceRepository;
+        private readonly IRepository<PersonFace> _personFaceRepository;
         private readonly ILogger<FaceService> _logger;
 
         private const string PersonGroupId = "my-cicrle-person-group";
@@ -34,13 +34,13 @@ namespace PhotoBank.Services
         public FaceServiceAws(AmazonRekognitionClient faceClient,
             IRepository<Face> faceRepository,
             IRepository<Person> personRepository,
-            IRepository<PersonGroupFace> personGroupFaceRepository,
+            IRepository<PersonFace> personFaceRepository,
             ILogger<FaceService> logger)
         {
             _faceClient = faceClient;
             _faceRepository = faceRepository;
             _personRepository = personRepository;
-            _personGroupFaceRepository = personGroupFaceRepository;
+            _personFaceRepository = personFaceRepository;
             _logger = logger;
         }
 
@@ -98,9 +98,9 @@ namespace PhotoBank.Services
 
         public async Task SyncFacesToPersonAsync()
         {
-            var dbPersonGroupFaces = await _personGroupFaceRepository.GetAll().Include(p => p.Person).AsNoTracking().ToListAsync();
+            var dbPersonFaces = await _personFaceRepository.GetAll().Include(p => p.Person).AsNoTracking().ToListAsync();
 
-            var groupBy = dbPersonGroupFaces.GroupBy(x => new { x.PersonId }, p => new { p.FaceId, p.ExternalGuid },
+            var groupBy = dbPersonFaces.GroupBy(x => new { x.PersonId }, p => new { p.FaceId, p.ExternalGuid },
                 (key, g) => new { Key = key, Faces = g.ToList() });
 
             foreach (var dbPerson in groupBy)
@@ -149,9 +149,9 @@ namespace PhotoBank.Services
                                 {
                                     continue;
                                 }
-                                var personGroupFace = dbPersonGroupFaces.Single(g => g.PersonId == dbPerson.Key.PersonId && g.FaceId == personFace.FaceId);
-                                personGroupFace.ExternalGuid = Guid.Parse(associatedFace.FaceId);
-                                await _personGroupFaceRepository.UpdateAsync(personGroupFace, pgf => pgf.ExternalGuid);
+                                var link = dbPersonFaces.Single(g => g.PersonId == dbPerson.Key.PersonId && g.FaceId == personFace.FaceId);
+                                link.ExternalGuid = Guid.Parse(associatedFace.FaceId);
+                                await _personFaceRepository.UpdateAsync(link, pgf => pgf.ExternalGuid);
                             }
                         }
                         catch (Exception e)

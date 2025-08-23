@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PhotoBank.DbContext.Models
 {
-    public class PersonGroupFace : IEntityBase
+    public class PersonFace : IEntityBase
     {
         public int Id { get; set; }
         public int PersonId { get; set; }

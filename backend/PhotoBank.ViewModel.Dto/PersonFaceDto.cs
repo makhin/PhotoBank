@@ -1,6 +1,6 @@
 namespace PhotoBank.ViewModel.Dto
 {
-    public class PersonGroupFaceDto
+    public class PersonFaceDto
     {
         public int Id { get; set; }
 

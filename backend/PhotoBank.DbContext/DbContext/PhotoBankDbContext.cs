@@ -111,18 +111,18 @@ namespace PhotoBank.DbContext.DbContext
                 .WithMany(t => t.PhotoCategories)
                 .HasForeignKey(pt => pt.CategoryId);
 
-            modelBuilder.Entity<PersonGroupFace>().HasIndex(q => q.FaceId);
-            modelBuilder.Entity<PersonGroupFace>().HasIndex(q => q.PersonId);
+            modelBuilder.Entity<PersonFace>().HasIndex(q => q.FaceId);
+            modelBuilder.Entity<PersonFace>().HasIndex(q => q.PersonId);
 
             // Relationships
-            modelBuilder.Entity<PersonGroupFace>()
+            modelBuilder.Entity<PersonFace>()
                 .HasOne(t => t.Person)
-                .WithMany(t => t.PersonGroupFaces)
+                .WithMany(t => t.PersonFaces)
                 .HasForeignKey(t => t.PersonId);
 
-            modelBuilder.Entity<PersonGroupFace>()
+            modelBuilder.Entity<PersonFace>()
                 .HasOne(t => t.Face)
-                .WithOne(t => t.PersonGroupFace);
+                .WithOne(t => t.PersonFace);
 
             modelBuilder.Entity<File>(e =>
             {

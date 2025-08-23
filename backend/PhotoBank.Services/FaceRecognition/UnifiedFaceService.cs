@@ -16,14 +16,14 @@ public sealed class UnifiedFaceService
     private readonly IFaceProvider _provider;
     private readonly IRepository<Person> _persons;
     private readonly IRepository<Face> _faces;
-    private readonly IRepository<PersonGroupFace> _links;
+    private readonly IRepository<PersonFace> _links;
     private readonly ILogger<UnifiedFaceService> _log;
 
     public UnifiedFaceService(
         IFaceProvider provider,
         IRepository<Person> persons,
         IRepository<Face> faces,
-        IRepository<PersonGroupFace> links,
+        IRepository<PersonFace> links,
         ILogger<UnifiedFaceService> log)
     {
         _provider = provider;
@@ -88,7 +88,7 @@ public sealed class UnifiedFaceService
             {
                 var linkId = missing.Single(m => m.FaceId == faceId).Id;
 
-                await _links.UpdateAsync(new PersonGroupFace
+                await _links.UpdateAsync(new PersonFace
                 {
                     Id = linkId,
                     PersonId = group.Key,
