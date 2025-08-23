@@ -461,6 +461,114 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PathDto'
+  /persongroups:
+    get:
+      tags:
+        - PersonGroups
+      operationId: PersonGroups_GetAll
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonGroupDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonGroupDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonGroupDto'
+    post:
+      tags:
+        - PersonGroups
+      operationId: PersonGroups_Create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonGroupDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/PersonGroupDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/PersonGroupDto'
+      responses:
+        '201':
+          description: Created
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/PersonGroupDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonGroupDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/PersonGroupDto'
+  '/persongroups/{groupId}':
+    delete:
+      tags:
+        - PersonGroups
+      operationId: PersonGroups_Delete
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: No Content
+  '/persongroups/{groupId}/persons/{personId}':
+    post:
+      tags:
+        - PersonGroups
+      operationId: PersonGroups_AddPerson
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: personId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: No Content
+    delete:
+      tags:
+        - PersonGroups
+      operationId: PersonGroups_RemovePerson
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: personId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: No Content
   /persons:
     get:
       tags:
@@ -1218,6 +1326,19 @@ components:
           type: string
       additionalProperties: false
     PersonDto:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          minLength: 1
+          type: string
+      additionalProperties: false
+    PersonGroupDto:
       required:
         - id
         - name
