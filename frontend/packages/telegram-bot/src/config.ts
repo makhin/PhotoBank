@@ -5,11 +5,11 @@ import { fileURLToPath } from 'node:url';
 import { botTokenNotDefinedError } from '@photobank/shared/constants';
 
 // Node.js ESM does not provide __dirname, recreate it from import.meta.url
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const dirName = path.dirname(fileURLToPath(import.meta.url));
 // Load environment variables from the project root when running locally.
-// __dirname points to `packages/telegram-bot/src` during development,
+// dirName points to `packages/telegram-bot/src` during development,
 // so climb up to the repository root to locate the `.env` file.
-dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
+dotenv.config({ path: path.resolve(dirName, '../../../../.env') });
 
 export const BOT_TOKEN: string = process.env.BOT_TOKEN || '';
 if (!BOT_TOKEN) throw new Error(botTokenNotDefinedError);

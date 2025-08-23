@@ -11,88 +11,90 @@ import type {
 import { photobankAxios } from '../../axios-instance';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
   export const getAdminAccessProfiles = () => {
 const adminAccessProfilesList = (
     
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<AccessProfile[]>(
       {url: `/admin/access-profiles`, method: 'GET'
     },
-      );
+      options);
     }
   const adminAccessProfilesCreate = (
     accessProfile: AccessProfile,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/access-profiles`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: accessProfile
     },
-      );
+      options);
     }
   const adminAccessProfilesGet = (
     id: number,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<AccessProfile>(
       {url: `/admin/access-profiles/${id}`, method: 'GET'
     },
-      );
+      options);
     }
   const adminAccessProfilesUpdate = (
     id: number,
     accessProfile: AccessProfile,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/access-profiles/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: accessProfile
     },
-      );
+      options);
     }
   const adminAccessProfilesDelete = (
     id: number,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/access-profiles/${id}`, method: 'DELETE'
     },
-      );
+      options);
     }
   const adminAccessProfilesAssignUser = (
     id: number,
     userId: string,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/access-profiles/${id}/assign-user/${userId}`, method: 'POST'
     },
-      );
+      options);
     }
   const adminAccessProfilesUnassignUser = (
     id: number,
     userId: string,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/access-profiles/${id}/assign-user/${userId}`, method: 'DELETE'
     },
-      );
+      options);
     }
   const adminAccessProfilesAssignRole = (
     id: number,
     roleId: string,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/access-profiles/${id}/assign-role/${roleId}`, method: 'POST'
     },
-      );
+      options);
     }
   const adminAccessProfilesUnassignRole = (
     id: number,
     roleId: string,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/access-profiles/${id}/assign-role/${roleId}`, method: 'DELETE'
     },
-      );
+      options);
     }
   return {adminAccessProfilesList,adminAccessProfilesCreate,adminAccessProfilesGet,adminAccessProfilesUpdate,adminAccessProfilesDelete,adminAccessProfilesAssignUser,adminAccessProfilesUnassignUser,adminAccessProfilesAssignRole,adminAccessProfilesUnassignRole}};
 

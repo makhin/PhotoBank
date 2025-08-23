@@ -17,6 +17,10 @@ import {
 
 export const getPersonsGetAllResponseMock = (): PersonDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}})})))
 
+export const getPersonsCreateResponseMock = (overrideResponse: Partial< PersonDto > = {}): PersonDto => ({id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}}), ...overrideResponse})
+
+export const getPersonsUpdateResponseMock = (overrideResponse: Partial< PersonDto > = {}): PersonDto => ({id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}}), ...overrideResponse})
+
 
 export const getPersonsGetAllMockHandler = (overrideResponse?: PersonDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PersonDto[]> | PersonDto[])) => {
   return http.get('/api/persons', async (info) => {await delay(1000);
@@ -29,6 +33,43 @@ export const getPersonsGetAllMockHandler = (overrideResponse?: PersonDto[] | ((i
       })
   })
 }
+
+export const getPersonsCreateMockHandler = (overrideResponse?: PersonDto | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<PersonDto> | PersonDto)) => {
+  return http.post('/api/persons', async (info) => {await delay(1000);
+  
+    return new HttpResponse(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getPersonsCreateResponseMock(),
+      { status: 201,
+        headers: { 'Content-Type': 'text/plain' }
+      })
+  })
+}
+
+export const getPersonsUpdateMockHandler = (overrideResponse?: PersonDto | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<PersonDto> | PersonDto)) => {
+  return http.put('/api/persons/:personId', async (info) => {await delay(1000);
+  
+    return new HttpResponse(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getPersonsUpdateResponseMock(),
+      { status: 200,
+        headers: { 'Content-Type': 'text/plain' }
+      })
+  })
+}
+
+export const getPersonsDeleteMockHandler = (overrideResponse?: null | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<null> | null)) => {
+  return http.delete('/api/persons/:personId', async (info) => {await delay(1000);
+  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+    return new HttpResponse(null,
+      { status: 204,
+        
+      })
+  })
+}
 export const getPersonsMock = () => [
-  getPersonsGetAllMockHandler()
+  getPersonsGetAllMockHandler(),
+  getPersonsCreateMockHandler(),
+  getPersonsUpdateMockHandler(),
+  getPersonsDeleteMockHandler()
 ]

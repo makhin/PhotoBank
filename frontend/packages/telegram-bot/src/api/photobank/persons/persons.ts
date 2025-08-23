@@ -11,20 +11,54 @@ import type {
 import { photobankAxios } from '../../axios-instance';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
   export const getPersons = () => {
 const personsGetAll = (
     
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<PersonDto[]>(
       {url: `/persons`, method: 'GET'
     },
-      );
+      options);
     }
-  return {personsGetAll}};
+  const personsCreate = (
+    personDto: PersonDto,
+ options?: SecondParameter<typeof photobankAxios>,) => {
+      return photobankAxios<PersonDto>(
+      {url: `/persons`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: personDto
+    },
+      options);
+    }
+  const personsUpdate = (
+    personId: number,
+    personDto: PersonDto,
+ options?: SecondParameter<typeof photobankAxios>,) => {
+      return photobankAxios<PersonDto>(
+      {url: `/persons/${personId}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: personDto
+    },
+      options);
+    }
+  const personsDelete = (
+    personId: number,
+ options?: SecondParameter<typeof photobankAxios>,) => {
+      return photobankAxios<null>(
+      {url: `/persons/${personId}`, method: 'DELETE'
+    },
+      options);
+    }
+  return {personsGetAll,personsCreate,personsUpdate,personsDelete}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
     type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 export type PersonsGetAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPersons>['personsGetAll']>>>
+export type PersonsCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPersons>['personsCreate']>>>
+export type PersonsUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPersons>['personsUpdate']>>>
+export type PersonsDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPersons>['personsDelete']>>>
