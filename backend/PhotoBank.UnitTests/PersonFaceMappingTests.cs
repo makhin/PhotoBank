@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace PhotoBank.UnitTests;
 
 [TestFixture]
-public class PersonGroupFaceMappingTests
+public class PersonFaceMappingTests
 {
     private IMapper _mapper = null!;
 
@@ -25,7 +25,7 @@ public class PersonGroupFaceMappingTests
     [Test]
     public void MapsFaceImage()
     {
-        var entity = new PersonGroupFace
+        var entity = new PersonFace
         {
             Id = 1,
             PersonId = 2,
@@ -33,7 +33,7 @@ public class PersonGroupFaceMappingTests
             Face = new Face { Image = new byte[] { 1, 2, 3 } }
         };
 
-        var dto = _mapper.Map<PersonGroupFaceDto>(entity);
+        var dto = _mapper.Map<PersonFaceDto>(entity);
 
         dto.FaceImage.Should().BeEquivalentTo(new byte[] { 1, 2, 3 });
     }

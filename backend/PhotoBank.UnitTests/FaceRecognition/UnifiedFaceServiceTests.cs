@@ -23,7 +23,7 @@ public class UnifiedFaceServiceTests
     private Mock<IFaceProvider> _provider = null!;
     private Mock<IRepository<Person>> _persons = null!;
     private Mock<IRepository<Face>> _faces = null!;
-    private Mock<IRepository<PersonGroupFace>> _links = null!;
+    private Mock<IRepository<PersonFace>> _links = null!;
     private UnifiedFaceService _service = null!;
 
     [SetUp]
@@ -34,7 +34,7 @@ public class UnifiedFaceServiceTests
 
         _persons = new Mock<IRepository<Person>>();
         _faces = new Mock<IRepository<Face>>();
-        _links = new Mock<IRepository<PersonGroupFace>>();
+        _links = new Mock<IRepository<PersonFace>>();
         var logger = Mock.Of<ILogger<UnifiedFaceService>>();
 
         _service = new UnifiedFaceService(_provider.Object, _persons.Object, _faces.Object, _links.Object, logger);
@@ -51,7 +51,7 @@ public class UnifiedFaceServiceTests
 
         var personsRepo = new Repository<Person>(sp);
         var facesRepo = new Repository<Face>(sp);
-        var linksRepo = new Repository<PersonGroupFace>(sp);
+        var linksRepo = new Repository<PersonFace>(sp);
 
         var provider = new Mock<IFaceProvider>(MockBehavior.Strict);
         provider.SetupGet(p => p.Kind).Returns(FaceProviderKind.Local);
@@ -91,7 +91,7 @@ public class UnifiedFaceServiceTests
 
         var personsRepo = new Repository<Person>(sp);
         var facesRepo = new Repository<Face>(sp);
-        var linksRepo = new Repository<PersonGroupFace>(sp);
+        var linksRepo = new Repository<PersonFace>(sp);
 
         var provider = new Mock<IFaceProvider>(MockBehavior.Strict);
         provider.SetupGet(p => p.Kind).Returns(FaceProviderKind.Local);
@@ -107,9 +107,9 @@ public class UnifiedFaceServiceTests
             new Face { Id = 102, PhotoId = 0, Image = new byte[] { 2 }, Rectangle = new Point(0, 0), S3Key_Image = string.Empty, S3ETag_Image = string.Empty, Sha256_Image = string.Empty, FaceAttributes = string.Empty }
         );
 
-        var linkMissing = new PersonGroupFace { Id = -1, PersonId = 1, FaceId = 101, ExternalId = null, Provider = null };
-        var linkExists  = new PersonGroupFace { Id = -2, PersonId = 1, FaceId = 102, ExternalId = "have", Provider = "Local" };
-        ctx.Set<PersonGroupFace>().AddRange(linkMissing, linkExists);
+        var linkMissing = new PersonFace { Id = -1, PersonId = 1, FaceId = 101, ExternalId = null, Provider = null };
+        var linkExists  = new PersonFace { Id = -2, PersonId = 1, FaceId = 102, ExternalId = "have", Provider = "Local" };
+        ctx.Set<PersonFace>().AddRange(linkMissing, linkExists);
 
         await ctx.SaveChangesAsync();
         ctx.ChangeTracker.Clear();
@@ -118,7 +118,7 @@ public class UnifiedFaceServiceTests
 
         provider.Verify(p => p.LinkFacesToPersonAsync(1, It.Is<IReadOnlyCollection<FaceToLink>>(l => l.Single().FaceId == 101), It.IsAny<CancellationToken>()), Times.Once);
 
-        var link101 = await ctx.Set<PersonGroupFace>().AsNoTracking().SingleAsync(l => l.PersonId == 1 && l.FaceId == 101);
+        var link101 = await ctx.Set<PersonFace>().AsNoTracking().SingleAsync(l => l.PersonId == 1 && l.FaceId == 101);
 
         Assert.That(link101.ExternalId, Is.EqualTo("extA"));
         Assert.That(link101.Provider, Is.EqualTo(provider.Object.Kind.ToString()));

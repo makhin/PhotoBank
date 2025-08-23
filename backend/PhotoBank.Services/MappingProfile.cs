@@ -54,11 +54,11 @@ namespace PhotoBank.Services
             CreateMap<PersonGroup, PersonGroupDto>()
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
-            CreateMap<PersonGroupFace, PersonGroupFaceDto>()
+            CreateMap<PersonFace, PersonFaceDto>()
                 .ForMember(dest => dest.FaceImage, opt => opt.MapFrom(src => src.Face.Image))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
-            CreateMap<PersonGroupFaceDto, PersonGroupFace>()
+            CreateMap<PersonFaceDto, PersonFace>()
                 .ForSourceMember(src => src.FaceImage, opt => opt.DoNotValidate())
                 .ForMember(dest => dest.Person, opt => opt.Ignore())
                 .ForMember(dest => dest.Face, opt => opt.Ignore())
@@ -76,7 +76,7 @@ namespace PhotoBank.Services
 
             CreateMap<Face, Models.FaceDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonGroupFace.PersonId))
+                .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonFace.PersonId))
                 .ForMember(dest => dest.PersonDateOfBirth, opt => opt.MapFrom(src => src.Person.DateOfBirth))
                 .ForMember(dest => dest.PhotoTakenDate, opt => opt.MapFrom(src => src.Photo.TakenDate))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
