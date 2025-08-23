@@ -5,7 +5,9 @@
  * OpenAPI spec version: 1.0
  */
 import type {
-  UpdateFaceDto
+  FaceIdentityDto,
+  FacesGetParams,
+  UpdateFaceIdentityDto
 } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
 
 import { photobankAxios } from '../../axios-instance';
@@ -15,20 +17,30 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
   export const getFaces = () => {
-const facesUpdate = (
-    updateFaceDto: UpdateFaceDto,
+const facesGet = (
+    params?: FacesGetParams,
+ options?: SecondParameter<typeof photobankAxios>,) => {
+      return photobankAxios<FaceIdentityDto[]>(
+      {url: `/faces`, method: 'GET',
+        params
+    },
+      options);
+    }
+  const facesUpdate = (
+    updateFaceIdentityDto: UpdateFaceIdentityDto,
  options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/faces`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
-      data: updateFaceDto
+      data: updateFaceIdentityDto
     },
       options);
     }
-  return {facesUpdate}};
+  return {facesGet,facesUpdate}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
     type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
+export type FacesGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFaces>['facesGet']>>>
 export type FacesUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFaces>['facesUpdate']>>>

@@ -84,6 +84,12 @@ export interface FaceDto {
   friendlyFaceAttributes: string;
 }
 
+export interface FaceIdentityDto {
+  id?: number;
+  identityStatus?: IdentityStatus;
+  person?: PersonDto;
+}
+
 export interface FilterDto {
   page?: number;
   pageSize?: number;
@@ -119,6 +125,19 @@ export interface GeoPointDto {
   longitude: number;
 }
 
+export type IdentityStatus = typeof IdentityStatus[keyof typeof IdentityStatus];
+
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const IdentityStatus = {
+  NUMBER_0: 0,
+  NUMBER_1: 1,
+  NUMBER_2: 2,
+  NUMBER_3: 3,
+  NUMBER_4: 4,
+  NUMBER_5: 5,
+} as const;
+
 export interface LoginRequestDto {
   /** @nullable */
   email: string | null;
@@ -144,13 +163,7 @@ export interface PersonDto {
   name: string;
 }
 
-export interface PersonGroupDto {
-  id: number;
-  /** @minLength 1 */
-  name: string;
-}
-
-export interface PersonGroupFaceDto {
+export interface PersonFaceDto {
   id?: number;
   personId: number;
   faceId: number;
@@ -161,6 +174,12 @@ export interface PersonGroupFaceDto {
   /** @nullable */
   externalId?: string | null;
   externalGuid?: string;
+}
+
+export interface PersonGroupDto {
+  id: number;
+  /** @minLength 1 */
+  name: string;
 }
 
 export interface PersonItemDto {
@@ -291,9 +310,11 @@ export interface ThisDayDto {
   month?: number;
 }
 
-export interface UpdateFaceDto {
+export interface UpdateFaceIdentityDto {
   faceId: number;
-  personId: number;
+  /** @nullable */
+  personId?: number | null;
+  identityStatus: IdentityStatus;
 }
 
 export interface UpdateUserDto {
@@ -330,6 +351,11 @@ export interface UserWithClaimsDto {
   /** @nullable */
   claims?: ClaimDto[] | null;
 }
+
+export type FacesGetParams = {
+status?: IdentityStatus;
+personId?: number;
+};
 
 export type PhotosUploadBody = {
   files?: Blob[];
