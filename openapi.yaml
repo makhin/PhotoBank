@@ -461,6 +461,108 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PathDto'
+  /persongroupfaces:
+    get:
+      tags:
+        - PersonGroupFaces
+      operationId: PersonGroupFaces_GetAll
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonGroupFaceDto'
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonGroupFaceDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonGroupFaceDto'
+    post:
+      tags:
+        - PersonGroupFaces
+      operationId: PersonGroupFaces_Create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonGroupFaceDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/PersonGroupFaceDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/PersonGroupFaceDto'
+      responses:
+        '201':
+          description: Created
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/PersonGroupFaceDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonGroupFaceDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/PersonGroupFaceDto'
+  '/persongroupfaces/{id}':
+    put:
+      tags:
+        - PersonGroupFaces
+      operationId: PersonGroupFaces_Update
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonGroupFaceDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/PersonGroupFaceDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/PersonGroupFaceDto'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/PersonGroupFaceDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonGroupFaceDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/PersonGroupFaceDto'
+    delete:
+      tags:
+        - PersonGroupFaces
+      operationId: PersonGroupFaces_Delete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: No Content
   /persongroups:
     get:
       tags:
@@ -514,6 +616,41 @@ paths:
               schema:
                 $ref: '#/components/schemas/PersonGroupDto'
   '/persongroups/{groupId}':
+    put:
+      tags:
+        - PersonGroups
+      operationId: PersonGroups_Update
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonGroupDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/PersonGroupDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/PersonGroupDto'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/PersonGroupDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonGroupDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/PersonGroupDto'
     delete:
       tags:
         - PersonGroups
@@ -593,6 +730,84 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PersonDto'
+    post:
+      tags:
+        - Persons
+      operationId: Persons_Create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/PersonDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/PersonDto'
+      responses:
+        '201':
+          description: Created
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/PersonDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/PersonDto'
+  '/persons/{personId}':
+    put:
+      tags:
+        - Persons
+      operationId: Persons_Update
+      parameters:
+        - name: personId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/PersonDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/PersonDto'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/PersonDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/PersonDto'
+    delete:
+      tags:
+        - Persons
+      operationId: Persons_Delete
+      parameters:
+        - name: personId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: No Content
   /photos/search:
     post:
       tags:
@@ -1350,6 +1565,35 @@ components:
         name:
           minLength: 1
           type: string
+      additionalProperties: false
+    PersonGroupFaceDto:
+      required:
+        - faceId
+        - personId
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        personId:
+          type: integer
+          format: int32
+        faceId:
+          type: integer
+          format: int32
+        faceImage:
+          type: string
+          format: byte
+          nullable: true
+        provider:
+          type: string
+          nullable: true
+        externalId:
+          type: string
+          nullable: true
+        externalGuid:
+          type: string
+          format: uuid
       additionalProperties: false
     PersonItemDto:
       required:
