@@ -34,6 +34,10 @@ public interface IPhotoService
     Task DeletePersonGroupAsync(int groupId);
     Task AddPersonToGroupAsync(int groupId, int personId);
     Task RemovePersonFromGroupAsync(int groupId, int personId);
+    Task<IEnumerable<PersonGroupFaceDto>> GetAllPersonGroupFacesAsync();
+    Task<PersonGroupFaceDto> CreatePersonGroupFaceAsync(PersonGroupFaceDto dto);
+    Task<PersonGroupFaceDto> UpdatePersonGroupFaceAsync(int id, PersonGroupFaceDto dto);
+    Task DeletePersonGroupFaceAsync(int id);
     Task UpdateFaceAsync(int faceId, int personId);
     Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold);
     Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path);
@@ -47,6 +51,7 @@ public class PhotoService : IPhotoService
     private readonly IRepository<Storage> _storageRepository;
     private readonly IRepository<PersonGroup> _personGroupRepository;
     private readonly IRepository<Person> _personRepository;
+    private readonly IRepository<PersonGroupFace> _personGroupFaceRepository;
     private readonly IMapper _mapper;
     private readonly IMemoryCache _cache;
     private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
@@ -69,6 +74,7 @@ public class PhotoService : IPhotoService
         IRepository<Storage> storageRepository,
         IRepository<Tag> tagRepository,
         IRepository<PersonGroup> personGroupRepository,
+        IRepository<PersonGroupFace> personGroupFaceRepository,
         IMapper mapper,
         IMemoryCache cache,
         ICurrentUser currentUser)
@@ -78,6 +84,7 @@ public class PhotoService : IPhotoService
         _faceRepository = faceRepository;
         _storageRepository = storageRepository;
         _personGroupRepository = personGroupRepository;
+        _personGroupFaceRepository = personGroupFaceRepository;
         _personRepository = personRepository;
         _mapper = mapper;
         _cache = cache;
@@ -319,6 +326,33 @@ public class PhotoService : IPhotoService
             person.PersonGroups.Remove(group);
             await _db.SaveChangesAsync();
         }
+    }
+
+    public async Task<IEnumerable<PersonGroupFaceDto>> GetAllPersonGroupFacesAsync()
+    {
+        return await _personGroupFaceRepository.GetAll()
+            .AsNoTracking()
+            .ProjectTo<PersonGroupFaceDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+    }
+
+    public async Task<PersonGroupFaceDto> CreatePersonGroupFaceAsync(PersonGroupFaceDto dto)
+    {
+        var entity = _mapper.Map<PersonGroupFace>(dto);
+        var created = await _personGroupFaceRepository.InsertAsync(entity);
+        return _mapper.Map<PersonGroupFaceDto>(created);
+    }
+
+    public async Task<PersonGroupFaceDto> UpdatePersonGroupFaceAsync(int id, PersonGroupFaceDto dto)
+    {
+        var entity = _mapper.Map<PersonGroupFace>(dto);
+        await _personGroupFaceRepository.UpdateAsync(entity);
+        return _mapper.Map<PersonGroupFaceDto>(entity);
+    }
+
+    public async Task DeletePersonGroupFaceAsync(int id)
+    {
+        await _personGroupFaceRepository.DeleteAsync(id);
     }
 
     public async Task UpdateFaceAsync(int faceId, int personId)
