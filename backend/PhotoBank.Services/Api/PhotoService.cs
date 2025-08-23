@@ -39,6 +39,8 @@ public interface IPhotoService
     Task<PersonGroupFaceDto> UpdatePersonGroupFaceAsync(int id, PersonGroupFaceDto dto);
     Task DeletePersonGroupFaceAsync(int id);
     Task UpdateFaceAsync(int faceId, int personId);
+    Task<IEnumerable<FaceIdentityDto>> GetFacesAsync(IdentityStatus? status, int? personId);
+    Task UpdateFaceIdentityAsync(int faceId, IdentityStatus identityStatus, int? personId);
     Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold);
     Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path);
 }
@@ -365,6 +367,33 @@ public class PhotoService : IPhotoService
             PersonId = personId == -1 ? null : personId
         };
         await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentifiedWithConfidence, f => f.IdentityStatus);
+    }
+
+    public async Task<IEnumerable<FaceIdentityDto>> GetFacesAsync(IdentityStatus? status, int? personId)
+    {
+        var query = _faceRepository.GetAll();
+        if (status.HasValue)
+            query = query.Where(f => f.IdentityStatus == status.Value);
+        if (personId.HasValue)
+            query = query.Where(f => f.PersonId == personId.Value);
+
+        return await query
+            .OrderBy(f => f.Id)
+            .ProjectTo<FaceIdentityDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+    }
+
+    public async Task UpdateFaceIdentityAsync(int faceId, IdentityStatus identityStatus, int? personId)
+    {
+        var face = new Face
+        {
+            Id = faceId,
+            IdentityStatus = identityStatus,
+            PersonId = personId,
+            IdentifiedWithConfidence = identityStatus == IdentityStatus.Identified && personId.HasValue ? 1 : 0
+        };
+
+        await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentityStatus, f => f.IdentifiedWithConfidence);
     }
 
     public async Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path)

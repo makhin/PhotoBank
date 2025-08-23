@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PhotoBank.DbContext\PhotoBank.DbContext.csproj" />
+  </ItemGroup>
+
 </Project>
