@@ -144,6 +144,25 @@ export interface PersonDto {
   name: string;
 }
 
+export interface PersonGroupDto {
+  id: number;
+  /** @minLength 1 */
+  name: string;
+}
+
+export interface PersonGroupFaceDto {
+  id?: number;
+  personId: number;
+  faceId: number;
+  /** @nullable */
+  faceImage?: string | null;
+  /** @nullable */
+  provider?: string | null;
+  /** @nullable */
+  externalId?: string | null;
+  externalGuid?: string;
+}
+
 export interface PersonItemDto {
   personId: number;
 }

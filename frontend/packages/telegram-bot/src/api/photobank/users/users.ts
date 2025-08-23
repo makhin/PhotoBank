@@ -16,77 +16,79 @@ import type {
 import { photobankAxios } from '../../axios-instance';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
   export const getUsers = () => {
 const usersGetAll = (
     
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<UserWithClaimsDto[]>(
       {url: `/admin/users`, method: 'GET'
     },
-      );
+      options);
     }
   const usersCreate = (
     createUserDto: CreateUserDto,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<UserWithClaimsDto>(
       {url: `/admin/users`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createUserDto
     },
-      );
+      options);
     }
   const usersUpdate = (
     id: string,
     updateUserDto: UpdateUserDto,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/users/${id}`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateUserDto
     },
-      );
+      options);
     }
   const usersDelete = (
     id: string,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/users/${id}`, method: 'DELETE'
     },
-      );
+      options);
     }
   const usersResetPassword = (
     id: string,
     resetPasswordDto: ResetPasswordDto,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/users/${id}/reset-password`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: resetPasswordDto
     },
-      );
+      options);
     }
   const usersSetClaims = (
     id: string,
     claimDto: ClaimDto[],
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/users/${id}/claims`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: claimDto
     },
-      );
+      options);
     }
   const usersSetRoles = (
     id: string,
     setRolesDto: SetRolesDto,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/admin/users/${id}/roles`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: setRolesDto
     },
-      );
+      options);
     }
   return {usersGetAll,usersCreate,usersUpdate,usersDelete,usersResetPassword,usersSetClaims,usersSetRoles}};
 

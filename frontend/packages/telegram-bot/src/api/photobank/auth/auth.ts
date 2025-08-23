@@ -19,79 +19,81 @@ import type {
 import { photobankAxios } from '../../axios-instance';
 
 
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
 
   export const getAuth = () => {
 const authLogin = (
     loginRequestDto: LoginRequestDto,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<LoginResponseDto>(
       {url: `/auth/login`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: loginRequestDto
     },
-      );
+      options);
     }
   const authRegister = (
     registerRequestDto: RegisterRequestDto,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/auth/register`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: registerRequestDto
     },
-      );
+      options);
     }
   const authGetUser = (
     
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<UserDto>(
       {url: `/auth/user`, method: 'GET'
     },
-      );
+      options);
     }
   const authUpdateUser = (
     updateUserDto: UpdateUserDto,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/auth/user`, method: 'PUT',
       headers: {'Content-Type': 'application/json', },
       data: updateUserDto
     },
-      );
+      options);
     }
   const authTelegramExchange = (
     telegramExchangeRequest: TelegramExchangeRequest,
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<TelegramExchangeResponse>(
       {url: `/auth/telegram/exchange`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: telegramExchangeRequest
     },
-      );
+      options);
     }
   const authGetUserClaims = (
     
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<ClaimDto[]>(
       {url: `/auth/claims`, method: 'GET'
     },
-      );
+      options);
     }
   const authGetUserRoles = (
     
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<RoleDto[]>(
       {url: `/auth/roles`, method: 'GET'
     },
-      );
+      options);
     }
   const authGetEffective = (
     
- ) => {
+ options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<null>(
       {url: `/auth/debug/effective-access`, method: 'GET'
     },
-      );
+      options);
     }
   return {authLogin,authRegister,authGetUser,authUpdateUser,authTelegramExchange,authGetUserClaims,authGetUserRoles,authGetEffective}};
 
