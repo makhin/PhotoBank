@@ -38,18 +38,19 @@ public class PersonGroupServiceTests
         db.PersonGroups.Add(new PersonGroup { Id = 1, Name = "Family" });
         db.SaveChanges();
 
-        _service = new PhotoService(
-            db,
-            _provider.GetRequiredService<IRepository<Photo>>(),
-            _provider.GetRequiredService<IRepository<Person>>(),
-            _provider.GetRequiredService<IRepository<Face>>(),
-            _provider.GetRequiredService<IRepository<Storage>>(),
-            _provider.GetRequiredService<IRepository<Tag>>(),
-            _provider.GetRequiredService<IRepository<PersonGroup>>(),
-            _provider.GetRequiredService<IMapper>(),
-            _provider.GetRequiredService<IMemoryCache>(),
-            _provider.GetRequiredService<ICurrentUser>()
-        );
+            _service = new PhotoService(
+                db,
+                _provider.GetRequiredService<IRepository<Photo>>(),
+                _provider.GetRequiredService<IRepository<Person>>(),
+                _provider.GetRequiredService<IRepository<Face>>(),
+                _provider.GetRequiredService<IRepository<Storage>>(),
+                _provider.GetRequiredService<IRepository<Tag>>(),
+                _provider.GetRequiredService<IRepository<PersonGroup>>(),
+                _provider.GetRequiredService<IRepository<PersonGroupFace>>(),
+                _provider.GetRequiredService<IMapper>(),
+                _provider.GetRequiredService<IMemoryCache>(),
+                _provider.GetRequiredService<ICurrentUser>()
+            );
     }
 
     [TearDown]

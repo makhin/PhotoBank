@@ -53,6 +53,7 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<Storage>(provider),
                 new Repository<Tag>(provider),
                 new Repository<PersonGroup>(provider),
+                new Repository<PersonGroupFace>(provider),
                 _mapper,
                 new MemoryCache(new MemoryCacheOptions()),
                 new DummyCurrentUser());
@@ -90,6 +91,7 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<Storage>(provider),
                 new Repository<Tag>(provider),
                 new Repository<PersonGroup>(provider),
+                new Repository<PersonGroupFace>(provider),
                 _mapper,
                 new MemoryCache(new MemoryCacheOptions()),
                 new DummyCurrentUser());
@@ -131,6 +133,7 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<Storage>(provider),
                 new Repository<Tag>(provider),
                 new Repository<PersonGroup>(provider),
+                new Repository<PersonGroupFace>(provider),
                 _mapper,
                 new MemoryCache(new MemoryCacheOptions()),
                 new DummyCurrentUser());
