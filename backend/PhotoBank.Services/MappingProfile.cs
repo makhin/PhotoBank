@@ -60,6 +60,12 @@ namespace PhotoBank.Services
 
             CreateMap<PersonGroupFaceDto, PersonGroupFace>()
                 .ForSourceMember(src => src.FaceImage, opt => opt.DoNotValidate())
+                .ForMember(dest => dest.Person, opt => opt.Ignore())
+                .ForMember(dest => dest.Face, opt => opt.Ignore())
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<Face, FaceIdentityDto>()
+                .ForMember(dest => dest.Person, opt => opt.MapFrom(src => src.Person))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Face, ViewModel.Dto.FaceDto>()
