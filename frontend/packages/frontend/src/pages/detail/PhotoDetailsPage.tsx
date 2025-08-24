@@ -419,11 +419,12 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                                         personId={face.personId ?? undefined}
                                                         persons={persons}
                                                         disabled={!showFaceBoxes || !isAdmin}
-                                                          onChange={(personId) => {
+                                                      onChange={(personId) => {
                                                               void updateFace({
                                                                   data: {
                                                                       faceId: face.id!,
-                                                                      personId: personId ?? -1,
+                                                                      personId: personId ?? null,
+                                                                      identityStatus: personId == null ? 5 : 3,
                                                                   },
                                                               });
                                                           }}
