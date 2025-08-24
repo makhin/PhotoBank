@@ -47,7 +47,9 @@ interface PhotoDetailsPageProps {
 
 const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const [imageDisplaySize, setImageDisplaySize] = useState({width: 0, height: 0, scale: 1});
+    const imageDisplaySizeRef = useRef(imageDisplaySize);
     const [containerSize, setContainerSize] = useState({width: 0, height: 0});
+    const containerSizeRef = useRef(containerSize);
     const [showFaceBoxes, setShowFaceBoxes] = useState(false);
     const [placeName, setPlaceName] = useState('');
     const persons = useAppSelector((state) => state.metadata.persons);
@@ -82,31 +84,47 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
         }
         return {width: 0, height: 0};
     }, [photoData]);
+    const imageNaturalSizeRef = useRef(imageNaturalSize);
 
     const updateSizes = useCallback(() => {
-        if (containerRef.current) {
-            const containerRect = containerRef.current.getBoundingClientRect();
-            const newContainerSize = {
-                width: containerRect.width,
-                height: containerRect.height
-            };
+        if (!containerRef.current) return;
 
-            if (newContainerSize.width !== containerSize.width || newContainerSize.height !== containerSize.height) {
-                setContainerSize(newContainerSize);
-            }
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const newContainerSize = {
+            width: containerRect.width,
+            height: containerRect.height,
+        };
 
-            const calculatedSize = calculateImageSize(
-                imageNaturalSize.width,
-                imageNaturalSize.height,
-                newContainerSize.width,
-                newContainerSize.height
-            );
-
-            if (calculatedSize.width !== imageDisplaySize.width || calculatedSize.height !== imageDisplaySize.height) {
-                setImageDisplaySize(calculatedSize);
-            }
+        if (
+            newContainerSize.width !== containerSizeRef.current.width ||
+            newContainerSize.height !== containerSizeRef.current.height
+        ) {
+            containerSizeRef.current = newContainerSize;
+            setContainerSize(newContainerSize);
         }
-    }, [imageNaturalSize, containerSize, imageDisplaySize]);
+
+        const { width: naturalWidth, height: naturalHeight } = imageNaturalSizeRef.current;
+        const calculatedSize = calculateImageSize(
+            naturalWidth,
+            naturalHeight,
+            newContainerSize.width,
+            newContainerSize.height,
+        );
+
+        if (
+            calculatedSize.width !== imageDisplaySizeRef.current.width ||
+            calculatedSize.height !== imageDisplaySizeRef.current.height ||
+            calculatedSize.scale !== imageDisplaySizeRef.current.scale
+        ) {
+            imageDisplaySizeRef.current = calculatedSize;
+            setImageDisplaySize(calculatedSize);
+        }
+    }, []);
+
+    useEffect(() => {
+        imageNaturalSizeRef.current = imageNaturalSize;
+        updateSizes();
+    }, [imageNaturalSize, updateSizes]);
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver(updateSizes);
