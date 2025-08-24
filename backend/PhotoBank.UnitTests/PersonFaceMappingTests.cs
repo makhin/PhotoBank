@@ -17,6 +17,7 @@ public class PersonFaceMappingTests
     public void Setup()
     {
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
         var provider = services.BuildServiceProvider();
         _mapper = provider.GetRequiredService<IMapper>();
