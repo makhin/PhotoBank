@@ -57,8 +57,14 @@ namespace PhotoBank.DbContext.DbContext
 
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => p.Id)
-                .HasDatabaseName("IX_Photos_NeedsMigration")
-                .HasFilter("[S3Key_Preview] IS NULL OR [S3Key_Thumbnail] IS NULL")
+                .HasDatabaseName("IX_Photos_NeedsMigration_Preview")
+                .HasFilter("[S3Key_Preview] IS NULL")
+                .IncludeProperties(p => new { p.S3Key_Preview, p.S3Key_Thumbnail });
+
+            modelBuilder.Entity<Photo>()
+                .HasIndex(p => p.Id)
+                .HasDatabaseName("IX_Photos_NeedsMigration_Thumbnail")
+                .HasFilter("[S3Key_Thumbnail] IS NULL")
                 .IncludeProperties(p => new { p.S3Key_Preview, p.S3Key_Thumbnail });
 
             modelBuilder.Entity<Photo>()

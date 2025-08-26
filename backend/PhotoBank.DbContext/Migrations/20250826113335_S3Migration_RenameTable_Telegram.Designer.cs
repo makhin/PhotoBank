@@ -13,15 +13,15 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    [Migration("20250803135340_Missed")]
-    partial class Missed
+    [Migration("20250826113335_S3Migration_RenameTable_Telegram")]
+    partial class S3Migration_RenameTable_Telegram
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.7")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -219,8 +219,11 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Telegram")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<TimeSpan?>("TelegramSendTimeUtc")
+                        .HasColumnType("time");
+
+                    b.Property<long?>("TelegramUserId")
+                        .HasColumnType("bigint");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -238,6 +241,10 @@ namespace PhotoBank.DbContext.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.HasIndex("TelegramUserId")
+                        .IsUnique()
+                        .HasFilter("[TelegramUserId] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -257,6 +264,7 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Text")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -275,6 +283,7 @@ namespace PhotoBank.DbContext.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -317,7 +326,11 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<double?>("Age")
                         .HasColumnType("float");
 
+                    b.Property<long?>("BlobSize_Image")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("FaceAttributes")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool?>("Gender")
@@ -330,7 +343,11 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("int");
 
                     b.Property<byte[]>("Image")
+                        .IsRequired()
                         .HasColumnType("varbinary(max)");
+
+                    b.Property<DateTime?>("MigratedAt_Image")
+                        .HasColumnType("datetime2");
 
                     b.Property<int?>("PersonId")
                         .HasColumnType("int");
@@ -339,12 +356,34 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("int");
 
                     b.Property<Geometry>("Rectangle")
+                        .IsRequired()
                         .HasColumnType("geometry");
+
+                    b.Property<string>("S3ETag_Image")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("S3Key_Image")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("Sha256_Image")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<double?>("Smile")
                         .HasColumnType("float");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Id")
+                        .HasDatabaseName("IX_Faces_NeedsMigration")
+                        .HasFilter("[S3Key_Image] IS NULL");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("Id"), new[] { "S3Key_Image" });
 
                     b.HasIndex("IdentityStatus");
 
@@ -353,6 +392,8 @@ namespace PhotoBank.DbContext.Migrations
                     b.HasIndex("PersonId");
 
                     SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("PersonId"), new[] { "PhotoId" });
+
+                    b.HasIndex("PersonId", "PhotoId");
 
                     b.HasIndex("PhotoId", "Id", "PersonId");
 
@@ -404,10 +445,11 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<int?>("PhotoId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PropertyNameId")
+                    b.Property<int>("PropertyNameId")
                         .HasColumnType("int");
 
                     b.Property<Geometry>("Rectangle")
+                        .IsRequired()
                         .HasColumnType("geometry");
 
                     b.HasKey("Id");
@@ -433,13 +475,52 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<Guid>("ExternalGuid")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ExternalId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Provider")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Persons");
+                });
+
+            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonFace", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ExternalGuid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ExternalId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("FaceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PersonId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Provider")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FaceId")
+                        .IsUnique();
+
+                    b.HasIndex("PersonId");
+
+                    b.ToTable("PersonFace");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroup", b =>
@@ -459,33 +540,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.ToTable("PersonGroups");
                 });
 
-            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroupFace", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("ExternalGuid")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("FaceId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PersonId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FaceId")
-                        .IsUnique();
-
-                    b.HasIndex("PersonId");
-
-                    b.ToTable("PersonGroupFace");
-                });
-
             modelBuilder.Entity("PhotoBank.DbContext.Models.Photo", b =>
                 {
                     b.Property<int>("Id")
@@ -495,21 +549,31 @@ namespace PhotoBank.DbContext.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AccentColor")
+                        .IsRequired()
                         .HasMaxLength(6)
                         .HasColumnType("nvarchar(6)");
 
                     b.Property<double>("AdultScore")
                         .HasColumnType("float");
 
+                    b.Property<long?>("BlobSize_Preview")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("BlobSize_Thumbnail")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("DominantColorBackground")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("DominantColorForeground")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("DominantColors")
+                        .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
@@ -523,8 +587,9 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("ImageHash")
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("IsAdultContent")
                         .HasColumnType("bit");
@@ -536,7 +601,14 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("bit");
 
                     b.Property<Point>("Location")
+                        .IsRequired()
                         .HasColumnType("geometry");
+
+                    b.Property<DateTime?>("MigratedAt_Preview")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("MigratedAt_Thumbnail")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -547,17 +619,49 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("int");
 
                     b.Property<byte[]>("PreviewImage")
+                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<double>("RacyScore")
                         .HasColumnType("float");
 
                     b.Property<string>("RelativePath")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("S3ETag_Preview")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("S3ETag_Thumbnail")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("S3Key_Preview")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("S3Key_Thumbnail")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
                     b.Property<double>("Scale")
                         .HasColumnType("float");
+
+                    b.Property<string>("Sha256_Preview")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Sha256_Thumbnail")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<int>("StorageId")
                         .HasColumnType("int");
@@ -566,6 +670,7 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<byte[]>("Thumbnail")
+                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<long?>("Width")
@@ -573,7 +678,11 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Id");
+                    b.HasIndex("Id")
+                        .HasDatabaseName("IX_Photos_NeedsMigration_Thumbnail")
+                        .HasFilter("[S3Key_Thumbnail] IS NULL");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("Id"), new[] { "S3Key_Preview", "S3Key_Thumbnail" });
 
                     b.HasIndex("IsAdultContent");
 
@@ -588,6 +697,8 @@ namespace PhotoBank.DbContext.Migrations
                     b.HasIndex("TakenDate");
 
                     b.HasIndex("Name", "RelativePath");
+
+                    b.HasIndex("StorageId", "TakenDate");
 
                     b.ToTable("Photos");
                 });
@@ -625,7 +736,7 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.HasIndex("PhotoId");
 
-                    b.HasIndex("TagId");
+                    b.HasIndex("TagId", "PhotoId");
 
                     b.ToTable("PhotoTags");
                 });
@@ -657,9 +768,11 @@ namespace PhotoBank.DbContext.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Folder")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -676,14 +789,50 @@ namespace PhotoBank.DbContext.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Hint")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Tag_Name");
+
+                    SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Name"), false);
+
                     b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("PhotoBank.Services.FaceRecognition.Local.FaceEmbedding", b =>
+                {
+                    b.Property<int>("FaceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FaceId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PersonId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("Vector")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.HasKey("FaceId");
+
+                    b.HasIndex("PersonId");
+
+                    b.ToTable("FaceEmbeddings", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -795,21 +944,23 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.HasOne("PhotoBank.DbContext.Models.PropertyName", "PropertyName")
                         .WithMany()
-                        .HasForeignKey("PropertyNameId");
+                        .HasForeignKey("PropertyNameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("PropertyName");
                 });
 
-            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonGroupFace", b =>
+            modelBuilder.Entity("PhotoBank.DbContext.Models.PersonFace", b =>
                 {
                     b.HasOne("PhotoBank.DbContext.Models.Face", "Face")
-                        .WithOne("PersonGroupFace")
-                        .HasForeignKey("PhotoBank.DbContext.Models.PersonGroupFace", "FaceId")
+                        .WithOne("PersonFace")
+                        .HasForeignKey("PhotoBank.DbContext.Models.PersonFace", "FaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("PhotoBank.DbContext.Models.Person", "Person")
-                        .WithMany("PersonGroupFaces")
+                        .WithMany("PersonFaces")
                         .HasForeignKey("PersonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -875,14 +1026,15 @@ namespace PhotoBank.DbContext.Migrations
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Face", b =>
                 {
-                    b.Navigation("PersonGroupFace");
+                    b.Navigation("PersonFace")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Person", b =>
                 {
                     b.Navigation("Faces");
 
-                    b.Navigation("PersonGroupFaces");
+                    b.Navigation("PersonFaces");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Photo", b =>

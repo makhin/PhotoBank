@@ -18,7 +18,7 @@ namespace PhotoBank.DbContext.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.7")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -676,8 +676,8 @@ namespace PhotoBank.DbContext.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Id")
-                        .HasDatabaseName("IX_Photos_NeedsMigration")
-                        .HasFilter("[S3Key_Preview] IS NULL OR [S3Key_Thumbnail] IS NULL");
+                        .HasDatabaseName("IX_Photos_NeedsMigration_Thumbnail")
+                        .HasFilter("[S3Key_Thumbnail] IS NULL");
 
                     SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("Id"), new[] { "S3Key_Preview", "S3Key_Thumbnail" });
 
