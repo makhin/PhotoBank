@@ -1,8 +1,5 @@
 using System.Data;
 using System.Diagnostics;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using ImageMagick;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +8,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
-using Minio.Exceptions;
 using Minio.DataModel.Args;
+using Minio.Exceptions;
 using PhotoBank.DbContext.DbContext;
+
+namespace PhotoBank.BlobMigrator.Infrastructure.Migration;
 
 public sealed class BlobMigrationHostedService : IHostedService
 {
@@ -51,10 +50,8 @@ public sealed class BlobMigrationHostedService : IHostedService
         Directory.CreateDirectory(_opt.TempDir);
 
         await EnsureBucketAsync(ct);
-
-        // Примеры двух прогонов — подстройте под свои реальные критерии выборки:
-        await MigratePhotosAsync(ct);
         await MigrateFacesAsync(ct);
+        await MigratePhotosAsync(ct);
 
         _log.LogInformation("Migration finished.");
     }

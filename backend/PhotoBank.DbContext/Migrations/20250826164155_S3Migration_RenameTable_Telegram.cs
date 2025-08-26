@@ -17,7 +17,7 @@ namespace PhotoBank.DbContext.Migrations
                 table: "ObjectProperties");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_PersonPersonGroup_PersonGroup_PersonGroupsId",
+                name: "FK_PersonPersonGroup_PersonGroups_PersonGroupsId",
                 table: "PersonPersonGroup");
 
             migrationBuilder.DropIndex(
@@ -28,17 +28,9 @@ namespace PhotoBank.DbContext.Migrations
                 name: "IX_Photos_Id",
                 table: "Photos");
 
-            migrationBuilder.DropPrimaryKey(
-                name: "PK_PersonGroup",
-                table: "PersonGroup");
-
             migrationBuilder.DropColumn(
                 name: "Telegram",
                 table: "AspNetUsers");
-
-            migrationBuilder.RenameTable(
-                name: "PersonGroup",
-                newName: "PersonGroups");
 
             migrationBuilder.AlterColumn<string>(
                 name: "Name",
@@ -100,73 +92,6 @@ namespace PhotoBank.DbContext.Migrations
                 oldClrType: typeof(string),
                 oldType: "nvarchar(255)",
                 oldMaxLength: 255,
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<byte[]>(
-                name: "PreviewImage",
-                table: "Photos",
-                type: "varbinary(max)",
-                nullable: false,
-                defaultValue: new byte[0],
-                oldClrType: typeof(byte[]),
-                oldType: "varbinary(max)",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<Point>(
-                name: "Location",
-                table: "Photos",
-                type: "geometry",
-                nullable: false,
-                oldClrType: typeof(Point),
-                oldType: "geometry",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<string>(
-                name: "DominantColors",
-                table: "Photos",
-                type: "nvarchar(150)",
-                maxLength: 150,
-                nullable: false,
-                defaultValue: "",
-                oldClrType: typeof(string),
-                oldType: "nvarchar(150)",
-                oldMaxLength: 150,
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<string>(
-                name: "DominantColorForeground",
-                table: "Photos",
-                type: "nvarchar(50)",
-                maxLength: 50,
-                nullable: false,
-                defaultValue: "",
-                oldClrType: typeof(string),
-                oldType: "nvarchar(50)",
-                oldMaxLength: 50,
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<string>(
-                name: "DominantColorBackground",
-                table: "Photos",
-                type: "nvarchar(50)",
-                maxLength: 50,
-                nullable: false,
-                defaultValue: "",
-                oldClrType: typeof(string),
-                oldType: "nvarchar(50)",
-                oldMaxLength: 50,
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<string>(
-                name: "AccentColor",
-                table: "Photos",
-                type: "nvarchar(6)",
-                maxLength: 6,
-                nullable: false,
-                defaultValue: "",
-                oldClrType: typeof(string),
-                oldType: "nvarchar(6)",
-                oldMaxLength: 6,
                 oldNullable: true);
 
             migrationBuilder.AddColumn<long>(
@@ -261,15 +186,6 @@ namespace PhotoBank.DbContext.Migrations
                 type: "nvarchar(max)",
                 nullable: true);
 
-            migrationBuilder.AlterColumn<Geometry>(
-                name: "Rectangle",
-                table: "ObjectProperties",
-                type: "geometry",
-                nullable: false,
-                oldClrType: typeof(Geometry),
-                oldType: "geometry",
-                oldNullable: true);
-
             migrationBuilder.AlterColumn<int>(
                 name: "PropertyNameId",
                 table: "ObjectProperties",
@@ -278,25 +194,6 @@ namespace PhotoBank.DbContext.Migrations
                 defaultValue: 0,
                 oldClrType: typeof(int),
                 oldType: "int",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<Geometry>(
-                name: "Rectangle",
-                table: "Faces",
-                type: "geometry",
-                nullable: false,
-                oldClrType: typeof(Geometry),
-                oldType: "geometry",
-                oldNullable: true);
-
-            migrationBuilder.AlterColumn<byte[]>(
-                name: "Image",
-                table: "Faces",
-                type: "varbinary(max)",
-                nullable: false,
-                defaultValue: new byte[0],
-                oldClrType: typeof(byte[]),
-                oldType: "varbinary(max)",
                 oldNullable: true);
 
             migrationBuilder.AlterColumn<string>(
@@ -377,29 +274,8 @@ namespace PhotoBank.DbContext.Migrations
                 type: "bigint",
                 nullable: true);
 
-            migrationBuilder.AddPrimaryKey(
-                name: "PK_PersonGroups",
-                table: "PersonGroups",
-                column: "Id");
-
             migrationBuilder.CreateTable(
-                name: "FaceEmbeddings",
-                columns: table => new
-                {
-                    FaceId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PersonId = table.Column<int>(type: "int", nullable: false),
-                    Model = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Vector = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_FaceEmbeddings", x => x.FaceId);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PersonFaces",
+                name: "PersonFace",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -412,15 +288,15 @@ namespace PhotoBank.DbContext.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PersonFaces", x => x.Id);
+                    table.PrimaryKey("PK_PersonFace", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PersonFaces_Faces_FaceId",
+                        name: "FK_PersonFace_Faces_FaceId",
                         column: x => x.FaceId,
                         principalTable: "Faces",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_PersonFaces_Persons_PersonId",
+                        name: "FK_PersonFace_Persons_PersonId",
                         column: x => x.PersonId,
                         principalTable: "Persons",
                         principalColumn: "Id",
@@ -470,19 +346,14 @@ namespace PhotoBank.DbContext.Migrations
                 filter: "[TelegramUserId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_FaceEmbeddings_PersonId",
-                table: "FaceEmbeddings",
-                column: "PersonId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PersonFaces_FaceId",
-                table: "PersonFaces",
+                name: "IX_PersonFace_FaceId",
+                table: "PersonFace",
                 column: "FaceId",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_PersonFaces_PersonId",
-                table: "PersonFaces",
+                name: "IX_PersonFace_PersonId",
+                table: "PersonFace",
                 column: "PersonId");
 
             migrationBuilder.AddForeignKey(
@@ -514,7 +385,7 @@ namespace PhotoBank.DbContext.Migrations
                 table: "PersonPersonGroup");
 
             migrationBuilder.DropTable(
-                name: "FaceEmbeddings");
+                name: "PersonFace");
 
             migrationBuilder.DropIndex(
                 name: "IX_Tag_Name",
@@ -805,33 +676,6 @@ namespace PhotoBank.DbContext.Migrations
                 table: "PersonGroup",
                 column: "Id");
 
-            migrationBuilder.CreateTable(
-                name: "PersonGroupFace",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    FaceId = table.Column<int>(type: "int", nullable: false),
-                    PersonId = table.Column<int>(type: "int", nullable: false),
-                    ExternalGuid = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PersonGroupFace", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PersonGroupFace_Faces_FaceId",
-                        column: x => x.FaceId,
-                        principalTable: "Faces",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PersonGroupFace_Persons_PersonId",
-                        column: x => x.PersonId,
-                        principalTable: "Persons",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_PhotoTags_TagId",
                 table: "PhotoTags",
@@ -841,17 +685,6 @@ namespace PhotoBank.DbContext.Migrations
                 name: "IX_Photos_Id",
                 table: "Photos",
                 column: "Id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PersonGroupFace_FaceId",
-                table: "PersonGroupFace",
-                column: "FaceId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PersonGroupFace_PersonId",
-                table: "PersonGroupFace",
-                column: "PersonId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_ObjectProperties_PropertyNames_PropertyNameId",
