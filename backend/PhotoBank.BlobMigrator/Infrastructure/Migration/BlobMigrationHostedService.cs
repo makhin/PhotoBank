@@ -181,10 +181,10 @@ public sealed class BlobMigrationHostedService : IHostedService
         var sw = Stopwatch.StartNew();
         int migrated = 0, skipped = 0, failed = 0;
 
-        List<long> ids;
+        List<int> ids;
         await using (var db = await _dbFactory.CreateDbContextAsync(ct))
         {
-            ids = await db.Database.SqlQueryRaw<long>(
+            ids = await db.Database.SqlQueryRaw<int>(
                 """
                 SELECT TOP({0}) f.Id
                 FROM Faces f WITH (NOLOCK)
@@ -230,7 +230,7 @@ public sealed class BlobMigrationHostedService : IHostedService
     {
         var need = await db.Database.SqlQueryRaw<int>(
             """
-            SELECT CASE WHEN f.Image IS NOT NULL AND (f.S3Key_Image IS NULL OR f.S3Key_Image='') THEN 1 ELSE 0 END
+            SELECT CASE WHEN f.Image IS NOT NULL AND (f.S3Key_Image IS NULL OR f.S3Key_Image='') THEN 1 ELSE 0 END as Value
             FROM Faces f WITH (NOLOCK) WHERE f.Id = {0}
             """, id).FirstOrDefaultAsync(ct) == 1;
 
