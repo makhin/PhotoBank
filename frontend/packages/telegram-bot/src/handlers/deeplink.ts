@@ -16,7 +16,11 @@ bot.on('message', async (ctx: MyContext, next) => {
         await ctx.reply(ctx.t('start-linked'));
       } catch (e) {
         const forbidden = e instanceof ProblemDetailsError && e.problem.status === 403;
-        await ctx.reply(forbidden ? ctx.t('not-registered') : ctx.t('sorry-try-later'));
+        await ctx.reply(
+          forbidden
+            ? ctx.t('not-registered', { userId: ctx.from?.id })
+            : ctx.t('sorry-try-later')
+        );
       }
       return;
     }
