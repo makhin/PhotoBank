@@ -20,9 +20,8 @@ namespace PhotoBank.UnitTests.Enrichers.Services
         public async Task CreateFacePreview_UploadsToS3()
         {
             var minio = new Mock<IMinioClient>();
-            var putResp = (PutObjectResponse)Activator.CreateInstance(typeof(PutObjectResponse), nonPublic: true);
             var stat = (ObjectStat)Activator.CreateInstance(typeof(ObjectStat), nonPublic: true);
-            minio.Setup(m => m.PutObjectAsync(It.IsAny<PutObjectArgs>(), default)).ReturnsAsync(putResp).Verifiable();
+            minio.Setup(m => m.PutObjectAsync(It.IsAny<PutObjectArgs>(), default)).ReturnsAsync((PutObjectResponse?)null).Verifiable();
             minio.Setup(m => m.StatObjectAsync(It.IsAny<StatObjectArgs>(), default)).ReturnsAsync(stat);
             var service = new FacePreviewService(minio.Object);
             var image = new MagickImage(MagickColors.Red, 10, 10) { Format = MagickFormat.Jpeg };

@@ -18,18 +18,21 @@ public sealed class UnifiedFaceService
     private readonly IRepository<Face> _faces;
     private readonly IRepository<PersonFace> _links;
     private readonly ILogger<UnifiedFaceService> _log;
+    private readonly IFaceStorageService _storage;
 
     public UnifiedFaceService(
         IFaceProvider provider,
         IRepository<Person> persons,
         IRepository<Face> faces,
         IRepository<PersonFace> links,
+        IFaceStorageService storage,
         ILogger<UnifiedFaceService> log)
     {
         _provider = provider;
         _persons = persons;
         _faces = faces;
         _links = links;
+        _storage = storage;
         _log = log;
     }
 
@@ -73,15 +76,23 @@ public sealed class UnifiedFaceService
 
             var faceIds = missing.Select(m => m.FaceId).ToArray();
 
-            var blobs = await _faces.GetAll()
+            var faces = await _faces.GetAll()
                 .Where(f => faceIds.Contains(f.Id))
-                .Select(f => new { f.Id, f.Image })
+                .Select(f => new Face { Id = f.Id, Image = f.Image, S3Key_Image = f.S3Key_Image })
                 .ToListAsync(ct);
 
-            var toLink = blobs.Select(b => new FaceToLink(
-                b.Id,
-                OpenStream: () => new MemoryStream(b.Image, writable: false),
-                ExternalId: null)).ToList();
+            var toLink = new List<FaceToLink>();
+            foreach (var face in faces)
+            {
+                await using var stream = await _storage.OpenReadStreamAsync(face, ct);
+                var ms = new MemoryStream();
+                await stream.CopyToAsync(ms, ct);
+                var bytes = ms.ToArray();
+                toLink.Add(new FaceToLink(
+                    face.Id,
+                    OpenStream: () => new MemoryStream(bytes, writable: false),
+                    ExternalId: null));
+            }
 
             var map = await _provider.LinkFacesToPersonAsync(group.Key, toLink, ct);
             foreach (var (faceId, external) in map)
