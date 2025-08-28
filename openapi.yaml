@@ -919,6 +919,35 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  '/photos/{id}/preview':
+    get:
+      tags:
+        - Photos
+      operationId: Photos_GetPreview
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+        '301':
+          description: Moved Permanently
+        '404':
+          description: Not Found
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /photos/upload:
     post:
       tags:
@@ -1662,7 +1691,6 @@ components:
       required:
         - id
         - name
-        - previewImage
       type: object
       properties:
         id:
@@ -1678,9 +1706,12 @@ components:
           type: string
           format: date-time
           nullable: true
-        previewImage:
+        s3Key_Preview:
           type: string
-          format: byte
+          nullable: true
+        s3Key_Thumbnail:
+          type: string
+          nullable: true
         location:
           $ref: '#/components/schemas/GeoPointDto'
         orientation:
@@ -1721,15 +1752,14 @@ components:
         - name
         - relativePath
         - storageName
-        - thumbnail
       type: object
       properties:
         id:
           type: integer
           format: int32
-        thumbnail:
+        s3Key_Thumbnail:
           type: string
-          format: byte
+          nullable: true
         name:
           minLength: 1
           type: string
