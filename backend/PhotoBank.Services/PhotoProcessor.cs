@@ -10,6 +10,7 @@ using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Models;
 using File = PhotoBank.DbContext.Models.File;
 using Storage = PhotoBank.DbContext.Models.Storage;
+using ImageMagick;
 
 namespace PhotoBank.Services
 {
@@ -76,9 +77,9 @@ namespace PhotoBank.Services
 
             await _dependencyExecutor.ExecuteAsync(_enrichers, photo, sourceData);
 
-            if (photo.PreviewImage != null)
+            if (sourceData.PreviewImage != null)
             {
-                photo.ImageHash = ImageHashHelper.ComputeHash(photo.PreviewImage);
+                photo.ImageHash = ImageHashHelper.ComputeHash(sourceData.PreviewImage.ToByteArray());
             }
 
             try

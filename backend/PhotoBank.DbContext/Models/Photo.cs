@@ -29,7 +29,6 @@ namespace PhotoBank.DbContext.Models
         public string DominantColors { get; set; }
         [Column(TypeName = "geometry")]
         public Point Location { get; set; }
-        public byte[] PreviewImage { get; set; }
         public byte[] Thumbnail { get; set; }
         [MaxLength(512)]
         public string S3Key_Preview { get; set; }

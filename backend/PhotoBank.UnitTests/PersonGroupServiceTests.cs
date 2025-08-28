@@ -12,6 +12,8 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.AccessControl;
+using Moq;
+using Minio;
 
 namespace PhotoBank.UnitTests;
 
@@ -49,7 +51,8 @@ public class PersonGroupServiceTests
                 _provider.GetRequiredService<IRepository<PersonFace>>(),
                 _provider.GetRequiredService<IMapper>(),
                 _provider.GetRequiredService<IMemoryCache>(),
-                _provider.GetRequiredService<ICurrentUser>()
+                _provider.GetRequiredService<ICurrentUser>(),
+                new Mock<IMinioClient>().Object
             );
     }
 
