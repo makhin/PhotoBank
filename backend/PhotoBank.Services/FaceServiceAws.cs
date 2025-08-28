@@ -28,6 +28,7 @@ namespace PhotoBank.Services
         private readonly IRepository<Person> _personRepository;
         private readonly IRepository<PersonFace> _personFaceRepository;
         private readonly ILogger<FaceService> _logger;
+        private readonly IFaceStorageService _storage;
 
         private const string PersonGroupId = "my-cicrle-person-group";
 
@@ -35,12 +36,14 @@ namespace PhotoBank.Services
             IRepository<Face> faceRepository,
             IRepository<Person> personRepository,
             IRepository<PersonFace> personFaceRepository,
+            IFaceStorageService storage,
             ILogger<FaceService> logger)
         {
             _faceClient = faceClient;
             _faceRepository = faceRepository;
             _personRepository = personRepository;
             _personFaceRepository = personFaceRepository;
+            _storage = storage;
             _logger = logger;
         }
 
@@ -120,44 +123,42 @@ namespace PhotoBank.Services
 
                     var dbFace = await _faceRepository.GetAsync(personFace.FaceId);
 
-                    await using (var stream = new MemoryStream(dbFace.Image))
+                    await using var stream = await _storage.OpenReadStreamAsync(dbFace);
+                    try
                     {
-                        try
+                        var indexFaces =  await _faceClient.IndexFacesAsync(new IndexFacesRequest
                         {
-                            var indexFaces =  await _faceClient.IndexFacesAsync(new IndexFacesRequest
+                            CollectionId = PersonGroupId,
+                            MaxFaces = 1,
+                            Image = new Image
+                            {
+                                Bytes = (MemoryStream)stream
+                            },
+                            DetectionAttributes = new List<string> { "ALL" }
+                        });
+
+                        foreach (var faceRecord in indexFaces.FaceRecords)
+                        {
+                            var associateFaces  = await _faceClient.AssociateFacesAsync(new AssociateFacesRequest
                             {
                                 CollectionId = PersonGroupId,
-                                MaxFaces = 1,
-                                Image = new Image
-                                {
-                                    Bytes = stream
-                                },
-                                DetectionAttributes = new List<string> { "ALL" }
+                                UserId = dbPerson.Key.PersonId.ToString(),
+                                FaceIds = new List<string> { faceRecord.Face.FaceId }
                             });
 
-                            foreach (var faceRecord in indexFaces.FaceRecords)
+                            var associatedFace = associateFaces.AssociatedFaces.FirstOrDefault();
+                            if (associatedFace == null)
                             {
-                                var associateFaces  = await _faceClient.AssociateFacesAsync(new AssociateFacesRequest
-                                {
-                                    CollectionId = PersonGroupId,
-                                    UserId = dbPerson.Key.PersonId.ToString(),
-                                    FaceIds = new List<string> { faceRecord.Face.FaceId }
-                                });
-
-                                var associatedFace = associateFaces.AssociatedFaces.FirstOrDefault();
-                                if (associatedFace == null)
-                                {
-                                    continue;
-                                }
-                                var link = dbPersonFaces.Single(g => g.PersonId == dbPerson.Key.PersonId && g.FaceId == personFace.FaceId);
-                                link.ExternalGuid = Guid.Parse(associatedFace.FaceId);
-                                await _personFaceRepository.UpdateAsync(link, pgf => pgf.ExternalGuid);
+                                continue;
                             }
+                            var link = dbPersonFaces.Single(g => g.PersonId == dbPerson.Key.PersonId && g.FaceId == personFace.FaceId);
+                            link.ExternalGuid = Guid.Parse(associatedFace.FaceId);
+                            await _personFaceRepository.UpdateAsync(link, pgf => pgf.ExternalGuid);
                         }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e);
-                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
                     }
                 }
             }
