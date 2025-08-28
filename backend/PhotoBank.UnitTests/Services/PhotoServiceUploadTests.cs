@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
+using Minio;
 using NUnit.Framework;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
@@ -56,7 +58,8 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<PersonFace>(provider),
                 _mapper,
                 new MemoryCache(new MemoryCacheOptions()),
-                new DummyCurrentUser());
+                new DummyCurrentUser(),
+                new Mock<IMinioClient>().Object);
 
             var bytes = new byte[] { 1, 2, 3, 4 };
             await using var ms = new MemoryStream(bytes);
@@ -94,7 +97,8 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<PersonFace>(provider),
                 _mapper,
                 new MemoryCache(new MemoryCacheOptions()),
-                new DummyCurrentUser());
+                new DummyCurrentUser(),
+                new Mock<IMinioClient>().Object);
 
             var bytes = new byte[] { 1, 2, 3, 4 };
             await using var ms1 = new MemoryStream(bytes);
@@ -136,7 +140,8 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<PersonFace>(provider),
                 _mapper,
                 new MemoryCache(new MemoryCacheOptions()),
-                new DummyCurrentUser());
+                new DummyCurrentUser(),
+                new Mock<IMinioClient>().Object);
 
             var bytes1 = new byte[] { 1, 2, 3, 4 };
             await using var ms1 = new MemoryStream(bytes1);

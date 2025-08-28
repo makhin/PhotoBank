@@ -9,6 +9,7 @@ using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Models;
+using ImageMagick;
 
 namespace PhotoBank.Services.Enrichers;
 
@@ -46,20 +47,14 @@ public sealed class AnalyzeEnricher : IEnricher
         if (photo is null) throw new ArgumentNullException(nameof(photo));
         if (source is null) throw new ArgumentNullException(nameof(source));
 
-        // 3) Быстрые проверки — нет превью или уже обогащено
-        if (photo.PreviewImage is null || photo.PreviewImage.Length == 0)
+        if (source.PreviewImage is null)
             return;
 
         if (source.ImageAnalysis != null)
             return;
 
         // 4) Read-only поток без лишних копий буфера
-        using var stream = new MemoryStream(
-            buffer: photo.PreviewImage,
-            index: 0,
-            count: photo.PreviewImage.Length,
-            writable: false,
-            publiclyVisible: true);
+        using var stream = new MemoryStream(source.PreviewImage.ToByteArray());
 
         // 5) Простая политика ретраев (на 429/5xx/сетевые)
         source.ImageAnalysis = await RetryAsync(

@@ -34,7 +34,13 @@ namespace PhotoBank.Services.Enrichers
         {
             try
             {
-                var detectedFaces = await _faceService.DetectFacesAsync(photo.PreviewImage);
+                if (sourceData.PreviewImage is null)
+                {
+                    photo.FaceIdentifyStatus = FaceIdentifyStatus.NotDetected;
+                    return;
+                }
+
+                var detectedFaces = await _faceService.DetectFacesAsync(sourceData.PreviewImage.ToByteArray());
                 if (detectedFaces.Count == 0)
                 {
                     photo.FaceIdentifyStatus = FaceIdentifyStatus.NotDetected;

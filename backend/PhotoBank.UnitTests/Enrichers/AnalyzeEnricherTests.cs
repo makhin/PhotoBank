@@ -10,6 +10,7 @@ using PhotoBank.Services.Enrichers;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using PhotoBank.Services.Models;
+using ImageMagick;
 
 namespace PhotoBank.UnitTests.Enrichers
 {
@@ -52,8 +53,12 @@ namespace PhotoBank.UnitTests.Enrichers
         public async Task EnrichAsync_ShouldSetImageAnalysis()
         {
             // Arrange
-            var photo = new Photo { PreviewImage = new byte[] { 1, 2, 3 } };
-            var sourceData = new SourceDataDto();
+            var photo = new Photo();
+            var preview = new MagickImage(MagickColors.Red, 10, 10) { Format = MagickFormat.Jpeg };
+            var sourceData = new SourceDataDto
+            {
+                PreviewImage = preview
+            };
             var imageAnalysis = new ImageAnalysis
             {
                 Adult = new AdultInfo

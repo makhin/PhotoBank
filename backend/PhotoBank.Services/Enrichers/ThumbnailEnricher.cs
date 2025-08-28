@@ -8,6 +8,7 @@ using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Models;
+using ImageMagick;
 
 namespace PhotoBank.Services.Enrichers;
 
@@ -29,22 +30,17 @@ public sealed class ThumbnailEnricher : IEnricher
         _client = client ?? throw new ArgumentNullException(nameof(client));
     }
 
-    public async Task EnrichAsync(Photo photo, SourceDataDto _, CancellationToken cancellationToken = default)
+    public async Task EnrichAsync(Photo photo, SourceDataDto source, CancellationToken cancellationToken = default)
     {
         if (photo is null) throw new ArgumentNullException(nameof(photo));
-        if (photo.PreviewImage is null || photo.PreviewImage.Length == 0)
+        if (source?.PreviewImage is null)
             return; // нечего генерировать
 
         if (photo.Thumbnail is { Length: > 0 })
             return; // уже есть
 
         // Источник: read-only MemoryStream поверх массива без копий
-        using var srcStream = new MemoryStream(
-            buffer: photo.PreviewImage,
-            index: 0,
-            count: photo.PreviewImage.Length,
-            writable: false,
-            publiclyVisible: true);
+        using var srcStream = new MemoryStream(source.PreviewImage.ToByteArray());
 
         // Ретраи + перемотка стрима перед каждой попыткой
         using var thumbStream = await RetryAsync(

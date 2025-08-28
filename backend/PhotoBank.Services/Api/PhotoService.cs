@@ -14,6 +14,8 @@ using PhotoBank.ViewModel.Dto;
 using PhotoBank.Services;
 using System.IO;
 using PhotoBank.AccessControl;
+using Minio;
+using Minio.DataModel.Args;
 
 namespace PhotoBank.Services.Api;
 
@@ -43,6 +45,7 @@ public interface IPhotoService
     Task UpdateFaceIdentityAsync(int faceId, IdentityStatus identityStatus, int? personId);
     Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold);
     Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path);
+    Task<byte[]> GetObjectAsync(string key);
 }
 
 public class PhotoService : IPhotoService
@@ -61,6 +64,7 @@ public class PhotoService : IPhotoService
     private readonly Lazy<Task<IReadOnlyList<PersonDto>>> _persons;
     private readonly Lazy<Task<IReadOnlyList<PersonGroupDto>>> _personGroups;
     private readonly ICurrentUser _currentUser;
+    private readonly IMinioClient _minioClient;
 
     private static readonly MemoryCacheEntryOptions CacheOptions = new()
     {
@@ -79,7 +83,8 @@ public class PhotoService : IPhotoService
         IRepository<PersonFace> personFaceRepository,
         IMapper mapper,
         IMemoryCache cache,
-        ICurrentUser currentUser)
+        ICurrentUser currentUser,
+        IMinioClient minioClient)
     {
         _db = db;
         _photoRepository = photoRepository;
@@ -91,6 +96,7 @@ public class PhotoService : IPhotoService
         _mapper = mapper;
         _cache = cache;
         _currentUser = currentUser;
+        _minioClient = minioClient;
         _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
             GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
                 .AsNoTracking()
@@ -463,6 +469,16 @@ public class PhotoService : IPhotoService
             .ToList();
 
         return _mapper.Map<IEnumerable<PhotoItemDto>>(result);
+    }
+
+    public async Task<byte[]> GetObjectAsync(string key)
+    {
+        using var ms = new MemoryStream();
+        await _minioClient.GetObjectAsync(new GetObjectArgs()
+            .WithBucket("photobank")
+            .WithObject(key)
+            .WithCallbackStream(stream => stream.CopyTo(ms)));
+        return ms.ToArray();
     }
 
     private static PhotoAclExtensions.PhotoAcl BuildPhotoAcl(ICurrentUser user)

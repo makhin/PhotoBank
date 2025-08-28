@@ -9,6 +9,8 @@ using NetTopologySuite.Geometries;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
+using Minio;
 using NUnit.Framework;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
@@ -56,7 +58,8 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<PersonFace>(provider),
                 _mapper,
                 new MemoryCache(new MemoryCacheOptions()),
-                new DummyCurrentUser());
+                new DummyCurrentUser(),
+                new Mock<IMinioClient>().Object);
         }
 
         [Test]
@@ -76,7 +79,6 @@ namespace PhotoBank.UnitTests.Services
             var photos = Builder<Photo>.CreateListOfSize(2)
                 .All()
                 .With(p => p.Location = new Point(0, 0))
-                .With(p => p.PreviewImage = Array.Empty<byte>())
                 .With(p => p.Thumbnail = Array.Empty<byte>())
                 .With(p => p.Storage = storage)
                 .With(p => p.StorageId = storage.Id)
@@ -114,7 +116,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p=> p.Id = 1)
                 .With(p => p.IsBW = true)
                 .With(p => p.Location = new Point(0, 0))
-                .With(p => p.PreviewImage = Array.Empty<byte>())
                 .With(p => p.Thumbnail = Array.Empty<byte>())
                 .With(p => p.Storage = storage)
                 .With(p => p.StorageId = storage.Id)
@@ -124,7 +125,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 2)
                 .With(p => p.IsBW = false)
                 .With(p => p.Location = new Point(0, 0))
-                .With(p => p.PreviewImage = Array.Empty<byte>())
                 .With(p => p.Thumbnail = Array.Empty<byte>())
                 .With(p => p.Storage = storage)
                 .With(p => p.StorageId = storage.Id)
@@ -164,7 +164,6 @@ namespace PhotoBank.UnitTests.Services
             var photoWithTag = Builder<Photo>.CreateNew()
                 .With(p => p.Id = 1)
                 .With(p => p.Location = new Point(0, 0))
-                .With(p => p.PreviewImage = Array.Empty<byte>())
                 .With(p => p.Thumbnail = Array.Empty<byte>())
                 .With(p => p.Storage = storage)
                 .With(p => p.StorageId = storage.Id)
@@ -177,7 +176,6 @@ namespace PhotoBank.UnitTests.Services
             var photoWithoutTag = Builder<Photo>.CreateNew()
                 .With(p => p.Id = 2)
                 .With(p => p.Location = new Point(0, 0))
-                .With(p => p.PreviewImage = Array.Empty<byte>())
                 .With(p => p.Thumbnail = Array.Empty<byte>())
                 .With(p => p.Storage = storage)
                 .With(p => p.StorageId = storage.Id)
@@ -218,7 +216,6 @@ namespace PhotoBank.UnitTests.Services
             var photoAllTags = Builder<Photo>.CreateNew()
                 .With(p => p.Id = 1)
                 .With(p => p.Location = new Point(0, 0))
-                .With(p => p.PreviewImage = Array.Empty<byte>())
                 .With(p => p.Thumbnail = Array.Empty<byte>())
                 .With(p => p.Storage = storage)
                 .With(p => p.StorageId = storage.Id)
@@ -233,7 +230,6 @@ namespace PhotoBank.UnitTests.Services
             var photoOnlyTag1 = Builder<Photo>.CreateNew()
                 .With(p => p.Id = 2)
                 .With(p => p.Location = new Point(0, 0))
-                .With(p => p.PreviewImage = Array.Empty<byte>())
                 .With(p => p.Thumbnail = Array.Empty<byte>())
                 .With(p => p.Storage = storage)
                 .With(p => p.StorageId = storage.Id)
@@ -247,7 +243,6 @@ namespace PhotoBank.UnitTests.Services
             var photoOnlyTag2 = Builder<Photo>.CreateNew()
                 .With(p => p.Id = 3)
                 .With(p => p.Location = new Point(0, 0))
-                .With(p => p.PreviewImage = Array.Empty<byte>())
                 .With(p => p.Thumbnail = Array.Empty<byte>())
                 .With(p => p.Storage = storage)
                 .With(p => p.StorageId = storage.Id)
@@ -293,7 +288,6 @@ namespace PhotoBank.UnitTests.Services
             var photoBoth = Builder<Photo>.CreateNew()
                 .With(p => p.Id = 1)
                 .With(p => p.Location = new Point(0, 0))
-                .With(p => p.PreviewImage = Array.Empty<byte>())
                 .With(p => p.Thumbnail = Array.Empty<byte>())
                 .With(p => p.Storage = storage)
                 .With(p => p.StorageId = storage.Id)
@@ -308,7 +302,6 @@ namespace PhotoBank.UnitTests.Services
             var photoOnlyP1 = Builder<Photo>.CreateNew()
                 .With(p => p.Id = 2)
                 .With(p => p.Location = new Point(0, 0))
-                .With(p => p.PreviewImage = Array.Empty<byte>())
                 .With(p => p.Thumbnail = Array.Empty<byte>())
                 .With(p => p.Storage = storage)
                 .With(p => p.StorageId = storage.Id)
@@ -322,7 +315,6 @@ namespace PhotoBank.UnitTests.Services
             var photoOnlyP2 = Builder<Photo>.CreateNew()
                 .With(p => p.Id = 3)
                 .With(p => p.Location = new Point(0, 0))
-                .With(p => p.PreviewImage = Array.Empty<byte>())
                 .With(p => p.Thumbnail = Array.Empty<byte>())
                 .With(p => p.Storage = storage)
                 .With(p => p.StorageId = storage.Id)

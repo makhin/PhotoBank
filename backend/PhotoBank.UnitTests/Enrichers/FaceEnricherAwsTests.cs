@@ -64,7 +64,8 @@ namespace PhotoBank.UnitTests.Enrichers
         {
             // Arrange
             var photo = new Photo();
-            var sourceData = new SourceDataDto();
+            var preview1 = new MagickImage(MagickColors.Red, 10, 10) { Format = MagickFormat.Jpeg };
+            var sourceData = new SourceDataDto { PreviewImage = preview1 };
             _mockFaceService.Setup(service => service.DetectFacesAsync(It.IsAny<byte[]>()))
                 .ReturnsAsync(new List<FaceDetail>());
 
@@ -80,7 +81,8 @@ namespace PhotoBank.UnitTests.Enrichers
         {
             // Arrange
             var photo = new Photo();
-            var sourceData = new SourceDataDto();
+            var preview2 = new MagickImage(MagickColors.Red, 10, 10) { Format = MagickFormat.Jpeg };
+            var sourceData = new SourceDataDto { PreviewImage = preview2 };
             var detectedFaces = new List<FaceDetail>
             {
                 new FaceDetail { BoundingBox = new BoundingBox { Height = 0.1f, Width = 0.1f, Top = 0.1f, Left = 0.1f } }
@@ -101,9 +103,10 @@ namespace PhotoBank.UnitTests.Enrichers
         {
             // Arrange
             var photo = new Photo();
+            var preview3 = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg };
             var sourceData = new SourceDataDto
             {
-                PreviewImage = new MagickImage(MagickColors.Red, 100, 100)
+                PreviewImage = preview3
             };
             var detectedFaces = new List<FaceDetail>
             {
@@ -125,9 +128,10 @@ namespace PhotoBank.UnitTests.Enrichers
         {
             // Arrange
             var photo = new Photo();
+            var preview4 = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg };
             var sourceData = new SourceDataDto
             {
-                PreviewImage = new MagickImage(MagickColors.Red, 100, 100)
+                PreviewImage = preview4
             };
             var detectedFaces = new List<FaceDetail>
             {
