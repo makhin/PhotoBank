@@ -6,6 +6,6 @@ namespace PhotoBank.Services.Enrichers.Services
 {
     public interface IFacePreviewService
     {
-        Task<byte[]> CreateFacePreview(DetectedFace detectedFace, IMagickImage<byte> image, double photoScale);
+        Task<(string key, string etag)> CreateFacePreview(DetectedFace detectedFace, IMagickImage<byte> image, double photoScale);
     }
 }
