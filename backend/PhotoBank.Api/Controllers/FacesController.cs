@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PhotoBank.Services.Api;
 using PhotoBank.DbContext.Models;
 using PhotoBank.ViewModel.Dto;
+using System.Net.Mime;
 
 namespace PhotoBank.Api.Controllers;
 
@@ -25,5 +26,31 @@ public class FacesController(IPhotoService photoService) : ControllerBase
     {
         await photoService.UpdateFaceIdentityAsync(dto.FaceId, dto.IdentityStatus, dto.PersonId);
         return Ok();
+    }
+
+    [HttpGet("{id}/image")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status301MovedPermanently)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetImage(int id)
+    {
+        var result = await photoService.GetFaceImageAsync(id);
+        if (result is null)
+            return NotFound();
+
+        var etag = $"\"{result.ETag}\"";
+        Response.Headers.ETag = etag;
+        Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+
+        if (Request.Headers.IfNoneMatch.Contains(etag))
+            return StatusCode(StatusCodes.Status304NotModified);
+
+        if (result.PreSignedUrl is not null)
+        {
+            Response.Headers.Location = result.PreSignedUrl;
+            return StatusCode(StatusCodes.Status301MovedPermanently);
+        }
+
+        return File(result.Data!, MediaTypeNames.Image.Jpeg);
     }
 }
