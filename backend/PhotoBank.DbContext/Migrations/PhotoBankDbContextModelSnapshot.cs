@@ -340,7 +340,6 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("int");
 
                     b.Property<byte[]>("Image")
-                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<DateTime?>("MigratedAt_Image")

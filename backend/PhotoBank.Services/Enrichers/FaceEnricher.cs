@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ImageMagick;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Newtonsoft.Json;
 using PhotoBank.DbContext.Models;
@@ -60,11 +62,13 @@ namespace PhotoBank.Services.Enrichers
 
                 foreach (var detectedFace in detectedFaces)
                 {
+                    var (key, etag) = await _facePreviewService.CreateFacePreview(detectedFace, sourceData.PreviewImage, 1);
                     var face = new Face
                     {
                         PhotoId = photo.Id,
                         IdentityStatus = IdentityStatus.NotIdentified,
-                        Image = await _facePreviewService.CreateFacePreview(detectedFace, sourceData.PreviewImage, 1),
+                        S3Key_Image = key,
+                        S3ETag_Image = etag,
                         Rectangle = GeoWrapper.GetRectangle(detectedFace.FaceRectangle, photo.Scale)
                     };
 
@@ -84,8 +88,10 @@ namespace PhotoBank.Services.Enrichers
                     }
                     else if (IsAbleToIdentify(detectedFace, photo.Scale))
                     {
-                        face.Image = await _facePreviewService.CreateFacePreview(detectedFace, sourceData.OriginalImage, photo.Scale);
-                        identifyResult = await _faceService.FaceIdentityAsync(face);
+                        var bytes = await CreateFaceBytes(detectedFace, sourceData.OriginalImage, photo.Scale);
+                        var tempFace = new Face { Image = bytes };
+                        identifyResult = await _faceService.FaceIdentityAsync(tempFace);
+                        (face.S3Key_Image, face.S3ETag_Image) = await _facePreviewService.CreateFacePreview(detectedFace, sourceData.OriginalImage, photo.Scale);
                         IdentifyFace(face, identifyResult, photo.TakenDate);
                     }
 
@@ -123,6 +129,25 @@ namespace PhotoBank.Services.Enrichers
                 face.IdentifiedWithConfidence = candidate.Confidence;
                 face.Person = person;
             }
+        }
+
+        private static async Task<byte[]> CreateFaceBytes(DetectedFace detectedFace, IMagickImage<byte> image, double scale)
+        {
+            await using var stream = new MemoryStream();
+            var faceImage = image.Clone();
+            var height = (uint)(detectedFace.FaceRectangle.Height / scale);
+            var width = (uint)(detectedFace.FaceRectangle.Width / scale);
+            var top = (int)(detectedFace.FaceRectangle.Top / scale);
+            var left = (int)(detectedFace.FaceRectangle.Left / scale);
+            var geometry = new MagickGeometry(width, height)
+            {
+                IgnoreAspectRatio = true,
+                Y = top,
+                X = left
+            };
+            faceImage.Crop(geometry);
+            await faceImage.WriteAsync(stream);
+            return stream.ToArray();
         }
     }
 }

@@ -127,7 +127,7 @@ namespace PhotoBank.UnitTests.Enrichers
             _mockFaceService.Setup(service => service.IdentifyAsync(It.IsAny<IList<Guid?>>()))
                 .ReturnsAsync(identifyResults);
             _mockFacePreviewService.Setup(service => service.CreateFacePreview(It.IsAny<DetectedFace>(), It.IsAny<IMagickImage<byte>>(), It.IsAny<double>()))
-                .ReturnsAsync(new byte[] { 1, 2, 3 });
+                .ReturnsAsync(("s3/key", "etag"));
 
             // Act
             await _faceEnricher.EnrichAsync(photo, sourceData);
@@ -137,6 +137,7 @@ namespace PhotoBank.UnitTests.Enrichers
             photo.Faces[0].IdentityStatus.Should().Be(IdentityStatus.Identified);
             photo.Faces[0].IdentifiedWithConfidence.Should().Be(0.9);
             photo.Faces[0].Person.Should().Be(_persons[0]);
+            photo.Faces[0].S3Key_Image.Should().Be("s3/key");
         }
     }
 }
