@@ -98,7 +98,7 @@ namespace PhotoBank.Repositories
         }
         public async Task<TTable> UpdateAsync(TTable entity)
         {
-            var recordExists = _entities.Any(a => a.Id == entity.Id);
+            var recordExists = await _entities.AnyAsync(a => a.Id == entity.Id);
 
             if (!recordExists)
             {
