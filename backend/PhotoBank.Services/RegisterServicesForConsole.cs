@@ -14,6 +14,7 @@ using PhotoBank.Services.Recognition;
 using PhotoBank.Services.Translator;
 using PhotoBank.Services.Search;
 using PhotoBank.AccessControl;
+using Minio;
 using ApiKeyServiceClientCredentials = Microsoft.Azure.CognitiveServices.Vision.ComputerVision.ApiKeyServiceClientCredentials;
 using Polly;
 
@@ -27,6 +28,10 @@ namespace PhotoBank.Services
         public static void Configure(IServiceCollection services, IConfiguration configuration)
         {
             services.AddMemoryCache();
+            services.AddSingleton<IMinioClient>(_ => new MinioClient()
+                .WithEndpoint("localhost")
+                .WithCredentials("", "")
+                .Build());
             services.AddSingleton<IComputerVisionClient, ComputerVisionClient>(provider =>
             {
                 var key = configuration.GetSection(ComputerVision)["Key"];
