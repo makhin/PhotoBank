@@ -47,6 +47,7 @@ public interface IPhotoService
     Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path);
     Task<byte[]> GetObjectAsync(string key);
     Task<PhotoPreviewResult?> GetPhotoPreviewAsync(int id);
+    Task<PhotoPreviewResult?> GetPhotoThumbnailAsync(int id);
 }
 
 public record PhotoPreviewResult(string ETag, string? PreSignedUrl, byte[]? Data);
@@ -496,6 +497,31 @@ public class PhotoService : IPhotoService
         {
             var data = await GetObjectAsync(photo.S3Key_Preview);
             return new PhotoPreviewResult(photo.S3ETag_Preview, null, data);
+        }
+    }
+
+    public async Task<PhotoPreviewResult?> GetPhotoThumbnailAsync(int id)
+    {
+        var photo = await _photoRepository.GetByCondition(p => p.Id == id)
+            .AsNoTracking()
+            .Select(p => new { p.S3Key_Thumbnail, p.S3ETag_Thumbnail })
+            .SingleOrDefaultAsync();
+
+        if (photo == null || string.IsNullOrEmpty(photo.S3Key_Thumbnail))
+            return null;
+
+        try
+        {
+            var url = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
+                .WithBucket("photobank")
+                .WithObject(photo.S3Key_Thumbnail)
+                .WithExpiry(60 * 60));
+            return new PhotoPreviewResult(photo.S3ETag_Thumbnail, url, null);
+        }
+        catch
+        {
+            var data = await GetObjectAsync(photo.S3Key_Thumbnail);
+            return new PhotoPreviewResult(photo.S3ETag_Thumbnail, null, data);
         }
     }
 

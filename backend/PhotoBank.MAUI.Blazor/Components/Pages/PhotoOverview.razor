@@ -67,9 +67,9 @@
                 <RadzenLink Path="@string.Format("photodetail/{0}", data.Id)" Text="@data.Id.ToString()" target="_blank" />
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="PhotoItemDto" Property="Thumbnail" Title="Thumbnail" Sortable="false" Filterable="false">
+        <RadzenDataGridColumn TItem="PhotoItemDto" Property="S3Key_Thumbnail" Title="Thumbnail" Sortable="false" Filterable="false">
             <Template Context="data">
-                <img src="data:image;base64,@Convert.ToBase64String(data?.Thumbnail)" />
+                @data.S3Key_Thumbnail
             </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="PhotoItemDto" Property="Name" Title="Name" />

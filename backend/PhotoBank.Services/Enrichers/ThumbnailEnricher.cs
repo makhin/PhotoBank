@@ -9,12 +9,15 @@ using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Models;
 using ImageMagick;
+using Minio;
+using Minio.DataModel.Args;
 
 namespace PhotoBank.Services.Enrichers;
 
 public sealed class ThumbnailEnricher : IEnricher
 {
     private readonly IComputerVisionClient _client;
+    private readonly IMinioClient _minio;
 
     public EnricherType EnricherType => EnricherType.Thumbnail;
 
@@ -25,9 +28,10 @@ public sealed class ThumbnailEnricher : IEnricher
     private const int Height = 50;
     private const bool SmartCropping = true;
 
-    public ThumbnailEnricher(IComputerVisionClient client)
+    public ThumbnailEnricher(IComputerVisionClient client, IMinioClient minio)
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
+        _minio = minio ?? throw new ArgumentNullException(nameof(minio));
     }
 
     public async Task EnrichAsync(Photo photo, SourceDataDto source, CancellationToken cancellationToken = default)
@@ -36,7 +40,7 @@ public sealed class ThumbnailEnricher : IEnricher
         if (source?.PreviewImage is null)
             return; // нечего генерировать
 
-        if (photo.Thumbnail is { Length: > 0 })
+        if (!string.IsNullOrEmpty(photo.S3Key_Thumbnail))
             return; // уже есть
 
         // Источник: read-only MemoryStream поверх массива без копий
@@ -57,7 +61,15 @@ public sealed class ThumbnailEnricher : IEnricher
         // Копируем в byte[]; thumbnail маленький — стартуем с 32 КБ
         await using var ms = new MemoryStream(capacity: 32 * 1024);
         await thumbStream.CopyToAsync(ms).ConfigureAwait(false);
-        photo.Thumbnail = ms.ToArray();
+        ms.Position = 0;
+        var key = $"thumbnails/{Guid.NewGuid():N}.jpg";
+        await _minio.PutObjectAsync(new PutObjectArgs()
+            .WithBucket("photobank")
+            .WithObject(key)
+            .WithStreamData(ms)
+            .WithObjectSize(ms.Length)
+            .WithContentType("image/jpeg"), cancellationToken);
+        photo.S3Key_Thumbnail = key;
     }
 
     private static async Task<T> RetryAsync<T>(

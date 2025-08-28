@@ -37,6 +37,7 @@ namespace PhotoBank.Services
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Photo, PhotoItemDto>()
+                .ForMember(dest => dest.S3Key_Thumbnail, opt => opt.MapFrom(src => src.S3Key_Thumbnail))
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.PhotoTags))
                 .ForMember(dest => dest.Persons, opt => opt.MapFrom(src => src.Faces))
                 .ForMember(dest => dest.Captions, opt => opt.MapFrom(src => src.Captions))
