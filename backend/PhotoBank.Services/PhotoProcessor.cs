@@ -233,8 +233,10 @@ namespace PhotoBank.Services
                 return result;
             }
 
-            var file = _fileRepository.GetByCondition(f => f.Name == result.Name && f.Photo.Id == result.PhotoId);
-            result.DuplicateStatus = file != null ? DuplicateStatus.FileExists : DuplicateStatus.FileNotExists;
+            var fileExists = await _fileRepository
+                .GetByCondition(f => f.Name == result.Name && f.Photo.Id == result.PhotoId)
+                .AnyAsync();
+            result.DuplicateStatus = fileExists ? DuplicateStatus.FileExists : DuplicateStatus.FileNotExists;
             return result;
         }
 
