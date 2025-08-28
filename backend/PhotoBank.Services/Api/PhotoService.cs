@@ -46,7 +46,10 @@ public interface IPhotoService
     Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold);
     Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path);
     Task<byte[]> GetObjectAsync(string key);
+    Task<PhotoPreviewResult?> GetPhotoPreviewAsync(int id);
 }
+
+public record PhotoPreviewResult(string ETag, string? PreSignedUrl, byte[]? Data);
 
 public class PhotoService : IPhotoService
 {
@@ -469,6 +472,31 @@ public class PhotoService : IPhotoService
             .ToList();
 
         return _mapper.Map<IEnumerable<PhotoItemDto>>(result);
+    }
+
+    public async Task<PhotoPreviewResult?> GetPhotoPreviewAsync(int id)
+    {
+        var photo = await _photoRepository.GetByCondition(p => p.Id == id)
+            .AsNoTracking()
+            .Select(p => new { p.S3Key_Preview, p.S3ETag_Preview })
+            .SingleOrDefaultAsync();
+
+        if (photo == null || string.IsNullOrEmpty(photo.S3Key_Preview))
+            return null;
+
+        try
+        {
+            var url = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
+                .WithBucket("photobank")
+                .WithObject(photo.S3Key_Preview)
+                .WithExpiry(60 * 60));
+            return new PhotoPreviewResult(photo.S3ETag_Preview, url, null);
+        }
+        catch
+        {
+            var data = await GetObjectAsync(photo.S3Key_Preview);
+            return new PhotoPreviewResult(photo.S3ETag_Preview, null, data);
+        }
     }
 
     public async Task<byte[]> GetObjectAsync(string key)
