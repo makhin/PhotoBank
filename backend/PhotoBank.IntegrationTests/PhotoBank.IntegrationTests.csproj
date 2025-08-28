@@ -17,11 +17,16 @@
     <PackageReference Include="nunit" Version="4.4.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="5.1.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.8" />
+    <PackageReference Include="DotNet.Testcontainers" Version="1.6.0" />
+    <PackageReference Include="Testcontainers.MsSql" Version="1.6.0" />
+    <PackageReference Include="Respawn" Version="6.2.1" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PhotoBank.DbContext\PhotoBank.DbContext.csproj" />
     <ProjectReference Include="..\PhotoBank.Repositories\PhotoBank.Repositories.csproj" />
     <ProjectReference Include="..\PhotoBank.Services\PhotoBank.Services.csproj" />
+    <ProjectReference Include="..\PhotoBank.Api\PhotoBank.Api.csproj" />
   </ItemGroup>
 </Project>

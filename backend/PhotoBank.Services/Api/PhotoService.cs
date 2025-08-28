@@ -48,6 +48,7 @@ public interface IPhotoService
     Task<byte[]> GetObjectAsync(string key);
     Task<PhotoPreviewResult?> GetPhotoPreviewAsync(int id);
     Task<PhotoPreviewResult?> GetPhotoThumbnailAsync(int id);
+    Task<PhotoPreviewResult?> GetFaceImageAsync(int id);
 }
 
 public record PhotoPreviewResult(string ETag, string? PreSignedUrl, byte[]? Data);
@@ -522,6 +523,31 @@ public class PhotoService : IPhotoService
         {
             var data = await GetObjectAsync(photo.S3Key_Thumbnail);
             return new PhotoPreviewResult(photo.S3ETag_Thumbnail, null, data);
+        }
+    }
+
+    public async Task<PhotoPreviewResult?> GetFaceImageAsync(int id)
+    {
+        var face = await _faceRepository.GetByCondition(f => f.Id == id)
+            .AsNoTracking()
+            .Select(f => new { f.S3Key_Image, f.S3ETag_Image })
+            .SingleOrDefaultAsync();
+
+        if (face == null || string.IsNullOrEmpty(face.S3Key_Image))
+            return null;
+
+        try
+        {
+            var url = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
+                .WithBucket("photobank")
+                .WithObject(face.S3Key_Image)
+                .WithExpiry(60 * 60));
+            return new PhotoPreviewResult(face.S3ETag_Image, url, null);
+        }
+        catch
+        {
+            var data = await GetObjectAsync(face.S3Key_Image);
+            return new PhotoPreviewResult(face.S3ETag_Image, null, data);
         }
     }
 
