@@ -13,7 +13,7 @@ namespace PhotoBank.DbContext.Models
         public double? Age { get; set; }
         public bool? Gender { get; set; }
         public double? Smile { get; set; }
-        public byte[] Image { get; set; }
+        public byte[]? Image { get; set; }
         [MaxLength(512)]
         public string S3Key_Image { get; set; }
         [MaxLength(128)]

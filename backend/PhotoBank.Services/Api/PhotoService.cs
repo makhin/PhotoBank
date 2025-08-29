@@ -14,6 +14,8 @@ using PhotoBank.ViewModel.Dto;
 using PhotoBank.Services;
 using System.IO;
 using PhotoBank.AccessControl;
+using Minio;
+using Minio.DataModel.Args;
 
 namespace PhotoBank.Services.Api;
 
@@ -43,7 +45,13 @@ public interface IPhotoService
     Task UpdateFaceIdentityAsync(int faceId, IdentityStatus identityStatus, int? personId);
     Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold);
     Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path);
+    Task<byte[]> GetObjectAsync(string key);
+    Task<PhotoPreviewResult?> GetPhotoPreviewAsync(int id);
+    Task<PhotoPreviewResult?> GetPhotoThumbnailAsync(int id);
+    Task<PhotoPreviewResult?> GetFaceImageAsync(int id);
 }
+
+public record PhotoPreviewResult(string ETag, string? PreSignedUrl, byte[]? Data);
 
 public class PhotoService : IPhotoService
 {
@@ -61,6 +69,7 @@ public class PhotoService : IPhotoService
     private readonly Lazy<Task<IReadOnlyList<PersonDto>>> _persons;
     private readonly Lazy<Task<IReadOnlyList<PersonGroupDto>>> _personGroups;
     private readonly ICurrentUser _currentUser;
+    private readonly IMinioClient _minioClient;
 
     private static readonly MemoryCacheEntryOptions CacheOptions = new()
     {
@@ -79,7 +88,8 @@ public class PhotoService : IPhotoService
         IRepository<PersonFace> personFaceRepository,
         IMapper mapper,
         IMemoryCache cache,
-        ICurrentUser currentUser)
+        ICurrentUser currentUser,
+        IMinioClient minioClient)
     {
         _db = db;
         _photoRepository = photoRepository;
@@ -91,6 +101,7 @@ public class PhotoService : IPhotoService
         _mapper = mapper;
         _cache = cache;
         _currentUser = currentUser;
+        _minioClient = minioClient;
         _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
             GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
                 .AsNoTracking()
@@ -463,6 +474,91 @@ public class PhotoService : IPhotoService
             .ToList();
 
         return _mapper.Map<IEnumerable<PhotoItemDto>>(result);
+    }
+
+    public async Task<PhotoPreviewResult?> GetPhotoPreviewAsync(int id)
+    {
+        var photo = await _photoRepository.GetByCondition(p => p.Id == id)
+            .AsNoTracking()
+            .Select(p => new { p.S3Key_Preview, p.S3ETag_Preview })
+            .SingleOrDefaultAsync();
+
+        if (photo == null || string.IsNullOrEmpty(photo.S3Key_Preview))
+            return null;
+
+        try
+        {
+            var url = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
+                .WithBucket("photobank")
+                .WithObject(photo.S3Key_Preview)
+                .WithExpiry(60 * 60));
+            return new PhotoPreviewResult(photo.S3ETag_Preview, url, null);
+        }
+        catch
+        {
+            var data = await GetObjectAsync(photo.S3Key_Preview);
+            return new PhotoPreviewResult(photo.S3ETag_Preview, null, data);
+        }
+    }
+
+    public async Task<PhotoPreviewResult?> GetPhotoThumbnailAsync(int id)
+    {
+        var photo = await _photoRepository.GetByCondition(p => p.Id == id)
+            .AsNoTracking()
+            .Select(p => new { p.S3Key_Thumbnail, p.S3ETag_Thumbnail })
+            .SingleOrDefaultAsync();
+
+        if (photo == null || string.IsNullOrEmpty(photo.S3Key_Thumbnail))
+            return null;
+
+        try
+        {
+            var url = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
+                .WithBucket("photobank")
+                .WithObject(photo.S3Key_Thumbnail)
+                .WithExpiry(60 * 60));
+            return new PhotoPreviewResult(photo.S3ETag_Thumbnail, url, null);
+        }
+        catch
+        {
+            var data = await GetObjectAsync(photo.S3Key_Thumbnail);
+            return new PhotoPreviewResult(photo.S3ETag_Thumbnail, null, data);
+        }
+    }
+
+    public async Task<PhotoPreviewResult?> GetFaceImageAsync(int id)
+    {
+        var face = await _faceRepository.GetByCondition(f => f.Id == id)
+            .AsNoTracking()
+            .Select(f => new { f.S3Key_Image, f.S3ETag_Image })
+            .SingleOrDefaultAsync();
+
+        if (face == null || string.IsNullOrEmpty(face.S3Key_Image))
+            return null;
+
+        try
+        {
+            var url = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
+                .WithBucket("photobank")
+                .WithObject(face.S3Key_Image)
+                .WithExpiry(60 * 60));
+            return new PhotoPreviewResult(face.S3ETag_Image, url, null);
+        }
+        catch
+        {
+            var data = await GetObjectAsync(face.S3Key_Image);
+            return new PhotoPreviewResult(face.S3ETag_Image, null, data);
+        }
+    }
+
+    public async Task<byte[]> GetObjectAsync(string key)
+    {
+        using var ms = new MemoryStream();
+        await _minioClient.GetObjectAsync(new GetObjectArgs()
+            .WithBucket("photobank")
+            .WithObject(key)
+            .WithCallbackStream(stream => stream.CopyTo(ms)));
+        return ms.ToArray();
     }
 
     private static PhotoAclExtensions.PhotoAcl BuildPhotoAcl(ICurrentUser user)

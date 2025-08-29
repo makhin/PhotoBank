@@ -20,7 +20,12 @@ beforeEach(() => {
 describe('deeplink handler', () => {
   it('links user on base /start', async () => {
     vi.spyOn(auth, 'ensureUserAccessToken').mockResolvedValue('token');
-    const ctx = { message: { text: '/start' }, reply: vi.fn(), t: (k: string) => i18n.t('en', k) } as any;
+    const ctx = {
+      message: { text: '/start' },
+      from: { id: 42 },
+      reply: vi.fn(),
+      t: (k: string, vars?: any) => i18n.t('en', k, vars),
+    } as any;
     await handler(ctx, async () => {});
     expect(auth.ensureUserAccessToken).toHaveBeenCalled();
     expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'start-linked'));
@@ -30,14 +35,24 @@ describe('deeplink handler', () => {
     vi.spyOn(auth, 'ensureUserAccessToken').mockRejectedValue(
       new ProblemDetailsError({ title: 'Forbidden', status: 403 })
     );
-    const ctx = { message: { text: '/start' }, reply: vi.fn(), t: (k: string) => i18n.t('en', k) } as any;
+    const ctx = {
+      message: { text: '/start' },
+      from: { id: 42 },
+      reply: vi.fn(),
+      t: (k: string, vars?: any) => i18n.t('en', k, vars),
+    } as any;
     await handler(ctx, async () => {});
-    expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'not-registered'));
+    expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'not-registered', { userId: 42 }));
   });
 
   it('replies sorry-try-later on other errors', async () => {
     vi.spyOn(auth, 'ensureUserAccessToken').mockRejectedValue(new Error('fail'));
-    const ctx = { message: { text: '/start' }, reply: vi.fn(), t: (k: string) => i18n.t('en', k) } as any;
+    const ctx = {
+      message: { text: '/start' },
+      from: { id: 42 },
+      reply: vi.fn(),
+      t: (k: string, vars?: any) => i18n.t('en', k, vars),
+    } as any;
     await handler(ctx, async () => {});
     expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'sorry-try-later'));
   });

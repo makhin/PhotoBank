@@ -66,7 +66,8 @@ namespace PhotoBank.UnitTests.Enrichers
         {
             // Arrange
             var photo = new Photo();
-            var sourceData = new SourceDataDto();
+            var preview1 = new MagickImage(MagickColors.Red, 10, 10) { Format = MagickFormat.Jpeg };
+            var sourceData = new SourceDataDto { PreviewImage = preview1 };
             _mockFaceService.Setup(service => service.DetectFacesAsync(It.IsAny<byte[]>()))
                 .ReturnsAsync(new List<DetectedFace>());
 
@@ -82,7 +83,8 @@ namespace PhotoBank.UnitTests.Enrichers
         {
             // Arrange
             var photo = new Photo();
-            var sourceData = new SourceDataDto();
+            var preview2 = new MagickImage(MagickColors.Red, 10, 10) { Format = MagickFormat.Jpeg };
+            var sourceData = new SourceDataDto { PreviewImage = preview2 };
             var detectedFaces = new List<DetectedFace>
             {
                 new DetectedFace { FaceId = Guid.NewGuid() }
@@ -102,7 +104,9 @@ namespace PhotoBank.UnitTests.Enrichers
         {
             // Arrange
             var photo = new Photo();
-            var sourceData = new SourceDataDto();
+            var preview3 = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg };
+            var original = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg };
+            var sourceData = new SourceDataDto { PreviewImage = preview3, OriginalImage = original };
             var detectedFaces = new List<DetectedFace>
             {
                 new DetectedFace { FaceId = Guid.NewGuid(), FaceRectangle = new FaceRectangle { Height = 50, Width = 50, Top = 10, Left = 10 } }
@@ -123,7 +127,7 @@ namespace PhotoBank.UnitTests.Enrichers
             _mockFaceService.Setup(service => service.IdentifyAsync(It.IsAny<IList<Guid?>>()))
                 .ReturnsAsync(identifyResults);
             _mockFacePreviewService.Setup(service => service.CreateFacePreview(It.IsAny<DetectedFace>(), It.IsAny<IMagickImage<byte>>(), It.IsAny<double>()))
-                .ReturnsAsync(new byte[] { 1, 2, 3 });
+                .ReturnsAsync(("s3/key", "etag"));
 
             // Act
             await _faceEnricher.EnrichAsync(photo, sourceData);
@@ -133,6 +137,7 @@ namespace PhotoBank.UnitTests.Enrichers
             photo.Faces[0].IdentityStatus.Should().Be(IdentityStatus.Identified);
             photo.Faces[0].IdentifiedWithConfidence.Should().Be(0.9);
             photo.Faces[0].Person.Should().Be(_persons[0]);
+            photo.Faces[0].S3Key_Image.Should().Be("s3/key");
         }
     }
 }

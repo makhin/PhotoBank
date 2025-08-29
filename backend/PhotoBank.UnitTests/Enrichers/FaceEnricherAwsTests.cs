@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Rekognition.Model;
 using FluentAssertions;
@@ -13,6 +14,9 @@ using PhotoBank.Services;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Models;
 using PhotoBank.UnitTests;
+using Minio;
+using Minio.DataModel.Args;
+using Minio.DataModel.Response;
 using Person = PhotoBank.DbContext.Models.Person;
 
 namespace PhotoBank.UnitTests.Enrichers
@@ -22,6 +26,7 @@ namespace PhotoBank.UnitTests.Enrichers
     {
         private Mock<IFaceServiceAws> _mockFaceService;
         private Mock<IRepository<Person>> _mockPersonRepository;
+        private Mock<IMinioClient> _mockMinio;
         private FaceEnricherAws _faceEnricher;
         private List<Person> _persons;
 
@@ -30,13 +35,16 @@ namespace PhotoBank.UnitTests.Enrichers
         {
             _mockFaceService = new Mock<IFaceServiceAws>();
             _mockPersonRepository = new Mock<IRepository<Person>>();
+            _mockMinio = new Mock<IMinioClient>();
             _persons = new List<Person>
             {
                 new Person { Id = 1, Name = "John Doe", ExternalGuid = Guid.NewGuid() },
                 new Person { Id = 2, Name = "Jane Doe", ExternalGuid = Guid.NewGuid() }
             };
             _mockPersonRepository.Setup(repo => repo.GetAll()).Returns(_persons.AsQueryable());
-            _faceEnricher = new FaceEnricherAws(_mockFaceService.Object, _mockPersonRepository.Object);
+            _mockMinio.Setup(m => m.PutObjectAsync(It.IsAny<PutObjectArgs>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new PutObjectResponse(System.Net.HttpStatusCode.OK, "bucket", new System.Collections.Generic.Dictionary<string, string>(), 0, "etag"));
+            _faceEnricher = new FaceEnricherAws(_mockFaceService.Object, _mockPersonRepository.Object, _mockMinio.Object);
         }
 
         [Test]
@@ -64,7 +72,8 @@ namespace PhotoBank.UnitTests.Enrichers
         {
             // Arrange
             var photo = new Photo();
-            var sourceData = new SourceDataDto();
+            var preview1 = new MagickImage(MagickColors.Red, 10, 10) { Format = MagickFormat.Jpeg };
+            var sourceData = new SourceDataDto { PreviewImage = preview1 };
             _mockFaceService.Setup(service => service.DetectFacesAsync(It.IsAny<byte[]>()))
                 .ReturnsAsync(new List<FaceDetail>());
 
@@ -80,7 +89,8 @@ namespace PhotoBank.UnitTests.Enrichers
         {
             // Arrange
             var photo = new Photo();
-            var sourceData = new SourceDataDto();
+            var preview2 = new MagickImage(MagickColors.Red, 10, 10) { Format = MagickFormat.Jpeg };
+            var sourceData = new SourceDataDto { PreviewImage = preview2 };
             var detectedFaces = new List<FaceDetail>
             {
                 new FaceDetail { BoundingBox = new BoundingBox { Height = 0.1f, Width = 0.1f, Top = 0.1f, Left = 0.1f } }
@@ -101,9 +111,10 @@ namespace PhotoBank.UnitTests.Enrichers
         {
             // Arrange
             var photo = new Photo();
+            var preview3 = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg };
             var sourceData = new SourceDataDto
             {
-                PreviewImage = new MagickImage(MagickColors.Red, 100, 100)
+                PreviewImage = preview3
             };
             var detectedFaces = new List<FaceDetail>
             {
@@ -125,9 +136,10 @@ namespace PhotoBank.UnitTests.Enrichers
         {
             // Arrange
             var photo = new Photo();
+            var preview4 = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg };
             var sourceData = new SourceDataDto
             {
-                PreviewImage = new MagickImage(MagickColors.Red, 100, 100)
+                PreviewImage = preview4
             };
             var detectedFaces = new List<FaceDetail>
             {
@@ -154,6 +166,7 @@ namespace PhotoBank.UnitTests.Enrichers
             photo.Faces[0].IdentityStatus.Should().Be(IdentityStatus.Identified);
             photo.Faces[0].IdentifiedWithConfidence.Should().Be(0.9f);
             photo.Faces[0].Person.Should().Be(_persons[0]);
+            photo.Faces[0].S3Key_Image.Should().NotBeNull();
         }
     }
 }

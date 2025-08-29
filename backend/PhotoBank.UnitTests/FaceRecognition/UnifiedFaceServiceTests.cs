@@ -14,6 +14,7 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.FaceRecognition;
 using PhotoBank.Services.FaceRecognition.Abstractions;
+using PhotoBank.Services;
 
 namespace PhotoBank.UnitTests.FaceRecognition;
 
@@ -24,6 +25,7 @@ public class UnifiedFaceServiceTests
     private Mock<IRepository<Person>> _persons = null!;
     private Mock<IRepository<Face>> _faces = null!;
     private Mock<IRepository<PersonFace>> _links = null!;
+    private Mock<IFaceStorageService> _storage = null!;
     private UnifiedFaceService _service = null!;
 
     [SetUp]
@@ -35,9 +37,10 @@ public class UnifiedFaceServiceTests
         _persons = new Mock<IRepository<Person>>();
         _faces = new Mock<IRepository<Face>>();
         _links = new Mock<IRepository<PersonFace>>();
+        _storage = new Mock<IFaceStorageService>();
         var logger = Mock.Of<ILogger<UnifiedFaceService>>();
 
-        _service = new UnifiedFaceService(_provider.Object, _persons.Object, _faces.Object, _links.Object, logger);
+        _service = new UnifiedFaceService(_provider.Object, _persons.Object, _faces.Object, _links.Object, _storage.Object, logger);
     }
 
     [Test]
@@ -59,7 +62,7 @@ public class UnifiedFaceServiceTests
             .Setup(p => p.UpsertPersonsAsync(It.IsAny<IReadOnlyCollection<PersonSyncItem>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<int, string> { { 1, "ext1" } });
 
-        var service = new UnifiedFaceService(provider.Object, personsRepo, facesRepo, linksRepo, Mock.Of<ILogger<UnifiedFaceService>>());
+        var service = new UnifiedFaceService(provider.Object, personsRepo, facesRepo, linksRepo, Mock.Of<IFaceStorageService>(), Mock.Of<ILogger<UnifiedFaceService>>());
 
         ctx.Persons.AddRange(
             new Person { Id = 1, Name = "Alice", ExternalId = null, Provider = null },
@@ -98,12 +101,16 @@ public class UnifiedFaceServiceTests
         provider.Setup(p => p.LinkFacesToPersonAsync(1, It.IsAny<IReadOnlyCollection<FaceToLink>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<int, string> { { 101, "extA" } });
 
-        var service = new UnifiedFaceService(provider.Object, personsRepo, facesRepo, linksRepo, Mock.Of<ILogger<UnifiedFaceService>>());
+        var storage = new Mock<IFaceStorageService>();
+        storage.Setup(s => s.OpenReadStreamAsync(It.Is<Face>(f => f.Id == 101), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MemoryStream(new byte[] {1}));
+
+        var service = new UnifiedFaceService(provider.Object, personsRepo, facesRepo, linksRepo, storage.Object, Mock.Of<ILogger<UnifiedFaceService>>());
 
         ctx.Persons.Add(new Person { Id = 1, Name = "Alice" });
 
         ctx.Faces.AddRange(
-            new Face { Id = 101, PhotoId = 0, Image = new byte[] { 1 }, Rectangle = new Point(0, 0), S3Key_Image = string.Empty, S3ETag_Image = string.Empty, Sha256_Image = string.Empty, FaceAttributes = string.Empty },
+            new Face { Id = 101, PhotoId = 0, Image = null, S3Key_Image = "face101", Rectangle = new Point(0, 0), S3ETag_Image = string.Empty, Sha256_Image = string.Empty, FaceAttributes = string.Empty },
             new Face { Id = 102, PhotoId = 0, Image = new byte[] { 2 }, Rectangle = new Point(0, 0), S3Key_Image = string.Empty, S3ETag_Image = string.Empty, Sha256_Image = string.Empty, FaceAttributes = string.Empty }
         );
 
@@ -117,6 +124,7 @@ public class UnifiedFaceServiceTests
         await service.SyncFacesToPersonsAsync();
 
         provider.Verify(p => p.LinkFacesToPersonAsync(1, It.Is<IReadOnlyCollection<FaceToLink>>(l => l.Single().FaceId == 101), It.IsAny<CancellationToken>()), Times.Once);
+        storage.Verify(s => s.OpenReadStreamAsync(It.Is<Face>(f => f.Id == 101), It.IsAny<CancellationToken>()), Times.Once);
 
         var link101 = await ctx.Set<PersonFace>().AsNoTracking().SingleAsync(l => l.PersonId == 1 && l.FaceId == 101);
 

@@ -10,6 +10,7 @@ using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Models;
 using File = PhotoBank.DbContext.Models.File;
 using Storage = PhotoBank.DbContext.Models.Storage;
+using ImageMagick;
 
 namespace PhotoBank.Services
 {
@@ -76,9 +77,9 @@ namespace PhotoBank.Services
 
             await _dependencyExecutor.ExecuteAsync(_enrichers, photo, sourceData);
 
-            if (photo.PreviewImage != null)
+            if (sourceData.PreviewImage != null)
             {
-                photo.ImageHash = ImageHashHelper.ComputeHash(photo.PreviewImage);
+                photo.ImageHash = ImageHashHelper.ComputeHash(sourceData.PreviewImage.ToByteArray());
             }
 
             try
@@ -232,8 +233,10 @@ namespace PhotoBank.Services
                 return result;
             }
 
-            var file = _fileRepository.GetByCondition(f => f.Name == result.Name && f.Photo.Id == result.PhotoId);
-            result.DuplicateStatus = file != null ? DuplicateStatus.FileExists : DuplicateStatus.FileNotExists;
+            var fileExists = await _fileRepository
+                .GetByCondition(f => f.Name == result.Name && f.Photo.Id == result.PhotoId)
+                .AnyAsync();
+            result.DuplicateStatus = fileExists ? DuplicateStatus.FileExists : DuplicateStatus.FileNotExists;
             return result;
         }
 

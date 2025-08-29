@@ -10,9 +10,9 @@ export async function ensureRegistered(ctx: MyContext): Promise<boolean> {
     return true;
   } catch (err) {
     if (err instanceof ProblemDetailsError && err.problem.status === 403) {
-      await ctx.reply(ctx.t('not-registered'));
+      await ctx.reply(ctx.t('not-registered', { userId: ctx.from?.id }));
     } else {
-      await ctx.reply(ctx.t('not-registered'));
+      await ctx.reply(ctx.t('not-registered', { userId: ctx.from?.id }));
     }
     return false;
   }

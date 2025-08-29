@@ -37,7 +37,7 @@ namespace PhotoBank.Services.Enrichers
                     source.PreviewImage = image.Clone();
                 }
 
-                photo.PreviewImage = stream.ToArray();
+                // Preview image is kept only in source data and stored in S3
             }
         }
     }

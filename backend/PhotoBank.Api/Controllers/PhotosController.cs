@@ -5,6 +5,7 @@ using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 
 namespace PhotoBank.Api.Controllers
 {
@@ -40,6 +41,41 @@ namespace PhotoBank.Api.Controllers
 
             logger.LogInformation("Returning photo with id {Id}", id);
             return Ok(photo);
+        }
+
+        [HttpGet("{id}/preview")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status301MovedPermanently)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetPreview(int id)
+        {
+            logger.LogInformation("Fetching preview for photo {Id}", id);
+            var result = await photoService.GetPhotoPreviewAsync(id);
+            if (result is null)
+            {
+                logger.LogWarning("Preview for photo {Id} not found", id);
+                return NotFound();
+            }
+
+            var etag = $"\"{result.ETag}\"";
+            Response.Headers.ETag = etag;
+            Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+
+            if (Request.Headers.IfNoneMatch.Contains(etag))
+            {
+                logger.LogInformation("Preview for photo {Id} not modified", id);
+                return StatusCode(StatusCodes.Status304NotModified);
+            }
+
+            if (result.PreSignedUrl is not null)
+            {
+                logger.LogInformation("Redirecting to pre-signed URL for photo {Id}", id);
+                Response.Headers.Location = result.PreSignedUrl;
+                return StatusCode(StatusCodes.Status301MovedPermanently);
+            }
+
+            logger.LogInformation("Streaming preview for photo {Id}", id);
+            return File(result.Data!, MediaTypeNames.Image.Jpeg);
         }
 
         [HttpPost("upload")]

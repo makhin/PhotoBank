@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Models;
+using Minio;
+using Minio.DataModel.Args;
 using Face = PhotoBank.DbContext.Models.Face;
 using Person = PhotoBank.DbContext.Models.Person;
 
@@ -21,11 +23,13 @@ namespace PhotoBank.Services.Enrichers
         private const int MinFaceSize = 36;
         private readonly IFaceServiceAws _faceService;
         private readonly List<Person> _persons;
+        private readonly IMinioClient _minio;
 
-        public FaceEnricherAws(IFaceServiceAws faceService, IRepository<Person> personRepository)
+        public FaceEnricherAws(IFaceServiceAws faceService, IRepository<Person> personRepository, IMinioClient minio)
         {
             _faceService = faceService;
             _persons = personRepository.GetAll().ToList();
+            _minio = minio ?? throw new ArgumentNullException(nameof(minio));
         }
         public EnricherType EnricherType => EnricherType.Face;
         public Type[] Dependencies => new[] { typeof(PreviewEnricher), typeof(MetadataEnricher) };
@@ -34,7 +38,13 @@ namespace PhotoBank.Services.Enrichers
         {
             try
             {
-                var detectedFaces = await _faceService.DetectFacesAsync(photo.PreviewImage);
+                if (sourceData.PreviewImage is null)
+                {
+                    photo.FaceIdentifyStatus = FaceIdentifyStatus.NotDetected;
+                    return;
+                }
+
+                var detectedFaces = await _faceService.DetectFacesAsync(sourceData.PreviewImage.ToByteArray());
                 if (detectedFaces.Count == 0)
                 {
                     photo.FaceIdentifyStatus = FaceIdentifyStatus.NotDetected;
@@ -49,23 +59,12 @@ namespace PhotoBank.Services.Enrichers
                     var previewImageHeight = sourceData.PreviewImage.Height;
                     var previewImageWidth = sourceData.PreviewImage.Width;
 
-                    var face = new Face
-                    {
-                        PhotoId = photo.Id,
-                        IdentityStatus = IdentityStatus.NotIdentified,
-                        Image = await CreateFacePreview(detectedFace.BoundingBox, sourceData.PreviewImage),
-                        Rectangle = GeoWrapper.GetRectangle(previewImageHeight, previewImageWidth, detectedFace.BoundingBox, photo.Scale),
-                        Age = (detectedFace.AgeRange.High + detectedFace.AgeRange.Low) / 2,
-                        Gender = detectedFace.Gender.Value == GenderType.Male,
-                        Smile = detectedFace.Smile.Confidence,
-                        FaceAttributes = JsonConvert.SerializeObject(detectedFace),
-                    };
-
+                    var faceBytes = await CreateFacePreview(detectedFace.BoundingBox, sourceData.PreviewImage);
                     if (!IsAbleToIdentify(previewImageHeight, previewImageWidth, detectedFace.BoundingBox))
                     {
                         if (IsAbleToIdentify(previewImageHeight, previewImageWidth, detectedFace.BoundingBox, photo.Scale))
                         {
-                            face.Image = await CreateFacePreview(detectedFace.BoundingBox, sourceData.OriginalImage);
+                            faceBytes = await CreateFacePreview(detectedFace.BoundingBox, sourceData.OriginalImage);
                         }
                         else
                         {
@@ -73,7 +72,29 @@ namespace PhotoBank.Services.Enrichers
                         }
                     }
 
-                    var matches = await _faceService.SearchUsersByImageAsync(face.Image);
+                    await using var ms = new MemoryStream(faceBytes);
+                    var key = $"faces/{Guid.NewGuid():N}.jpg";
+                    var response = await _minio.PutObjectAsync(new PutObjectArgs()
+                        .WithBucket("photobank")
+                        .WithObject(key)
+                        .WithStreamData(ms)
+                        .WithObjectSize(ms.Length)
+                        .WithContentType("image/jpeg"), cancellationToken);
+
+                    var face = new Face
+                    {
+                        PhotoId = photo.Id,
+                        IdentityStatus = IdentityStatus.NotIdentified,
+                        S3Key_Image = key,
+                        S3ETag_Image = response?.Etag,
+                        Rectangle = GeoWrapper.GetRectangle(previewImageHeight, previewImageWidth, detectedFace.BoundingBox, photo.Scale),
+                        Age = (detectedFace.AgeRange.High + detectedFace.AgeRange.Low) / 2,
+                        Gender = detectedFace.Gender.Value == GenderType.Male,
+                        Smile = detectedFace.Smile.Confidence,
+                        FaceAttributes = JsonConvert.SerializeObject(detectedFace),
+                    };
+
+                    var matches = await _faceService.SearchUsersByImageAsync(faceBytes);
                     IdentifyFace(face, matches, photo.TakenDate);
                     photo.Faces.Add(face);
                 }
