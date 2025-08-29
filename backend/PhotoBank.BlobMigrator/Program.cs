@@ -1,4 +1,3 @@
-using ImageMagick;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,10 +6,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
 using PhotoBank.BlobMigrator;
-using PhotoBank.BlobMigrator.Infrastructure.Migration;
 using PhotoBank.DbContext.DbContext;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -59,14 +56,6 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
         .WithSSL(s3.UseSsl)
         .Build();
 });
-
-// 6) Ограничения ресурсов для Magick.NET (безопасные лимиты по умолчанию — при необходимости поднимите)
-ResourceLimits.Memory = 256 * 1024 * 1024; // 256 MB
-if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-{
-    // На Linux иногда полезно ограничить ещё и Disk, чтобы Magick не лез во временный swap-файл.
-    ResourceLimits.Disk = 1024L * 1024 * 1024; // 1 GB
-}
 
 // 7) HostedService
 builder.Services.AddHostedService<BlobMigrationHostedService>();
