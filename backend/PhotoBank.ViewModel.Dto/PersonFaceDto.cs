@@ -10,8 +10,6 @@ namespace PhotoBank.ViewModel.Dto
         [System.ComponentModel.DataAnnotations.Required]
         public int FaceId { get; set; }
 
-        public byte[]? FaceImage { get; set; }
-
         public string? Provider { get; set; }
         public string? ExternalId { get; set; }
         public System.Guid ExternalGuid { get; set; }

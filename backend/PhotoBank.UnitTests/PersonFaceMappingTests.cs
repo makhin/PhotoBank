@@ -24,18 +24,18 @@ public class PersonFaceMappingTests
     }
 
     [Test]
-    public void MapsFaceImage()
+    public void MapsIds()
     {
         var entity = new PersonFace
         {
             Id = 1,
             PersonId = 2,
-            FaceId = 3,
-            Face = new Face { Image = new byte[] { 1, 2, 3 } }
+            FaceId = 3
         };
 
         var dto = _mapper.Map<PersonFaceDto>(entity);
 
-        dto.FaceImage.Should().BeEquivalentTo(new byte[] { 1, 2, 3 });
+        dto.PersonId.Should().Be(2);
+        dto.FaceId.Should().Be(3);
     }
 }

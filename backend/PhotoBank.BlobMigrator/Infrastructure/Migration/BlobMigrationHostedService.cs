@@ -52,9 +52,8 @@ public sealed class BlobMigrationHostedService : IHostedService
 
         await EnsureBucketAsync(ct);
 
-        // Примеры двух прогонов — подстройте под свои реальные критерии выборки:
+        // Пример прогона — подстройте под свои реальные критерии выборки:
         await MigratePhotosAsync(ct);
-        await MigrateFacesAsync(ct);
 
         _log.LogInformation("Migration finished.");
     }
@@ -178,86 +177,6 @@ public sealed class BlobMigrationHostedService : IHostedService
     }
 
     // ---------------- Migration: Faces ----------------
-    private async Task MigrateFacesAsync(CancellationToken ct)
-    {
-        _log.LogInformation("Faces migration started...");
-        var sw = Stopwatch.StartNew();
-        int migrated = 0, skipped = 0, failed = 0;
-
-        List<long> ids;
-        await using (var db = await _dbFactory.CreateDbContextAsync(ct))
-        {
-            ids = await db.Database.SqlQueryRaw<long>(
-                """
-                SELECT TOP({0}) f.Id
-                FROM Faces f WITH (NOLOCK)
-                WHERE f.Image IS NOT NULL AND (f.S3Key_Image IS NULL OR f.S3Key_Image = '')
-                ORDER BY f.Id
-                """, _opt.BatchSize
-            ).ToListAsync(ct);
-        }
-
-        _log.LogInformation("Faces to process: {Count}", ids.Count);
-
-        using var throttler = new SemaphoreSlim(_opt.Concurrency);
-        var tasks = ids.Select(async id =>
-        {
-            await throttler.WaitAsync(ct);
-            try
-            {
-                await using var db = await _dbFactory.CreateDbContextAsync(ct);
-                var (ok, wasSkipped) = await MigrateFaceRowAsync(db, id, ct);
-                if (ok) Interlocked.Increment(ref migrated);
-                else if (wasSkipped) Interlocked.Increment(ref skipped);
-                else Interlocked.Increment(ref failed);
-            }
-            catch (Exception ex)
-            {
-                _log.LogError(ex, "Faces:{Id} failed", id);
-                Interlocked.Increment(ref failed);
-            }
-            finally
-            {
-                throttler.Release();
-            }
-        }).ToArray();
-
-        await Task.WhenAll(tasks);
-
-        sw.Stop();
-        _log.LogInformation("Faces: migrated={Migrated}, skipped={Skipped}, failed={Failed} in {Elapsed}",
-            migrated, skipped, failed, sw.Elapsed);
-    }
-
-    private async Task<(bool ok, bool skipped)> MigrateFaceRowAsync(PhotoBankDbContext db, long id, CancellationToken ct)
-    {
-        var need = await db.Database.SqlQueryRaw<int>(
-            """
-            SELECT CASE WHEN f.Image IS NOT NULL AND (f.S3Key_Image IS NULL OR f.S3Key_Image='') THEN 1 ELSE 0 END
-            FROM Faces f WITH (NOLOCK) WHERE f.Id = {0}
-            """, id).FirstOrDefaultAsync(ct) == 1;
-
-        if (!need) return (false, true);
-
-        var connStr = _cfg.GetConnectionString("DefaultConnection")!;
-
-        var tmp = Path.Combine(_opt.TempDir, $"face_{id}.bin");
-        await DumpBlobToFileAsync(connStr, "Faces", "Image", "Id", id, tmp, ct);
-        try
-        {
-            var key = BuildKey("faces", id, "image");
-            await UploadToS3Async(tmp, key, ct);
-            await db.Database.ExecuteSqlRawAsync(
-                "UPDATE Faces SET S3Key_Image = {0} WHERE Id = {1}", [key, id], ct);
-        }
-        finally
-        {
-            SafeDelete(tmp);
-        }
-
-        return (true, false);
-    }
-
     // ---------------- Helpers ----------------
 
     private async Task EnsureBucketAsync(CancellationToken ct)

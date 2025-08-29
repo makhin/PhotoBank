@@ -89,8 +89,7 @@ namespace PhotoBank.Services.Enrichers
                     else if (IsAbleToIdentify(detectedFace, photo.Scale))
                     {
                         var bytes = await CreateFaceBytes(detectedFace, sourceData.OriginalImage, photo.Scale);
-                        var tempFace = new Face { Image = bytes };
-                        identifyResult = await _faceService.FaceIdentityAsync(tempFace);
+                        identifyResult = await _faceService.FaceIdentityAsync(bytes);
                         (face.S3Key_Image, face.S3ETag_Image) = await _facePreviewService.CreateFacePreview(detectedFace, sourceData.OriginalImage, photo.Scale);
                         IdentifyFace(face, identifyResult, photo.TakenDate);
                     }
