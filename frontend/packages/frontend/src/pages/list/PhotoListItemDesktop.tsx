@@ -55,7 +55,7 @@ const PhotoListItemDesktop = ({
 
   const [ref, inView] = useInView<HTMLDivElement>();
   const prefetchHandlers = usePrefetchOnHover([
-    photo.originalUrl ?? '',
+    photo.previewUrl ?? '',
   ]);
 
   const base = photo.previewUrl;
