@@ -28,7 +28,7 @@ export const photoColumns: Column<PhotoItemDto>[] = [
     header: i18n.t('colPreviewLabel'),
     width: 'col-span-2',
     render: (r) => (
-      <PreviewCell thumbnail={r.thumbnail ?? ''} alt={r.name} className="w-16 h-16" />
+      <PreviewCell thumbnailUrl={r.thumbnailUrl ?? ''} alt={r.name} className="w-16 h-16" />
     ),
   },
   {

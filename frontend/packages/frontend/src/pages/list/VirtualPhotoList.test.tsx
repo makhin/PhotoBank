@@ -26,7 +26,7 @@ import { usePhotoVirtual } from './usePhotoVirtual';
 const createPhotos = (count: number): PhotoItemDto[] =>
   Array.from({ length: count }, (_, i) => ({
     id: i + 1,
-    thumbnail: '',
+    thumbnailUrl: '',
     name: `Photo ${i + 1}`,
     storageName: 's',
     relativePath: 'p',

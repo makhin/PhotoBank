@@ -32,7 +32,7 @@ const PhotoPreviewModal = ({ photoId, onOpenChange }: PhotoPreviewModalProps) =>
                     <p className="p-4">{t('loadingText')}</p>
                 ) : (
                     <img
-                        src={`data:image/jpeg;base64,${photo.previewImage}`}
+                        src={photo.previewUrl ?? ''}
                         alt={photo.name}
                         className="max-h-full max-w-full w-auto h-auto mx-auto object-contain"
                     />

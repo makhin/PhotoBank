@@ -67,7 +67,7 @@ const PhotoListPage = () => {
     () =>
       Array.from({ length: 15 }, (_, i) => ({
         id: i,
-        thumbnail: '',
+        thumbnailUrl: '',
         name: '',
         storageName: '',
         relativePath: '',

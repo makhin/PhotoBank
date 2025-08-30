@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { Image } from 'lucide-react';
 
 interface PhotoPreviewProps {
-    thumbnail: string;
+    thumbnailUrl: string;
     alt: string;
     className?: string;
 }
 
-const PhotoPreview = ({ thumbnail, alt, className = "" }: PhotoPreviewProps) => {
+const PhotoPreview = ({ thumbnailUrl, alt, className = "" }: PhotoPreviewProps) => {
     const [imageError, setImageError] = useState(false);
 
     return (
@@ -18,7 +18,7 @@ const PhotoPreview = ({ thumbnail, alt, className = "" }: PhotoPreviewProps) => 
                 </div>
             ) : (
                 <img
-                    src={`data:image/jpeg;base64,${thumbnail}`}
+                    src={thumbnailUrl}
                     alt={alt}
                     className="w-full h-full object-cover transition-transform hover:scale-110 duration-200"
                     onError={() => { setImageError(true); }}
