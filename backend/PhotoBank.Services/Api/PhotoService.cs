@@ -223,6 +223,8 @@ public class PhotoService : IPhotoService
             .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
 
+        await FillUrlsAsync(photos);
+
         return new PageResponse<PhotoItemDto>
         {
             TotalCount = count,
@@ -232,6 +234,7 @@ public class PhotoService : IPhotoService
 
     public async Task<PhotoDto> GetPhotoAsync(int id)
     {
+        PhotoDto? dto;
         if (_currentUser.IsAdmin)
         {
             var adminQuery = _db.Photos
@@ -241,19 +244,26 @@ public class PhotoService : IPhotoService
                 .AsSplitQuery();
 
             var adminEntity = await adminQuery.FirstOrDefaultAsync(p => p.Id == id);
-            return adminEntity is null ? null : _mapper.Map<Photo, PhotoDto>(adminEntity);
+            dto = adminEntity is null ? null : _mapper.Map<Photo, PhotoDto>(adminEntity);
+        }
+        else
+        {
+            var acl = BuildPhotoAcl(_currentUser);
+            var entity = await CompiledQueries.PhotoByIdWithAcl(
+                _db,
+                id,
+                acl.StorageIds,
+                acl.FromDate,
+                acl.ToDate,
+                acl.AllowedPersonGroupIds
+            );
+            dto = entity is null ? null : _mapper.Map<Photo, PhotoDto>(entity);
         }
 
-        var acl = BuildPhotoAcl(_currentUser);
-        var entity = await CompiledQueries.PhotoByIdWithAcl(
-            _db,
-            id,
-            acl.StorageIds,
-            acl.FromDate,
-            acl.ToDate,
-            acl.AllowedPersonGroupIds
-        );
-        return entity is null ? null : _mapper.Map<Photo, PhotoDto>(entity);
+        if (dto != null)
+            await FillUrlsAsync(dto);
+
+        return dto;
     }
 
     public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync() => await _persons.Value;
@@ -473,7 +483,9 @@ public class PhotoService : IPhotoService
             .Where(p => ImageHashHelper.HammingDistance(hash, p.ImageHash) <= threshold)
             .ToList();
 
-        return _mapper.Map<IEnumerable<PhotoItemDto>>(result);
+        var dtos = _mapper.Map<List<PhotoItemDto>>(result);
+        await FillUrlsAsync(dtos);
+        return dtos;
     }
 
     public async Task<PhotoPreviewResult?> GetPhotoPreviewAsync(int id)
@@ -548,6 +560,39 @@ public class PhotoService : IPhotoService
         {
             var data = await GetObjectAsync(face.S3Key_Image);
             return new PhotoPreviewResult(face.S3ETag_Image, null, data);
+        }
+    }
+
+    private async Task FillUrlsAsync(PhotoDto dto)
+    {
+        dto.PreviewUrl = await GetPresignedUrlAsync(dto.S3Key_Preview);
+        dto.ThumbnailUrl = await GetPresignedUrlAsync(dto.S3Key_Thumbnail);
+    }
+
+    private async Task FillUrlsAsync(IEnumerable<PhotoItemDto> dtos)
+    {
+        foreach (var dto in dtos)
+        {
+            dto.PreviewUrl = await GetPresignedUrlAsync(dto.S3Key_Preview);
+            dto.ThumbnailUrl = await GetPresignedUrlAsync(dto.S3Key_Thumbnail);
+        }
+    }
+
+    private async Task<string?> GetPresignedUrlAsync(string? key)
+    {
+        if (string.IsNullOrEmpty(key))
+            return null;
+
+        try
+        {
+            return await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
+                .WithBucket("photobank")
+                .WithObject(key)
+                .WithExpiry(60 * 60));
+        }
+        catch
+        {
+            return null;
         }
     }
 
