@@ -54,8 +54,8 @@ describe('aiCommand', () => {
         personNames: ['Alice'],
         tagNames: ['portrait'],
         takenDateFrom: '2020-01-01T00:00:00.000Z',
-        top: 10,
-        skip: 0,
+        page: 1,
+        pageSize: 10,
       })
     );
     expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'search-photos-empty'));
