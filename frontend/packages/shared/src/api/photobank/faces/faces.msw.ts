@@ -39,7 +39,18 @@ export const getFacesUpdateMockHandler = (overrideResponse?: null | ((info: Para
       })
   })
 }
+
+export const getFacesGetImageMockHandler = (overrideResponse?: null | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<null> | null)) => {
+  return http.get('/api/faces/:id/image', async (info) => {await delay(1000);
+  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
+    return new HttpResponse(null,
+      { status: 200,
+        
+      })
+  })
+}
 export const getFacesMock = () => [
   getFacesGetMockHandler(),
-  getFacesUpdateMockHandler()
+  getFacesUpdateMockHandler(),
+  getFacesGetImageMockHandler()
 ]
