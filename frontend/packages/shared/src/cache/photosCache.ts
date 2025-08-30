@@ -4,7 +4,10 @@ import { LRUCache } from 'lru-cache';
 import { isBrowser } from '../utils/isBrowser';
 import type { PhotoDto } from '../api/photobank/model';
 
-export interface CachedPhoto extends PhotoDto {
+export interface CachedPhoto {
+  id: number;
+  s3Key_Preview?: string | null;
+  s3Key_Thumbnail?: string | null;
   added: number;
 }
 
@@ -29,11 +32,12 @@ if (isBrowser()) {
 }
 
 export async function cachePhoto(photo: PhotoDto): Promise<void> {
-  const cached = { ...photo, added: Date.now() };
+  const { id, s3Key_Preview, s3Key_Thumbnail } = photo;
+  const cached: CachedPhoto = { id, s3Key_Preview, s3Key_Thumbnail, added: Date.now() };
   if (isBrowser()) {
     await db?.photos.put(cached);
   } else {
-    photoCache?.set(photo.id, cached);
+    photoCache?.set(id, cached);
   }
 }
 

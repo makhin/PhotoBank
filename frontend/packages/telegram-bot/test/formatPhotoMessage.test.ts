@@ -7,11 +7,10 @@ vi.mock('../src/dictionaries', () => ({
 }));
 
 describe('formatPhotoMessage', () => {
-  const basePhoto: PhotoDto & { previewUrl?: string; originalUrl?: string } = {
+  const basePhoto: PhotoDto & { originalUrl?: string } = {
     id: 1,
     name: 'Test',
     scale: 1,
-    previewImage: '',
     adultScore: 0,
     racyScore: 0,
     height: 100,

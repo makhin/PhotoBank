@@ -14,7 +14,10 @@ export interface PhotoDto {
   scale?: number;
   /** @nullable */
   takenDate?: string | null;
-  previewImage: string;
+  s3Key_Preview?: string | null;
+  s3Key_Thumbnail?: string | null;
+  previewUrl?: string | null;
+  thumbnailUrl?: string | null;
   location?: GeoPointDto;
   /** @nullable */
   orientation?: number | null;
