@@ -61,6 +61,7 @@ namespace PhotoBank.Services
             services.AddTransient<IFacePreviewService, FacePreviewService>();
             services.AddTransient<IFaceServiceAws, FaceServiceAws>();
             services.AddTransient<IFaceStorageService, FaceStorageService>();
+            services.AddPhotoEvents();
 
             services.AddTransient<IPhotoProcessor, PhotoProcessor>();
             services.AddTransient<IPhotoService, PhotoService>();
