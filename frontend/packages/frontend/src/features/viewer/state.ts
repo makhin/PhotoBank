@@ -3,7 +3,6 @@ import { create } from 'zustand';
 export interface ViewerItem {
   id: number;
   preview: string;
-  original: string;
   title?: string;
 }
 
