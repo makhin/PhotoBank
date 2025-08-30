@@ -470,6 +470,35 @@ paths:
       responses:
         '200':
           description: OK
+  '/faces/{id}/image':
+    get:
+      tags:
+        - Faces
+      operationId: Faces_GetImage
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+        '301':
+          description: Moved Permanently
+        '404':
+          description: Not Found
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /paths:
     get:
       tags:
@@ -1651,10 +1680,6 @@ components:
         faceId:
           type: integer
           format: int32
-        faceImage:
-          type: string
-          format: byte
-          nullable: true
         provider:
           type: string
           nullable: true
@@ -1712,6 +1737,12 @@ components:
         s3Key_Thumbnail:
           type: string
           nullable: true
+        previewUrl:
+          type: string
+          nullable: true
+        thumbnailUrl:
+          type: string
+          nullable: true
         location:
           $ref: '#/components/schemas/GeoPointDto'
         orientation:
@@ -1758,6 +1789,15 @@ components:
           type: integer
           format: int32
         s3Key_Thumbnail:
+          type: string
+          nullable: true
+        s3Key_Preview:
+          type: string
+          nullable: true
+        thumbnailUrl:
+          type: string
+          nullable: true
+        previewUrl:
           type: string
           nullable: true
         name:
