@@ -14,6 +14,8 @@ namespace PhotoBank.ViewModel.Dto
         public DateTime? TakenDate { get; set; }
         public string? S3Key_Preview { get; set; }
         public string? S3Key_Thumbnail { get; set; }
+        public string? PreviewUrl { get; set; }
+        public string? ThumbnailUrl { get; set; }
         public GeoPointDto? Location { get; set; }
         public int? Orientation { get; set; }
         public List<FaceDto>? Faces { get; set; }
