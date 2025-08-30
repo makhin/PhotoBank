@@ -10,7 +10,8 @@
     "web": "expo start --web",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "doctor": "expo-doctor"
+    "doctor": "expo-doctor",
+    "test": "vitest"
   },
   "dependencies": {
     "@photobank/shared": "workspace:*",
@@ -32,6 +33,8 @@
     "@types/node": "24.0.13",
     "typescript": "5.9.2",
     "eslint": "^9.8.0",
-    "prettier": "^3.3.3"
+    "prettier": "^3.3.3",
+    "vitest": "^3.2.4",
+    "react-test-renderer": "19.0.0"
   }
 }

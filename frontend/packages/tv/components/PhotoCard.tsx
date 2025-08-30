@@ -2,22 +2,31 @@ import React from 'react';
 import { View, Image, StyleSheet, Text } from 'react-native';
 import { PhotoItemDto } from '@photobank/shared/api/photobank';
 
-export const PhotoCard = ({ photo }: { photo: PhotoItemDto }) => (
+export const PhotoCard = ({ photo }: { photo: PhotoItemDto }) => {
+  const uri = photo.thumbnailUrl ?? photo.previewUrl;
+
+  return (
     <View style={styles.card}>
-      <Image
-          source={{ uri: `data:image/jpeg;base64,${photo.thumbnail}` }}
+      {uri ? (
+        <Image
+          source={{ uri }}
           style={styles.image}
           resizeMode="cover"
-      />
+          testID="photo-image"
+        />
+      ) : (
+        <View style={[styles.image, styles.placeholder]} testID="photo-placeholder" />
+      )}
       <View style={styles.infoContainer}>
-          <Text style={styles.name}>{photo.name}</Text>
-          {photo.takenDate && <Text style={styles.date}>{photo.takenDate}</Text>}
-          {photo.captions && photo.captions.length > 0 && (
-              <Text style={styles.caption}>{photo.captions[0]}</Text>
-          )}
+        <Text style={styles.name}>{photo.name}</Text>
+        {photo.takenDate && <Text style={styles.date}>{photo.takenDate}</Text>}
+        {photo.captions && photo.captions.length > 0 && (
+          <Text style={styles.caption}>{photo.captions[0]}</Text>
+        )}
       </View>
     </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   card: {
@@ -29,6 +38,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   image: { width: '100%', height: '100%' },
+  placeholder: {
+    backgroundColor: '#333',
+  },
   infoContainer: {
     position: 'absolute',
     bottom: 0,
