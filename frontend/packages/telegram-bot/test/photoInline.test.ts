@@ -7,7 +7,7 @@ const basePhoto = {
   id: 1,
   name: 'test',
   scale: 1,
-  previewUrl: 'http://example.com/img.jpg',
+  previewImage: 'aGVsbG8=',
   adultScore: 0,
   racyScore: 0,
   height: 100,

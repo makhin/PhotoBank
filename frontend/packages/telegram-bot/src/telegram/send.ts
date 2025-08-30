@@ -7,6 +7,7 @@ import { getFileId, setFileId, delFileId } from '../cache/fileIdCache';
 import { logger } from '../utils/logger';
 import type { PhotoItemDto } from '../types';
 import { withTelegramRetry } from '../utils/retry';
+import { toTelegramFile } from '../utils/image';
 
 function buildCaption(p: PhotoItemDto): string {
   const parts = [p.name, p.takenDate ? formatDate(p.takenDate) : null];
@@ -24,7 +25,7 @@ export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
       throttled(() =>
         ctx.api.sendPhoto(
           ctx.chat.id,
-          cached ?? (p.previewUrl ?? p.originalUrl ?? ''),
+          cached ?? toTelegramFile(p.previewImage) ?? '',
           { caption: buildCaption(p) },
         ),
       ),
@@ -44,7 +45,7 @@ export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
           throttled(() =>
             ctx.api.sendPhoto(
               ctx.chat.id,
-              p.previewUrl ?? p.originalUrl ?? '',
+              toTelegramFile(p.previewImage) ?? '',
               { caption: buildCaption(p) },
             ),
           ),
@@ -75,7 +76,7 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
   for (const group of groups) {
     const medias: InputMediaPhoto[] = group.map((p) => {
       const cached = getFileId(p.id);
-      const media = cached ?? (p.previewUrl ?? p.originalUrl ?? '');
+      const media = cached ?? (toTelegramFile(p.previewImage) ?? '');
       return {
         type: 'photo',
         media,
