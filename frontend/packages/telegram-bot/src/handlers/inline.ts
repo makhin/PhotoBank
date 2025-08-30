@@ -43,7 +43,6 @@ bot.on('inline_query', async (ctx: MyContext) => {
       id: number;
       name?: string | null;
       previewUrl?: string | null;
-      originalUrl?: string | null;
       thumbnailUrl?: string | null;
       takenDate?: string | null;
       tags?: { tagId: number }[];
@@ -55,8 +54,8 @@ bot.on('inline_query', async (ctx: MyContext) => {
       (p): InlineQueryResultPhoto => ({
         type: 'photo',
         id: String(p.id),
-        photo_url: p.previewUrl ?? p.originalUrl ?? '',
-        thumbnail_url: p.thumbnailUrl ?? p.previewUrl ?? p.originalUrl ?? '',
+        photo_url: p.previewUrl ?? p.thumbnailUrl ?? '',
+        thumbnail_url: p.thumbnailUrl ?? p.previewUrl ?? '',
         title: p.name ?? `#${p.id}`,
         description: [
           formatDate(p.takenDate),
