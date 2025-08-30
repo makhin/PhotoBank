@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
 using PhotoBank.AccessControl;
 using System;
 using System.Collections.Generic;
@@ -16,7 +14,7 @@ namespace PhotoBank.DbContext.DbContext
     {
         public static readonly ILoggerFactory PhotoBankLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 
-    private readonly ICurrentUser _user;
+        private readonly ICurrentUser _user;
 
         public DbSet<Storage> Storages { get; set; }
         public DbSet<Photo> Photos { get; set; }
@@ -33,7 +31,7 @@ namespace PhotoBank.DbContext.DbContext
         public DbSet<PropertyName> PropertyNames { get; set; }
         public DbSet<Enricher> Enrichers { get; set; }
 
-        public PhotoBankDbContext(DbContextOptions<PhotoBankDbContext> options, ICurrentUser user) : base(options)
+        private PhotoBankDbContext(DbContextOptions<PhotoBankDbContext> options, ICurrentUser user) : base(options) //TODO: user
         {
             _user = user;
         }
@@ -45,7 +43,6 @@ namespace PhotoBank.DbContext.DbContext
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfigurationsFromAssembly(System.Reflection.Assembly.Load("PhotoBank.Services"));
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<ApplicationUser>(b =>

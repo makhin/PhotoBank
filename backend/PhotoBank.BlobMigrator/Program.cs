@@ -2,12 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
-using Minio.DataModel.Args;
+using PhotoBank.BlobMigrator;
 using PhotoBank.DbContext.DbContext;
-using System.Runtime.InteropServices;
-using ImageMagick;
+using System.Reflection;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -20,13 +20,26 @@ builder.Services.Configure<S3Options>(builder.Configuration.GetSection("S3"));
 
 // 3) Строка подключения
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Missing ConnectionStrings:DefaultConnection");
+                       ?? throw new InvalidOperationException("Missing ConnectionStrings:DefaultConnection");
 
 // 4) EF Core: фабрика контекстов для многопоточности
-builder.Services.AddDbContextFactory<PhotoBankDbContext>(opt =>
+builder.Services.AddDbContextPool<PhotoBankDbContext>((sp, options) =>
 {
-    opt.UseSqlServer(connectionString, sql => sql.UseNetTopologySuite());
+    options.UseLoggerFactory(LoggerFactory.Create(loggingBuilder => loggingBuilder.AddDebug()));
+
+    options.UseSqlServer(
+        connectionString,
+        sql =>
+        {
+            sql.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName().Name);
+            sql.UseNetTopologySuite();
+            sql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null);
+            sql.CommandTimeout(60);
+            sql.MaxBatchSize(128);
+            sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+        });
 });
+builder.Services.AddDbContextFactory<PhotoBankDbContext>();
 
 // 5) MinIO/S3 клиент
 builder.Services.AddSingleton<IMinioClient>(sp =>
@@ -44,34 +57,28 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
         .Build();
 });
 
-// 6) Ограничения ресурсов для Magick.NET (безопасные лимиты по умолчанию — при необходимости поднимите)
-ResourceLimits.Memory = 256 * 1024 * 1024; // 256 MB
-if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-{
-    // На Linux иногда полезно ограничить ещё и Disk, чтобы Magick не лез во временный swap-файл.
-    ResourceLimits.Disk = 1024L * 1024 * 1024; // 1 GB
-}
-
 // 7) HostedService
 builder.Services.AddHostedService<BlobMigrationHostedService>();
 
 await builder.Build().RunAsync();
 
-
-// ---------------- Options ----------------
-public sealed class BlobMigrationOptions
+namespace PhotoBank.BlobMigrator
 {
-    public bool Enabled { get; set; } = true;
-    public int BatchSize { get; set; } = 200;
-    public int Concurrency { get; set; } = 3;
-    public string TempDir { get; set; } = "tmp-migrate";
-}
+    // ---------------- Options ----------------
+    public sealed class BlobMigrationOptions
+    {
+        public bool Enabled { get; set; } = true;
+        public int BatchSize { get; set; } = 200;
+        public int Concurrency { get; set; } = 3;
+        public string TempDir { get; set; } = "tmp-migrate";
+    }
 
-public sealed class S3Options
-{
-    public string Endpoint { get; set; } = "http://127.0.0.1:9000";
-    public bool UseSsl { get; set; }
-    public string AccessKey { get; set; } = "minioadmin";
-    public string SecretKey { get; set; } = "minioadmin";
-    public string Bucket { get; set; } = "photobank";
+    public sealed class S3Options
+    {
+        public string Endpoint { get; set; } = "http://192.168.1.63:9010";
+        public bool UseSsl { get; set; }
+        public string AccessKey { get; set; } = "alexandr";
+        public string SecretKey { get; set; } = "12345678";
+        public string Bucket { get; set; } = "photobank";
+    }
 }
