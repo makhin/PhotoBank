@@ -1,4 +1,4 @@
-import { InputFile, InlineKeyboard } from 'grammy';
+import { InlineKeyboard } from 'grammy';
 import type { PhotoDto } from '@photobank/shared/api/photobank';
 
 import { formatPhotoMessage } from './formatPhotoMessage';
@@ -42,11 +42,10 @@ export async function sendPhotoById(ctx: MyContext, id: number) {
         return;
     }
 
-    const { caption, hasSpoiler, image } = formatPhotoMessage(photo);
+    const { caption, hasSpoiler, imageUrl } = formatPhotoMessage(photo);
 
-    if (image) {
-        const file = new InputFile(image, `${photo.name}.jpg`);
-        await ctx.replyWithPhoto(file, {
+    if (imageUrl) {
+        await ctx.replyWithPhoto(imageUrl, {
             caption,
             parse_mode: "HTML",
             has_spoiler: hasSpoiler,
@@ -64,7 +63,7 @@ export async function openPhotoInline(ctx: MyContext, id: number) {
         return;
     }
 
-    const { caption, hasSpoiler, image } = formatPhotoMessage(photo);
+    const { caption, hasSpoiler, imageUrl } = formatPhotoMessage(photo);
 
     let keyboard: InlineKeyboard | undefined;
     if (chatId) {
@@ -79,9 +78,8 @@ export async function openPhotoInline(ctx: MyContext, id: number) {
     }
 
     if (!chatId) {
-        if (image) {
-            const file = new InputFile(image, `${photo.name}.jpg`);
-            await ctx.replyWithPhoto(file, { caption, parse_mode: "HTML", reply_markup: keyboard, has_spoiler: hasSpoiler });
+        if (imageUrl) {
+            await ctx.replyWithPhoto(imageUrl, { caption, parse_mode: "HTML", reply_markup: keyboard, has_spoiler: hasSpoiler });
         } else {
             await ctx.reply(caption, { parse_mode: "HTML", reply_markup: keyboard });
         }
@@ -91,14 +89,13 @@ export async function openPhotoInline(ctx: MyContext, id: number) {
     const existing = photoMessages.get(chatId);
     if (existing) {
         try {
-            if (image) {
-                const file = new InputFile(image, `${photo.name}.jpg`);
+            if (imageUrl) {
                 await ctx.api.editMessageMedia(
                     chatId,
                     existing,
                     {
                         type: "photo",
-                        media: file,
+                        media: imageUrl,
                         caption,
                         parse_mode: "HTML",
                     },
@@ -113,9 +110,8 @@ export async function openPhotoInline(ctx: MyContext, id: number) {
         }
     }
 
-    if (image) {
-        const file = new InputFile(image, `${photo.name}.jpg`);
-        const msg = await ctx.replyWithPhoto(file, { caption, parse_mode: "HTML", reply_markup: keyboard, has_spoiler: hasSpoiler });
+    if (imageUrl) {
+        const msg = await ctx.replyWithPhoto(imageUrl, { caption, parse_mode: "HTML", reply_markup: keyboard, has_spoiler: hasSpoiler });
         photoMessages.set(chatId, msg.message_id);
     } else {
         const msg = await ctx.reply(caption, { parse_mode: "HTML", reply_markup: keyboard });

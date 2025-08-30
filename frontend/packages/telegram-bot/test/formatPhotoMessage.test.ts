@@ -7,7 +7,7 @@ vi.mock('../src/dictionaries', () => ({
 }));
 
 describe('formatPhotoMessage', () => {
-  const basePhoto: PhotoDto = {
+  const basePhoto: PhotoDto & { previewUrl?: string; originalUrl?: string } = {
     id: 1,
     name: 'Test',
     scale: 1,
@@ -19,7 +19,7 @@ describe('formatPhotoMessage', () => {
   };
 
   it('includes main fields in caption', () => {
-    const { caption, image } = formatPhotoMessage({
+    const { caption, imageUrl } = formatPhotoMessage({
       ...basePhoto,
       takenDate: '2024-01-02T00:00:00Z',
       captions: ['hello'],
@@ -31,14 +31,17 @@ describe('formatPhotoMessage', () => {
     expect(caption).toContain('📝 hello');
     expect(caption).toContain('🏷️ tag1, tag2');
     expect(caption).toContain('👤 Person 2');
-    expect(image).toBeUndefined();
+    expect(imageUrl).toBeUndefined();
   });
 
-  it('decodes preview image when provided', () => {
-    const base64 = Buffer.from('img').toString('base64');
-    const { image } = formatPhotoMessage({ ...basePhoto, previewImage: base64 });
-    expect(image).toBeInstanceOf(Buffer);
-    expect(image?.toString()).toBe('img');
+  it('uses preview url when provided', () => {
+    const { imageUrl } = formatPhotoMessage({ ...basePhoto, previewUrl: 'http://example.com/preview.jpg' });
+    expect(imageUrl).toBe('http://example.com/preview.jpg');
+  });
+
+  it('falls back to original url', () => {
+    const { imageUrl } = formatPhotoMessage({ ...basePhoto, originalUrl: 'http://example.com/original.jpg' });
+    expect(imageUrl).toBe('http://example.com/original.jpg');
   });
 
   it('replaces missing person with unknown label', () => {

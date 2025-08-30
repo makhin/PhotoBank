@@ -7,7 +7,7 @@ const basePhoto = {
   id: 1,
   name: 'test',
   scale: 1,
-  previewImage: Buffer.from('img').toString('base64'),
+  previewUrl: 'http://example.com/img.jpg',
   adultScore: 0,
   racyScore: 0,
   height: 100,
