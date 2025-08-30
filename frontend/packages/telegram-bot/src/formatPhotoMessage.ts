@@ -3,9 +3,11 @@ import { formatDate } from "@photobank/shared/index";
 
 import { getPersonName } from "./dictionaries";
 
-type PhotoWithUrls = PhotoDto & { previewUrl?: string | null; originalUrl?: string | null };
-
-export function formatPhotoMessage(photo: PhotoWithUrls): { caption: string; hasSpoiler: boolean; imageUrl?: string } {
+export function formatPhotoMessage(photo: PhotoDto): {
+    caption: string;
+    hasSpoiler: boolean;
+    previewImage?: string;
+} {
     const lines: string[] = [];
 
     lines.push(`📸 <b>${photo.name}</b>`);
@@ -31,11 +33,9 @@ export function formatPhotoMessage(photo: PhotoWithUrls): { caption: string; has
         }
     }
 
-    const imageUrl = photo.previewUrl ?? photo.originalUrl ?? undefined;
-
     return {
         caption: lines.join("\n"),
         hasSpoiler: photo.adultScore > 0.5 || photo.racyScore > 0.5,
-        imageUrl,
+        previewImage: photo.previewImage || undefined,
     };
 }

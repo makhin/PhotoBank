@@ -8,8 +8,7 @@ const basePhoto: PhotoItemDto = {
   id: 1,
   name: 'Test',
   takenDate: '2024-01-01',
-  previewUrl: 'http://example.com/prev.jpg',
-  originalUrl: 'http://example.com/orig.jpg',
+  previewImage: 'aGVsbG8=',
   storageName: 's',
   relativePath: 'r',
 };
