@@ -1737,12 +1737,6 @@ components:
         s3Key_Thumbnail:
           type: string
           nullable: true
-        previewUrl:
-          type: string
-          nullable: true
-        thumbnailUrl:
-          type: string
-          nullable: true
         location:
           $ref: '#/components/schemas/GeoPointDto'
         orientation:
@@ -1789,15 +1783,6 @@ components:
           type: integer
           format: int32
         s3Key_Thumbnail:
-          type: string
-          nullable: true
-        s3Key_Preview:
-          type: string
-          nullable: true
-        thumbnailUrl:
-          type: string
-          nullable: true
-        previewUrl:
           type: string
           nullable: true
         name:
