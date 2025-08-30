@@ -168,8 +168,6 @@ export interface PersonFaceDto {
   personId: number;
   faceId: number;
   /** @nullable */
-  faceImage?: string | null;
-  /** @nullable */
   provider?: string | null;
   /** @nullable */
   externalId?: string | null;
@@ -193,7 +191,14 @@ export interface PhotoDto {
   scale?: number;
   /** @nullable */
   takenDate?: string | null;
-  previewImage: string;
+  /** @nullable */
+  s3Key_Preview?: string | null;
+  /** @nullable */
+  s3Key_Thumbnail?: string | null;
+  /** @nullable */
+  previewUrl?: string | null;
+  /** @nullable */
+  thumbnailUrl?: string | null;
   location?: GeoPointDto;
   /** @nullable */
   orientation?: number | null;
@@ -211,7 +216,14 @@ export interface PhotoDto {
 
 export interface PhotoItemDto {
   id: number;
-  thumbnail: string;
+  /** @nullable */
+  s3Key_Thumbnail?: string | null;
+  /** @nullable */
+  s3Key_Preview?: string | null;
+  /** @nullable */
+  thumbnailUrl?: string | null;
+  /** @nullable */
+  previewUrl?: string | null;
   /** @minLength 1 */
   name: string;
   /** @nullable */

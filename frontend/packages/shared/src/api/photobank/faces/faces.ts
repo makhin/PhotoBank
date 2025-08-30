@@ -21,6 +21,7 @@ import type {
 import type {
   FaceIdentityDto,
   FacesGetParams,
+  ProblemDetails,
   UpdateFaceIdentityDto
 } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
 
@@ -192,4 +193,89 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions );
     }
+    export type facesGetImageResponse200 = {
+  data: null
+  status: 200
+}
+
+export type facesGetImageResponse301 = {
+  data: null
+  status: 301
+}
+
+export type facesGetImageResponse404 = {
+  data: ProblemDetails
+  status: 404
+}
     
+export type facesGetImageResponseComposite = facesGetImageResponse200 | facesGetImageResponse301 | facesGetImageResponse404;
+    
+export type facesGetImageResponse = facesGetImageResponseComposite & {
+  headers: Headers;
+}
+
+export const getFacesGetImageUrl = (id: number,) => {
+
+
+  
+
+  return `/faces/${id}/image`
+}
+
+export const facesGetImage = async (id: number, options?: RequestInit): Promise<facesGetImageResponse> => {
+  
+  return customFetcher<facesGetImageResponse>(getFacesGetImageUrl(id),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getFacesGetImageQueryKey = (id?: number,) => {
+    return [`/faces/${id}/image`] as const;
+    }
+
+    
+export const getFacesGetImageQueryOptions = <TData = Awaited<ReturnType<typeof facesGetImage>>, TError = null | ProblemDetails>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGetImage>>, TError, TData>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFacesGetImageQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGetImage>>> = ({ signal }) => facesGetImage(id, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof facesGetImage>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type FacesGetImageQueryResult = NonNullable<Awaited<ReturnType<typeof facesGetImage>>>
+export type FacesGetImageQueryError = null | ProblemDetails
+
+
+
+export function useFacesGetImage<TData = Awaited<ReturnType<typeof facesGetImage>>, TError = null | ProblemDetails>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGetImage>>, TError, TData>, }
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getFacesGetImageQueryOptions(id,options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+

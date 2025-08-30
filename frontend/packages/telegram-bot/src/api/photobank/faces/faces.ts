@@ -36,7 +36,15 @@ const facesGet = (
     },
       options);
     }
-  return {facesGet,facesUpdate}};
+  const facesGetImage = (
+    id: number,
+ options?: SecondParameter<typeof photobankAxios>,) => {
+      return photobankAxios<null>(
+      {url: `/faces/${id}/image`, method: 'GET'
+    },
+      options);
+    }
+  return {facesGet,facesUpdate,facesGetImage}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -44,3 +52,4 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 
 export type FacesGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFaces>['facesGet']>>>
 export type FacesUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFaces>['facesUpdate']>>>
+export type FacesGetImageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFaces>['facesGetImage']>>>

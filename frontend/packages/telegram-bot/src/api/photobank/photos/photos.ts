@@ -38,6 +38,14 @@ const photosSearchPhotos = (
     },
       options);
     }
+  const photosGetPreview = (
+    id: number,
+ options?: SecondParameter<typeof photobankAxios>,) => {
+      return photobankAxios<null>(
+      {url: `/photos/${id}/preview`, method: 'GET'
+    },
+      options);
+    }
   const photosUpload = (
     photosUploadBody: PhotosUploadBody,
  options?: SecondParameter<typeof photobankAxios>,) => {const formData = new FormData();
@@ -67,7 +75,7 @@ if(photosUploadBody.path !== undefined) {
     },
       options);
     }
-  return {photosSearchPhotos,photosGetPhoto,photosUpload,photosGetDuplicates}};
+  return {photosSearchPhotos,photosGetPhoto,photosGetPreview,photosUpload,photosGetDuplicates}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -75,5 +83,6 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 
 export type PhotosSearchPhotosResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosSearchPhotos']>>>
 export type PhotosGetPhotoResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetPhoto']>>>
+export type PhotosGetPreviewResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetPreview']>>>
 export type PhotosUploadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosUpload']>>>
 export type PhotosGetDuplicatesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetDuplicates']>>>
