@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import type { GeoPointDto } from '../api/photobank/model';
+import type { GeoPointDto } from '../api/photobank';
 
 /**
  * Returns a human friendly place name for the given coordinates using
