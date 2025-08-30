@@ -52,7 +52,7 @@ public sealed class BlobMigrationHostedService : IHostedService
         await EnsureBucketAsync(ct);
 
         await MigratePhotosAsync(ct);
-//        await MigrateFacesAsync(ct);
+        await MigrateFacesAsync(ct);
 
         _log.LogInformation("Migration finished.");
     }
@@ -192,7 +192,6 @@ public sealed class BlobMigrationHostedService : IHostedService
         return (true, false);
     }
 
-    // ============================= Faces =============================
     private async Task MigrateFacesAsync(CancellationToken ct)
     {
         _log.LogInformation("Faces migration started...");

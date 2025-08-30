@@ -25,11 +25,6 @@ public class FaceStorageService : IFaceStorageService
 
     public async Task<Stream> OpenReadStreamAsync(Face face, CancellationToken ct = default)
     {
-        if (face.Image != null)
-        {
-            return new MemoryStream(face.Image, writable: false);
-        }
-
         if (string.IsNullOrEmpty(face.S3Key_Image))
             throw new InvalidOperationException("Face has no image data");
 

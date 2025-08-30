@@ -78,7 +78,7 @@ public sealed class UnifiedFaceService
 
             var faces = await _faces.GetAll()
                 .Where(f => faceIds.Contains(f.Id))
-                .Select(f => new Face { Id = f.Id, Image = f.Image, S3Key_Image = f.S3Key_Image })
+                .Select(f => new Face { Id = f.Id, S3Key_Image = f.S3Key_Image })
                 .ToListAsync(ct);
 
             var toLink = new List<FaceToLink>();

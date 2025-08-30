@@ -10,6 +10,8 @@ using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Minio;
+using Minio.DataModel.Args;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Models;
@@ -28,7 +30,7 @@ namespace PhotoBank.Services
         Task ListFindSimilarAsync();
         Task<List<DetectedFace>> DetectFacesAsync(byte[] image);
         Task<IList<IdentifyResult>> IdentifyAsync(IList<Guid?> faceIds);
-        Task<IdentifyResult> FaceIdentityAsync(Face face);
+        Task<IdentifyResult> FaceIdentityAsync(byte[] image);
     }
 
     public class FaceService : IFaceService
@@ -38,6 +40,7 @@ namespace PhotoBank.Services
         private readonly IRepository<DbContext.Models.Person> _personRepository;
         private readonly IRepository<PersonFace> _personFaceRepository;
         private readonly IRepository<Photo> _photoRepository;
+        private readonly IMinioClient _minioClient;
         private readonly IMapper _mapper;
         private readonly ILogger<FaceService> _logger;
 
@@ -65,6 +68,7 @@ namespace PhotoBank.Services
             IRepository<DbContext.Models.Person> personRepository,
             IRepository<PersonFace> personFaceRepository,
             IRepository<Photo> photoRepository,
+            IMinioClient minioClient,
             IMapper mapper,
             ILogger<FaceService> logger)
         {
@@ -73,6 +77,7 @@ namespace PhotoBank.Services
             _personRepository = personRepository;
             _personFaceRepository = personFaceRepository;
             _photoRepository = photoRepository;
+            _minioClient = minioClient;
             _mapper = mapper;
             _logger = logger;
         }
@@ -152,7 +157,13 @@ namespace PhotoBank.Services
                     }
 
                     var dbFace = await _faceRepository.GetAsync(personFace.FaceId);
-                    await using (var stream = new MemoryStream(dbFace.Image))
+                    if (string.IsNullOrEmpty(dbFace.S3Key_Image))
+                    {
+                        continue;
+                    }
+
+                    var data = await GetObjectAsync(dbFace.S3Key_Image);
+                    await using (var stream = new MemoryStream(data))
                     {
                         try
                         {
@@ -218,8 +229,13 @@ namespace PhotoBank.Services
                     continue;
                 }
 
-                //await Task.Delay(1800);
-                await using (var stream = new MemoryStream(dbFace.Image))
+                if (string.IsNullOrEmpty(dbFace.S3Key_Image))
+                {
+                    continue;
+                }
+
+                var data = await GetObjectAsync(dbFace.S3Key_Image);
+                await using (var stream = new MemoryStream(data))
                 {
                     try
                     {
@@ -252,7 +268,7 @@ namespace PhotoBank.Services
                 .Include(f => f.Person)
                 .Include(f => f.Photo)
                 .AsNoTrackingWithIdentityResolution()
-                .Where( f => f.Photo.StorageId == 9 && f.IdentityStatus == IdentityStatus.ForReprocessing)
+                .Where(f => f.Photo.StorageId == 9 && f.IdentityStatus == IdentityStatus.ForReprocessing)
                 .ProjectTo<FaceDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
@@ -267,7 +283,15 @@ namespace PhotoBank.Services
 
                     try
                     {
-                        detectedFaces = await DetectFacesAsync(face.Image);
+                        if (string.IsNullOrEmpty(face.S3Key_Image))
+                        {
+                            dbFace.IdentityStatus = IdentityStatus.NotDetected;
+                            await _faceRepository.UpdateAsync(dbFace, f => f.IdentityStatus);
+                            continue;
+                        }
+
+                        var data = await GetObjectAsync(face.S3Key_Image);
+                        detectedFaces = await DetectFacesAsync(data);
                     }
                     catch (Exception e)
                     {
@@ -342,17 +366,25 @@ namespace PhotoBank.Services
 
         public async Task ListFindSimilarAsync()
         {
-            var photos = await _faceRepository
+            var keys = await _faceRepository
                 .GetAll()
                 .AsNoTracking()
-                .Take(100).Select(p => p.Image).ToListAsync();
+                .Take(100)
+                .Select(p => p.S3Key_Image)
+                .ToListAsync();
 
             var persistedFaces = (await _faceClient.LargeFaceList.ListFacesAsync(AllFacesListId)).ToList();
 
-            foreach (var photo in photos)
+            foreach (var key in keys)
             {
+                if (string.IsNullOrEmpty(key))
+                {
+                    continue;
+                }
+
                 try
                 {
+                    var photo = await GetObjectAsync(key);
                     IList<DetectedFace> detectedFaces = await DetectFacesAsync(photo);
                     //await Task.Delay(1800);
     
@@ -378,95 +410,46 @@ namespace PhotoBank.Services
             }
         }
 
-        public async Task<IdentifyResult> FaceIdentityAsync(Face face)
+        public async Task<IdentifyResult> FaceIdentityAsync(byte[] image)
         {
             IList<DetectedFace> detectedFaces;
 
             try
             {
-                detectedFaces = await DetectFacesAsync(face.Image);
+                detectedFaces = await DetectFacesAsync(image);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                face.IdentityStatus = IdentityStatus.NotDetected;
                 return await Task.FromResult((IdentifyResult)null);
             }
 
             var identifyResults = await _faceClient.Face.IdentifyAsync(detectedFaces.Select(f => f.FaceId).ToList(), PersonGroupId);
             return identifyResults.SingleOrDefault();
         }
-        /*
-        public async Task FaceIdentityAsync(Face face)
-        {
-            _persons ??= await _personRepository.GetAll().AsNoTracking().ToListAsync();
-
-            try
-            {
-                IList<DetectedFace> detectedFaces;
-
-                try
-                {
-                    detectedFaces = await DetectFacesAsync(face.Image);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    face.IdentityStatus = IdentityStatus.NotDetected;
-                    return;
-                }
-
-                var identifyResults = await _faceClient.Face.IdentifyAsync(detectedFaces.Select(f => f.FaceId).ToList(), PersonGroupId);
-
-                if (!identifyResults.Any())
-                {
-                    face.IdentityStatus = IdentityStatus.NotIdentified;
-                    return;
-                }
-
-                foreach (var identifyResult in identifyResults)
-                {
-                    var candidate = identifyResult.Candidates.OrderByDescending(x => x.Confidence).FirstOrDefault();
-                    if (candidate == null)
-                    {
-                        face.IdentityStatus = IdentityStatus.NotIdentified;
-                    }
-                    else
-                    {
-                        var person = _persons.Single(p => p.ExternalGuid == candidate.PersonId);
-                        if (person.DateOfBirth != null && face.Photo.TakenDate > new DateTime(1990, 1, 1) &&
-                            face.Photo.TakenDate < person.DateOfBirth)
-                        {
-                            face.IdentityStatus = IdentityStatus.NotIdentified;
-                        }
-                        else
-                        {
-                            face.IdentityStatus = IdentityStatus.Identified;
-                            face.IdentifiedWithConfidence = candidate.Confidence;
-                            face.Person = person;
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }
-        */
         public async Task<List<DetectedFace>> DetectFacesAsync(byte[] image)
         {
             await using (var stream = new MemoryStream(image))
             {
                 var detectedFaces = await _faceClient.Face.DetectWithStreamAsync(stream,
-                    recognitionModel: RecognitionModel, 
-                    detectionModel: DetectionModel, 
+                    recognitionModel: RecognitionModel,
+                    detectionModel: DetectionModel,
                     returnFaceId: true,
-                    returnFaceLandmarks: false, 
+                    returnFaceLandmarks: false,
                     returnFaceAttributes: DetectionModel == Microsoft.Azure.CognitiveServices.Vision.Face.Models.DetectionModel.Detection02 ? null : _attributes);
 
                 return detectedFaces == null ? await Task.FromResult(new List<DetectedFace>()) : detectedFaces.ToList();
             }
+        }
+
+        private async Task<byte[]> GetObjectAsync(string key)
+        {
+            using var ms = new MemoryStream();
+            await _minioClient.GetObjectAsync(new GetObjectArgs()
+                .WithBucket("photobank")
+                .WithObject(key)
+                .WithCallbackStream(stream => stream.CopyTo(ms)));
+            return ms.ToArray();
         }
 
         private async Task<bool> GetTrainingStatusAsync()

@@ -110,8 +110,8 @@ public class UnifiedFaceServiceTests
         ctx.Persons.Add(new Person { Id = 1, Name = "Alice" });
 
         ctx.Faces.AddRange(
-            new Face { Id = 101, PhotoId = 0, Image = null, S3Key_Image = "face101", Rectangle = new Point(0, 0), S3ETag_Image = string.Empty, Sha256_Image = string.Empty, FaceAttributes = string.Empty },
-            new Face { Id = 102, PhotoId = 0, Image = new byte[] { 2 }, Rectangle = new Point(0, 0), S3Key_Image = string.Empty, S3ETag_Image = string.Empty, Sha256_Image = string.Empty, FaceAttributes = string.Empty }
+            new Face { Id = 101, PhotoId = 0, S3Key_Image = "face101", Rectangle = new Point(0, 0), S3ETag_Image = string.Empty, Sha256_Image = string.Empty, FaceAttributes = string.Empty },
+            new Face { Id = 102, PhotoId = 0, S3Key_Image = string.Empty, Rectangle = new Point(0, 0), S3ETag_Image = string.Empty, Sha256_Image = string.Empty, FaceAttributes = string.Empty }
         );
 
         var linkMissing = new PersonFace { Id = -1, PersonId = 1, FaceId = 101, ExternalId = null, Provider = null };
