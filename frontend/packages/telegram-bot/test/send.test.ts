@@ -9,7 +9,6 @@ const basePhoto: PhotoItemDto = {
   name: 'Test',
   takenDate: '2024-01-01',
   previewUrl: 'http://example.com/prev.jpg',
-  originalUrl: 'http://example.com/orig.jpg',
   storageName: 's',
   relativePath: 'r',
 };
@@ -26,6 +25,11 @@ describe('sendPhotoSmart', () => {
     };
     delFileId(basePhoto.id);
     await sendPhotoSmart(ctx, basePhoto);
+    expect(ctx.api.sendPhoto).toHaveBeenCalledWith(
+      ctx.chat.id,
+      basePhoto.previewUrl,
+      { caption: expect.any(String) },
+    );
     expect(ctx.api.sendPhoto).toHaveBeenCalledTimes(1);
     expect(getFileId(basePhoto.id)).toBe('abc');
   });
@@ -44,6 +48,18 @@ describe('sendPhotoSmart', () => {
       },
     };
     await sendPhotoSmart(ctx, photo);
+    expect(ctx.api.sendPhoto).toHaveBeenNthCalledWith(
+      1,
+      ctx.chat.id,
+      'old',
+      { caption: expect.any(String) },
+    );
+    expect(ctx.api.sendPhoto).toHaveBeenNthCalledWith(
+      2,
+      ctx.chat.id,
+      photo.previewUrl,
+      { caption: expect.any(String) },
+    );
     expect(ctx.api.sendPhoto).toHaveBeenCalledTimes(2);
     expect(getFileId(photo.id)).toBe('new');
   });
