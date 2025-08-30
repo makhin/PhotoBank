@@ -9,11 +9,11 @@ const { photosSearchPhotos, photosGetPhoto, photosUpload } = getPhotos();
 
 export async function searchPhotos(
   ctx: Context,
-  filter: FilterDto & { top?: number; skip?: number },
+  filter: FilterDto & { page: number; pageSize: number },
 ) {
   try {
     setRequestContext(ctx);
-    return await photosSearchPhotos(filter as FilterDto);
+    return await photosSearchPhotos(filter);
   } catch (err) {
     handleServiceError(err);
     throw err;

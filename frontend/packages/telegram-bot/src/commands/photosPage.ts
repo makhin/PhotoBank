@@ -34,13 +34,12 @@ export async function sendPhotosPage({
     }
   }
 
-  const skip = (page - 1) * PHOTOS_PAGE_SIZE;
   let queryResult;
   try {
     const res = await searchPhotos(ctx, {
       ...filter,
-      top: PHOTOS_PAGE_SIZE,
-      skip,
+      page,
+      pageSize: PHOTOS_PAGE_SIZE,
     });
     queryResult = res.data;
   } catch (err) {
