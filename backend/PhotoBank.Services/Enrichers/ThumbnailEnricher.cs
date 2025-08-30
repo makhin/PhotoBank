@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
@@ -62,6 +63,14 @@ public sealed class ThumbnailEnricher : IEnricher
         await using var ms = new MemoryStream(capacity: 32 * 1024);
         await thumbStream.CopyToAsync(ms).ConfigureAwait(false);
         ms.Position = 0;
+        string sha256Hex;
+        using (var sha = SHA256.Create())
+        {
+            var hash = await sha.ComputeHashAsync(ms, cancellationToken);
+            sha256Hex = Convert.ToHexString(hash);
+        }
+
+        ms.Position = 0;
         var key = $"thumbnails/{Guid.NewGuid():N}.jpg";
         await _minio.PutObjectAsync(new PutObjectArgs()
             .WithBucket("photobank")
@@ -69,7 +78,15 @@ public sealed class ThumbnailEnricher : IEnricher
             .WithStreamData(ms)
             .WithObjectSize(ms.Length)
             .WithContentType("image/jpeg"), cancellationToken);
+
+        var stat = await _minio.StatObjectAsync(new StatObjectArgs()
+            .WithBucket("photobank")
+            .WithObject(key), cancellationToken);
+
         photo.S3Key_Thumbnail = key;
+        photo.S3ETag_Thumbnail = stat.ETag ?? string.Empty;
+        photo.Sha256_Thumbnail = sha256Hex;
+        photo.BlobSize_Thumbnail = ms.Length;
     }
 
     private static async Task<T> RetryAsync<T>(

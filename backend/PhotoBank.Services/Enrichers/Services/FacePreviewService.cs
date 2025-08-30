@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using ImageMagick;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
@@ -17,7 +18,7 @@ namespace PhotoBank.Services.Enrichers.Services
             _minio = minio ?? throw new ArgumentNullException(nameof(minio));
         }
 
-        public async Task<(string key, string etag)> CreateFacePreview(DetectedFace detectedFace, IMagickImage<byte> image, double photoScale)
+        public async Task<(string key, string etag, string sha256, long size)> CreateFacePreview(DetectedFace detectedFace, IMagickImage<byte> image, double photoScale)
         {
             await using var stream = new MemoryStream();
             var faceImage = image.Clone();
@@ -25,6 +26,14 @@ namespace PhotoBank.Services.Enrichers.Services
             await faceImage.WriteAsync(stream);
             stream.Position = 0;
 
+            string sha256Hex;
+            using (var sha = SHA256.Create())
+            {
+                var hash = await sha.ComputeHashAsync(stream);
+                sha256Hex = Convert.ToHexString(hash);
+            }
+
+            stream.Position = 0;
             var key = $"faces/{Guid.NewGuid():N}.jpg";
             await _minio.PutObjectAsync(new PutObjectArgs()
                 .WithBucket("photobank")
@@ -37,7 +46,7 @@ namespace PhotoBank.Services.Enrichers.Services
                 .WithBucket("photobank")
                 .WithObject(key));
 
-            return (key, stat.ETag ?? string.Empty);
+            return (key, stat.ETag ?? string.Empty, sha256Hex, stream.Length);
         }
 
         private static MagickGeometry GetMagickGeometry(DetectedFace detectedFace, double photoScale)

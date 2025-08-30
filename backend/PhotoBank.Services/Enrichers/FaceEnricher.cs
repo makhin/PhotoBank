@@ -62,13 +62,15 @@ namespace PhotoBank.Services.Enrichers
 
                 foreach (var detectedFace in detectedFaces)
                 {
-                    var (key, etag) = await _facePreviewService.CreateFacePreview(detectedFace, sourceData.PreviewImage, 1);
+                    var (key, etag, sha, size) = await _facePreviewService.CreateFacePreview(detectedFace, sourceData.PreviewImage, 1);
                     var face = new Face
                     {
                         PhotoId = photo.Id,
                         IdentityStatus = IdentityStatus.NotIdentified,
                         S3Key_Image = key,
                         S3ETag_Image = etag,
+                        Sha256_Image = sha,
+                        BlobSize_Image = size,
                         Rectangle = GeoWrapper.GetRectangle(detectedFace.FaceRectangle, photo.Scale)
                     };
 
@@ -90,7 +92,8 @@ namespace PhotoBank.Services.Enrichers
                     {
                         var bytes = await CreateFaceBytes(detectedFace, sourceData.OriginalImage, photo.Scale);
                         identifyResult = await _faceService.FaceIdentityAsync(bytes);
-                        (face.S3Key_Image, face.S3ETag_Image) = await _facePreviewService.CreateFacePreview(detectedFace, sourceData.OriginalImage, photo.Scale);
+                        (face.S3Key_Image, face.S3ETag_Image, face.Sha256_Image, face.BlobSize_Image) =
+                            await _facePreviewService.CreateFacePreview(detectedFace, sourceData.OriginalImage, photo.Scale);
                         IdentifyFace(face, identifyResult, photo.TakenDate);
                     }
 
