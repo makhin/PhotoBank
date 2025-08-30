@@ -5,7 +5,7 @@ import { PhotoItemDto } from '@photobank/shared/api/photobank';
 export const PhotoCard = ({ photo }: { photo: PhotoItemDto }) => (
     <View style={styles.card}>
       <Image
-          source={{ uri: `data:image/jpeg;base64,${photo.thumbnail}` }}
+          source={{ uri: photo.thumbnailUrl ?? '' }}
           style={styles.image}
           resizeMode="cover"
       />

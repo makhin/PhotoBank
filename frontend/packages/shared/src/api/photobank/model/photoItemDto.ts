@@ -9,10 +9,11 @@ import type { PersonItemDto } from './personItemDto';
 
 export interface PhotoItemDto {
   id: number;
-  thumbnail?: string;
-  thumbnailUrl?: string;
-  previewUrl?: string;
-  originalUrl?: string;
+  s3Key_Thumbnail?: string | null;
+  s3Key_Preview?: string | null;
+  thumbnailUrl?: string | null;
+  previewUrl?: string | null;
+  originalUrl?: string | null;
   /** @minLength 1 */
   name: string;
   /** @nullable */
