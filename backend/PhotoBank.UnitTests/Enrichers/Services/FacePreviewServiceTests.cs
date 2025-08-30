@@ -27,11 +27,13 @@ namespace PhotoBank.UnitTests.Enrichers.Services
             var image = new MagickImage(MagickColors.Red, 10, 10) { Format = MagickFormat.Jpeg };
             var face = new DetectedFace { FaceRectangle = new FaceRectangle { Height = 10, Width = 10, Top = 0, Left = 0 } };
 
-            var (key, etag) = await service.CreateFacePreview(face, image, 1);
+            var (key, etag, sha, size) = await service.CreateFacePreview(face, image, 1);
 
             minio.Verify(m => m.PutObjectAsync(It.IsAny<PutObjectArgs>(), default), Times.Once);
             key.Should().StartWith("faces/");
             etag.Should().BeEmpty();
+            sha.Should().HaveLength(64);
+            size.Should().BeGreaterThan(0);
         }
     }
 }

@@ -127,7 +127,7 @@ namespace PhotoBank.UnitTests.Enrichers
             _mockFaceService.Setup(service => service.IdentifyAsync(It.IsAny<IList<Guid?>>()))
                 .ReturnsAsync(identifyResults);
             _mockFacePreviewService.Setup(service => service.CreateFacePreview(It.IsAny<DetectedFace>(), It.IsAny<IMagickImage<byte>>(), It.IsAny<double>()))
-                .ReturnsAsync(("s3/key", "etag"));
+                .ReturnsAsync(("s3/key", "etag", "hash", 10L));
 
             // Act
             await _faceEnricher.EnrichAsync(photo, sourceData);

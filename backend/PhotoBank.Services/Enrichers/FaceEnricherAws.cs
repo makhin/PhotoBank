@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Rekognition;
@@ -73,6 +74,14 @@ namespace PhotoBank.Services.Enrichers
                     }
 
                     await using var ms = new MemoryStream(faceBytes);
+                    string sha256Hex;
+                    using (var sha = SHA256.Create())
+                    {
+                        var hash = sha.ComputeHash(ms);
+                        sha256Hex = Convert.ToHexString(hash);
+                    }
+
+                    ms.Position = 0;
                     var key = $"faces/{Guid.NewGuid():N}.jpg";
                     var response = await _minio.PutObjectAsync(new PutObjectArgs()
                         .WithBucket("photobank")
@@ -87,6 +96,8 @@ namespace PhotoBank.Services.Enrichers
                         IdentityStatus = IdentityStatus.NotIdentified,
                         S3Key_Image = key,
                         S3ETag_Image = response?.Etag,
+                        Sha256_Image = sha256Hex,
+                        BlobSize_Image = ms.Length,
                         Rectangle = GeoWrapper.GetRectangle(previewImageHeight, previewImageWidth, detectedFace.BoundingBox, photo.Scale),
                         Age = (detectedFace.AgeRange.High + detectedFace.AgeRange.Low) / 2,
                         Gender = detectedFace.Gender.Value == GenderType.Male,
