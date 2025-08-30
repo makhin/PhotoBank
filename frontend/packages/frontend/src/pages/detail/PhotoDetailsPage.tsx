@@ -74,10 +74,6 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
         [photoData?.takenDate],
     );
 
-    const previewImageSrc = photoData
-        ? `data:image/jpeg;base64,${photoData.previewImage}`
-        : undefined;
-
     const imageNaturalSize = useMemo(() => {
         if (photoData?.width && photoData.height && photoData.scale) {
             return {width: photoData.width * photoData.scale, height: photoData.height * photoData.scale};
@@ -208,13 +204,13 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                 variant="ghost"
                                 aria-label="Open viewer"
                                 onClick={() => {
-                                    if (previewImageSrc) {
+                                    if (photoData?.previewUrl) {
                                         useViewer.getState().open(
                                             [
                                                 {
                                                     id: photoData.id,
-                                                    preview: previewImageSrc,
-                                                    original: previewImageSrc,
+                                                    preview: photoData.previewUrl,
+                                                    original: photoData.originalUrl ?? photoData.previewUrl,
                                                     title: photoData.name,
                                                 },
                                             ],
@@ -234,7 +230,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                             >
                                 <img
                                     loading="lazy"
-                                    src={previewImageSrc}
+                                    src={photoData.previewUrl}
                                     alt={photoData.name}
                                     className="max-h-full max-w-full object-contain"
                                 />

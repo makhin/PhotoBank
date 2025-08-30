@@ -34,7 +34,7 @@ const PhotoListItemMobile = ({
     <div className="space-y-3">
       <div className="flex items-start gap-3">
         <PhotoPreview
-          thumbnail={photo.thumbnail ?? ''}
+          thumbnailUrl={photo.thumbnailUrl ?? ''}
           alt={photo.name}
           className="w-20 h-20 flex-shrink-0"
         />

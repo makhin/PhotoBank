@@ -9,7 +9,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const photo = {
   id: 1,
   name: 'Test Photo',
-  previewImage: 'fakeImage',
+  previewUrl: 'http://example.com/prev.jpg',
+  originalUrl: 'http://example.com/orig.jpg',
   scale: 1,
   takenDate: '2024-01-01T00:00:00Z',
   faces: [
