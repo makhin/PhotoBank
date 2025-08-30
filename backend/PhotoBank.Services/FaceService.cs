@@ -26,7 +26,6 @@ namespace PhotoBank.Services
         Task SyncFacesToPersonAsync();
         Task AddFacesToLargeFaceListAsync();
         Task GroupIdentifyAsync();
-//        Task FaceIdentityAsync(Face face);
         Task ListFindSimilarAsync();
         Task<List<DetectedFace>> DetectFacesAsync(byte[] image);
         Task<IList<IdentifyResult>> IdentifyAsync(IList<Guid?> faceIds);
@@ -114,7 +113,6 @@ namespace PhotoBank.Services
 
                     var person = await _faceClient.PersonGroupPerson.CreateAsync(PersonGroupId, dbPerson.Name,
                         dbPerson.Id.ToString());
-                    //await Task.Delay(1000);
 
                     dbPerson.ExternalGuid = person.PersonId;
                     await _personRepository.UpdateAsync(dbPerson, p => p.ExternalGuid);
@@ -128,7 +126,6 @@ namespace PhotoBank.Services
                     }
 
                     await _faceClient.PersonGroupPerson.DeleteAsync(PersonGroupId, servicePerson.PersonId);
-                    //await Task.Delay(1000);
                 }
 
             }
@@ -459,7 +456,6 @@ namespace PhotoBank.Services
             {
                 do
                 {
-                    //await Task.Delay(1000);
                     trainingStatus = await _faceClient.PersonGroup.GetTrainingStatusAsync(PersonGroupId);
                 } while (trainingStatus.Status == TrainingStatusType.Running);
             }
@@ -478,7 +474,6 @@ namespace PhotoBank.Services
             {
                 do
                 {
-                    //await Task.Delay(1000);
                     trainingStatus = await _faceClient.LargeFaceList.GetTrainingStatusAsync(AllFacesListId);
                 } while (trainingStatus.Status == TrainingStatusType.Running);
             }

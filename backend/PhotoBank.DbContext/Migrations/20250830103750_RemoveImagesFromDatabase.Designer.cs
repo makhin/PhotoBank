@@ -13,8 +13,8 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    [Migration("20250828205508_RemoveFaceImage")]
-    partial class RemoveFaceImage
+    [Migration("20250830103750_RemoveImagesFromDatabase")]
+    partial class RemoveImagesFromDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -786,35 +786,6 @@ namespace PhotoBank.DbContext.Migrations
                     SqlServerIndexBuilderExtensions.IsClustered(b.HasIndex("Name"), false);
 
                     b.ToTable("Tags");
-                });
-
-            modelBuilder.Entity("PhotoBank.Services.FaceRecognition.Local.FaceEmbedding", b =>
-                {
-                    b.Property<int>("FaceId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FaceId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Model")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("PersonId")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("Vector")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
-                    b.HasKey("FaceId");
-
-                    b.HasIndex("PersonId");
-
-                    b.ToTable("FaceEmbeddings", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

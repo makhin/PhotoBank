@@ -785,35 +785,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("PhotoBank.Services.FaceRecognition.Local.FaceEmbedding", b =>
-                {
-                    b.Property<int>("FaceId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FaceId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Model")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("PersonId")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("Vector")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
-                    b.HasKey("FaceId");
-
-                    b.HasIndex("PersonId");
-
-                    b.ToTable("FaceEmbeddings", (string)null);
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
