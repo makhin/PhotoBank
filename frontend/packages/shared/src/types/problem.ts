@@ -1,15 +1,12 @@
-export interface ProblemDetails {
-  type?: string;
-  title: string;
-  status: number;
-  detail?: string;
-  instance?: string;
-  [k: string]: unknown;
-}
+import type { ProblemDetails } from '../api/photobank/model/problemDetails';
+export type { ProblemDetails } from '../api/photobank/model/problemDetails';
 
 export class ProblemDetailsError extends Error {
   constructor(public problem: ProblemDetails) {
-    super(problem.title);
+    super(
+      problem.title ??
+        (problem.status != null ? `HTTP ${problem.status}` : 'ProblemDetailsError')
+    );
     this.name = 'ProblemDetailsError';
   }
 }
@@ -22,5 +19,9 @@ export class HttpError extends Error {
 }
 
 export const isProblemDetails = (value: unknown): value is ProblemDetails => {
-  return typeof value === 'object' && value !== null && 'title' in value && 'status' in value;
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const obj = value as Record<string, unknown>;
+  return ['type', 'title', 'status', 'detail', 'instance'].some((k) => k in obj);
 };
