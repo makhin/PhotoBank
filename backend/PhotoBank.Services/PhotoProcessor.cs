@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.Events;
 using PhotoBank.Services.Models;
 using File = PhotoBank.DbContext.Models.File;
 using Storage = PhotoBank.DbContext.Models.Storage;
@@ -29,6 +31,7 @@ namespace PhotoBank.Services
         private readonly IRepository<Face> _faceRepository;
         private readonly IDependencyExecutor _dependencyExecutor;
         private readonly IEnumerable<IEnricher> _enrichers;
+        private readonly IMediator _mediator;
 
         private class PhotoFilePath
         {
@@ -43,7 +46,8 @@ namespace PhotoBank.Services
             IRepository<Face> faceRepository,
             IRepository<Enricher> enricherRepository,
             IDependencyExecutor dependencyExecutor,
-            EnricherResolver enricherResolver
+            EnricherResolver enricherResolver,
+            IMediator mediator
             )
         {
             _photoRepository = photoRepository;
@@ -51,6 +55,7 @@ namespace PhotoBank.Services
             _faceRepository = faceRepository;
             _dependencyExecutor = dependencyExecutor;
             _enrichers = enricherResolver(enricherRepository);
+            _mediator = mediator;
         }
 
         public async Task<int> AddPhotoAsync(Storage storage, string path)
@@ -90,6 +95,12 @@ namespace PhotoBank.Services
             {
                 Console.WriteLine("An exception occurred: {0}, {1}", exception.InnerException, exception.Message);
             }
+
+            var faces = (photo.Faces ?? new List<Face>())
+                .Zip(sourceData.FaceImages, (f, img) => new PhotoCreatedFace(f.Id, img))
+                .ToList();
+            var evt = new PhotoCreated(photo.Id, sourceData.PreviewImage.ToByteArray(), sourceData.ThumbnailImage, faces);
+            await _mediator.Publish(evt);
 
             return photo.Id;
         }

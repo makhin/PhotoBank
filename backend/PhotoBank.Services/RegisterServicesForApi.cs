@@ -21,6 +21,7 @@ namespace PhotoBank.Services
             services.AddSingleton<ITokenService, TokenService>();
             services.AddSingleton<IImageService, ImageService>();
             services.AddTransient<IFaceStorageService, FaceStorageService>();
+            services.AddPhotoEvents();
             services.AddOptions<TranslatorOptions>().BindConfiguration("Translator");
             services.AddHttpClient<ITranslatorService, TranslatorService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(100 * attempt)));
