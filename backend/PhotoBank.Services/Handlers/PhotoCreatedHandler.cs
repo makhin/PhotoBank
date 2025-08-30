@@ -10,6 +10,10 @@ using Minio.DataModel.Args;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Events;
+using System.Linq;
+
+// ReSharper disable once CheckNamespace
+using PhotoBank.Services; // For S3KeyBuilder
 
 namespace PhotoBank.Services.Handlers;
 
@@ -26,10 +30,17 @@ public class PhotoCreatedHandler : INotificationHandler<PhotoCreated>
 
     public async Task Handle(PhotoCreated notification, CancellationToken cancellationToken)
     {
+        var info = await _context.Photos
+            .AsNoTracking()
+            .Where(p => p.Id == notification.PhotoId)
+            .Select(p => new { Storage = p.Storage.Name, p.RelativePath })
+            .SingleAsync(cancellationToken);
+
         var photoEntry = _context.Photos.Attach(new Photo { Id = notification.PhotoId });
 
-        var (previewEtag, previewSha, previewSize) = await UploadAsync($"previews/{notification.PhotoId}.jpg", notification.Preview, cancellationToken);
-        photoEntry.Property(p => p.S3Key_Preview).CurrentValue = $"previews/{notification.PhotoId}.jpg";
+        var previewKey = S3KeyBuilder.BuildPreviewKey(info.Storage, info.RelativePath, notification.PhotoId);
+        var (previewEtag, previewSha, previewSize) = await UploadAsync(previewKey, notification.Preview, cancellationToken);
+        photoEntry.Property(p => p.S3Key_Preview).CurrentValue = previewKey;
         photoEntry.Property(p => p.S3Key_Preview).IsModified = true;
         photoEntry.Property(p => p.S3ETag_Preview).CurrentValue = previewEtag;
         photoEntry.Property(p => p.S3ETag_Preview).IsModified = true;
@@ -40,8 +51,9 @@ public class PhotoCreatedHandler : INotificationHandler<PhotoCreated>
 
         if (notification.Thumbnail != null)
         {
-            var (thumbEtag, thumbSha, thumbSize) = await UploadAsync($"thumbnails/{notification.PhotoId}.jpg", notification.Thumbnail, cancellationToken);
-            photoEntry.Property(p => p.S3Key_Thumbnail).CurrentValue = $"thumbnails/{notification.PhotoId}.jpg";
+            var thumbKey = S3KeyBuilder.BuildThumbnailKey(info.Storage, info.RelativePath, notification.PhotoId);
+            var (thumbEtag, thumbSha, thumbSize) = await UploadAsync(thumbKey, notification.Thumbnail, cancellationToken);
+            photoEntry.Property(p => p.S3Key_Thumbnail).CurrentValue = thumbKey;
             photoEntry.Property(p => p.S3Key_Thumbnail).IsModified = true;
             photoEntry.Property(p => p.S3ETag_Thumbnail).CurrentValue = thumbEtag;
             photoEntry.Property(p => p.S3ETag_Thumbnail).IsModified = true;
@@ -53,7 +65,7 @@ public class PhotoCreatedHandler : INotificationHandler<PhotoCreated>
 
         foreach (var face in notification.Faces)
         {
-            var key = $"faces/{notification.PhotoId}_{face.FaceId}.jpg";
+            var key = S3KeyBuilder.BuildFaceKey(face.FaceId);
             var (etag, sha, size) = await UploadAsync(key, face.Image, cancellationToken);
             var faceEntry = _context.Faces.Attach(new Face { Id = face.FaceId });
             faceEntry.Property(f => f.S3Key_Image).CurrentValue = key;
