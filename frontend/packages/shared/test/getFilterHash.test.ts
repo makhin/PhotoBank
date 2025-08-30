@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { getFilterHash } from '../src';
-import type { FilterDto } from '../src/api/photobank/model';
+import type { FilterDto } from '../src/api/photobank';
 
 describe('getFilterHash', () => {
   it('returns stable hash for identical filters', () => {

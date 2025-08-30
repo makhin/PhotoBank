@@ -2,7 +2,7 @@ import Dexie, { type Table } from 'dexie';
 import { LRUCache } from 'lru-cache';
 
 import { isBrowser } from '../utils/isBrowser';
-import type { PhotoItemDto } from '../api/photobank/model';
+import type { PhotoItemDto } from '../api/photobank';
 
 export interface CachedFilterResult {
   hash: string;
