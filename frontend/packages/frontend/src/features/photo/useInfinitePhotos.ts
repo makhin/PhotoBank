@@ -4,7 +4,6 @@ import { photosSearchPhotos } from '@photobank/shared/api/photobank';
 import type {
   FilterDto,
   photosSearchPhotosResponse,
-  PhotoItemDto,
 } from '@photobank/shared/api/photobank';
 
 export const useInfinitePhotos = (filter: FilterDto) => {
@@ -17,7 +16,7 @@ export const useInfinitePhotos = (filter: FilterDto) => {
       photosSearchPhotos({
         ...filter,
         thisDay: filter.thisDay ?? undefined,
-        page: pageParam as number,
+        page: pageParam,
         pageSize,
       }),
     getNextPageParam: (lastPage, pages) => {
@@ -34,9 +33,9 @@ export const useInfinitePhotos = (filter: FilterDto) => {
 
   const items = useMemo(
     () =>
-      (query.data?.pages.flatMap((p) =>
+      query.data?.pages.flatMap((p) =>
         p.status === 200 ? p.data.items ?? [] : []
-      ) ?? []) as PhotoItemDto[],
+      ) ?? [],
     [query.data]
   );
 
