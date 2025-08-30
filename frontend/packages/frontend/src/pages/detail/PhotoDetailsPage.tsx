@@ -210,7 +210,6 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                                 {
                                                     id: photoData.id,
                                                     preview: photoData.previewUrl,
-                                                    original: photoData.originalUrl ?? photoData.previewUrl,
                                                     title: photoData.name,
                                                 },
                                             ],

@@ -58,7 +58,7 @@ const Lightbox = () => {
           >
             <ImageCanvas
               thumbSrc={item.preview}
-              src={item.original}
+              src={item.preview}
               alt={item.title}
               fetchPriority="high"
             />

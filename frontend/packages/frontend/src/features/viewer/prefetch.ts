@@ -12,6 +12,5 @@ export const prefetchAround = (
     const item = items[i];
     if (!item) continue;
     prefetch(item.preview);
-    prefetch(item.original);
   }
 };
