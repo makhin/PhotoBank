@@ -3,9 +3,7 @@ import { formatDate } from "@photobank/shared/index";
 
 import { getPersonName } from "./dictionaries";
 
-type PhotoWithUrls = PhotoDto & { originalUrl?: string | null };
-
-export function formatPhotoMessage(photo: PhotoWithUrls): { caption: string; hasSpoiler: boolean; imageUrl?: string } {
+export function formatPhotoMessage(photo: PhotoDto): { caption: string; hasSpoiler: boolean; imageUrl?: string } {
     const lines: string[] = [];
 
     lines.push(`📸 <b>${photo.name}</b>`);
@@ -31,7 +29,7 @@ export function formatPhotoMessage(photo: PhotoWithUrls): { caption: string; has
         }
     }
 
-    const imageUrl = photo.previewUrl ?? photo.originalUrl ?? undefined;
+    const imageUrl = photo.previewUrl ?? undefined;
 
     return {
         caption: lines.join("\n"),

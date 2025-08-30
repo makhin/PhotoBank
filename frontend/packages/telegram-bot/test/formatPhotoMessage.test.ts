@@ -7,7 +7,7 @@ vi.mock('../src/dictionaries', () => ({
 }));
 
 describe('formatPhotoMessage', () => {
-  const basePhoto: PhotoDto & { originalUrl?: string } = {
+  const basePhoto: PhotoDto = {
     id: 1,
     name: 'Test',
     scale: 1,
@@ -36,11 +36,6 @@ describe('formatPhotoMessage', () => {
   it('uses preview url when provided', () => {
     const { imageUrl } = formatPhotoMessage({ ...basePhoto, previewUrl: 'http://example.com/preview.jpg' });
     expect(imageUrl).toBe('http://example.com/preview.jpg');
-  });
-
-  it('falls back to original url', () => {
-    const { imageUrl } = formatPhotoMessage({ ...basePhoto, originalUrl: 'http://example.com/original.jpg' });
-    expect(imageUrl).toBe('http://example.com/original.jpg');
   });
 
   it('replaces missing person with unknown label', () => {
