@@ -3,7 +3,10 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import type { FilterDto, PhotoItemDto } from '@photobank/shared/api/photobank';
 import { useTranslation } from 'react-i18next';
 
-import { useInfinitePhotos } from '@/features/photo/useInfinitePhotos';
+import {
+  useInfinitePhotos,
+  type UseInfinitePhotosResult,
+} from '@/features/photo/useInfinitePhotos';
 import { useAppDispatch, useAppSelector } from '@/app/hook';
 import { setFilter } from '@/features/photo/model/photoSlice';
 import { useViewer } from '@/features/viewer/state';
@@ -43,7 +46,7 @@ const PhotoListPage = () => {
     hasNextPage,
     isLoading,
     isFetchingNextPage,
-  } = useInfinitePhotos(filter);
+  }: UseInfinitePhotosResult = useInfinitePhotos(filter);
   const navigate = useNavigate();
   const location = useLocation();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -55,7 +58,7 @@ const PhotoListPage = () => {
   }, []);
   const viewerItems = useMemo(
     () =>
-      photos.map((p) => ({
+      photos.map((p: PhotoItemDto) => ({
         id: p.id,
         preview: p.thumbnailUrl!,
         title: p.name,
@@ -125,7 +128,9 @@ const PhotoListPage = () => {
                       tabIndex: 0,
                       onClick: (e: React.MouseEvent) => {
                         e.stopPropagation();
-                        const index = photos.findIndex((p) => p.id === photo.id);
+                        const index = photos.findIndex(
+                          (p: PhotoItemDto) => p.id === photo.id
+                        );
                         if (index >= 0) {
                           useViewer.getState().open(viewerItems, index);
                           pushPhotoId(photo.id);
@@ -134,7 +139,9 @@ const PhotoListPage = () => {
                       onKeyDown: (e: React.KeyboardEvent) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.stopPropagation();
-                          const index = photos.findIndex((p) => p.id === photo.id);
+                          const index = photos.findIndex(
+                            (p: PhotoItemDto) => p.id === photo.id
+                          );
                           if (index >= 0) {
                             useViewer.getState().open(viewerItems, index);
                             pushPhotoId(photo.id);
@@ -161,7 +168,7 @@ const PhotoListPage = () => {
   useEffect(() => {
     const id = readPhotoId(location.search);
     if (id && photos.length > 0) {
-      const index = photos.findIndex((p) => p.id === id);
+      const index = photos.findIndex((p: PhotoItemDto) => p.id === id);
       if (index >= 0) {
         useViewer.getState().open(viewerItems, index);
       }
@@ -247,13 +254,13 @@ const PhotoListPage = () => {
           <div className="lg:hidden">
             <div className="grid gap-4 sm:grid-cols-2">
               {loading
-                ? skeletonPhotos.slice(0, 6).map((p) => (
+                ? skeletonPhotos.slice(0, 6).map((p: PhotoItemDto) => (
                     <PhotoListItemSkeleton key={p.id} />
                   ))
                 : photos.length === 0 ? (
                     <EmptyState text="No photos" />
                   ) : (
-                    photos.map((photo) => (
+                    photos.map((photo: PhotoItemDto) => (
                       <PhotoListItemMobile
                         key={photo.id}
                         photo={photo}
