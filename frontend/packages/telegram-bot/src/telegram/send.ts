@@ -24,7 +24,7 @@ export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
       throttled(() =>
         ctx.api.sendPhoto(
           ctx.chat.id,
-          cached ?? (p.previewUrl ?? ''),
+          cached ?? (p.thumbnailUrl ?? ''),
           { caption: buildCaption(p) },
         ),
       ),
@@ -33,18 +33,18 @@ export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
     if (newId && newId !== cached) setFileId(p.id, newId);
     return message;
     } catch (e: unknown) {
-      // If cached file_id expired, remove and retry with preview URL
+      // If cached file_id expired, remove and retry with thumbnail URL
       const err = e as { error_code?: number; description?: string };
       const code = err.error_code;
       const desc = err.description ?? '';
     if (cached && (code === 400 || desc.includes('wrong file identifier'))) {
       delFileId(p.id);
-      logger.warn('file_id invalidated, retry with preview URL', { photoId: p.id });
+      logger.warn('file_id invalidated, retry with thumbnail URL', { photoId: p.id });
         const message = (await withTelegramRetry(() =>
           throttled(() =>
             ctx.api.sendPhoto(
               ctx.chat.id,
-              p.previewUrl ?? '',
+              p.thumbnailUrl ?? '',
               { caption: buildCaption(p) },
             ),
           ),
@@ -75,7 +75,7 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
   for (const group of groups) {
     const medias: InputMediaPhoto[] = group.map((p) => {
       const cached = getFileId(p.id);
-      const media = cached ?? (p.previewUrl ?? '');
+      const media = cached ?? (p.thumbnailUrl ?? '');
       return {
         type: 'photo',
         media,

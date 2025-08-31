@@ -8,7 +8,7 @@ const basePhoto: PhotoItemDto = {
   id: 1,
   name: 'Test',
   takenDate: '2024-01-01',
-  previewUrl: 'http://example.com/prev.jpg',
+  thumbnailUrl: 'http://example.com/thumb.jpg',
   storageName: 's',
   relativePath: 'r',
 };
@@ -27,7 +27,7 @@ describe('sendPhotoSmart', () => {
     await sendPhotoSmart(ctx, basePhoto);
     expect(ctx.api.sendPhoto).toHaveBeenCalledWith(
       ctx.chat.id,
-      basePhoto.previewUrl,
+      basePhoto.thumbnailUrl,
       { caption: expect.any(String) },
     );
     expect(ctx.api.sendPhoto).toHaveBeenCalledTimes(1);
@@ -57,7 +57,7 @@ describe('sendPhotoSmart', () => {
     expect(ctx.api.sendPhoto).toHaveBeenNthCalledWith(
       2,
       ctx.chat.id,
-      photo.previewUrl,
+      photo.thumbnailUrl,
       { caption: expect.any(String) },
     );
     expect(ctx.api.sendPhoto).toHaveBeenCalledTimes(2);
