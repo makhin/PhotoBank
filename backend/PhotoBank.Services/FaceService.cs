@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +13,6 @@ using Minio;
 using Minio.DataModel.Args;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
-using PhotoBank.Services.Models;
 using Person = PhotoBank.DbContext.Models.Person;
 using PersonGroup = Microsoft.Azure.CognitiveServices.Vision.Face.Models.PersonGroup;
 
@@ -262,11 +260,14 @@ namespace PhotoBank.Services
         {
             var faces = await _faceRepository
                 .GetAll()
-                .Include(f => f.Person)
-                .Include(f => f.Photo)
-                .AsNoTrackingWithIdentityResolution()
                 .Where(f => f.Photo.StorageId == 9 && f.IdentityStatus == IdentityStatus.ForReprocessing)
-                .ProjectTo<FaceDto>(_mapper.ConfigurationProvider)
+                .Select(f => new
+                {
+                    f.Id,
+                    f.S3Key_Image,
+                    PhotoTakenDate = f.Photo.TakenDate
+                })
+                .AsNoTracking()
                 .ToListAsync();
 
             _persons = await _personRepository.GetAll().AsNoTracking().ToListAsync();
@@ -276,7 +277,7 @@ namespace PhotoBank.Services
                 try
                 {
                     IList<DetectedFace> detectedFaces;
-                    var dbFace = new Face {Id = face.Id};
+                    var dbFace = new Face { Id = face.Id };
 
                     try
                     {

@@ -79,7 +79,6 @@ namespace PhotoBank.Services
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonFace.PersonId))
                 .ForMember(dest => dest.PersonDateOfBirth, opt => opt.MapFrom(src => src.Person.DateOfBirth))
                 .ForMember(dest => dest.PhotoTakenDate, opt => opt.MapFrom(src => src.Photo.TakenDate))
-                .ForMember(dest => dest.S3Key_Image, opt => opt.MapFrom(src => src.S3Key_Image))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
         }
     }
