@@ -192,9 +192,7 @@ export interface PhotoDto {
   /** @nullable */
   takenDate?: string | null;
   /** @nullable */
-  s3Key_Preview?: string | null;
-  /** @nullable */
-  s3Key_Thumbnail?: string | null;
+  previewUrl?: string | null;
   location?: GeoPointDto;
   /** @nullable */
   orientation?: number | null;
@@ -213,7 +211,7 @@ export interface PhotoDto {
 export interface PhotoItemDto {
   id: number;
   /** @nullable */
-  s3Key_Thumbnail?: string | null;
+  thumbnailUrl?: string | null;
   /** @minLength 1 */
   name: string;
   /** @nullable */
