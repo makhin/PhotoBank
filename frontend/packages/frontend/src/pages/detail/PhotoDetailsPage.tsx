@@ -193,7 +193,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                         <CardHeader className="pb-4 border-b border-border flex items-center justify-between">
                             <div>
                                 <CardTitle className="text-2xl font-bold">
-                                    {photoData.name}
+                                    {photoData.name ?? ''}
                                 </CardTitle>
                                 {photoData.captions && photoData.captions.length > 0 && (
                                     <p className="text-muted-foreground italic">{photoData.captions[0]}</p>
@@ -210,7 +210,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                                 {
                                                     id: photoData.id,
                                                     preview: photoData.previewUrl,
-                                                    title: photoData.name,
+                                                    title: photoData.name ?? '',
                                                 },
                                             ],
                                             0,
@@ -229,8 +229,8 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                             >
                                 <img
                                     loading="lazy"
-                                    src={photoData.previewUrl}
-                                    alt={photoData.name}
+                                    src={photoData.previewUrl ?? undefined}
+                                    alt={photoData.name ?? ''}
                                     className="max-h-full max-w-full object-contain"
                                 />
                                   {showFaceBoxes &&
@@ -258,10 +258,10 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                 <CardContent className="space-y-3">
                                     <div>
                                           <Label className="text-muted-foreground text-xs">{t('nameLabel')}</Label>
-                                          <Input value={photoData.name} readOnly className="mt-1 bg-muted"/>
+                                          <Input value={photoData.name ?? ''} readOnly className="mt-1 bg-muted"/>
                                     </div>
 
-                                    {photoData.id && (
+                                    {photoData.id != null && (
                                         <div>
                                             <Label className="text-muted-foreground text-xs">{t('idLabel')}</Label>
                                             <Input value={photoData.id.toString()} readOnly className="mt-1 bg-muted"/>
@@ -273,7 +273,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                         <Input value={formattedTakenDate} readOnly className="mt-1 bg-muted"/>
                                     </div>
 
-                                      {photoData.width && photoData.height && (
+                                      {photoData.width != null && photoData.height != null && (
                                         <div className="grid grid-cols-2 gap-2">
                                             <div>
                                                 <Label className="text-muted-foreground text-xs">{t('widthLabel')}</Label>
@@ -288,14 +288,14 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                         </div>
                                     )}
 
-                                      {photoData.scale && (
+                                      {photoData.scale != null && (
                                         <div>
                                             <Label className="text-muted-foreground text-xs">{t('scaleLabel')}</Label>
                                             <Input value={photoData.scale.toString()} readOnly className="mt-1 bg-muted"/>
                                         </div>
                                     )}
 
-                                      {photoData.orientation && (
+                                      {photoData.orientation != null && (
                                         <div>
                                             <Label className="text-muted-foreground text-xs">{t('orientationLabel')}</Label>
                                               <Input
@@ -306,7 +306,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                         </div>
                                     )}
 
-                                      {photoData.location && placeName && (
+                                      {photoData.location != null && placeName && (
                                         <div>
                                             <Label className="text-muted-foreground text-xs">{t('locationLabel')}</Label>
                                               <a
