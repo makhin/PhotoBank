@@ -21,7 +21,6 @@ namespace PhotoBank.Services
                             Longitude = src.Location.Coordinate.Y
                         }))
                 .ForMember(dest => dest.PreviewUrl, opt => opt.Ignore())
-                .ForMember(dest => dest.ThumbnailUrl, opt => opt.Ignore())
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Caption, string>().ConvertUsing(c => c.Text);
@@ -39,9 +38,6 @@ namespace PhotoBank.Services
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Photo, PhotoItemDto>()
-                .ForMember(dest => dest.S3Key_Thumbnail, opt => opt.MapFrom(src => src.S3Key_Thumbnail))
-                .ForMember(dest => dest.S3Key_Preview, opt => opt.MapFrom(src => src.S3Key_Preview))
-                .ForMember(dest => dest.PreviewUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.ThumbnailUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.PhotoTags))
                 .ForMember(dest => dest.Persons, opt => opt.MapFrom(src => src.Faces))
