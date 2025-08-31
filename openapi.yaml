@@ -1731,10 +1731,7 @@ components:
           type: string
           format: date-time
           nullable: true
-        s3Key_Preview:
-          type: string
-          nullable: true
-        s3Key_Thumbnail:
+        previewUrl:
           type: string
           nullable: true
         location:
@@ -1782,7 +1779,7 @@ components:
         id:
           type: integer
           format: int32
-        s3Key_Thumbnail:
+        thumbnailUrl:
           type: string
           nullable: true
         name:
