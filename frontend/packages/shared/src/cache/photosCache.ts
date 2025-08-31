@@ -6,8 +6,7 @@ import type { PhotoDto } from '../api/photobank';
 
 export interface CachedPhoto {
   id: number;
-  s3Key_Preview?: string | null;
-  s3Key_Thumbnail?: string | null;
+  previewUrl?: string | null;
   added: number;
 }
 
@@ -32,8 +31,8 @@ if (isBrowser()) {
 }
 
 export async function cachePhoto(photo: PhotoDto): Promise<void> {
-  const { id, s3Key_Preview, s3Key_Thumbnail } = photo;
-  const cached: CachedPhoto = { id, s3Key_Preview, s3Key_Thumbnail, added: Date.now() };
+  const { id, previewUrl } = photo;
+  const cached: CachedPhoto = { id, previewUrl, added: Date.now() };
   if (isBrowser()) {
     await db?.photos.put(cached);
   } else {
