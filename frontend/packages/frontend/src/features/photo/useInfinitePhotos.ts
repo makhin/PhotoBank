@@ -9,7 +9,13 @@ import type {
 export const useInfinitePhotos = (filter: FilterDto) => {
   const pageSize = filter.pageSize ?? 10;
 
-  const query = useInfiniteQuery<photosSearchPhotosResponse>({
+  const query = useInfiniteQuery<
+    photosSearchPhotosResponse,
+    Error,
+    photosSearchPhotosResponse,
+    [string, FilterDto],
+    number
+  >({
     queryKey: ['photos', filter],
     initialPageParam: 1,
     queryFn: ({ pageParam }) =>
