@@ -46,9 +46,9 @@
 else
 {
     <div class="wrapper">
-        @if (!string.IsNullOrEmpty(Photo.S3Key_Preview))
+        @if (!string.IsNullOrEmpty(Photo.PreviewUrl))
         {
-            <img src="@Photo.S3Key_Preview" alt="@string.Join(" ", Photo.Captions ?? Array.Empty<string>())"/>
+            <img src="@Photo.PreviewUrl" alt="@string.Join(" ", Photo.Captions ?? Array.Empty<string>())"/>
         }
         @for (var i = 0; i < (Photo.Faces?.Count ?? 0); i++)
         {

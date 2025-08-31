@@ -5,9 +5,9 @@
 @using System.Linq
 @if (Photo != null)
 {
-    @if (!string.IsNullOrEmpty(Photo.S3Key_Preview))
+    @if (!string.IsNullOrEmpty(Photo.PreviewUrl))
     {
-        <img src="@Photo.S3Key_Preview" alt="@string.Join(" ", Photo.Captions)" />
+        <img src="@Photo.PreviewUrl" alt="@string.Join(" ", Photo.Captions)" />
     }
 }
 else

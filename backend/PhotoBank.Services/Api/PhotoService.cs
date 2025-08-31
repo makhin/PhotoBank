@@ -565,16 +565,28 @@ public class PhotoService : IPhotoService
 
     private async Task FillUrlsAsync(PhotoDto dto)
     {
-        dto.PreviewUrl = await GetPresignedUrlAsync(dto.S3Key_Preview);
-        dto.ThumbnailUrl = await GetPresignedUrlAsync(dto.S3Key_Thumbnail);
+        var key = await _photoRepository.GetByCondition(p => p.Id == dto.Id)
+            .AsNoTracking()
+            .Select(p => p.S3Key_Preview)
+            .SingleOrDefaultAsync();
+
+        dto.PreviewUrl = await GetPresignedUrlAsync(key);
     }
 
     private async Task FillUrlsAsync(IEnumerable<PhotoItemDto> dtos)
     {
+        var ids = dtos.Select(d => d.Id).ToList();
+        var keyMap = await _photoRepository.GetByCondition(p => ids.Contains(p.Id))
+            .AsNoTracking()
+            .Select(p => new { p.Id, p.S3Key_Thumbnail })
+            .ToDictionaryAsync(p => p.Id);
+
         foreach (var dto in dtos)
         {
-            dto.PreviewUrl = await GetPresignedUrlAsync(dto.S3Key_Preview);
-            dto.ThumbnailUrl = await GetPresignedUrlAsync(dto.S3Key_Thumbnail);
+            if (keyMap.TryGetValue(dto.Id, out var key))
+            {
+                dto.ThumbnailUrl = await GetPresignedUrlAsync(key.S3Key_Thumbnail);
+            }
         }
     }
 
