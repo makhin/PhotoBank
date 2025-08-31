@@ -23,6 +23,9 @@ jobs:
         run: dotnet restore backend/PhotoBank.Api/PhotoBank.Api.csproj
       - name: Build backend
         run: dotnet build backend/PhotoBank.Api/PhotoBank.Api.csproj -c Debug --no-restore
+      - name: Restore dotnet tools
+        working-directory: backend/PhotoBank.Api
+        run: dotnet tool restore
       - name: Generate OpenAPI spec
         working-directory: backend/PhotoBank.Api
         run: ./generateApi.bat
