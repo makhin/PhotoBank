@@ -55,10 +55,10 @@ const PhotoListItemDesktop = ({
 
   const [ref, inView] = useInView<HTMLDivElement>();
   const prefetchHandlers = usePrefetchOnHover([
-    photo.previewUrl ?? '',
+    photo.thumbnailUrl ?? '',
   ]);
 
-  const base = photo.previewUrl;
+  const base = photo.thumbnailUrl;
   const srcSet = base
     ? [
         `${base}?w=480 480w`,
@@ -89,7 +89,7 @@ const PhotoListItemDesktop = ({
               <SmartImage
                 alt={photo.name}
                 thumbSrc={photo.thumbnailUrl ?? ''}
-                src={photo.previewUrl ?? ''}
+                src={photo.thumbnailUrl ?? ''}
                 srcSet={srcSet}
                 sizes={sizes}
                 className="w-full h-full rounded-lg"

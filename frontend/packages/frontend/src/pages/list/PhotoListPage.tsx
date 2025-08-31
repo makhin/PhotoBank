@@ -57,10 +57,7 @@ const PhotoListPage = () => {
     () =>
       photos.map((p) => ({
         id: p.id,
-        preview: p.previewUrl!,
-
-
-
+        preview: p.thumbnailUrl!,
         title: p.name,
       })),
     [photos]
