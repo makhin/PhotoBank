@@ -69,6 +69,7 @@ public class PhotoService : IPhotoService
     private readonly Lazy<Task<IReadOnlyList<PersonDto>>> _persons;
     private readonly Lazy<Task<IReadOnlyList<PersonGroupDto>>> _personGroups;
     private readonly ICurrentUser _currentUser;
+    private readonly IS3ResourceService _s3ResourceService;
     private readonly IMinioClient _minioClient;
 
     private static readonly MemoryCacheEntryOptions CacheOptions = new()
@@ -89,6 +90,7 @@ public class PhotoService : IPhotoService
         IMapper mapper,
         IMemoryCache cache,
         ICurrentUser currentUser,
+        IS3ResourceService s3ResourceService,
         IMinioClient minioClient)
     {
         _db = db;
@@ -101,6 +103,7 @@ public class PhotoService : IPhotoService
         _mapper = mapper;
         _cache = cache;
         _currentUser = currentUser;
+        _s3ResourceService = s3ResourceService;
         _minioClient = minioClient;
         _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
             GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
@@ -490,77 +493,29 @@ public class PhotoService : IPhotoService
 
     public async Task<PhotoPreviewResult?> GetPhotoPreviewAsync(int id)
     {
-        var photo = await _photoRepository.GetByCondition(p => p.Id == id)
-            .AsNoTracking()
-            .Select(p => new { p.S3Key_Preview, p.S3ETag_Preview })
-            .SingleOrDefaultAsync();
-
-        if (photo == null || string.IsNullOrEmpty(photo.S3Key_Preview))
-            return null;
-
-        try
-        {
-            var url = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
-                .WithBucket("photobank")
-                .WithObject(photo.S3Key_Preview)
-                .WithExpiry(60 * 60));
-            return new PhotoPreviewResult(photo.S3ETag_Preview, url, null);
-        }
-        catch
-        {
-            var data = await GetObjectAsync(photo.S3Key_Preview);
-            return new PhotoPreviewResult(photo.S3ETag_Preview, null, data);
-        }
+        return await _s3ResourceService.GetAsync(
+            _photoRepository,
+            id,
+            p => p.S3Key_Preview,
+            p => p.S3ETag_Preview);
     }
 
     public async Task<PhotoPreviewResult?> GetPhotoThumbnailAsync(int id)
     {
-        var photo = await _photoRepository.GetByCondition(p => p.Id == id)
-            .AsNoTracking()
-            .Select(p => new { p.S3Key_Thumbnail, p.S3ETag_Thumbnail })
-            .SingleOrDefaultAsync();
-
-        if (photo == null || string.IsNullOrEmpty(photo.S3Key_Thumbnail))
-            return null;
-
-        try
-        {
-            var url = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
-                .WithBucket("photobank")
-                .WithObject(photo.S3Key_Thumbnail)
-                .WithExpiry(60 * 60));
-            return new PhotoPreviewResult(photo.S3ETag_Thumbnail, url, null);
-        }
-        catch
-        {
-            var data = await GetObjectAsync(photo.S3Key_Thumbnail);
-            return new PhotoPreviewResult(photo.S3ETag_Thumbnail, null, data);
-        }
+        return await _s3ResourceService.GetAsync(
+            _photoRepository,
+            id,
+            p => p.S3Key_Thumbnail,
+            p => p.S3ETag_Thumbnail);
     }
 
     public async Task<PhotoPreviewResult?> GetFaceImageAsync(int id)
     {
-        var face = await _faceRepository.GetByCondition(f => f.Id == id)
-            .AsNoTracking()
-            .Select(f => new { f.S3Key_Image, f.S3ETag_Image })
-            .SingleOrDefaultAsync();
-
-        if (face == null || string.IsNullOrEmpty(face.S3Key_Image))
-            return null;
-
-        try
-        {
-            var url = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
-                .WithBucket("photobank")
-                .WithObject(face.S3Key_Image)
-                .WithExpiry(60 * 60));
-            return new PhotoPreviewResult(face.S3ETag_Image, url, null);
-        }
-        catch
-        {
-            var data = await GetObjectAsync(face.S3Key_Image);
-            return new PhotoPreviewResult(face.S3ETag_Image, null, data);
-        }
+        return await _s3ResourceService.GetAsync(
+            _faceRepository,
+            id,
+            f => f.S3Key_Image,
+            f => f.S3ETag_Image);
     }
 
     private async Task FillUrlsAsync(PhotoDto dto)

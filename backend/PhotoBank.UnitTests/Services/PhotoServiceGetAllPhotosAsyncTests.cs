@@ -59,6 +59,7 @@ namespace PhotoBank.UnitTests.Services
                 _mapper,
                 new MemoryCache(new MemoryCacheOptions()),
                 new DummyCurrentUser(),
+                new Mock<IS3ResourceService>().Object,
                 new Mock<IMinioClient>().Object);
         }
 

@@ -20,6 +20,7 @@ namespace PhotoBank.Services
             services.TryAddScoped<ICurrentUser, DummyCurrentUser>();
             services.AddSingleton<ITokenService, TokenService>();
             services.AddSingleton<IImageService, ImageService>();
+            services.AddSingleton<IS3ResourceService, S3ResourceService>();
             services.AddTransient<IFaceStorageService, FaceStorageService>();
             services.AddPhotoEvents();
             services.AddOptions<TranslatorOptions>().BindConfiguration("Translator");
