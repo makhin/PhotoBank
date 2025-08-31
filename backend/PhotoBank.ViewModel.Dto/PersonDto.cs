@@ -1,6 +1,6 @@
 ﻿namespace PhotoBank.ViewModel.Dto
 {
-    public class PersonDto
+    public class PersonDto : IHasId<int>
     {
         [System.ComponentModel.DataAnnotations.Required]
         public int Id { get; set; }

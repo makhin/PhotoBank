@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PhotoBank.ViewModel.Dto
 {
-    public class StorageDto
+    public class StorageDto : IHasId<int>
     {
         [System.ComponentModel.DataAnnotations.Required]
 

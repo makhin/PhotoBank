@@ -1,7 +1,7 @@
 ﻿
 namespace PhotoBank.ViewModel.Dto
 {
-    public class FaceDto 
+    public class FaceDto : IHasId<int>
     {
         public int Id { get; set; }
         public int? PersonId { get; set; }
