@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import { photosSearchPhotos } from '@photobank/shared/api/photobank';
 import type {
   FilterDto,
+  PhotoItemDto,
   photosSearchPhotosResponse,
 } from '@photobank/shared/api/photobank';
 
@@ -12,7 +13,7 @@ export const useInfinitePhotos = (filter: FilterDto) => {
   const query = useInfiniteQuery<
     photosSearchPhotosResponse,
     Error,
-    photosSearchPhotosResponse,
+    InfiniteData<photosSearchPhotosResponse>,
     [string, FilterDto],
     number
   >({
@@ -25,9 +26,12 @@ export const useInfinitePhotos = (filter: FilterDto) => {
         page: pageParam,
         pageSize,
       }),
-    getNextPageParam: (lastPage, pages) => {
+    getNextPageParam: (
+      lastPage: photosSearchPhotosResponse,
+      pages: photosSearchPhotosResponse[]
+    ) => {
       const total = lastPage.status === 200 ? lastPage.data.totalCount ?? 0 : 0;
-      const loaded = pages.reduce((sum, p) => {
+      const loaded = pages.reduce((sum, p: photosSearchPhotosResponse) => {
         if (p.status === 200) {
           return sum + (p.data.items?.length ?? 0);
         }
@@ -37,9 +41,9 @@ export const useInfinitePhotos = (filter: FilterDto) => {
     },
   });
 
-  const items = useMemo(
+  const items: PhotoItemDto[] = useMemo(
     () =>
-      query.data?.pages.flatMap((p) =>
+      query.data?.pages.flatMap((p: photosSearchPhotosResponse) =>
         p.status === 200 ? p.data.items ?? [] : []
       ) ?? [],
     [query.data]
