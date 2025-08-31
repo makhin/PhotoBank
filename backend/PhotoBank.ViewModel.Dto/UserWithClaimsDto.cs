@@ -2,7 +2,7 @@ using System;
 
 namespace PhotoBank.ViewModel.Dto;
 
-public class UserWithClaimsDto
+public class UserWithClaimsDto : IHasId<string>
 {
     public required string Id { get; set; } = string.Empty;
     public required string Email { get; set; } = string.Empty;

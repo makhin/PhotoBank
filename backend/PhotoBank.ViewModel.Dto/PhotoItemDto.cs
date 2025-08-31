@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace PhotoBank.ViewModel.Dto
 {
-    public class PhotoItemDto
+    public class PhotoItemDto : IHasId<int>
     {
         [System.ComponentModel.DataAnnotations.Required]
         public int Id { get; set; }

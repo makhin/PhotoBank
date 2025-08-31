@@ -2,7 +2,7 @@
 
 namespace PhotoBank.ViewModel.Dto
 {
-    public class TagDto
+    public class TagDto : IHasId<int>
     {
         [System.ComponentModel.DataAnnotations.Required]
 
