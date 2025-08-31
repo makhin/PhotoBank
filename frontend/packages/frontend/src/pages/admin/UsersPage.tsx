@@ -23,7 +23,7 @@ import { Textarea } from '@/shared/ui/textarea';
 
 const schema = z.object({
   phoneNumber: z.string().optional(),
-  telegram: z.string().optional(),
+  telegramUserId: z.string().optional(),
   claims: z.string().optional(),
 });
 
@@ -38,7 +38,9 @@ function UserEditor({ user, onSave }: UserEditorProps) {
   const { t } = useTranslation();
   const defaultValues = {
     phoneNumber: user.phoneNumber ?? '',
-    telegram: user.telegram ?? '',
+    telegramUserId: user.telegramUserId
+      ? String(user.telegramUserId)
+      : '',
     claims: user.claims?.map((c) => `${c.type}:${c.value}`).join('\n') ?? '',
   };
   const form = useForm<FormData>({ resolver: zodResolver(schema), defaultValues });
@@ -68,7 +70,7 @@ function UserEditor({ user, onSave }: UserEditorProps) {
           />
           <FormField
             control={form.control}
-            name="telegram"
+            name="telegramUserId"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t('telegramLabel')}</FormLabel>
@@ -109,7 +111,15 @@ export default function UsersPage() {
   const { t } = useTranslation();
 
   const handleSave = async (id: string, data: FormData) => {
-    await updateUser({ id, data });
+    await updateUser({
+      id,
+      data: {
+        phoneNumber: data.phoneNumber,
+        telegramUserId: data.telegramUserId
+          ? Number(data.telegramUserId)
+          : undefined,
+      },
+    });
     const claims = (data.claims ?? '')
       .split('\n')
       .filter(Boolean)
