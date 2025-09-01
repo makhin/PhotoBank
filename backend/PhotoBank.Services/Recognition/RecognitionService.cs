@@ -1,8 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Minio;
-using Minio.DataModel.Args;
+using PhotoBank.Services;
 using PhotoBank.DbContext.Models;
 using PhotoBank.InsightFaceApiClient;
 using PhotoBank.Repositories;
@@ -18,13 +17,13 @@ namespace PhotoBank.Services.Recognition
     {
         private readonly IRepository<Face> _faces;
         private readonly IInsightFaceApiClient _client;
-        private readonly IMinioClient _minioClient;
+        private readonly MinioObjectService _minioObjectService;
 
-        public RecognitionService(IRepository<Face> faces, IInsightFaceApiClient client, IMinioClient minioClient)
+        public RecognitionService(IRepository<Face> faces, IInsightFaceApiClient client, MinioObjectService minioObjectService)
         {
             _faces = faces;
             _client = client;
-            _minioClient = minioClient;
+            _minioObjectService = minioObjectService;
         }
 
         public async Task RegisterPersonsAsync()
@@ -36,7 +35,7 @@ namespace PhotoBank.Services.Recognition
                     continue;
                 }
 
-                var bytes = await GetObjectAsync(face.S3Key_Image);
+                var bytes = await _minioObjectService.GetObjectAsync(face.S3Key_Image);
                 await using var fileStream = new MemoryStream(bytes);
                 await _client.RegisterAsync(face.PersonId!.Value, fileStream).ContinueWith(task =>
                 {
@@ -45,16 +44,6 @@ namespace PhotoBank.Services.Recognition
                         : $"Recognition failed for {face.Id}: {task.Exception?.Message}");
                 });
             }
-        }
-
-        private async Task<byte[]> GetObjectAsync(string key)
-        {
-            using var ms = new MemoryStream();
-            await _minioClient.GetObjectAsync(new GetObjectArgs()
-                .WithBucket("photobank")
-                .WithObject(key)
-                .WithCallbackStream(stream => stream.CopyTo(ms)));
-            return ms.ToArray();
         }
 
     }

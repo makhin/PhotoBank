@@ -27,6 +27,7 @@ public static partial class ServiceCollectionExtensions
         });
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IFaceStorageService, FaceStorageService>();
+        services.AddScoped<MinioObjectService>();
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddPhotoEvents();
         if (configuration != null)

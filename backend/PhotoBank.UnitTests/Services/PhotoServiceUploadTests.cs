@@ -60,6 +60,7 @@ namespace PhotoBank.UnitTests.Services
                 new MemoryCache(new MemoryCacheOptions()),
                 new DummyCurrentUser(),
                 new Mock<IS3ResourceService>().Object,
+                new MinioObjectService(new Mock<IMinioClient>().Object),
                 new Mock<IMinioClient>().Object);
 
             var bytes = new byte[] { 1, 2, 3, 4 };
@@ -100,6 +101,7 @@ namespace PhotoBank.UnitTests.Services
                 new MemoryCache(new MemoryCacheOptions()),
                 new DummyCurrentUser(),
                 new Mock<IS3ResourceService>().Object,
+                new MinioObjectService(new Mock<IMinioClient>().Object),
                 new Mock<IMinioClient>().Object);
 
             var bytes = new byte[] { 1, 2, 3, 4 };
@@ -144,6 +146,7 @@ namespace PhotoBank.UnitTests.Services
                 new MemoryCache(new MemoryCacheOptions()),
                 new DummyCurrentUser(),
                 new Mock<IS3ResourceService>().Object,
+                new MinioObjectService(new Mock<IMinioClient>().Object),
                 new Mock<IMinioClient>().Object);
 
             var bytes1 = new byte[] { 1, 2, 3, 4 };

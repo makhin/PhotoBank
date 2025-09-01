@@ -70,6 +70,7 @@ public class PhotoService : IPhotoService
     private readonly Lazy<Task<IReadOnlyList<PersonGroupDto>>> _personGroups;
     private readonly ICurrentUser _currentUser;
     private readonly IS3ResourceService _s3ResourceService;
+    private readonly MinioObjectService _minioObjectService;
     private readonly IMinioClient _minioClient;
 
     private static readonly MemoryCacheEntryOptions CacheOptions = new()
@@ -91,6 +92,7 @@ public class PhotoService : IPhotoService
         IMemoryCache cache,
         ICurrentUser currentUser,
         IS3ResourceService s3ResourceService,
+        MinioObjectService minioObjectService,
         IMinioClient minioClient)
     {
         _db = db;
@@ -104,6 +106,7 @@ public class PhotoService : IPhotoService
         _cache = cache;
         _currentUser = currentUser;
         _s3ResourceService = s3ResourceService;
+        _minioObjectService = minioObjectService;
         _minioClient = minioClient;
         _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
             GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
@@ -568,15 +571,8 @@ public class PhotoService : IPhotoService
         }
     }
 
-    public async Task<byte[]> GetObjectAsync(string key)
-    {
-        using var ms = new MemoryStream();
-        await _minioClient.GetObjectAsync(new GetObjectArgs()
-            .WithBucket("photobank")
-            .WithObject(key)
-            .WithCallbackStream(stream => stream.CopyTo(ms)));
-        return ms.ToArray();
-    }
+    public Task<byte[]> GetObjectAsync(string key)
+        => _minioObjectService.GetObjectAsync(key);
 
     private static PhotoAclExtensions.PhotoAcl BuildPhotoAcl(ICurrentUser user)
     {
