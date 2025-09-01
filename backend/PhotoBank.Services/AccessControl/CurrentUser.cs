@@ -17,8 +17,20 @@ public sealed class CurrentUser : ICurrentUser
     public CurrentUser(IHttpContextAccessor http, IEffectiveAccessProvider provider)
     {
         var principal = http.HttpContext?.User ?? throw new InvalidOperationException("No HttpContext.User");
+
+        if (principal.Identity?.IsAuthenticated != true)
+        {
+            UserId = string.Empty;
+            IsAdmin = false;
+            AllowedStorageIds = new HashSet<int>();
+            AllowedPersonGroupIds = new HashSet<int>();
+            AllowedDateRanges = Array.Empty<(DateOnly From, DateOnly To)>();
+            CanSeeNsfw = false;
+            return;
+        }
+
         UserId = principal.FindFirstValue(ClaimTypes.NameIdentifier)
-                   ?? throw new InvalidOperationException("No sub/NameIdentifier claim");
+                   ?? throw new InvalidOperationException("Authenticated user missing NameIdentifier claim");
 
         var eff = provider.GetAsync(UserId, principal).GetAwaiter().GetResult();
 
