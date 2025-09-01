@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
@@ -57,6 +58,7 @@ public class GetAllPhotosIntegrationTests
                     }));
             services
                 .AddPhotobankCore(_config)
+                .AddScoped<ICurrentUser, DummyCurrentUser>()
                 .AddPhotobankApi();
 
             services.AddLogging();

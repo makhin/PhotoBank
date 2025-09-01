@@ -56,14 +56,13 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddPhotobankApi(this IServiceCollection services, IConfiguration? configuration = null)
     {
         services.AddHttpContextAccessor();
-        services.TryAddScoped<ICurrentUser, DummyCurrentUser>();
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddSingleton<ITokenService, TokenService>();
         services.AddSingleton<IImageService, ImageService>();
         services.AddSingleton<IS3ResourceService, S3ResourceService>();
         services.AddTransient<IFaceStorageService, FaceStorageService>();
         services.AddScoped<IEffectiveAccessProvider, EffectiveAccessProvider>();
-        services.AddScoped<ICurrentUser, CurrentUser>();
+        services.TryAddScoped<ICurrentUser, CurrentUser>();
         return services;
     }
 
