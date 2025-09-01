@@ -55,13 +55,11 @@ public class GetAllPhotosIntegrationTests
                         builder.UseNetTopologySuite();
                         builder.CommandTimeout(120);
                     }));
-            RegisterServicesForApi.Configure(services);
+            services
+                .AddPhotobankCore(_config)
+                .AddPhotobankApi();
 
             services.AddLogging();
-            services.AddAutoMapper(cfg =>
-            {
-                cfg.AddProfile<MappingProfile>();
-            });
             services.AddSingleton<IMinioClient>(Mock.Of<IMinioClient>());
             _provider = services.BuildServiceProvider();
             var db = _provider.GetRequiredService<PhotoBankDbContext>();
