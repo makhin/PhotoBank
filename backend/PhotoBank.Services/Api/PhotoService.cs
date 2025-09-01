@@ -175,13 +175,14 @@ public class PhotoService : IPhotoService
         if (filter.Persons?.Any() == true)
         {
             var personIds = filter.Persons.ToList();
-            query =
-                from p in query
-                join f in _db.Faces on p.Id equals f.PhotoId
+            var photoIds =
+                from f in _db.Faces
                 where f.PersonId != null && personIds.Contains(f.PersonId.Value)
-                group f by p into g
+                group f by f.PhotoId into g
                 where g.Select(x => x.PersonId).Distinct().Count() == personIds.Count
                 select g.Key;
+
+            query = query.Where(p => photoIds.Contains(p.Id));
         }
 
         if (filter.Tags?.Any() == true)
