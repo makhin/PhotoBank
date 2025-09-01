@@ -6,6 +6,7 @@ using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using PhotoBank.AccessControl;
 using PhotoBank.InsightFaceApiClient;
 using PhotoBank.Services;
@@ -23,23 +24,26 @@ public static partial class ServiceCollectionExtensions
         const string computerVision = "ComputerVision";
         const string face = "Face";
 
+        services.Configure<ComputerVisionOptions>(configuration.GetSection(computerVision));
+        services.Configure<FaceApiOptions>(configuration.GetSection(face));
+
         services.AddSingleton<IComputerVisionClient, ComputerVisionClient>(provider =>
         {
-            var key = configuration.GetSection(computerVision)["Key"];
-            var credentials = new ApiKeyServiceClientCredentials(key);
+            var options = provider.GetRequiredService<IOptions<ComputerVisionOptions>>().Value;
+            var credentials = new ApiKeyServiceClientCredentials(options.Key);
             return new ComputerVisionClient(credentials)
             {
-                Endpoint = configuration.GetSection(computerVision)["Endpoint"]
+                Endpoint = options.Endpoint
             };
         });
 
         services.AddSingleton<IFaceClient, FaceClient>(provider =>
         {
-            var key = configuration.GetSection(face)["Key"];
-            var credentials = new ApiKeyServiceClientCredentials(key);
+            var options = provider.GetRequiredService<IOptions<FaceApiOptions>>().Value;
+            var credentials = new ApiKeyServiceClientCredentials(options.Key);
             return new FaceClient(credentials)
             {
-                Endpoint = configuration.GetSection(face)["Endpoint"]
+                Endpoint = options.Endpoint
             };
         });
 
