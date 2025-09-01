@@ -4,6 +4,10 @@ services:
     env_file: .env
     environment:
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
+      - Auth__Telegram__ServiceKey=${BOT_SERVICE_KEY}
+      - Minio__Endpoint=${MINIO_ENDPOINT}
+      - Minio__AccessKey=${MINIO_ACCESS} 
+      - Minio__SecretKey=${MINIO_SECRET}
     ports:
       - "5066:5066"
 
@@ -27,6 +31,7 @@ services:
     env_file: .env
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
+      - BOT_SERVICE_KEY=${BOT_SERVICE_KEY}
       - API_EMAIL=${API_EMAIL}
       - API_PASSWORD=${API_PASSWORD}
       - VITE_API_BASE_URL=${VITE_API_BASE_URL}
