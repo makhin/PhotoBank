@@ -19,6 +19,7 @@ using Minio.DataModel.Args;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.Api.Controllers;
+using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services;
@@ -57,6 +58,7 @@ public class FaceImageEndpointTests
             }));
         services
             .AddPhotobankCore()
+            .AddScoped<ICurrentUser, DummyCurrentUser>()
             .AddPhotobankApi();
         services.AddLogging();
         services.AddSingleton<IMinioClient>(Mock.Of<IMinioClient>());
@@ -98,6 +100,7 @@ public class FaceImageEndpointTests
             }));
         services
             .AddPhotobankCore()
+            .AddScoped<ICurrentUser, DummyCurrentUser>()
             .AddPhotobankApi();
         services.AddLogging();
         services.AddSingleton(minioClient);
