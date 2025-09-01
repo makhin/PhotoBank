@@ -1,10 +1,5 @@
-using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using PhotoBank.DbContext.DbContext;
-using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using Serilog;
@@ -27,19 +22,7 @@ namespace PhotoBank.Console
                     .WriteTo.File("consoleapp.log"))
                 .ConfigureServices((context, services) =>
                 {
-                    var connectionString = context.Configuration.GetConnectionString("DefaultConnection");
-
-                    services.AddDbContext<PhotoBankDbContext>(opts =>
-                    {
-                        opts.UseSqlServer(connectionString, builder =>
-                        {
-                            builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
-                            builder.UseNetTopologySuite();
-                            builder.CommandTimeout(120);
-                        });
-                        opts.EnableSensitiveDataLogging();
-                        opts.EnableDetailedErrors();
-                    });
+                    services.AddPhotobankDbContext(context.Configuration, usePool: false);
 
                     services
                         .AddPhotobankCore(context.Configuration)

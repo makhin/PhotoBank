@@ -1,12 +1,8 @@
-using System.Reflection;
-using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
-using PhotoBank.AccessControl;
 using Microsoft.AspNetCore.Identity;
 using PhotoBank.Services;
 using PhotoBank.Services.FaceRecognition;
@@ -44,10 +40,6 @@ namespace PhotoBank.Api
             builder.WebHost.UseUrls("http://0.0.0.0:5066");
 
             // Add services to the container.
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-                                   throw new InvalidOperationException(
-                                       "Connection string 'DefaultConnection' not found.");
-
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowAll", policy =>
@@ -60,34 +52,7 @@ namespace PhotoBank.Api
                 });
             });
 
-            builder.Services.AddSingleton<DbTimingInterceptor>();
-            builder.Services.AddDbContextPool<PhotoBankDbContext>((sp, options) =>
-            {
-                options.AddInterceptors(sp.GetRequiredService<DbTimingInterceptor>());
-                options
-                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-                    .EnableDetailedErrors(builder.Environment.IsDevelopment())
-                    .EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
-
-                options.UseLoggerFactory(LoggerFactory.Create(loggingBuilder => loggingBuilder.AddDebug()));
-
-                options.UseSqlServer(
-                    connectionString,
-                    sql =>
-                    {
-                        sql.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName().Name);
-                        sql.UseNetTopologySuite();
-                        sql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null);
-                        sql.CommandTimeout(60);
-                        sql.MaxBatchSize(128);
-                        sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                    });
-            });
-
-            builder.Services.AddDbContext<AccessControlDbContext>(opt =>
-            {
-                opt.UseSqlServer(connectionString);
-            });
+            builder.Services.AddPhotobankDbContext(builder.Configuration, usePool: true);
 
             builder.Services.AddDefaultIdentity<ApplicationUser>()
                 .AddRoles<IdentityRole>()
