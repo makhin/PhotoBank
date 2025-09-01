@@ -37,7 +37,7 @@ public sealed class ThumbnailEnricher : IEnricher
 
         using var srcStream = new MemoryStream(source.PreviewImage.ToByteArray());
 
-        using var thumbStream = await RetryAsync(
+        using var thumbStream = await RetryHelper.RetryAsync(
             action: async () =>
             {
                 srcStream.Position = 0;
@@ -46,43 +46,22 @@ public sealed class ThumbnailEnricher : IEnricher
                     .ConfigureAwait(false);
             },
             attempts: 3,
-            initialDelayMs: 300).ConfigureAwait(false);
+            delay: TimeSpan.FromMilliseconds(300),
+            shouldRetry: ex => ex switch
+            {
+                ComputerVisionErrorResponseException { Response: { StatusCode: var code } }
+                    when code is HttpStatusCode.TooManyRequests
+                     or HttpStatusCode.BadGateway
+                     or HttpStatusCode.ServiceUnavailable
+                     or HttpStatusCode.GatewayTimeout => true,
+                HttpRequestException => true,
+                _ => false
+            }).ConfigureAwait(false);
 
         await using var ms = new MemoryStream(capacity: 32 * 1024);
         await thumbStream.CopyToAsync(ms).ConfigureAwait(false);
         source.ThumbnailImage = ms.ToArray();
     }
 
-    private static async Task<T> RetryAsync<T>(
-        Func<Task<T>> action,
-        int attempts,
-        int initialDelayMs)
-    {
-        var delay = initialDelayMs;
-
-        for (var tryNo = 1; ; tryNo++)
-        {
-            try
-            {
-                return await action().ConfigureAwait(false);
-            }
-            catch (ComputerVisionErrorResponseException ex)
-                when (IsRetryable(ex.Response?.StatusCode) && tryNo < attempts)
-            {
-            }
-            catch (HttpRequestException)
-                when (tryNo < attempts)
-            {
-            }
-
-            await Task.Delay(delay).ConfigureAwait(false);
-            delay = Math.Min(delay * 2, 4000);
-        }
-
-        static bool IsRetryable(HttpStatusCode? code) =>
-            code is HttpStatusCode.TooManyRequests
-             or HttpStatusCode.BadGateway
-             or HttpStatusCode.ServiceUnavailable
-             or HttpStatusCode.GatewayTimeout;
-    }
 }
+

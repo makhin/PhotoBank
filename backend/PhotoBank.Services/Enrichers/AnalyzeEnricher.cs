@@ -57,7 +57,7 @@ public sealed class AnalyzeEnricher : IEnricher
         using var stream = new MemoryStream(source.PreviewImage.ToByteArray());
 
         // 5) Простая политика ретраев (на 429/5xx/сетевые)
-        source.ImageAnalysis = await RetryAsync(
+        source.ImageAnalysis = await RetryHelper.RetryAsync(
             action: async () =>
                 await _client
                     .AnalyzeImageInStreamAsync(
@@ -68,39 +68,16 @@ public sealed class AnalyzeEnricher : IEnricher
                         modelVersion: "latest")
                     .ConfigureAwait(false),
             attempts: 3,
-            initialDelayMs: 300).ConfigureAwait(false);
-    }
-
-    private static async Task<T> RetryAsync<T>(
-        Func<Task<T>> action,
-        int attempts,
-        int initialDelayMs)
-    {
-        var delay = initialDelayMs;
-
-        for (var tryNo = 1; ; tryNo++)
-        {
-            try
+            delay: TimeSpan.FromMilliseconds(300),
+            shouldRetry: ex => ex switch
             {
-                return await action().ConfigureAwait(false);
-            }
-            catch (ComputerVisionErrorResponseException ex) when (IsRetryable(ex.Response?.StatusCode))
-            {
-                if (tryNo >= attempts) throw;
-            }
-            catch (HttpRequestException) when (tryNo < attempts)
-            {
-                // сетевые/транзиентные
-            }
-
-            await Task.Delay(delay).ConfigureAwait(false);
-            delay = Math.Min(delay * 2, 4000); // экспоненциально до 4с
-        }
-
-        static bool IsRetryable(HttpStatusCode? code) =>
-            code is HttpStatusCode.TooManyRequests // 429
-             or HttpStatusCode.BadGateway          // 502
-             or HttpStatusCode.ServiceUnavailable  // 503
-             or HttpStatusCode.GatewayTimeout;     // 504
+                ComputerVisionErrorResponseException { Response: { StatusCode: var code } }
+                    when code is HttpStatusCode.TooManyRequests
+                     or HttpStatusCode.BadGateway
+                     or HttpStatusCode.ServiceUnavailable
+                     or HttpStatusCode.GatewayTimeout => true,
+                HttpRequestException => true,
+                _ => false
+            }).ConfigureAwait(false);
     }
 }
