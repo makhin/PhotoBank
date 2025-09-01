@@ -41,10 +41,11 @@ namespace PhotoBank.Console
                         opts.EnableDetailedErrors();
                     });
 
-                    RegisterServicesForConsole.Configure(services, context.Configuration);
+                    services
+                        .AddPhotobankCore(context.Configuration)
+                        .AddPhotobankConsole(context.Configuration);
 
                     services.AddSingleton<App>();
-                    services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
                 })
                 .Build();
 

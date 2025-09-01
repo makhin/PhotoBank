@@ -165,7 +165,9 @@ namespace PhotoBank.Api
                 c.DocumentFilter<ServersDocumentFilter>();
             });
 
-            RegisterServicesForApi.Configure(builder.Services);
+            builder.Services
+                .AddPhotobankCore(builder.Configuration)
+                .AddPhotobankApi();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

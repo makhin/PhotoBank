@@ -55,9 +55,10 @@ public class FaceImageEndpointTests
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.UseNetTopologySuite();
             }));
-        RegisterServicesForApi.Configure(services);
+        services
+            .AddPhotobankCore()
+            .AddPhotobankApi();
         services.AddLogging();
-        services.AddAutoMapper(cfg => { cfg.AddProfile<MappingProfile>(); });
         services.AddSingleton<IMinioClient>(Mock.Of<IMinioClient>());
         await using var provider = services.BuildServiceProvider();
         var db = provider.GetRequiredService<PhotoBankDbContext>();
@@ -95,9 +96,10 @@ public class FaceImageEndpointTests
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.UseNetTopologySuite();
             }));
-        RegisterServicesForApi.Configure(services);
+        services
+            .AddPhotobankCore()
+            .AddPhotobankApi();
         services.AddLogging();
-        services.AddAutoMapper(cfg => { cfg.AddProfile<MappingProfile>(); });
         services.AddSingleton(minioClient);
         return services.BuildServiceProvider();
     }
