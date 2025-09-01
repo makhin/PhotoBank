@@ -11,6 +11,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.IdentityModel.Tokens;
 using Minio;
 using PhotoBank.AccessControl;
@@ -63,7 +65,11 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddPhotobankApi(this IServiceCollection services, IConfiguration? configuration = null)
+    public static IServiceCollection AddPhotobankApi(
+        this IServiceCollection services,
+        IConfiguration? configuration = null,
+        bool configureCors = false,
+        Action<SwaggerGenOptions>? configureSwagger = null)
     {
         services.AddHttpContextAccessor();
         services.AddScoped<IPhotoService, PhotoService>();
@@ -96,6 +102,42 @@ public static class ServiceCollectionExtensions
                     ValidAudience = jwtSection["Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!))
                 };
+            });
+        }
+
+        if (configureCors)
+        {
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy
+                        .SetIsOriginAllowed(_ => true)
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials();
+                });
+            });
+        }
+
+        if (configureSwagger != null)
+        {
+            services.AddEndpointsApiExplorer();
+            services.AddSwaggerGen(options =>
+            {
+                options.CustomOperationIds(apiDesc =>
+                {
+                    if (apiDesc.ActionDescriptor is ControllerActionDescriptor descriptor)
+                    {
+                        var controllerName = descriptor.ControllerName;
+                        var actionName = descriptor.ActionName;
+                        return $"{controllerName}_{actionName}";
+                    }
+
+                    return null;
+                });
+
+                configureSwagger(options);
             });
         }
 

@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Microsoft.AspNetCore.Mvc.Controllers;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.Services;
 using Microsoft.AspNetCore.Diagnostics;
@@ -34,18 +32,6 @@ namespace PhotoBank.Api
             builder.WebHost.UseUrls("http://0.0.0.0:5066");
 
             // Add services to the container.
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAll", policy =>
-                {
-                    policy
-                        .SetIsOriginAllowed(_ => true)
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials();
-                });
-            });
-
             builder.Services.AddPhotobankDbContext(builder.Configuration, usePool: true);
 
             builder.Services.Configure<RouteOptions>(options =>
@@ -75,27 +61,12 @@ namespace PhotoBank.Api
                     new BadRequestObjectResult(new ValidationProblemDetails(context.ModelState));
             });
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.CustomOperationIds(apiDesc =>
-                {
-                    if (apiDesc.ActionDescriptor is ControllerActionDescriptor descriptor)
-                    {
-                        var controllerName = descriptor.ControllerName;
-                        var actionName = descriptor.ActionName;
-                        return $"{controllerName}_{actionName}";
-                    }
-
-                    return null;
-                });
-                c.DocumentFilter<ServersDocumentFilter>();
-            });
-
             builder.Services
                 .AddPhotobankCore(builder.Configuration)
-                .AddPhotobankApi(builder.Configuration);
+                .AddPhotobankApi(builder.Configuration, configureCors: true, configureSwagger: c =>
+                {
+                    c.DocumentFilter<ServersDocumentFilter>();
+                });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
