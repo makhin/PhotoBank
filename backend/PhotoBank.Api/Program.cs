@@ -2,13 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using PhotoBank.DbContext.DbContext;
-using PhotoBank.DbContext.Models;
-using Microsoft.AspNetCore.Identity;
 using PhotoBank.Services;
-using PhotoBank.Services.FaceRecognition;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -53,37 +47,6 @@ namespace PhotoBank.Api
             });
 
             builder.Services.AddPhotobankDbContext(builder.Configuration, usePool: true);
-
-            builder.Services.AddDefaultIdentity<ApplicationUser>()
-                .AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<PhotoBankDbContext>();
-
-            var jwtSection = builder.Configuration.GetSection("Jwt");
-            builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSection["Issuer"],
-                    ValidAudience = jwtSection["Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!))
-                };
-            });
-
-
-            builder.Services.AddAuthorization(options =>
-            {
-                options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
-            });
 
             builder.Services.Configure<RouteOptions>(options =>
             {
@@ -132,7 +95,7 @@ namespace PhotoBank.Api
 
             builder.Services
                 .AddPhotobankCore(builder.Configuration)
-                .AddPhotobankApi();
+                .AddPhotobankApi(builder.Configuration);
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
