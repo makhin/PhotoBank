@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PhotoBank.Services\PhotoBank.Services.csproj" />
+    <ProjectReference Include="..\PhotoBank.DependencyInjection\PhotoBank.DependencyInjection.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using PhotoBank.Services;
+using PhotoBank.DependencyInjection;
 using PhotoBank.Services.Api;
 using Serilog;
 

@@ -27,6 +27,7 @@
     <ProjectReference Include="..\PhotoBank.DbContext\PhotoBank.DbContext.csproj" />
     <ProjectReference Include="..\PhotoBank.Repositories\PhotoBank.Repositories.csproj" />
     <ProjectReference Include="..\PhotoBank.Services\PhotoBank.Services.csproj" />
+    <ProjectReference Include="..\PhotoBank.DependencyInjection\PhotoBank.DependencyInjection.csproj" />
     <ProjectReference Include="..\PhotoBank.Api\PhotoBank.Api.csproj" />
   </ItemGroup>
 </Project>

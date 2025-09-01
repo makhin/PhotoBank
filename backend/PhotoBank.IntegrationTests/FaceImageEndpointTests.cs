@@ -22,7 +22,7 @@ using PhotoBank.Api.Controllers;
 using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Services;
+using PhotoBank.DependencyInjection;
 using PhotoBank.Services.Api;
 using Respawn;
 
