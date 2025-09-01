@@ -26,11 +26,9 @@ public static partial class ServiceCollectionExtensions
         Action<SwaggerGenOptions>? configureSwagger = null)
     {
         services.AddHttpContextAccessor();
-        services.AddScoped<IPhotoService, PhotoService>();
         services.AddSingleton<ITokenService, TokenService>();
         services.AddSingleton<IImageService, ImageService>();
         services.AddSingleton<IS3ResourceService, S3ResourceService>();
-        services.AddTransient<IFaceStorageService, FaceStorageService>();
         services.AddScoped<IEffectiveAccessProvider, EffectiveAccessProvider>();
         services.TryAddScoped<ICurrentUser, CurrentUser>();
         services.AddDefaultIdentity<ApplicationUser>()

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Minio;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
+using PhotoBank.Services.Api;
 using PhotoBank.Services.Search;
 using PhotoBank.Services.Translator;
 using Polly;
@@ -20,6 +21,8 @@ public static partial class ServiceCollectionExtensions
             .WithCredentials("", "")
             .Build());
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddScoped<IFaceStorageService, FaceStorageService>();
+        services.AddScoped<IPhotoService, PhotoService>();
         services.AddPhotoEvents();
         if (configuration != null)
         {
