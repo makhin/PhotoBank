@@ -8,9 +8,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
 using Minio;
 using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
+using PhotoBank.DbContext.Models;
 using PhotoBank.InsightFaceApiClient;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Api;
@@ -24,6 +29,7 @@ using PhotoBank.Services.Translator;
 using Polly;
 using System;
 using System.Linq;
+using System.Text;
 using ApiKeyServiceClientCredentials = Microsoft.Azure.CognitiveServices.Vision.ComputerVision.ApiKeyServiceClientCredentials;
 
 namespace PhotoBank.Services;
@@ -67,6 +73,39 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IFaceStorageService, FaceStorageService>();
         services.AddScoped<IEffectiveAccessProvider, EffectiveAccessProvider>();
         services.TryAddScoped<ICurrentUser, CurrentUser>();
+        services.AddDefaultIdentity<ApplicationUser>()
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<PhotoBankDbContext>();
+
+        if (configuration != null)
+        {
+            var jwtSection = configuration.GetSection("Jwt");
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtSection["Issuer"],
+                    ValidAudience = jwtSection["Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!))
+                };
+            });
+        }
+
+        services.AddAuthorization(options =>
+        {
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build();
+        });
+
         return services;
     }
 
