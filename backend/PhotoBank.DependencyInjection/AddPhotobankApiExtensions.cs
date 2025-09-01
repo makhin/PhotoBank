@@ -21,9 +21,7 @@ public static partial class ServiceCollectionExtensions
 {
     public static IServiceCollection AddPhotobankApi(
         this IServiceCollection services,
-        IConfiguration? configuration = null,
-        bool configureCors = false,
-        Action<SwaggerGenOptions>? configureSwagger = null)
+        IConfiguration configuration)
     {
         services.AddHttpContextAccessor();
         services.AddSingleton<ITokenService, TokenService>();
@@ -35,69 +33,72 @@ public static partial class ServiceCollectionExtensions
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<PhotoBankDbContext>();
 
-        if (configuration != null)
+        var jwtSection = configuration.GetSection("Jwt");
+        services.AddAuthentication(options =>
         {
-            var jwtSection = configuration.GetSection("Jwt");
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSection["Issuer"],
-                    ValidAudience = jwtSection["Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!))
-                };
-            });
-        }
-
-        if (configureCors)
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
         {
-            services.AddCors(options =>
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                options.AddPolicy("AllowAll", policy =>
-                {
-                    policy
-                        .SetIsOriginAllowed(_ => true)
-                        .AllowAnyMethod()
-                        .AllowAnyHeader()
-                        .AllowCredentials();
-                });
-            });
-        }
-
-        if (configureSwagger != null)
-        {
-            services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen(options =>
-            {
-                options.CustomOperationIds(apiDesc =>
-                {
-                    if (apiDesc.ActionDescriptor is ControllerActionDescriptor descriptor)
-                    {
-                        var controllerName = descriptor.ControllerName;
-                        var actionName = descriptor.ActionName;
-                        return $"{controllerName}_{actionName}";
-                    }
-
-                    return null;
-                });
-
-                configureSwagger(options);
-            });
-        }
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtSection["Issuer"],
+                ValidAudience = jwtSection["Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!))
+            };
+        });
 
         services.AddAuthorization(options =>
         {
             options.FallbackPolicy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
                 .Build();
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddPhotobankCors(this IServiceCollection services)
+    {
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", policy =>
+            {
+                policy
+                    .SetIsOriginAllowed(_ => true)
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials();
+            });
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddPhotobankSwagger(
+        this IServiceCollection services,
+        Action<SwaggerGenOptions>? configure = null)
+    {
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(options =>
+        {
+            options.CustomOperationIds(apiDesc =>
+            {
+                if (apiDesc.ActionDescriptor is ControllerActionDescriptor descriptor)
+                {
+                    var controllerName = descriptor.ControllerName;
+                    var actionName = descriptor.ActionName;
+                    return $"{controllerName}_{actionName}";
+                }
+
+                return null;
+            });
+
+            configure?.Invoke(options);
         });
 
         return services;
