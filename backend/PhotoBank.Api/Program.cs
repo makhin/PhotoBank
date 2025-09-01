@@ -3,14 +3,9 @@ using PhotoBank.DbContext.DbContext;
 using PhotoBank.DependencyInjection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Serilog;
 using HealthChecks.UI.Client;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using System.Text.Json.Serialization;
 using PhotoBank.Api.Swagger;
-using PhotoBank.Api.Validators;
 
 namespace PhotoBank.Api
 {
@@ -34,32 +29,7 @@ namespace PhotoBank.Api
             // Add services to the container.
             builder.Services.AddPhotobankDbContext(builder.Configuration, usePool: true);
 
-            builder.Services.Configure<RouteOptions>(options =>
-            {
-                options.LowercaseUrls = true;
-            });
-
-            builder.Services.AddProblemDetails();
-
-            builder.Services.AddHealthChecks()
-                .AddSqlServer(
-                    connectionString: builder.Configuration.GetConnectionString("DefaultConnection")!,
-                    name: "sql",
-                    tags: new[] { "ready" },
-                    failureStatus: HealthStatus.Unhealthy);
-            builder.Services.AddControllers()
-                .AddJsonOptions(options =>
-                {
-                    options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict;
-                });
-
-            builder.Services.AddFluentValidationAutoValidation();
-            builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestDtoValidator>();
-            builder.Services.Configure<ApiBehaviorOptions>(options =>
-            {
-                options.InvalidModelStateResponseFactory = context =>
-                    new BadRequestObjectResult(new ValidationProblemDetails(context.ModelState));
-            });
+            builder.Services.AddPhotobankMvc(builder.Configuration);
 
             builder.Services
                 .AddPhotobankCore(builder.Configuration)
