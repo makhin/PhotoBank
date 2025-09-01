@@ -25,6 +25,8 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.DependencyInjection;
 using PhotoBank.Services.Api;
 using Respawn;
+using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
 
 namespace PhotoBank.IntegrationTests;
 
@@ -56,10 +58,19 @@ public class FaceImageEndpointTests
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.UseNetTopologySuite();
             }));
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Issuer"] = "issuer",
+                ["Jwt:Audience"] = "audience",
+                ["Jwt:Key"] = "secret"
+            })
+            .Build();
         services
-            .AddPhotobankCore()
+            .AddPhotobankCore(config)
             .AddScoped<ICurrentUser, DummyCurrentUser>()
-            .AddPhotobankApi();
+            .AddPhotobankApi(config)
+            .AddPhotobankCors();
         services.AddLogging();
         services.AddSingleton<IMinioClient>(Mock.Of<IMinioClient>());
         await using var provider = services.BuildServiceProvider();
@@ -98,10 +109,19 @@ public class FaceImageEndpointTests
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.UseNetTopologySuite();
             }));
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Issuer"] = "issuer",
+                ["Jwt:Audience"] = "audience",
+                ["Jwt:Key"] = "secret"
+            })
+            .Build();
         services
-            .AddPhotobankCore()
+            .AddPhotobankCore(config)
             .AddScoped<ICurrentUser, DummyCurrentUser>()
-            .AddPhotobankApi();
+            .AddPhotobankApi(config)
+            .AddPhotobankCors();
         services.AddLogging();
         services.AddSingleton(minioClient);
         return services.BuildServiceProvider();

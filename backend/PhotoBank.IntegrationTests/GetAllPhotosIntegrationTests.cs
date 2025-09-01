@@ -12,6 +12,7 @@ using Minio;
 using Moq;
 using System.Diagnostics;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PhotoBank.IntegrationTests;
@@ -38,6 +39,12 @@ public class GetAllPhotosIntegrationTests
         _config = new ConfigurationBuilder()
             .SetBasePath(TestContext.CurrentContext.TestDirectory)
             .AddJsonFile("appsettings.json")
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Issuer"] = "issuer",
+                ["Jwt:Audience"] = "audience",
+                ["Jwt:Key"] = "secret"
+            })
             .Build();
     }
 
@@ -59,7 +66,8 @@ public class GetAllPhotosIntegrationTests
             services
                 .AddPhotobankCore(_config)
                 .AddScoped<ICurrentUser, DummyCurrentUser>()
-                .AddPhotobankApi();
+                .AddPhotobankApi(_config)
+                .AddPhotobankCors();
 
             services.AddLogging();
             services.AddSingleton<IMinioClient>(Mock.Of<IMinioClient>());

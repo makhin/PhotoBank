@@ -63,7 +63,9 @@ namespace PhotoBank.Api
 
             builder.Services
                 .AddPhotobankCore(builder.Configuration)
-                .AddPhotobankApi(builder.Configuration, configureCors: true, configureSwagger: c =>
+                .AddPhotobankApi(builder.Configuration)
+                .AddPhotobankCors()
+                .AddPhotobankSwagger(c =>
                 {
                     c.DocumentFilter<ServersDocumentFilter>();
                 });
