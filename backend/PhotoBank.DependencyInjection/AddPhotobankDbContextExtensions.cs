@@ -43,6 +43,13 @@ public static partial class ServiceCollectionExtensions
                         sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     });
             });
+
+            services.AddScoped<PhotoBankDbContext>(sp =>
+            {
+                var context = sp.GetRequiredService<IDbContextFactory<PhotoBankDbContext>>().CreateDbContext();
+                context.ConfigureUser(sp.GetRequiredService<ICurrentUser>());
+                return context;
+            });
         }
         else
         {
@@ -62,6 +69,14 @@ public static partial class ServiceCollectionExtensions
                         sql.UseNetTopologySuite();
                         sql.CommandTimeout(120);
                     });
+            });
+
+            services.AddScoped<PhotoBankDbContext>(sp =>
+            {
+                var options = sp.GetRequiredService<DbContextOptions<PhotoBankDbContext>>();
+                var context = new PhotoBankDbContext(options);
+                context.ConfigureUser(sp.GetRequiredService<ICurrentUser>());
+                return context;
             });
         }
 
