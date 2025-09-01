@@ -1,22 +1,23 @@
-﻿using System;
-using System.Linq;
-using Amazon.Rekognition;
+﻿using Amazon.Rekognition;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Minio;
+using PhotoBank.AccessControl;
 using PhotoBank.InsightFaceApiClient;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichers.Services;
+using PhotoBank.Services.FaceRecognition;
 using PhotoBank.Services.Recognition;
-using PhotoBank.Services.Translator;
 using PhotoBank.Services.Search;
-using PhotoBank.AccessControl;
-using Minio;
-using ApiKeyServiceClientCredentials = Microsoft.Azure.CognitiveServices.Vision.ComputerVision.ApiKeyServiceClientCredentials;
+using PhotoBank.Services.Translator;
 using Polly;
+using System;
+using System.Linq;
+using ApiKeyServiceClientCredentials = Microsoft.Azure.CognitiveServices.Vision.ComputerVision.ApiKeyServiceClientCredentials;
 
 namespace PhotoBank.Services
 {
@@ -86,6 +87,10 @@ namespace PhotoBank.Services
             services.AddTransient<IEnricher, FaceEnricherAws>();
             services.AddTransient<IImageMetadataReaderWrapper, ImageMetadataReaderWrapper>();
 
+            services.AddFaceRecognition(configuration);
+            services.AddScoped<UnifiedFaceService>();
+            services.AddScoped<IFaceService, FaceService>();
+
             services.AddSingleton<IInsightFaceApiClient, InsightFaceApiClient.InsightFaceApiClient>();
             services.AddTransient<IRecognitionService, RecognitionService>();
 
@@ -109,6 +114,11 @@ namespace PhotoBank.Services
                             return (IEnricher)provider.GetRequiredService(type);
                         });
                 };
+            });
+
+            services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile<MappingProfile>();
             });
         }
     }

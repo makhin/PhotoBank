@@ -14,6 +14,7 @@ namespace PhotoBank.Services
     {
         public static void Configure(IServiceCollection services)
         {
+            services.AddHttpContextAccessor();
             services.AddMemoryCache();
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IPhotoService, PhotoService>();
@@ -27,6 +28,12 @@ namespace PhotoBank.Services
             services.AddHttpClient<ITranslatorService, TranslatorService>()
                 .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(100 * attempt)));
             services.AddScoped<ISearchFilterNormalizer, SearchFilterNormalizer>();
+            services.AddScoped<IEffectiveAccessProvider, EffectiveAccessProvider>();
+            services.AddScoped<ICurrentUser, CurrentUser>();
+            services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile<MappingProfile>();
+            });
         }
     }
 }

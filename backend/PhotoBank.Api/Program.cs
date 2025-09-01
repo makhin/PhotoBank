@@ -60,9 +60,6 @@ namespace PhotoBank.Api
                 });
             });
 
-            builder.Services.AddHttpContextAccessor();
-            builder.Services.AddMemoryCache();
-
             builder.Services.AddSingleton<DbTimingInterceptor>();
             builder.Services.AddDbContextPool<PhotoBankDbContext>((sp, options) =>
             {
@@ -168,19 +165,7 @@ namespace PhotoBank.Api
                 c.DocumentFilter<ServersDocumentFilter>();
             });
 
-            builder.Services.AddFaceRecognition(builder.Configuration);
-            builder.Services.AddScoped<UnifiedFaceService>();
-            builder.Services.AddScoped<IFaceService, FaceService>();
-
             RegisterServicesForApi.Configure(builder.Services);
-            builder.Services.AddAutoMapper(cfg =>
-            {
-                cfg.AddProfile<MappingProfile>();
-            });
-
-            builder.Services.AddScoped<IEffectiveAccessProvider, EffectiveAccessProvider>();
-            builder.Services.AddScoped<ICurrentUser, CurrentUser>();
-
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
