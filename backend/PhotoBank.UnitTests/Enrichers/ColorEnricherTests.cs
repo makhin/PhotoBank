@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
@@ -9,42 +10,16 @@ using PhotoBank.Services.Models;
 namespace PhotoBank.UnitTests.Enrichers
 {
     [TestFixture]
-    public class ColorEnricherTests
+    public class ColorEnricherTests : EnricherTestsBase<ColorEnricher>
     {
-        private ColorEnricher _colorEnricher;
-
-        [SetUp]
-        public void Setup()
-        {
-            _colorEnricher = new ColorEnricher();
-        }
-
-        [Test]
-        public void EnricherType_ShouldReturnColor()
-        {
-            // Act
-            var result = _colorEnricher.EnricherType;
-
-            // Assert
-            result.Should().Be(EnricherType.Color);
-        }
-
-        [Test]
-        public void Dependencies_ShouldReturnAnalyzeEnricher()
-        {
-            // Act
-            var result = _colorEnricher.Dependencies;
-
-            // Assert
-            result.Should().ContainSingle()
-                .And.Contain(typeof(AnalyzeEnricher));
-        }
+        protected override EnricherType ExpectedEnricherType => EnricherType.Color;
+        protected override Type[] ExpectedDependencies => new[] { typeof(AnalyzeEnricher) };
 
         [TestCase(true, "FF5733", "Black", "White", new[] { "Black", "White", "Gray" })]
         [TestCase(false, "00FF00", "Red", "Blue", new[] { "Red", "Blue", "Green" })]
-        public async Task EnrichAsync_ShouldSetColorProperties(bool isBWImg, string accentColor, string dominantColorBackground, string dominantColorForeground, string[] dominantColors)
+        public async Task EnrichAsync_ShouldSetColorProperties(bool isBWImg, string accentColor, string dominantColorBackground,
+            string dominantColorForeground, string[] dominantColors)
         {
-            // Arrange
             var photo = new Photo();
             var sourceData = new SourceDataDto
             {
@@ -61,10 +36,8 @@ namespace PhotoBank.UnitTests.Enrichers
                 }
             };
 
-            // Act
-            await _colorEnricher.EnrichAsync(photo, sourceData);
+            await _enricher.EnrichAsync(photo, sourceData);
 
-            // Assert
             photo.IsBW.Should().Be(isBWImg);
             photo.AccentColor.Should().Be(accentColor);
             photo.DominantColorBackground.Should().Be(dominantColorBackground);
@@ -73,4 +46,3 @@ namespace PhotoBank.UnitTests.Enrichers
         }
     }
 }
-
