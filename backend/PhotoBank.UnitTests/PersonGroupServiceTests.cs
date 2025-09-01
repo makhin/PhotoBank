@@ -53,6 +53,7 @@ public class PersonGroupServiceTests
             _provider.GetRequiredService<IMemoryCache>(),
             _provider.GetRequiredService<ICurrentUser>(),
             new Mock<IS3ResourceService>().Object,
+            new MinioObjectService(new Mock<IMinioClient>().Object),
             new Mock<IMinioClient>().Object
         );
     }
