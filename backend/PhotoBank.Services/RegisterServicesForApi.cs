@@ -1,6 +1,7 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Minio;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Api;
 using PhotoBank.AccessControl;
@@ -16,6 +17,10 @@ namespace PhotoBank.Services
         {
             services.AddHttpContextAccessor();
             services.AddMemoryCache();
+            services.AddSingleton<IMinioClient>(_ => new MinioClient()
+                .WithEndpoint("localhost")
+                .WithCredentials("", "")
+                .Build());
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IPhotoService, PhotoService>();
             services.TryAddScoped<ICurrentUser, DummyCurrentUser>();
