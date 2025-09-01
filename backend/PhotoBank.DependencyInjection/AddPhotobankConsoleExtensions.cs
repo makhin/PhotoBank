@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using PhotoBank.AccessControl;
 using PhotoBank.InsightFaceApiClient;
 using PhotoBank.Services;
-using PhotoBank.Services.Api;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.FaceRecognition;
@@ -49,9 +48,7 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<IFaceService, FaceService>();
         services.AddTransient<IFacePreviewService, FacePreviewService>();
         services.AddTransient<IFaceServiceAws, FaceServiceAws>();
-        services.AddTransient<IFaceStorageService, FaceStorageService>();
         services.AddTransient<IPhotoProcessor, PhotoProcessor>();
-        services.AddTransient<IPhotoService, PhotoService>();
         services.AddSingleton<ICurrentUser, DummyCurrentUser>();
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<ISyncService, SyncService>();
