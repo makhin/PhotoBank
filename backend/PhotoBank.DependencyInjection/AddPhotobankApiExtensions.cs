@@ -1,13 +1,20 @@
 using System;
 using System.Text;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
@@ -74,6 +81,47 @@ public static partial class ServiceCollectionExtensions
                     .AllowAnyHeader()
                     .AllowCredentials();
             });
+        });
+
+        return services;
+    }
+
+    public static IServiceCollection AddPhotobankMvc(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<RouteOptions>(options =>
+        {
+            options.LowercaseUrls = true;
+        });
+
+        services.AddProblemDetails();
+
+        services.AddHealthChecks()
+            .AddSqlServer(
+                connectionString: configuration.GetConnectionString("DefaultConnection")!,
+                name: "sql",
+                tags: new[] { "ready" },
+                failureStatus: HealthStatus.Unhealthy);
+
+        services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+            });
+
+        services.AddFluentValidationAutoValidation();
+
+        var validatorType = Type.GetType("PhotoBank.Api.Validators.LoginRequestDtoValidator, PhotoBank.Api");
+        if (validatorType is not null)
+        {
+            services.AddValidatorsFromAssemblyContaining(validatorType);
+        }
+
+        services.Configure<ApiBehaviorOptions>(options =>
+        {
+            options.InvalidModelStateResponseFactory = context =>
+                new BadRequestObjectResult(new ValidationProblemDetails(context.ModelState));
         });
 
         return services;
