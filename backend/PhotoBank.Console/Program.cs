@@ -22,13 +22,11 @@ namespace PhotoBank.Console
                     .WriteTo.File("consoleapp.log"))
                 .ConfigureServices((context, services) =>
                 {
-                    services.AddPhotobankDbContext(context.Configuration, usePool: false);
-
                     services
+                        .AddPhotobankDbContext(context.Configuration, usePool: false)
                         .AddPhotobankCore(context.Configuration)
-                        .AddPhotobankConsole(context.Configuration);
-
-                    services.AddSingleton<App>();
+                        .AddPhotobankConsole(context.Configuration)
+                        .AddSingleton<App>();
                 })
                 .Build();
 

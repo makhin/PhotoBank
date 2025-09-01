@@ -43,14 +43,7 @@ namespace PhotoBank.Console
             if (options.StorageId.HasValue)
             {
                 var storage = await _storages.GetAsync(options.StorageId.Value);
-                if (storage == null)
-                {
-                    _logger.LogError("Storage {StorageId} not found", options.StorageId);
-                }
-                else
-                {
-                    await AddFilesAsync(storage, token);
-                }
+                await AddFilesAsync(storage, token);
             }
         }
 

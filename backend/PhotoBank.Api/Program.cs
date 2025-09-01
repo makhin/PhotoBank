@@ -26,14 +26,11 @@ namespace PhotoBank.Api
             builder.WebHost.UseKestrel();
             builder.WebHost.UseUrls("http://0.0.0.0:5066");
 
-            // Add services to the container.
-            builder.Services.AddPhotobankDbContext(builder.Configuration, usePool: true);
-
-            builder.Services.AddPhotobankMvc(builder.Configuration);
-
             builder.Services
+                .AddPhotobankDbContext(builder.Configuration, usePool: true)
                 .AddPhotobankCore(builder.Configuration)
                 .AddPhotobankApi(builder.Configuration)
+                .AddPhotobankMvc(builder.Configuration)
                 .AddPhotobankCors()
                 .AddPhotobankSwagger(c =>
                 {
@@ -84,9 +81,12 @@ namespace PhotoBank.Api
                         Title = title,
                         Type = type,
                         Detail = app.Environment.IsDevelopment() ? ex?.Message : "An error occurred.",
-                        Instance = context.Request.Path
+                        Instance = context.Request.Path,
+                        Extensions =
+                        {
+                            ["traceId"] = context.TraceIdentifier
+                        }
                     };
-                    problem.Extensions["traceId"] = context.TraceIdentifier;
 
                     context.Response.ContentType = "application/problem+json";
                     context.Response.StatusCode = status;
