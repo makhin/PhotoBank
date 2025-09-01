@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
-using PhotoBank.Services;
+using PhotoBank.DependencyInjection;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
 using Minio;

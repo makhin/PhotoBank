@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PhotoBank.DbContext.DbContext;
-using PhotoBank.Services;
+using PhotoBank.DependencyInjection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
