@@ -188,13 +188,17 @@ public class PhotoService : IPhotoService
         if (filter.Tags?.Any() == true)
         {
             var tagIds = filter.Tags.ToList();
-            query =
-                from p in query
-                join pt in _db.PhotoTags on p.Id equals pt.PhotoId
+            var taggedPhotoIds =
+                from pt in _db.PhotoTags
                 where tagIds.Contains(pt.TagId)
-                group pt by p into g
+                group pt by pt.PhotoId into g
                 where g.Select(x => x.TagId).Distinct().Count() == tagIds.Count
                 select g.Key;
+
+            query =
+                from p in query
+                join pid in taggedPhotoIds on p.Id equals pid
+                select p;
         }
 
         return query;
