@@ -309,30 +309,6 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-  /auth/claims:
-    get:
-      tags:
-        - Auth
-      operationId: Auth_GetUserClaims
-      responses:
-        '200':
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ClaimDto'
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ClaimDto'
-            text/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ClaimDto'
   /auth/telegram/exchange:
     post:
       tags:
@@ -1773,16 +1749,6 @@ components:
           type: string
           nullable: true
         password:
-          type: string
-          nullable: true
-      additionalProperties: false
-    ClaimDto:
-      type: object
-      properties:
-        type:
-          type: string
-          nullable: true
-        value:
           type: string
           nullable: true
       additionalProperties: false

@@ -5,7 +5,6 @@
  * OpenAPI spec version: 1.0
  */
 import type {
-  ClaimDto,
   LoginRequestDto,
   LoginResponseDto,
   RegisterRequestDto,
@@ -60,14 +59,6 @@ const authLogin = (
     },
       options);
     }
-  const authGetUserClaims = (
-    
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<ClaimDto[]>(
-      {url: `/auth/claims`, method: 'GET'
-    },
-      options);
-    }
   const authTelegramExchange = (
     telegramExchangeRequest: TelegramExchangeRequest,
  options?: SecondParameter<typeof photobankAxios>,) => {
@@ -86,7 +77,7 @@ const authLogin = (
     },
       options);
     }
-  return {authLogin,authRegister,authGetUser,authUpdateUser,authGetUserClaims,authTelegramExchange,authGetEffective}};
+  return {authLogin,authRegister,authGetUser,authUpdateUser,authTelegramExchange,authGetEffective}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -96,6 +87,5 @@ export type AuthLoginResult = NonNullable<Awaited<ReturnType<ReturnType<typeof g
 export type AuthRegisterResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authRegister']>>>
 export type AuthGetUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetUser']>>>
 export type AuthUpdateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authUpdateUser']>>>
-export type AuthGetUserClaimsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetUserClaims']>>>
 export type AuthTelegramExchangeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authTelegramExchange']>>>
 export type AuthGetEffectiveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetEffective']>>>

@@ -27,7 +27,7 @@ namespace PhotoBank.Api
             builder.WebHost.UseUrls("http://0.0.0.0:5066");
 
             builder.Services
-                .AddPhotobankDbContext(builder.Configuration, usePool: true)
+                .AddPhotobankDbContext(builder.Configuration, usePool: false)
                 .AddPhotobankCore(builder.Configuration)
                 .AddPhotobankApi(builder.Configuration)
                 .AddPhotobankMvc(builder.Configuration)

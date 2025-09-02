@@ -253,13 +253,6 @@ export interface RegisterRequestDto {
   password: string | null;
 }
 
-export interface ClaimDto {
-  /** @nullable */
-  type?: string | null;
-  /** @nullable */
-  value?: string | null;
-}
-
 export interface ResetPasswordDto {
   /** @nullable */
   newPassword: string | null;

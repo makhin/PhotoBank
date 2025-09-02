@@ -19,7 +19,6 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  ClaimDto,
   LoginRequestDto,
   LoginResponseDto,
   ProblemDetails,
@@ -358,83 +357,7 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions );
     }
-    export type authGetUserClaimsResponse200 = {
-  data: ClaimDto[]
-  status: 200
-}
-    
-export type authGetUserClaimsResponseComposite = authGetUserClaimsResponse200;
-    
-export type authGetUserClaimsResponse = authGetUserClaimsResponseComposite & {
-  headers: Headers;
-}
-
-export const getAuthGetUserClaimsUrl = () => {
-
-
-  
-
-  return `/auth/claims`
-}
-
-export const authGetUserClaims = async ( options?: RequestInit): Promise<authGetUserClaimsResponse> => {
-  
-  return customFetcher<authGetUserClaimsResponse>(getAuthGetUserClaimsUrl(),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
-
-export const getAuthGetUserClaimsQueryKey = () => {
-    return [`/auth/claims`] as const;
-    }
-
-    
-export const getAuthGetUserClaimsQueryOptions = <TData = Awaited<ReturnType<typeof authGetUserClaims>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUserClaims>>, TError, TData>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAuthGetUserClaimsQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUserClaims>>> = ({ signal }) => authGetUserClaims(signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authGetUserClaims>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type AuthGetUserClaimsQueryResult = NonNullable<Awaited<ReturnType<typeof authGetUserClaims>>>
-export type AuthGetUserClaimsQueryError = unknown
-
-
-
-export function useAuthGetUserClaims<TData = Awaited<ReturnType<typeof authGetUserClaims>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUserClaims>>, TError, TData>, }
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getAuthGetUserClaimsQueryOptions(options)
-
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-export type authTelegramExchangeResponse200 = {
+    export type authTelegramExchangeResponse200 = {
   data: TelegramExchangeResponse
   status: 200
 }
