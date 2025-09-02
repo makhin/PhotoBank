@@ -89,8 +89,6 @@
   "racyContentLabel": "Откровенный контент",
   "thisDayLabel": "В этот день",
   "botRunningText": "Бот работает",
-  "previewModalFallbackTitle": "Предпросмотр",
-  "manageUsersTitle": "Управление пользователями",
-  "saveUserButtonText": "Сохранить пользователя"
+  "previewModalFallbackTitle": "Предпросмотр"
 }
 

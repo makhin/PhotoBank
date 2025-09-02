@@ -154,10 +154,6 @@ export const colStorageLabel = 'Storage';
 export const colFlagsLabel = 'Flags';
 export const colDetailsLabel = 'Details';
 
-// Admin pages
-export const manageUsersTitle = 'Manage Users';
-export const saveUserButtonText = 'Save User';
-
 // Service page
 export const serviceInfoTitle = 'Technical Information';
 
