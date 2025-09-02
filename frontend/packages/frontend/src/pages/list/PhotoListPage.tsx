@@ -9,7 +9,7 @@ import {
 } from '@/features/photo/useInfinitePhotos';
 import { useAppDispatch, useAppSelector } from '@/app/hook';
 import { setFilter } from '@/features/photo/model/photoSlice';
-import { useViewer } from '@/features/viewer/state';
+import { open } from '@/features/viewer/viewerSlice';
 import { pushPhotoId, readPhotoId, clearPhotoId } from '@/features/viewer/urlSync';
 import EmptyState from '@/components/EmptyState';
 import PhotoDetailsModal from '@/components/PhotoDetailsModal';
@@ -132,7 +132,7 @@ const PhotoListPage = () => {
                           (p: PhotoItemDto) => p.id === photo.id
                         );
                         if (index >= 0) {
-                          useViewer.getState().open(viewerItems, index);
+                          dispatch(open({ items: viewerItems, index }));
                           pushPhotoId(photo.id);
                         }
                       },
@@ -143,7 +143,7 @@ const PhotoListPage = () => {
                             (p: PhotoItemDto) => p.id === photo.id
                           );
                           if (index >= 0) {
-                            useViewer.getState().open(viewerItems, index);
+                            dispatch(open({ items: viewerItems, index }));
                             pushPhotoId(photo.id);
                           }
                         }
@@ -170,17 +170,17 @@ const PhotoListPage = () => {
     if (id && photos.length > 0) {
       const index = photos.findIndex((p: PhotoItemDto) => p.id === id);
       if (index >= 0) {
-        useViewer.getState().open(viewerItems, index);
+        dispatch(open({ items: viewerItems, index }));
       }
     }
-  }, [location.search, photos, viewerItems]);
+  }, [dispatch, location.search, photos, viewerItems]);
 
+  const viewerOpen = useAppSelector((s) => s.viewer.isOpen);
+  const wasViewerOpen = useRef(false);
   useEffect(() => {
-    const unsubscribe = useViewer.subscribe((s) => {
-      if (!s.isOpen) clearPhotoId();
-    });
-    return unsubscribe;
-  }, []);
+    if (wasViewerOpen.current && !viewerOpen) clearPhotoId();
+    wasViewerOpen.current = viewerOpen;
+  }, [viewerOpen]);
 
   const handleFilterOpen = useCallback(() => {
     navigate('/filter', { state: { useCurrentFilter: true } });

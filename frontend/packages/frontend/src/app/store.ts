@@ -9,6 +9,7 @@ import photoReducer, {
 } from '@/features/photo/model/photoSlice';
 import botReducer from '@/features/bot/model/botSlice';
 import authReducer from '@/features/auth/model/authSlice';
+import viewerReducer from '@/features/viewer/viewerSlice';
 
 const filterStore = namespacedStorage('photo');
 
@@ -27,6 +28,7 @@ export const store = configureStore({
     photo: photoReducer,
     bot: botReducer,
     auth: authReducer,
+    viewer: viewerReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(filterMiddleware),

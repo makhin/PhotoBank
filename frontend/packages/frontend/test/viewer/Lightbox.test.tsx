@@ -1,19 +1,27 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Lightbox from '@/features/viewer/Lightbox';
-import { useViewer } from '@/features/viewer/state';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
 import { describe, expect, it } from 'vitest';
+
+import Lightbox from '@/features/viewer/Lightbox';
+import viewerReducer, { open } from '@/features/viewer/viewerSlice';
 
 describe('Lightbox', () => {
   it('navigates and closes', async () => {
-    render(<Lightbox />);
+    const store = configureStore({ reducer: { viewer: viewerReducer } });
+    render(
+      <Provider store={store}>
+        <Lightbox />
+      </Provider>
+    );
     const items = [
       { id: 1, preview: 'a_p', title: 'a' },
       { id: 2, preview: 'b_p', title: 'b' },
       { id: 3, preview: 'c_p', title: 'c' },
     ];
     act(() => {
-      useViewer.getState().open(items, 1);
+      store.dispatch(open({ items, index: 1 }));
     });
     expect((await screen.findAllByAltText('b')).length).toBeGreaterThan(0);
     await userEvent.keyboard('{ArrowRight}');
