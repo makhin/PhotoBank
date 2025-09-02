@@ -11,6 +11,11 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@photobank/shared": ["packages/shared/src"],
+      "@photobank/shared/*": ["packages/shared/src/*"]
+    }
   }
 }
