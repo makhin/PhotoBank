@@ -34,7 +34,10 @@ public class AuthController(
         if (user == null)
             return BadRequest();
 
+        var roles = await userManager.GetRolesAsync(user);
+        var roleClaims = roles.Select(r => new Claim(ClaimTypes.Role, r));
         var claims = await userManager.GetClaimsAsync(user);
+        claims = claims.Concat(roleClaims).ToList();
 
         var token = tokenService.CreateToken(user, request.RememberMe, claims);
         return Ok(new LoginResponseDto { Token = token });
