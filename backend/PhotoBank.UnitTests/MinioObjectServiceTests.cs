@@ -30,7 +30,7 @@ public class MinioObjectServiceTests
                 var field = args.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
                     .FirstOrDefault(f => typeof(Delegate).IsAssignableFrom(f.FieldType));
                 var del = field?.GetValue(args) as Delegate;
-                del?.DynamicInvoke(new MemoryStream(data));
+                del?.DynamicInvoke(new MemoryStream(data), CancellationToken.None);
             })
             .ReturnsAsync((ObjectStat)Activator.CreateInstance(typeof(ObjectStat), nonPublic: true)!);
 
