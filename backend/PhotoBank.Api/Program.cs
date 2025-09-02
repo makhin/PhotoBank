@@ -38,6 +38,8 @@ namespace PhotoBank.Api
                 });
             var app = builder.Build();
 
+            app.UsePathBase("/api");
+
             // Configure the HTTP request pipeline.
 //            if (app.Environment.IsDevelopment())
             {
