@@ -89,8 +89,6 @@
   "racyContentLabel": "Racy Content",
   "thisDayLabel": "This Day",
   "botRunningText": "Bot is running",
-  "previewModalFallbackTitle": "Preview",
-  "manageUsersTitle": "Manage Users",
-  "saveUserButtonText": "Save User"
+  "previewModalFallbackTitle": "Preview"
 }
 
