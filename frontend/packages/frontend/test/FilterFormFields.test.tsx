@@ -7,12 +7,6 @@ import metaReducer from '../src/features/meta/model/metaSlice';
 import { Form } from '../src/shared/ui/form';
 import { describe, it, beforeEach, expect, vi } from 'vitest';
 
-declare module '@testing-library/react' {
-  interface RenderOptions {
-    wrapper?: React.ComponentType;
-  }
-}
-
 const renderWithAdmin = async (isAdmin: boolean) => {
   vi.doMock('@photobank/shared', async () => {
     const actual = await vi.importActual<any>('@photobank/shared');

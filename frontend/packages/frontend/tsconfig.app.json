@@ -27,9 +27,9 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@photobank/shared": ["../shared/src"],
+      "@photobank/shared/*": ["../shared/src/*"],
+      "@/*": ["./src/*"]
     }
   },
   "include": [

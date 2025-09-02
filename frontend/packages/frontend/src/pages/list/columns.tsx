@@ -1,11 +1,12 @@
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import { formatDate } from '@photobank/shared/format';
 
+import RowActions from './RowActions';
+import PreviewCell from './PreviewCell';
+
 import i18n from '@/shared/config/i18n';
 import FlagIcon from '@/components/formatters/FlagIcon';
 
-import PreviewCell from './PreviewCell';
-import RowActions from './RowActions';
 
 export interface Column<T> {
   id: string;
