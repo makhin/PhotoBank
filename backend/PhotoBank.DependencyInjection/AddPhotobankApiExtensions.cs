@@ -110,7 +110,6 @@ public static partial class ServiceCollectionExtensions
         services.AddControllers(options =>
             {
                 options.OutputFormatters.RemoveType<StringOutputFormatter>();
-                options.InputFormatters.RemoveType<StringInputFormatter>();
             })
             .AddJsonOptions(options =>
             {
