@@ -1,11 +1,9 @@
 import type { Context } from 'grammy';
 import {
   authGetUser,
-  authGetUserRoles,
   authGetUserClaims,
   authUpdateUser,
   type authGetUserResponse,
-  type authGetUserRolesResponse,
   type authGetUserClaimsResponse,
   type authUpdateUserResponse,
   type UpdateUserDto,
@@ -20,10 +18,6 @@ async function authorized<T>(ctx: Context, fn: (options?: RequestInit) => Promis
 
 export function getUser(ctx: Context): Promise<authGetUserResponse> {
   return authorized(ctx, authGetUser);
-}
-
-export function getUserRoles(ctx: Context): Promise<authGetUserRolesResponse> {
-  return authorized(ctx, authGetUserRoles);
 }
 
 export function getUserClaims(ctx: Context): Promise<authGetUserClaimsResponse> {

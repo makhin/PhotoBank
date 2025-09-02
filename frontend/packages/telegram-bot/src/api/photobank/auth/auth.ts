@@ -9,7 +9,6 @@ import type {
   LoginRequestDto,
   LoginResponseDto,
   RegisterRequestDto,
-  RoleDto,
   TelegramExchangeRequest,
   TelegramExchangeResponse,
   UpdateUserDto,
@@ -61,16 +60,6 @@ const authLogin = (
     },
       options);
     }
-  const authTelegramExchange = (
-    telegramExchangeRequest: TelegramExchangeRequest,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<TelegramExchangeResponse>(
-      {url: `/auth/telegram/exchange`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: telegramExchangeRequest
-    },
-      options);
-    }
   const authGetUserClaims = (
     
  options?: SecondParameter<typeof photobankAxios>,) => {
@@ -79,11 +68,13 @@ const authLogin = (
     },
       options);
     }
-  const authGetUserRoles = (
-    
+  const authTelegramExchange = (
+    telegramExchangeRequest: TelegramExchangeRequest,
  options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<RoleDto[]>(
-      {url: `/auth/roles`, method: 'GET'
+      return photobankAxios<TelegramExchangeResponse>(
+      {url: `/auth/telegram/exchange`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: telegramExchangeRequest
     },
       options);
     }
@@ -95,7 +86,7 @@ const authLogin = (
     },
       options);
     }
-  return {authLogin,authRegister,authGetUser,authUpdateUser,authTelegramExchange,authGetUserClaims,authGetUserRoles,authGetEffective}};
+  return {authLogin,authRegister,authGetUser,authUpdateUser,authGetUserClaims,authTelegramExchange,authGetEffective}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -105,7 +96,6 @@ export type AuthLoginResult = NonNullable<Awaited<ReturnType<ReturnType<typeof g
 export type AuthRegisterResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authRegister']>>>
 export type AuthGetUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetUser']>>>
 export type AuthUpdateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authUpdateUser']>>>
-export type AuthTelegramExchangeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authTelegramExchange']>>>
 export type AuthGetUserClaimsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetUserClaims']>>>
-export type AuthGetUserRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetUserRoles']>>>
+export type AuthTelegramExchangeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authTelegramExchange']>>>
 export type AuthGetEffectiveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetEffective']>>>

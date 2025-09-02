@@ -8,7 +8,6 @@ import { logger } from '@photobank/shared/utils/logger';
 import { useTranslation } from 'react-i18next';
 import {
   useAuthGetUser,
-  useAuthGetUserRoles,
   useAuthGetUserClaims,
   useAuthUpdateUser,
 } from '@photobank/shared/api/photobank';
@@ -30,8 +29,6 @@ export default function MyProfilePage() {
   const { t } = useTranslation();
   const { data: userResp } = useAuthGetUser();
   const user = userResp?.data;
-  const { data: rolesResp } = useAuthGetUserRoles();
-  const roles = rolesResp?.data ?? [];
   const { data: claimsResp } = useAuthGetUserClaims();
   const claims = claimsResp?.data ?? [];
   const { mutateAsync: updateUser } = useAuthUpdateUser();
@@ -111,25 +108,6 @@ export default function MyProfilePage() {
               <Button type="submit" className="w-full">{t('saveButtonText')}</Button>
             </form>
           </Form>
-          {roles.length > 0 && (
-            <div>
-              <h2 className="font-medium">{t('rolesTitle')}</h2>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                {roles.map((r) => (
-                  <li key={r.name}>
-                    <span className="font-semibold">{r.name}</span>
-                    {r.claims && r.claims.length > 0 && (
-                      <ul className="list-disc list-inside ml-4">
-                  {r.claims?.map((c: ClaimDto, idx: number) => (
-                    <li key={idx}>{c.type ?? ''}: {c.value ?? ''}</li>
-                  ))}
-                      </ul>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
           {claims.length > 0 && (
             <div>
               <h2 className="font-medium">{t('userClaimsTitle')}</h2>

@@ -1,33 +1,17 @@
 import type { MyContext } from "../i18n";
-import { getUser, getUserRoles, getUserClaims } from "../services/auth";
+import { getUser, getUserClaims } from "../services/auth";
 import { handleCommandError } from "../errorHandler";
 
 export async function profileCommand(ctx: MyContext) {
     const username = ctx.from?.username ?? String(ctx.from?.id ?? "");
     try {
         await getUser(ctx);
-        const [rolesRes, claimsRes] = await Promise.all([
-            getUserRoles(ctx),
-            getUserClaims(ctx),
-        ]);
-        const roles = rolesRes.data;
+        const claimsRes = await getUserClaims(ctx);
         const claims = claimsRes.data;
 
         const lines: string[] = [
             ctx.t('user-info', { username }),
         ];
-
-        if (roles.length) {
-            lines.push(ctx.t('roles-label'));
-            for (const role of roles) {
-                lines.push(`- ${role.name}`);
-                for (const claim of role.claims) {
-                    lines.push(`  • ${claim.type}: ${claim.value}`);
-                }
-            }
-        } else {
-            lines.push(ctx.t('roles-empty'));
-        }
 
         if (claims.length) {
             lines.push(ctx.t('claims-label'));
