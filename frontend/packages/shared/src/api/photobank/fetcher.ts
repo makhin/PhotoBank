@@ -25,9 +25,10 @@ export function setImpersonateUser(username: string | null | undefined) {
 
 export async function customFetcher<T>(
   url: string,
-  options: RequestInit = {},
-  signal?: AbortSignal,
+  init: RequestInit | AbortSignal = {},
 ): Promise<T> {
+  const options: RequestInit = init instanceof AbortSignal ? { signal: init } : init;
+
   return queue.add(async (): Promise<T> => {
     const headers = new Headers(options.headers);
     if (tokenProvider) {
@@ -40,7 +41,7 @@ export async function customFetcher<T>(
 
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const response = await fetch(`${baseUrl}${url}`, { ...options, headers, signal: signal ?? null });
+        const response = await fetch(`${baseUrl}${url}`, { ...options, headers });
         const data = await response.json().catch(() => undefined);
 
         if (response.ok) {
