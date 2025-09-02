@@ -1,4 +1,4 @@
-import * as AuthApi from '../api/photobank/auth/auth';
+import { useAuthGetUser } from '../api/photobank';
 
 const ADMIN_ROLE = 'Administrator';
 const ROLE_CLAIM_TYPES = [
@@ -7,12 +7,12 @@ const ROLE_CLAIM_TYPES = [
 ];
 
 export const useIsAdmin = (): boolean | null => {
-  const { data: claims, isLoading, isError } = AuthApi.useAuthGetUserClaims();
+  const { data: userResp, isLoading, isError } = useAuthGetUser();
   if (isLoading) return null;
   if (isError) return false;
-  return (
-    claims?.data.some(
-      (c) => ROLE_CLAIM_TYPES.includes(c.type ?? '') && c.value === ADMIN_ROLE,
-    ) ?? false
+  const claims = (userResp?.data as any)?.claims ?? [];
+  return claims.some(
+    (c: { type?: string | null; value?: string | null }) =>
+      ROLE_CLAIM_TYPES.includes(c.type ?? '') && c.value === ADMIN_ROLE,
   );
 };
