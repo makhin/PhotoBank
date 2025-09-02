@@ -35,6 +35,8 @@ namespace PhotoBank.DbContext.DbContext
         public HashSet<int> AllowedStorageIds { get; private set; } = new();
         public HashSet<int> AllowedPersonGroupIds { get; private set; } = new();
         public List<(DateOnly From, DateOnly To)> AllowedDateRanges { get; private set; } = new();
+        public DateTime? AllowedFromDate { get; private set; }
+        public DateTime? AllowedToDate { get; private set; }
         public bool CanSeeNsfw { get; private set; } = true;
 
         public PhotoBankDbContext(DbContextOptions<PhotoBankDbContext> options) : base(options)
@@ -47,6 +49,12 @@ namespace PhotoBank.DbContext.DbContext
             AllowedStorageIds = user.AllowedStorageIds?.ToHashSet() ?? new();
             AllowedPersonGroupIds = user.AllowedPersonGroupIds?.ToHashSet() ?? new();
             AllowedDateRanges = user.AllowedDateRanges?.ToList() ?? new();
+            AllowedFromDate = AllowedDateRanges.Count > 0
+                ? AllowedDateRanges.Min(r => r.From).ToDateTime(TimeOnly.MinValue)
+                : (DateTime?)null;
+            AllowedToDate = AllowedDateRanges.Count > 0
+                ? AllowedDateRanges.Max(r => r.To).ToDateTime(TimeOnly.MaxValue)
+                : (DateTime?)null;
             CanSeeNsfw = user.CanSeeNsfw;
         }
 
@@ -56,6 +64,8 @@ namespace PhotoBank.DbContext.DbContext
             AllowedStorageIds.Clear();
             AllowedPersonGroupIds.Clear();
             AllowedDateRanges.Clear();
+            AllowedFromDate = null;
+            AllowedToDate = null;
             CanSeeNsfw = true;
             ChangeTracker.Clear();
         }
@@ -155,7 +165,7 @@ namespace PhotoBank.DbContext.DbContext
 
             modelBuilder.Entity<Face>()
                 .HasIndex(p => p.IdentityStatus)
-                .IncludeProperties(p =>p.PersonId);
+                .IncludeProperties(p => p.PersonId);
 
             modelBuilder.Entity<Face>()
                 .HasIndex(p => p.PersonId)
@@ -192,23 +202,22 @@ namespace PhotoBank.DbContext.DbContext
                 IsAdmin || p.PersonGroups.Any(pg => AllowedPersonGroupIds.Contains(pg.Id)));
 
             modelBuilder.Entity<Photo>().HasQueryFilter(p =>
-                IsAdmin ||
-                (
-                    (AllowedStorageIds.Count > 0 && AllowedStorageIds.Contains(p.StorageId)) &&
-                    (
-                        AllowedPersonGroupIds.Count == 0
-                        || !p.Faces.Any()
-                        || p.Faces.Any(f => f.PersonId != null &&
-                            f.Person.PersonGroups.Any(pg => AllowedPersonGroupIds.Contains(pg.Id)))
-                    ) &&
-                    (
-                        AllowedDateRanges.Count == 0
-                        || (p.TakenDate != null && AllowedDateRanges.Any(r =>
-                            p.TakenDate.Value >= r.From.ToDateTime(TimeOnly.MinValue) &&
-                            p.TakenDate.Value <= r.To.ToDateTime(TimeOnly.MaxValue)))
-                    ) &&
-                    (CanSeeNsfw || (!p.IsAdultContent && !p.IsRacyContent))
-                ));
+                IsAdmin
+                    ? true
+                    : (
+                        (AllowedStorageIds.Count > 0 && AllowedStorageIds.Contains(p.StorageId)) &&
+                        (
+                            AllowedPersonGroupIds.Count == 0
+                            || !p.Faces.Any()
+                            || p.Faces.Any(f => f.PersonId != null &&
+                                f.Person.PersonGroups.Any(pg => AllowedPersonGroupIds.Contains(pg.Id)))
+                        ) &&
+                        (
+                            AllowedFromDate == null || AllowedToDate == null
+                            || (p.TakenDate != null && p.TakenDate >= AllowedFromDate && p.TakenDate <= AllowedToDate)
+                        ) &&
+                        (CanSeeNsfw || (!p.IsAdultContent && !p.IsRacyContent))
+                    ));
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
