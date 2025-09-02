@@ -8,7 +8,7 @@ import { useFacesUpdate } from '@photobank/shared/api/photobank';
 import { Maximize2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { useAppSelector } from '@/app/hook';
+import { useAppDispatch, useAppSelector } from '@/app/hook';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import { Label } from '@/shared/ui/label';
@@ -19,7 +19,7 @@ import { Checkbox } from '@/shared/ui/checkbox';
 import { ScoreBar } from '@/components/ScoreBar';
 import { FaceOverlay } from '@/components/FaceOverlay';
 import { FacePersonSelector } from '@/components/FacePersonSelector';
-import { useViewer } from '@/features/viewer/state';
+import { open } from '@/features/viewer/viewerSlice';
 import { pushPhotoId } from '@/features/viewer/urlSync';
 import { Button } from '@/shared/ui/button';
 
@@ -54,6 +54,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const [placeName, setPlaceName] = useState('');
     const persons = useAppSelector((state) => state.metadata.persons);
     const isAdmin = useIsAdmin();
+    const dispatch = useAppDispatch();
     const { mutateAsync: updateFace } = useFacesUpdate();
     const { t } = useTranslation();
 
@@ -205,15 +206,17 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                 aria-label="Open viewer"
                                 onClick={() => {
                                     if (photoData?.previewUrl) {
-                                        useViewer.getState().open(
-                                            [
-                                                {
-                                                    id: photoData.id,
-                                                    preview: photoData.previewUrl,
-                                                    title: photoData.name ?? '',
-                                                },
-                                            ],
-                                            0,
+                                        dispatch(
+                                            open({
+                                                items: [
+                                                    {
+                                                        id: photoData.id,
+                                                        preview: photoData.previewUrl,
+                                                        title: photoData.name ?? '',
+                                                    },
+                                                ],
+                                                index: 0,
+                                            })
                                         );
                                         pushPhotoId(photoData.id);
                                     }
