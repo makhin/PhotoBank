@@ -14,11 +14,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AccessProfile'
             application/json:
               schema:
                 type: array
@@ -63,9 +58,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/AccessProfile'
             application/json:
               schema:
                 $ref: '#/components/schemas/AccessProfile'
@@ -209,9 +201,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/LoginResponseDto'
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponseDto'
@@ -221,9 +210,6 @@ paths:
         '400':
           description: Bad Request
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -252,9 +238,6 @@ paths:
         '400':
           description: Bad Request
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -270,9 +253,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UserDto'
             application/json:
               schema:
                 $ref: '#/components/schemas/UserDto'
@@ -300,9 +280,6 @@ paths:
         '400':
           description: Bad Request
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -329,9 +306,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/TelegramExchangeResponse'
             application/json:
               schema:
                 $ref: '#/components/schemas/TelegramExchangeResponse'
@@ -341,9 +315,6 @@ paths:
         '401':
           description: Unauthorized
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -353,9 +324,6 @@ paths:
         '403':
           description: Forbidden
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -389,11 +357,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FaceIdentityDto'
             application/json:
               schema:
                 type: array
@@ -442,9 +405,6 @@ paths:
         '404':
           description: Not Found
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -460,11 +420,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PathDto'
             application/json:
               schema:
                 type: array
@@ -484,11 +439,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PersonFaceDto'
             application/json:
               schema:
                 type: array
@@ -518,9 +468,6 @@ paths:
         '201':
           description: Created
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/PersonFaceDto'
             application/json:
               schema:
                 $ref: '#/components/schemas/PersonFaceDto'
@@ -554,9 +501,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/PersonFaceDto'
             application/json:
               schema:
                 $ref: '#/components/schemas/PersonFaceDto'
@@ -586,11 +530,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PersonGroupDto'
             application/json:
               schema:
                 type: array
@@ -620,9 +559,6 @@ paths:
         '201':
           description: Created
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/PersonGroupDto'
             application/json:
               schema:
                 $ref: '#/components/schemas/PersonGroupDto'
@@ -656,9 +592,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/PersonGroupDto'
             application/json:
               schema:
                 $ref: '#/components/schemas/PersonGroupDto'
@@ -729,11 +662,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PersonDto'
             application/json:
               schema:
                 type: array
@@ -763,9 +691,6 @@ paths:
         '201':
           description: Created
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/PersonDto'
             application/json:
               schema:
                 $ref: '#/components/schemas/PersonDto'
@@ -799,9 +724,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/PersonDto'
             application/json:
               schema:
                 $ref: '#/components/schemas/PersonDto'
@@ -842,9 +764,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/PhotoItemDtoPageResponse'
             application/json:
               schema:
                 $ref: '#/components/schemas/PhotoItemDtoPageResponse'
@@ -854,9 +773,6 @@ paths:
         '400':
           description: Bad Request
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -879,9 +795,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/PhotoDto'
             application/json:
               schema:
                 $ref: '#/components/schemas/PhotoDto'
@@ -891,9 +804,6 @@ paths:
         '404':
           description: Not Found
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -920,9 +830,6 @@ paths:
         '404':
           description: Not Found
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -985,11 +892,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PhotoItemDto'
             application/json:
               schema:
                 type: array
@@ -1009,11 +911,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StorageDto'
             application/json:
               schema:
                 type: array
@@ -1033,11 +930,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TagDto'
             application/json:
               schema:
                 type: array
@@ -1057,11 +949,6 @@ paths:
         '200':
           description: OK
           content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/UserDto'
             application/json:
               schema:
                 type: array
@@ -1091,9 +978,6 @@ paths:
         '201':
           description: Created
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/UserDto'
             application/json:
               schema:
                 $ref: '#/components/schemas/UserDto'
@@ -1103,9 +987,6 @@ paths:
         '400':
           description: Bad Request
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -1140,9 +1021,6 @@ paths:
         '404':
           description: Not Found
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -1152,9 +1030,6 @@ paths:
         '400':
           description: Bad Request
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -1177,9 +1052,6 @@ paths:
         '404':
           description: Not Found
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -1214,9 +1086,6 @@ paths:
         '404':
           description: Not Found
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
@@ -1251,9 +1120,6 @@ paths:
         '404':
           description: Not Found
           content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
