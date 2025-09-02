@@ -362,30 +362,6 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-  /auth/claims:
-    get:
-      tags:
-        - Auth
-      operationId: Auth_GetUserClaims
-      responses:
-        '200':
-          description: OK
-          content:
-            text/plain:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ClaimDto'
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ClaimDto'
-            text/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ClaimDto'
   /auth/roles:
     get:
       tags:
@@ -1109,17 +1085,17 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserWithClaimsDto'
+                  $ref: '#/components/schemas/UserDto'
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserWithClaimsDto'
+                  $ref: '#/components/schemas/UserDto'
             text/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/UserWithClaimsDto'
+                  $ref: '#/components/schemas/UserDto'
     post:
       tags:
         - Users
@@ -1141,13 +1117,13 @@ paths:
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/UserWithClaimsDto'
+                $ref: '#/components/schemas/UserDto'
             application/json:
               schema:
-                $ref: '#/components/schemas/UserWithClaimsDto'
+                $ref: '#/components/schemas/UserDto'
             text/json:
               schema:
-                $ref: '#/components/schemas/UserWithClaimsDto'
+                $ref: '#/components/schemas/UserDto'
         '400':
           description: Bad Request
           content:
@@ -1271,61 +1247,6 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-  '/admin/users/{id}/claims':
-    put:
-      tags:
-        - Users
-      operationId: Users_SetClaims
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/ClaimDto'
-          text/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/ClaimDto'
-          application/*+json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/ClaimDto'
-      responses:
-        '200':
-          description: OK
-        '404':
-          description: Not Found
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '400':
-          description: Bad Request
-          content:
-            text/plain:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
   '/admin/users/{id}/roles':
     put:
       tags:
@@ -1435,19 +1356,6 @@ components:
           format: int32
         profile:
           $ref: '#/components/schemas/AccessProfile'
-      additionalProperties: false
-    ClaimDto:
-      required:
-        - type
-        - value
-      type: object
-      properties:
-        type:
-          type: string
-          nullable: true
-        value:
-          type: string
-          nullable: true
       additionalProperties: false
     CreateUserDto:
       required:
@@ -1885,11 +1793,6 @@ components:
         name:
           type: string
           nullable: true
-        claims:
-          type: array
-          items:
-            $ref: '#/components/schemas/ClaimDto'
-          nullable: true
       additionalProperties: false
     SetRolesDto:
       type: object
@@ -1999,26 +1902,6 @@ components:
     UserDto:
       required:
         - email
-      type: object
-      properties:
-        email:
-          type: string
-          nullable: true
-        phoneNumber:
-          type: string
-          nullable: true
-        telegramUserId:
-          type: integer
-          format: int64
-          nullable: true
-        telegramSendTimeUtc:
-          type: string
-          format: date-span
-          nullable: true
-      additionalProperties: false
-    UserWithClaimsDto:
-      required:
-        - email
         - id
       type: object
       properties:
@@ -2038,10 +1921,5 @@ components:
         telegramSendTimeUtc:
           type: string
           format: date-span
-          nullable: true
-        claims:
-          type: array
-          items:
-            $ref: '#/components/schemas/ClaimDto'
           nullable: true
       additionalProperties: false
