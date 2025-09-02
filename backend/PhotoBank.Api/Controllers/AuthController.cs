@@ -77,6 +77,7 @@ public class AuthController(
 
         return Ok(new UserDto
         {
+            Id = user.Id,
             Email = user.Email ?? string.Empty,
             PhoneNumber = user.PhoneNumber,
             TelegramUserId = user.TelegramUserId,
@@ -130,20 +131,6 @@ public class AuthController(
         return Ok(new TelegramExchangeResponse(token, expiresIn));
     }
 
-    [HttpGet("claims")]
-    [Authorize]
-    [ProducesResponseType(typeof(IEnumerable<ClaimDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetUserClaims()
-    {
-        var user = await userManager.GetUserAsync(User);
-        if (user == null)
-            return NotFound();
-
-        var claims = await userManager.GetClaimsAsync(user);
-        var result = claims.Select(c => new ClaimDto { Type = c.Type, Value = c.Value });
-        return Ok(result);
-    }
-
     [HttpGet("roles")]
     [Authorize]
     [ProducesResponseType(typeof(IEnumerable<RoleDto>), StatusCodes.Status200OK)]
@@ -154,19 +141,7 @@ public class AuthController(
             return NotFound();
 
         var names = await userManager.GetRolesAsync(user);
-        var roles = new List<RoleDto>();
-        foreach (var name in names)
-        {
-            var role = await roleManager.FindByNameAsync(name);
-            if (role == null)
-                continue;
-            var roleClaims = await roleManager.GetClaimsAsync(role);
-            roles.Add(new RoleDto
-            {
-                Name = name,
-                Claims = roleClaims.Select(c => new ClaimDto { Type = c.Type, Value = c.Value })
-            });
-        }
+        var roles = names.Select(name => new RoleDto { Name = name });
 
         return Ok(roles);
     }

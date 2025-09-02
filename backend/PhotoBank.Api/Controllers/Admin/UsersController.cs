@@ -1,10 +1,10 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.ViewModel.Dto;
+using System.Linq;
 
 namespace PhotoBank.Api.Controllers.Admin;
 
@@ -14,29 +14,23 @@ namespace PhotoBank.Api.Controllers.Admin;
 public class UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<UserWithClaimsDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<UserWithClaimsDto>>> GetAllAsync()
+    [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<UserDto>>> GetAllAsync()
     {
         var users = await userManager.Users.AsNoTracking().ToListAsync();
-        var result = new List<UserWithClaimsDto>();
-        foreach (var user in users)
+        var result = users.Select(user => new UserDto
         {
-            var claims = await userManager.GetClaimsAsync(user);
-            result.Add(new UserWithClaimsDto
-            {
-                Id = user.Id,
-                Email = user.Email ?? string.Empty,
-                PhoneNumber = user.PhoneNumber,
-                TelegramUserId = user.TelegramUserId,
-                TelegramSendTimeUtc = user.TelegramSendTimeUtc,
-                Claims = claims.Select(c => new ClaimDto { Type = c.Type, Value = c.Value })
-            });
-        }
+            Id = user.Id,
+            Email = user.Email ?? string.Empty,
+            PhoneNumber = user.PhoneNumber,
+            TelegramUserId = user.TelegramUserId,
+            TelegramSendTimeUtc = user.TelegramSendTimeUtc
+        });
         return Ok(result);
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(UserWithClaimsDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateAsync([FromBody] CreateUserDto dto)
     {
@@ -51,14 +45,13 @@ public class UsersController(UserManager<ApplicationUser> userManager, RoleManag
                     await userManager.AddToRoleAsync(user, role);
         }
 
-        var created = new UserWithClaimsDto
+        var created = new UserDto
         {
             Id = user.Id,
             Email = user.Email!,
             PhoneNumber = user.PhoneNumber,
             TelegramUserId = user.TelegramUserId,
-            TelegramSendTimeUtc = user.TelegramSendTimeUtc,
-            Claims = Enumerable.Empty<ClaimDto>()
+            TelegramSendTimeUtc = user.TelegramSendTimeUtc
         };
         return CreatedAtAction(nameof(GetAllAsync), new { id = user.Id }, created);
     }
@@ -107,28 +100,6 @@ public class UsersController(UserManager<ApplicationUser> userManager, RoleManag
         var r = await userManager.ResetPasswordAsync(user, token, dto.NewPassword);
         if (!r.Succeeded) return BadRequest(r.Errors);
         return NoContent();
-    }
-
-    [HttpPut("{id}/claims")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> SetClaimsAsync(string id, [FromBody] IEnumerable<ClaimDto> claimsDto)
-    {
-        var user = await userManager.FindByIdAsync(id);
-        if (user == null)
-            return NotFound();
-
-        var existing = await userManager.GetClaimsAsync(user);
-        var removeResult = await userManager.RemoveClaimsAsync(user, existing);
-        if (!removeResult.Succeeded)
-            return BadRequest(removeResult.Errors);
-
-        var addResult = await userManager.AddClaimsAsync(user, claimsDto.Select(c => new Claim(c.Type, c.Value)));
-        if (!addResult.Succeeded)
-            return BadRequest(addResult.Errors);
-
-        return Ok();
     }
 
     [HttpPut("{id}/roles")]
