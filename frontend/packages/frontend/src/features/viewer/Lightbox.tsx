@@ -4,8 +4,8 @@ import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect } from 'react';
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/dialog';
-
 import { useAppDispatch, useAppSelector } from '@/app/hook';
+
 import ImageCanvas from './ImageCanvas';
 import { close, next, prev } from './viewerSlice';
 import { prefetchAround } from './prefetch';
