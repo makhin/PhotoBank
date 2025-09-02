@@ -157,7 +157,7 @@ const PhotoListPage = () => {
           </div>
         );
       },
-      [handleOpenDetails, photos, viewerItems]
+      [dispatch, handleOpenDetails, photos, viewerItems]
     );
 
   const renderSkeletonRow = useCallback(
