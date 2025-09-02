@@ -4,6 +4,8 @@
     "composite": true,
     "outDir": "dist",
     "rootDir": "src",
+    "baseUrl": "src",
+    "paths": { "@/*": ["*"] },
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "target": "ES2022",
