@@ -6,12 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { setAuthToken } from '@photobank/shared/auth';
 import { logger } from '@photobank/shared/utils/logger';
 import { useTranslation } from 'react-i18next';
-import {
-  useAuthGetUser,
-  useAuthGetUserClaims,
-  useAuthUpdateUser,
-} from '@photobank/shared/api/photobank';
-import type { ClaimDto } from '@photobank/shared/api/photobank';
+import { useAuthGetUser, useAuthUpdateUser } from '@photobank/shared/api/photobank';
 
 import {Button} from '@/shared/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/shared/ui/form';
@@ -29,8 +24,6 @@ export default function MyProfilePage() {
   const { t } = useTranslation();
   const { data: userResp } = useAuthGetUser();
   const user = userResp?.data;
-  const { data: claimsResp } = useAuthGetUserClaims();
-  const claims = claimsResp?.data ?? [];
   const { mutateAsync: updateUser } = useAuthUpdateUser();
 
   const form = useForm<FormData>({
@@ -108,16 +101,6 @@ export default function MyProfilePage() {
               <Button type="submit" className="w-full">{t('saveButtonText')}</Button>
             </form>
           </Form>
-          {claims.length > 0 && (
-            <div>
-              <h2 className="font-medium">{t('userClaimsTitle')}</h2>
-              <ul className="list-disc list-inside ml-4 space-y-1">
-                {claims.map((c: ClaimDto, idx: number) => (
-                  <li key={idx}>{c.type ?? ''}: {c.value ?? ''}</li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       )}
       <Button

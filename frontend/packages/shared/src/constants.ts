@@ -143,7 +143,6 @@ export const phoneNumberLabel = 'Phone number';
 export const telegramLabel = 'Telegram';
 export const saveButtonText = 'Save';
 export const rolesTitle = 'Roles';
-export const userClaimsTitle = 'User Claims';
 export const logoutButtonText = 'Logout';
 
 // Photo list table headers
