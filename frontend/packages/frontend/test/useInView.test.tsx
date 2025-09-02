@@ -1,6 +1,6 @@
 import { render, screen, act } from '@testing-library/react';
 import { useInView } from '@/hooks/useInView';
-import { vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import React from 'react';
 
 describe('useInView', () => {

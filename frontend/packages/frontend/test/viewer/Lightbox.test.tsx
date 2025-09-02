@@ -2,6 +2,7 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Lightbox from '@/features/viewer/Lightbox';
 import { useViewer } from '@/features/viewer/state';
+import { describe, expect, it } from 'vitest';
 
 describe('Lightbox', () => {
   it('navigates and closes', async () => {
