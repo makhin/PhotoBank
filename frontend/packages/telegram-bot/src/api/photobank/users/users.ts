@@ -5,12 +5,11 @@
  * OpenAPI spec version: 1.0
  */
 import type {
-  ClaimDto,
   CreateUserDto,
   ResetPasswordDto,
   SetRolesDto,
   UpdateUserDto,
-  UserWithClaimsDto
+  UserDto
 } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
 
 import { photobankAxios } from '../../axios-instance';
@@ -23,7 +22,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 const usersGetAll = (
     
  options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<UserWithClaimsDto[]>(
+      return photobankAxios<UserDto[]>(
       {url: `/admin/users`, method: 'GET'
     },
       options);
@@ -31,7 +30,7 @@ const usersGetAll = (
   const usersCreate = (
     createUserDto: CreateUserDto,
  options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<UserWithClaimsDto>(
+      return photobankAxios<UserDto>(
       {url: `/admin/users`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createUserDto
@@ -68,17 +67,6 @@ const usersGetAll = (
     },
       options);
     }
-  const usersSetClaims = (
-    id: string,
-    claimDto: ClaimDto[],
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/admin/users/${id}/claims`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: claimDto
-    },
-      options);
-    }
   const usersSetRoles = (
     id: string,
     setRolesDto: SetRolesDto,
@@ -90,7 +78,7 @@ const usersGetAll = (
     },
       options);
     }
-  return {usersGetAll,usersCreate,usersUpdate,usersDelete,usersResetPassword,usersSetClaims,usersSetRoles}};
+  return {usersGetAll,usersCreate,usersUpdate,usersDelete,usersResetPassword,usersSetRoles}};
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -101,5 +89,4 @@ export type UsersCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof
 export type UsersUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersUpdate']>>>
 export type UsersDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersDelete']>>>
 export type UsersResetPasswordResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersResetPassword']>>>
-export type UsersSetClaimsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersSetClaims']>>>
 export type UsersSetRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersSetRoles']>>>

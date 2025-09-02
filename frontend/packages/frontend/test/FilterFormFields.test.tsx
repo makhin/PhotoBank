@@ -13,18 +13,15 @@ declare module '@testing-library/react' {
   }
 }
 
-const renderWithRoles = async (roles: any[]) => {
-  const getUserRoles = vi.fn().mockImplementation(() => {
-    console.log('getUserRoles called with', roles);
-    return Promise.resolve({ data: roles });
+const renderWithAdmin = async (isAdmin: boolean) => {
+  vi.doMock('@photobank/shared', async () => {
+    const actual = await vi.importActual<any>('@photobank/shared');
+    return {
+      ...actual,
+      useIsAdmin: () => isAdmin,
+      useCanSeeNsfw: () => false,
+    };
   });
-  vi.doMock('@photobank/shared/auth', () => ({
-    getAuthToken: () => 'token',
-  }));
-  vi.doMock('@photobank/shared/api/photobank', () => ({
-    authGetUserRoles: getUserRoles,
-    useAuthGetUserClaims: () => ({ data: { data: [] }, isLoading: false, isError: false })
-  }));
 
   const { FilterFormFields } = await import('../src/components/FilterFormFields');
 
@@ -73,7 +70,6 @@ const renderWithRoles = async (roles: any[]) => {
   }
 
   render(<Wrapper />);
-  return { getUserRoles };
 };
 
 describe('FilterFormFields', () => {
@@ -83,7 +79,7 @@ describe('FilterFormFields', () => {
   });
 
   it.skip('shows admin checkboxes for administrators', async () => {
-    await renderWithRoles([{ name: 'Administrator' }]);
+    await renderWithAdmin(true);
     expect(await screen.findByText('Adult Content')).toBeTruthy();
   });
 

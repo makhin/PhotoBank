@@ -44,13 +44,6 @@ export interface AccessProfileStorageAllow {
   profile?: AccessProfile;
 }
 
-export interface ClaimDto {
-  /** @nullable */
-  type: string | null;
-  /** @nullable */
-  value: string | null;
-}
-
 export interface CreateUserDto {
   /** @nullable */
   email: string | null;
@@ -260,16 +253,16 @@ export interface RegisterRequestDto {
   password: string | null;
 }
 
+export interface ClaimDto {
+  /** @nullable */
+  type?: string | null;
+  /** @nullable */
+  value?: string | null;
+}
+
 export interface ResetPasswordDto {
   /** @nullable */
   newPassword: string | null;
-}
-
-export interface RoleDto {
-  /** @nullable */
-  name: string | null;
-  /** @nullable */
-  claims?: ClaimDto[] | null;
 }
 
 export interface SetRolesDto {
@@ -328,17 +321,6 @@ export interface UpdateUserDto {
 
 export interface UserDto {
   /** @nullable */
-  email: string | null;
-  /** @nullable */
-  phoneNumber?: string | null;
-  /** @nullable */
-  telegramUserId?: number | null;
-  /** @nullable */
-  telegramSendTimeUtc?: string | null;
-}
-
-export interface UserWithClaimsDto {
-  /** @nullable */
   id: string | null;
   /** @nullable */
   email: string | null;
@@ -348,8 +330,6 @@ export interface UserWithClaimsDto {
   telegramUserId?: number | null;
   /** @nullable */
   telegramSendTimeUtc?: string | null;
-  /** @nullable */
-  claims?: ClaimDto[] | null;
 }
 
 export type FacesGetParams = {

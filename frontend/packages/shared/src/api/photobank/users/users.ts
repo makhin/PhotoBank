@@ -19,13 +19,12 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  ClaimDto,
   CreateUserDto,
   ProblemDetails,
   ResetPasswordDto,
   SetRolesDto,
   UpdateUserDto,
-  UserWithClaimsDto
+  UserDto
 } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
 
 import { customFetcher } from '.././fetcher';
@@ -38,7 +37,7 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 
 
 export type usersGetAllResponse200 = {
-  data: UserWithClaimsDto[]
+  data: UserDto[]
   status: 200
 }
     
@@ -114,7 +113,7 @@ export function useUsersGetAll<TData = Awaited<ReturnType<typeof usersGetAll>>, 
 
 
 export type usersCreateResponse201 = {
-  data: UserWithClaimsDto
+  data: UserDto
   status: 201
 }
 
@@ -440,93 +439,6 @@ const {mutation: mutationOptions} = options ?
       > => {
 
       const mutationOptions = getUsersResetPasswordMutationOptions(options);
-
-      return useMutation(mutationOptions );
-    }
-    export type usersSetClaimsResponse200 = {
-  data: null
-  status: 200
-}
-
-export type usersSetClaimsResponse400 = {
-  data: ProblemDetails
-  status: 400
-}
-
-export type usersSetClaimsResponse404 = {
-  data: ProblemDetails
-  status: 404
-}
-    
-export type usersSetClaimsResponseComposite = usersSetClaimsResponse200 | usersSetClaimsResponse400 | usersSetClaimsResponse404;
-    
-export type usersSetClaimsResponse = usersSetClaimsResponseComposite & {
-  headers: Headers;
-}
-
-export const getUsersSetClaimsUrl = (id: string,) => {
-
-
-  
-
-  return `/admin/users/${id}/claims`
-}
-
-export const usersSetClaims = async (id: string,
-    claimDto: ClaimDto[], options?: RequestInit): Promise<usersSetClaimsResponse> => {
-  
-  return customFetcher<usersSetClaimsResponse>(getUsersSetClaimsUrl(id),
-  {      
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      claimDto,)
-  }
-);}
-
-
-
-
-export const getUsersSetClaimsMutationOptions = <TError = ProblemDetails | ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersSetClaims>>, TError,{id: string;data: ClaimDto[]}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof usersSetClaims>>, TError,{id: string;data: ClaimDto[]}, TContext> => {
-
-const mutationKey = ['usersSetClaims'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersSetClaims>>, {id: string;data: ClaimDto[]}> = (props) => {
-          const {id,data} = props ?? {};
-
-          return  usersSetClaims(id,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UsersSetClaimsMutationResult = NonNullable<Awaited<ReturnType<typeof usersSetClaims>>>
-    export type UsersSetClaimsMutationBody = ClaimDto[]
-    export type UsersSetClaimsMutationError = ProblemDetails | ProblemDetails
-
-    export const useUsersSetClaims = <TError = ProblemDetails | ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersSetClaims>>, TError,{id: string;data: ClaimDto[]}, TContext>, }
- ): UseMutationResult<
-        Awaited<ReturnType<typeof usersSetClaims>>,
-        TError,
-        {id: string;data: ClaimDto[]},
-        TContext
-      > => {
-
-      const mutationOptions = getUsersSetClaimsMutationOptions(options);
 
       return useMutation(mutationOptions );
     }

@@ -17,13 +17,11 @@ import {
 
 export const getAuthLoginResponseMock = (overrideResponse: Partial< LoginResponseDto > = {}): LoginResponseDto => ({token: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), ...overrideResponse})
 
-export const getAuthGetUserResponseMock = (overrideResponse: Partial< UserDto > = {}): UserDto => ({email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), phoneNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), telegramUserId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), null]), undefined]), telegramSendTimeUtc: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), ...overrideResponse})
+export const getAuthGetUserResponseMock = (overrideResponse: Partial< UserDto > = {}): UserDto => ({id: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), phoneNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), telegramUserId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), null]), undefined]), telegramSendTimeUtc: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), ...overrideResponse})
+
+export const getAuthGetUserClaimsResponseMock = (): ClaimDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({type: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), value: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])})))
 
 export const getAuthTelegramExchangeResponseMock = (overrideResponse: Partial< TelegramExchangeResponse > = {}): TelegramExchangeResponse => ({accessToken: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), expiresIn: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), ...overrideResponse})
-
-export const getAuthGetUserClaimsResponseMock = (): ClaimDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({type: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null])})))
-
-export const getAuthGetUserRolesResponseMock = (): RoleDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({name: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), claims: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({type: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null])})), undefined])})))
 
 
 export const getAuthLoginMockHandler = (overrideResponse?: LoginResponseDto | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<LoginResponseDto> | LoginResponseDto)) => {
@@ -70,18 +68,6 @@ export const getAuthUpdateUserMockHandler = (overrideResponse?: null | ((info: P
   })
 }
 
-export const getAuthTelegramExchangeMockHandler = (overrideResponse?: TelegramExchangeResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TelegramExchangeResponse> | TelegramExchangeResponse)) => {
-  return http.post('/api/auth/telegram/exchange', async (info) => {await delay(1000);
-  
-    return new HttpResponse(overrideResponse !== undefined
-    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAuthTelegramExchangeResponseMock(),
-      { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
-      })
-  })
-}
-
 export const getAuthGetUserClaimsMockHandler = (overrideResponse?: ClaimDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<ClaimDto[]> | ClaimDto[])) => {
   return http.get('/api/auth/claims', async (info) => {await delay(1000);
   
@@ -94,12 +80,12 @@ export const getAuthGetUserClaimsMockHandler = (overrideResponse?: ClaimDto[] | 
   })
 }
 
-export const getAuthGetUserRolesMockHandler = (overrideResponse?: RoleDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<RoleDto[]> | RoleDto[])) => {
-  return http.get('/api/auth/roles', async (info) => {await delay(1000);
+export const getAuthTelegramExchangeMockHandler = (overrideResponse?: TelegramExchangeResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TelegramExchangeResponse> | TelegramExchangeResponse)) => {
+  return http.post('/api/auth/telegram/exchange', async (info) => {await delay(1000);
   
     return new HttpResponse(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAuthGetUserRolesResponseMock(),
+    : getAuthTelegramExchangeResponseMock(),
       { status: 200,
         headers: { 'Content-Type': 'text/plain' }
       })
@@ -120,7 +106,6 @@ export const getAuthMock = () => [
   getAuthRegisterMockHandler(),
   getAuthGetUserMockHandler(),
   getAuthUpdateUserMockHandler(),
-  getAuthTelegramExchangeMockHandler(),
   getAuthGetUserClaimsMockHandler(),
-  getAuthGetUserRolesMockHandler(),
+  getAuthTelegramExchangeMockHandler(),
   getAuthGetEffectiveMockHandler()]

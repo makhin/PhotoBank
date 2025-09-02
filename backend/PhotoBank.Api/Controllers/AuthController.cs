@@ -8,8 +8,6 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Api;
 using PhotoBank.AccessControl;
 using PhotoBank.ViewModel.Dto;
-using System.Linq;
-using System.Collections.Generic;
 using System.Security.Claims;
 
 namespace PhotoBank.Api.Controllers;
@@ -19,7 +17,6 @@ namespace PhotoBank.Api.Controllers;
 public class AuthController(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
-    RoleManager<IdentityRole> roleManager,
     ITokenService tokenService,
     IConfiguration configuration) : ControllerBase
 {
@@ -38,15 +35,6 @@ public class AuthController(
             return BadRequest();
 
         var claims = await userManager.GetClaimsAsync(user);
-        var roleNames = await userManager.GetRolesAsync(user);
-        foreach (var name in roleNames)
-        {
-            var role = await roleManager.FindByNameAsync(name);
-            if (role == null)
-                continue;
-            var roleClaims = await roleManager.GetClaimsAsync(role);
-            claims = claims.Concat(roleClaims).ToList();
-        }
 
         var token = tokenService.CreateToken(user, request.RememberMe, claims);
         return Ok(new LoginResponseDto { Token = token });
@@ -129,21 +117,6 @@ public class AuthController(
         var expiresIn = 3600;
 
         return Ok(new TelegramExchangeResponse(token, expiresIn));
-    }
-
-    [HttpGet("roles")]
-    [Authorize]
-    [ProducesResponseType(typeof(IEnumerable<RoleDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetUserRoles()
-    {
-        var user = await userManager.GetUserAsync(User);
-        if (user == null)
-            return NotFound();
-
-        var names = await userManager.GetRolesAsync(user);
-        var roles = names.Select(name => new RoleDto { Name = name });
-
-        return Ok(roles);
     }
 
     [HttpGet("debug/effective-access")]

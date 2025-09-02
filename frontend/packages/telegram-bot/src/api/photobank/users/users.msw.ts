@@ -15,12 +15,12 @@ import {
 } from 'msw';
 
 
-export const getUsersGetAllResponseMock = (): UserWithClaimsDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), phoneNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), telegramUserId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), null]), undefined]), telegramSendTimeUtc: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), claims: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({type: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null])})), undefined])})))
+export const getUsersGetAllResponseMock = (): UserDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), phoneNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), telegramUserId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), null]), undefined]), telegramSendTimeUtc: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])})))
 
-export const getUsersCreateResponseMock = (overrideResponse: Partial< UserWithClaimsDto > = {}): UserWithClaimsDto => ({id: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), phoneNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), telegramUserId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), null]), undefined]), telegramSendTimeUtc: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), claims: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({type: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), value: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null])})), undefined]), ...overrideResponse})
+export const getUsersCreateResponseMock = (overrideResponse: Partial< UserDto > = {}): UserDto => ({id: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), phoneNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), telegramUserId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), null]), undefined]), telegramSendTimeUtc: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), ...overrideResponse})
 
 
-export const getUsersGetAllMockHandler = (overrideResponse?: UserWithClaimsDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<UserWithClaimsDto[]> | UserWithClaimsDto[])) => {
+export const getUsersGetAllMockHandler = (overrideResponse?: UserDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<UserDto[]> | UserDto[])) => {
   return http.get('/api/admin/users', async (info) => {await delay(1000);
   
     return new HttpResponse(overrideResponse !== undefined
@@ -32,7 +32,7 @@ export const getUsersGetAllMockHandler = (overrideResponse?: UserWithClaimsDto[]
   })
 }
 
-export const getUsersCreateMockHandler = (overrideResponse?: UserWithClaimsDto | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<UserWithClaimsDto> | UserWithClaimsDto)) => {
+export const getUsersCreateMockHandler = (overrideResponse?: UserDto | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<UserDto> | UserDto)) => {
   return http.post('/api/admin/users', async (info) => {await delay(1000);
   
     return new HttpResponse(overrideResponse !== undefined
@@ -74,16 +74,6 @@ export const getUsersResetPasswordMockHandler = (overrideResponse?: null | ((inf
   })
 }
 
-export const getUsersSetClaimsMockHandler = (overrideResponse?: null | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<null> | null)) => {
-  return http.put('/api/admin/users/:id/claims', async (info) => {await delay(1000);
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
-    return new HttpResponse(null,
-      { status: 200,
-        
-      })
-  })
-}
-
 export const getUsersSetRolesMockHandler = (overrideResponse?: null | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<null> | null)) => {
   return http.put('/api/admin/users/:id/roles', async (info) => {await delay(1000);
   if (typeof overrideResponse === 'function') {await overrideResponse(info); }
@@ -99,5 +89,4 @@ export const getUsersMock = () => [
   getUsersUpdateMockHandler(),
   getUsersDeleteMockHandler(),
   getUsersResetPasswordMockHandler(),
-  getUsersSetClaimsMockHandler(),
   getUsersSetRolesMockHandler()]
