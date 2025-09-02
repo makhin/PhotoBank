@@ -4,6 +4,10 @@
     "composite": true,
     "outDir": "dist",
     "rootDir": "src",
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["*"]
+    },
     "declaration": true,
     "emitDeclarationOnly": false
   },
