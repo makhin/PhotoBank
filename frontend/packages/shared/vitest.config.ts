@@ -7,9 +7,7 @@ export default mergeConfig(
   baseConfig,
   defineConfig({
     resolve: {
-      alias: {
-        '@': path.resolve(__dirname),
-      },
+      alias: { '@': path.resolve(__dirname, 'src') },
     },
     test: {
       setupFiles: './test-setup.ts',
