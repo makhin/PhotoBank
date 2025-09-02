@@ -204,8 +204,8 @@ namespace PhotoBank.DbContext.DbContext
                     (
                         AllowedDateRanges.Count == 0
                         || (p.TakenDate != null && AllowedDateRanges.Any(r =>
-                            p.TakenDate.Value.Date >= r.From.ToDateTime(TimeOnly.MinValue).Date &&
-                            p.TakenDate.Value.Date <= r.To.ToDateTime(TimeOnly.MinValue).Date))
+                            p.TakenDate.Value >= r.From.ToDateTime(TimeOnly.MinValue) &&
+                            p.TakenDate.Value <= r.To.ToDateTime(TimeOnly.MaxValue)))
                     ) &&
                     (CanSeeNsfw || (!p.IsAdultContent && !p.IsRacyContent))
                 ));
