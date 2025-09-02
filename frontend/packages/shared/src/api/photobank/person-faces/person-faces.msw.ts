@@ -14,6 +14,10 @@ import {
   http
 } from 'msw';
 
+import type {
+  PersonFaceDto
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 
 export const getPersonFacesGetAllResponseMock = (): PersonFaceDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), personId: faker.number.int({min: undefined, max: undefined}), faceId: faker.number.int({min: undefined, max: undefined}), provider: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), externalId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), externalGuid: faker.helpers.arrayElement([faker.string.uuid(), undefined])})))
 
@@ -25,11 +29,11 @@ export const getPersonFacesUpdateResponseMock = (overrideResponse: Partial< Pers
 export const getPersonFacesGetAllMockHandler = (overrideResponse?: PersonFaceDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PersonFaceDto[]> | PersonFaceDto[])) => {
   return http.get('/api/personfaces', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPersonFacesGetAllResponseMock(),
+    : getPersonFacesGetAllResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
@@ -37,11 +41,11 @@ export const getPersonFacesGetAllMockHandler = (overrideResponse?: PersonFaceDto
 export const getPersonFacesCreateMockHandler = (overrideResponse?: PersonFaceDto | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<PersonFaceDto> | PersonFaceDto)) => {
   return http.post('/api/personfaces', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPersonFacesCreateResponseMock(),
+    : getPersonFacesCreateResponseMock()),
       { status: 201,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
@@ -49,11 +53,11 @@ export const getPersonFacesCreateMockHandler = (overrideResponse?: PersonFaceDto
 export const getPersonFacesUpdateMockHandler = (overrideResponse?: PersonFaceDto | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<PersonFaceDto> | PersonFaceDto)) => {
   return http.put('/api/personfaces/:id', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPersonFacesUpdateResponseMock(),
+    : getPersonFacesUpdateResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }

@@ -14,6 +14,12 @@ import {
   http
 } from 'msw';
 
+import type {
+  PhotoDto,
+  PhotoItemDto,
+  PhotoItemDtoPageResponse
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 
 export const getPhotosSearchPhotosResponseMock = (overrideResponse: Partial< PhotoItemDtoPageResponse > = {}): PhotoItemDtoPageResponse => ({totalCount: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), items: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.number.int({min: undefined, max: undefined}), thumbnailUrl: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), name: faker.string.alpha({length: {min: 1, max: 20}}), takenDate: faker.helpers.arrayElement([faker.helpers.arrayElement([`${faker.date.past().toISOString().split('.')[0]}Z`, null]), undefined]), isBW: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), isAdultContent: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), adultScore: faker.helpers.arrayElement([faker.number.float({min: undefined, max: undefined, fractionDigits: 2}), undefined]), isRacyContent: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), racyScore: faker.helpers.arrayElement([faker.number.float({min: undefined, max: undefined, fractionDigits: 2}), undefined]), storageName: faker.string.alpha({length: {min: 1, max: 20}}), relativePath: faker.string.alpha({length: {min: 1, max: 20}}), tags: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({tagId: faker.number.int({min: undefined, max: undefined})})), undefined]), persons: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({personId: faker.number.int({min: undefined, max: undefined})})), undefined]), captions: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => (faker.string.alpha({length: {min: 10, max: 20}}))), undefined])})), undefined]), ...overrideResponse})
 
@@ -25,11 +31,11 @@ export const getPhotosGetDuplicatesResponseMock = (): PhotoItemDto[] => (Array.f
 export const getPhotosSearchPhotosMockHandler = (overrideResponse?: PhotoItemDtoPageResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<PhotoItemDtoPageResponse> | PhotoItemDtoPageResponse)) => {
   return http.post('/api/photos/search', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPhotosSearchPhotosResponseMock(),
+    : getPhotosSearchPhotosResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
@@ -37,11 +43,11 @@ export const getPhotosSearchPhotosMockHandler = (overrideResponse?: PhotoItemDto
 export const getPhotosGetPhotoMockHandler = (overrideResponse?: PhotoDto | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PhotoDto> | PhotoDto)) => {
   return http.get('/api/photos/:id', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPhotosGetPhotoResponseMock(),
+    : getPhotosGetPhotoResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
@@ -69,11 +75,11 @@ export const getPhotosUploadMockHandler = (overrideResponse?: null | ((info: Par
 export const getPhotosGetDuplicatesMockHandler = (overrideResponse?: PhotoItemDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PhotoItemDto[]> | PhotoItemDto[])) => {
   return http.get('/api/photos/duplicates', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPhotosGetDuplicatesResponseMock(),
+    : getPhotosGetDuplicatesResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }

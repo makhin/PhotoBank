@@ -14,6 +14,10 @@ import {
   http
 } from 'msw';
 
+import type {
+  FaceIdentityDto
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 
 export const getFacesGetResponseMock = (): FaceIdentityDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), identityStatus: faker.helpers.arrayElement([faker.helpers.arrayElement([0,1,2,3,4,5] as const), undefined]), person: faker.helpers.arrayElement([{id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}})}, undefined])})))
 
@@ -21,11 +25,11 @@ export const getFacesGetResponseMock = (): FaceIdentityDto[] => (Array.from({ le
 export const getFacesGetMockHandler = (overrideResponse?: FaceIdentityDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<FaceIdentityDto[]> | FaceIdentityDto[])) => {
   return http.get('/api/faces', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getFacesGetResponseMock(),
+    : getFacesGetResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }

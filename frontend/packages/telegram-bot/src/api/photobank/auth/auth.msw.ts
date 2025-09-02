@@ -14,6 +14,12 @@ import {
   http
 } from 'msw';
 
+import type {
+  LoginResponseDto,
+  TelegramExchangeResponse,
+  UserDto
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 
 export const getAuthLoginResponseMock = (overrideResponse: Partial< LoginResponseDto > = {}): LoginResponseDto => ({token: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), ...overrideResponse})
 
@@ -25,11 +31,11 @@ export const getAuthTelegramExchangeResponseMock = (overrideResponse: Partial< T
 export const getAuthLoginMockHandler = (overrideResponse?: LoginResponseDto | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<LoginResponseDto> | LoginResponseDto)) => {
   return http.post('/api/auth/login', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAuthLoginResponseMock(),
+    : getAuthLoginResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
@@ -47,11 +53,11 @@ export const getAuthRegisterMockHandler = (overrideResponse?: null | ((info: Par
 export const getAuthGetUserMockHandler = (overrideResponse?: UserDto | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<UserDto> | UserDto)) => {
   return http.get('/api/auth/user', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAuthGetUserResponseMock(),
+    : getAuthGetUserResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
@@ -69,11 +75,11 @@ export const getAuthUpdateUserMockHandler = (overrideResponse?: null | ((info: P
 export const getAuthTelegramExchangeMockHandler = (overrideResponse?: TelegramExchangeResponse | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<TelegramExchangeResponse> | TelegramExchangeResponse)) => {
   return http.post('/api/auth/telegram/exchange', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAuthTelegramExchangeResponseMock(),
+    : getAuthTelegramExchangeResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }

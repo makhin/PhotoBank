@@ -14,6 +14,10 @@ import {
   http
 } from 'msw';
 
+import type {
+  PersonDto
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 
 export const getPersonsGetAllResponseMock = (): PersonDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}})})))
 
@@ -25,11 +29,11 @@ export const getPersonsUpdateResponseMock = (overrideResponse: Partial< PersonDt
 export const getPersonsGetAllMockHandler = (overrideResponse?: PersonDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PersonDto[]> | PersonDto[])) => {
   return http.get('/api/persons', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPersonsGetAllResponseMock(),
+    : getPersonsGetAllResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
@@ -37,11 +41,11 @@ export const getPersonsGetAllMockHandler = (overrideResponse?: PersonDto[] | ((i
 export const getPersonsCreateMockHandler = (overrideResponse?: PersonDto | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<PersonDto> | PersonDto)) => {
   return http.post('/api/persons', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPersonsCreateResponseMock(),
+    : getPersonsCreateResponseMock()),
       { status: 201,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
@@ -49,11 +53,11 @@ export const getPersonsCreateMockHandler = (overrideResponse?: PersonDto | ((inf
 export const getPersonsUpdateMockHandler = (overrideResponse?: PersonDto | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<PersonDto> | PersonDto)) => {
   return http.put('/api/persons/:personId', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPersonsUpdateResponseMock(),
+    : getPersonsUpdateResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }

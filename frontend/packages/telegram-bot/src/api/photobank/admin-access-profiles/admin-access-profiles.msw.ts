@@ -14,6 +14,10 @@ import {
   http
 } from 'msw';
 
+import type {
+  AccessProfile
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 
 export const getAdminAccessProfilesListResponseMock = (): AccessProfile[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), name: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 128}}), null]), undefined]), description: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 512}}), null]), undefined]), flags_CanSeeNsfw: faker.helpers.arrayElement([faker.datatype.boolean(), undefined]), storages: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({profileId: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), storageId: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined])})), undefined]), personGroups: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({profileId: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), personGroupId: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined])})), undefined]), dateRanges: faker.helpers.arrayElement([Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({profileId: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), fromDate: faker.helpers.arrayElement([faker.date.past().toISOString().split('T')[0], undefined]), toDate: faker.helpers.arrayElement([faker.date.past().toISOString().split('T')[0], undefined])})), undefined])})))
 
@@ -23,11 +27,11 @@ export const getAdminAccessProfilesGetResponseMock = (overrideResponse: Partial<
 export const getAdminAccessProfilesListMockHandler = (overrideResponse?: AccessProfile[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<AccessProfile[]> | AccessProfile[])) => {
   return http.get('/api/admin/access-profiles', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAccessProfilesListResponseMock(),
+    : getAdminAccessProfilesListResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
@@ -45,11 +49,11 @@ export const getAdminAccessProfilesCreateMockHandler = (overrideResponse?: null 
 export const getAdminAccessProfilesGetMockHandler = (overrideResponse?: AccessProfile | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<AccessProfile> | AccessProfile)) => {
   return http.get('/api/admin/access-profiles/:id', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getAdminAccessProfilesGetResponseMock(),
+    : getAdminAccessProfilesGetResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }

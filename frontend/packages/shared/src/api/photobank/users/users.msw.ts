@@ -14,6 +14,10 @@ import {
   http
 } from 'msw';
 
+import type {
+  UserDto
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 
 export const getUsersGetAllResponseMock = (): UserDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), email: faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), phoneNumber: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined]), telegramUserId: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), null]), undefined]), telegramSendTimeUtc: faker.helpers.arrayElement([faker.helpers.arrayElement([faker.string.alpha({length: {min: 10, max: 20}}), null]), undefined])})))
 
@@ -23,11 +27,11 @@ export const getUsersCreateResponseMock = (overrideResponse: Partial< UserDto > 
 export const getUsersGetAllMockHandler = (overrideResponse?: UserDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<UserDto[]> | UserDto[])) => {
   return http.get('/api/admin/users', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getUsersGetAllResponseMock(),
+    : getUsersGetAllResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
@@ -35,11 +39,11 @@ export const getUsersGetAllMockHandler = (overrideResponse?: UserDto[] | ((info:
 export const getUsersCreateMockHandler = (overrideResponse?: UserDto | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<UserDto> | UserDto)) => {
   return http.post('/api/admin/users', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getUsersCreateResponseMock(),
+    : getUsersCreateResponseMock()),
       { status: 201,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }

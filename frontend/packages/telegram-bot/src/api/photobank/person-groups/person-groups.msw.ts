@@ -14,6 +14,10 @@ import {
   http
 } from 'msw';
 
+import type {
+  PersonGroupDto
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 
 export const getPersonGroupsGetAllResponseMock = (): PersonGroupDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}})})))
 
@@ -25,11 +29,11 @@ export const getPersonGroupsUpdateResponseMock = (overrideResponse: Partial< Per
 export const getPersonGroupsGetAllMockHandler = (overrideResponse?: PersonGroupDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PersonGroupDto[]> | PersonGroupDto[])) => {
   return http.get('/api/persongroups', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPersonGroupsGetAllResponseMock(),
+    : getPersonGroupsGetAllResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
@@ -37,11 +41,11 @@ export const getPersonGroupsGetAllMockHandler = (overrideResponse?: PersonGroupD
 export const getPersonGroupsCreateMockHandler = (overrideResponse?: PersonGroupDto | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<PersonGroupDto> | PersonGroupDto)) => {
   return http.post('/api/persongroups', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPersonGroupsCreateResponseMock(),
+    : getPersonGroupsCreateResponseMock()),
       { status: 201,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
@@ -49,11 +53,11 @@ export const getPersonGroupsCreateMockHandler = (overrideResponse?: PersonGroupD
 export const getPersonGroupsUpdateMockHandler = (overrideResponse?: PersonGroupDto | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<PersonGroupDto> | PersonGroupDto)) => {
   return http.put('/api/persongroups/:groupId', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getPersonGroupsUpdateResponseMock(),
+    : getPersonGroupsUpdateResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }

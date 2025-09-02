@@ -14,6 +14,10 @@ import {
   http
 } from 'msw';
 
+import type {
+  StorageDto
+} from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
+
 
 export const getStoragesGetAllResponseMock = (): StorageDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}})})))
 
@@ -21,11 +25,11 @@ export const getStoragesGetAllResponseMock = (): StorageDto[] => (Array.from({ l
 export const getStoragesGetAllMockHandler = (overrideResponse?: StorageDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<StorageDto[]> | StorageDto[])) => {
   return http.get('/api/storages', async (info) => {await delay(1000);
   
-    return new HttpResponse(overrideResponse !== undefined
+    return new HttpResponse(JSON.stringify(overrideResponse !== undefined
     ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
-    : getStoragesGetAllResponseMock(),
+    : getStoragesGetAllResponseMock()),
       { status: 200,
-        headers: { 'Content-Type': 'text/plain' }
+        headers: { 'Content-Type': 'application/json' }
       })
   })
 }
