@@ -13,7 +13,6 @@ describe('uploadPhotosAdapter', () => {
       headers: new Headers(),
       json: () => Promise.resolve(null),
     } as unknown as Response);
-    // @ts-expect-error assign mock fetch
     global.fetch = fetchMock;
     await uploadPhotosAdapter({
       files: [{ data: 'data', name: 'a.txt' }],
@@ -21,7 +20,12 @@ describe('uploadPhotosAdapter', () => {
       path: 'user',
     });
     expect(fetchMock).toHaveBeenCalled();
-    const [, options] = fetchMock.mock.calls[0];
-    expect(options.headers.get('Authorization')).toBe('Bearer token123');
+    const call = fetchMock.mock.calls[0];
+    if (call && call.length > 1) {
+      const [, options] = call;
+      expect(options.headers.get('Authorization')).toBe('Bearer token123');
+    } else {
+      throw new Error('fetchMock was not called with the expected arguments');
+    }
   });
 });

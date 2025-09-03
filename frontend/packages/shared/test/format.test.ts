@@ -9,7 +9,7 @@ import {
   formatList,
 } from '../src/format';
 
-const locale = 'en-US';
+const locale = 'ru-RU';
 
 describe('format module', () => {
   it('formats date', () => {
@@ -35,7 +35,7 @@ describe('format module', () => {
 
   it('formats bytes', () => {
     expect(formatBytes(1_048_576)).toBe('1 MB');
-    expect(formatBytes(1_500_000)).toBe('1.4 MB');
+    expect(formatBytes(1_500_000)).toBe('1,4 MB');
   });
 
   it('formats duration', () => {
