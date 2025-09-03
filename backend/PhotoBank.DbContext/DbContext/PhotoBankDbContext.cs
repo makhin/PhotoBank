@@ -111,6 +111,11 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => new { p.StorageId, p.TakenDate });
 
+            modelBuilder.Entity<Photo>().Property<int?>("TakenMonth")
+                .HasComputedColumnSql("CASE WHEN [TakenDate] IS NULL THEN NULL ELSE MONTH([TakenDate]) END PERSISTED");
+            modelBuilder.Entity<Photo>().Property<int?>("TakenDay")
+                .HasComputedColumnSql("CASE WHEN [TakenDate] IS NULL THEN NULL ELSE DAY([TakenDate]) END PERSISTED");
+
             modelBuilder.Entity<PhotoTag>()
                 .HasKey(t => new { t.PhotoId, t.TagId });
 
@@ -191,33 +196,6 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Enricher>()
                 .HasIndex(u => u.Name)
                 .IsUnique();
-
-            // --- Global filters ---
-            // Storage — only allowed, admin sees all
-            modelBuilder.Entity<Storage>().HasQueryFilter(s =>
-                IsAdmin || AllowedStorageIds.Contains(s.Id));
-
-            // Person — only from allowed groups, admin sees all
-            modelBuilder.Entity<Person>().HasQueryFilter(p =>
-                IsAdmin || p.PersonGroups.Any(pg => AllowedPersonGroupIds.Contains(pg.Id)));
-
-            modelBuilder.Entity<Photo>().HasQueryFilter(p =>
-                IsAdmin
-                    ? true
-                    : (
-                        (AllowedStorageIds.Count > 0 && AllowedStorageIds.Contains(p.StorageId)) &&
-                        (
-                            AllowedPersonGroupIds.Count == 0
-                            || !p.Faces.Any()
-                            || p.Faces.Any(f => f.PersonId != null &&
-                                f.Person.PersonGroups.Any(pg => AllowedPersonGroupIds.Contains(pg.Id)))
-                        ) &&
-                        (
-                            AllowedFromDate == null || AllowedToDate == null
-                            || (p.TakenDate != null && p.TakenDate >= AllowedFromDate && p.TakenDate <= AllowedToDate)
-                        ) &&
-                        (CanSeeNsfw || (!p.IsAdultContent && !p.IsRacyContent))
-                    ));
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

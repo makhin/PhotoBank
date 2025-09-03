@@ -24,8 +24,6 @@ namespace PhotoBank.ViewModel.Dto
         public IEnumerable<int>? Tags { get; set; }
         public string[]? TagNames { get; set; }
 
-        public string? OrderBy { get; set; }
-
         public bool IsNotEmpty()
         {
             return (Storages != null && Storages.Any())

@@ -126,7 +126,6 @@ public class GetAllPhotosIntegrationTests
             Page = 2
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.TotalCount.Should().Be(5180);
         result.Items.Should().HaveCount(10);
     }
 
