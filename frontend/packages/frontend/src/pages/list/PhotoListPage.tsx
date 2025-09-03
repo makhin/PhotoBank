@@ -50,6 +50,7 @@ const PhotoListPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const [detailsId, setDetailsId] = useState<number | null>(null);
@@ -222,7 +223,11 @@ const PhotoListPage = () => {
         </Button>
       </div>
 
-      <ScrollArea className="h-[calc(100vh-240px)]" ref={scrollAreaRef}>
+      <ScrollArea
+        className="h-[calc(100vh-240px)]"
+        ref={scrollAreaRef}
+        viewportRef={viewportRef}
+      >
         <div className="p-6">
           {/* Desktop/Tablet View */}
           <div className="hidden lg:block">
@@ -236,7 +241,7 @@ const PhotoListPage = () => {
             {loading ? (
               <VirtualPhotoList
                 photos={skeletonPhotos}
-                parentRef={scrollAreaRef}
+                parentRef={viewportRef}
                 renderRow={renderSkeletonRow}
               />
             ) : photos.length === 0 ? (
@@ -244,7 +249,7 @@ const PhotoListPage = () => {
             ) : (
               <VirtualPhotoList
                 photos={photos}
-                parentRef={scrollAreaRef}
+                parentRef={viewportRef}
                 renderRow={renderPhotoRow}
               />
             )}

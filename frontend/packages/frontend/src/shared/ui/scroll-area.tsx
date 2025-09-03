@@ -5,8 +5,12 @@ import { cn } from "@/shared/lib/utils"
 
 const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>
->(({ className, children, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & {
+    viewportRef?: React.Ref<
+      React.ElementRef<typeof ScrollAreaPrimitive.Viewport>
+    >;
+  }
+>(({ className, children, viewportRef, ...props }, ref) => {
   return (
     <ScrollAreaPrimitive.Root
       data-slot="scroll-area"
@@ -15,6 +19,7 @@ const ScrollArea = React.forwardRef<
       {...props}
     >
       <ScrollAreaPrimitive.Viewport
+        ref={viewportRef}
         data-slot="scroll-area-viewport"
         className="focus-visible:ring-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1"
       >

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 
 import PhotoListItemDesktop from './PhotoListItemDesktop';
@@ -28,9 +28,13 @@ const VirtualPhotoList = ({
 }: VirtualPhotoListProps) => {
   const { items, totalSize, virtualizer } = usePhotoVirtual({
     count: photos.length,
-    parentRef,
+    viewportRef: parentRef,
     estimateSize,
   });
+
+  useLayoutEffect(() => {
+    virtualizer.measure();
+  }, [photos.length, virtualizer]);
 
   const row = renderRow ?? defaultRenderRow;
 
