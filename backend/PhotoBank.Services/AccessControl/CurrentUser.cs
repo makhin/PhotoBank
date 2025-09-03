@@ -20,7 +20,7 @@ public sealed class CurrentUser : ICurrentUser
 
         if (principal.Identity?.IsAuthenticated != true)
         {
-            UserId = principal.Identity?.Name ?? Guid.NewGuid().ToString();
+            UserId = principal.Identity?.Name ?? string.Empty;
             IsAdmin = false;
             AllowedStorageIds = new HashSet<int>();
             AllowedPersonGroupIds = new HashSet<int>();

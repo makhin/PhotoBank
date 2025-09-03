@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace PhotoBank.ViewModel.Dto
 {
@@ -8,6 +9,7 @@ namespace PhotoBank.ViewModel.Dto
         [System.ComponentModel.DataAnnotations.Required]
         public int Id { get; set; }
 
+        [JsonIgnore]
         public string? S3Key_Thumbnail { get; set; }
         public string? ThumbnailUrl { get; set; }
 

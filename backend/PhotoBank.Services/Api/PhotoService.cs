@@ -204,7 +204,7 @@ public class PhotoService : IPhotoService
 
         // Execute the count query first
         int? count = null;
-        if (filter.Page == 1)
+        //if (filter.Page == 1)
         {
             count = await query.CountAsync(); // один раз и только на 1-й
         }
@@ -238,7 +238,7 @@ public class PhotoService : IPhotoService
         {
             var adminQuery = _db.Photos
                 .Include(p => p.PhotoTags).ThenInclude(pt => pt.Tag)
-                .Include(p => p.Faces).ThenInclude(f => f.Person).ThenInclude(per => per.PersonGroups)
+                .Include(p => p.Faces).ThenInclude(f => f.Person)
                 .Include(p => p.Captions)
                 .AsSplitQuery();
 

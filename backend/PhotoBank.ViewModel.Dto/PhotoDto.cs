@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace PhotoBank.ViewModel.Dto
 {
@@ -12,6 +13,7 @@ namespace PhotoBank.ViewModel.Dto
         public required string Name { get; set; }
         public double Scale { get; set; }
         public DateTime? TakenDate { get; set; }
+        [JsonIgnore]
         public string? S3Key_Preview { get; set; }
         public string? PreviewUrl { get; set; }
         public GeoPointDto? Location { get; set; }
