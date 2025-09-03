@@ -57,5 +57,11 @@ test('renders only a subset of items', async () => {
   if (photos?.length) {
     expect(rows.length).toBeLessThanOrEqual(photos.length);
   }
+
+  rows.forEach((row, i) => {
+    const parent = row.parentElement;
+    expect(parent).not.toBeNull();
+    expect(parent?.getAttribute('data-index')).toBe(String(i));
+  });
 });
 

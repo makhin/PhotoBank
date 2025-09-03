@@ -49,6 +49,7 @@ const VirtualPhotoList = ({
           <div
             key={photo.id}
             ref={virtualizer.measureElement}
+            data-index={item.index}
             style={{
               position: 'absolute',
               top: 0,
