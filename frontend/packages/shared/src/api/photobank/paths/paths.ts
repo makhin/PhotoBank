@@ -20,10 +20,8 @@ import type {
 
 import { customFetcher } from '.././fetcher';
 
-type AwaitedInput<T> = PromiseLike<T> | T;
 
-      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -64,16 +62,16 @@ export const getPathsGetAllQueryKey = () => {
     }
 
     
-export const getPathsGetAllQueryOptions = <TData = Awaited<ReturnType<typeof pathsGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof pathsGetAll>>, TError, TData>, }
+export const getPathsGetAllQueryOptions = <TData = Awaited<ReturnType<typeof pathsGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof pathsGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getPathsGetAllQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof pathsGetAll>>> = ({ signal }) => pathsGetAll(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof pathsGetAll>>> = ({ signal }) => pathsGetAll({ signal, ...requestOptions });
 
       
 
@@ -88,7 +86,7 @@ export type PathsGetAllQueryError = unknown
 
 
 export function usePathsGetAll<TData = Awaited<ReturnType<typeof pathsGetAll>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof pathsGetAll>>, TError, TData>, }
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof pathsGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 

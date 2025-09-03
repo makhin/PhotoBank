@@ -24,10 +24,8 @@ import type {
 
 import { customFetcher } from '.././fetcher';
 
-type AwaitedInput<T> = PromiseLike<T> | T;
 
-      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -68,16 +66,16 @@ export const getPersonFacesGetAllQueryKey = () => {
     }
 
     
-export const getPersonFacesGetAllQueryOptions = <TData = Awaited<ReturnType<typeof personFacesGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof personFacesGetAll>>, TError, TData>, }
+export const getPersonFacesGetAllQueryOptions = <TData = Awaited<ReturnType<typeof personFacesGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof personFacesGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getPersonFacesGetAllQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof personFacesGetAll>>> = ({ signal }) => personFacesGetAll(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof personFacesGetAll>>> = ({ signal }) => personFacesGetAll({ signal, ...requestOptions });
 
       
 
@@ -92,7 +90,7 @@ export type PersonFacesGetAllQueryError = unknown
 
 
 export function usePersonFacesGetAll<TData = Awaited<ReturnType<typeof personFacesGetAll>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof personFacesGetAll>>, TError, TData>, }
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof personFacesGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -142,15 +140,15 @@ export const personFacesCreate = async (personFaceDto: PersonFaceDto, options?: 
 
 
 export const getPersonFacesCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personFacesCreate>>, TError,{data: PersonFaceDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personFacesCreate>>, TError,{data: PersonFaceDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof personFacesCreate>>, TError,{data: PersonFaceDto}, TContext> => {
 
 const mutationKey = ['personFacesCreate'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -158,7 +156,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof personFacesCreate>>, {data: PersonFaceDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  personFacesCreate(data,)
+          return  personFacesCreate(data,requestOptions)
         }
 
         
@@ -171,7 +169,7 @@ const {mutation: mutationOptions} = options ?
     export type PersonFacesCreateMutationError = unknown
 
     export const usePersonFacesCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personFacesCreate>>, TError,{data: PersonFaceDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personFacesCreate>>, TError,{data: PersonFaceDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof personFacesCreate>>,
         TError,
@@ -219,15 +217,15 @@ export const personFacesUpdate = async (id: number,
 
 
 export const getPersonFacesUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personFacesUpdate>>, TError,{id: number;data: PersonFaceDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personFacesUpdate>>, TError,{id: number;data: PersonFaceDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof personFacesUpdate>>, TError,{id: number;data: PersonFaceDto}, TContext> => {
 
 const mutationKey = ['personFacesUpdate'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -235,7 +233,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof personFacesUpdate>>, {id: number;data: PersonFaceDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  personFacesUpdate(id,data,)
+          return  personFacesUpdate(id,data,requestOptions)
         }
 
         
@@ -248,7 +246,7 @@ const {mutation: mutationOptions} = options ?
     export type PersonFacesUpdateMutationError = unknown
 
     export const usePersonFacesUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personFacesUpdate>>, TError,{id: number;data: PersonFaceDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personFacesUpdate>>, TError,{id: number;data: PersonFaceDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof personFacesUpdate>>,
         TError,
@@ -294,15 +292,15 @@ export const personFacesDelete = async (id: number, options?: RequestInit): Prom
 
 
 export const getPersonFacesDeleteMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personFacesDelete>>, TError,{id: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personFacesDelete>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof personFacesDelete>>, TError,{id: number}, TContext> => {
 
 const mutationKey = ['personFacesDelete'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -310,7 +308,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof personFacesDelete>>, {id: number}> = (props) => {
           const {id} = props ?? {};
 
-          return  personFacesDelete(id,)
+          return  personFacesDelete(id,requestOptions)
         }
 
         
@@ -323,7 +321,7 @@ const {mutation: mutationOptions} = options ?
     export type PersonFacesDeleteMutationError = unknown
 
     export const usePersonFacesDelete = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personFacesDelete>>, TError,{id: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personFacesDelete>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof personFacesDelete>>,
         TError,

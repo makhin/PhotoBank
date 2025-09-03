@@ -24,9 +24,4 @@ const pathsGetAll = (
       options);
     }
   return {pathsGetAll}};
-
-type AwaitedInput<T> = PromiseLike<T> | T;
-
-    type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
 export type PathsGetAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPaths>['pathsGetAll']>>>

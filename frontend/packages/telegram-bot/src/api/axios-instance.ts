@@ -1,41 +1,53 @@
-import axios, { AxiosRequestConfig, AxiosError } from 'axios';
+import axios, { AxiosRequestConfig, AxiosInstance } from 'axios';
 import type { Context } from 'grammy';
 
-import { ensureUserAccessToken, invalidateUserToken } from '../auth';
+import { ensureUserAccessToken, invalidateUserToken } from '@/auth';
 
-const API_BASE_URL = process.env.API_BASE_URL;
+const API_BASE_URL = process.env.API_BASE_URL ?? '/api';
 
 let currentCtx: Context | undefined;
-
-export function setRequestContext(ctx: Context) {
+export function setRequestContext(ctx: Context | undefined) {
   currentCtx = ctx;
 }
 
-export async function photobankAxios<T>(config: AxiosRequestConfig, ctx?: Context) {
+const client: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+});
+
+// Перегрузки: orval будет использовать первую
+export async function photobankAxios<T>(config: AxiosRequestConfig): Promise<T>;
+export async function photobankAxios<T>(config: AxiosRequestConfig, ctx: Context): Promise<T>;
+export async function photobankAxios<T>(config: AxiosRequestConfig, ctx?: Context): Promise<T> {
   const context = ctx ?? currentCtx;
   if (!context) {
     throw new Error('Telegram context is required');
   }
-  if (!API_BASE_URL) {
-    throw new Error('API_BASE_URL is not set');
-  }
-  async function doRequest(force = false) {
+
+  async function doRequest(force = false): Promise<T> {
     const token = await ensureUserAccessToken(context, force);
-    return axios<T>({
-      baseURL: API_BASE_URL,
-      headers: { Authorization: `Bearer ${token}`, ...(config.headers || {}) },
+    const res = await client.request<T>({
       ...config,
+      // axios v1+ понимает AbortSignal: signal?: AbortSignal
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(config.headers ?? {}),
+      },
     });
+    return res.data; // важно: возвращаем тело, не AxiosResponse
   }
+
   try {
     return await doRequest(false);
-  } catch (err) {
-    const status = (err as AxiosError | undefined)?.response?.status;
+  } catch (error) {
+    const err = error as unknown;
+    const status = (axios.isAxiosError(err) ? err.response?.status : undefined);
+
     if (status === 401 || status === 403) {
-      // токен протух или права изменились — инвалидируем и пробуем ещё раз
+      // токен протух/права изменились — инвалидируем и пробуем ещё раз
       invalidateUserToken(context);
       return await doRequest(true);
     }
-    throw err;
+    throw error;
   }
 }

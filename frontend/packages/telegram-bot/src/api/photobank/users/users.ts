@@ -79,11 +79,6 @@ const usersGetAll = (
       options);
     }
   return {usersGetAll,usersCreate,usersUpdate,usersDelete,usersResetPassword,usersSetRoles}};
-
-type AwaitedInput<T> = PromiseLike<T> | T;
-
-    type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
 export type UsersGetAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersGetAll']>>>
 export type UsersCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersCreate']>>>
 export type UsersUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersUpdate']>>>

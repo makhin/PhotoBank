@@ -76,11 +76,6 @@ if(photosUploadBody.path !== undefined) {
       options);
     }
   return {photosSearchPhotos,photosGetPhoto,photosGetPreview,photosUpload,photosGetDuplicates}};
-
-type AwaitedInput<T> = PromiseLike<T> | T;
-
-    type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
 export type PhotosSearchPhotosResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosSearchPhotos']>>>
 export type PhotosGetPhotoResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetPhoto']>>>
 export type PhotosGetPreviewResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetPreview']>>>

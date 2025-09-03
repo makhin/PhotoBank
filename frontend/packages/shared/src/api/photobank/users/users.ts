@@ -29,10 +29,8 @@ import type {
 
 import { customFetcher } from '.././fetcher';
 
-type AwaitedInput<T> = PromiseLike<T> | T;
 
-      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -73,16 +71,16 @@ export const getUsersGetAllQueryKey = () => {
     }
 
     
-export const getUsersGetAllQueryOptions = <TData = Awaited<ReturnType<typeof usersGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof usersGetAll>>, TError, TData>, }
+export const getUsersGetAllQueryOptions = <TData = Awaited<ReturnType<typeof usersGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof usersGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getUsersGetAllQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersGetAll>>> = ({ signal }) => usersGetAll(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersGetAll>>> = ({ signal }) => usersGetAll({ signal, ...requestOptions });
 
       
 
@@ -97,7 +95,7 @@ export type UsersGetAllQueryError = unknown
 
 
 export function useUsersGetAll<TData = Awaited<ReturnType<typeof usersGetAll>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof usersGetAll>>, TError, TData>, }
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof usersGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -152,15 +150,15 @@ export const usersCreate = async (createUserDto: CreateUserDto, options?: Reques
 
 
 export const getUsersCreateMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersCreate>>, TError,{data: CreateUserDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersCreate>>, TError,{data: CreateUserDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof usersCreate>>, TError,{data: CreateUserDto}, TContext> => {
 
 const mutationKey = ['usersCreate'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -168,7 +166,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersCreate>>, {data: CreateUserDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  usersCreate(data,)
+          return  usersCreate(data,requestOptions)
         }
 
         
@@ -181,7 +179,7 @@ const {mutation: mutationOptions} = options ?
     export type UsersCreateMutationError = ProblemDetails
 
     export const useUsersCreate = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersCreate>>, TError,{data: CreateUserDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersCreate>>, TError,{data: CreateUserDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof usersCreate>>,
         TError,
@@ -239,15 +237,15 @@ export const usersUpdate = async (id: string,
 
 
 export const getUsersUpdateMutationOptions = <TError = ProblemDetails | ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersUpdate>>, TError,{id: string;data: UpdateUserDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersUpdate>>, TError,{id: string;data: UpdateUserDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof usersUpdate>>, TError,{id: string;data: UpdateUserDto}, TContext> => {
 
 const mutationKey = ['usersUpdate'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -255,7 +253,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersUpdate>>, {id: string;data: UpdateUserDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  usersUpdate(id,data,)
+          return  usersUpdate(id,data,requestOptions)
         }
 
         
@@ -268,7 +266,7 @@ const {mutation: mutationOptions} = options ?
     export type UsersUpdateMutationError = ProblemDetails | ProblemDetails
 
     export const useUsersUpdate = <TError = ProblemDetails | ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersUpdate>>, TError,{id: string;data: UpdateUserDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersUpdate>>, TError,{id: string;data: UpdateUserDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof usersUpdate>>,
         TError,
@@ -319,15 +317,15 @@ export const usersDelete = async (id: string, options?: RequestInit): Promise<us
 
 
 export const getUsersDeleteMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersDelete>>, TError,{id: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersDelete>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof usersDelete>>, TError,{id: string}, TContext> => {
 
 const mutationKey = ['usersDelete'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -335,7 +333,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersDelete>>, {id: string}> = (props) => {
           const {id} = props ?? {};
 
-          return  usersDelete(id,)
+          return  usersDelete(id,requestOptions)
         }
 
         
@@ -348,7 +346,7 @@ const {mutation: mutationOptions} = options ?
     export type UsersDeleteMutationError = ProblemDetails
 
     export const useUsersDelete = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersDelete>>, TError,{id: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersDelete>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof usersDelete>>,
         TError,
@@ -401,15 +399,15 @@ export const usersResetPassword = async (id: string,
 
 
 export const getUsersResetPasswordMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersResetPassword>>, TError,{id: string;data: ResetPasswordDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersResetPassword>>, TError,{id: string;data: ResetPasswordDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof usersResetPassword>>, TError,{id: string;data: ResetPasswordDto}, TContext> => {
 
 const mutationKey = ['usersResetPassword'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -417,7 +415,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersResetPassword>>, {id: string;data: ResetPasswordDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  usersResetPassword(id,data,)
+          return  usersResetPassword(id,data,requestOptions)
         }
 
         
@@ -430,7 +428,7 @@ const {mutation: mutationOptions} = options ?
     export type UsersResetPasswordMutationError = ProblemDetails
 
     export const useUsersResetPassword = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersResetPassword>>, TError,{id: string;data: ResetPasswordDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersResetPassword>>, TError,{id: string;data: ResetPasswordDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof usersResetPassword>>,
         TError,
@@ -483,15 +481,15 @@ export const usersSetRoles = async (id: string,
 
 
 export const getUsersSetRolesMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersSetRoles>>, TError,{id: string;data: SetRolesDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersSetRoles>>, TError,{id: string;data: SetRolesDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof usersSetRoles>>, TError,{id: string;data: SetRolesDto}, TContext> => {
 
 const mutationKey = ['usersSetRoles'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -499,7 +497,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersSetRoles>>, {id: string;data: SetRolesDto}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  usersSetRoles(id,data,)
+          return  usersSetRoles(id,data,requestOptions)
         }
 
         
@@ -512,7 +510,7 @@ const {mutation: mutationOptions} = options ?
     export type UsersSetRolesMutationError = ProblemDetails
 
     export const useUsersSetRoles = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersSetRoles>>, TError,{id: string;data: SetRolesDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersSetRoles>>, TError,{id: string;data: SetRolesDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof usersSetRoles>>,
         TError,

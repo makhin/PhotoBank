@@ -45,11 +45,6 @@ const facesGet = (
       options);
     }
   return {facesGet,facesUpdate,facesGetImage}};
-
-type AwaitedInput<T> = PromiseLike<T> | T;
-
-    type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
 export type FacesGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFaces>['facesGet']>>>
 export type FacesUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFaces>['facesUpdate']>>>
 export type FacesGetImageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFaces>['facesGetImage']>>>

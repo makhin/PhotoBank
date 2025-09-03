@@ -20,10 +20,8 @@ import type {
 
 import { customFetcher } from '.././fetcher';
 
-type AwaitedInput<T> = PromiseLike<T> | T;
 
-      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -64,16 +62,16 @@ export const getTagsGetAllQueryKey = () => {
     }
 
     
-export const getTagsGetAllQueryOptions = <TData = Awaited<ReturnType<typeof tagsGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof tagsGetAll>>, TError, TData>, }
+export const getTagsGetAllQueryOptions = <TData = Awaited<ReturnType<typeof tagsGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof tagsGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getTagsGetAllQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof tagsGetAll>>> = ({ signal }) => tagsGetAll(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof tagsGetAll>>> = ({ signal }) => tagsGetAll({ signal, ...requestOptions });
 
       
 
@@ -88,7 +86,7 @@ export type TagsGetAllQueryError = unknown
 
 
 export function useTagsGetAll<TData = Awaited<ReturnType<typeof tagsGetAll>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof tagsGetAll>>, TError, TData>, }
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof tagsGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 

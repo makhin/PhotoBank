@@ -3,9 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { describe, expect, it } from 'vitest';
-
-import Lightbox from '@/features/viewer/Lightbox';
-import viewerReducer, { open } from '@/features/viewer/viewerSlice';
+import Lightbox from '../../src/features/viewer/Lightbox';
+import viewerReducer, { open } from '../../src/features/viewer/viewerSlice';
 
 describe('Lightbox', () => {
   it('navigates and closes', async () => {

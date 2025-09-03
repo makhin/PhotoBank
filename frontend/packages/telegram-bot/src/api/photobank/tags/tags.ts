@@ -24,9 +24,4 @@ const tagsGetAll = (
       options);
     }
   return {tagsGetAll}};
-
-type AwaitedInput<T> = PromiseLike<T> | T;
-
-    type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
 export type TagsGetAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTags>['tagsGetAll']>>>

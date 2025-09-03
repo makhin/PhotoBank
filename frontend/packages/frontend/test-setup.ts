@@ -1,16 +1,26 @@
+import { configureApi } from '@photobank/shared/api/photobank';
 import { setupServer } from 'msw/node';
-import { handlers } from './src/mocks/handlers';
+import type { HttpHandler } from 'msw';              // ← тип для handlers
+
+import { handlers } from '@/mocks/handlers';
 
 import '@testing-library/jest-dom/vitest';
 import './src/shared/config/i18n';
 
+configureApi('/api');
+
+// ---- ResizeObserver без any
 class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
 }
-(globalThis as any).ResizeObserver = ResizeObserver;
+Object.defineProperty(globalThis, 'ResizeObserver', {  // ← вместо (globalThis as any).ResizeObserver
+  writable: true,
+  value: ResizeObserver,
+});
 
+// ---- matchMedia стаб
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: (query: string) => ({
@@ -25,6 +35,7 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
+// ---- IntersectionObserver стаб
 Object.defineProperty(window, 'IntersectionObserver', {
   writable: true,
   value: class {
@@ -35,25 +46,13 @@ Object.defineProperty(window, 'IntersectionObserver', {
   },
 });
 
+// ---- Canvas стаб
 Object.defineProperty(globalThis, 'HTMLCanvasElement', {
   writable: true,
   value: class {
-    getContext() { return null; }
+    getContext(): CanvasRenderingContext2D | null { return null; }
   },
 });
 
-export const server = setupServer(...(handlers as any));
-beforeAll(() =>
-  server.listen({
-    onUnhandledRequest(request, print) {
-      const url = new URL(request.url);
-      if (url.pathname.startsWith('/assets')) {
-        return;
-      }
-
-      print.warning();
-    },
-  }),
-);
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+// ---- server без any
+export const server = setupServer(...(handlers as HttpHandler[]));  // ← типизировано

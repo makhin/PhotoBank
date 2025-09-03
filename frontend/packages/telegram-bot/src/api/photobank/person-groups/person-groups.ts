@@ -71,11 +71,6 @@ const personGroupsGetAll = (
       options);
     }
   return {personGroupsGetAll,personGroupsCreate,personGroupsUpdate,personGroupsDelete,personGroupsAddPerson,personGroupsRemovePerson}};
-
-type AwaitedInput<T> = PromiseLike<T> | T;
-
-    type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
 export type PersonGroupsGetAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPersonGroups>['personGroupsGetAll']>>>
 export type PersonGroupsCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPersonGroups>['personGroupsCreate']>>>
 export type PersonGroupsUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPersonGroups>['personGroupsUpdate']>>>

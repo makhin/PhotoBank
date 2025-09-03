@@ -97,11 +97,6 @@ const adminAccessProfilesList = (
       options);
     }
   return {adminAccessProfilesList,adminAccessProfilesCreate,adminAccessProfilesGet,adminAccessProfilesUpdate,adminAccessProfilesDelete,adminAccessProfilesAssignUser,adminAccessProfilesUnassignUser,adminAccessProfilesAssignRole,adminAccessProfilesUnassignRole}};
-
-type AwaitedInput<T> = PromiseLike<T> | T;
-
-    type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
 export type AdminAccessProfilesListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesList']>>>
 export type AdminAccessProfilesCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesCreate']>>>
 export type AdminAccessProfilesGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesGet']>>>

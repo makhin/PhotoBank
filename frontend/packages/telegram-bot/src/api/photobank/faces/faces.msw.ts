@@ -19,7 +19,7 @@ import type {
 } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
 
 
-export const getFacesGetResponseMock = (): FaceIdentityDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined}), undefined]), identityStatus: faker.helpers.arrayElement([faker.helpers.arrayElement([0,1,2,3,4,5] as const), undefined]), person: faker.helpers.arrayElement([{id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}})}, undefined])})))
+export const getFacesGetResponseMock = (): FaceIdentityDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.helpers.arrayElement([faker.number.int({min: undefined, max: undefined, multipleOf: undefined}), undefined]), identityStatus: faker.helpers.arrayElement([faker.helpers.arrayElement([0,1,2,3,4,5] as const), undefined]), person: faker.helpers.arrayElement([{id: faker.number.int({min: undefined, max: undefined, multipleOf: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}})}, undefined])})))
 
 
 export const getFacesGetMockHandler = (overrideResponse?: FaceIdentityDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<FaceIdentityDto[]> | FaceIdentityDto[])) => {

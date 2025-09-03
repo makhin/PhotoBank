@@ -24,10 +24,8 @@ import type {
 
 import { customFetcher } from '.././fetcher';
 
-type AwaitedInput<T> = PromiseLike<T> | T;
 
-      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -68,16 +66,16 @@ export const getAdminAccessProfilesListQueryKey = () => {
     }
 
     
-export const getAdminAccessProfilesListQueryOptions = <TData = Awaited<ReturnType<typeof adminAccessProfilesList>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminAccessProfilesList>>, TError, TData>, }
+export const getAdminAccessProfilesListQueryOptions = <TData = Awaited<ReturnType<typeof adminAccessProfilesList>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminAccessProfilesList>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getAdminAccessProfilesListQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAccessProfilesList>>> = ({ signal }) => adminAccessProfilesList(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAccessProfilesList>>> = ({ signal }) => adminAccessProfilesList({ signal, ...requestOptions });
 
       
 
@@ -92,7 +90,7 @@ export type AdminAccessProfilesListQueryError = unknown
 
 
 export function useAdminAccessProfilesList<TData = Awaited<ReturnType<typeof adminAccessProfilesList>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminAccessProfilesList>>, TError, TData>, }
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminAccessProfilesList>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -142,15 +140,15 @@ export const adminAccessProfilesCreate = async (accessProfile: AccessProfile, op
 
 
 export const getAdminAccessProfilesCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesCreate>>, TError,{data: AccessProfile}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesCreate>>, TError,{data: AccessProfile}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesCreate>>, TError,{data: AccessProfile}, TContext> => {
 
 const mutationKey = ['adminAccessProfilesCreate'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -158,7 +156,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminAccessProfilesCreate>>, {data: AccessProfile}> = (props) => {
           const {data} = props ?? {};
 
-          return  adminAccessProfilesCreate(data,)
+          return  adminAccessProfilesCreate(data,requestOptions)
         }
 
         
@@ -171,7 +169,7 @@ const {mutation: mutationOptions} = options ?
     export type AdminAccessProfilesCreateMutationError = unknown
 
     export const useAdminAccessProfilesCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesCreate>>, TError,{data: AccessProfile}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesCreate>>, TError,{data: AccessProfile}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof adminAccessProfilesCreate>>,
         TError,
@@ -220,16 +218,16 @@ export const getAdminAccessProfilesGetQueryKey = (id?: number,) => {
     }
 
     
-export const getAdminAccessProfilesGetQueryOptions = <TData = Awaited<ReturnType<typeof adminAccessProfilesGet>>, TError = unknown>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminAccessProfilesGet>>, TError, TData>, }
+export const getAdminAccessProfilesGetQueryOptions = <TData = Awaited<ReturnType<typeof adminAccessProfilesGet>>, TError = unknown>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminAccessProfilesGet>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getAdminAccessProfilesGetQueryKey(id);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAccessProfilesGet>>> = ({ signal }) => adminAccessProfilesGet(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAccessProfilesGet>>> = ({ signal }) => adminAccessProfilesGet(id, { signal, ...requestOptions });
 
       
 
@@ -244,7 +242,7 @@ export type AdminAccessProfilesGetQueryError = unknown
 
 
 export function useAdminAccessProfilesGet<TData = Awaited<ReturnType<typeof adminAccessProfilesGet>>, TError = unknown>(
- id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminAccessProfilesGet>>, TError, TData>, }
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof adminAccessProfilesGet>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -295,15 +293,15 @@ export const adminAccessProfilesUpdate = async (id: number,
 
 
 export const getAdminAccessProfilesUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUpdate>>, TError,{id: number;data: AccessProfile}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUpdate>>, TError,{id: number;data: AccessProfile}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUpdate>>, TError,{id: number;data: AccessProfile}, TContext> => {
 
 const mutationKey = ['adminAccessProfilesUpdate'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -311,7 +309,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminAccessProfilesUpdate>>, {id: number;data: AccessProfile}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  adminAccessProfilesUpdate(id,data,)
+          return  adminAccessProfilesUpdate(id,data,requestOptions)
         }
 
         
@@ -324,7 +322,7 @@ const {mutation: mutationOptions} = options ?
     export type AdminAccessProfilesUpdateMutationError = unknown
 
     export const useAdminAccessProfilesUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUpdate>>, TError,{id: number;data: AccessProfile}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUpdate>>, TError,{id: number;data: AccessProfile}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof adminAccessProfilesUpdate>>,
         TError,
@@ -370,15 +368,15 @@ export const adminAccessProfilesDelete = async (id: number, options?: RequestIni
 
 
 export const getAdminAccessProfilesDeleteMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesDelete>>, TError,{id: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesDelete>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesDelete>>, TError,{id: number}, TContext> => {
 
 const mutationKey = ['adminAccessProfilesDelete'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -386,7 +384,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminAccessProfilesDelete>>, {id: number}> = (props) => {
           const {id} = props ?? {};
 
-          return  adminAccessProfilesDelete(id,)
+          return  adminAccessProfilesDelete(id,requestOptions)
         }
 
         
@@ -399,7 +397,7 @@ const {mutation: mutationOptions} = options ?
     export type AdminAccessProfilesDeleteMutationError = unknown
 
     export const useAdminAccessProfilesDelete = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesDelete>>, TError,{id: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesDelete>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof adminAccessProfilesDelete>>,
         TError,
@@ -447,15 +445,15 @@ export const adminAccessProfilesAssignUser = async (id: number,
 
 
 export const getAdminAccessProfilesAssignUserMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesAssignUser>>, TError,{id: number;userId: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesAssignUser>>, TError,{id: number;userId: string}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesAssignUser>>, TError,{id: number;userId: string}, TContext> => {
 
 const mutationKey = ['adminAccessProfilesAssignUser'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -463,7 +461,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminAccessProfilesAssignUser>>, {id: number;userId: string}> = (props) => {
           const {id,userId} = props ?? {};
 
-          return  adminAccessProfilesAssignUser(id,userId,)
+          return  adminAccessProfilesAssignUser(id,userId,requestOptions)
         }
 
         
@@ -476,7 +474,7 @@ const {mutation: mutationOptions} = options ?
     export type AdminAccessProfilesAssignUserMutationError = unknown
 
     export const useAdminAccessProfilesAssignUser = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesAssignUser>>, TError,{id: number;userId: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesAssignUser>>, TError,{id: number;userId: string}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof adminAccessProfilesAssignUser>>,
         TError,
@@ -524,15 +522,15 @@ export const adminAccessProfilesUnassignUser = async (id: number,
 
 
 export const getAdminAccessProfilesUnassignUserMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignUser>>, TError,{id: number;userId: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignUser>>, TError,{id: number;userId: string}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignUser>>, TError,{id: number;userId: string}, TContext> => {
 
 const mutationKey = ['adminAccessProfilesUnassignUser'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -540,7 +538,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminAccessProfilesUnassignUser>>, {id: number;userId: string}> = (props) => {
           const {id,userId} = props ?? {};
 
-          return  adminAccessProfilesUnassignUser(id,userId,)
+          return  adminAccessProfilesUnassignUser(id,userId,requestOptions)
         }
 
         
@@ -553,7 +551,7 @@ const {mutation: mutationOptions} = options ?
     export type AdminAccessProfilesUnassignUserMutationError = unknown
 
     export const useAdminAccessProfilesUnassignUser = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignUser>>, TError,{id: number;userId: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignUser>>, TError,{id: number;userId: string}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof adminAccessProfilesUnassignUser>>,
         TError,
@@ -601,15 +599,15 @@ export const adminAccessProfilesAssignRole = async (id: number,
 
 
 export const getAdminAccessProfilesAssignRoleMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesAssignRole>>, TError,{id: number;roleId: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesAssignRole>>, TError,{id: number;roleId: string}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesAssignRole>>, TError,{id: number;roleId: string}, TContext> => {
 
 const mutationKey = ['adminAccessProfilesAssignRole'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -617,7 +615,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminAccessProfilesAssignRole>>, {id: number;roleId: string}> = (props) => {
           const {id,roleId} = props ?? {};
 
-          return  adminAccessProfilesAssignRole(id,roleId,)
+          return  adminAccessProfilesAssignRole(id,roleId,requestOptions)
         }
 
         
@@ -630,7 +628,7 @@ const {mutation: mutationOptions} = options ?
     export type AdminAccessProfilesAssignRoleMutationError = unknown
 
     export const useAdminAccessProfilesAssignRole = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesAssignRole>>, TError,{id: number;roleId: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesAssignRole>>, TError,{id: number;roleId: string}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof adminAccessProfilesAssignRole>>,
         TError,
@@ -678,15 +676,15 @@ export const adminAccessProfilesUnassignRole = async (id: number,
 
 
 export const getAdminAccessProfilesUnassignRoleMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>, TError,{id: number;roleId: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>, TError,{id: number;roleId: string}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>, TError,{id: number;roleId: string}, TContext> => {
 
 const mutationKey = ['adminAccessProfilesUnassignRole'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -694,7 +692,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>, {id: number;roleId: string}> = (props) => {
           const {id,roleId} = props ?? {};
 
-          return  adminAccessProfilesUnassignRole(id,roleId,)
+          return  adminAccessProfilesUnassignRole(id,roleId,requestOptions)
         }
 
         
@@ -707,7 +705,7 @@ const {mutation: mutationOptions} = options ?
     export type AdminAccessProfilesUnassignRoleMutationError = unknown
 
     export const useAdminAccessProfilesUnassignRole = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>, TError,{id: number;roleId: string}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>, TError,{id: number;roleId: string}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>,
         TError,

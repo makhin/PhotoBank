@@ -24,9 +24,4 @@ const storagesGetAll = (
       options);
     }
   return {storagesGetAll}};
-
-type AwaitedInput<T> = PromiseLike<T> | T;
-
-    type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
 export type StoragesGetAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getStorages>['storagesGetAll']>>>

@@ -20,10 +20,8 @@ import type {
 
 import { customFetcher } from '.././fetcher';
 
-type AwaitedInput<T> = PromiseLike<T> | T;
 
-      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -64,16 +62,16 @@ export const getStoragesGetAllQueryKey = () => {
     }
 
     
-export const getStoragesGetAllQueryOptions = <TData = Awaited<ReturnType<typeof storagesGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof storagesGetAll>>, TError, TData>, }
+export const getStoragesGetAllQueryOptions = <TData = Awaited<ReturnType<typeof storagesGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof storagesGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getStoragesGetAllQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof storagesGetAll>>> = ({ signal }) => storagesGetAll(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof storagesGetAll>>> = ({ signal }) => storagesGetAll({ signal, ...requestOptions });
 
       
 
@@ -88,7 +86,7 @@ export type StoragesGetAllQueryError = unknown
 
 
 export function useStoragesGetAll<TData = Awaited<ReturnType<typeof storagesGetAll>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof storagesGetAll>>, TError, TData>, }
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof storagesGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 

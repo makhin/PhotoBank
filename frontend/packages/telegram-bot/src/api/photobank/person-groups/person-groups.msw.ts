@@ -19,11 +19,11 @@ import type {
 } from '../photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
 
 
-export const getPersonGroupsGetAllResponseMock = (): PersonGroupDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}})})))
+export const getPersonGroupsGetAllResponseMock = (): PersonGroupDto[] => (Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({id: faker.number.int({min: undefined, max: undefined, multipleOf: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}})})))
 
-export const getPersonGroupsCreateResponseMock = (overrideResponse: Partial< PersonGroupDto > = {}): PersonGroupDto => ({id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}}), ...overrideResponse})
+export const getPersonGroupsCreateResponseMock = (overrideResponse: Partial< PersonGroupDto > = {}): PersonGroupDto => ({id: faker.number.int({min: undefined, max: undefined, multipleOf: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}}), ...overrideResponse})
 
-export const getPersonGroupsUpdateResponseMock = (overrideResponse: Partial< PersonGroupDto > = {}): PersonGroupDto => ({id: faker.number.int({min: undefined, max: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}}), ...overrideResponse})
+export const getPersonGroupsUpdateResponseMock = (overrideResponse: Partial< PersonGroupDto > = {}): PersonGroupDto => ({id: faker.number.int({min: undefined, max: undefined, multipleOf: undefined}), name: faker.string.alpha({length: {min: 1, max: 20}}), ...overrideResponse})
 
 
 export const getPersonGroupsGetAllMockHandler = (overrideResponse?: PersonGroupDto[] | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<PersonGroupDto[]> | PersonGroupDto[])) => {

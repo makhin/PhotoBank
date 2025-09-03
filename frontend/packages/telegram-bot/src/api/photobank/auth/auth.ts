@@ -78,11 +78,6 @@ const authLogin = (
       options);
     }
   return {authLogin,authRegister,authGetUser,authUpdateUser,authTelegramExchange,authGetEffective}};
-
-type AwaitedInput<T> = PromiseLike<T> | T;
-
-    type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
 export type AuthLoginResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authLogin']>>>
 export type AuthRegisterResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authRegister']>>>
 export type AuthGetUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetUser']>>>

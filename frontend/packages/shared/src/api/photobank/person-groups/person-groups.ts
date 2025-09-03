@@ -24,10 +24,8 @@ import type {
 
 import { customFetcher } from '.././fetcher';
 
-type AwaitedInput<T> = PromiseLike<T> | T;
 
-      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -68,16 +66,16 @@ export const getPersonGroupsGetAllQueryKey = () => {
     }
 
     
-export const getPersonGroupsGetAllQueryOptions = <TData = Awaited<ReturnType<typeof personGroupsGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof personGroupsGetAll>>, TError, TData>, }
+export const getPersonGroupsGetAllQueryOptions = <TData = Awaited<ReturnType<typeof personGroupsGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof personGroupsGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getPersonGroupsGetAllQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof personGroupsGetAll>>> = ({ signal }) => personGroupsGetAll(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof personGroupsGetAll>>> = ({ signal }) => personGroupsGetAll({ signal, ...requestOptions });
 
       
 
@@ -92,7 +90,7 @@ export type PersonGroupsGetAllQueryError = unknown
 
 
 export function usePersonGroupsGetAll<TData = Awaited<ReturnType<typeof personGroupsGetAll>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof personGroupsGetAll>>, TError, TData>, }
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof personGroupsGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -142,15 +140,15 @@ export const personGroupsCreate = async (personGroupDto: PersonGroupDto, options
 
 
 export const getPersonGroupsCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsCreate>>, TError,{data: PersonGroupDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsCreate>>, TError,{data: PersonGroupDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof personGroupsCreate>>, TError,{data: PersonGroupDto}, TContext> => {
 
 const mutationKey = ['personGroupsCreate'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -158,7 +156,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof personGroupsCreate>>, {data: PersonGroupDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  personGroupsCreate(data,)
+          return  personGroupsCreate(data,requestOptions)
         }
 
         
@@ -171,7 +169,7 @@ const {mutation: mutationOptions} = options ?
     export type PersonGroupsCreateMutationError = unknown
 
     export const usePersonGroupsCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsCreate>>, TError,{data: PersonGroupDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsCreate>>, TError,{data: PersonGroupDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof personGroupsCreate>>,
         TError,
@@ -219,15 +217,15 @@ export const personGroupsUpdate = async (groupId: number,
 
 
 export const getPersonGroupsUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsUpdate>>, TError,{groupId: number;data: PersonGroupDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsUpdate>>, TError,{groupId: number;data: PersonGroupDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof personGroupsUpdate>>, TError,{groupId: number;data: PersonGroupDto}, TContext> => {
 
 const mutationKey = ['personGroupsUpdate'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -235,7 +233,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof personGroupsUpdate>>, {groupId: number;data: PersonGroupDto}> = (props) => {
           const {groupId,data} = props ?? {};
 
-          return  personGroupsUpdate(groupId,data,)
+          return  personGroupsUpdate(groupId,data,requestOptions)
         }
 
         
@@ -248,7 +246,7 @@ const {mutation: mutationOptions} = options ?
     export type PersonGroupsUpdateMutationError = unknown
 
     export const usePersonGroupsUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsUpdate>>, TError,{groupId: number;data: PersonGroupDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsUpdate>>, TError,{groupId: number;data: PersonGroupDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof personGroupsUpdate>>,
         TError,
@@ -294,15 +292,15 @@ export const personGroupsDelete = async (groupId: number, options?: RequestInit)
 
 
 export const getPersonGroupsDeleteMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsDelete>>, TError,{groupId: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsDelete>>, TError,{groupId: number}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof personGroupsDelete>>, TError,{groupId: number}, TContext> => {
 
 const mutationKey = ['personGroupsDelete'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -310,7 +308,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof personGroupsDelete>>, {groupId: number}> = (props) => {
           const {groupId} = props ?? {};
 
-          return  personGroupsDelete(groupId,)
+          return  personGroupsDelete(groupId,requestOptions)
         }
 
         
@@ -323,7 +321,7 @@ const {mutation: mutationOptions} = options ?
     export type PersonGroupsDeleteMutationError = unknown
 
     export const usePersonGroupsDelete = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsDelete>>, TError,{groupId: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsDelete>>, TError,{groupId: number}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof personGroupsDelete>>,
         TError,
@@ -371,15 +369,15 @@ export const personGroupsAddPerson = async (groupId: number,
 
 
 export const getPersonGroupsAddPersonMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsAddPerson>>, TError,{groupId: number;personId: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsAddPerson>>, TError,{groupId: number;personId: number}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof personGroupsAddPerson>>, TError,{groupId: number;personId: number}, TContext> => {
 
 const mutationKey = ['personGroupsAddPerson'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -387,7 +385,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof personGroupsAddPerson>>, {groupId: number;personId: number}> = (props) => {
           const {groupId,personId} = props ?? {};
 
-          return  personGroupsAddPerson(groupId,personId,)
+          return  personGroupsAddPerson(groupId,personId,requestOptions)
         }
 
         
@@ -400,7 +398,7 @@ const {mutation: mutationOptions} = options ?
     export type PersonGroupsAddPersonMutationError = unknown
 
     export const usePersonGroupsAddPerson = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsAddPerson>>, TError,{groupId: number;personId: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsAddPerson>>, TError,{groupId: number;personId: number}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof personGroupsAddPerson>>,
         TError,
@@ -448,15 +446,15 @@ export const personGroupsRemovePerson = async (groupId: number,
 
 
 export const getPersonGroupsRemovePersonMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsRemovePerson>>, TError,{groupId: number;personId: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsRemovePerson>>, TError,{groupId: number;personId: number}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof personGroupsRemovePerson>>, TError,{groupId: number;personId: number}, TContext> => {
 
 const mutationKey = ['personGroupsRemovePerson'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -464,7 +462,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof personGroupsRemovePerson>>, {groupId: number;personId: number}> = (props) => {
           const {groupId,personId} = props ?? {};
 
-          return  personGroupsRemovePerson(groupId,personId,)
+          return  personGroupsRemovePerson(groupId,personId,requestOptions)
         }
 
         
@@ -477,7 +475,7 @@ const {mutation: mutationOptions} = options ?
     export type PersonGroupsRemovePersonMutationError = unknown
 
     export const usePersonGroupsRemovePerson = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsRemovePerson>>, TError,{groupId: number;personId: number}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personGroupsRemovePerson>>, TError,{groupId: number;personId: number}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof personGroupsRemovePerson>>,
         TError,

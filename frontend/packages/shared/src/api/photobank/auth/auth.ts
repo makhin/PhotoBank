@@ -31,10 +31,8 @@ import type {
 
 import { customFetcher } from '.././fetcher';
 
-type AwaitedInput<T> = PromiseLike<T> | T;
 
-      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -78,15 +76,15 @@ export const authLogin = async (loginRequestDto: LoginRequestDto, options?: Requ
 
 
 export const getAuthLoginMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext> => {
 
 const mutationKey = ['authLogin'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -94,7 +92,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof authLogin>>, {data: LoginRequestDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  authLogin(data,)
+          return  authLogin(data,requestOptions)
         }
 
         
@@ -107,7 +105,7 @@ const {mutation: mutationOptions} = options ?
     export type AuthLoginMutationError = ProblemDetails
 
     export const useAuthLogin = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof authLogin>>,
         TError,
@@ -159,15 +157,15 @@ export const authRegister = async (registerRequestDto: RegisterRequestDto, optio
 
 
 export const getAuthRegisterMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authRegister>>, TError,{data: RegisterRequestDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authRegister>>, TError,{data: RegisterRequestDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof authRegister>>, TError,{data: RegisterRequestDto}, TContext> => {
 
 const mutationKey = ['authRegister'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -175,7 +173,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof authRegister>>, {data: RegisterRequestDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  authRegister(data,)
+          return  authRegister(data,requestOptions)
         }
 
         
@@ -188,7 +186,7 @@ const {mutation: mutationOptions} = options ?
     export type AuthRegisterMutationError = ProblemDetails
 
     export const useAuthRegister = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authRegister>>, TError,{data: RegisterRequestDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authRegister>>, TError,{data: RegisterRequestDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof authRegister>>,
         TError,
@@ -237,16 +235,16 @@ export const getAuthGetUserQueryKey = () => {
     }
 
     
-export const getAuthGetUserQueryOptions = <TData = Awaited<ReturnType<typeof authGetUser>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUser>>, TError, TData>, }
+export const getAuthGetUserQueryOptions = <TData = Awaited<ReturnType<typeof authGetUser>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUser>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getAuthGetUserQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUser>>> = ({ signal }) => authGetUser(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUser>>> = ({ signal }) => authGetUser({ signal, ...requestOptions });
 
       
 
@@ -261,7 +259,7 @@ export type AuthGetUserQueryError = unknown
 
 
 export function useAuthGetUser<TData = Awaited<ReturnType<typeof authGetUser>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUser>>, TError, TData>, }
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUser>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -316,15 +314,15 @@ export const authUpdateUser = async (updateUserDto: UpdateUserDto, options?: Req
 
 
 export const getAuthUpdateUserMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authUpdateUser>>, TError,{data: UpdateUserDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authUpdateUser>>, TError,{data: UpdateUserDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof authUpdateUser>>, TError,{data: UpdateUserDto}, TContext> => {
 
 const mutationKey = ['authUpdateUser'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -332,7 +330,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof authUpdateUser>>, {data: UpdateUserDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  authUpdateUser(data,)
+          return  authUpdateUser(data,requestOptions)
         }
 
         
@@ -345,7 +343,7 @@ const {mutation: mutationOptions} = options ?
     export type AuthUpdateUserMutationError = ProblemDetails
 
     export const useAuthUpdateUser = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authUpdateUser>>, TError,{data: UpdateUserDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authUpdateUser>>, TError,{data: UpdateUserDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof authUpdateUser>>,
         TError,
@@ -402,15 +400,15 @@ export const authTelegramExchange = async (telegramExchangeRequest: TelegramExch
 
 
 export const getAuthTelegramExchangeMutationOptions = <TError = ProblemDetails | ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext> => {
 
 const mutationKey = ['authTelegramExchange'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -418,7 +416,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof authTelegramExchange>>, {data: TelegramExchangeRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  authTelegramExchange(data,)
+          return  authTelegramExchange(data,requestOptions)
         }
 
         
@@ -431,7 +429,7 @@ const {mutation: mutationOptions} = options ?
     export type AuthTelegramExchangeMutationError = ProblemDetails | ProblemDetails
 
     export const useAuthTelegramExchange = <TError = ProblemDetails | ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof authTelegramExchange>>,
         TError,
@@ -480,16 +478,16 @@ export const getAuthGetEffectiveQueryKey = () => {
     }
 
     
-export const getAuthGetEffectiveQueryOptions = <TData = Awaited<ReturnType<typeof authGetEffective>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetEffective>>, TError, TData>, }
+export const getAuthGetEffectiveQueryOptions = <TData = Awaited<ReturnType<typeof authGetEffective>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetEffective>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getAuthGetEffectiveQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetEffective>>> = ({ signal }) => authGetEffective(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetEffective>>> = ({ signal }) => authGetEffective({ signal, ...requestOptions });
 
       
 
@@ -504,7 +502,7 @@ export type AuthGetEffectiveQueryError = unknown
 
 
 export function useAuthGetEffective<TData = Awaited<ReturnType<typeof authGetEffective>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetEffective>>, TError, TData>, }
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetEffective>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 

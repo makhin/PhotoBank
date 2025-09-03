@@ -27,10 +27,8 @@ import type {
 
 import { customFetcher } from '.././fetcher';
 
-type AwaitedInput<T> = PromiseLike<T> | T;
 
-      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
-
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -78,16 +76,16 @@ export const getFacesGetQueryKey = (params?: FacesGetParams,) => {
     }
 
     
-export const getFacesGetQueryOptions = <TData = Awaited<ReturnType<typeof facesGet>>, TError = unknown>(params?: FacesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGet>>, TError, TData>, }
+export const getFacesGetQueryOptions = <TData = Awaited<ReturnType<typeof facesGet>>, TError = unknown>(params?: FacesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGet>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getFacesGetQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGet>>> = ({ signal }) => facesGet(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGet>>> = ({ signal }) => facesGet(params, { signal, ...requestOptions });
 
       
 
@@ -102,7 +100,7 @@ export type FacesGetQueryError = unknown
 
 
 export function useFacesGet<TData = Awaited<ReturnType<typeof facesGet>>, TError = unknown>(
- params?: FacesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGet>>, TError, TData>, }
+ params?: FacesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGet>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -152,15 +150,15 @@ export const facesUpdate = async (updateFaceIdentityDto: UpdateFaceIdentityDto, 
 
 
 export const getFacesUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceIdentityDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceIdentityDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceIdentityDto}, TContext> => {
 
 const mutationKey = ['facesUpdate'];
-const {mutation: mutationOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -168,7 +166,7 @@ const {mutation: mutationOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof facesUpdate>>, {data: UpdateFaceIdentityDto}> = (props) => {
           const {data} = props ?? {};
 
-          return  facesUpdate(data,)
+          return  facesUpdate(data,requestOptions)
         }
 
         
@@ -181,7 +179,7 @@ const {mutation: mutationOptions} = options ?
     export type FacesUpdateMutationError = unknown
 
     export const useFacesUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceIdentityDto}, TContext>, }
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceIdentityDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof facesUpdate>>,
         TError,
@@ -240,16 +238,16 @@ export const getFacesGetImageQueryKey = (id?: number,) => {
     }
 
     
-export const getFacesGetImageQueryOptions = <TData = Awaited<ReturnType<typeof facesGetImage>>, TError = null | ProblemDetails>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGetImage>>, TError, TData>, }
+export const getFacesGetImageQueryOptions = <TData = Awaited<ReturnType<typeof facesGetImage>>, TError = null | ProblemDetails>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGetImage>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
-const {query: queryOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getFacesGetImageQueryKey(id);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGetImage>>> = ({ signal }) => facesGetImage(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGetImage>>> = ({ signal }) => facesGetImage(id, { signal, ...requestOptions });
 
       
 
@@ -264,7 +262,7 @@ export type FacesGetImageQueryError = null | ProblemDetails
 
 
 export function useFacesGetImage<TData = Awaited<ReturnType<typeof facesGetImage>>, TError = null | ProblemDetails>(
- id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGetImage>>, TError, TData>, }
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGetImage>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
