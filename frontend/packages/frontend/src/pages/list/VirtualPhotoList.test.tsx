@@ -37,7 +37,7 @@ test('renders only a subset of items', async () => {
   const photos = createPhotos(50);
 
   (usePhotoVirtual as unknown as Mock).mockReturnValue({
-    virtualizer: { measureElement: vi.fn() },
+    virtualizer: { measureElement: vi.fn(), measure: vi.fn() },
     items: makeItems(Math.min(photos.length, 10)) as any,
     totalSize: 112 * Math.min(photos.length, 10),
   });

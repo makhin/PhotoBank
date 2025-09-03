@@ -3,25 +3,18 @@ import { RefObject } from 'react';
 
 interface UsePhotoVirtualProps {
   count: number;
-  parentRef: RefObject<HTMLElement | null>;
+  viewportRef: RefObject<HTMLElement | null>;
   estimateSize?: (index: number) => number;
 }
 
 export const usePhotoVirtual = ({
   count,
-  parentRef,
+  viewportRef,
   estimateSize,
 }: UsePhotoVirtualProps) => {
   const virtualizer = useVirtualizer({
     count,
-    getScrollElement: () => {
-      const parent = parentRef.current;
-      if (!parent) return null;
-      const viewport = parent.querySelector<HTMLElement>(
-        '[data-slot="scroll-area-viewport"]'
-      );
-      return viewport ?? (parent);
-    },
+    getScrollElement: () => viewportRef.current,
     estimateSize: estimateSize ?? (() => 112),
     overscan: 8,
   });
