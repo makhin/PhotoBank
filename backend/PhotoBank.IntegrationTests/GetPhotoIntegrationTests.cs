@@ -7,7 +7,6 @@ using Moq;
 using NUnit.Framework;
 using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
-using PhotoBank.DbContext.Models;
 using PhotoBank.DependencyInjection;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;

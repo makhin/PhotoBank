@@ -13,6 +13,7 @@
     "doctor": "expo-doctor"
   },
   "dependencies": {
+    "@expo/vector-icons": "14.0.2",
     "@photobank/shared": "workspace:*",
     "@react-native-community/datetimepicker": "8.4.2",
     "@react-navigation/native": "7.1.14",
@@ -20,7 +21,6 @@
     "axios": "1.10.0",
     "expo": "53.0.17",
     "expo-status-bar": "2.2.3",
-    "@expo/vector-icons": "14.0.2",
     "react": "19.0.0",
     "react-native": "0.79.5",
     "react-native-paper": "5.14.5",
@@ -28,10 +28,10 @@
   },
   "devDependencies": {
     "@babel/core": "7.25.2",
-    "@types/react": "19.0.10",
     "@types/node": "24.0.13",
-    "typescript": "5.9.2",
-    "eslint": "^9.8.0",
-    "prettier": "^3.3.3"
+    "@types/react": "19.0.10",
+    "eslint": "^9.34.0",
+    "prettier": "^3.6.2",
+    "typescript": "5.9.2"
   }
 }
