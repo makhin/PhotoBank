@@ -42,7 +42,7 @@ describe('aiCommand', () => {
     vi.spyOn(utils, 'getFilterHash').mockReturnValue('hash');
     const searchSpy = vi
       .spyOn(photoService, 'searchPhotos')
-      .mockResolvedValue({ data: { count: 0, photos: [] } } as any);
+      .mockResolvedValue({ count: 0, photos: [] } as any);
     aiFilters.clear();
 
     await aiCommand(ctx);
@@ -91,7 +91,8 @@ describe('aiCommand', () => {
       });
     vi.spyOn(utils, 'getFilterHash').mockResolvedValue('hash');
     vi.spyOn(photoService, 'searchPhotos').mockResolvedValue({
-      data: { count: 0, photos: [] },
+      count: 0,
+      photos: [],
     } as any);
     aiFilters.clear();
 

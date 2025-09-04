@@ -21,7 +21,7 @@ beforeEach(() => {
 });
 
 it('sends new message and stores id', async () => {
-  vi.spyOn(photoService, 'getPhoto').mockResolvedValue({ data: basePhoto } as any);
+  vi.spyOn(photoService, 'getPhoto').mockResolvedValue(basePhoto as any);
   const ctx = {
     chat: { id: 1 },
     replyWithPhoto: vi.fn().mockResolvedValue({ message_id: 42 }),
@@ -37,7 +37,7 @@ it('sends new message and stores id', async () => {
 });
 
 it('edits existing message when available', async () => {
-  vi.spyOn(photoService, 'getPhoto').mockResolvedValue({ data: basePhoto } as any);
+  vi.spyOn(photoService, 'getPhoto').mockResolvedValue(basePhoto as any);
   photoMessages.set(1, 42);
   const ctx = {
     chat: { id: 1 },
@@ -54,7 +54,7 @@ it('edits existing message when available', async () => {
 });
 
 it('adds navigation buttons from current page list', async () => {
-  vi.spyOn(photoService, 'getPhoto').mockResolvedValue({ data: basePhoto } as any);
+  vi.spyOn(photoService, 'getPhoto').mockResolvedValue(basePhoto as any);
   const ctx = {
     chat: { id: 1 },
     replyWithPhoto: vi.fn().mockResolvedValue({ message_id: 1 }),

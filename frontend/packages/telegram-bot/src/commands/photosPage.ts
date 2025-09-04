@@ -37,12 +37,11 @@ export async function sendPhotosPage({
   const skip = (page - 1) * PHOTOS_PAGE_SIZE;
   let queryResult;
   try {
-    const res = await searchPhotos(ctx, {
+    queryResult = await searchPhotos(ctx, {
       ...filter,
       top: PHOTOS_PAGE_SIZE,
       skip,
     });
-    queryResult = res.data;
   } catch (err) {
     await handleCommandError(ctx, err);
     return;
