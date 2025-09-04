@@ -1,10 +1,8 @@
 import type { Context } from 'grammy';
 import {
   authGetUser,
-  authGetUserClaims,
   authUpdateUser,
   type authGetUserResponse,
-  type authGetUserClaimsResponse,
   type authUpdateUserResponse,
   type UpdateUserDto,
 } from '@photobank/shared/api/photobank';
@@ -18,10 +16,6 @@ async function authorized<T>(ctx: Context, fn: (options?: RequestInit) => Promis
 
 export function getUser(ctx: Context): Promise<authGetUserResponse> {
   return authorized(ctx, authGetUser);
-}
-
-export function getUserClaims(ctx: Context): Promise<authGetUserClaimsResponse> {
-  return authorized(ctx, authGetUserClaims);
 }
 
 export function updateUser(
