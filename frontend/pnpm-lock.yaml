@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@radix-ui/react-visually-hidden':
+        specifier: ^1.0.0
+        version: 1.2.3(@types/react-dom@19.1.9(@types/react@19.1.12))(@types/react@19.1.12)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
     devDependencies:
       '@eslint/js':
         specifier: ^9.34.0
