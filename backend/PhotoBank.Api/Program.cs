@@ -105,8 +105,9 @@ namespace PhotoBank.Api
                     diag.Set("RequestId", http.TraceIdentifier);
                 };
             });
-            app.UseCors("AllowAll");
+
             app.UseRouting();
+            app.UseCors("AllowAll");
             // Disabled HTTPS redirection to ensure CORS headers are applied
             // correctly during local development when running over HTTP.
             app.UseAuthentication();
