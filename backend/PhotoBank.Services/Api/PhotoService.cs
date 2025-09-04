@@ -237,8 +237,11 @@ public class PhotoService : IPhotoService
         if (_currentUser.IsAdmin)
         {
             var adminQuery = _db.Photos
-                .Include(p => p.PhotoTags).ThenInclude(pt => pt.Tag)
-                .Include(p => p.Faces).ThenInclude(f => f.Person)
+                .Include(p => p.PhotoTags)
+                .ThenInclude(pt => pt.Tag)
+                .Include(p => p.Faces)
+                .ThenInclude(f => f.Person)
+                .ThenInclude(pg => pg.PersonGroups)
                 .Include(p => p.Captions)
                 .AsSplitQuery();
 

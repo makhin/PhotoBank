@@ -14,7 +14,7 @@ namespace PhotoBank.ViewModel.Dto
         public double Scale { get; set; }
         public DateTime? TakenDate { get; set; }
         [JsonIgnore]
-        public string? S3Key_Preview { get; set; }
+        public string S3Key_Preview { get; set; }
         public string? PreviewUrl { get; set; }
         public GeoPointDto? Location { get; set; }
         public int? Orientation { get; set; }

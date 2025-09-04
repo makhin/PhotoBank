@@ -10,7 +10,7 @@ namespace PhotoBank.ViewModel.Dto
         public int Id { get; set; }
 
         [JsonIgnore]
-        public string? S3Key_Thumbnail { get; set; }
+        public string S3Key_Thumbnail { get; set; }
         public string? ThumbnailUrl { get; set; }
 
         [System.ComponentModel.DataAnnotations.Required]
