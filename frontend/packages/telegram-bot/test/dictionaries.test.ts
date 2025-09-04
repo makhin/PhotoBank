@@ -7,10 +7,10 @@ describe('dictionaries', () => {
   });
 
   it('getPersonName returns loaded name', async () => {
-    const getAllPersons = vi.fn().mockResolvedValue({ data: [{ id: 1, name: 'John' }] });
-    const getAllTags = vi.fn().mockResolvedValue({ data: [] });
-    const getAllStorages = vi.fn().mockResolvedValue({ data: [] });
-    const getAllPaths = vi.fn().mockResolvedValue({ data: [] });
+    const getAllPersons = vi.fn().mockResolvedValue([{ id: 1, name: 'John' }]);
+    const getAllTags = vi.fn().mockResolvedValue([]);
+    const getAllStorages = vi.fn().mockResolvedValue([]);
+    const getAllPaths = vi.fn().mockResolvedValue([]);
     vi.doMock('../src/services/dictionary', () => ({
       fetchPersons: getAllPersons,
       fetchTags: getAllTags,
@@ -39,20 +39,16 @@ describe('dictionaries', () => {
   });
 
   it('findBestPersonId and findBestTagId return closest match', async () => {
-    const getAllPersons = vi.fn().mockResolvedValue({
-      data: [
-        { id: 1, name: 'Alice' },
-        { id: 2, name: 'Bob' },
-      ],
-    });
-    const getAllTags = vi.fn().mockResolvedValue({
-      data: [
-        { id: 10, name: 'portrait' },
-        { id: 11, name: 'sea' },
-      ],
-    });
-    const getAllStorages = vi.fn().mockResolvedValue({ data: [] });
-    const getAllPaths = vi.fn().mockResolvedValue({ data: [] });
+    const getAllPersons = vi.fn().mockResolvedValue([
+      { id: 1, name: 'Alice' },
+      { id: 2, name: 'Bob' },
+    ]);
+    const getAllTags = vi.fn().mockResolvedValue([
+      { id: 10, name: 'portrait' },
+      { id: 11, name: 'sea' },
+    ]);
+    const getAllStorages = vi.fn().mockResolvedValue([]);
+    const getAllPaths = vi.fn().mockResolvedValue([]);
     vi.doMock('../src/services/dictionary', () => ({
       fetchPersons: getAllPersons,
       fetchTags: getAllTags,
@@ -66,16 +62,14 @@ describe('dictionaries', () => {
   });
 
   it('getAllStoragesWithPaths returns loaded data', async () => {
-    const getAllStorages = vi.fn().mockResolvedValue({ data: [{ id: 1, name: 'S1' }] });
-    const getAllPaths = vi.fn().mockResolvedValue({
-      data: [
-        { storageId: 1, path: '/a' },
-        { storageId: 1, path: '/b' },
-      ],
-    });
+    const getAllStorages = vi.fn().mockResolvedValue([{ id: 1, name: 'S1' }]);
+    const getAllPaths = vi.fn().mockResolvedValue([
+      { storageId: 1, path: '/a' },
+      { storageId: 1, path: '/b' },
+    ]);
     vi.doMock('../src/services/dictionary', () => ({
-      fetchPersons: vi.fn().mockResolvedValue({ data: [] }),
-      fetchTags: vi.fn().mockResolvedValue({ data: [] }),
+      fetchPersons: vi.fn().mockResolvedValue([]),
+      fetchTags: vi.fn().mockResolvedValue([]),
       fetchStorages: getAllStorages,
       fetchPaths: getAllPaths,
     }));

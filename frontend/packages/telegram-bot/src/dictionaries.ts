@@ -36,25 +36,25 @@ function getDict(): DictData {
   const existing = cache.get(currentUser);
   if (existing) return existing;
   return {
-    tagMap: new Map(),
-    personMap: new Map(),
+    tagMap: new Map<number, string>(),
+    personMap: new Map<number, string>(),
     tagList: [],
     personList: [],
     storageList: [],
-    storageMap: new Map(),
-    pathsMap: new Map(),
+    storageMap: new Map<number, string>(),
+    pathsMap: new Map<number, string[]>(),
   };
 }
 
 export async function loadDictionaries(ctx: MyContext) {
   if (cache.has(currentUser)) return;
-  const { data: tagList } = await fetchTags(ctx);
-  const tagMap = new Map(tagList.map(tag => [tag.id, tag.name]));
-  const { data: personList } = await fetchPersons(ctx);
-  const personMap = new Map(personList.map(p => [p.id, p.name]));
-  const { data: storageList } = await fetchStorages(ctx);
-  const storageMap = new Map(storageList.map((s) => [s.id, s.name]));
-  const { data: pathList } = await fetchPaths(ctx);
+  const tagList = await fetchTags(ctx);
+  const tagMap = new Map<number, string>(tagList.map((t) => [t.id, t.name]));
+  const personList = await fetchPersons(ctx);
+  const personMap = new Map<number, string>(personList.map((p) => [p.id, p.name]));
+  const storageList = await fetchStorages(ctx);
+  const storageMap = new Map<number, string>(storageList.map((s) => [s.id, s.name]));
+  const pathList = await fetchPaths(ctx);
   const pathsMap = new Map<number, string[]>();
   for (const p of pathList) {
     const arr = pathsMap.get(p.storageId) ?? [];
