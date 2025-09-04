@@ -1,28 +1,12 @@
 import type { MyContext } from "../i18n";
-import { getUser, getUserClaims } from "../services/auth";
+import { getUser } from "../services/auth";
 import { handleCommandError } from "../errorHandler";
 
 export async function profileCommand(ctx: MyContext) {
     const username = ctx.from?.username ?? String(ctx.from?.id ?? "");
     try {
         await getUser(ctx);
-        const claimsRes = await getUserClaims(ctx);
-        const claims = claimsRes.data;
-
-        const lines: string[] = [
-            ctx.t('user-info', { username }),
-        ];
-
-        if (claims.length) {
-            lines.push(ctx.t('claims-label'));
-            for (const claim of claims) {
-                lines.push(`- ${claim.type}: ${claim.value}`);
-            }
-        } else {
-            lines.push(ctx.t('claims-empty'));
-        }
-
-        await ctx.reply(lines.join("\n"));
+        await ctx.reply(ctx.t('user-info', { username }));
     } catch (error: unknown) {
         if (error instanceof Error && error.message.includes('404')) {
             await ctx.reply(ctx.t('not-registered', { userId: ctx.from?.id }));
