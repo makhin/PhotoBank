@@ -88,12 +88,10 @@ public class GetPhotoIntegrationTests
         _provider.Dispose();
     }
 
-    [Test]
-    public async Task GetPhotoAsync_AdminUser_ReturnsPhotoDto()
+    [TestCase(10000)]
+    [TestCase(30000)]
+    public async Task GetPhotoAsync_AdminUser_ReturnsPhotoDto(int testId)
     {
-        // Arrange
-        var testId = 10000;
-
         // Act
         var result = await MeasureGetPhotoAsync(testId);
 

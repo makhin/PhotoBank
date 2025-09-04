@@ -28,7 +28,7 @@ namespace PhotoBank.DbContext.Models
         [MaxLength(150)]
         public string DominantColors { get; set; }
         [Column(TypeName = "geometry")]
-        public Point Location { get; set; }
+        public Point? Location { get; set; }
         [MaxLength(512)]
         public string S3Key_Preview { get; set; }
         [MaxLength(128)]
