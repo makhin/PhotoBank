@@ -36,7 +36,7 @@ describe('handleSearch', () => {
     } as any;
     const searchSpy = vi
       .spyOn(photoService, 'searchPhotos')
-      .mockResolvedValue({ data: { count: 0, photos: [] } } as any);
+      .mockResolvedValue({ count: 0, photos: [] } as any);
 
     await searchCommands.handleSearch(ctx);
 

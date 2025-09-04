@@ -13,7 +13,8 @@ export async function searchPhotos(
 ) {
   try {
     setRequestContext(ctx);
-    return await photosSearchPhotos(filter as FilterDto);
+    const res = await photosSearchPhotos(filter as FilterDto);
+    return res.data;
   } catch (err) {
     handleServiceError(err);
     throw err;
@@ -23,7 +24,8 @@ export async function searchPhotos(
 export async function getPhoto(ctx: Context, id: number) {
   try {
     setRequestContext(ctx);
-    return await photosGetPhoto(id);
+    const res = await photosGetPhoto(id);
+    return res.data;
   } catch (err) {
     handleServiceError(err);
     throw err;

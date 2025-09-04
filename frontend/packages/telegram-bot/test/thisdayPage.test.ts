@@ -32,7 +32,8 @@ describe('sendThisDayPage', () => {
     photo.currentPagePhotos.set(1, { page: 1, ids: [1] });
     vi.spyOn(photo, 'deletePhotoMessage').mockResolvedValue();
     vi.spyOn(photoService, 'searchPhotos').mockResolvedValue({
-      data: { count: 1, photos: [basePhoto] },
+      count: 1,
+      photos: [basePhoto],
     } as any);
 
     await sendThisDayPage(ctx, 2, true);
@@ -50,7 +51,8 @@ describe('sendThisDayPage', () => {
     photo.currentPagePhotos.set(1, { page: 1, ids: [1] });
     vi.spyOn(photo, 'deletePhotoMessage').mockResolvedValue();
     vi.spyOn(photoService, 'searchPhotos').mockResolvedValue({
-      data: { count: 1, photos: [basePhoto] },
+      count: 1,
+      photos: [basePhoto],
     } as any);
 
     await sendThisDayPage(ctx, 1, true);

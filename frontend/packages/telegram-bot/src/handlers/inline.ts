@@ -46,7 +46,7 @@ bot.on('inline_query', async (ctx: MyContext) => {
       takenDate?: string | null;
       tags?: { tagId: number }[];
     };
-    const data = resp.data as { photos?: Photo[]; items?: Photo[] };
+    const data = resp as { photos?: Photo[]; items?: Photo[] };
     const items = data.photos ?? data.items ?? [];
 
     const results: InlineQueryResult[] = items.map(

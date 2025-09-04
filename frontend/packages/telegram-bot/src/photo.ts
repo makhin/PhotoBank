@@ -24,8 +24,8 @@ export async function deletePhotoMessage(ctx: MyContext) {
 
 async function fetchPhoto(ctx: MyContext, id: number): Promise<PhotoDto | null> {
     try {
-        const { data } = await getPhoto(ctx, id);
-        return data;
+        const photo = await getPhoto(ctx, id);
+        return photo;
     } catch {
         return null;
     }
@@ -35,8 +35,7 @@ export async function sendPhotoById(ctx: MyContext, id: number) {
     let photo: PhotoDto;
 
     try {
-        const res = await getPhoto(ctx, id);
-        photo = res.data;
+        photo = await getPhoto(ctx, id);
     } catch {
         await ctx.reply(ctx.t('photo-not-found'));
         return;
