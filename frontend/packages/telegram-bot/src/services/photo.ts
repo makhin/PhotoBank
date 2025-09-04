@@ -1,7 +1,11 @@
 import type { Context } from 'grammy';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 
-import { getPhotos } from '../api/photobank/photos/photos';
+import {
+  getPhotos,
+  type PhotosGetPhotoResult,
+  type PhotosSearchPhotosResult,
+} from '../api/photobank/photos/photos';
 import { setRequestContext } from '../api/axios-instance';
 import { handleServiceError } from '../errorHandler';
 
@@ -10,22 +14,23 @@ const { photosSearchPhotos, photosGetPhoto, photosUpload } = getPhotos();
 export async function searchPhotos(
   ctx: Context,
   filter: FilterDto & { top?: number; skip?: number },
-) {
+): Promise<PhotosSearchPhotosResult> {
   try {
     setRequestContext(ctx);
-    const res = await photosSearchPhotos(filter as FilterDto);
-    return res.data;
+    return await photosSearchPhotos(filter as FilterDto);
   } catch (err) {
     handleServiceError(err);
     throw err;
   }
 }
 
-export async function getPhoto(ctx: Context, id: number) {
+export async function getPhoto(
+  ctx: Context,
+  id: number,
+): Promise<PhotosGetPhotoResult> {
   try {
     setRequestContext(ctx);
-    const res = await photosGetPhoto(id);
-    return res.data;
+    return await photosGetPhoto(id);
   } catch (err) {
     handleServiceError(err);
     throw err;
