@@ -1,6 +1,7 @@
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+
 import PhotoDetailsPage from '@/pages/detail/PhotoDetailsPage';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 interface PhotoDetailsModalProps {
     photoId: number | null;
