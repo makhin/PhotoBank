@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "rimraf dist && tsc -p tsconfig.build.json && cpy \"src/locales/**/*\" dist/locales",
+    "build": "pnpm --filter @photobank/shared build && rimraf dist && tsc -b tsconfig.build.json && cpy \"src/locales/**/*\" dist/locales",
     "prestart": "pnpm run build",
     "start": "node --experimental-specifier-resolution=node dist/index.js",
     "test": "vitest",
