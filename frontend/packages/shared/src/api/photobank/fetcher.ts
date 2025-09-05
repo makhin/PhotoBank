@@ -1,5 +1,5 @@
 import PQueue from 'p-queue';
-import { ProblemDetailsError, HttpError, isProblemDetails } from '../../types/problem';
+import { ProblemDetailsError, HttpError, isProblemDetails } from '@/types/problem';
 
 // ====== конфиг ======
 let tokenProvider: (() => string | undefined | Promise<string | undefined>) | undefined;
@@ -70,7 +70,7 @@ async function parseBody<T>(res: Response): Promise<T> {
 // ====== ГЛАВНОЕ: мутатор для orval ======
 export async function customFetcher<T>(
   url: string,
-  init: RequestInit | AbortSignal = {},
+  init?: RequestInit | AbortSignal,
 ): Promise<T> {
   const options: RequestInit = isAbortSignal(init) ? { signal: init } : (init ?? {});
 

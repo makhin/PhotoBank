@@ -20,9 +20,6 @@
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.14.0",
-  "dependencies": {
-    "@radix-ui/react-visually-hidden": "^1.0.0"
-  },
   "devDependencies": {
     "@eslint/js": "^9.34.0",
     "@faker-js/faker": "^10.0.0",
