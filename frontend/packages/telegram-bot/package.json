@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "rimraf dist && tsc -p tsconfig.json && cpy \"src/locales/**/*\" dist/locales",
+    "build": "rimraf dist && tsc -p tsconfig.build.json && cpy \"src/locales/**/*\" dist/locales",
+    "prestart": "pnpm run build",
     "start": "node --experimental-specifier-resolution=node dist/index.js",
     "test": "vitest",
     "test:ui": "vitest --ui",
