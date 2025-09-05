@@ -7,8 +7,8 @@
     "emitDeclarationOnly": false,
     "declaration": true,
     "sourceMap": true,
-    "moduleResolution": "node16",
-    "module": "node16",
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
     "target": "ES2022",
     "composite": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
