@@ -244,7 +244,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUser>>> = ({ signal }) => authGetUser({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUser>>> = () => authGetUser(requestOptions);
 
       
 
@@ -487,7 +487,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetEffective>>> = ({ signal }) => authGetEffective({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetEffective>>> = () => authGetEffective(requestOptions);
 
       
 

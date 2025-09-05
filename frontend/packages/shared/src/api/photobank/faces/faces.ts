@@ -85,7 +85,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGet>>> = ({ signal }) => facesGet(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGet>>> = () => facesGet(params, requestOptions);
 
       
 
@@ -247,7 +247,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGetImage>>> = ({ signal }) => facesGetImage(id, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGetImage>>> = () => facesGetImage(id, requestOptions);
 
       
 

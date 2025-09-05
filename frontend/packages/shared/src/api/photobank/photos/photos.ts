@@ -167,7 +167,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof photosGetPhoto>>> = ({ signal }) => photosGetPhoto(id, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof photosGetPhoto>>> = () => photosGetPhoto(id, requestOptions);
 
       
 
@@ -253,7 +253,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof photosGetPreview>>> = ({ signal }) => photosGetPreview(id, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof photosGetPreview>>> = () => photosGetPreview(id, requestOptions);
 
       
 
@@ -422,7 +422,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof photosGetDuplicates>>> = ({ signal }) => photosGetDuplicates(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof photosGetDuplicates>>> = () => photosGetDuplicates(params, requestOptions);
 
       
 

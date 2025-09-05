@@ -75,7 +75,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAccessProfilesList>>> = ({ signal }) => adminAccessProfilesList({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAccessProfilesList>>> = () => adminAccessProfilesList(requestOptions);
 
       
 
@@ -227,7 +227,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAccessProfilesGet>>> = ({ signal }) => adminAccessProfilesGet(id, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminAccessProfilesGet>>> = () => adminAccessProfilesGet(id, requestOptions);
 
       
 

@@ -75,7 +75,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof personsGetAll>>> = ({ signal }) => personsGetAll({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof personsGetAll>>> = () => personsGetAll(requestOptions);
 
       
 

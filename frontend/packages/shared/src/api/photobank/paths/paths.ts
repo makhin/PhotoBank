@@ -71,7 +71,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof pathsGetAll>>> = ({ signal }) => pathsGetAll({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof pathsGetAll>>> = () => pathsGetAll(requestOptions);
 
       
 
