@@ -21,6 +21,7 @@ export default defineConfig({
             name: 'customFetcher'
           },
          query: {
+           signal: false,
            useQuery: true,
            useInfinite: false,
          },
