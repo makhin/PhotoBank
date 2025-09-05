@@ -62,6 +62,11 @@
       "types": "./dist/format/index.d.ts",
       "import": "./dist/format/index.js",
       "default": "./dist/format/index.js"
+    },
+    "./api/photobank/auth/auth.msw": {
+      "types": "./dist/api/photobank/auth/auth.msw.d.ts",
+      "import": "./dist/api/photobank/auth/auth.msw.js",
+      "default": "./dist/api/photobank/auth/auth.msw.js"
     }
   },
   "main": "./dist/index.js",
