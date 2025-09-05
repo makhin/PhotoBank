@@ -145,3 +145,5 @@ export async function customFetcher<T>(
     throw new Error('Request failed after retries');
   }) as Promise<T>;
 }
+
+export { customFetcher as fetcher };
