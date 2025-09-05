@@ -23,12 +23,8 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function isAbortSignal(v: unknown): v is AbortSignal {
-  return !!v && typeof v === 'object' && 'aborted' in (v as any) && 'addEventListener' in (v as any);
-}
-
 function buildUrl(url: string): string {
-  if (/^https?:\/\//i.test(url)) return url; // абсолютные URL не трогаем
+  if (/^https?:\/\//i.test(url)) return url;
   if (!baseUrl) return url;
   const left = baseUrl.replace(/\/$/, '');
   const right = url.startsWith('/') ? url : `/${url}`;
@@ -39,7 +35,6 @@ function normalizeInit(init?: RequestInit): RequestInit {
   const headers = new Headers(init?.headers ?? {});
   if (!headers.has('Accept')) headers.set('Accept', 'application/json');
 
-  // если тело — «простой объект», кодируем его как JSON
   const bodyIsJson =
     init?.body != null &&
     !(init.body instanceof FormData) &&
@@ -62,23 +57,17 @@ async function parseBody<T>(res: Response): Promise<T> {
   if (res.status === 204) return undefined as unknown as T;
   const ct = res.headers.get('content-type') ?? '';
   if (ct.includes('application/json')) return (await res.json()) as T;
-  // Пытаемся прочитать текст, если не JSON
   const txt = await res.text().catch(() => '');
   return (txt as unknown) as T;
 }
 
-// ====== ГЛАВНОЕ: мутатор для orval ======
-export async function customFetcher<T>(url: string, init?: RequestInit): Promise<T>;
-export async function customFetcher<T>(url: string, init?: AbortSignal): Promise<T>;
-export async function customFetcher<T>(url: string, init?: RequestInit | AbortSignal): Promise<T> {
-  const options: RequestInit = isAbortSignal(init) ? { signal: init } : (init ?? {});
-
+// ====== мутатор для orval ======
+export async function customFetcher<T>(url: string, init?: RequestInit): Promise<T> {
   return queue.add<T>(async (): Promise<T> => {
-    // подготавливаем init (заголовки/тело/credentials)
-    const normalized = normalizeInit(options);
+    const normalized = normalizeInit(init);
     const headers = new Headers(normalized.headers);
 
-    // авторизация/имперсонация
+    // auth / impersonation
     if (tokenProvider) {
       const token = await tokenProvider();
       if (token && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
@@ -90,12 +79,8 @@ export async function customFetcher<T>(url: string, init?: RequestInit | AbortSi
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const response = await fetch(buildUrl(url), finalInit);
+        if (response.ok) return await parseBody<T>(response);
 
-        if (response.ok) {
-          return await parseBody<T>(response);
-        }
-
-        // читаем тело ошибки (попытка JSON)
         const errorText = await response.text().catch(() => '');
         let errorData: unknown = undefined;
         try {
@@ -104,9 +89,7 @@ export async function customFetcher<T>(url: string, init?: RequestInit | AbortSi
           errorData = errorText || undefined;
         }
 
-        if (isProblemDetails(errorData)) {
-          throw new ProblemDetailsError(errorData);
-        }
+        if (isProblemDetails(errorData)) throw new ProblemDetailsError(errorData);
 
         const err = new HttpError(response.status, {
           url: buildUrl(url),
@@ -121,15 +104,13 @@ export async function customFetcher<T>(url: string, init?: RequestInit | AbortSi
         }
         throw err;
       } catch (e: any) {
-        // abort — не ретраим
         const isAbort =
           e?.name === 'AbortError' ||
           e?.code === 'ABORT_ERR' ||
           (typeof e?.message === 'string' && /aborted/i.test(e.message));
         if (isAbort) throw e;
 
-        // сетевые и 5xx — ретраим
-        const isNetwork = e instanceof TypeError; // fetch network error
+        const isNetwork = e instanceof TypeError;
         const is5xx = e instanceof HttpError && e.status >= 500;
         if ((isNetwork || is5xx) && attempt < 2) {
           const backoff = 2 ** attempt * 100 + Math.random() * 100;
@@ -140,7 +121,6 @@ export async function customFetcher<T>(url: string, init?: RequestInit | AbortSi
       }
     }
 
-    // сюда не дойдём, но для TS:
     throw new Error('Request failed after retries');
   }) as Promise<T>;
 }
