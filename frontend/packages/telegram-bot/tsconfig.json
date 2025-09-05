@@ -5,7 +5,10 @@
     "outDir": "dist",
     "rootDir": "src",
     "baseUrl": "src",
-    "paths": { "@/*": ["*"] },
+    "paths": {
+      "@/*": ["*"],
+      "@photobank/shared/*": ["../shared/src/*"]
+    },
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "target": "ES2022",
