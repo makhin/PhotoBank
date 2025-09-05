@@ -1,5 +1,5 @@
 import PQueue from 'p-queue';
-import { ProblemDetailsError, HttpError, isProblemDetails } from '@/types/problem';
+import { ProblemDetailsError, HttpError, isProblemDetails } from '../../types/problem';
 
 // ====== конфиг ======
 let tokenProvider: (() => string | undefined | Promise<string | undefined>) | undefined;
