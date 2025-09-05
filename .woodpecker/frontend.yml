@@ -14,7 +14,7 @@ steps:
           cd frontend
           corepack enable
           pnpm install --frozen-lockfile
-          pnpm --filter @photobank/frontend build
+          pnpm --filter @photobank/frontend... build
           pnpm --filter @photobank/frontend test || echo "Frontend tests failed, ignoring"
 
   - name: publish
