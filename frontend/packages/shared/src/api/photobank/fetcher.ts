@@ -68,10 +68,9 @@ async function parseBody<T>(res: Response): Promise<T> {
 }
 
 // ====== ГЛАВНОЕ: мутатор для orval ======
-export async function customFetcher<T>(
-  url: string,
-  init?: RequestInit | AbortSignal,
-): Promise<T> {
+export async function customFetcher<T>(url: string, init?: RequestInit): Promise<T>;
+export async function customFetcher<T>(url: string, init?: AbortSignal): Promise<T>;
+export async function customFetcher<T>(url: string, init?: RequestInit | AbortSignal): Promise<T> {
   const options: RequestInit = isAbortSignal(init) ? { signal: init } : (init ?? {});
 
   return queue.add<T>(async (): Promise<T> => {
