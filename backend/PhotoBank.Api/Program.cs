@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 using HealthChecks.UI.Client;
 using PhotoBank.Api.Swagger;
+using System.Reflection;
 
 namespace PhotoBank.Api
 {
@@ -13,7 +14,10 @@ namespace PhotoBank.Api
     {
         public static void Main(string[] args)
         {
-            Console.WriteLine("Start App!");
+            var version = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString();
+            Console.WriteLine($"Start App! Version: {version}");
 
             var builder = WebApplication.CreateBuilder(args);
 
