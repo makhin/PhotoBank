@@ -1,8 +1,13 @@
 kind: pipeline          # тип конфигурации
 name: api          # имя pipeline (обязательно)
 
-
 steps:
+  - name: unshallow
+    image: alpine/git
+    commands:
+      - git fetch --prune --tags
+      - '[ -f .git/shallow ] && git fetch --unshallow --tags || true'
+
   - name: build
     image: mcr.microsoft.com/dotnet/sdk:9.0
     when:
