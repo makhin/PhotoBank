@@ -4,24 +4,20 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import type {
-  PathDto
-} from '../photoBankApi.schemas';
-
 import { photobankAxios } from '../../axios-instance';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
-  export const getPaths = () => {
-const pathsGetAll = (
+  export const getVersion = () => {
+const versionGet = (
     
  options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<PathDto[]>(
-      {url: `/paths`, method: 'GET'
+      return photobankAxios<string>(
+      {url: `/version`, method: 'GET'
     },
       options);
     }
-  return {pathsGetAll}};
-export type PathsGetAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPaths>['pathsGetAll']>>>
+  return {versionGet}};
+export type VersionGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getVersion>['versionGet']>>>
