@@ -24,15 +24,18 @@ public class AuthController(
     [AllowAnonymous]
     [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
-        var result = await signInManager.PasswordSignInAsync(request.Email, request.Password, request.RememberMe, false);
-        if (!result.Succeeded)
-            return BadRequest();
+        // 1) Находим пользователя
+        var user = await userManager.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        if (user is null)
+            return Unauthorized();
 
-        var user = await userManager.FindByEmailAsync(request.Email);
-        if (user == null)
-            return BadRequest();
+        // 2) Проверяем пароль, НО НЕ ВЫЗЫВАЕМ PasswordSignInAsync (он пытается ставить cookie)
+        var pwd = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+        if (!pwd.Succeeded)
+            return Unauthorized();
 
         var roles = await userManager.GetRolesAsync(user);
         var roleClaims = roles.Select(r => new Claim(ClaimTypes.Role, r));
