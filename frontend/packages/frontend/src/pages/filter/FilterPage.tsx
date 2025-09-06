@@ -27,6 +27,7 @@ function FilterPage() {
   const savedFilter = useAppSelector((state) => state.photo.filter);
   const loaded = useAppSelector((s) => s.metadata.loaded);
   const loading = useAppSelector((s) => s.metadata.loading);
+  const error = useAppSelector((s) => s.metadata.error);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -106,8 +107,10 @@ function FilterPage() {
     navigate(`/photos?filter=${encodeURIComponent(encoded)}`);
   };
 
-  if (!loaded) {
-    return <p className="p-4">{t('loadingText')}</p>;
+  if (!loaded || error) {
+    return (
+      <p className="p-4">{error ? t('metadataErrorText') : t('loadingText')}</p>
+    );
   }
 
   return (
