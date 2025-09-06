@@ -1,3 +1,6 @@
+kind: pipeline          # тип конфигурации
+name: bot          # имя pipeline (обязательно)
+
 steps:
   - name: build
     image: node:20-alpine
