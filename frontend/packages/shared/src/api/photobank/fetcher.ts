@@ -79,7 +79,10 @@ export async function customFetcher<T>(url: string, init?: RequestInit): Promise
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const response = await fetch(buildUrl(url), finalInit);
-        if (response.ok) return await parseBody<T>(response);
+        if (response.ok) {
+          const data = await parseBody<unknown>(response);
+          return { data, status: response.status, headers: response.headers } as T;
+        }
 
         const errorText = await response.text().catch(() => '');
         let errorData: unknown = undefined;
