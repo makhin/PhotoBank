@@ -17,7 +17,7 @@ namespace PhotoBank.Api
             var version = Assembly.GetExecutingAssembly()
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
                 ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString();
-            Console.WriteLine($"Start App! Version: {version}");
+            Console.WriteLine($"Start App! Version: v{version}");
 
             var builder = WebApplication.CreateBuilder(args);
 
