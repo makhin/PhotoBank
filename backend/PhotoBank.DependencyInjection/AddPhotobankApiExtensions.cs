@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Security.Claims;
+using System.Reflection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics;
@@ -23,6 +24,7 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.OpenApi.Models;
 
 namespace PhotoBank.DependencyInjection;
 
@@ -137,9 +139,27 @@ public static partial class ServiceCollectionExtensions
         this IServiceCollection services,
         Action<SwaggerGenOptions>? configure = null)
     {
+        var assembly = typeof(ServiceCollectionExtensions).Assembly;
+        var version = assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion ?? assembly.GetName().Version?.ToString() ?? "1.0.0";
+        version = version.Split('+')[0];
+        var parts = version.Split('.');
+        if (parts.Length >= 3)
+        {
+            version = string.Join('.', parts[0], parts[1], parts[2]);
+        }
+        const string title = "PhotoBank.Api";
+
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(options =>
         {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = title,
+                Version = version
+            });
+
             options.CustomOperationIds(apiDesc =>
             {
                 if (apiDesc.ActionDescriptor is ControllerActionDescriptor descriptor)
