@@ -1,6 +1,3 @@
-kind: pipeline          # тип конфигурации
-name: api          # имя pipeline (обязательно)
-
 clone:
   git:
     image: woodpeckerci/plugin-git
