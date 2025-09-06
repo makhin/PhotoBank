@@ -22,6 +22,7 @@
   "filterFormTitle": "Расширенная форма фильтра",
   "applyFiltersButton": "Применить фильтры",
   "loadingText": "Загрузка...",
+  "metadataErrorText": "Не удалось загрузить метаданные.",
   "openAiPageTitle": "Чат OpenAI",
   "openAiSendButton": "Отправить",
   "openAiPromptPlaceholder": "Введите запрос...",

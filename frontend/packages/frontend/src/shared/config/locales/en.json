@@ -22,6 +22,7 @@
   "filterFormTitle": "Advanced Filter Form",
   "applyFiltersButton": "Apply Filters",
   "loadingText": "Loading...",
+  "metadataErrorText": "Failed to load metadata.",
   "openAiPageTitle": "OpenAI Chat",
   "openAiSendButton": "Send",
   "openAiPromptPlaceholder": "Enter your request...",

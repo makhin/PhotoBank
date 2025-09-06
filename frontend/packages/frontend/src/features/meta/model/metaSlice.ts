@@ -114,7 +114,8 @@ export const metadataSlice = createSlice({
             )
             .addCase(loadMetadata.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.error.message;
+                state.loaded = true;
+                state.error = action.error.message ?? 'Unknown error';
             });
     },
 });
