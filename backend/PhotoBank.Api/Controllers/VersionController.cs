@@ -14,6 +14,6 @@ public class VersionController : ControllerBase
         var version = Assembly.GetExecutingAssembly()
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
             ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown";
-        return Ok(version);
+        return Ok($"v{version}");
     }
 }
