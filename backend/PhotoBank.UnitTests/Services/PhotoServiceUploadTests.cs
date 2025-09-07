@@ -1,21 +1,23 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using AutoMapper;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
+using Microsoft.Extensions.Options;
 using Minio;
+using Moq;
 using NUnit.Framework;
+using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
-using PhotoBank.AccessControl;
+using PhotoBank.Services.Internal;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace PhotoBank.UnitTests.Services
 {
@@ -61,7 +63,8 @@ namespace PhotoBank.UnitTests.Services
                 new DummyCurrentUser(),
                 new Mock<IS3ResourceService>().Object,
                 new MinioObjectService(new Mock<IMinioClient>().Object),
-                new Mock<IMinioClient>().Object);
+                new Mock<IMinioClient>().Object,
+                new Mock<IOptions<S3Options>>().Object);
 
             var bytes = new byte[] { 1, 2, 3, 4 };
             await using var ms = new MemoryStream(bytes);
@@ -102,7 +105,8 @@ namespace PhotoBank.UnitTests.Services
                 new DummyCurrentUser(),
                 new Mock<IS3ResourceService>().Object,
                 new MinioObjectService(new Mock<IMinioClient>().Object),
-                new Mock<IMinioClient>().Object);
+                new Mock<IMinioClient>().Object,
+                new Mock<IOptions<S3Options>>().Object);
 
             var bytes = new byte[] { 1, 2, 3, 4 };
             await using var ms1 = new MemoryStream(bytes);
@@ -147,7 +151,8 @@ namespace PhotoBank.UnitTests.Services
                 new DummyCurrentUser(),
                 new Mock<IS3ResourceService>().Object,
                 new MinioObjectService(new Mock<IMinioClient>().Object),
-                new Mock<IMinioClient>().Object);
+                new Mock<IMinioClient>().Object,
+                new Mock<IOptions<S3Options>>().Object);
 
             var bytes1 = new byte[] { 1, 2, 3, 4 };
             await using var ms1 = new MemoryStream(bytes1);

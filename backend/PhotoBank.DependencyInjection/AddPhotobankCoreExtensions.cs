@@ -1,4 +1,3 @@
-using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -6,9 +5,11 @@ using Minio;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
+using PhotoBank.Services.Internal;
 using PhotoBank.Services.Search;
 using PhotoBank.Services.Translator;
 using Polly;
+using System;
 
 namespace PhotoBank.DependencyInjection;
 
@@ -34,6 +35,7 @@ public static partial class ServiceCollectionExtensions
         {
             services.AddOptions<TranslatorOptions>().Bind(configuration.GetSection("Translator"));
             services.AddOptions<MinioOptions>().Bind(configuration.GetSection("Minio"));
+            services.Configure<S3Options>(configuration.GetSection("S3"));
         }
         else
         {
@@ -47,6 +49,7 @@ public static partial class ServiceCollectionExtensions
         {
             cfg.AddProfile<MappingProfile>();
         });
+
         return services;
     }
 }

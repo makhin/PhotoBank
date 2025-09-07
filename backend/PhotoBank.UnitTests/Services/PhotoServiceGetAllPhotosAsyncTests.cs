@@ -1,24 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using FizzWare.NBuilder;
 using FluentAssertions;
-using NetTopologySuite.Geometries;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
+using Microsoft.Extensions.Options;
 using Minio;
+using Moq;
+using NetTopologySuite.Geometries;
 using NUnit.Framework;
+using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
+using PhotoBank.Services.Internal;
 using PhotoBank.ViewModel.Dto;
-using PhotoBank.AccessControl;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace PhotoBank.UnitTests.Services
 {
@@ -61,7 +63,8 @@ namespace PhotoBank.UnitTests.Services
                 new DummyCurrentUser(),
                 new Mock<IS3ResourceService>().Object,
                 new MinioObjectService(new Mock<IMinioClient>().Object),
-                new Mock<IMinioClient>().Object);
+                new Mock<IMinioClient>().Object,
+                new Mock<IOptions<S3Options>>().Object);
         }
 
         [Test]

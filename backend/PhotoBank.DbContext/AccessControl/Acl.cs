@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PhotoBank.DbContext.Models;
+using System;
 using System.Linq;
 
 namespace PhotoBank.AccessControl;
@@ -23,4 +24,19 @@ public sealed record Acl(
         }
         return new(storageIds, from, to, groups, u.CanSeeNsfw);
     }
+}
+
+public static class MaybeAclExtensions
+{
+    /// <summary>Применяет ACL для Photo только если пользователь не админ.</summary>
+    public static IQueryable<Photo> MaybeApplyAcl(this IQueryable<Photo> q, ICurrentUser user)
+        => user.IsAdmin ? q : q.Where(AclPredicates.PhotoWhere(Acl.FromUser(user)));
+
+    /// <summary>Применяет ACL для Person только если пользователь не админ.</summary>
+    public static IQueryable<Person> MaybeApplyAcl(this IQueryable<Person> q, ICurrentUser user)
+        => user.IsAdmin ? q : q.Where(AclPredicates.PersonWhere(Acl.FromUser(user)));
+
+    /// <summary>Применяет ACL для Storage только если пользователь не админ.</summary>
+    public static IQueryable<Storage> MaybeApplyAcl(this IQueryable<Storage> q, ICurrentUser user)
+        => user.IsAdmin ? q : q.Where(AclPredicates.StorageWhere(Acl.FromUser(user)));
 }

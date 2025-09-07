@@ -3,6 +3,7 @@ using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
 using PhotoBank.AccessControl;
@@ -16,7 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using PhotoBank.Services.Internal;
 
 namespace PhotoBank.Services.Api;
 
@@ -69,15 +70,17 @@ public class PhotoService : IPhotoService
     private readonly Lazy<Task<IReadOnlyList<PathDto>>> _paths;
     private readonly Lazy<Task<IReadOnlyList<PersonDto>>> _persons;
     private readonly Lazy<Task<IReadOnlyList<PersonGroupDto>>> _personGroups;
+    private readonly Lazy<Task<IReadOnlyList<StorageDto>>> _storages;
     private readonly ICurrentUser _currentUser;
     private readonly IS3ResourceService _s3ResourceService;
     private readonly MinioObjectService _minioObjectService;
     private readonly IMinioClient _minioClient;
+    private readonly S3Options _s3;
 
     private static readonly MemoryCacheEntryOptions CacheOptions = new()
     {
-        AbsoluteExpiration = null, // Setting AbsoluteExpiration to null
-        SlidingExpiration = null  // Optional: SlidingExpiration can also be null for endless expiration
+        AbsoluteExpiration = null,
+        SlidingExpiration = null
     };
 
     public PhotoService(
@@ -94,7 +97,8 @@ public class PhotoService : IPhotoService
         ICurrentUser currentUser,
         IS3ResourceService s3ResourceService,
         MinioObjectService minioObjectService,
-        IMinioClient minioClient)
+        IMinioClient minioClient,
+        IOptions<S3Options> s3Options)
     {
         _db = db;
         _photoRepository = photoRepository;
@@ -109,37 +113,66 @@ public class PhotoService : IPhotoService
         _s3ResourceService = s3ResourceService;
         _minioObjectService = minioObjectService;
         _minioClient = minioClient;
+        _s3 = s3Options?.Value ?? new S3Options();
+
         _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
-            GetCachedAsync("tags", async () => (IReadOnlyList<TagDto>)await tagRepository.GetAll()
-                .AsNoTracking()
-                .OrderBy(p => p.Name)
-                .ThenBy(p => p.Id)
-                .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
-                .ToListAsync()));
-        _paths = new Lazy<Task<IReadOnlyList<PathDto>>>(() =>
-            GetCachedAsync("paths_" + _currentUser.UserId, async () => (IReadOnlyList<PathDto>)await photoRepository.GetAll()
-                .AsNoTracking()
-                .ApplyAcl(Acl.FromUser(_currentUser))
-                .ProjectTo<PathDto>(_mapper.ConfigurationProvider)
-                .Distinct()
-                .OrderBy(p => p.Path)
-                .ThenBy(p => p.StorageId)
-                .ToListAsync()));
-        _persons = new Lazy<Task<IReadOnlyList<PersonDto>>>(() =>
-            GetCachedAsync("persons_" + _currentUser.UserId, async () =>
-                (IReadOnlyList<PersonDto>) await _personRepository.GetAll()
+            GetCachedAsync(CacheKeys.Tags, async () =>
+                (IReadOnlyList<TagDto>)await tagRepository.GetAll()
                     .AsNoTracking()
-                    .ApplyAcl(Acl.FromUser(_currentUser)) // фильтр по группам
+                    .OrderBy(p => p.Name).ThenBy(p => p.Id)
+                    .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync()));
+
+        _paths = new Lazy<Task<IReadOnlyList<PathDto>>>(() =>
+            GetCachedAsync(CacheKeys.Paths(_currentUser), async () =>
+            {
+                var q = photoRepository.GetAll()
+                    .AsNoTracking()
+                    .MaybeApplyAcl(_currentUser);
+
+                // безопасный Distinct по ключам, затем проекция
+                var items = await q
+                    .Select(p => new { p.StorageId, p.RelativePath })
+                    .Distinct()
+                    .OrderBy(p => p.RelativePath).ThenBy(p => p.StorageId)
+                    .Select(p => new PathDto { StorageId = p.StorageId, Path = p.RelativePath })
+                    .ToListAsync();
+                return (IReadOnlyList<PathDto>)items;
+            }));
+
+        _persons = new Lazy<Task<IReadOnlyList<PersonDto>>>(() =>
+            GetCachedAsync(CacheKeys.Persons(_currentUser), async () =>
+            {
+                var q = _personRepository.GetAll()
+                    .AsNoTracking()
+                    .MaybeApplyAcl(_currentUser); // только для не-админа
+
+                return (IReadOnlyList<PersonDto>)await q
                     .OrderBy(p => p.Name).ThenBy(p => p.Id)
                     .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
-                    .ToListAsync()));
+                    .ToListAsync();
+            }));
+
         _personGroups = new Lazy<Task<IReadOnlyList<PersonGroupDto>>>(() =>
-            GetCachedAsync("persongroups", async () => (IReadOnlyList<PersonGroupDto>)await personGroupRepository.GetAll()
-                .AsNoTracking()
-                .OrderBy(pg => pg.Name)
-                .ThenBy(pg => pg.Id)
-                .ProjectTo<PersonGroupDto>(_mapper.ConfigurationProvider)
-                .ToListAsync()));
+            GetCachedAsync(CacheKeys.PersonGroups, async () =>
+                (IReadOnlyList<PersonGroupDto>)await personGroupRepository.GetAll()
+                    .AsNoTracking()
+                    .OrderBy(pg => pg.Name).ThenBy(pg => pg.Id)
+                    .ProjectTo<PersonGroupDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync()));
+
+        _storages = new Lazy<Task<IReadOnlyList<StorageDto>>>(() =>
+            GetCachedAsync(CacheKeys.Storages(_currentUser), async () =>
+            {
+                var q = _storageRepository.GetAll()
+                    .AsNoTracking()
+                    .MaybeApplyAcl(_currentUser);
+
+                return (IReadOnlyList<StorageDto>)await q
+                    .OrderBy(p => p.Name).ThenBy(p => p.Id)
+                    .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+            }));
     }
 
     private async Task<IReadOnlyList<T>> GetCachedAsync<T>(string key, Func<Task<IReadOnlyList<T>>> factory)
@@ -149,7 +182,6 @@ public class PhotoService : IPhotoService
             values = await factory();
             _cache.Set(key, values, CacheOptions);
         }
-
         return values;
     }
 
@@ -178,19 +210,19 @@ public class PhotoService : IPhotoService
         if (!string.IsNullOrEmpty(filter.Caption))
             query = query.Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption!)));
 
+        // Оптимизированные фильтры (один Any + Contains)
         if (filter.Persons?.Any() == true)
         {
             var personIds = filter.Persons.ToList();
-
-            foreach (var personId in personIds)
-                query = query.Where(p => _db.Faces.Any(f => f.PhotoId == p.Id && f.PersonId == personId));
+            query = query.Where(p =>
+                _db.Faces.Any(f => f.PhotoId == p.Id && f.PersonId != null && personIds.Contains(f.PersonId.Value)));
         }
 
         if (filter.Tags?.Any() == true)
         {
             var tagIds = filter.Tags.ToList();
-            foreach (var tagId in tagIds)
-                query = query.Where(p => _db.PhotoTags.Any(pt => pt.PhotoId == p.Id && pt.TagId == tagId));
+            query = query.Where(p =>
+                _db.PhotoTags.Any(pt => pt.PhotoId == p.Id && tagIds.Contains(pt.TagId)));
         }
 
         return query;
@@ -198,22 +230,15 @@ public class PhotoService : IPhotoService
 
     public async Task<PageResponse<PhotoItemDto>> GetAllPhotosAsync(FilterDto filter)
     {
-        var query = ApplyFilter(_photoRepository.GetAll().AsNoTracking(), filter);
-         if (!_currentUser.IsAdmin)
-            query = query.ApplyAcl(Acl.FromUser(_currentUser));
+        var query = ApplyFilter(_photoRepository.GetAll().AsNoTracking(), filter)
+            .MaybeApplyAcl(_currentUser);
 
-        // Execute the count query first
         int? count = null;
-        //if (filter.Page == 1)
-        {
-            count = await query.CountAsync(); // один раз и только на 1-й
-        }
+        count = await query.CountAsync(); // при желании можно считать только на 1-й странице
 
-        // Cap page size to avoid large requests
         var pageSize = Math.Min(filter.PageSize, PageRequest.MaxPageSize);
-
-        // Execute the photos query next
         var skip = (filter.Page - 1) * pageSize;
+
         var photos = await query
             .OrderByDescending(p => p.TakenDate)
             .ThenByDescending(p => p.Id)
@@ -237,11 +262,8 @@ public class PhotoService : IPhotoService
         if (_currentUser.IsAdmin)
         {
             var adminQuery = _db.Photos
-                .Include(p => p.PhotoTags)
-                .ThenInclude(pt => pt.Tag)
-                .Include(p => p.Faces)
-                .ThenInclude(f => f.Person)
-                .ThenInclude(pg => pg.PersonGroups)
+                .Include(p => p.PhotoTags).ThenInclude(pt => pt.Tag)
+                .Include(p => p.Faces).ThenInclude(f => f.Person).ThenInclude(pg => pg.PersonGroups)
                 .Include(p => p.Captions)
                 .AsSplitQuery();
 
@@ -252,22 +274,26 @@ public class PhotoService : IPhotoService
         {
             var acl = Acl.FromUser(_currentUser);
             var entity = await CompiledQueries.PhotoByIdWithAcl(
-                    _db, id, acl.StorageIds, acl.FromDate, acl.ToDate, acl.AllowedPersonGroupIds, acl.CanSeeNsfw);
+                _db, id, acl.StorageIds, acl.FromDate, acl.ToDate, acl.AllowedPersonGroupIds, acl.CanSeeNsfw);
             dto = entity is null ? null : _mapper.Map<Photo, PhotoDto>(entity);
         }
 
         if (dto != null)
             await FillUrlsAsync(dto);
 
-        return dto;
+        return dto!;
     }
 
     public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync() => await _persons.Value;
+    public async Task<IEnumerable<PathDto>> GetAllPathsAsync() => await _paths.Value;
+    public async Task<IEnumerable<StorageDto>> GetAllStoragesAsync() => await _storages.Value;
+    public async Task<IEnumerable<TagDto>> GetAllTagsAsync() => await _tags.Value;
+    public async Task<IEnumerable<PersonGroupDto>> GetAllPersonGroupsAsync() => await _personGroups.Value;
 
     public async Task<PersonDto> CreatePersonAsync(string name)
     {
         var entity = await _personRepository.InsertAsync(new Person { Name = name });
-        _cache.Remove("persons");
+        InvalidatePersonsCache();
         return _mapper.Map<PersonDto>(entity);
     }
 
@@ -275,35 +301,20 @@ public class PhotoService : IPhotoService
     {
         var entity = new Person { Id = personId, Name = name };
         await _personRepository.UpdateAsync(entity, p => p.Name);
-        _cache.Remove("persons");
+        InvalidatePersonsCache();
         return _mapper.Map<PersonDto>(entity);
     }
 
     public async Task DeletePersonAsync(int personId)
     {
         await _personRepository.DeleteAsync(personId);
-        _cache.Remove("persons");
+        InvalidatePersonsCache();
     }
-
-    public async Task<IEnumerable<PathDto>> GetAllPathsAsync() => await _paths.Value;
-
-    public async Task<IEnumerable<StorageDto>> GetAllStoragesAsync()
-    {
-        var q = _storageRepository.GetAll().AsNoTracking();
-        if (!_currentUser.IsAdmin) q = q.ApplyAcl(Acl.FromUser(_currentUser));
-        return await q.OrderBy(p => p.Name).ThenBy(p => p.Id)
-            .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
-            .ToListAsync();
-    }
-
-    public async Task<IEnumerable<TagDto>> GetAllTagsAsync() => await _tags.Value;
-
-    public async Task<IEnumerable<PersonGroupDto>> GetAllPersonGroupsAsync() => await _personGroups.Value;
 
     public async Task<PersonGroupDto> CreatePersonGroupAsync(string name)
     {
         var entity = await _personGroupRepository.InsertAsync(new PersonGroup { Name = name });
-        _cache.Remove("persongroups");
+        _cache.Remove(CacheKeys.PersonGroups);
         return _mapper.Map<PersonGroupDto>(entity);
     }
 
@@ -311,14 +322,14 @@ public class PhotoService : IPhotoService
     {
         var entity = new PersonGroup { Id = groupId, Name = name };
         await _personGroupRepository.UpdateAsync(entity, pg => pg.Name);
-        _cache.Remove("persongroups");
+        _cache.Remove(CacheKeys.PersonGroups);
         return _mapper.Map<PersonGroupDto>(entity);
     }
 
     public async Task DeletePersonGroupAsync(int groupId)
     {
         await _personGroupRepository.DeleteAsync(groupId);
-        _cache.Remove("persongroups");
+        _cache.Remove(CacheKeys.PersonGroups);
     }
 
     public async Task AddPersonToGroupAsync(int groupId, int personId)
@@ -517,8 +528,13 @@ public class PhotoService : IPhotoService
 
     private async Task FillUrlsAsync(IEnumerable<PhotoItemDto> dtos)
     {
-        foreach (var dto in dtos)
+        // параллельная генерация presigned URL
+        var list = dtos.ToList();
+        var tasks = list.Select(async dto =>
+        {
             dto.ThumbnailUrl = await GetPresignedUrlAsync(dto.S3Key_Thumbnail);
+        });
+        await Task.WhenAll(tasks);
     }
 
     private async Task<string?> GetPresignedUrlAsync(string? key)
@@ -529,9 +545,9 @@ public class PhotoService : IPhotoService
         try
         {
             return await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
-                .WithBucket("photobank")
+                .WithBucket(_s3.Bucket)
                 .WithObject(key)
-                .WithExpiry(60 * 60));
+                .WithExpiry(_s3.UrlExpirySeconds));
         }
         catch
         {
@@ -541,5 +557,10 @@ public class PhotoService : IPhotoService
 
     public Task<byte[]> GetObjectAsync(string key)
         => _minioObjectService.GetObjectAsync(key);
-}
 
+    private void InvalidatePersonsCache()
+    {
+        _cache.Remove(CacheKeys.PersonsAll);
+        _cache.Remove(CacheKeys.PersonsOf(_currentUser.UserId));
+    }
+}
