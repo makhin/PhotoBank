@@ -1,19 +1,21 @@
-using System;
-using System.Threading.Tasks;
+using AutoMapper;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Caching.Memory;
-using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Minio;
+using Moq;
 using NUnit.Framework;
+using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
-using PhotoBank.AccessControl;
-using Moq;
-using Minio;
+using PhotoBank.Services.Internal;
+using System;
+using System.Threading.Tasks;
 
 namespace PhotoBank.UnitTests;
 
@@ -54,7 +56,8 @@ public class PersonGroupServiceTests
             _provider.GetRequiredService<ICurrentUser>(),
             new Mock<IS3ResourceService>().Object,
             new MinioObjectService(new Mock<IMinioClient>().Object),
-            new Mock<IMinioClient>().Object
+            new Mock<IMinioClient>().Object,
+            new Mock<IOptions<S3Options>>().Object
         );
     }
 

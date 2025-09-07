@@ -1,17 +1,79 @@
 import * as React from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
-import { buildThumbnailUrl } from '@/shared/utils/buildThumbnailUrl';
-import { useAppSelector } from '@/shared/store';
-import { selectPersonsMap, selectTagsMap, selectMetadataLoaded } from '@/features/metadata/selectors';
-import type { PhotoItemDto } from '@/shared/types';
+import type {
+  PhotoItemDto,
+  PersonItemDto,
+  TagItemDto,
+} from '@photobank/shared/api/photobank';
 
-export function usePhotoColumns(): ColumnDef<PhotoItemDto, any>[] {
+import { Badge } from '@/shared/ui/badge';
+import { buildThumbnailUrl } from '@/shared/utils/buildThumbnailUrl';
+import { useAppSelector } from '@/app/hook';
+import {
+  selectPersonsMap,
+  selectTagsMap,
+  selectMetadataLoaded,
+} from '@/features/metadata/selectors';
+
+function BadgeList({
+                     items,
+                     max = 8,
+                     variant = 'outline',
+                   }: {
+  items: string[];
+  max?: number;
+  variant?: 'outline' | 'secondary' | 'destructive' | null | undefined;
+}) {
+  if (!items.length) return null;
+  const visible = items.slice(0, max);
+  const rest = items.length - visible.length;
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {visible.map((n) => (
+        <Badge key={n} variant={variant ?? 'outline'}>
+          {n}
+        </Badge>
+      ))}
+      {rest > 0 && <span className="text-xs text-muted-foreground">+{rest}</span>}
+    </div>
+  );
+}
+
+function extractNames<T>(
+  items: T[] | null | undefined,
+  pickId: (item: T) => number | null | undefined,
+  dict: Map<number, string>,
+  enabled: boolean,
+): string[] {
+  if (!enabled || !items?.length) return [];
+  const names = items
+    .map((it) => {
+      const id = pickId(it);
+      return id != null ? dict.get(id) : undefined;
+    })
+    .filter(Boolean) as string[];
+  return Array.from(new Set(names));
+}
+
+export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
   const personsMap = useAppSelector(selectPersonsMap);
   const tagsMap = useAppSelector(selectTagsMap);
   const metaLoaded = useAppSelector(selectMetadataLoaded);
 
-  return React.useMemo<ColumnDef<PhotoItemDto, any>[]>(() => [
+  const extractPersonNames = React.useCallback(
+    (persons: PersonItemDto[] | null | undefined) =>
+      extractNames(persons, (p) => p.personId, personsMap, metaLoaded),
+    [personsMap, metaLoaded],
+  );
+
+  const extractTagNames = React.useCallback(
+    (tags: TagItemDto[] | null | undefined) =>
+      extractNames(tags, (t) => t.tagId, tagsMap, metaLoaded),
+    [tagsMap, metaLoaded],
+  );
+
+  return React.useMemo<ColumnDef<PhotoItemDto>[]>(() => [
     {
       id: 'preview',
       header: 'Preview',
@@ -19,7 +81,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto, any>[] {
       cell: ({ row }) => {
         const p = row.original;
         const src = buildThumbnailUrl(p);
-        const alt = p.fileName ?? `photo-${p.id}`;
+        const alt = p.name ?? `photo-${p.id}`;
         return (
           <img
             src={src}
@@ -37,9 +99,11 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto, any>[] {
         const p = row.original;
         return (
           <div className="flex flex-col">
-            <div className="font-medium leading-tight">{p.caption || p.fileName}</div>
+            <div className="font-medium leading-tight">{p.name}</div>
             {p.relativePath && (
-              <div className="text-xs text-muted-foreground truncate">{p.relativePath}</div>
+              <div className="text-xs text-muted-foreground truncate">
+                {p.relativePath}
+              </div>
             )}
           </div>
         );
@@ -48,12 +112,11 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto, any>[] {
     {
       id: 'date',
       header: 'Taken',
-      accessorFn: (p) => p.takenDate ?? p.createdAt ?? '',
+      accessorFn: (p) => (p.takenDate ? new Date(p.takenDate).toISOString() : ''),
       cell: ({ getValue }) => {
-        const v = getValue() as string | Date | undefined;
-        if (!v) return null;
-        const d = new Date(v);
-        return <span className="text-sm">{d.toLocaleDateString()}</span>;
+        const iso = getValue() as string;
+        if (!iso) return null;
+        return <span className="text-sm">{new Date(iso).toLocaleDateString()}</span>;
       },
       size: 120,
     },
@@ -61,26 +124,8 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto, any>[] {
       id: 'people',
       header: 'People',
       cell: ({ row }) => {
-        if (!metaLoaded) return null;
-        const faces = row.original.faces ?? [];
-        const names = Array.from(
-          new Set(
-            faces
-              .map((f) => (f.personId ? personsMap.get(f.personId) : null))
-              .filter(Boolean) as string[],
-          ),
-        );
-        if (names.length === 0) return null;
-        return (
-          <div className="flex flex-wrap gap-1">
-            {names.slice(0, 6).map((n) => (
-              <Badge key={n} variant="secondary">{n}</Badge>
-            ))}
-            {names.length > 6 && (
-              <span className="text-xs text-muted-foreground">+{names.length - 6}</span>
-            )}
-          </div>
-        );
+        const names = extractPersonNames(row.original.persons);
+        return <BadgeList items={names} max={6} variant="secondary" />;
       },
       size: 240,
     },
@@ -88,30 +133,8 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto, any>[] {
       id: 'tags',
       header: 'Tags',
       cell: ({ row }) => {
-        if (!metaLoaded) return null;
-        const p = row.original as any;
-        // поддерживаем и старый вид (photo.photoTags[].tagId), и новый (tags: number[] | string[])
-        const tagIds: number[] = Array.isArray(p.photoTags)
-          ? p.photoTags.map((t: any) => t?.tagId).filter(Boolean)
-          : Array.isArray(p.tags)
-            ? p.tags.map((t: any) => (typeof t === 'number' ? t : t?.tagId)).filter(Boolean)
-            : [];
-
-        const names = tagIds
-          .map((id: number) => tagsMap.get(id))
-          .filter(Boolean) as string[];
-
-        if (names.length === 0) return null;
-        return (
-          <div className="flex flex-wrap gap-1">
-            {names.slice(0, 8).map((n) => (
-              <Badge key={n} variant="outline">{n}</Badge>
-            ))}
-            {names.length > 8 && (
-              <span className="text-xs text-muted-foreground">+{names.length - 8}</span>
-            )}
-          </div>
-        );
+        const names = extractTagNames(row.original.tags);
+        return <BadgeList items={names} max={8} variant="outline" />;
       },
       size: 320,
     },
@@ -130,5 +153,5 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto, any>[] {
       },
       size: 140,
     },
-  ], [metaLoaded, personsMap, tagsMap]);
+  ], [extractPersonNames, extractTagNames]);
 }
