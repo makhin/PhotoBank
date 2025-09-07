@@ -45,8 +45,13 @@ export type authLoginResponse400 = {
   data: ProblemDetails
   status: 400
 }
+
+export type authLoginResponse401 = {
+  data: ProblemDetails
+  status: 401
+}
     
-export type authLoginResponseComposite = authLoginResponse200 | authLoginResponse400;
+export type authLoginResponseComposite = authLoginResponse200 | authLoginResponse400 | authLoginResponse401;
     
 export type authLoginResponse = authLoginResponseComposite & {
   headers: Headers;
@@ -75,7 +80,7 @@ export const authLogin = async (loginRequestDto: LoginRequestDto, options?: Requ
 
 
 
-export const getAuthLoginMutationOptions = <TError = ProblemDetails,
+export const getAuthLoginMutationOptions = <TError = ProblemDetails | ProblemDetails,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext> => {
 
@@ -102,9 +107,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type AuthLoginMutationResult = NonNullable<Awaited<ReturnType<typeof authLogin>>>
     export type AuthLoginMutationBody = LoginRequestDto
-    export type AuthLoginMutationError = ProblemDetails
+    export type AuthLoginMutationError = ProblemDetails | ProblemDetails
 
-    export const useAuthLogin = <TError = ProblemDetails,
+    export const useAuthLogin = <TError = ProblemDetails | ProblemDetails,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof authLogin>>,
