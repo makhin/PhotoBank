@@ -18,9 +18,7 @@ import { ScrollArea } from '@/shared/ui/scroll-area';
 import { deserializeFilter } from '@/shared/lib/filter-url';
 
 import PhotoListItemMobile from './PhotoListItemMobile';
-import VirtualPhotoList from './VirtualPhotoList';
-import PhotoListItemSkeleton from './PhotoListItemSkeleton';
-import { photoColumns } from './columns';
+import { PhotoTable } from '@/features/photos/components/PhotoTable';
 
 const PhotoListPage = () => {
   const dispatch = useAppDispatch();
@@ -50,7 +48,6 @@ const PhotoListPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const viewportRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const [detailsId, setDetailsId] = useState<number | null>(null);
@@ -104,67 +101,7 @@ const PhotoListPage = () => {
     }
   }, [searchParams, dispatch]);
 
-  const renderPhotoRow = useCallback(
-    (photo: PhotoItemDto) => {
-      const handleClick = () => handleOpenDetails(photo.id);
-        return (
-          <div
-            role="button"
-            tabIndex={0}
-            className="grid grid-cols-12 gap-2 px-4 py-2 cursor-pointer hover:bg-muted/50"
-            onClick={handleClick}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                handleClick();
-              }
-            }}
-          >
-            {photoColumns.map((c) => (
-              <div
-                key={c.id}
-                className={c.width}
-                {...(c.id === 'preview'
-                  ? {
-                      role: 'button',
-                      tabIndex: 0,
-                      onClick: (e: React.MouseEvent) => {
-                        e.stopPropagation();
-                        const index = photos.findIndex(
-                          (p: PhotoItemDto) => p.id === photo.id
-                        );
-                        if (index >= 0) {
-                          dispatch(open({ items: viewerItems, index }));
-                          pushPhotoId(photo.id);
-                        }
-                      },
-                      onKeyDown: (e: React.KeyboardEvent) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.stopPropagation();
-                          const index = photos.findIndex(
-                            (p: PhotoItemDto) => p.id === photo.id
-                          );
-                          if (index >= 0) {
-                            dispatch(open({ items: viewerItems, index }));
-                            pushPhotoId(photo.id);
-                          }
-                        }
-                      },
-                    }
-                  : {})}
-              >
-                {c.render(photo)}
-              </div>
-            ))}
-          </div>
-        );
-      },
-      [dispatch, handleOpenDetails, photos, viewerItems]
-    );
-
-  const renderSkeletonRow = useCallback(
-    (_photo: PhotoItemDto) => <PhotoListItemSkeleton />,
-    []
-  );
+  
 
   useEffect(() => {
     const id = readPhotoId(location.search);
@@ -226,31 +163,20 @@ const PhotoListPage = () => {
       <ScrollArea
         className="h-[calc(100vh-240px)]"
         ref={scrollAreaRef}
-        viewportRef={viewportRef}
       >
         <div className="p-6">
           {/* Desktop/Tablet View */}
           <div className="hidden lg:block">
-            <div className="grid grid-cols-12 gap-4 mb-4 px-4 py-2 bg-muted/50 rounded-lg font-medium text-sm">
-              {photoColumns.map((c) => (
-                <div key={c.id} className={c.width}>
-                  {c.header}
-                </div>
-              ))}
-            </div>
             {loading ? (
-              <VirtualPhotoList
-                photos={skeletonPhotos}
-                parentRef={viewportRef}
-                renderRow={renderSkeletonRow}
-              />
+              <PhotoTable rows={[]} isFetchingNextPage />
             ) : photos.length === 0 ? (
               <EmptyState text="No photos" />
             ) : (
-              <VirtualPhotoList
-                photos={photos}
-                parentRef={viewportRef}
-                renderRow={renderPhotoRow}
+              <PhotoTable
+                rows={photos}
+                isFetchingNextPage={isFetchingNextPage}
+                hasNextPage={hasNextPage}
+                fetchNextPage={() => void fetchNextPage()}
               />
             )}
           </div>
@@ -260,7 +186,10 @@ const PhotoListPage = () => {
             <div className="grid gap-4 sm:grid-cols-2">
               {loading
                 ? skeletonPhotos.slice(0, 6).map((p: PhotoItemDto) => (
-                    <PhotoListItemSkeleton key={p.id} />
+                    <div
+                      key={p.id}
+                      className="h-40 w-full rounded-lg bg-muted animate-pulse"
+                    />
                   ))
                 : photos.length === 0 ? (
                     <EmptyState text="No photos" />

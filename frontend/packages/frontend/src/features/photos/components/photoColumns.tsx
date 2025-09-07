@@ -1,8 +1,8 @@
 import * as React from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/shared/ui/badge';
 import { buildThumbnailUrl } from '@/shared/utils/buildThumbnailUrl';
-import { useAppSelector } from '@/shared/store';
+import { useAppSelector } from '@/app/hook';
 import { selectPersonsMap, selectTagsMap, selectMetadataLoaded } from '@/features/metadata/selectors';
 import type { PhotoItemDto } from '@/shared/types';
 

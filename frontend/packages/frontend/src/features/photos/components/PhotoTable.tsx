@@ -7,7 +7,7 @@ import {
   VisibilityState,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Card } from '@/components/ui/card';
+import { Card } from '@/shared/ui/card';
 import { usePhotoColumns } from './photoColumns';
 import type { PhotoItemDto } from '@/shared/types';
 
