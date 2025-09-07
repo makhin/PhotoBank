@@ -3,13 +3,14 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  ColumnDef,
   VisibilityState,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { PhotoItemDto } from '@photobank/shared/api/photobank';
+
 import { Card } from '@/shared/ui/card';
+
 import { usePhotoColumns } from './photoColumns';
-import type { PhotoItemDto } from '@/shared/types';
 
 type Props = {
   rows: PhotoItemDto[];
@@ -46,7 +47,7 @@ export function PhotoTable({
 
   const table = useReactTable({
     data: rows,
-    columns: columns as ColumnDef<PhotoItemDto, any>[],
+    columns: columns,
     state: { columnVisibility: visibility },
     onColumnVisibilityChange: setVisibility,
     getCoreRowModel: getCoreRowModel(),
