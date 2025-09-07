@@ -10,15 +10,15 @@ import {
 import { useAppDispatch, useAppSelector } from '@/app/hook';
 import { setFilter } from '@/features/photo/model/photoSlice';
 import { open } from '@/features/viewer/viewerSlice';
-import { pushPhotoId, readPhotoId, clearPhotoId } from '@/features/viewer/urlSync';
+import { readPhotoId, clearPhotoId } from '@/features/viewer/urlSync';
 import EmptyState from '@/components/EmptyState';
 import PhotoDetailsModal from '@/components/PhotoDetailsModal';
 import { Button } from '@/shared/ui/button';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { deserializeFilter } from '@/shared/lib/filter-url';
+import { PhotoTable } from '@/features/photos/components/PhotoTable';
 
 import PhotoListItemMobile from './PhotoListItemMobile';
-import { PhotoTable } from '@/features/photos/components/PhotoTable';
 
 const PhotoListPage = () => {
   const dispatch = useAppDispatch();
