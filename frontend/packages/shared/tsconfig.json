@@ -11,11 +11,11 @@
     "declaration": true,
     "emitDeclarationOnly": false
   },
-  "include": ["src"],
+  "include": ["src/**/*"],
   "exclude": [
-    "src/**/*.msw.ts",
     "src/api/photobank/msw.ts",
-    "src/api/photobank/msw.scenarios.ts"
+    "src/api/photobank/msw.scenarios.ts",
+    "src/**/*.msw.ts"
   ]
 }
 
