@@ -2,10 +2,10 @@ import { InlineKeyboard } from 'grammy';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 import { firstNWords } from '@photobank/shared/index';
 
-import type { MyContext } from '../i18n';
-import { searchPhotos } from '../services/photo';
-import { handleCommandError } from '../errorHandler';
-import { captionCache, currentPagePhotos, deletePhotoMessage } from '../photo';
+import type { MyContext } from '../i18n.js';
+import { searchPhotos } from '../services/photo.js';
+import { handleCommandError } from '../errorHandler.js';
+import { captionCache, currentPagePhotos, deletePhotoMessage } from '../photo.js';
 
 export const PHOTOS_PAGE_SIZE = 10;
 
