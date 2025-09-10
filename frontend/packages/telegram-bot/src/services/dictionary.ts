@@ -1,11 +1,11 @@
 import type { Context } from 'grammy';
 
-import { getPaths } from '../api/photobank/paths/paths.js';
-import { getPersons } from '../api/photobank/persons/persons.js';
-import { getStorages } from '../api/photobank/storages/storages.js';
-import { getTags } from '../api/photobank/tags/tags.js';
-import { setRequestContext } from '../api/axios-instance.js';
-import { handleServiceError } from '../errorHandler.js';
+import { getPaths } from '../api/photobank/paths/paths';
+import { getPersons } from '../api/photobank/persons/persons';
+import { getStorages } from '../api/photobank/storages/storages';
+import { getTags } from '../api/photobank/tags/tags';
+import { setRequestContext } from '../api/axios-instance';
+import { handleServiceError } from '../errorHandler';
 
 const { pathsGetAll } = getPaths();
 const { personsGetAll } = getPersons();

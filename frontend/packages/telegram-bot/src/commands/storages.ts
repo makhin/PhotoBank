@@ -1,6 +1,6 @@
-import type { MyContext } from '../i18n.js';
-import { getAllStoragesWithPaths } from '../dictionaries.js';
-import { parsePrefix, sendNamedItemsPage } from './helpers.js';
+import type { MyContext } from '../i18n';
+import { getAllStoragesWithPaths } from '../dictionaries';
+import { parsePrefix, sendNamedItemsPage } from './helpers';
 
 const MAX_PATHS_PER_STORAGE = 20;
 

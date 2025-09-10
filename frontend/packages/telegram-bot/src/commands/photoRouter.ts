@@ -1,8 +1,8 @@
 import { Bot, type CommandContext, type HearsContext, type CallbackQueryContext } from "grammy";
 
-import { sendPhotoById, openPhotoInline } from "../photo.js";
-import { withRegistered } from '../registration.js';
-import type { MyContext } from '../i18n.js';
+import { sendPhotoById, openPhotoInline } from "../photo";
+import { withRegistered } from '../registration';
+import type { MyContext } from '../i18n';
 
 // Main command
 export function registerPhotoRoutes(bot: Bot<MyContext>) {

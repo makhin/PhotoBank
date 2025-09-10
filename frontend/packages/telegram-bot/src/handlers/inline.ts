@@ -2,12 +2,12 @@ import type { InlineQueryResult, InlineQueryResultPhoto } from 'grammy/types';
 import { formatDate } from '@photobank/shared/format';
 import { ProblemDetailsError } from '@photobank/shared/types/problem';
 
-import { bot } from '../bot.js';
-import { ensureUserAccessToken } from '../auth.js';
-import { searchPhotos } from '../services/photo.js';
-import { getTagName } from '../dictionaries.js';
-import { logger } from '../logger.js';
-import type { MyContext } from '../i18n.js';
+import { bot } from '../bot';
+import { ensureUserAccessToken } from '../auth';
+import { searchPhotos } from '../services/photo';
+import { getTagName } from '../dictionaries';
+import { logger } from '../logger';
+import type { MyContext } from '../i18n';
 
 const PAGE_SIZE = 20;
 

@@ -1,3 +1,3 @@
-export * from './openai.js';
-export * from './constants.js';
-export * from './filter.js';
+export * from './openai';
+export * from './constants';
+export * from './filter';
