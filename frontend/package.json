@@ -19,7 +19,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.15.1",
   "devDependencies": {
     "@eslint/js": "^9.34.0",
     "@faker-js/faker": "^10.0.0",

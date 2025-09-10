@@ -6,6 +6,5 @@ export * from './photos/photos';
 export * from './storages/storages';
 export * from './tags/tags';
 export * from './users/users';
-export * from './photoBankApiVersion1000CultureNeutralPublicKeyTokenNull.schemas';
-export * from './model';
+export * from './photoBankApi.schemas';
 export * from './fetcher';
