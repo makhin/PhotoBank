@@ -13,6 +13,5 @@
     "composite": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
-  "include": ["src/**/*"],
-  "files": ["src/i18n.ts"]
+  "include": ["src/**/*"]
 }

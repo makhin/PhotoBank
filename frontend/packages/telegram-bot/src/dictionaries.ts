@@ -4,8 +4,8 @@ import type {
   TagDto,
 } from '@photobank/shared/api/photobank';
 
-import { i18n } from './i18n';
-import type { MyContext } from './i18n';
+import { i18n } from './i18n.js';
+import type { MyContext } from './i18n.js';
 import {
   fetchPaths,
   fetchPersons,

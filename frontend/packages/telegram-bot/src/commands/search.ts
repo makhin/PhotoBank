@@ -1,11 +1,11 @@
 import {
-  parse as parseDfns,
-  isValid,
-  startOfYear,
-  endOfYear,
-  startOfMonth,
   endOfMonth,
+  endOfYear,
   format as formatDfns,
+  isValid,
+  parse as parseDfns,
+  startOfMonth,
+  startOfYear,
 } from 'date-fns';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 
@@ -110,22 +110,6 @@ function parseAfter(val?: string): { from?: string } {
   return p ? { from: formatDfns(p.from, "yyyy-MM-dd") } : {};
 }
 
-/* ===================== sort -> orderBy ===================== */
-
-function mapSortToOrderBy(sort?: "relevance" | "date_asc" | "date_desc"): string | undefined {
-  switch (sort) {
-    case "date_asc":
-      return "TakenDate asc";
-    case "date_desc":
-      return "TakenDate desc";
-    case "relevance":
-      // если на бэке есть сортировка по релевантности — укажи реальное поле
-      return "Relevance desc";
-    default:
-      return undefined;
-  }
-}
-
 /* ===================== парсер → FilterDto ===================== */
 /**
  * Поддержка:
@@ -147,7 +131,6 @@ function parseArgsToFilter(raw: string): FilterDto {
   const rest: string[] = [];
   let takenDateFrom: string | undefined;
   let takenDateTo: string | undefined;
-  let sort: "relevance" | "date_asc" | "date_desc" | undefined;
 
   for (const t of tokens) {
     const hasColon = t.includes(":");
@@ -177,7 +160,6 @@ function parseArgsToFilter(raw: string): FilterDto {
             .forEach((x) => {
               if (x && !tagNames.includes(x)) tagNames.push(x);
             });
-          continue;
         }
         case "person":
         case "people": {
@@ -187,32 +169,22 @@ function parseArgsToFilter(raw: string): FilterDto {
             .forEach((x) => {
               if (x && !personNames.includes(x)) personNames.push(x);
             });
-          continue;
         }
         case "date": {
           const { from, to } = parseDateExpr(val ?? "");
           if (from) takenDateFrom = from;
           if (to) takenDateTo = to;
-          continue;
         }
         case "before": {
           const { to } = parseBefore(val);
           if (to) takenDateTo = to;
-          continue;
         }
         case "after": {
           const { from } = parseAfter(val);
-          if (from) takenDateFrom = from;
-          continue;
-        }
-        case "sort": {
-          const s = (val ?? "").toLowerCase();
-          if (s === "relevance" || s === "date_asc" || s === "date_desc") sort = s;
-          continue;
+          if (from) takenDateFrom = from
         }
         default:
           rest.push(t);
-          continue;
       }
     } else {
       // даты без ключа — одиночная/диапазон
@@ -228,7 +200,10 @@ function parseArgsToFilter(raw: string): FilterDto {
 
   const caption = rest.join(" ").trim() || undefined;
 
-  const filter: FilterDto = {
+
+
+
+  return {
     caption,
     tagNames: tagNames.length ? Array.from(new Set(tagNames)) : undefined,
     personNames: personNames.length
@@ -237,8 +212,6 @@ function parseArgsToFilter(raw: string): FilterDto {
     takenDateFrom,
     takenDateTo,
   };
-
-  return filter;
 }
 
 /* ===================== callback_data кодек ===================== */
