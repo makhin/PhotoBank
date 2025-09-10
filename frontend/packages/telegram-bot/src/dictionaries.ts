@@ -11,7 +11,7 @@ import {
   fetchPersons,
   fetchStorages,
   fetchTags,
-} from './services/dictionary';
+} from './services/dictionary.js';
 
 type DictData = {
   tagMap: Map<number, string>;
