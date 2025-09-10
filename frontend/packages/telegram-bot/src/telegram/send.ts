@@ -2,11 +2,11 @@ import type { Context } from 'grammy';
 import type { InputMediaPhoto, Message } from 'grammy/types';
 import { formatDate } from '@photobank/shared/format';
 
-import { throttled } from '../utils/limiter.js';
-import { getFileId, setFileId, delFileId } from '../cache/fileIdCache.js';
-import { logger } from '../utils/logger.js';
-import type { PhotoItemDto } from '../types.js';
-import { withTelegramRetry } from '../utils/retry.js';
+import { throttled } from '../utils/limiter';
+import { getFileId, setFileId, delFileId } from '../cache/fileIdCache';
+import { logger } from '../utils/logger';
+import type { PhotoItemDto } from '../types';
+import { withTelegramRetry } from '../utils/retry';
 
 function buildCaption(p: PhotoItemDto): string {
   const parts = [p.name, p.takenDate ? formatDate(p.takenDate) : null];

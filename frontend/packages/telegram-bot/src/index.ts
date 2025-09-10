@@ -1,32 +1,32 @@
 import { configureAzureOpenAI } from "@photobank/shared/ai/openai";
 
-import { loadDictionaries, setDictionariesUser } from "./dictionaries.js";
+import { loadDictionaries, setDictionariesUser } from "./dictionaries";
 import {
   AZURE_OPENAI_ENDPOINT,
   AZURE_OPENAI_KEY,
   AZURE_OPENAI_DEPLOYMENT,
   AZURE_OPENAI_API_VERSION,
-} from "./config.js";
-import { bot } from './bot.js';
-import { sendThisDayPage, thisDayCommand } from "./commands/thisday.js";
-import { captionCache } from "./photo.js";
-import { sendSearchPage, searchCommand, decodeSearchCallback } from "./commands/search.js";
-import { aiCommand, sendAiPage } from "./commands/ai.js";
-import { helpCommand } from "./commands/help.js";
-import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe.js";
-import { tagsCommand, sendTagsPage } from "./commands/tags.js";
-import { personsCommand, sendPersonsPage } from "./commands/persons.js";
-import { storagesCommand, sendStoragesPage } from "./commands/storages.js";
-import { tagsCallbackPattern, personsCallbackPattern, storagesCallbackPattern } from "./patterns.js";
-import { registerPhotoRoutes } from "./commands/photoRouter.js";
-import { profileCommand } from "./commands/profile.js";
-import { uploadCommand } from "./commands/upload.js";
-import { withRegistered } from './registration.js';
-import { logger } from './logger.js';
-import { handleBotError } from './errorHandler.js';
-import './handlers/inline.js';
-import './handlers/deeplink.js';
-import { i18n } from './i18n.js';
+} from "./config";
+import { bot } from './bot';
+import { sendThisDayPage, thisDayCommand } from "./commands/thisday";
+import { captionCache } from "./photo";
+import { sendSearchPage, searchCommand, decodeSearchCallback } from "./commands/search";
+import { aiCommand, sendAiPage } from "./commands/ai";
+import { helpCommand } from "./commands/help";
+import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
+import { tagsCommand, sendTagsPage } from "./commands/tags";
+import { personsCommand, sendPersonsPage } from "./commands/persons";
+import { storagesCommand, sendStoragesPage } from "./commands/storages";
+import { tagsCallbackPattern, personsCallbackPattern, storagesCallbackPattern } from "./patterns";
+import { registerPhotoRoutes } from "./commands/photoRouter";
+import { profileCommand } from "./commands/profile";
+import { uploadCommand } from "./commands/upload";
+import { withRegistered } from './registration';
+import { logger } from './logger';
+import { handleBotError } from './errorHandler';
+import './handlers/inline';
+import './handlers/deeplink';
+import { i18n } from './i18n';
 
 const privateCommands = (lang: string) => [
   { command: 'start', description: i18n.t(lang, 'cmd-start') },

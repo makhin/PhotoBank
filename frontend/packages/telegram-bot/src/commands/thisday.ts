@@ -1,5 +1,5 @@
-import type { MyContext } from '../i18n.js';
-import { sendPhotosPage } from './photosPage.js';
+import type { MyContext } from '../i18n';
+import { sendPhotosPage } from './photosPage';
 
 function parsePage(text?: string): number {
     if (!text) return 1;

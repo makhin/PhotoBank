@@ -1,6 +1,6 @@
 import type { Context } from 'grammy';
 
-import { exchangeTelegramUserToken } from './api/auth.js';
+import { exchangeTelegramUserToken } from './api/auth';
 
 type CacheEntry = { token: string; exp: number }; // seconds since epoch
 const tokenCache = new Map<number, CacheEntry>();

@@ -1,11 +1,11 @@
 import axios from 'axios';
 import { uploadStorageName } from '@photobank/shared/constants';
 
-import { BOT_TOKEN } from '../config.js';
-import { getStorageId } from '../dictionaries.js';
-import { handleCommandError } from '../errorHandler.js';
-import type { MyContext } from '../i18n.js';
-import { uploadPhotos } from '../services/photo.js';
+import { BOT_TOKEN } from '../config';
+import { getStorageId } from '../dictionaries';
+import { handleCommandError } from '../errorHandler';
+import type { MyContext } from '../i18n';
+import { uploadPhotos } from '../services/photo';
 
 async function fetchFile(ctx: MyContext, fileId: string, fileName: string) {
   const file = await ctx.api.getFile(fileId);

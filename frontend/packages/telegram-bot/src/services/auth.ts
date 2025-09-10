@@ -7,7 +7,7 @@ import {
   type UpdateUserDto,
 } from '@photobank/shared/api/photobank';
 
-import { ensureUserAccessToken } from '../auth.js';
+import { ensureUserAccessToken } from '../auth';
 
 async function authorized<T>(ctx: Context, fn: (options?: RequestInit) => Promise<T>): Promise<T> {
   const token = await ensureUserAccessToken(ctx);

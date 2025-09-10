@@ -4,14 +4,14 @@ import type {
   TagDto,
 } from '@photobank/shared/api/photobank';
 
-import { i18n } from './i18n.js';
-import type { MyContext } from './i18n.js';
+import { i18n } from './i18n';
+import type { MyContext } from './i18n';
 import {
   fetchPaths,
   fetchPersons,
   fetchStorages,
   fetchTags,
-} from './services/dictionary.js';
+} from './services/dictionary';
 
 type DictData = {
   tagMap: Map<number, string>;

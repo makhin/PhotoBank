@@ -1,6 +1,6 @@
-import type { MyContext } from "../i18n.js";
-import { getAllPersons } from '../dictionaries.js';
-import { parsePrefix, sendNamedItemsPage } from "./helpers.js";
+import type { MyContext } from "../i18n";
+import { getAllPersons } from '../dictionaries';
+import { parsePrefix, sendNamedItemsPage } from "./helpers";
 
 export async function sendPersonsPage(
   ctx: MyContext,

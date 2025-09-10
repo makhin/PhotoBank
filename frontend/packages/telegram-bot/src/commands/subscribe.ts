@@ -1,10 +1,10 @@
 import { Bot } from 'grammy';
 import type { UpdateUserDto } from '@photobank/shared/api/photobank';
 
-import { updateUser } from '../services/auth.js';
-import type { MyContext } from '../i18n.js';
-import { i18n } from '../i18n.js';
-import { sendThisDayPage } from './thisday.js';
+import { updateUser } from '../services/auth';
+import type { MyContext } from '../i18n';
+import { i18n } from '../i18n';
+import { sendThisDayPage } from './thisday';
 
 export const subscriptions = new Map<number, { time: string; locale: string }>();
 
