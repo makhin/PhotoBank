@@ -7,11 +7,12 @@
     "emitDeclarationOnly": false,
     "declaration": true,
     "sourceMap": true,
-    "moduleResolution": "Bundler",
-    "module": "ESNext",
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
     "target": "ES2022",
     "composite": true,
     "tsBuildInfoFile": "./dist/.tsbuildinfo"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "files": ["src/i18n.ts"]
 }
