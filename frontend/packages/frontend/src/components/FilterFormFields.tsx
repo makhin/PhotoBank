@@ -103,7 +103,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                                 selected={field.value}
                                                 captionLayout="dropdown"
                                                 onSelect={(d) => {
-                                                    field.value = d;
+                                                    field.onChange(d);
                                                     setOpenFrom(false);
                                                 }}
                                             />
@@ -143,7 +143,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                                 selected={field.value}
                                                 captionLayout="dropdown"
                                                 onSelect={(d) => {
-                                                    field.value = d;
+                                                    field.onChange(d);
                                                     setOpenTo(false);
                                                 }}
                                             />
