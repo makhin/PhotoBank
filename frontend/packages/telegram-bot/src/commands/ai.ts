@@ -2,9 +2,9 @@ import { parseQueryWithOpenAI } from '@photobank/shared/ai/openai';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 import { getFilterHash } from '@photobank/shared/index';
 
-import type { MyContext } from '../i18n';
-import { sendPhotosPage } from './photosPage';
-import { logger } from '../logger';
+import type { MyContext } from '../i18n.js';
+import { sendPhotosPage } from './photosPage.js';
+import { logger } from '../logger.js';
 
 export const aiFilters = new Map<string, FilterDto>();
 

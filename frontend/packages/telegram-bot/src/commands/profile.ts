@@ -1,6 +1,6 @@
-import type { MyContext } from "../i18n";
-import { getUser } from "../services/auth";
-import { handleCommandError } from "../errorHandler";
+import type { MyContext } from "../i18n.js";
+import { getUser } from "../services/auth.js";
+import { handleCommandError } from "../errorHandler.js";
 
 export async function profileCommand(ctx: MyContext) {
     const username = ctx.from?.username ?? String(ctx.from?.id ?? "");

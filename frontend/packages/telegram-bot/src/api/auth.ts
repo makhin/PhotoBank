@@ -1,6 +1,6 @@
 import { configureApi, customFetcher } from '@photobank/shared/api/photobank';
 
-import { BOT_SERVICE_KEY } from '../config';
+import { BOT_SERVICE_KEY } from '../config.js';
 
 configureApi(process.env.API_BASE_URL ?? '');
 

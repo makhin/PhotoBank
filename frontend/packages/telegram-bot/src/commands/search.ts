@@ -11,7 +11,7 @@ import type { FilterDto } from '@photobank/shared/api/photobank';
 
 import type { MyContext } from '@/i18n.js';
 
-import { sendPhotosPage } from './photosPage';
+import { sendPhotosPage } from './photosPage.js';
 
 /* ===================== токенизация ===================== */
 

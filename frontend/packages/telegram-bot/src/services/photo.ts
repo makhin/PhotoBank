@@ -5,9 +5,9 @@ import {
   getPhotos,
   type PhotosGetPhotoResult,
   type PhotosSearchPhotosResult,
-} from '../api/photobank/photos/photos';
-import { setRequestContext } from '../api/axios-instance';
-import { handleServiceError } from '../errorHandler';
+} from '../api/photobank/photos/photos.js';
+import { setRequestContext } from '../api/axios-instance.js';
+import { handleServiceError } from '../errorHandler.js';
 
 const { photosSearchPhotos, photosGetPhoto, photosUpload } = getPhotos();
 
