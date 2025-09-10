@@ -238,9 +238,6 @@ function parseArgsToFilter(raw: string): FilterDto {
     takenDateTo,
   };
 
-  const orderBy = mapSortToOrderBy(sort);
-  if (orderBy) filter.orderBy = orderBy;
-
   return filter;
 }
 
@@ -283,8 +280,7 @@ export async function handleSearch(ctx: MyContext) {
     (!filter.tagNames || filter.tagNames.length === 0) &&
     (!filter.personNames || filter.personNames.length === 0) &&
     !filter.takenDateFrom &&
-    !filter.takenDateTo &&
-    !filter.orderBy;
+    !filter.takenDateTo;
 
   if (nothingSet) {
     await ctx.reply(ctx.t("search-usage"));
