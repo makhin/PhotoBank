@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PhotoBank.Services.Api;
+using PhotoBank.Services.Search;
 using PhotoBank.ViewModel.Dto;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,10 @@ namespace PhotoBank.Api.Controllers
     [Route("[controller]")]
     [Authorize]
     [ApiController]
-    public class PhotosController(ILogger<PhotosController> logger, IPhotoService photoService)
+    public class PhotosController(
+        ILogger<PhotosController> logger,
+        IPhotoService photoService,
+        ISearchFilterNormalizer normalizer)
         : ControllerBase
     {
         [HttpPost("search")]
@@ -21,6 +25,7 @@ namespace PhotoBank.Api.Controllers
         public async Task<ActionResult<PageResponse<PhotoItemDto>>> SearchPhotos([FromBody] FilterDto request)
         {
             logger.LogInformation("Searching photos with filter {@Filter}", request);
+            await normalizer.NormalizeAsync(request);
             var result = await photoService.GetAllPhotosAsync(request);
             logger.LogInformation("Found {Count} photos", result.TotalCount);
             return Ok(result);
