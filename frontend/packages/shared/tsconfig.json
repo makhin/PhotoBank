@@ -2,14 +2,10 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "outDir": "dist",
-    "rootDir": "src",
     "baseUrl": "src",
     "paths": {
       "@/*": ["*"]
     },
-    "declaration": true,
-    "emitDeclarationOnly": false
   },
   "include": [
     "src/**/*",
@@ -21,7 +17,7 @@
     "src/api/photobank/storages/**/*.ts",
     "src/api/photobank/tags/**/*.ts",
     "src/api/photobank/users/**/*.ts",
-    "src/api/photobank/photoBankApi.schemas"
+    "src/api/photobank/photoBankApi.schemas.ts"
   ],
   "exclude": [
     "src/api/photobank/msw.ts",

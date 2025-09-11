@@ -8,16 +8,24 @@ export interface ProblemDetails {
 }
 
 export class ProblemDetailsError extends Error {
-  constructor(public problem: ProblemDetails) {
+  public readonly problem: ProblemDetails;
+
+  constructor(problem: ProblemDetails) {
     super(problem.title);
     this.name = 'ProblemDetailsError';
+    this.problem = problem;
   }
 }
 
 export class HttpError extends Error {
-  constructor(public status: number, public info?: unknown) {
+  public readonly status: number;
+  public readonly info?: unknown;
+
+  constructor(status: number, info?: unknown) {
     super(`HTTP ${status}`);
     this.name = 'HttpError';
+    this.status = status;
+    this.info = info;
   }
 }
 

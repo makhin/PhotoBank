@@ -1,4 +1,4 @@
-import { PhotoItemDto } from '@photobank/shared/api/photobank';
+import { type PhotoItemDto } from '@photobank/shared/api/photobank';
 
 export function buildThumbnailUrl(photo: PhotoItemDto): string {
   if (photo.thumbnailUrl) return String(photo.thumbnailUrl);

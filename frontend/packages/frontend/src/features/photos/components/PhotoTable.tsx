@@ -3,10 +3,10 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  VisibilityState,
+  type VisibilityState,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { PhotoItemDto } from '@photobank/shared/api/photobank';
+import { type PhotoItemDto } from '@photobank/shared/api/photobank';
 
 import { Card } from '@/shared/ui/card';
 

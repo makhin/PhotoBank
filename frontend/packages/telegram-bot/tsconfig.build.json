@@ -1,17 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "noEmit": false,
-    "emitDeclarationOnly": false,
-    "declaration": true,
-    "sourceMap": true,
-    "moduleResolution": "Bundler",
-    "module": "ESNext",
-    "target": "ES2022",
-    "composite": true,
-    "tsBuildInfoFile": "./dist/.tsbuildinfo"
+    "noEmit": true
   },
   "include": ["src/**/*"]
 }

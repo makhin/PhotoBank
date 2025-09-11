@@ -14,16 +14,16 @@ export const getGenderText = (gender?: boolean | null) => {
   return gender ? 'Муж' : 'Жен';
 };
 
-export { getFilterHash } from './utils/getFilterHash';
-export { getOrientation } from './utils/getOrientation';
+export { getFilterHash } from './utils/getFilterHash.js';
+export { getOrientation } from './utils/getOrientation.js';
 export {
   cachePhoto,
   getCachedPhoto,
-} from './cache/photosCache';
+} from './cache/photosCache.js';
 export {
   cacheFilterResult,
   getCachedFilterResult,
-} from './cache/filterResultsCache';
+} from './cache/filterResultsCache.js';
 
 export const firstNWords = (sentence: string, count: number): string => {
   const trimmed = sentence.trim();
@@ -37,7 +37,7 @@ export const firstNWords = (sentence: string, count: number): string => {
   return words.slice(0, count).join(' ') + '... ';
 };
 
-export { useIsAdmin } from './hooks/useIsAdmin';
-export { useCanSeeNsfw } from './hooks/useCanSeeNsfw';
-export { getPlaceByGeoPoint } from './utils/geocode';
-export { uploadPhotosAdapter } from './adapters/photos-upload.adapter';
+export { useIsAdmin } from './hooks/useIsAdmin.js';
+export { useCanSeeNsfw } from './hooks/useCanSeeNsfw.js';
+export { getPlaceByGeoPoint } from './utils/geocode.js';
+export { uploadPhotosAdapter } from './adapters/photos-upload.adapter.js';

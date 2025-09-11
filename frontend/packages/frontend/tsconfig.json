@@ -7,7 +7,8 @@
       "@photobank/shared/*": ["../shared/src/*"],
       "@/*": ["./src/*"]
     },
-    "types": ["vite/client", "vitest/globals", "node", "react"]
+    "types": ["vite/client", "vitest/globals", "node", "react"],
+    "jsx": "react-jsx"
   },
   "include": ["src", "vite.config.ts", "vitest.config.ts"],
   "exclude": [

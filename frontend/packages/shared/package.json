@@ -1,103 +1,45 @@
 {
   "name": "@photobank/shared",
-  "private": true,
   "version": "1.0.1",
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    },
-    "./api/photobank": {
-      "types": "./dist/api/photobank/index.d.ts",
-      "import": "./dist/api/photobank/index.js"
-    },
-    "./ai": {
-      "types": "./dist/ai/index.d.ts",
-      "import": "./dist/ai/index.js"
-    },
-    "./ai/*": {
-      "types": "./dist/ai/*.d.ts",
-      "import": "./dist/ai/*.js",
-      "default": "./dist/ai/*.js"
-    },
-    "./constants": {
-      "types": "./dist/constants.d.ts",
-      "import": "./dist/constants.js",
-      "default": "./dist/constants.js"
-    },
-    "./auth": {
-      "types": "./dist/auth/index.d.ts",
-      "import": "./dist/auth/index.js",
-      "default": "./dist/auth/index.js"
-    },
-    "./api/photobank/fetcher": {
-      "types": "./dist/api/photobank/fetcher.d.ts",
-      "import": "./dist/api/photobank/fetcher.js",
-      "default": "./dist/api/photobank/fetcher.js"
-    },
-    "./index": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    },
-    "./types/problem": {
-      "types": "./dist/types/problem.d.ts",
-      "import": "./dist/types/problem.js",
-      "default": "./dist/types/problem.js"
-    },
-    "./safeStorage": {
-      "types": "./dist/safeStorage.d.ts",
-      "import": "./dist/safeStorage.js",
-      "default": "./dist/safeStorage.js"
-    },
-    "./utils/logger": {
-      "types": "./dist/utils/logger.d.ts",
-      "import": "./dist/utils/logger.js",
-      "default": "./dist/utils/logger.js"
-    },
-    "./format": {
-      "types": "./dist/format/index.d.ts",
-      "import": "./dist/format/index.js",
-      "default": "./dist/format/index.js"
-    },
-    "./api/photobank/auth/auth.msw": {
-      "types": "./dist/api/photobank/auth/auth.msw.d.ts",
-      "import": "./dist/api/photobank/auth/auth.msw.js",
-      "default": "./dist/api/photobank/auth/auth.msw.js"
+      "types": "./dist/types/index.d.ts",
+      "default": "./src/index.ts"
     }
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "vitest run",
-    "lint": "eslint \"src/**/*.ts\""
+    "build:types": "tsc -p tsconfig.types.json"
   },
   "dependencies": {
     "axios": "^1.11.0",
     "date-fns": "^4.1.0",
     "dexie": "^4.2.0",
+    "eventemitter3": "^5.0.1",
     "lru-cache": "^11.2.1",
     "object-hash": "^3.0.0",
-    "openai": "^5.19.1",
-    "p-queue": "^8.1.0",
-    "zod": "^4.1.5"
+    "openai": "^5.20.1",
+    "p-queue": "^8.1.1",
+    "p-timeout": "^6.1.4",
+    "zod": "^4.1.7"
   },
   "peerDependencies": {
-    "@tanstack/react-query": "^5.85.8",
+    "@tanstack/query-core": "^5.87.4",
+    "@tanstack/react-query": "^5.87.4",
     "react": "^19.1.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.9.0",
-    "@tanstack/react-query": "^5.86.0",
+    "@tanstack/query-core": "^5.87.4",
+    "@tanstack/react-query": "^5.87.4",
     "@types/react": "^19.1.12",
-    "msw": "^2.11.1",
+    "msw": "^2.11.2",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   }

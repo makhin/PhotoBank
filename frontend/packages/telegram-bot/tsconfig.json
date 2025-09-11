@@ -2,19 +2,12 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
-    "outDir": "dist",
-    "rootDir": "src",
     "baseUrl": "src",
     "paths": {
       "@/*": ["*"],
       "@photobank/shared/*": ["../shared/src/*"],
       "@photobank/shared/api/photobank": ["../shared/src/api/photobank/index.ts"]
     },
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "target": "ES2022",
-    "types": ["node", "vitest/globals"],
-    "strict": false
   },
   "references": [{ "path": "../shared" }],
   "include": ["src"],

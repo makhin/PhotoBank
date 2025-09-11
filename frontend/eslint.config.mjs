@@ -1,3 +1,4 @@
+// eslint.config.mjs
 import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -26,16 +27,17 @@ export default [
       '**/*.spec.tsx',
       '**/*.msw.ts',
       '**/src/mocks/**',
+      // сгенерированный orval код; при желании убери эту строку
       '**/api/photobank/**',
     ],
   },
-  // The strictTypeChecked preset enables many "no-unsafe" rules that produce
-  // hundreds of false positives in our generated API clients and tests. The
-  // recommendedTypeChecked preset still leverages type information but keeps
-  // the rule set manageable for the codebase.
+
+  // Базовые правила TypeScript с type-aware проверками
   ...tseslint.configs.recommendedTypeChecked,
+
   {
     files: ['**/*.{ts,tsx}'],
+
     plugins: {
       react: reactPlugin,
       'react-hooks': reactHooks,
@@ -43,26 +45,39 @@ export default [
       import: importPlugin,
       'unused-imports': unusedImports,
     },
+
     languageOptions: {
       parserOptions: {
+        // укажи монорепо-проекты; eslint запустит type-aware анализ
         project: ['./packages/**/tsconfig*.json'],
         tsconfigRootDir: import.meta.dirname,
         ecmaFeatures: { jsx: true },
       },
     },
+
     settings: {
       react: { version: 'detect' },
       'import/resolver': {
+        // корректный резолв алиасов из tsconfig (монорепо)
         typescript: {
           project: ['./packages/**/tsconfig*.json'],
+          alwaysTryTypes: true,
+        },
+        // и обычный node-резолвер, чтобы правило import/extensions работало предсказуемо
+        node: {
+          extensions: ['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts'],
         },
       },
     },
+
     rules: {
+      // React / Hooks / a11y
       ...reactPlugin.configs.recommended.rules,
       ...reactPlugin.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
       ...jsxA11y.configs.recommended.rules,
+
+      // Порядок импортов
       'import/order': [
         'error',
         {
@@ -74,19 +89,19 @@ export default [
           'newlines-between': 'always',
         },
       ],
+
+      // Без неиспользуемых импортов
       'unused-imports/no-unused-imports': 'error',
+
+      // TS/JS общие
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { argsIgnorePattern: '^_' },
-      ],
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
       'no-undef': 'off',
+
+      // Чуть ослабим строгие правила под твой кодстайл
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
-      // Disable the family of `no-unsafe-*` rules for now. The generated API
-      // clients rely heavily on `any` types which trigger thousands of these
-      // warnings, making lint noise overwhelming.
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
@@ -94,7 +109,26 @@ export default [
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-redundant-type-constituents': 'off',
       '@typescript-eslint/no-invalid-void-type': 'off',
+
+      // ГЛАВНОЕ: импорт/экспорт ТОЛЬКО без расширений
+      'import/extensions': [
+        'error',
+        'ignorePackages',
+        {
+          js: 'never',
+          jsx: 'never',
+          ts: 'never',
+          tsx: 'never',
+          mjs: 'never',
+          cjs: 'never',
+        },
+      ],
+
+      // Избавляемся от ./index и лишних сегментов пути
+      'import/no-useless-path-segments': ['error', { noUselessIndex: true }],
     },
   },
+
+  // Совместимость с Prettier
   prettier,
 ];

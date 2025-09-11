@@ -1,5 +1,4 @@
 // @ts-check
-import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
@@ -55,9 +54,18 @@ export default [
         typescript: {
           project: ['./tsconfig.node.json', './tsconfig.app.json'],
         },
+        node: {
+          extensions: ['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts'],
+        },
       },
     },
     rules: {
+        // Импорты/экспорты без расширений
+    'import/extensions': [
+        'error',
+        'ignorePackages',
+        { js: 'never', jsx: 'never', ts: 'never', tsx: 'never', mjs: 'never', cjs: 'never' }
+      ],
       // React best practices
       ...reactPlugin.configs.recommended.rules,
       ...reactPlugin.configs['jsx-runtime'].rules,

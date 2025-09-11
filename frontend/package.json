@@ -3,30 +3,29 @@
   "version": "1.0.0",
   "description": "",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
-    "build": "pnpm -r run build",
-    "dev": "pnpm --filter frontend dev",
-    "bot": "pnpm --filter telegram-bot start",
-    "lint": "pnpm -r lint",
-    "format": "pnpm -r format",
-    "test": "pnpm -r --workspace-concurrency=1 test",
-    "test:coverage": "pnpm -r --workspace-concurrency=1 test:coverage",
-    "generate:api": "orval --config ./orval.config.ts"
+    "orval": "orval --config orval.config.ts",
+    "build:types": "pnpm --filter @photobank/shared run build:types",
+    "build:frontend": "pnpm --filter @photobank/frontend run build",
+    "build:bot": "pnpm --filter @photobank/telegram-bot run build",
+    "build": "pnpm run orval && pnpm run build:types && pnpm run build:frontend && pnpm run build:bot",
+    "dev:frontend": "pnpm --filter @photobank/frontend run dev",
+    "dev:bot": "pnpm --filter @photobank/telegram-bot run dev",
+    "generate:api": "orval --config orval.config.ts",
+    "lint": "eslint packages --ext .ts,.tsx --max-warnings=0"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.15.1",
   "devDependencies": {
-    "@eslint/js": "^9.34.0",
+    "@eslint/js": "^9.35.0",
     "@faker-js/faker": "^10.0.0",
     "@types/object-hash": "^3.0.6",
-    "@typescript-eslint/eslint-plugin": "^8.42.0",
-    "@typescript-eslint/parser": "^8.42.0",
-    "eslint": "^9.34.0",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
+    "depcheck": "^1.4.7",
+    "eslint": "^9.35.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
@@ -36,12 +35,20 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-redux": "^0.1.0",
     "eslint-plugin-unused-imports": "^4.2.0",
-    "msw": "^2.11.1",
+    "msw": "^2.11.2",
     "orval": "^7.11.2",
     "prettier": "^3.6.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.2",
-    "typescript-eslint": "^8.42.0",
-    "zod": "^4.1.5"
+    "typescript-eslint": "^8.43.0",
+    "zod": "^4.1.7"
+  },
+  "dependencies": {
+    "@floating-ui/core": "^1.7.3",
+    "@floating-ui/utils": "^0.2.10",
+    "@radix-ui/react-arrow": "^1.1.7",
+    "detect-node-es": "^1.1.0",
+    "get-nonce": "^1.0.1",
+    "react-style-singleton": "^2.2.3"
   }
 }
