@@ -1,5 +1,12 @@
 {
-  "files": [],
-  "references": [{ "path": "../shared" }],
-  "extends": "../../tsconfig.base.json"
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "noImplicitOverride": false,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["src", "vite.config.ts", "env.d.ts"]
 }

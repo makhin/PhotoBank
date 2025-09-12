@@ -1,3 +1,4 @@
+// packages/shared/src/index.ts
 import {format, parseISO} from "date-fns";
 
 export const formatDate = (dateString?: string) => {
@@ -14,16 +15,16 @@ export const getGenderText = (gender?: boolean | null) => {
   return gender ? 'Муж' : 'Жен';
 };
 
-export { getFilterHash } from './utils/getFilterHash.js';
-export { getOrientation } from './utils/getOrientation.js';
+export { getFilterHash } from './utils/getFilterHash';
+export { getOrientation } from './utils/getOrientation';
 export {
   cachePhoto,
   getCachedPhoto,
-} from './cache/photosCache.js';
+} from './cache/photosCache';
 export {
   cacheFilterResult,
   getCachedFilterResult,
-} from './cache/filterResultsCache.js';
+} from './cache/filterResultsCache';
 
 export const firstNWords = (sentence: string, count: number): string => {
   const trimmed = sentence.trim();
@@ -37,7 +38,20 @@ export const firstNWords = (sentence: string, count: number): string => {
   return words.slice(0, count).join(' ') + '... ';
 };
 
-export { useIsAdmin } from './hooks/useIsAdmin.js';
-export { useCanSeeNsfw } from './hooks/useCanSeeNsfw.js';
-export { getPlaceByGeoPoint } from './utils/geocode.js';
-export { uploadPhotosAdapter } from './adapters/photos-upload.adapter.js';
+export { useIsAdmin } from './hooks/useIsAdmin';
+export { useCanSeeNsfw } from './hooks/useCanSeeNsfw';
+export { getPlaceByGeoPoint } from './utils/geocode';
+export { uploadPhotosAdapter } from './adapters/photos-upload.adapter';
+
+export * from './format';
+export * from './auth';
+export * from './safeStorage';
+export * from './constants';
+export * as logger from './utils/logger';
+
+// важно: пробрасываем наружу весь автосгенерённый API под @photobank/shared/api/photobank
+export * as api from './api/photobank';
+export * from './api/photobank';
+
+export { configureApi, configureApiAuth, setImpersonateUser } from './api/photobank/fetcher';
+export { configureApi as setBaseUrl } from './api/photobank/fetcher';

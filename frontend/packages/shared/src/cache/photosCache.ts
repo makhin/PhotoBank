@@ -6,7 +6,7 @@ import type { PhotoDto } from '../api/photobank';
 
 export interface CachedPhoto {
   id: number;
-  previewUrl?: string | null;
+  previewUrl?: string | null | undefined;
   added: number;
 }
 

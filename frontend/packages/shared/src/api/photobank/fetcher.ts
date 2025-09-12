@@ -48,7 +48,7 @@ function normalizeInit(init?: RequestInit): RequestInit {
   return {
     ...init,
     headers,
-    body: bodyIsJson ? JSON.stringify(init!.body) : init?.body,
+    body: bodyIsJson ? JSON.stringify(init!.body) : init?.body ?? null,
     credentials: init?.credentials ?? 'include',
   };
 }

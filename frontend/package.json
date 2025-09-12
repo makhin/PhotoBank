@@ -1,7 +1,10 @@
 {
   "name": "photobank-monorepo",
   "type": "module",
-  "engines": { "node": ">=20.11", "pnpm": ">=9.0.0" },
+  "engines": {
+    "node": ">=20.11",
+    "pnpm": ">=9.0.0"
+  },
   "version": "1.0.0",
   "description": "",
   "private": true,

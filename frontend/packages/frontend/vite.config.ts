@@ -4,18 +4,19 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import * as path from 'node:path';
 
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+  plugins: [
+    react(),
+    tsconfigPaths({
+      // читаем только фронтовый tsconfig, игнорим ошибки в остальных пакетах
+      projects: [path.resolve(__dirname, 'tsconfig.app.json')],
+      ignoreConfigErrors: true,
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@photobank/shared': path.resolve(__dirname, '../../shared/src') // dev: брать исходники
-    }
+    },
   },
-  build: {
-    target: 'es2022',
-    sourcemap: true
-  },
-  optimizeDeps: {
-    entries: ['src/main.tsx']
-  }
+  build: { target: 'es2022', sourcemap: true },
+  optimizeDeps: { entries: ['src/main.tsx'] },
 });

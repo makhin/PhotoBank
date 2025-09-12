@@ -1,9 +1,0 @@
-declare module '@photobank/shared/api/photobank/auth/auth.msw';
-declare module '@photobank/shared/api/photobank/faces/faces.msw';
-declare module '@photobank/shared/api/photobank/photos/photos.msw';
-declare module '@photobank/shared/api/photobank/persons/persons.msw';
-declare module '@photobank/shared/api/photobank/tags/tags.msw';
-declare module '@photobank/shared/api/photobank/users/users.msw';
-declare module '@photobank/shared/api/photobank/paths/paths.msw';
-declare module '@photobank/shared/api/photobank/storages/storages.msw';
-declare module '@photobank/shared/api/photobank/msw.scenarios';

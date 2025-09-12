@@ -4,7 +4,13 @@
     "jsx": "react-jsx",
     "noEmit": true,                       // фронт не эмитит; сборка делается Vite
     "moduleDetection": "force",
-    "types": ["vite/client", "vitest/globals"]
+    "types": ["vite/client", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@photobank/shared": ["../shared/src/index.ts"],
+      "@photobank/shared/*": ["../shared/src/*"]
+    }
   },
-  "include": ["src", "vite.config.ts", "vitest.config.ts"]
+  "include": ["src", "vite.config.ts", "vitest.config.ts", "env.d.ts"]
 }

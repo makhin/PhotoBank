@@ -15,13 +15,6 @@ import './index.css';
 async function start() {
   configureApi(API_BASE_URL);
 
-  // ВАЖНО: импортируй только по флагу, чтобы не тянуть msw в прод-бандл
-  if (import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS === '1') {
-    const { worker } = await import('./mocks/browser');
-    await worker.start({
-      onUnhandledRequest: 'bypass', // реальные вызовы не ломаем
-    });
-  }
 
   const root = document.getElementById('root')!;
   ReactDOM.createRoot(root).render(
