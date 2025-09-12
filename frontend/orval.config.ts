@@ -11,10 +11,6 @@ export default defineConfig({
       client: 'react-query',
       httpClient: 'fetch',
       mode: 'tags-split',
-      mock: {
-        type: 'msw',
-        baseUrl: '/api',
-      },
        override: {
           mutator: {
             path: path.resolve(__dirname, 'packages/shared/src/api/photobank/fetcher.ts'),
@@ -35,10 +31,6 @@ export default defineConfig({
       target: path.resolve(__dirname, 'packages/telegram-bot/src/api/photobank'),
       client: 'axios',
       mode: 'tags-split',
-      mock: {
-        type: 'msw',
-        baseUrl: '/api',
-      },
       override: {
         mutator: {
           path: path.resolve(__dirname, 'packages/telegram-bot/src/api/axios-instance.ts'),

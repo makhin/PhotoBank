@@ -1,8 +1,2 @@
 packages:
   - packages/*
-
-onlyBuiltDependencies:
-  - '@tailwindcss/oxide'
-  - esbuild
-  - msw
-  - unrs-resolver

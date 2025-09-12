@@ -3,17 +3,21 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "engines": { "node": ">=20.11" },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
   "scripts": {
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "pnpm run typecheck && tsup",
     "dev": "tsup --watch --onSuccess \"node dist/index.js\"",
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@photobank/shared": "workspace:*",
     "@grammyjs/conversations": "^2.1.0",
     "@grammyjs/i18n": "^1.1.2",
     "@grammyjs/runner": "^2.0.3",
-    "@photobank/shared": "workspace:*",
     "axios": "^1.11.0",
     "bottleneck": "^2.19.5",
     "date-fns": "^4.1.0",

@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig, AxiosInstance } from 'axios';
+import axios, { type AxiosRequestConfig, type AxiosInstance } from 'axios';
 import type { Context } from 'grammy';
 
 import { ensureUserAccessToken, invalidateUserToken } from '@/auth';

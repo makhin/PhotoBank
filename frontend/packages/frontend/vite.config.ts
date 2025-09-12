@@ -1,24 +1,21 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import * as path from 'node:path';
 
 export default defineConfig({
   plugins: [react(), tsconfigPaths()],
   resolve: {
-    preserveSymlinks: true
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@photobank/shared': path.resolve(__dirname, '../../shared/src') // dev: брать исходники
+    }
   },
   build: {
     target: 'es2022',
     sourcemap: true
   },
   optimizeDeps: {
-    include: [
-      '@tanstack/query-core',
-      '@tanstack/react-query',
-      'redux',
-      'cookie',
-      'use-sync-external-store/with-selector',
-      'eventemitter3'
-    ]
+    entries: ['src/main.tsx']
   }
 });

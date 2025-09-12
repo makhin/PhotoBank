@@ -1,4 +1,7 @@
-import { configureApi, customFetcher } from '@photobank/shared/api/photobank';
+import {
+  configureApi,
+  customFetcher,
+} from '@photobank/shared/src/api/photobank';
 
 import { BOT_SERVICE_KEY } from '../config';
 

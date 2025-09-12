@@ -1,28 +1,15 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
     "composite": true,
-    "baseUrl": "src",
-    "paths": {
-      "@/*": ["*"]
-    },
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "moduleDetection": "force",
+    "skipLibCheck": true
   },
-  "include": [
-    "src/**/*",
-    "src/api/photobank/auth/**/*.ts",
-    "src/api/photobank/faces/**/*.ts",
-    "src/api/photobank/paths/**/*.ts",
-    "src/api/photobank/persons/**/*.ts",
-    "src/api/photobank/photos/**/*.ts",
-    "src/api/photobank/storages/**/*.ts",
-    "src/api/photobank/tags/**/*.ts",
-    "src/api/photobank/users/**/*.ts",
-    "src/api/photobank/photoBankApi.schemas.ts"
-  ],
-  "exclude": [
-    "src/api/photobank/msw.ts",
-    "src/api/photobank/msw.scenarios.ts",
-    "src/**/*.msw.ts"
-  ]
+  "include": ["src"],
+  "exclude": ["dist"]
 }
-

@@ -25,9 +25,8 @@ export default [
       '**/*.test.tsx',
       '**/*.spec.ts',
       '**/*.spec.tsx',
-      '**/*.msw.ts',
-      '**/src/mocks/**',
-      // сгенерированный orval код; при желании убери эту строку
+      // если вернёшь генерацию Orval/MSW — оставь
+      '**/src/**/generated/**',
       '**/api/photobank/**',
     ],
   },
@@ -48,7 +47,6 @@ export default [
 
     languageOptions: {
       parserOptions: {
-        // укажи монорепо-проекты; eslint запустит type-aware анализ
         project: ['./packages/**/tsconfig*.json'],
         tsconfigRootDir: import.meta.dirname,
         ecmaFeatures: { jsx: true },
@@ -58,16 +56,18 @@ export default [
     settings: {
       react: { version: 'detect' },
       'import/resolver': {
-        // корректный резолв алиасов из tsconfig (монорепо)
         typescript: {
           project: ['./packages/**/tsconfig*.json'],
           alwaysTryTypes: true,
         },
-        // и обычный node-резолвер, чтобы правило import/extensions работало предсказуемо
         node: {
           extensions: ['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts'],
         },
       },
+      'import/parsers': {
+        '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'],
+      },
+      'import/extensions': ['.ts', '.tsx', '.js', '.jsx', '.mts', '.cts'],
     },
 
     rules: {
@@ -90,7 +90,10 @@ export default [
         },
       ],
 
-      // Без неиспользуемых импортов
+      // Не допускаем дубли импортов
+      'import/no-duplicates': 'error',
+
+      // Убираем неиспользуемые импорты
       'unused-imports/no-unused-imports': 'error',
 
       // TS/JS общие
@@ -110,7 +113,7 @@ export default [
       '@typescript-eslint/no-redundant-type-constituents': 'off',
       '@typescript-eslint/no-invalid-void-type': 'off',
 
-      // ГЛАВНОЕ: импорт/экспорт ТОЛЬКО без расширений
+      // Импорт/экспорт только без расширений
       'import/extensions': [
         'error',
         'ignorePackages',
@@ -127,6 +130,12 @@ export default [
       // Избавляемся от ./index и лишних сегментов пути
       'import/no-useless-path-segments': ['error', { noUselessIndex: true }],
     },
+  },
+
+  // Для js/mjs/cjs-конфигов без TS-проектов
+  {
+    files: ['**/*.{js,mjs,cjs}'],
+    languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
   },
 
   // Совместимость с Prettier

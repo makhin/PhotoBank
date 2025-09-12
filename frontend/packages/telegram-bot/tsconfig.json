@@ -1,21 +1,14 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
     "composite": true,
-    "baseUrl": "src",
-    "paths": {
-      "@/*": ["*"],
-      "@photobank/shared/*": ["../shared/src/*"],
-      "@photobank/shared/api/photobank": ["../shared/src/api/photobank/index.ts"]
-    },
+    "declaration": true,
+    "noEmit": false,
+    "moduleDetection": "force",
+    "types": ["node"],
   },
-  "references": [{ "path": "../shared" }],
-  "include": ["src"],
-  "exclude": [
-    "src/**/*.msw.ts",
-    "src/**/__mocks__/**",
-    "src/**/*.mock.ts",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts"
-  ]
+  "references": [{ "path": "../../shared" }],
+  "include": ["src"]
 }

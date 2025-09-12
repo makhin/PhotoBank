@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "frontend/packages/shared" },
+    { "path": "frontend/packages/frontend" },
+    { "path": "frontend/packages/telegram-bot" }
+  ]
+}

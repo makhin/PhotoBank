@@ -1,16 +1,28 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "target": "ES2022",
-    "noEmit": true,
+    "lib": ["ES2023", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "verbatimModuleSyntax": true,
-    "resolvePackageJsonExports": true,
-    "resolvePackageJsonImports": true,
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "checkJs": false,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "useUnknownInCatchVariables": true,
+    "esModuleInterop": false,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "exactOptionalPropertyTypes": true,
+    "inlineSources": false,
+    "sourceMap": true,
+    "types": [],
     "baseUrl": ".",
     "paths": {
-      "@photobank/shared": ["packages/shared/src"],
-      "@photobank/shared/*": ["packages/shared/src/*"]
+      "@photobank/shared/*": ["frontend/packages/shared/src/*"],
+      "@photobank/shared": ["frontend/packages/shared/src/index.ts"]
     }
   }
 }

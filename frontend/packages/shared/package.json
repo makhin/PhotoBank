@@ -2,20 +2,22 @@
   "name": "@photobank/shared",
   "version": "1.0.1",
   "type": "module",
-  "sideEffects": false,
+  "description": "Shared utilities and types for Photobank",
+  "private": true,
   "exports": {
     ".": {
-      "types": "./dist/types/index.d.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
-  "types": "./dist/types/index.d.ts",
+  "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
-    "build:types": "tsc -p tsconfig.types.json"
+    "build:types": "tsc -p tsconfig.types.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit false"
   },
   "dependencies": {
     "axios": "^1.11.0",
