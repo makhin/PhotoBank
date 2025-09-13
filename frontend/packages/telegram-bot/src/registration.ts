@@ -8,12 +8,14 @@ export async function ensureRegistered(ctx: MyContext): Promise<boolean> {
   try {
     await ensureUserAccessToken(ctx);
     return true;
-  } catch (err) {
-    if (err instanceof ProblemDetailsError && err.problem.status === 403) {
-      await ctx.reply(ctx.t('not-registered', { userId: ctx.from?.id ?? 0 }));
-    } else {
-      await ctx.reply(ctx.t('not-registered', { userId: ctx.from?.id ?? 0 }));
-    }
+  } catch (e: unknown) {
+    let forbidden = false;
+    if (e instanceof ProblemDetailsError) forbidden = e.problem.status === 403;
+    await ctx.reply(
+      forbidden
+        ? ctx.t('not-registered', { userId: ctx.from?.id ?? 0 })
+        : ctx.t('sorry-try-later')
+    );
     return false;
   }
 }
