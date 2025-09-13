@@ -1,6 +1,5 @@
 import { InlineKeyboard } from 'grammy';
-import type { FilterDto } from '@photobank/shared/api/photobank';
-import { firstNWords } from '@photobank/shared/';
+import { firstNWords, type FilterDto } from '@photobank/shared';
 
 import type { MyContext } from '../i18n';
 import { searchPhotos } from '../services/photo';
