@@ -18,7 +18,7 @@ bot.on('inline_query', async (ctx: MyContext) => {
   // Авторизация для inline: если нет — мягко предлагаем /start link
   try {
     await ensureUserAccessToken(ctx);
-  } catch {
+  } catch (e: unknown) {
     await ctx.answerInlineQuery(
       [],
       {
@@ -76,8 +76,10 @@ bot.on('inline_query', async (ctx: MyContext) => {
         next_offset: nextOffset,
       } satisfies Parameters<typeof ctx.answerInlineQuery>[1],
     );
-  } catch (e) {
-    if (e instanceof ProblemDetailsError && e.problem.status === 403) {
+  } catch (e: unknown) {
+    let forbidden = false;
+    if (e instanceof ProblemDetailsError) forbidden = e.problem.status === 403;
+    if (forbidden) {
       await ctx.answerInlineQuery(
         [],
         {
