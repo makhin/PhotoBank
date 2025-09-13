@@ -18,37 +18,34 @@ export async function sendPhotoSmart(ctx: Context, p: PhotoItemDto) {
   if (!ctx.chat) {
     throw new Error('Chat not found');
   }
+  const chatId = ctx.chat.id;
   const cached = getFileId(p.id);
   try {
     const message = await withTelegramRetry(() =>
       throttled(() =>
-        ctx.api.sendPhoto(
-          ctx.chat.id,
-          cached ?? (p.thumbnailUrl ?? ''),
-          { caption: buildCaption(p) },
-        ),
+        ctx.api.sendPhoto(chatId, cached ?? (p.thumbnailUrl ?? ''), {
+          caption: buildCaption(p),
+        }),
       ),
     );
     const newId = message.photo?.at(-1)?.file_id || null;
     if (newId && newId !== cached) setFileId(p.id, newId);
     return message;
-    } catch (e: unknown) {
-      // If cached file_id expired, remove and retry with thumbnail URL
-      const err = e as { error_code?: number; description?: string };
-      const code = err.error_code;
-      const desc = err.description ?? '';
+  } catch (e: unknown) {
+    // If cached file_id expired, remove and retry with thumbnail URL
+    const err = e as { error_code?: number; description?: string };
+    const code = err.error_code;
+    const desc = err.description ?? '';
     if (cached && (code === 400 || desc.includes('wrong file identifier'))) {
       delFileId(p.id);
       logger.warn('file_id invalidated, retry with thumbnail URL', { photoId: p.id });
-        const message = (await withTelegramRetry(() =>
-          throttled(() =>
-            ctx.api.sendPhoto(
-              ctx.chat.id,
-              p.thumbnailUrl ?? '',
-              { caption: buildCaption(p) },
-            ),
-          ),
-        ));
+      const message = (await withTelegramRetry(() =>
+        throttled(() =>
+          ctx.api.sendPhoto(chatId, p.thumbnailUrl ?? '', {
+            caption: buildCaption(p),
+          }),
+        ),
+      ));
       const newId = message.photo?.at(-1)?.file_id || null;
       if (newId) setFileId(p.id, newId);
       return message;
@@ -69,8 +66,9 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
   if (!ctx.chat) {
     throw new Error('Chat not found');
   }
+  const chatId = ctx.chat.id;
   const groups = chunk(photos, 10); // Telegram limit
-    const results: Message[] = [];
+  const results: Message[] = [];
 
   for (const group of groups) {
     const medias: InputMediaPhoto[] = group.map((p) => {
@@ -86,7 +84,7 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
     try {
       // mediaGroup cannot be edited, so just send and continue
       const msgs = (await withTelegramRetry(() =>
-        throttled(() => ctx.api.sendMediaGroup(ctx.chat.id, medias)),
+        throttled(() => ctx.api.sendMediaGroup(chatId, medias)),
       )) as Message.PhotoMessage[];
       // Save file_id for all items where it appears
       msgs.forEach((m, i) => {
@@ -95,11 +93,11 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
         if (id) setFileId(p.id, id);
       });
       results.push(...msgs);
-      } catch (e: unknown) {
-        const err = e as { error_code?: number; description?: string };
-        const code = err.error_code;
-        const desc = err.description ?? '';
-        logger.warn('sendMediaGroup failed, fallback to singles', { code, desc, count: group.length });
+    } catch (e: unknown) {
+      const err = e as { error_code?: number; description?: string };
+      const code = err.error_code;
+      const desc = err.description ?? '';
+      logger.warn('sendMediaGroup failed, fallback to singles', { code, desc, count: group.length });
 
       // Fallback: send one by one to still deliver to user
       for (const p of group) {
