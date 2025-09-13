@@ -63,8 +63,11 @@ export async function sendPhotosPage({
 
   for (const photo of queryResult.items) {
     const year = photo.takenDate ? new Date(photo.takenDate).getFullYear() : 0;
-    if (!byYear.has(year)) byYear.set(year, new Map());
-    const yearMap = byYear.get(year);
+    let yearMap = byYear.get(year);
+    if (!yearMap) {
+      yearMap = new Map();
+      byYear.set(year, yearMap);
+    }
     const key = `${photo.storageName} / ${photo.relativePath}`;
     if (!yearMap.has(key)) yearMap.set(key, []);
     yearMap.get(key)!.push(photo);
