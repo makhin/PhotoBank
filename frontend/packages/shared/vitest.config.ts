@@ -11,6 +11,7 @@ export default mergeConfig(
     },
     test: {
       setupFiles: './test-setup.ts',
+      exclude: ['test/**/*.test.skip.ts'],
     },
   }),
 );
