@@ -24,13 +24,6 @@
     "sourceMap": true,
     "types": [],
     "baseUrl": ".",
-    "paths": {
-      "@photobank/shared/*": [
-        "packages/shared/src/*"
-      ],
-      "@photobank/shared": [
-        "packages/shared/src/index.ts"
-      ]
-    }
+    "paths": {}
   }
 }

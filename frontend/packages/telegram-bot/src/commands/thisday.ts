@@ -2,9 +2,10 @@ import type { MyContext } from '../i18n';
 import { sendPhotosPage } from './photosPage';
 
 function parsePage(text?: string): number {
-    if (!text) return 1;
-    const match = text.match(/\/thisday\s+(\d+)/);
-    return match ? parseInt(match[1], 10) || 1 : 1;
+  if (!text) return 1;
+  const match = text.match(/\/thisday\s+(\d+)/);
+  const g1 = match?.[1];
+  return g1 ? parseInt(g1, 10) || 1 : 1;
 }
 
 export async function handleThisDay(ctx: MyContext) {

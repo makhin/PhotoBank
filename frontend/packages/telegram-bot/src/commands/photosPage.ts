@@ -1,6 +1,6 @@
 import { InlineKeyboard } from 'grammy';
 import type { FilterDto } from '@photobank/shared/api/photobank';
-import { firstNWords } from '@photobank/shared/index';
+import { firstNWords } from '@photobank/shared/';
 
 import type { MyContext } from '../i18n';
 import { searchPhotos } from '../services/photo';
@@ -47,7 +47,7 @@ export async function sendPhotosPage({
     return;
   }
 
-  if (!queryResult.count || !queryResult.photos?.length) {
+  if (!queryResult.totalCount || !queryResult.items?.length) {
     if (edit) {
       await ctx.editMessageText(fallbackMessage).catch(() => ctx.reply(fallbackMessage));
     } else {
@@ -55,11 +55,13 @@ export async function sendPhotosPage({
     }
     return;
   }
+  const items = queryResult.items ?? [];
+  const totalCount = queryResult.totalCount ?? 0;
 
-  const totalPages = Math.ceil(queryResult.count / PHOTOS_PAGE_SIZE);
-  const byYear = new Map<number, Map<string, typeof queryResult.photos>>();
+  const totalPages = Math.ceil(totalCount / PHOTOS_PAGE_SIZE);
+  const byYear = new Map<number, Map<string, typeof items>>();
 
-  for (const photo of queryResult.photos) {
+  for (const photo of queryResult.items) {
     const year = photo.takenDate ? new Date(photo.takenDate).getFullYear() : 0;
     if (!byYear.has(year)) byYear.set(year, new Map());
     const yearMap = byYear.get(year);

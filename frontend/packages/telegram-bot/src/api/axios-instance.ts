@@ -10,41 +10,26 @@ export function setRequestContext(ctx: Context | undefined) {
   currentCtx = ctx;
 }
 
-const client: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
+const client: AxiosInstance = axios.create({ baseURL: API_BASE_URL, withCredentials: true });
 
-// Перегрузки: orval будет использовать первую
-export async function photobankAxios<T>(config: AxiosRequestConfig): Promise<T>;
-export async function photobankAxios<T>(config: AxiosRequestConfig, ctx: Context): Promise<T>;
 export async function photobankAxios<T>(config: AxiosRequestConfig, ctx?: Context): Promise<T> {
-  const context = ctx ?? currentCtx;
-  if (!context) {
-    throw new Error('Telegram context is required');
-  }
+  const context = (ctx ?? currentCtx)!; // ← non-null assertion
+  if (!context) throw new Error('Telegram context is required');
 
-  async function doRequest(force = false): Promise<T> {
-    const token = await ensureUserAccessToken(context, force);
+  const doRequest = async (force = false): Promise<T> => {
+    const token = await ensureUserAccessToken(context, force); // теперь тип ОК
     const res = await client.request<T>({
       ...config,
-      // axios v1+ понимает AbortSignal: signal?: AbortSignal
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...(config.headers ?? {}),
-      },
+      headers: { Authorization: `Bearer ${token}`, ...(config.headers ?? {}) },
     });
-    return res.data; // важно: возвращаем тело, не AxiosResponse
-  }
+    return res.data;
+  };
 
   try {
     return await doRequest(false);
   } catch (error) {
-    const err = error as unknown;
-    const status = (axios.isAxiosError(err) ? err.response?.status : undefined);
-
+    const status = axios.isAxiosError(error) ? error.response?.status : undefined;
     if (status === 401 || status === 403) {
-      // токен протух/права изменились — инвалидируем и пробуем ещё раз
       invalidateUserToken(context);
       return await doRequest(true);
     }

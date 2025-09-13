@@ -1,6 +1,6 @@
 import { parseQueryWithOpenAI } from '@photobank/shared/ai/openai';
 import type { FilterDto } from '@photobank/shared/api/photobank';
-import { getFilterHash } from '@photobank/shared/index';
+import { getFilterHash } from '@photobank/shared';
 
 import type { MyContext } from '../i18n';
 import { sendPhotosPage } from './photosPage';

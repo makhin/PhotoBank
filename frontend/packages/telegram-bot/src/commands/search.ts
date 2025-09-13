@@ -21,9 +21,9 @@ function tokenize(input: string): string[] {
   let q: "'" | '"' | null = null;
 
   for (let i = 0; i < input.length; i++) {
-    const ch = input[i];
+    const ch = input.charAt(i);
     if (q) {
-      if (ch === "\\" && i + 1 < input.length) cur += input[++i];
+      if (ch === "\\" && i + 1 < input.length) cur += input.charAt(++i);
       else if (ch === q) q = null;
       else cur += ch;
     } else {
@@ -83,10 +83,10 @@ function parseDateExpr(expr: string): { from?: string; to?: string } {
     const [a, b] = expr.split("..").map((s) => s.trim());
     const left = a ? parseSingleLoose(a) : null;
     const right = b ? parseSingleLoose(b) : null;
-    return {
-      from: left ? formatDfns(left.from, "yyyy-MM-dd") : undefined,
-      to: right ? formatDfns(right.to, "yyyy-MM-dd") : undefined,
-    };
+    const res: { from?: string; to?: string } = {};
+    if (left)  res.from = formatDfns(left.from,  "yyyy-MM-dd");
+    if (right) res.to   = formatDfns(right.to,   "yyyy-MM-dd");
+    return res;
   }
   const one = parseSingleLoose(expr);
   if (!one) return {};
@@ -133,18 +133,23 @@ function parseArgsToFilter(raw: string): FilterDto {
   let takenDateTo: string | undefined;
 
   for (const t of tokens) {
-    const hasColon = t.includes(":");
-    const [kRaw, ...vParts] = t.split(":");
-    const key = kRaw.toLowerCase();
-    const val = hasColon ? vParts.join(":") : undefined;
+    const hasColon = t.includes(':');
+
+    let key = '';
+    let val: string | undefined;
+    if (hasColon) {
+      const [kRaw, ...vParts] = t.split(':');
+      key = (kRaw ?? '').toLowerCase();
+      val = vParts.join(':');
+    }
 
     // #... / @... (имена)
-    if (!hasColon && t.startsWith("#")) {
+    if (!hasColon && t.startsWith('#')) {
       const body = t.slice(1).trim();
       if (body && !tagNames.includes(body)) tagNames.push(body);
       continue;
     }
-    if (!hasColon && t.startsWith("@")) {
+    if (!hasColon && t.startsWith('@')) {
       const body = t.slice(1).trim();
       if (body && !personNames.includes(body)) personNames.push(body);
       continue;
@@ -152,43 +157,43 @@ function parseArgsToFilter(raw: string): FilterDto {
 
     if (hasColon) {
       switch (key) {
-        case "tag":
-        case "tags": {
-          (val ?? "")
-            .split(",")
-            .map((x) => x.trim().replace(/^#/, ""))
+        case 'tag':
+        case 'tags': {
+          (val ?? '')
+            .split(',')
+            .map((x) => x.trim().replace(/^#/, ''))
             .forEach((x) => {
               if (x && !tagNames.includes(x)) tagNames.push(x);
             });
         }
-        case "person":
-        case "people": {
-          (val ?? "")
-            .split(",")
-            .map((x) => x.trim().replace(/^@/, ""))
+        case 'person':
+        case 'people': {
+          (val ?? '')
+            .split(',')
+            .map((x) => x.trim().replace(/^@/, ''))
             .forEach((x) => {
               if (x && !personNames.includes(x)) personNames.push(x);
             });
         }
-        case "date": {
-          const { from, to } = parseDateExpr(val ?? "");
+        case 'date': {
+          const { from, to } = parseDateExpr(val ?? '');
           if (from) takenDateFrom = from;
           if (to) takenDateTo = to;
         }
-        case "before": {
+        case 'before': {
           const { to } = parseBefore(val);
           if (to) takenDateTo = to;
         }
-        case "after": {
+        case 'after': {
           const { from } = parseAfter(val);
-          if (from) takenDateFrom = from
+          if (from) takenDateFrom = from;
         }
         default:
           rest.push(t);
       }
     } else {
       // даты без ключа — одиночная/диапазон
-      if (/^\d{4}(-\d{2}(-\d{2})?)?$/.test(t) || t.includes("..")) {
+      if (/^\d{4}(-\d{2}(-\d{2})?)?$/.test(t) || t.includes('..')) {
         const { from, to } = parseDateExpr(t);
         if (from) takenDateFrom = from;
         if (to) takenDateTo = to;
@@ -291,7 +296,7 @@ export function decodeSearchCallback(data: string): { page: number; filter: Filt
   const page = Number(parts[1]);
   if (!Number.isInteger(page) || page < 1) return null;
 
-  const filter = decodeFilter(parts[2]);
+  const filter = parts[2] ? decodeFilter(parts[2]) : null;
   if (!filter) return null;
 
   return { page, filter };

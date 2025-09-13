@@ -12,8 +12,8 @@ import type { MyContext } from '../i18n';
 const PAGE_SIZE = 20;
 
 bot.on('inline_query', async (ctx: MyContext) => {
-  const q = (ctx.inlineQuery.query || '').trim();
-  const offset = Number(ctx.inlineQuery.offset || '0') || 0;
+  const q = (ctx.inlineQuery?.query ?? '').trim();
+  const offset = Number(ctx.inlineQuery?.offset ?? '0') || 0;
 
   // Авторизация для inline: если нет — мягко предлагаем /start link
   try {

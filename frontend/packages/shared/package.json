@@ -6,15 +6,46 @@
   "private": true,
   "exports": {
     "./package.json": "./package.json",
-    ".": "./src/index.ts",
     "./auth": "./src/auth.ts",
     "./safeStorage": "./src/safeStorage.ts",
-    "./constants": "./src/constants.ts",
-    "./format": "./src/format.ts",
-    "./utils/logger": "./src/utils/logger.ts",
-    "./ai/openai": "./src/ai/openai.ts",
-    "./api/photobank": "./src/api/photobank/index.ts",
-    "./api/photobank/*": "./src/api/photobank/*"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./index": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    },
+
+    "./format": {
+      "types": "./dist/format/index.d.ts",
+      "default": "./src/format/index.ts"
+    },
+    "./ai/openai": {
+      "types": "./dist/ai/openai.d.ts",
+      "default": "./src/ai/openai.ts"
+    },
+    "./types/problem": {
+      "types": "./dist/types/problem.d.ts",
+      "default": "./src/types/problem.ts"
+    },
+    "./constants": {
+      "types": "./dist/constants.d.ts",
+      "default": "./src/constants.ts"
+    },
+    "./utils/logger": {
+      "types": "./dist/utils/logger.d.ts",
+      "default": "./src/utils/logger.ts"
+    },
+
+    "./api/photobank": {
+      "types": "./dist/api/photobank/index.d.ts",
+      "default": "./src/api/photobank/index.ts"
+    },
+    "./api/photobank/*": {
+      "types": "./dist/api/photobank/*.d.ts",
+      "default": "./src/api/photobank/*.ts"
+    }
   },
   "main": "dist/index.js",
   "types": "./dist/index.d.ts",

@@ -12,9 +12,9 @@ export function handleBotError(err: BotError<Context>) {
 }
 
 export async function handleCommandError(ctx: MyContext, error: unknown) {
-  if (error instanceof ProblemDetailsError && error.problem.status === 403) {
-    await ctx.reply(ctx.t('not-registered', { userId: ctx.from?.id }));
-    return;
+    if (error instanceof ProblemDetailsError && (error).problem.status === 403) {
+      await ctx.reply(ctx.t('not-registered', { userId: ctx.from?.id ?? 0 }));
+      return;
   }
   logger.error(apiErrorMsg, error);
   await ctx.reply(ctx.t('sorry-try-later'));

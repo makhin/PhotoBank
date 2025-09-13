@@ -9,7 +9,7 @@ export async function profileCommand(ctx: MyContext) {
         await ctx.reply(ctx.t('user-info', { username }));
     } catch (error: unknown) {
         if (error instanceof Error && error.message.includes('404')) {
-            await ctx.reply(ctx.t('not-registered', { userId: ctx.from?.id }));
+            await ctx.reply(ctx.t('not-registered', { userId: ctx.from?.id ?? 0 }));
             return;
         }
         await handleCommandError(ctx, error);

@@ -1,14 +1,21 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
     "rootDir": "src",
     "outDir": "dist",
-    "composite": true,
+    "composite": false,
     "declaration": true,
     "noEmit": false,
     "moduleDetection": "force",
     "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   },
-  "references": [{ "path": "../../shared" }],
+  "references": [{ "path": "../shared" }],
   "include": ["src"]
 }

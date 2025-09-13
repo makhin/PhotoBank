@@ -1,5 +1,5 @@
 import type { PhotoDto } from "@photobank/shared/api/photobank";
-import { formatDate } from "@photobank/shared/index";
+import { formatDate } from "@photobank/shared/";
 
 import { getPersonName } from "./dictionaries";
 
@@ -23,7 +23,7 @@ export function formatPhotoMessage(photo: PhotoDto): { caption: string; hasSpoil
     }
 
     if (photo.faces?.length) {
-        const people = photo.faces.map(f => getPersonName(f.personId));
+        const people = photo.faces.map((f: { personId?: number | null }) => getPersonName(f.personId ?? null));
         if (people.some(Boolean)) {
             lines.push(`👤 ${people.join(", ")}`);
         }

@@ -6,10 +6,12 @@
     "composite": true,
     "declaration": true,
     "emitDeclarationOnly": true,
+    "declarationMap": true,
+    "stripInternal": true,
     "noEmit": false,
     "moduleDetection": "force",
     "skipLibCheck": true
   },
-  "include": ["src"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["dist"]
 }

@@ -19,7 +19,7 @@ export async function sendStoragesPage(
           const paths = s.paths.slice(0, MAX_PATHS_PER_STORAGE);
           const rest = s.paths.length > MAX_PATHS_PER_STORAGE ? ['  ...'] : [];
           return {
-            name: `${s.name}\n${paths.map((p) => `  ${p}`).concat(rest).join('\n')}`,
+            name: `${s.name}\n${paths.map((p: string) => `  ${p}`).concat(rest).join('\n')}`,
           };
         })
       ),

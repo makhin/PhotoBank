@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { aiCommand, parseAiPrompt, aiFilters } from '../src/commands/ai';
 import * as openai from '@photobank/shared/ai/openai';
 import * as photoService from '../src/services/photo';
-import * as utils from '@photobank/shared/index';
+import * as utils from '@photobank/shared/';
 import { i18n } from '../src/i18n';
 
 describe('parseAiPrompt', () => {
