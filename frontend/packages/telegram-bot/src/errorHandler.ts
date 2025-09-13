@@ -12,12 +12,11 @@ export function handleBotError(err: BotError<Context>) {
 }
 
 export async function handleCommandError(ctx: MyContext, error: unknown) {
-  let forbidden = false;
-  if (error instanceof ProblemDetailsError) forbidden = error.problem.status === 403;
-  if (forbidden) {
+  if (error instanceof ProblemDetailsError && error.problem.status === 403) {
     await ctx.reply(ctx.t('not-registered', { userId: ctx.from?.id ?? 0 }));
     return;
   }
+
   logger.error(apiErrorMsg, error);
   await ctx.reply(ctx.t('sorry-try-later'));
 }
