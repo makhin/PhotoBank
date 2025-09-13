@@ -53,7 +53,7 @@ export async function uploadCommand(ctx: MyContext) {
     });
 
     await ctx.reply(ctx.t('upload-success'));
-  } catch (err) {
+  } catch (err: unknown) {
     await ctx.reply(ctx.t('upload-failed'));
     await handleCommandError(ctx, err);
   }

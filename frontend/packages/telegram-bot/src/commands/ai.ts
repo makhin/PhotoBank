@@ -64,7 +64,7 @@ export async function aiCommand(ctx: MyContext, promptOverride?: string) {
     aiFilters.set(hash, dto);
 
     await sendAiPage(ctx, hash, 1);
-  } catch (err) {
+  } catch (err: unknown) {
     logger.error(err);
     await ctx.reply(ctx.t('sorry-try-later'));
   }

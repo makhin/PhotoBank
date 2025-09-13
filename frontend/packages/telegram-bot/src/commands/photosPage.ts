@@ -41,7 +41,7 @@ export async function sendPhotosPage({
       top: PHOTOS_PAGE_SIZE,
       skip,
     });
-  } catch (err) {
+  } catch (err: unknown) {
     await handleCommandError(ctx, err);
     return;
   }

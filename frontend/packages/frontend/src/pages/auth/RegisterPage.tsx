@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useAuthRegister } from '@photobank/shared/api/photobank';
 import { logger } from '@photobank/shared/utils/logger';
 import { useTranslation } from 'react-i18next';
+import { ProblemDetailsError } from '@photobank/shared/types/problem';
 
 import { Button } from '@/shared/ui/button';
 import {
@@ -39,8 +40,9 @@ export default function RegisterPage() {
     try {
       await register({ data });
       navigate('/login');
-    } catch (e) {
-      logger.error(e);
+    } catch (e: unknown) {
+      if (e instanceof ProblemDetailsError) logger.error(e.problem);
+      else logger.error(e);
       setErrorMessage('Failed to register');
     }
   };

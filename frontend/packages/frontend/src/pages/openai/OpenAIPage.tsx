@@ -45,7 +45,7 @@ export default function OpenAIPage() {
       const reply = await parseQueryWithOpenAI(input);
       const aiMsg: ChatMessage = { role: 'assistant', content: JSON.stringify(reply, null, 2) };
       setMessages(() => [...newMessages, aiMsg]);
-    } catch (err) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
     } finally {
