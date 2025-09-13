@@ -7,15 +7,12 @@
     "rootDir": "src",
     "outDir": "dist",
     "composite": true,
-    "declaration": true,
-    "noEmit": false,
+    "noEmit": true,
     "moduleDetection": "force",
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@photobank/shared": ["../shared/src/index.ts"],
-      "@photobank/shared/*": ["../shared/src/*"]
+      "@/*": ["src/*"]
     }
   },
   "references": [{ "path": "../shared" }],
