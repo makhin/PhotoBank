@@ -1,17 +1,19 @@
-import { InlineKeyboard } from "grammy";
+import { InlineKeyboard } from 'grammy';
 
-import type { MyContext } from "../i18n";
-import { logger } from "../logger";
+import type { MyContext } from '../i18n';
+import { logger } from '../logger';
 
 export const PAGE_SIZE = 10;
 
 export function parsePrefix(text?: string): string {
-  if (!text) return "";
-  const parts = text.split(" ");
-  return parts[1]?.trim() ?? "";
+  if (!text) return '';
+  const parts = text.split(' ');
+  return parts[1]?.trim() ?? '';
 }
 
-export interface NamedItem { name: string }
+export interface NamedItem {
+  name: string;
+}
 
 export interface SendPageOptions<T extends NamedItem> {
   ctx: MyContext;
@@ -53,41 +55,48 @@ export async function sendNamedItemsPage<T extends NamedItem>({
   const pageIndex = Math.min(Math.max(page, 1), totalPages);
   const slice = filtered.slice(
     (pageIndex - 1) * PAGE_SIZE,
-    pageIndex * PAGE_SIZE,
+    pageIndex * PAGE_SIZE
   );
 
   const lines = slice.map((i) => `- ${i.name}`);
-  lines.push("", ctx.t('page-info', { page: pageIndex, total: totalPages }));
+  lines.push('', ctx.t('page-info', { page: pageIndex, total: totalPages }));
 
   const keyboard = new InlineKeyboard();
   if (pageIndex > 1) {
     keyboard.text(
       ctx.t('first-page'),
-      `${command}:1:${encodeURIComponent(prefix)}`,
+      `${command}:1:${encodeURIComponent(prefix)}`
     );
     keyboard.text(
       ctx.t('prev-page'),
-      `${command}:${pageIndex - 1}:${encodeURIComponent(prefix)}`,
+      `${command}:${pageIndex - 1}:${encodeURIComponent(prefix)}`
     );
   }
   if (pageIndex < totalPages) {
     keyboard.text(
       ctx.t('next-page'),
-      `${command}:${pageIndex + 1}:${encodeURIComponent(prefix)}`,
+      `${command}:${pageIndex + 1}:${encodeURIComponent(prefix)}`
     );
     keyboard.text(
       ctx.t('last-page'),
-      `${command}:${totalPages}:${encodeURIComponent(prefix)}`,
+      `${command}:${totalPages}:${encodeURIComponent(prefix)}`
     );
   }
 
-  const text = lines.join("\n");
+  const text = lines.join('\n');
+
+  const replyOptions: Parameters<typeof ctx.reply>[1] = {};
+  const editOptions: Parameters<typeof ctx.editMessageText>[1] = {};
+  if (keyboard.inline_keyboard.length) {
+    replyOptions.reply_markup = keyboard;
+    editOptions.reply_markup = keyboard;
+  }
 
   if (edit) {
     await ctx
-      .editMessageText(text, { reply_markup: keyboard })
-      .catch(() => ctx.reply(text, { reply_markup: keyboard }));
+      .editMessageText(text, editOptions)
+      .catch(() => ctx.reply(text, replyOptions));
   } else {
-    await ctx.reply(text, { reply_markup: keyboard });
+    await ctx.reply(text, replyOptions);
   }
 }
