@@ -53,7 +53,7 @@
     "dist"
   ],
   "scripts": {
-    "build:types": "rimraf dist && tsc -p tsconfig.json --emitDeclarationOnly",
+    "build:types": "rimraf dist && tsc -b",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
