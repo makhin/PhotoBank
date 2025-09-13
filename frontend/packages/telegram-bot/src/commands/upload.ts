@@ -19,9 +19,10 @@ export async function uploadCommand(ctx: MyContext) {
   try {
     const files: Array<Promise<{ data: ArrayBuffer; name: string }>> = [];
 
-    if (ctx.message?.photo?.length) {
-      const photo = ctx.message.photo[ctx.message.photo.length - 1];
-      files.push(fetchFile(ctx, photo.file_id, `${photo.file_unique_id}.jpg`));
+    const photos = ctx.message?.photo;
+    if (photos?.length) {
+      const last = photos.at(-1)!;
+      files.push(fetchFile(ctx, last.file_id, `${last.file_unique_id}.jpg`));
     }
 
     if (ctx.message?.document) {
