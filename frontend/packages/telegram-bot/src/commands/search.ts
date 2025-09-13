@@ -165,6 +165,7 @@ function parseArgsToFilter(raw: string): FilterDto {
             .forEach((x) => {
               if (x && !tagNames.includes(x)) tagNames.push(x);
             });
+          break;
         }
         case 'person':
         case 'people': {
@@ -174,19 +175,23 @@ function parseArgsToFilter(raw: string): FilterDto {
             .forEach((x) => {
               if (x && !personNames.includes(x)) personNames.push(x);
             });
+          break;
         }
         case 'date': {
           const { from, to } = parseDateExpr(val ?? '');
           if (from) takenDateFrom = from;
           if (to) takenDateTo = to;
+          break;
         }
         case 'before': {
           const { to } = parseBefore(val);
           if (to) takenDateTo = to;
+          break;
         }
         case 'after': {
           const { from } = parseAfter(val);
           if (from) takenDateFrom = from;
+          break;
         }
         default:
           rest.push(t);
@@ -216,7 +221,7 @@ function parseArgsToFilter(raw: string): FilterDto {
       : undefined,
     takenDateFrom,
     takenDateTo,
-  };
+  } as FilterDto;
 }
 
 /* ===================== callback_data кодек ===================== */

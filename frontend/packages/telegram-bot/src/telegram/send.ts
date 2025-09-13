@@ -90,7 +90,7 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
       msgs.forEach((m, i) => {
         const p = group[i];
         const id = m.photo?.at(-1)?.file_id;
-        if (id) setFileId(p.id, id);
+        if (p && id) setFileId(p.id, id);
       });
       results.push(...msgs);
     } catch (e: unknown) {
