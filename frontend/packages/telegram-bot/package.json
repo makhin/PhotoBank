@@ -11,6 +11,8 @@
     "typecheck": "tsc -b",
     "build": "pnpm run typecheck && tsup",
     "dev": "tsup --watch --onSuccess \"node dist/index.js\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "start": "node dist/index.js"
   },
   "dependencies": {
