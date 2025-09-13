@@ -8,7 +8,7 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,                  // очищает dist перед сборкой
-  dts: true,                    // генерит index.d.ts
+  dts: false,                    // генерит index.d.ts
   external: ['grammy'],         // зависимости, которые не надо бандлить
   treeshake: true,
   skipNodeModulesBundle: true   // не пакует node_modules внутрь
