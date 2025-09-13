@@ -106,11 +106,12 @@ export async function customFetcher<T>(url: string, init?: RequestInit): Promise
           continue;
         }
         throw err;
-      } catch (e: any) {
+      } catch (e: unknown) {
+        const err = e as { name?: string; code?: string; message?: string };
         const isAbort =
-          e?.name === 'AbortError' ||
-          e?.code === 'ABORT_ERR' ||
-          (typeof e?.message === 'string' && /aborted/i.test(e.message));
+          err?.name === 'AbortError' ||
+          err?.code === 'ABORT_ERR' ||
+          (typeof err?.message === 'string' && /aborted/i.test(err.message));
         if (isAbort) throw e;
 
         const isNetwork = e instanceof TypeError;

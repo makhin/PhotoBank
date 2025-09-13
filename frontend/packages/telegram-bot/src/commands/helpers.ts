@@ -39,7 +39,7 @@ export async function sendNamedItemsPage<T extends NamedItem>({
   let items: T[];
   try {
     items = await fetchAll();
-  } catch (err) {
+  } catch (err: unknown) {
     logger.error(err);
     await ctx.reply(errorMsg);
     return;

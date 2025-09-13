@@ -16,7 +16,7 @@ export function useAutoLogin() {
         });
         setAuthToken(res.data.token!, true);
         logger.debug('Login success');
-      } catch (e) {
+      } catch (e: unknown) {
         logger.error('Login failed', e);
       }
     }

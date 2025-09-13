@@ -106,7 +106,7 @@ export async function sendAlbumSmart(ctx: Context, photos: PhotoItemDto[]) {
         try {
           const msg = await sendPhotoSmart(ctx, p);
           results.push(msg);
-        } catch (inner) {
+        } catch (inner: unknown) {
           // if even single send fails—log and continue
           logger.error('single send failed', inner);
         }

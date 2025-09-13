@@ -7,6 +7,7 @@ import { setAuthToken } from '@photobank/shared/auth';
 import { logger } from '@photobank/shared/utils/logger';
 import { useTranslation } from 'react-i18next';
 import { useAuthGetUser, useAuthUpdateUser } from '@photobank/shared/api/photobank';
+import { ProblemDetailsError } from '@photobank/shared/types/problem';
 
 import {Button} from '@/shared/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/shared/ui/form';
@@ -51,8 +52,9 @@ export default function MyProfilePage() {
         },
       });
       navigate('/filter');
-    } catch (e) {
-      logger.error(e);
+    } catch (e: unknown) {
+      if (e instanceof ProblemDetailsError) logger.error(e.problem);
+      else logger.error(e);
     }
   };
 

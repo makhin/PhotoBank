@@ -18,7 +18,7 @@ export async function searchPhotos(
   try {
     setRequestContext(ctx);
     return await photosSearchPhotos(filter as FilterDto);
-  } catch (err) {
+  } catch (err: unknown) {
     handleServiceError(err);
     throw err;
   }
@@ -31,7 +31,7 @@ export async function getPhoto(
   try {
     setRequestContext(ctx);
     return await photosGetPhoto(id);
-  } catch (err) {
+  } catch (err: unknown) {
     handleServiceError(err);
     throw err;
   }
@@ -48,7 +48,7 @@ export async function uploadPhotos(
   try {
     setRequestContext(ctx);
     return await photosUpload({ files: blobs, storageId, path });
-  } catch (err) {
+  } catch (err: unknown) {
     handleServiceError(err);
     throw err;
   }

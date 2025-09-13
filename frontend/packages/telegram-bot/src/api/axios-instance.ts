@@ -27,7 +27,7 @@ export async function photobankAxios<T>(config: AxiosRequestConfig, ctx?: Contex
 
   try {
     return await doRequest(false);
-  } catch (error) {
+  } catch (error: unknown) {
     const status = axios.isAxiosError(error) ? error.response?.status : undefined;
     if (status === 401 || status === 403) {
       invalidateUserToken(context);

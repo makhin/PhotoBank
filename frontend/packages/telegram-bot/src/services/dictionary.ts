@@ -16,7 +16,7 @@ export async function fetchTags(ctx: Context) {
   try {
     setRequestContext(ctx);
     return await tagsGetAll();
-  } catch (err) {
+  } catch (err: unknown) {
     handleServiceError(err);
     throw err;
   }
@@ -26,7 +26,7 @@ export async function fetchPersons(ctx: Context) {
   try {
     setRequestContext(ctx);
     return await personsGetAll();
-  } catch (err) {
+  } catch (err: unknown) {
     handleServiceError(err);
     throw err;
   }
@@ -36,7 +36,7 @@ export async function fetchStorages(ctx: Context) {
   try {
     setRequestContext(ctx);
     return await storagesGetAll();
-  } catch (err) {
+  } catch (err: unknown) {
     handleServiceError(err);
     throw err;
   }
@@ -46,7 +46,7 @@ export async function fetchPaths(ctx: Context) {
   try {
     setRequestContext(ctx);
     return await pathsGetAll();
-  } catch (err) {
+  } catch (err: unknown) {
     handleServiceError(err);
     throw err;
   }
