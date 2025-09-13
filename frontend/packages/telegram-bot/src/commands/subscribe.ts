@@ -11,8 +11,10 @@ export const subscriptions = new Map<number, { time: string; locale: string }>()
 export function parseSubscribeTime(text?: string): string | null {
   if (!text) return null;
   const match = text.match(/\/subscribe\s+(\d{1,2}:\d{2})/);
-  if (!match) return null;
-  const [hours, minutes] = match[1].split(":").map(Number);
+  if (!match?.[1]) return null;
+  const [hStr, mStr] = match[1]!.split(":");
+  const hours = Number(hStr);
+  const minutes = Number(mStr);
   if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
   return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 }
