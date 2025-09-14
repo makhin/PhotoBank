@@ -8,7 +8,8 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,                  // очищает dist перед сборкой
-  dts: false,                    // генерит index.d.ts
+  dts: false,                   // не генерит index.d.ts
+  noExternal: ['@photobank/shared'], // <- ВАЖНО: не внешне, а внутрь бандла
   external: ['grammy'],         // зависимости, которые не надо бандлить
   treeshake: true,
   skipNodeModulesBundle: true   // не пакует node_modules внутрь
