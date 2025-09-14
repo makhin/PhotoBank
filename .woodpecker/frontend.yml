@@ -3,7 +3,7 @@ name: frontend          # имя pipeline (обязательно)
 
 steps:
   - name: build
-    image: node:20-alpine
+    image: node:22-alpine
     when:
       event: [cron, manual]
       path: ['frontend/packages/frontend/*', 'frontend/packages/shared/*']
