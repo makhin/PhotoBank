@@ -78,7 +78,9 @@ bot.on('inline_query', async (ctx: MyContext) => {
     );
   } catch (e: unknown) {
     let forbidden = false;
-    if (e instanceof ProblemDetailsError) forbidden = e.problem.status === 403;
+    if (e instanceof ProblemDetailsError) {
+      forbidden = e.problem.status === 403;
+    }
     if (forbidden) {
       await ctx.answerInlineQuery(
         [],

@@ -10,7 +10,9 @@ export async function ensureRegistered(ctx: MyContext): Promise<boolean> {
     return true;
   } catch (e: unknown) {
     let forbidden = false;
-    if (e instanceof ProblemDetailsError) forbidden = e.problem.status === 403;
+    if (e instanceof ProblemDetailsError) {
+      forbidden = e.problem.status === 403;
+    }
     await ctx.reply(
       forbidden
         ? ctx.t('not-registered', { userId: ctx.from?.id ?? 0 })
