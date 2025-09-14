@@ -4,7 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "dist",
     "composite": true,
     "noEmit": true,
@@ -17,6 +17,10 @@
       "@photobank/shared/*": ["../shared/src/*"]
     }
   },
-  "references": [{ "path": "../shared" }],
+  "references": [
+    {
+      "path": "../shared"
+    }
+  ],
   "include": ["src"]
 }
