@@ -10,41 +10,39 @@
     "./safeStorage": "./src/safeStorage.ts",
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
+      "default": "./dist/index.js"
     },
     "./index": {
       "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
+      "default": "./dist/index.js"
     },
-
     "./format": {
       "types": "./dist/format/index.d.ts",
-      "default": "./src/format/index.ts"
+      "default": "./dist/format/index.js"
     },
     "./ai/openai": {
       "types": "./dist/ai/openai.d.ts",
-      "default": "./src/ai/openai.ts"
+      "default": "./dist/ai/openai.js"
     },
     "./types/problem": {
       "types": "./dist/types/problem.d.ts",
-      "default": "./src/types/problem.ts"
+      "default": "./dist/types/problem.js"
     },
     "./constants": {
       "types": "./dist/constants.d.ts",
-      "default": "./src/constants.ts"
+      "default": "./dist/constants.js"
     },
     "./utils/logger": {
       "types": "./dist/utils/logger.d.ts",
-      "default": "./src/utils/logger.ts"
+      "default": "./dist/utils/logger.js"
     },
-
     "./api/photobank": {
       "types": "./dist/api/photobank/index.d.ts",
-      "default": "./src/api/photobank/index.ts"
+      "default": "./dist/api/photobank/index.js"
     },
     "./api/photobank/*": {
       "types": "./dist/api/photobank/*.d.ts",
-      "default": "./src/api/photobank/*.ts"
+      "default": "./dist/api/photobank/*.js"
     }
   },
   "main": "dist/index.js",
