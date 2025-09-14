@@ -674,6 +674,9 @@ importers:
       lru-cache:
         specifier: ^11.2.1
         version: 11.2.1
+      object-hash:
+        specifier: ^3.0.0
+        version: 3.0.0
       openai:
         specifier: ^5.20.1
         version: 5.20.2(ws@8.18.3)(zod@4.1.8)
