@@ -28,6 +28,6 @@ export default defineConfig({
     setupFiles: ['./test-setup.ts'],
     environment: 'node',
     restoreMocks: true,
-    exclude: ['test/**/*.test.skip.ts'],
+    exclude: ['test/**/*.test.skip.ts', 'node_modules/**'],
   },
 });
