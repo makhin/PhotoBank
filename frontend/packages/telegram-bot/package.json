@@ -24,6 +24,7 @@
     "axios": "^1.11.0",
     "bottleneck": "^2.19.5",
     "date-fns": "^4.1.0",
+    "dexie": "^4.2.0",
     "dotenv": "^17.2.2",
     "fetch-blob": "^4.0.0",
     "grammy": "^1.38.2",
