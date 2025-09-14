@@ -8,7 +8,8 @@
   "types": "./dist/index.d.ts",
   "files": ["dist"],
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json",
+    "pretypecheck": "pnpm --filter @photobank/shared run build:types",
+    "typecheck": "tsc -b",
     "build": "pnpm run typecheck && tsup",
     "dev": "tsup --watch --onSuccess \"node dist/index.js\"",
     "test": "vitest run",
