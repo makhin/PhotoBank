@@ -17,8 +17,20 @@ if (!BOT_TOKEN) throw new Error(botTokenNotDefinedError);
 export const API_BASE_URL = process.env.API_BASE_URL;
 export const BOT_SERVICE_KEY = process.env.BOT_SERVICE_KEY;
 
-export const AZURE_OPENAI_ENDPOINT: string = process.env.VITE_AZURE_OPENAI_ENDPOINT || '';
-export const AZURE_OPENAI_KEY: string = process.env.VITE_AZURE_OPENAI_KEY || '';
-export const AZURE_OPENAI_DEPLOYMENT: string = process.env.VITE_AZURE_OPENAI_DEPLOYMENT || '';
-export const AZURE_OPENAI_API_VERSION: string = process.env.VITE_AZURE_OPENAI_API_VERSION || '';
+export const AZURE_OPENAI_ENDPOINT: string =
+  process.env.VITE_AZURE_OPENAI_ENDPOINT?.trim() || '';
+export const AZURE_OPENAI_KEY: string =
+  process.env.VITE_AZURE_OPENAI_KEY?.trim() || '';
+export const AZURE_OPENAI_DEPLOYMENT: string =
+  process.env.VITE_AZURE_OPENAI_DEPLOYMENT?.trim() || '';
+export const AZURE_OPENAI_API_VERSION: string =
+  process.env.VITE_AZURE_OPENAI_API_VERSION?.trim() || '';
+
+export const OPENAI_ENABLED =
+  !!(
+    AZURE_OPENAI_ENDPOINT &&
+    AZURE_OPENAI_KEY &&
+    AZURE_OPENAI_DEPLOYMENT &&
+    AZURE_OPENAI_API_VERSION
+  );
 

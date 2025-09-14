@@ -6,6 +6,7 @@ import {
   AZURE_OPENAI_KEY,
   AZURE_OPENAI_DEPLOYMENT,
   AZURE_OPENAI_API_VERSION,
+  OPENAI_ENABLED,
 } from "./config";
 import { bot } from './bot';
 import { sendThisDayPage, thisDayCommand } from "./commands/thisday";
@@ -72,13 +73,16 @@ bot.catch(handleBotError);
 
 registerPhotoRoutes(bot);
 
-
-configureAzureOpenAI({
-  endpoint: AZURE_OPENAI_ENDPOINT,
-  apiKey: AZURE_OPENAI_KEY,
-  deployment: AZURE_OPENAI_DEPLOYMENT,
-  apiVersion: AZURE_OPENAI_API_VERSION,
-});
+if (OPENAI_ENABLED) {
+  configureAzureOpenAI({
+    endpoint: AZURE_OPENAI_ENDPOINT,
+    apiKey: AZURE_OPENAI_KEY,
+    deployment: AZURE_OPENAI_DEPLOYMENT,
+    apiVersion: AZURE_OPENAI_API_VERSION,
+  });
+} else {
+  logger.warn('OpenAI disabled: missing configuration');
+}
 bot.command(
   "start",
   (ctx) => ctx.reply(ctx.t('welcome')),
