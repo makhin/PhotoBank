@@ -4,6 +4,7 @@ import type { ChatCompletionMessageParam } from 'openai/resources';
 import { FEW_SHOTS, SYSTEM_PROMPT } from './constants';
 import type { PhotoFilter } from './filter';
 import { PhotoFilterSchema, photoFilterSchemaForLLM } from './filter';
+import { logger } from '../utils/logger';
 
 let client: AzureOpenAI | null = null;
 
@@ -16,17 +17,22 @@ export async function createChatCompletion(text: string): Promise<string> {
       throw new Error('Azure OpenAI is not configured');
   }
 
-  const response = await client.chat.completions.create({
-    messages: [{role: 'user', content: text }],
-    temperature: 1,
-    top_p: 1,
-    model: 'gpt-4o',
-    response_format: {
-      type: 'text',
-    },
-  });
+  try {
+    const response = await client.chat.completions.create({
+      messages: [{ role: 'user', content: text }],
+      temperature: 1,
+      top_p: 1,
+      model: 'gpt-4o',
+      response_format: {
+        type: 'text',
+      },
+    });
 
-  return response.choices?.[0]?.message?.content ?? '';
+    return response.choices?.[0]?.message?.content ?? '';
+  } catch (err) {
+    logger.error(err);
+    throw new Error('OpenAI request failed');
+  }
 }
 
 export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
@@ -40,22 +46,27 @@ export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
     { role: 'user', content: text },
   ];
 
-  const response = await client.chat.completions.create({
-    messages: messages,
-    temperature: 1,
-    top_p: 1,
-    model: 'gpt-4o',
-    response_format: {
-      type: 'json_schema',
-      json_schema: {
-        name: 'PhotoFilter',
-        schema: photoFilterSchemaForLLM,
-        strict: true,
+  try {
+    const response = await client.chat.completions.create({
+      messages: messages,
+      temperature: 1,
+      top_p: 1,
+      model: 'gpt-4o',
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'PhotoFilter',
+          schema: photoFilterSchemaForLLM,
+          strict: true,
+        },
       },
-    },
-  });
+    });
 
-  const content = response.choices?.[0]?.message?.content ?? '{}';
+    const content = response.choices?.[0]?.message?.content ?? '{}';
 
-  return PhotoFilterSchema.parse(JSON.parse(content));
+    return PhotoFilterSchema.parse(JSON.parse(content));
+  } catch (err) {
+    logger.error(err);
+    throw new Error('OpenAI request failed');
+  }
 }
