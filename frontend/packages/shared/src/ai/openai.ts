@@ -8,7 +8,7 @@ import { PhotoFilterSchema, photoFilterSchemaForLLM } from './filter';
 let client: AzureOpenAI | null = null;
 
 export function configureAzureOpenAI(options: { endpoint:string , apiKey:string, deployment:string, apiVersion:string }): void {
-  client = new AzureOpenAI({...options, dangerouslyAllowBrowser: true});
+  client = new AzureOpenAI(options);
 }
 
 export async function createChatCompletion(text: string): Promise<string> {
