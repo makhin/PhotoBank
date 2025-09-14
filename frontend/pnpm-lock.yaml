@@ -581,7 +581,7 @@ importers:
   packages/shared:
     dependencies:
       axios:
-        specifier: ^1.12.1
+        specifier: ^1.11.0
         version: 1.12.1
       date-fns:
         specifier: ^4.1.0
@@ -589,6 +589,9 @@ importers:
       dexie:
         specifier: ^4.2.0
         version: 4.2.0
+      eventemitter3:
+        specifier: ^5.0.1
+        version: 5.0.1
       lru-cache:
         specifier: ^11.2.1
         version: 11.2.1
@@ -596,14 +599,20 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       openai:
-        specifier: ^5.20.2
+        specifier: ^5.20.1
         version: 5.20.2(ws@8.18.3)(zod@4.1.8)
       p-queue:
         specifier: ^8.1.1
         version: 8.1.1
+      p-timeout:
+        specifier: ^6.1.4
+        version: 6.1.4
       react:
         specifier: ^19.1.1
         version: 19.1.1
+      zod:
+        specifier: ^4.1.7
+        version: 4.1.8
     devDependencies:
       '@faker-js/faker':
         specifier: ^9.9.0
