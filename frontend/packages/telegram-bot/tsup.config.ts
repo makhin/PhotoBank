@@ -2,15 +2,14 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: ['src/index.ts'],
-  outDir: 'dist',
-  format: ['esm'],              // можно добавить 'cjs' если нужен dual build
   target: 'node20',
-  splitting: false,
+  format: ['esm'],
   sourcemap: true,
-  clean: true,                  // очищает dist перед сборкой
-  dts: false,                   // не генерит index.d.ts
-  noExternal: ['@photobank/shared'], // <- ВАЖНО: не внешне, а внутрь бандла
-  external: ['grammy'],         // зависимости, которые не надо бандлить
+  clean: true,
+  dts: false,
+  splitting: false,
+  outDir: 'dist',
+  noExternal: [/.*/],    // 🔥 бандлим ВСЕ зависимости, включая транзитивные (openai и ко)
+  platform: 'node',
   treeshake: true,
-  skipNodeModulesBundle: true   // не пакует node_modules внутрь
 });
