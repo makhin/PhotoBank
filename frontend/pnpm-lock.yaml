@@ -671,6 +671,9 @@ importers:
       lru-cache:
         specifier: ^11.2.1
         version: 11.2.1
+      openai:
+        specifier: ^5.20.1
+        version: 5.20.1(ws@8.18.3)(zod@4.1.7)
       p-retry:
         specifier: ^7.0.0
         version: 7.0.0
