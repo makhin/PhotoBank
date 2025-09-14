@@ -8,7 +8,7 @@
   "types": "./dist/index.d.ts",
   "files": ["dist"],
   "scripts": {
-    "typecheck": "tsc -b",
+    "typecheck": "tsc -p tsconfig.json",
     "build": "pnpm run typecheck && tsup",
     "dev": "tsup --watch --onSuccess \"node dist/index.js\"",
     "test": "vitest run",
