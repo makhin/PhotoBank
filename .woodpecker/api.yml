@@ -1,51 +1,55 @@
+kind: pipeline
+name: api
+
 clone:
   git:
     image: woodpeckerci/plugin-git
     settings:
-      partial: false   # отключаем partial clone
-      depth: 0         # полный клон
-      tags: true       # нужны теги для NBGV
+      partial: false        # нужен полный клон
+      depth: 200              # history + теги для NBGV
+      tags: true
+
+# Для volume-кэша нужен trusted-режим для репозитория
+volumes:
+  - name: nuget-cache
+    host:
+      path: /var/lib/woodpecker-cache/nuget
 
 steps:
   - name: build
-    image: mcr.microsoft.com/dotnet/sdk:9.0
-    when:
-      event: [cron, manual]
-      path: 'backend/*'
-    commands:
-      - |
-        if "true"; then
-          echo "Changes in backend detected — running build"
-          echo "API build and test"
-          cd backend
-          dotnet restore PhotoBank.Backend.sln
-          dotnet build PhotoBank.Backend.sln --no-restore --configuration Release
-          dotnet test PhotoBank.Backend.sln --no-build --configuration Release --filter "FullyQualifiedName~PhotoBank.UnitTests" || echo "API tests failed, ignoring"
-        else
-          echo "No backend changes — skipping build"
-          exit 0
-        fi
-
-  - name: publish
-    image: docker:24.0.7-cli
+    image: mcr.microsoft.com/dotnet/sdk:9.0-alpine
     when:
       event: [cron, manual]
       path: 'backend/*'
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      DOCKER_USERNAME:
-        from_secret: docker_username
-      DOCKER_PASSWORD:
-        from_secret: docker_password
+      - name: nuget-cache
+        path: /root/.nuget/packages
     commands:
       - |
-          echo "Changes in backend detected — running build"
-          echo "API docker build and push"
-          docker version
-          docker info
-          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-          docker build -t makhin/photobank-api:latest backend
-          docker push makhin/photobank-api:latest
-          docker logout
+        echo "Changes in backend detected — running build"
+        cd backend
+        dotnet restore
+        dotnet build -c Release --no-restore
+        # dotnet test --no-build  # если есть тесты — раскомментируй
 
+  - name: dockerize
+    image: quay.io/thegeeklab/wp-docker-buildx
+    privileged: true
+    when:
+      event: [cron, manual]
+      path: 'backend/*'
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: makhin/photobank-api
+      tags:
+        - latest
+      context: backend
+      containerfile: backend/Dockerfile
+      pull_image: true                       # всегда тянуть свежие базовые образы
+      provenance: false                      # чуть быстрее пуш
+      cache_from:
+        - "type=registry,ref=makhin/photobank-api:buildcache"
+      cache_to: "type=registry,ref=makhin/photobank-api:buildcache,mode=max"

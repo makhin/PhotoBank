@@ -1,5 +1,11 @@
-kind: pipeline          # тип конфигурации
-name: frontend          # имя pipeline (обязательно)
+kind: pipeline
+name: frontend
+
+# Для volume-кэша нужен trusted-режим для репозитория
+volumes:
+  - name: npm-cache
+    host:
+      path: /var/lib/woodpecker-cache/npm
 
 steps:
   - name: build
@@ -10,37 +16,37 @@ steps:
     environment:
       VITE_API_BASE_URL:
         from_secret: vite_api_base_url
-    commands:
-      - |
-          echo "Changes in frontend detected — running build"
-          echo "Frontend install, build and test"
-          cd frontend
-          corepack enable
-          pnpm install --frozen-lockfile
-          pnpm --filter @photobank/frontend... build
-          pnpm --filter @photobank/frontend test || echo "Frontend tests failed, ignoring"
-
-  - name: publish
-    image: docker:24.0.7-cli
-    when:
-      event: [cron, manual]
-      path: ['frontend/packages/frontend/*', 'frontend/packages/shared/*']
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      DOCKER_USERNAME:
-        from_secret: docker_username
-      DOCKER_PASSWORD:
-        from_secret: docker_password
-      VITE_API_BASE_URL:
-        from_secret: vite_api_base_url
+      - name: npm-cache
+        path: /root/.npm
     commands:
       - |
-          echo "Changes in frontend detected — running build"
-          echo "Frontend docker build and push"
-          docker version
-          docker info
-          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-          docker build -f frontend/Dockerfile.frontend -t makhin/photobank-frontend:latest --build-arg VITE_API_BASE_URL=$VITE_API_BASE_URL frontend
-          docker push makhin/photobank-frontend:latest
-          docker logout
+        echo "Changes in frontend detected — running build"
+        cd frontend
+        npm ci --prefer-offline
+        npm run build
+
+  - name: dockerize
+    image: quay.io/thegeeklab/wp-docker-buildx
+    privileged: true
+    when:
+      event: [push, tag, cron, manual]
+      path: ['frontend/packages/frontend/*', 'frontend/packages/shared/*']
+    settings:
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: makhin/photobank-frontend
+      tags:
+        - latest
+      context: frontend
+      containerfile: frontend/Dockerfile.frontend
+      pull_image: true
+      provenance: false
+      build_args:
+        VITE_API_BASE_URL:
+          from_secret: vite_api_base_url
+      cache_from:
+        - "type=registry,ref=makhin/photobank-frontend:buildcache"
+      cache_to: "type=registry,ref=makhin/photobank-frontend:buildcache,mode=max"

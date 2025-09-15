@@ -1,15 +1,22 @@
-# directories
-bin
-obj
+.git
+.vs
+.vscode
+.idea
+.DS_Store
+
 **/bin/
 **/obj/
 **/out/
-.vs
-.git
-
-# files
-Dockerfile*
-**/*.trx
+TestResults/
+artifacts/
 **/*.md
+**/*.trx
 *.user
 *.suo
+**/*.nupkg
+**/packages/
+**/.nuget/
+
+# если фронт тут же — убираем его из контекста
+frontend/
+**/node_modules/
