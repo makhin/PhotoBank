@@ -8,8 +8,11 @@ RUN dotnet restore PhotoBank.Api/PhotoBank.Api.csproj
 #   backend 
 COPY . .
 
-#    
-RUN dotnet publish PhotoBank.Api/PhotoBank.Api.csproj -c Release -o /out --no-restore
+#
+RUN dotnet publish PhotoBank.Api/PhotoBank.Api.csproj \
+    -c Release \
+    -o /out \
+    --no-restore
 
 # Runtime ńëîé
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
