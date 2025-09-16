@@ -23,7 +23,7 @@ FROM node:22-alpine AS production
 WORKDIR /app
 
 #
-RUN npm install -g serve
+RUN npx serve -s dist -l 5173
 
 #
 COPY --from=build /app/packages/frontend/dist ./dist
