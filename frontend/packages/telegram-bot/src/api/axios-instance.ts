@@ -1,6 +1,8 @@
 import axios, { type AxiosRequestConfig, type AxiosInstance } from 'axios';
 import type { Context } from 'grammy';
 
+import { HttpError } from '@photobank/shared/types/problem';
+
 import { ensureUserAccessToken, invalidateUserToken } from '@/auth';
 
 const API_BASE_URL = process.env.API_BASE_URL ?? '/api';
@@ -28,7 +30,11 @@ export async function photobankAxios<T>(config: AxiosRequestConfig, ctx?: Contex
   try {
     return await doRequest(false);
   } catch (error: unknown) {
-    const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+    const status = axios.isAxiosError(error)
+      ? error.response?.status
+      : error instanceof HttpError
+        ? error.status
+        : undefined;
     if (status === 401 || status === 403) {
       invalidateUserToken(context);
       return await doRequest(true);
