@@ -1,14 +1,17 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /app
 
-# Копируем весь backend код
+#   PhotoBank.Api   
+COPY PhotoBank.Api/PhotoBank.Api.csproj PhotoBank.Api/
+RUN dotnet restore PhotoBank.Api/PhotoBank.Api.csproj
+
+#   backend 
 COPY . .
 
-# Восстановление и сборка
-RUN dotnet restore PhotoBank.Api/PhotoBank.Api.csproj
-RUN dotnet publish PhotoBank.Api/PhotoBank.Api.csproj -c Release -o /out
+#    
+RUN dotnet publish PhotoBank.Api/PhotoBank.Api.csproj -c Release -o /out --no-restore
 
-# Runtime слой
+# Runtime Е„Г«Г®Г©
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /out .
