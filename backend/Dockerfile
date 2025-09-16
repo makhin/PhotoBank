@@ -1,8 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /app
 
-# Restore dependencies using solution and project files
-COPY PhotoBank.sln ./
+# Restore dependencies using project files
 COPY Directory.Build.props ./
 COPY PhotoBank.Api/PhotoBank.Api.csproj PhotoBank.Api/
 COPY PhotoBank.DependencyInjection/PhotoBank.DependencyInjection.csproj PhotoBank.DependencyInjection/
@@ -11,7 +10,7 @@ COPY PhotoBank.DbContext/PhotoBank.DbContext.csproj PhotoBank.DbContext/
 COPY PhotoBank.InsightFace.Client/PhotoBank.InsightFaceApiClient.csproj PhotoBank.InsightFace.Client/
 COPY PhotoBank.Repositories/PhotoBank.Repositories.csproj PhotoBank.Repositories/
 COPY PhotoBank.ViewModel.Dto/PhotoBank.ViewModel.Dto.csproj PhotoBank.ViewModel.Dto/
-RUN dotnet restore PhotoBank.sln
+RUN dotnet restore PhotoBank.Api/PhotoBank.Api.csproj
 
 # Copy the remaining source files and publish
 COPY . .
