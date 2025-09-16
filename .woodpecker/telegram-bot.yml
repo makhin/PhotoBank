@@ -1,16 +1,17 @@
 kind: pipeline          # тип конфигурации
 name: bot          # имя pipeline (обязательно)
 
-steps:
-  - name: restore-pnpm-cache
-    image: woodpeckerci/plugin-cache
-    settings:
-      restore: true
-      mount:
-        - /root/.local/share/pnpm/store
+volumes:
+  - name: pnpm-cache
+    host:
+      path: /var/lib/woodpecker-cache/pnpm
 
+steps:
   - name: build
     image: node:22-alpine
+    volumes:
+      - name: pnpm-cache
+        path: /root/.nuget/packages
     when:
       event: [cron, manual]
       path: ['frontend/packages/telegram-bot/**', 'frontend/packages/shared/**']
@@ -26,13 +27,6 @@ steps:
           pnpm install --frozen-lockfile
           pnpm --filter @photobank/telegram-bot build
           pnpm --filter @photobank/telegram-bot test || echo "Telegram bot tests failed, ignoring"
-
-  - name: save-nuget-cache          # ← сохраняем NuGet‑кэш
-    image: woodpeckerci/plugin-cache
-    settings:
-      rebuild: true
-      mount:
-        - /root/.nuget/packages
 
   - name: publish
     image: docker:28.4.0-cli

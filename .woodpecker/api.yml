@@ -1,3 +1,8 @@
+volumes:
+  - name: nuget-cache
+    host:
+      path: /var/lib/woodpecker-cache/nuget
+
 clone:
   git:
     image: woodpeckerci/plugin-git
@@ -7,15 +12,11 @@ clone:
       tags: true       # нужны теги для NBGV
 
 steps:
-  - name: restore-nuget-cache
-    image: woodpeckerci/plugin-cache
-    settings:
-      restore: true
-      mount:
-        - /root/.nuget/packages
-
   - name: build
     image: mcr.microsoft.com/dotnet/sdk:9.0
+    volumes:
+      - name: nuget-cache
+        path: /root/.nuget/packages
     when:
       event: [cron, manual]
       path: 'backend/**'
@@ -27,13 +28,6 @@ steps:
           dotnet restore PhotoBank.Backend.sln
           dotnet build PhotoBank.Backend.sln --no-restore --configuration Release
           dotnet test PhotoBank.Backend.sln --no-build --configuration Release --filter "FullyQualifiedName~PhotoBank.UnitTests" || echo "API tests failed, ignoring"
-
-  - name: save-nuget-cache
-    image: woodpeckerci/plugin-cache
-    settings:
-      rebuild: true
-      mount:
-        - /root/.nuget/packages
 
   - name: publish
     image: docker:28.4.0-cli
