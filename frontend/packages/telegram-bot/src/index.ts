@@ -25,8 +25,6 @@ import { uploadCommand } from "./commands/upload";
 import { withRegistered } from './registration';
 import { logger } from './logger';
 import { handleBotError } from './errorHandler';
-import './handlers/inline';
-import './handlers/deeplink';
 import { i18n } from './i18n';
 
 const privateCommands = (lang: string) => [
@@ -54,6 +52,11 @@ bot.use(async (ctx, next) => {
   if (lang) ctx.i18n.useLocale(lang);
   await next();
 });
+
+await Promise.all([
+  import('./handlers/deeplink'),
+  import('./handlers/inline'),
+]);
 
 bot.use(async (ctx, next) => {
   const username = ctx.from?.username ?? String(ctx.from?.id ?? '');
