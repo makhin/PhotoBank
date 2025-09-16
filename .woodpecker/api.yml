@@ -10,7 +10,7 @@ steps:
   - name: build
     image: mcr.microsoft.com/dotnet/sdk:9.0
     volumes:
-      - '/var/lib/woodpecker-cache/nuget'
+      - '/var/lib/woodpecker-cache/nuget:/root/.nuget-store'
     when:
       event: [cron, manual]
       path: 'backend/**'
