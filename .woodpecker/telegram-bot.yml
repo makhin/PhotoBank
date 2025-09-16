@@ -2,11 +2,18 @@ kind: pipeline          # тип конфигурации
 name: bot          # имя pipeline (обязательно)
 
 steps:
+  - name: restore-pnpm-cache
+    image: woodpeckerci/plugin-cache
+    settings:
+      restore: true
+      mount:
+        - /root/.local/share/pnpm/store
+
   - name: build
     image: node:22-alpine
     when:
       event: [cron, manual]
-      path: ['frontend/packages/telegram-bot/*', 'frontend/packages/shared/*']
+      path: ['frontend/packages/telegram-bot/**', 'frontend/packages/shared/**']
     environment:
       VITE_API_BASE_URL:
         from_secret: vite_api_base_url
@@ -20,8 +27,15 @@ steps:
           pnpm --filter @photobank/telegram-bot build
           pnpm --filter @photobank/telegram-bot test || echo "Telegram bot tests failed, ignoring"
 
+  - name: save-nuget-cache          # ← сохраняем NuGet‑кэш
+    image: woodpeckerci/plugin-cache
+    settings:
+      rebuild: true
+      mount:
+        - /root/.nuget/packages
+
   - name: publish
-    image: docker:24.0.7-cli
+    image: docker:28.4.0-cli
     when:
       event: [cron, manual]
       path: ['frontend/packages/telegram-bot/*', 'frontend/packages/shared/*']
@@ -42,3 +56,5 @@ steps:
           docker build -f frontend/Dockerfile.bot -t makhin/photobank-bot:latest frontend
           docker push makhin/photobank-bot:latest
           docker logout
+
+
