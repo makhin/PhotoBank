@@ -51,7 +51,8 @@
     "dist"
   ],
   "scripts": {
-    "build:types": "rimraf dist && tsc -b",
+    "build": "rimraf dist && tsc -b --force",
+    "build:types": "pnpm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
