@@ -1,7 +1,20 @@
-FROM node:22-alpine
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 COPY . .
 
-RUN corepack enable && pnpm install --frozen-lockfile --prod=false
-CMD ["pnpm", "--filter", "telegram-bot", "start"]
+RUN corepack enable
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @photobank/telegram-bot build
+
+FROM node:22-alpine AS runner
+WORKDIR /app
+
+COPY . .
+
+RUN corepack enable
+RUN pnpm install --prod
+
+COPY --from=builder /app/packages/telegram-bot/dist ./packages/telegram-bot/dist
+
+CMD ["node", "packages/telegram-bot/dist/index.js"]
