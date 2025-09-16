@@ -3,34 +3,43 @@ clone:
     image: woodpeckerci/plugin-git
     settings:
       partial: false   # отключаем partial clone
-      depth: 0         # полный клон
+      depth: 200         # полный клон
       tags: true       # нужны теги для NBGV
 
 steps:
+  - name: restore-nuget-cache
+    image: woodpeckerci/plugin-cache
+    settings:
+      restore: true
+      mount:
+        - /root/.nuget/packages
+
   - name: build
     image: mcr.microsoft.com/dotnet/sdk:9.0
     when:
       event: [cron, manual]
-      path: 'backend/*'
+      path: 'backend/**'
     commands:
       - |
-        if "true"; then
           echo "Changes in backend detected — running build"
           echo "API build and test"
           cd backend
           dotnet restore PhotoBank.Backend.sln
           dotnet build PhotoBank.Backend.sln --no-restore --configuration Release
           dotnet test PhotoBank.Backend.sln --no-build --configuration Release --filter "FullyQualifiedName~PhotoBank.UnitTests" || echo "API tests failed, ignoring"
-        else
-          echo "No backend changes — skipping build"
-          exit 0
-        fi
+
+  - name: save-nuget-cache
+    image: woodpeckerci/plugin-cache
+    settings:
+      rebuild: true
+      mount:
+        - /root/.nuget/packages
 
   - name: publish
-    image: docker:24.0.7-cli
+    image: docker:28.4.0-cli
     when:
       event: [cron, manual]
-      path: 'backend/*'
+      path: 'backend/**'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
