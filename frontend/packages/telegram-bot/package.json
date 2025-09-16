@@ -10,8 +10,9 @@
   "scripts": {
     "pretypecheck": "pnpm --filter @photobank/shared run build:types",
     "typecheck": "tsc -b",
-    "build": "pnpm run typecheck && tsup",
-    "dev": "tsup --watch --onSuccess \"node dist/index.js\"",
+    "build": "pnpm run typecheck && tsup && pnpm run copy:locales",
+    "copy:locales": "cpy src/locales/**/*.ftl dist/locales",
+    "dev": "tsup --watch --onSuccess \"pnpm run copy:locales && node dist/index.js\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "start": "node dist/index.js"
