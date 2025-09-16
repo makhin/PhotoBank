@@ -1,8 +1,3 @@
-volumes:
-  - name: nuget-cache
-    host:
-      path: /var/lib/woodpecker-cache/nuget
-
 clone:
   git:
     image: woodpeckerci/plugin-git
@@ -15,8 +10,7 @@ steps:
   - name: build
     image: mcr.microsoft.com/dotnet/sdk:9.0
     volumes:
-      - name: nuget-cache
-        path: /root/.nuget/packages
+      - '/var/lib/woodpecker-cache/nuget'
     when:
       event: [cron, manual]
       path: 'backend/**'

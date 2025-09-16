@@ -1,17 +1,11 @@
 kind: pipeline          # тип конфигурации
 name: frontend          # имя pipeline (обязательно)
 
-volumes:
-  - name: pnpm-cache
-    host:
-      path: /var/lib/woodpecker-cache/pnpm
-
 steps:
   - name: build
     image: node:22-alpine
     volumes:
-      - name: pnpm-cache
-        path: /root/.nuget/packages
+      - '/var/lib/woodpecker-cache/pnpm'
     when:
       event: [cron, manual]
       path: ['frontend/packages/frontend/**', 'frontend/packages/shared/**']
