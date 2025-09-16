@@ -12,9 +12,7 @@
     "types": ["node"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@photobank/shared": ["../shared/src/index.ts"],
-      "@photobank/shared/*": ["../shared/src/*"]
+      "@/*": ["src/*"]
     }
   },
   "references": [
