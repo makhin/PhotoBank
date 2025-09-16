@@ -1,29 +1,28 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 
-# Установить pnpm глобально
-RUN npm install -g pnpm
+# pnpm
+RUN corepack enable
 
-# Скопировать всё
+# Install dependencies
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile --prod=false
+
+# Build workspace
 COPY . .
 
-# Пробросить API URL в build stage
+# API URL build stage
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
-# Установить зависимости и собрать фронт
-RUN pnpm install --frozen-lockfile --prod=false
 RUN pnpm --filter frontend build
 
-# Production слой
+# Production
 FROM node:22-alpine AS production
 WORKDIR /app
 
-# Установить минимальный сервер
 RUN npm install -g serve
 
-# Скопировать только билд
 COPY --from=build /app/packages/frontend/dist ./dist
 
-# Старт сервера
 CMD ["serve", "-s", "dist", "-l", "5173"]
