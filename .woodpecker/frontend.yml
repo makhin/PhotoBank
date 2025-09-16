@@ -5,7 +5,7 @@ steps:
   - name: build
     image: node:22-alpine
     volumes:
-      - '/var/lib/woodpecker-cache/pnpm'
+      - '/var/lib/woodpecker-cache/pnpm:/root/.pnpm-store'
     when:
       event: [cron, manual]
       path: ['frontend/packages/frontend/**', 'frontend/packages/shared/**']
