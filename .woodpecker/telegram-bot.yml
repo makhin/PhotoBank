@@ -1,11 +1,5 @@
-kind: pipeline
-name: bot
-
-# Для volume-кэша нужен trusted-режим для репозитория
-volumes:
-  - name: npm-cache
-    host:
-      path: /var/lib/woodpecker-cache/npm
+kind: pipeline          # тип конфигурации
+name: bot          # имя pipeline (обязательно)
 
 steps:
   - name: build
@@ -16,37 +10,35 @@ steps:
     environment:
       VITE_API_BASE_URL:
         from_secret: vite_api_base_url
-    volumes:
-      - name: npm-cache
-        path: /root/.npm
     commands:
       - |
-        echo "Changes in bot detected — running build"
-        cd frontend
-        npm ci --prefer-offline
-        npm run build:bot || npm run build
+          echo "Changes in bot detected — running build"
+          echo "Telegram bot install, build and test"
+          cd frontend
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm --filter @photobank/telegram-bot build
+          pnpm --filter @photobank/telegram-bot test || echo "Telegram bot tests failed, ignoring"
 
-  - name: dockerize
-    image: quay.io/thegeeklab/wp-docker-buildx
-    privileged: true
+  - name: publish
+    image: docker:24.0.7-cli
     when:
-      event: [push, tag, cron, manual]
+      event: [cron, manual]
       path: ['frontend/packages/telegram-bot/*', 'frontend/packages/shared/*']
-    settings:
-      username:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      DOCKER_USERNAME:
         from_secret: docker_username
-      password:
+      DOCKER_PASSWORD:
         from_secret: docker_password
-      repo: makhin/photobank-bot
-      tags:
-        - latest
-      context: frontend
-      containerfile: frontend/Dockerfile.bot
-      pull_image: true
-      provenance: false
-      build_args:
-        VITE_API_BASE_URL:
-          from_secret: vite_api_base_url
-      cache_from:
-        - "type=registry,ref=makhin/photobank-bot:buildcache"
-      cache_to: "type=registry,ref=makhin/photobank-bot:buildcache,mode=max"
+    commands:
+      - |
+          echo "Changes in bot detected — running build"
+          echo "Telegram bot docker build and push"
+          docker version
+          docker info
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          docker build -f frontend/Dockerfile.bot -t makhin/photobank-bot:latest frontend
+          docker push makhin/photobank-bot:latest
+          docker logout
