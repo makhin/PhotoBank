@@ -112,19 +112,42 @@ public class AuthController(
         var configuredKey = configuration["Auth:Telegram:ServiceKey"];
         var presentedKey = Request.Headers["X-Service-Key"].ToString();
         if (string.IsNullOrWhiteSpace(configuredKey) || presentedKey != configuredKey)
-            return Problem(
+        {
+            var unauthorized = Problem(
                 title: "Unauthorized",
                 statusCode: StatusCodes.Status401Unauthorized,
                 detail: "Invalid service key");
 
+            if (unauthorized is ObjectResult unauthorizedObject)
+            {
+                unauthorizedObject.ContentTypes.Add("application/problem+json");
+            }
+
+            return unauthorized;
+        }
+
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.TelegramUserId == req.TelegramUserId);
         if (user is null)
-            return Problem(
+        {
+            var forbidden = Problem(
                 title: "Telegram not linked",
                 statusCode: StatusCodes.Status403Forbidden,
                 detail: "Ask admin to link your Telegram");
 
-        var token = tokenService.CreateToken(user, rememberMe: false);
+            if (forbidden is ObjectResult forbiddenObject)
+            {
+                forbiddenObject.ContentTypes.Add("application/problem+json");
+            }
+
+            return forbidden;
+        }
+
+        var roles = await userManager.GetRolesAsync(user);
+        var roleClaims = roles.Select(role => new Claim(ClaimTypes.Role, role));
+        var existingClaims = await userManager.GetClaimsAsync(user);
+        var allClaims = existingClaims.Concat(roleClaims).ToList();
+
+        var token = tokenService.CreateToken(user, rememberMe: false, allClaims);
         var expiresIn = 3600;
 
         return Ok(new TelegramExchangeResponse(token, expiresIn));

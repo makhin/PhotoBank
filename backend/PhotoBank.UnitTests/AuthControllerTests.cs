@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
@@ -58,7 +60,76 @@ public class AuthControllerTests
         problem.Detail.Should().Be("Ask admin to link your Telegram");
     }
 
-    private static AuthController CreateController(PhotoBankDbContext db, string serviceKey, string presentedKey)
+    [Test]
+    public async Task TelegramExchange_AdminRoleClaim_IsPassedToTokenService()
+    {
+        await using var db = TestDbFactory.CreateInMemory();
+
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Auth:Telegram:ServiceKey"] = "expected-key"
+            })
+            .Build();
+
+        var userManager = CreateUserManager(db);
+        var signInManager = CreateSignInManager(userManager);
+
+        var adminRole = new IdentityRole("Admin") { NormalizedName = "ADMIN" };
+        await db.Roles.AddAsync(adminRole);
+        await db.SaveChangesAsync();
+
+        var user = new ApplicationUser
+        {
+            UserName = "admin@example.com",
+            Email = "admin@example.com",
+            TelegramUserId = 789
+        };
+
+        await userManager.CreateAsync(user, "Str0ngP@ssw0rd!");
+        await userManager.AddClaimAsync(user, new Claim("ExistingClaim", "Value"));
+
+        db.UserRoles.Add(new IdentityUserRole<string>
+        {
+            RoleId = adminRole.Id,
+            UserId = user.Id
+        });
+        await db.SaveChangesAsync();
+
+        var tokenServiceMock = new Mock<ITokenService>();
+        List<Claim>? capturedClaims = null;
+
+        tokenServiceMock
+            .Setup(ts => ts.CreateToken(
+                It.Is<ApplicationUser>(u => u.Id == user.Id),
+                false,
+                It.IsAny<IEnumerable<Claim>>()))
+            .Returns("token")
+            .Callback<ApplicationUser, bool, IEnumerable<Claim>>((_, _, claims) =>
+            {
+                capturedClaims = claims?.ToList();
+            });
+
+        var controller = new AuthController(userManager, signInManager, tokenServiceMock.Object, configuration)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            }
+        };
+
+        controller.ControllerContext.HttpContext!.Request.Headers["X-Service-Key"] = "expected-key";
+
+        var result = await controller.TelegramExchange(new AuthController.TelegramExchangeRequest(user.TelegramUserId!.Value, user.UserName));
+
+        result.Should().BeOfType<OkObjectResult>();
+
+        capturedClaims.Should().NotBeNull();
+        capturedClaims!.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == "Admin");
+        capturedClaims.Should().Contain(c => c.Type == "ExistingClaim" && c.Value == "Value");
+    }
+
+    private static AuthController CreateController(PhotoBankDbContext db, string serviceKey, string presentedKey, ITokenService? tokenService = null)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -69,7 +140,7 @@ public class AuthControllerTests
 
         var userManager = CreateUserManager(db);
         var signInManager = CreateSignInManager(userManager);
-        var tokenService = Mock.Of<ITokenService>();
+        tokenService ??= Mock.Of<ITokenService>();
 
         var controller = new AuthController(userManager, signInManager, tokenService, configuration)
         {
