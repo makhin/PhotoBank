@@ -1,4 +1,6 @@
-import { InlineKeyboard } from 'grammy';
+import { Buffer } from 'node:buffer';
+
+import { InlineKeyboard, InputFile } from 'grammy';
 import type { PhotoDto } from '@photobank/shared/api/photobank';
 
 import { formatPhotoMessage } from './formatPhotoMessage';
@@ -11,6 +13,59 @@ export const currentPagePhotos = new Map<
   { page: number; ids: number[] }
 >();
 export const captionCache = new Map<number, string>();
+
+function extractFilenameFromUrl(url: string): string | undefined {
+  try {
+    const parsed = new URL(url);
+    const segments = parsed.pathname.split('/').filter(Boolean);
+    if (!segments.length) return undefined;
+    return decodeURIComponent(segments[segments.length - 1]!);
+  } catch {
+    const path = url.split('?')[0] ?? '';
+    const segment = path.split('/').filter(Boolean).pop();
+    return segment ? decodeURIComponent(segment) : undefined;
+  }
+}
+
+function deriveFilename(photo: PhotoDto, imageUrl: string): string | undefined {
+  const name = photo.name?.trim();
+  if (name) {
+    if (name.includes('.')) return name;
+    const extCandidate = extractFilenameFromUrl(imageUrl);
+    if (extCandidate) {
+      const dotIndex = extCandidate.lastIndexOf('.');
+      if (dotIndex !== -1) {
+        return `${name}${extCandidate.slice(dotIndex)}`;
+      }
+    }
+    return name;
+  }
+  return extractFilenameFromUrl(imageUrl);
+}
+
+export async function loadPhotoFile(photo: PhotoDto): Promise<{
+  caption: string;
+  hasSpoiler: boolean;
+  photoFile?: InputFile;
+}> {
+  const { caption, hasSpoiler, imageUrl } = formatPhotoMessage(photo);
+  if (!imageUrl) {
+    return { caption, hasSpoiler };
+  }
+
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to load preview: ${response.status}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    const filename = deriveFilename(photo, imageUrl);
+    const photoFile = new InputFile(Buffer.from(arrayBuffer), filename);
+    return { caption, hasSpoiler, photoFile };
+  } catch {
+    return { caption, hasSpoiler };
+  }
+}
 
 export async function deletePhotoMessage(ctx: MyContext) {
   const chatId = ctx.chat?.id;
@@ -47,17 +102,18 @@ export async function sendPhotoById(ctx: MyContext, id: number) {
     return;
   }
 
-  const { caption, hasSpoiler, imageUrl } = formatPhotoMessage(photo);
+  const { caption, hasSpoiler, photoFile } = await loadPhotoFile(photo);
 
-  if (imageUrl) {
-    await ctx.replyWithPhoto(imageUrl, {
+  if (photoFile) {
+    await ctx.replyWithPhoto(photoFile, {
       caption,
       parse_mode: 'HTML',
       has_spoiler: hasSpoiler,
     });
-  } else {
-    await ctx.reply(caption, { parse_mode: 'HTML' });
+    return;
   }
+
+  await ctx.reply(caption, { parse_mode: 'HTML' });
 }
 
 export async function openPhotoInline(ctx: MyContext, id: number) {
@@ -68,7 +124,7 @@ export async function openPhotoInline(ctx: MyContext, id: number) {
     return;
   }
 
-  const { caption, hasSpoiler, imageUrl } = formatPhotoMessage(photo);
+  const { caption, hasSpoiler, photoFile } = await loadPhotoFile(photo);
 
   let keyboard: InlineKeyboard | undefined;
   if (chatId) {
@@ -85,14 +141,14 @@ export async function openPhotoInline(ctx: MyContext, id: number) {
   }
 
   if (!chatId) {
-    if (imageUrl) {
+    if (photoFile) {
       const options: Parameters<typeof ctx.replyWithPhoto>[1] = {
         caption,
         parse_mode: 'HTML',
         has_spoiler: hasSpoiler,
       };
       if (keyboard) options.reply_markup = keyboard;
-      await ctx.replyWithPhoto(imageUrl, options);
+      await ctx.replyWithPhoto(photoFile, options);
     } else {
       const options: Parameters<typeof ctx.reply>[1] = { parse_mode: 'HTML' };
       if (keyboard) options.reply_markup = keyboard;
@@ -104,7 +160,7 @@ export async function openPhotoInline(ctx: MyContext, id: number) {
   const existing = photoMessages.get(chatId);
   if (existing) {
     try {
-      if (imageUrl) {
+      if (photoFile) {
         const options: Parameters<typeof ctx.api.editMessageMedia>[3] = {};
         if (keyboard) options.reply_markup = keyboard;
         await ctx.api.editMessageMedia(
@@ -112,9 +168,10 @@ export async function openPhotoInline(ctx: MyContext, id: number) {
           existing,
           {
             type: 'photo',
-            media: imageUrl,
+            media: photoFile,
             caption,
             parse_mode: 'HTML',
+            has_spoiler: hasSpoiler,
           },
           options
         );
@@ -130,14 +187,14 @@ export async function openPhotoInline(ctx: MyContext, id: number) {
     }
   }
 
-  if (imageUrl) {
+  if (photoFile) {
     const options: Parameters<typeof ctx.replyWithPhoto>[1] = {
       caption,
       parse_mode: 'HTML',
       has_spoiler: hasSpoiler,
     };
     if (keyboard) options.reply_markup = keyboard;
-    const msg = await ctx.replyWithPhoto(imageUrl, options);
+    const msg = await ctx.replyWithPhoto(photoFile, options);
     photoMessages.set(chatId, msg.message_id);
   } else {
     const options: Parameters<typeof ctx.reply>[1] = { parse_mode: 'HTML' };
