@@ -11,13 +11,10 @@ import { handleServiceError } from '../errorHandler';
 
 const { photosSearchPhotos, photosGetPhoto, photosUpload } = getPhotos();
 
-export async function searchPhotos(
-  ctx: Context,
-  filter: FilterDto & { top?: number; skip?: number },
-): Promise<PhotosSearchPhotosResult> {
+export async function searchPhotos(ctx: Context, filter: FilterDto): Promise<PhotosSearchPhotosResult> {
   try {
     setRequestContext(ctx);
-    return await photosSearchPhotos(filter as FilterDto);
+    return await photosSearchPhotos(filter);
   } catch (err: unknown) {
     handleServiceError(err);
     throw err;
