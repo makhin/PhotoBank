@@ -11,7 +11,7 @@ vi.mock('openai', () => ({
 
 import { configureAzureOpenAI, createChatCompletion, parseQueryWithOpenAI } from '../openai';
 
-describe('openai error handling', () => {
+describe('openai', () => {
   const loggerSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
 
   beforeEach(() => {
@@ -25,19 +25,74 @@ describe('openai error handling', () => {
     });
   });
 
-  it('createChatCompletion throws friendly error when request fails', async () => {
-    const err = new Error('network');
-    mockCreate.mockRejectedValueOnce(err);
+  describe('error handling', () => {
+    it('createChatCompletion throws friendly error when request fails', async () => {
+      const err = new Error('network');
+      mockCreate.mockRejectedValueOnce(err);
 
-    await expect(createChatCompletion('hi')).rejects.toThrow('OpenAI request failed');
-    expect(loggerSpy).toHaveBeenCalledWith(err);
+      await expect(createChatCompletion('hi')).rejects.toThrow('OpenAI request failed');
+      expect(loggerSpy).toHaveBeenCalledWith(err);
+    });
+
+    it('parseQueryWithOpenAI throws friendly error when request fails', async () => {
+      const err = new Error('oops');
+      mockCreate.mockRejectedValueOnce(err);
+
+      await expect(parseQueryWithOpenAI('query')).rejects.toThrow('OpenAI request failed');
+      expect(loggerSpy).toHaveBeenCalledWith(err);
+    });
   });
 
-  it('parseQueryWithOpenAI throws friendly error when request fails', async () => {
-    const err = new Error('oops');
-    mockCreate.mockRejectedValueOnce(err);
+  describe('model selection', () => {
+    it('createChatCompletion uses the configured deployment as the model', async () => {
+      mockCreate.mockResolvedValueOnce({
+        choices: [{ message: { content: 'hello' } }],
+      });
 
-    await expect(parseQueryWithOpenAI('query')).rejects.toThrow('OpenAI request failed');
-    expect(loggerSpy).toHaveBeenCalledWith(err);
+      await expect(createChatCompletion('hi')).resolves.toBe('hello');
+
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ model: 'deploy' }),
+      );
+    });
+
+    it('parseQueryWithOpenAI uses the configured deployment as the model', async () => {
+      mockCreate.mockResolvedValueOnce({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                personNames: [],
+                tagNames: [],
+                dateFrom: null,
+                dateTo: null,
+              }),
+            },
+          },
+        ],
+      });
+
+      await parseQueryWithOpenAI('query');
+
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({ model: 'deploy' }),
+      );
+    });
+  });
+
+  describe('configuration validation', () => {
+    it('throws if the deployment is missing', async () => {
+      configureAzureOpenAI({
+        endpoint: 'test',
+        apiKey: 'key',
+        deployment: '',
+        apiVersion: 'v1',
+      });
+
+      await expect(createChatCompletion('hi')).rejects.toThrow(
+        'Azure OpenAI deployment is not configured',
+      );
+      expect(mockCreate).not.toHaveBeenCalled();
+    });
   });
 });

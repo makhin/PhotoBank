@@ -6,23 +6,44 @@ import type { PhotoFilter } from './filter';
 import { PhotoFilterSchema, photoFilterSchemaForLLM } from './filter';
 import { logger } from '../utils/logger';
 
-let client: AzureOpenAI | null = null;
+type AzureOpenAIOptions = {
+  endpoint: string;
+  apiKey: string;
+  deployment: string;
+  apiVersion: string;
+};
 
-export function configureAzureOpenAI(options: { endpoint:string , apiKey:string, deployment:string, apiVersion:string }): void {
+let client: AzureOpenAI | null = null;
+let clientOptions: AzureOpenAIOptions | null = null;
+
+export function configureAzureOpenAI(options: AzureOpenAIOptions): void {
   client = new AzureOpenAI(options);
+  clientOptions = options;
+}
+
+function ensureConfigured(): { client: AzureOpenAI; deployment: string } {
+  if (!client) {
+    throw new Error('Azure OpenAI is not configured');
+  }
+
+  const deployment = clientOptions?.deployment;
+
+  if (!deployment) {
+    throw new Error('Azure OpenAI deployment is not configured');
+  }
+
+  return { client, deployment };
 }
 
 export async function createChatCompletion(text: string): Promise<string> {
-  if (!client) {
-      throw new Error('Azure OpenAI is not configured');
-  }
+  const { client, deployment } = ensureConfigured();
 
   try {
     const response = await client.chat.completions.create({
       messages: [{ role: 'user', content: text }],
       temperature: 1,
       top_p: 1,
-      model: 'gpt-4o',
+      model: deployment,
       response_format: {
         type: 'text',
       },
@@ -36,9 +57,7 @@ export async function createChatCompletion(text: string): Promise<string> {
 }
 
 export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
-  if (!client) {
-      throw new Error('Azure OpenAI is not configured');
-  }
+  const { client, deployment } = ensureConfigured();
 
   const messages: Array<ChatCompletionMessageParam> = [
     { role: 'system', content: SYSTEM_PROMPT },
@@ -51,7 +70,7 @@ export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
       messages: messages,
       temperature: 1,
       top_p: 1,
-      model: 'gpt-4o',
+      model: deployment,
       response_format: {
         type: 'json_schema',
         json_schema: {
