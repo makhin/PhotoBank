@@ -14,6 +14,7 @@ const PAGE_SIZE = 20;
 bot.on('inline_query', async (ctx: MyContext) => {
   const q = (ctx.inlineQuery?.query ?? '').trim();
   const offset = Number(ctx.inlineQuery?.offset ?? '0') || 0;
+  const page = Math.floor(offset / PAGE_SIZE) + 1;
 
   // Авторизация для inline: если нет — мягко предлагаем /start link
   try {
@@ -35,8 +36,8 @@ bot.on('inline_query', async (ctx: MyContext) => {
   try {
     const resp = await searchPhotos(ctx, {
       caption: q,
-      skip: offset,
-      top: PAGE_SIZE,
+      page,
+      pageSize: PAGE_SIZE,
     });
 
     type Photo = {
