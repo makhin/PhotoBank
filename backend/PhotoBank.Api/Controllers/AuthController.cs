@@ -112,12 +112,17 @@ public class AuthController(
         var configuredKey = configuration["Auth:Telegram:ServiceKey"];
         var presentedKey = Request.Headers["X-Service-Key"].ToString();
         if (string.IsNullOrWhiteSpace(configuredKey) || presentedKey != configuredKey)
-            return Unauthorized(Problem(title: "Unauthorized", statusCode: 401, detail: "Invalid service key"));
+            return Problem(
+                title: "Unauthorized",
+                statusCode: StatusCodes.Status401Unauthorized,
+                detail: "Invalid service key");
 
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.TelegramUserId == req.TelegramUserId);
         if (user is null)
-            return StatusCode(StatusCodes.Status403Forbidden,
-                Problem(title: "Telegram not linked", statusCode: 403, detail: "Ask admin to link your Telegram"));
+            return Problem(
+                title: "Telegram not linked",
+                statusCode: StatusCodes.Status403Forbidden,
+                detail: "Ask admin to link your Telegram");
 
         var token = tokenService.CreateToken(user, rememberMe: false);
         var expiresIn = 3600;
