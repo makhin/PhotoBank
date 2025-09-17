@@ -70,4 +70,24 @@ describe('photobankAxios', () => {
       headers: { Authorization: 'Bearer fresh-token' },
     });
   });
+
+  it('returns dictionary data for non-admin users without forcing reauth', async () => {
+    const ctx = { from: { id: 456 } } as unknown as Context;
+    const dictionary = [{ id: 1, name: 'Alice' }];
+
+    ensureUserAccessToken.mockResolvedValue('token');
+    request.mockResolvedValue({ data: dictionary });
+
+    const result = await photobankAxios<typeof dictionary>({ url: '/persons' }, ctx);
+
+    expect(result).toEqual(dictionary);
+    expect(ensureUserAccessToken).toHaveBeenCalledTimes(1);
+    expect(ensureUserAccessToken).toHaveBeenCalledWith(ctx, false);
+    expect(invalidateUserToken).not.toHaveBeenCalled();
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(request).toHaveBeenCalledWith({
+      url: '/persons',
+      headers: { Authorization: 'Bearer token' },
+    });
+  });
 });

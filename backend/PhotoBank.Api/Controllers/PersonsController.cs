@@ -7,7 +7,7 @@ namespace PhotoBank.Api.Controllers;
 
 [Route("[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class PersonsController(IPhotoService photoService) : ControllerBase
 {
     [HttpGet]
@@ -18,6 +18,7 @@ public class PersonsController(IPhotoService photoService) : ControllerBase
         return Ok(persons);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPost]
     [ProducesResponseType(typeof(PersonDto), StatusCodes.Status201Created)]
     public async Task<ActionResult<PersonDto>> CreateAsync(PersonDto dto)
@@ -26,6 +27,7 @@ public class PersonsController(IPhotoService photoService) : ControllerBase
         return CreatedAtAction(nameof(GetAllAsync), new { }, person);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{personId}")]
     [ProducesResponseType(typeof(PersonDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<PersonDto>> UpdateAsync(int personId, PersonDto dto)
@@ -36,6 +38,7 @@ public class PersonsController(IPhotoService photoService) : ControllerBase
         return Ok(person);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{personId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteAsync(int personId)
