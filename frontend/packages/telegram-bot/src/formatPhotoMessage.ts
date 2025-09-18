@@ -7,7 +7,7 @@ export function formatPhotoMessage(photo: PhotoDto): { caption: string; hasSpoil
 
   lines.push(`📸 <b>${photo.name}</b>`);
   if (photo.takenDate) {
-    lines.push(`📅 ${formatDate(photo.takenDate)}`);
+    lines.push(`📅 ${formatDate(photo.takenDate.toISOString())}`);
   }
 
   // lines.push(`📏 ${photo.width}×${photo.height}`);
