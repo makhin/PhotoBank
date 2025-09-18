@@ -1,3 +1,5 @@
+import { formatISO, parseISO } from 'date-fns';
+
 import { formSchema, type FormData } from '@/features/filter/lib/form-schema';
 
 const toBase64 = (json: string) => {
@@ -20,15 +22,34 @@ const fromBase64 = (encoded: string) => {
   return decodeURIComponent(escape(window.atob(encoded)));
 };
 
+const ensureDate = (value: unknown): Date | undefined => {
+  if (!value) return undefined;
+  if (value instanceof Date) return value;
+  if (typeof value === 'string') {
+    const parsedDate = parseISO(value);
+    return Number.isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+  }
+  return undefined;
+};
+
 export const serializeFilter = (data: FormData): string => {
-  const json = JSON.stringify(data);
+  const json = JSON.stringify({
+    ...data,
+    dateFrom: data.dateFrom ? formatISO(data.dateFrom) : undefined,
+    dateTo: data.dateTo ? formatISO(data.dateTo) : undefined,
+  });
   return toBase64(json);
 };
 
 export const deserializeFilter = (value: string): FormData | null => {
   try {
     const json = fromBase64(value);
-    const parsed = formSchema.parse(JSON.parse(json));
+    const raw = JSON.parse(json) as Record<string, unknown>;
+    const parsed = formSchema.parse({
+      ...raw,
+      dateFrom: ensureDate(raw.dateFrom),
+      dateTo: ensureDate(raw.dateTo),
+    });
     return parsed;
   } catch {
     return null;
