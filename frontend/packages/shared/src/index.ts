@@ -1,39 +1,25 @@
 // packages/shared/src/index.ts
 
-type FlexibleDateInput = string | number | Date | null | undefined;
+import { format } from 'date-fns';
 
-const ruDateTimeFormatter = new Intl.DateTimeFormat('ru-RU', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  hour12: false,
-});
+import {
+  DEFAULT_DATE_FORMAT,
+  toDate,
+  type FlexibleDateInput,
+} from './utils/parseDate';
 
 export const formatDate = (dateInput?: FlexibleDateInput) => {
   if (dateInput === null || dateInput === undefined) return 'не указана дата';
-  if (typeof dateInput === 'string' && dateInput.length === 0) {
+  if (typeof dateInput === 'string' && dateInput.trim().length === 0) {
     return 'не указана дата';
   }
 
-  let date: Date;
-
-  if (dateInput instanceof Date) {
-    date = dateInput;
-  } else if (typeof dateInput === 'number') {
-    date = new Date(dateInput);
-  } else if (typeof dateInput === 'string') {
-    date = new Date(dateInput);
-  } else {
+  const parsedDate = toDate(dateInput);
+  if (!parsedDate) {
     return 'неверный формат даты';
   }
 
-  if (Number.isNaN(date.getTime())) {
-    return 'неверный формат даты';
-  }
-
-  return ruDateTimeFormatter.format(date);
+  return format(parsedDate, DEFAULT_DATE_FORMAT);
 };
 
 export const getGenderText = (gender?: boolean | null) => {
