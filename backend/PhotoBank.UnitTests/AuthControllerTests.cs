@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -18,6 +19,7 @@ using PhotoBank.Api.Controllers;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Api;
+using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.UnitTests;
 
@@ -127,6 +129,59 @@ public class AuthControllerTests
         capturedClaims.Should().NotBeNull();
         capturedClaims!.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == "Admin");
         capturedClaims.Should().Contain(c => c.Type == "ExistingClaim" && c.Value == "Value");
+    }
+
+    [Test]
+    public async Task UpdateUser_WithOnlyTelegramSendTime_KeepsExistingTelegramUserId()
+    {
+        await using var db = TestDbFactory.CreateInMemory();
+
+        var userManager = CreateUserManager(db);
+        var signInManager = CreateSignInManager(userManager);
+
+        var user = new ApplicationUser
+        {
+            UserName = "user@example.com",
+            Email = "user@example.com",
+            TelegramUserId = 12345,
+            TelegramSendTimeUtc = TimeSpan.FromHours(8)
+        };
+
+        await userManager.CreateAsync(user, "Str0ngP@ssw0rd!");
+
+        var controller = new AuthController(
+            userManager,
+            signInManager,
+            Mock.Of<ITokenService>(),
+            new ConfigurationBuilder().Build())
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            }
+        };
+
+        controller.ControllerContext.HttpContext!.User = new ClaimsPrincipal(
+            new ClaimsIdentity(
+                new[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.Name, user.UserName!)
+                },
+                authenticationType: "Test"));
+
+        var dto = new UpdateUserDto
+        {
+            TelegramSendTimeUtc = TimeSpan.FromHours(9)
+        };
+
+        var result = await controller.UpdateUser(dto);
+
+        result.Should().BeOfType<OkResult>();
+
+        var updatedUser = await userManager.FindByIdAsync(user.Id);
+        updatedUser!.TelegramUserId.Should().Be(12345);
+        updatedUser.TelegramSendTimeUtc.Should().Be(TimeSpan.FromHours(9));
     }
 
     private static AuthController CreateController(PhotoBankDbContext db, string serviceKey, string presentedKey, ITokenService? tokenService = null)

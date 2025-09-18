@@ -67,7 +67,10 @@ public class UsersController(UserManager<ApplicationUser> userManager, RoleManag
             return NotFound();
 
         user.PhoneNumber = dto.PhoneNumber;
-        user.TelegramUserId = dto.TelegramUserId;
+        if (dto.TelegramUserId.HasValue)
+        {
+            user.TelegramUserId = dto.TelegramUserId;
+        }
         user.TelegramSendTimeUtc = dto.TelegramSendTimeUtc;
         var result = await userManager.UpdateAsync(user);
         if (!result.Succeeded)
