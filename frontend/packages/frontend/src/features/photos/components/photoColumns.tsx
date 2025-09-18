@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { format, formatISO, isValid, parseISO } from 'date-fns';
 import type { ColumnDef } from '@tanstack/react-table';
 import type {
   PhotoItemDto,
@@ -112,11 +113,25 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
     {
       id: 'date',
       header: 'Taken',
-      accessorFn: (p) => (p.takenDate ? new Date(p.takenDate).toISOString() : ''),
+      accessorFn: (p) => {
+        const rawValue = p.takenDate;
+        if (!rawValue) return '';
+        const isoInput =
+          typeof rawValue === 'string'
+            ? rawValue
+            : rawValue instanceof Date
+              ? rawValue.toISOString()
+              : '';
+        if (!isoInput) return '';
+        const parsed = parseISO(isoInput);
+        return isValid(parsed) ? formatISO(parsed) : '';
+      },
       cell: ({ getValue }) => {
         const iso = getValue() as string;
         if (!iso) return null;
-        return <span className="text-sm">{new Date(iso).toLocaleDateString()}</span>;
+        const parsed = parseISO(iso);
+        if (!isValid(parsed)) return null;
+        return <span className="text-sm">{format(parsed, 'dd.MM.yyyy')}</span>;
       },
       size: 120,
     },

@@ -1,21 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import * as path from 'node:path';
 
-import '@testing-library/jest-dom/vitest';
-
-// Моки для JSDOM
-class ResizeObserver { observe(){} unobserve(){} disconnect(){} }
-(globalThis as any).ResizeObserver = ResizeObserver;
-
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: (q: string) => ({
-    media: q, matches: false, onchange: null,
-    addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {},
-    dispatchEvent() { return false; }
-  }),
-});
-
 export default defineConfig({
   resolve: {
     alias: {
