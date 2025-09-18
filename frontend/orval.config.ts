@@ -12,7 +12,8 @@ export default defineConfig({
       httpClient: 'fetch',
       mode: 'tags-split',
        override: {
-          mutator: {
+         useDates: true,
+         mutator: {
             path: path.resolve(__dirname, 'packages/shared/src/api/photobank/fetcher.ts'),
             name: 'customFetcher'
           },
@@ -32,6 +33,7 @@ export default defineConfig({
       client: 'axios',
       mode: 'tags-split',
       override: {
+        useDates: true,
         mutator: {
           path: path.resolve(__dirname, 'packages/telegram-bot/src/api/axios-instance.ts'),
           name: 'photobankAxios',

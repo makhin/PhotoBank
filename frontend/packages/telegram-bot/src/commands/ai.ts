@@ -47,8 +47,8 @@ export async function aiCommand(ctx: MyContext, promptOverride?: string) {
 
     if (filter.personNames.length) dto.personNames = filter.personNames;
     if (filter.tagNames.length) dto.tagNames = filter.tagNames;
-    if (filter.dateFrom) dto.takenDateFrom = filter.dateFrom.toISOString();
-    if (filter.dateTo) dto.takenDateTo = filter.dateTo.toISOString();
+    if (filter.dateFrom) dto.takenDateFrom = filter.dateFrom;
+    if (filter.dateTo) dto.takenDateTo = filter.dateTo;
 
     if (
       !dto.personNames &&

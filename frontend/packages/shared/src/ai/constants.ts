@@ -1,26 +1,26 @@
 import type { ChatCompletionMessageParam } from 'openai/resources';
 
 export const SYSTEM_PROMPT = `
-Ты парсер пользовательских фраз о поиске фотографий.
-Всегда возвращай СТРОГО ВАЛИДНЫЙ JSON по схеме:
+You are a parser of user phrases for photo searches.
+Always return STRICTLY VALID JSON according to the schema:
 
 {
-  "personNames": string[],  // имена людей, в том числе полные имена, если есть
-  "tagNames": string[],     // ТОЛЬКО существительные в именительном падеже
+  "personNames": string[],  // names of people, including full names if present
+  "tagNames": string[],     // ONLY nouns in the nominative case
   "dateFrom": "YYYY-MM-DD" | null,
   "dateTo": "YYYY-MM-DD" | null
 }
 
-Требования:
-- НИЧЕГО, кроме JSON.
-- Если пользователь пишет «летом 2019», верни dateFrom=2019-06-01, dateTo=2019-08-31.
-- Если пользователь пишет «в январе 2019 года», верни dateFrom=2019-01-01, dateTo=2019-01-31.
-- "после <год>" => dateFrom = "<год>-01-01", dateTo = null.
-- "до <год>" => dateFrom = null, dateTo = "<год>-12-31".
-- Не добавляй тегов, которых нет во фразе.
-- Если нет людей — personNames = [].
-- Если есть несколько людей — перечисли всех.
-- Пустые поля ставь в null или [] по схеме.
+Requirements:
+- NOTHING except JSON.
+- If the user writes "in summer 2019", return dateFrom=2019-06-01, dateTo=2019-08-31.
+- If the user writes "in January 2019", return dateFrom=2019-01-01, dateTo=2019-01-31.
+- "after <year>" => dateFrom = "<year>-01-01", dateTo = null.
+- "before <year>" => dateFrom = null, dateTo = "<year>-12-31".
+- Do not add tags that are not present in the phrase.
+- If there are no people — personNames = [].
+- If there are several people — list them all.
+- Empty fields must be set to null or [] according to the schema.
 `;
 
 export const FEW_SHOTS: Array<ChatCompletionMessageParam> = [

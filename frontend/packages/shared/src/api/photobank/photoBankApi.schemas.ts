@@ -27,8 +27,8 @@ export interface AccessProfile {
 
 export interface AccessProfileDateRangeAllow {
   profileId?: number;
-  fromDate?: string;
-  toDate?: string;
+  fromDate?: Date;
+  toDate?: Date;
   profile?: AccessProfile;
 }
 
@@ -101,9 +101,9 @@ export interface FilterDto {
   /** @nullable */
   caption?: string | null;
   /** @nullable */
-  takenDateFrom?: string | null;
+  takenDateFrom?: Date | null;
   /** @nullable */
-  takenDateTo?: string | null;
+  takenDateTo?: Date | null;
   thisDay?: ThisDayDto;
   /** @nullable */
   personNames?: string[] | null;
@@ -181,7 +181,7 @@ export interface PhotoDto {
   name: string;
   scale?: number;
   /** @nullable */
-  takenDate?: string | null;
+  takenDate?: Date | null;
   /** @nullable */
   previewUrl?: string | null;
   location?: GeoPointDto;
@@ -206,7 +206,7 @@ export interface PhotoItemDto {
   /** @minLength 1 */
   name: string;
   /** @nullable */
-  takenDate?: string | null;
+  takenDate?: Date | null;
   isBW?: boolean;
   isAdultContent?: boolean;
   adultScore?: number;
