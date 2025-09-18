@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { DEFAULT_FORM_VALUES } from '@photobank/shared/constants';
 import { useTranslation } from 'react-i18next';
 import type { FilterDto } from '@photobank/shared/api/photobank';
+import { parseISO } from 'date-fns';
 
 import { useAppDispatch, useAppSelector } from '@/app/hook';
 import { setFilter } from '@/features/photo/model/photoSlice';
@@ -38,6 +39,16 @@ function FilterPage() {
 
   const useCurrentFilter = (location.state as { useCurrentFilter?: boolean } | null)?.useCurrentFilter;
 
+  const ensureDate = (value: unknown): Date | undefined => {
+    if (!value) return undefined;
+    if (value instanceof Date) return value;
+    if (typeof value === 'string') {
+      const parsedDate = parseISO(value);
+      return Number.isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+    }
+    return undefined;
+  };
+
   const savedDefaults: FormData = {
     caption: savedFilter.caption ?? undefined,
     storages: savedFilter.storages?.map(String) ?? [],
@@ -48,8 +59,8 @@ function FilterPage() {
     isAdultContent: savedFilter.isAdultContent ?? undefined,
     isRacyContent: savedFilter.isRacyContent ?? undefined,
     thisDay: savedFilter.thisDay ? true : undefined,
-    dateFrom: savedFilter.takenDateFrom ? new Date(savedFilter.takenDateFrom) : undefined,
-    dateTo: savedFilter.takenDateTo ? new Date(savedFilter.takenDateTo) : undefined,
+    dateFrom: ensureDate(savedFilter.takenDateFrom),
+    dateTo: ensureDate(savedFilter.takenDateTo),
   };
 
   const form = useForm<FormData>({
@@ -73,8 +84,8 @@ function FilterPage() {
           isAdultContent: parsed.isAdultContent,
           isRacyContent: parsed.isRacyContent,
           thisDay: parsed.thisDay ? { day: new Date().getDate(), month: new Date().getMonth() + 1 } : undefined,
-          takenDateFrom: parsed.dateFrom?.toISOString(),
-          takenDateTo: parsed.dateTo?.toISOString(),
+          takenDateFrom: parsed.dateFrom ?? undefined,
+          takenDateTo: parsed.dateTo ?? undefined,
           page: 1,
           pageSize: 10,
         };
@@ -95,8 +106,8 @@ function FilterPage() {
       isAdultContent: data.isAdultContent,
       isRacyContent: data.isRacyContent,
       thisDay: data.thisDay ? { day: now.getDate(), month: now.getMonth() + 1 } : undefined,
-      takenDateFrom: data.dateFrom?.toISOString(),
-      takenDateTo: data.dateTo?.toISOString(),
+      takenDateFrom: data.dateFrom ?? undefined,
+      takenDateTo: data.dateTo ?? undefined,
       page: 1,
       pageSize: 10,
     };

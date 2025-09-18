@@ -91,8 +91,8 @@ const PhotoListPage = () => {
           isAdultContent: parsed.isAdultContent,
           isRacyContent: parsed.isRacyContent,
           thisDay: parsed.thisDay ? { day: new Date().getDate(), month: new Date().getMonth() + 1 } : undefined,
-          takenDateFrom: parsed.dateFrom?.toISOString(),
-          takenDateTo: parsed.dateTo?.toISOString(),
+          takenDateFrom: parsed.dateFrom ?? undefined,
+          takenDateTo: parsed.dateTo ?? undefined,
           page: 1,
           pageSize: 10,
         };
