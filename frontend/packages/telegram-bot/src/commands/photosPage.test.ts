@@ -17,9 +17,7 @@ import { searchPhotos } from '../services/photo';
 
 const searchPhotosMock = vi.mocked(searchPhotos);
 
-type PhotoOverrides = Partial<Omit<PhotoItemDto, 'takenDate'>> & {
-  takenDate?: string | Date | null;
-};
+type PhotoOverrides = Partial<PhotoItemDto>;
 
 function createPhoto(overrides: PhotoOverrides = {}): PhotoItemDto {
   return {
@@ -27,13 +25,13 @@ function createPhoto(overrides: PhotoOverrides = {}): PhotoItemDto {
     name: 'Sample Photo Name',
     storageName: 'Main Storage',
     relativePath: 'album/photo.jpg',
-    takenDate: '2024-05-01T10:00:00Z',
+    takenDate: new Date('2024-05-01T10:00:00Z'),
     captions: ['A quick caption'],
     persons: [],
     isAdultContent: false,
     isRacyContent: false,
     ...overrides,
-  } as unknown as PhotoItemDto;
+  } satisfies PhotoItemDto;
 }
 
 function createContext(): MyContext {
@@ -66,7 +64,7 @@ describe('sendPhotosPage', () => {
     const ctx = createContext();
     searchPhotosMock.mockResolvedValue({
       totalCount: 1,
-      items: [createPhoto({ takenDate: '2023-08-15T00:00:00Z' })],
+      items: [createPhoto({ takenDate: new Date('2023-08-15T00:00:00Z') })],
     });
 
     await sendPhotosPage({
@@ -91,7 +89,7 @@ describe('sendPhotosPage', () => {
     const ctx = createContext();
     searchPhotosMock.mockResolvedValue({
       totalCount: 1,
-      items: [createPhoto({ takenDate: 'not-a-date' })],
+      items: [createPhoto({ takenDate: new Date('not-a-date') })],
     });
 
     await sendPhotosPage({
