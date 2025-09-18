@@ -2,7 +2,8 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 import { setupServer } from 'msw/node';
 let handlers: any[] = [];
 try {
-  ({ handlers } = await import('@photobank/shared/api/photobank/msw'));
+  const module = await import('@photobank/shared/api/photobank/msw');
+  handlers = Array.isArray(module.handlers) ? module.handlers : [];
 } catch {
   // shared MSW handlers are optional for lightweight tests
 }

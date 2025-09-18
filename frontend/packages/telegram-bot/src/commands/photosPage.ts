@@ -1,4 +1,5 @@
 import { InlineKeyboard } from 'grammy';
+import { getYear, isValid, parseISO } from 'date-fns';
 import { firstNWords, type FilterDto } from '@photobank/shared';
 
 import type { MyContext } from '../i18n';
@@ -60,7 +61,11 @@ export async function sendPhotosPage({
   const byYear = new Map<number, Map<string, typeof items>>();
 
   for (const photo of queryResult.items) {
-    const year = photo.takenDate ? new Date(photo.takenDate).getFullYear() : 0;
+    let year = 0;
+    if (photo.takenDate) {
+      const parsed = parseISO(photo.takenDate);
+      year = isValid(parsed) ? getYear(parsed) : 0;
+    }
     let yearMap = byYear.get(year);
     if (!yearMap) {
       yearMap = new Map();
