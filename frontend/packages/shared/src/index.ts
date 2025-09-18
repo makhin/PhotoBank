@@ -1,13 +1,39 @@
 // packages/shared/src/index.ts
-import {format, parseISO} from "date-fns";
 
-export const formatDate = (dateString?: string) => {
-  if (!dateString) return 'не указана дата';
-  try {
-    return format(parseISO(dateString), 'dd.MM.yyyy, HH:mm');
-  } catch {
+type FlexibleDateInput = string | number | Date | null | undefined;
+
+const ruDateTimeFormatter = new Intl.DateTimeFormat('ru-RU', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
+
+export const formatDate = (dateInput?: FlexibleDateInput) => {
+  if (dateInput === null || dateInput === undefined) return 'не указана дата';
+  if (typeof dateInput === 'string' && dateInput.length === 0) {
+    return 'не указана дата';
+  }
+
+  let date: Date;
+
+  if (dateInput instanceof Date) {
+    date = dateInput;
+  } else if (typeof dateInput === 'number') {
+    date = new Date(dateInput);
+  } else if (typeof dateInput === 'string') {
+    date = new Date(dateInput);
+  } else {
     return 'неверный формат даты';
   }
+
+  if (Number.isNaN(date.getTime())) {
+    return 'неверный формат даты';
+  }
+
+  return ruDateTimeFormatter.format(date);
 };
 
 export const getGenderText = (gender?: boolean | null) => {
