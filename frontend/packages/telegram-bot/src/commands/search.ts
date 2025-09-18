@@ -1,9 +1,12 @@
 import {
+  endOfDay,
   endOfMonth,
   endOfYear,
-  format as formatDfns,
+  formatISO,
   isValid,
   parse as parseDfns,
+  parseISO,
+  startOfDay,
   startOfMonth,
   startOfYear,
 } from 'date-fns';
@@ -77,37 +80,37 @@ function parseSingleLoose(str: string): { from: Date; to: Date } | null {
 }
 
 /** Диапазон A..B или одиночная дата */
-function parseDateExpr(expr: string): { from?: string; to?: string } {
+function parseDateExpr(expr: string): { from?: Date; to?: Date } {
   if (!expr) return {};
   if (expr.includes("..")) {
     const [a, b] = expr.split("..").map((s) => s.trim());
     const left = a ? parseSingleLoose(a) : null;
     const right = b ? parseSingleLoose(b) : null;
-    const res: { from?: string; to?: string } = {};
-    if (left)  res.from = formatDfns(left.from,  "yyyy-MM-dd");
-    if (right) res.to   = formatDfns(right.to,   "yyyy-MM-dd");
+    const res: { from?: Date; to?: Date } = {};
+    if (left) res.from = startOfDay(left.from);
+    if (right) res.to = endOfDay(right.to);
     return res;
   }
   const one = parseSingleLoose(expr);
   if (!one) return {};
   return {
-    from: formatDfns(one.from, "yyyy-MM-dd"),
-    to: formatDfns(one.to, "yyyy-MM-dd"),
+    from: startOfDay(one.from),
+    to: endOfDay(one.to),
   };
 }
 
 /** before:VAL → только верхняя граница */
-function parseBefore(val?: string): { to?: string } {
+function parseBefore(val?: string): { to?: Date } {
   if (!val) return {};
   const p = parseSingleLoose(val);
-  return p ? { to: formatDfns(p.to, "yyyy-MM-dd") } : {};
+  return p ? { to: endOfDay(p.to) } : {};
 }
 
 /** after:VAL → только нижняя граница */
-function parseAfter(val?: string): { from?: string } {
+function parseAfter(val?: string): { from?: Date } {
   if (!val) return {};
   const p = parseSingleLoose(val);
-  return p ? { from: formatDfns(p.from, "yyyy-MM-dd") } : {};
+  return p ? { from: startOfDay(p.from) } : {};
 }
 
 /* ===================== парсер → FilterDto ===================== */
@@ -129,8 +132,8 @@ function parseArgsToFilter(raw: string): FilterDto {
   const personNames: string[] = [];
 
   const rest: string[] = [];
-  let takenDateFrom: string | undefined;
-  let takenDateTo: string | undefined;
+  let takenDateFrom: Date | undefined;
+  let takenDateTo: Date | undefined;
 
   for (const t of tokens) {
     const hasColon = t.includes(':');
@@ -210,28 +213,63 @@ function parseArgsToFilter(raw: string): FilterDto {
 
   const caption = rest.join(" ").trim() || undefined;
 
+  const filter: FilterDto = {};
 
+  if (caption) filter.caption = caption;
+  if (tagNames.length) filter.tagNames = Array.from(new Set(tagNames));
+  if (personNames.length) filter.personNames = Array.from(new Set(personNames));
+  if (takenDateFrom) filter.takenDateFrom = takenDateFrom;
+  if (takenDateTo) filter.takenDateTo = takenDateTo;
 
-
-  return {
-    caption,
-    tagNames: tagNames.length ? Array.from(new Set(tagNames)) : undefined,
-    personNames: personNames.length
-      ? Array.from(new Set(personNames))
-      : undefined,
-    takenDateFrom,
-    takenDateTo,
-  } as FilterDto;
+  return filter;
 }
 
 /* ===================== callback_data кодек ===================== */
 
+type SerializableFilter = Omit<FilterDto, "takenDateFrom" | "takenDateTo"> & {
+  takenDateFrom?: string | null;
+  takenDateTo?: string | null;
+};
+
 function encodeFilter(filter: FilterDto): string {
-  return Buffer.from(JSON.stringify(filter), "utf8").toString("base64url");
+  const payload: SerializableFilter = {
+    ...filter,
+    takenDateFrom:
+      filter.takenDateFrom instanceof Date
+        ? formatISO(filter.takenDateFrom)
+        : filter.takenDateFrom ?? undefined,
+    takenDateTo:
+      filter.takenDateTo instanceof Date
+        ? formatISO(filter.takenDateTo)
+        : filter.takenDateTo ?? undefined,
+  };
+  return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
 }
 function decodeFilter(b64: string): FilterDto | null {
   try {
-    return JSON.parse(Buffer.from(b64, "base64url").toString("utf8")) as FilterDto;
+    const payload = JSON.parse(
+      Buffer.from(b64, "base64url").toString("utf8"),
+    ) as SerializableFilter;
+
+    const filter: FilterDto = { ...payload };
+
+    if (typeof payload.takenDateFrom === "string") {
+      const parsed = parseISO(payload.takenDateFrom);
+      if (isValid(parsed)) filter.takenDateFrom = parsed;
+      else delete filter.takenDateFrom;
+    } else if (payload.takenDateFrom === null) {
+      filter.takenDateFrom = null;
+    }
+
+    if (typeof payload.takenDateTo === "string") {
+      const parsed = parseISO(payload.takenDateTo);
+      if (isValid(parsed)) filter.takenDateTo = parsed;
+      else delete filter.takenDateTo;
+    } else if (payload.takenDateTo === null) {
+      filter.takenDateTo = null;
+    }
+
+    return filter;
   } catch {
     return null;
   }
