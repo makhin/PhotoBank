@@ -90,7 +90,10 @@ public class AuthController(
             return NotFound();
 
         user.PhoneNumber = dto.PhoneNumber ?? user.PhoneNumber;
-        user.TelegramUserId = dto.TelegramUserId;
+        if (dto.TelegramUserId.HasValue)
+        {
+            user.TelegramUserId = dto.TelegramUserId;
+        }
         user.TelegramSendTimeUtc = dto.TelegramSendTimeUtc ?? user.TelegramSendTimeUtc;
         var result = await userManager.UpdateAsync(user);
         if (!result.Succeeded)
