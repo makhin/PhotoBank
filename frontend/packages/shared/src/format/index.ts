@@ -1,22 +1,20 @@
-export type DateInput = string | number | Date | null | undefined;
+import { format } from 'date-fns';
+
+import {
+  DEFAULT_DATE_FORMAT,
+  DEFAULT_DATE_TIME_FORMAT,
+  toDate,
+  type FlexibleDateInput,
+} from '../utils/parseDate';
+
+export type DateInput = FlexibleDateInput;
 
 const locale =
   typeof navigator !== 'undefined' && navigator.language
     ? navigator.language
     : 'en-US';
 
-const dateFormatterCache = new Map<string, Intl.DateTimeFormat>();
 const numberFormatterCache = new Map<string, Intl.NumberFormat>();
-
-function getDateFormatter(opts?: Intl.DateTimeFormatOptions) {
-  const key = JSON.stringify(opts ?? {});
-  let fmt = dateFormatterCache.get(key);
-  if (!fmt) {
-    fmt = new Intl.DateTimeFormat(locale, opts);
-    dateFormatterCache.set(key, fmt);
-  }
-  return fmt;
-}
 
 function getNumberFormatter(opts?: Intl.NumberFormatOptions) {
   const key = JSON.stringify(opts ?? {});
@@ -28,25 +26,16 @@ function getNumberFormatter(opts?: Intl.NumberFormatOptions) {
   return fmt;
 }
 
-export function formatDate(
-  d: DateInput,
-  opts?: Intl.DateTimeFormatOptions
-): string {
-  if (d === null || d === undefined) return '';
-  const date = typeof d === 'string' || typeof d === 'number' ? new Date(d) : d;
-  if (!date || isNaN(date.getTime())) return '';
-  return getDateFormatter(opts).format(date);
+export function formatDate(d: DateInput): string {
+  const date = toDate(d);
+  if (!date) return '';
+  return format(date, DEFAULT_DATE_FORMAT);
 }
 
 export function formatDateTime(d: DateInput): string {
-  return formatDate(d, {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).replace(',', '');
+  const date = toDate(d);
+  if (!date) return '';
+  return format(date, DEFAULT_DATE_TIME_FORMAT);
 }
 
 export function formatBytes(n?: number | null): string {
