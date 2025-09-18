@@ -4,7 +4,11 @@
     "jsx": "react-jsx",
     "noEmit": true,                       // фронт не эмитит; сборка делается Vite
     "moduleDetection": "force",
-    "types": ["vite/client", "vitest/globals"],
+    "types": [
+      "vite/client",
+      "vitest/globals",
+      "@testing-library/jest-dom/vitest"
+    ],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
