@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { FilterDto } from '@photobank/shared';
-import type { PhotoDto } from '@photobank/shared/api/photobank';
+import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 
 vi.mock('../services/photo', () => ({
   searchPhotos: vi.fn(),
@@ -17,7 +17,11 @@ import { searchPhotos } from '../services/photo';
 
 const searchPhotosMock = vi.mocked(searchPhotos);
 
-function createPhoto(overrides: Partial<PhotoDto> = {}): PhotoDto {
+type PhotoOverrides = Partial<Omit<PhotoItemDto, 'takenDate'>> & {
+  takenDate?: string | Date | null;
+};
+
+function createPhoto(overrides: PhotoOverrides = {}): PhotoItemDto {
   return {
     id: 1,
     name: 'Sample Photo Name',
@@ -29,7 +33,7 @@ function createPhoto(overrides: Partial<PhotoDto> = {}): PhotoDto {
     isAdultContent: false,
     isRacyContent: false,
     ...overrides,
-  } as PhotoDto;
+  } as unknown as PhotoItemDto;
 }
 
 function createContext(): MyContext {
