@@ -1,4 +1,18 @@
+import { isValid, parseISO } from 'date-fns';
 import { z } from "zod";
+
+const toFilterDate = (value: string | null): Date | null => {
+  if (!value) return null;
+
+  const iso = value.includes('T') ? value : `${value}T00:00:00Z`;
+  const parsed = parseISO(iso);
+
+  if (!isValid(parsed)) {
+    return null;
+  }
+
+  return parsed;
+};
 
 export const PhotoFilterSchema = z.object({
   personNames: z.array(z.string()).default([]),
@@ -7,21 +21,13 @@ export const PhotoFilterSchema = z.object({
     .string()
     .nullable()
     .default(null)
-    .transform((val) => {
-      if (!val) return null;
-      const iso = val.includes('T') ? val : `${val}T00:00:00Z`;
-      return new Date(iso);
-    }),
+    .transform((val) => toFilterDate(val)),
 
   dateTo: z
     .string()
     .nullable()
     .default(null)
-    .transform((val) => {
-      if (!val) return null;
-      const iso = val.includes('T') ? val : `${val}T00:00:00Z`;
-      return new Date(iso);
-    }),
+    .transform((val) => toFilterDate(val)),
 });
 
 export const photoFilterSchemaForLLM = {
