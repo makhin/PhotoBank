@@ -1,7 +1,11 @@
 import * as React from 'react';
 import { render, screen, renderHook } from '@testing-library/react';
 import { compareAsc, parseISO } from 'date-fns';
-import type { CellContext, ColumnDef } from '@tanstack/react-table';
+import type {
+  AccessorFnColumnDef,
+  CellContext,
+  ColumnDef,
+} from '@tanstack/react-table';
 import {
   beforeEach,
   describe,
@@ -13,18 +17,16 @@ import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 
 import { usePhotoColumns } from './photoColumns';
 
-type AccessorColumn = ColumnDef<PhotoItemDto> & {
-  accessorFn: (row: PhotoItemDto, index: number) => unknown;
-  cell: (context: CellContext<PhotoItemDto, unknown>) => React.ReactNode;
-};
-
-const isDateColumn = (
+const hasAccessorFn = (
   column: ColumnDef<PhotoItemDto>,
-): column is AccessorColumn =>
-  column.id === 'date' &&
-  'accessorFn' in column &&
-  typeof column.accessorFn === 'function' &&
-  typeof column.cell === 'function';
+): column is AccessorFnColumnDef<PhotoItemDto, unknown> =>
+  'accessorFn' in column && typeof column.accessorFn === 'function';
+
+const hasCellRenderer = (
+  column: AccessorFnColumnDef<PhotoItemDto, unknown>,
+): column is AccessorFnColumnDef<PhotoItemDto, unknown> & {
+  cell: (context: CellContext<PhotoItemDto, unknown>) => React.ReactNode;
+} => typeof column.cell === 'function';
 
 type MockRootState = {
   metadata: {
@@ -61,9 +63,11 @@ describe('usePhotoColumns - date column', () => {
 
   it('renders taken date in DD.MM.YYYY format', () => {
     const { result } = renderHook(() => usePhotoColumns());
-    const dateColumn = result.current.find(isDateColumn);
+    const dateColumn = result.current.find((column) => column.id === 'date');
     expect(dateColumn).toBeDefined();
-    if (!dateColumn) return;
+    if (!dateColumn || !hasAccessorFn(dateColumn) || !hasCellRenderer(dateColumn)) {
+      return;
+    }
     const photo = createPhoto(1, '2024-06-07T10:15:00+03:00');
     const isoValue = dateColumn.accessorFn(photo, 0) as string;
     const cellNode = dateColumn.cell({ getValue: () => isoValue } as never);
@@ -75,9 +79,11 @@ describe('usePhotoColumns - date column', () => {
 
   it('returns ISO strings that preserve chronological sorting', () => {
     const { result } = renderHook(() => usePhotoColumns());
-    const dateColumn = result.current.find(isDateColumn);
+    const dateColumn = result.current.find((column) => column.id === 'date');
     expect(dateColumn).toBeDefined();
-    if (!dateColumn) return;
+    if (!dateColumn || !hasAccessorFn(dateColumn) || !hasCellRenderer(dateColumn)) {
+      return;
+    }
 
     const photos = [
       createPhoto(1, '2024-06-07T10:15:00+03:00'),
