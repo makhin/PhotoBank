@@ -2,6 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { InputFile } from 'grammy';
 import type { PhotoDto } from '@photobank/shared/api/photobank';
 
+import { formatPhotoMessage } from './formatPhotoMessage';
 import { loadPhotoFile } from './photo';
 
 function createPhoto(overrides: Partial<PhotoDto> = {}): PhotoDto {
@@ -11,6 +12,22 @@ function createPhoto(overrides: Partial<PhotoDto> = {}): PhotoDto {
     ...overrides,
   } as PhotoDto;
 }
+
+describe('formatPhotoMessage', () => {
+  it('formats ISO string takenDate values without throwing', () => {
+    const isoString = '2023-02-01T15:30:00.000Z';
+    const photo = createPhoto({
+      takenDate: isoString as unknown as Date,
+    });
+
+    let result: ReturnType<typeof formatPhotoMessage> | undefined;
+    expect(() => {
+      result = formatPhotoMessage(photo);
+    }).not.toThrow();
+
+    expect(result?.caption).toContain('📅 01.02.2023');
+  });
+});
 
 describe('loadPhotoFile', () => {
   afterEach(() => {
