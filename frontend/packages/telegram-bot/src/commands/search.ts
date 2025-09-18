@@ -232,16 +232,19 @@ type SerializableFilter = Omit<FilterDto, "takenDateFrom" | "takenDateTo"> & {
 };
 
 function encodeFilter(filter: FilterDto): string {
+  const { takenDateFrom, takenDateTo, ...rest } = filter;
   const payload: SerializableFilter = {
-    ...filter,
-    takenDateFrom:
-      filter.takenDateFrom instanceof Date
-        ? formatISO(filter.takenDateFrom)
-        : filter.takenDateFrom ?? undefined,
-    takenDateTo:
-      filter.takenDateTo instanceof Date
-        ? formatISO(filter.takenDateTo)
-        : filter.takenDateTo ?? undefined,
+    ...rest,
+    ...(takenDateFrom !== undefined && {
+      takenDateFrom:
+        takenDateFrom instanceof Date
+          ? formatISO(takenDateFrom)
+          : takenDateFrom,
+    }),
+    ...(takenDateTo !== undefined && {
+      takenDateTo:
+        takenDateTo instanceof Date ? formatISO(takenDateTo) : takenDateTo,
+    }),
   };
   return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
 }
@@ -251,21 +254,22 @@ function decodeFilter(b64: string): FilterDto | null {
       Buffer.from(b64, "base64url").toString("utf8"),
     ) as SerializableFilter;
 
-    const filter: FilterDto = { ...payload };
+    const { takenDateFrom, takenDateTo, ...rest } = payload;
+    const filter: FilterDto = { ...rest };
 
-    if (typeof payload.takenDateFrom === "string") {
-      const parsed = parseISO(payload.takenDateFrom);
+    if (typeof takenDateFrom === "string") {
+      const parsed = parseISO(takenDateFrom);
       if (isValid(parsed)) filter.takenDateFrom = parsed;
       else delete filter.takenDateFrom;
-    } else if (payload.takenDateFrom === null) {
+    } else if (takenDateFrom === null) {
       filter.takenDateFrom = null;
     }
 
-    if (typeof payload.takenDateTo === "string") {
-      const parsed = parseISO(payload.takenDateTo);
+    if (typeof takenDateTo === "string") {
+      const parsed = parseISO(takenDateTo);
       if (isValid(parsed)) filter.takenDateTo = parsed;
       else delete filter.takenDateTo;
-    } else if (payload.takenDateTo === null) {
+    } else if (takenDateTo === null) {
       filter.takenDateTo = null;
     }
 
