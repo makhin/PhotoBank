@@ -62,9 +62,22 @@ export async function sendPhotosPage({
 
   for (const photo of queryResult.items) {
     let year = 0;
-    if (photo.takenDate) {
-      const parsed = parseISO(photo.takenDate);
-      year = isValid(parsed) ? getYear(parsed) : 0;
+    const rawTakenDate = photo.takenDate;
+    let parsedDate: Date | null = null;
+
+    if (rawTakenDate instanceof Date) {
+      parsedDate = rawTakenDate;
+    } else {
+      const maybeTakenDateString = rawTakenDate as unknown;
+      if (typeof maybeTakenDateString === 'string') {
+        parsedDate = parseISO(maybeTakenDateString);
+      }
+    }
+
+    if (parsedDate) {
+      if (isValid(parsedDate)) {
+        year = getYear(parsedDate);
+      }
     }
     let yearMap = byYear.get(year);
     if (!yearMap) {
