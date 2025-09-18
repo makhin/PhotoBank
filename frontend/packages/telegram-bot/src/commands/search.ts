@@ -255,23 +255,30 @@ function decodeFilter(b64: string): FilterDto | null {
     ) as SerializableFilter;
 
     const { takenDateFrom, takenDateTo, ...rest } = payload;
-    const filter: FilterDto = { ...rest };
 
+    let parsedTakenDateFrom: Date | null | undefined;
     if (typeof takenDateFrom === "string") {
       const parsed = parseISO(takenDateFrom);
-      if (isValid(parsed)) filter.takenDateFrom = parsed;
-      else delete filter.takenDateFrom;
+      if (isValid(parsed)) parsedTakenDateFrom = parsed;
     } else if (takenDateFrom === null) {
-      filter.takenDateFrom = null;
+      parsedTakenDateFrom = null;
     }
 
+    let parsedTakenDateTo: Date | null | undefined;
     if (typeof takenDateTo === "string") {
       const parsed = parseISO(takenDateTo);
-      if (isValid(parsed)) filter.takenDateTo = parsed;
-      else delete filter.takenDateTo;
+      if (isValid(parsed)) parsedTakenDateTo = parsed;
     } else if (takenDateTo === null) {
-      filter.takenDateTo = null;
+      parsedTakenDateTo = null;
     }
+
+    const filter: FilterDto = {
+      ...rest,
+      ...(parsedTakenDateFrom !== undefined && {
+        takenDateFrom: parsedTakenDateFrom,
+      }),
+      ...(parsedTakenDateTo !== undefined && { takenDateTo: parsedTakenDateTo }),
+    };
 
     return filter;
   } catch {
