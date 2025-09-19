@@ -6,7 +6,13 @@ import type { MyContext } from '../i18n';
 import { i18n } from '../i18n';
 import { sendThisDayPage } from './thisday';
 
-export const subscriptions = new Map<number, { time: string; locale: string }>();
+type SubscriptionInfo = {
+  time: string;
+  locale: string;
+  from: NonNullable<MyContext['from']>;
+};
+
+export const subscriptions = new Map<number, SubscriptionInfo>();
 
 export function parseSubscribeTime(text?: string): string | null {
   if (!text) return null;
@@ -29,12 +35,17 @@ export async function subscribeCommand(ctx: MyContext) {
     await ctx.reply(ctx.t('chat-undetermined'));
     return;
   }
+  if (!ctx.from) {
+    await ctx.reply(ctx.t('chat-undetermined'));
+    return;
+  }
   const dto: UpdateUserDto & { telegramSendTimeUtc: string } = {
     telegramSendTimeUtc: `${time}:00`,
   };
   await updateUser(ctx, dto);
   const locale = await ctx.i18n.getLocale();
-  subscriptions.set(ctx.chat.id, { time, locale });
+  const fromSnapshot: NonNullable<MyContext['from']> = { ...ctx.from };
+  subscriptions.set(ctx.chat.id, { time, locale, from: fromSnapshot });
   await ctx.reply(ctx.t('subscription-confirmed', { time }));
 }
 
@@ -45,12 +56,18 @@ export function initSubscriptionScheduler(bot: Bot<MyContext>) {
       const current = `${String(now.getUTCHours()).padStart(2, "0")}:${String(now.getUTCMinutes()).padStart(2, "0")}`;
       for (const [chatId, info] of subscriptions.entries()) {
         if (info.time === current) {
+          const from = { ...info.from } as NonNullable<MyContext['from']>;
+          const translate = ((key: Parameters<MyContext['t']>[0], params?: Parameters<MyContext['t']>[1]) =>
+            i18n.t(info.locale, key, params)) as MyContext['t'];
           const ctxLike = {
             message: { text: '/thisday' },
+            chat: { id: chatId } as MyContext['chat'],
+            from,
             reply: (text: string, opts?: Record<string, unknown>) =>
               bot.api.sendMessage(chatId, text, opts),
-            t: (key: string) => i18n.t(info.locale, key),
-            i18n: { getLocale: () => info.locale } as unknown as MyContext['i18n'],
+            t: translate,
+            i18n: { getLocale: async () => info.locale } as unknown as MyContext['i18n'],
+            api: bot.api,
           } as unknown as MyContext;
           await sendThisDayPage(ctxLike, 1);
         }
