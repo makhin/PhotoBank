@@ -14,7 +14,7 @@ import { captionCache } from "./photo";
 import { sendSearchPage, searchCommand, decodeSearchCallback } from "./commands/search";
 import { aiCommand, sendAiPage } from "./commands/ai";
 import { helpCommand } from "./commands/help";
-import { subscribeCommand, initSubscriptionScheduler } from "./commands/subscribe";
+import { subscribeCommand, initSubscriptionScheduler, restoreSubscriptions } from "./commands/subscribe";
 import { tagsCommand, sendTagsPage } from "./commands/tags";
 import { personsCommand, sendPersonsPage } from "./commands/persons";
 import { storagesCommand, sendStoragesPage } from "./commands/storages";
@@ -205,4 +205,5 @@ await bot.api.setMyCommands(groupCommands('ru'), {
 
 bot.start();
 logger.info('bot started');
+await restoreSubscriptions(bot);
 initSubscriptionScheduler(bot);

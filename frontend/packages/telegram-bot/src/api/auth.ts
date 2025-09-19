@@ -1,4 +1,5 @@
 import { configureApi } from '@photobank/shared';
+import type { TelegramSubscriptionDto } from '@photobank/shared/api/photobank';
 import { customFetcher } from '@photobank/shared/api/photobank/fetcher';
 
 import { BOT_SERVICE_KEY } from '../config';
@@ -23,4 +24,17 @@ export async function exchangeTelegramUserToken(telegramUserId: number, username
     },
   );
   return res.data;
+}
+
+export async function fetchTelegramSubscriptions(): Promise<TelegramSubscriptionDto[]> {
+  const res = await customFetcher<{ data: TelegramSubscriptionDto[] }>(
+    '/auth/telegram/subscriptions',
+    {
+      method: 'GET',
+      headers: {
+        'X-Service-Key': serviceKey,
+      },
+    },
+  );
+  return res.data ?? [];
 }
