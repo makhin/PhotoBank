@@ -1,9 +1,11 @@
 import { Bot } from 'grammy';
-import type { UpdateUserDto } from '@photobank/shared/api/photobank';
+import type { TelegramSubscriptionDto, UpdateUserDto } from '@photobank/shared/api/photobank';
 
+import { fetchTelegramSubscriptions } from '../api/auth';
 import { updateUser } from '../services/auth';
 import type { MyContext } from '../i18n';
 import { i18n } from '../i18n';
+import { logger } from '../logger';
 import { sendThisDayPage } from './thisday';
 
 type SubscriptionInfo = {
@@ -13,6 +15,57 @@ type SubscriptionInfo = {
 };
 
 export const subscriptions = new Map<number, SubscriptionInfo>();
+
+const DEFAULT_LOCALE = 'en';
+
+function normalizeSubscriptionTime(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes)) return null;
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+}
+
+async function buildFromSnapshot(
+  bot: Bot<MyContext>,
+  chatId: number,
+): Promise<NonNullable<MyContext['from']>> {
+  const base: NonNullable<MyContext['from']> = {
+    id: chatId,
+    is_bot: false,
+    first_name: 'Telegram user',
+  } as NonNullable<MyContext['from']>;
+
+  const getChat = bot.api?.getChat?.bind(bot.api);
+  if (typeof getChat !== 'function') return base;
+
+  try {
+    const chat = await getChat(chatId);
+    if (chat && typeof chat === 'object') {
+      if ('first_name' in chat && chat.first_name) {
+        base.first_name = chat.first_name;
+      }
+      if ('last_name' in chat && chat.last_name) {
+        base.last_name = chat.last_name;
+      }
+      if ('username' in chat && chat.username) {
+        base.username = chat.username;
+      }
+    }
+  } catch (error) {
+    logger.warn('Failed to enrich restored subscription with chat info', chatId, error);
+  }
+
+  return base;
+}
+
+function isValidSubscription(entry: TelegramSubscriptionDto | undefined): entry is TelegramSubscriptionDto {
+  return !!entry && typeof entry.telegramUserId === 'number' && Number.isFinite(entry.telegramUserId);
+}
 
 export function parseSubscribeTime(text?: string): string | null {
   if (!text) return null;
@@ -47,6 +100,40 @@ export async function subscribeCommand(ctx: MyContext) {
   const fromSnapshot: NonNullable<MyContext['from']> = { ...ctx.from };
   subscriptions.set(ctx.chat.id, { time, locale, from: fromSnapshot });
   await ctx.reply(ctx.t('subscription-confirmed', { time }));
+}
+
+export async function restoreSubscriptions(bot: Bot<MyContext>): Promise<void> {
+  let stored: TelegramSubscriptionDto[];
+  try {
+    stored = await fetchTelegramSubscriptions();
+  } catch (error) {
+    logger.error('Failed to fetch saved Telegram subscriptions', error);
+    return;
+  }
+
+  if (!Array.isArray(stored) || stored.length === 0) return;
+
+  for (const entry of stored) {
+    if (!isValidSubscription(entry)) {
+      logger.warn('Skipping restored subscription due to invalid payload', entry);
+      continue;
+    }
+
+    const normalizedTime = normalizeSubscriptionTime(entry.telegramSendTimeUtc);
+    if (!normalizedTime) {
+      logger.warn('Skipping restored subscription due to invalid time', entry);
+      continue;
+    }
+
+    const from = await buildFromSnapshot(bot, entry.telegramUserId);
+    const locale = DEFAULT_LOCALE;
+
+    subscriptions.set(entry.telegramUserId, {
+      time: normalizedTime,
+      locale,
+      from,
+    });
+  }
 }
 
 export function initSubscriptionScheduler(bot: Bot<MyContext>) {
