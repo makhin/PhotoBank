@@ -8,6 +8,8 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Api;
 using PhotoBank.AccessControl;
 using PhotoBank.ViewModel.Dto;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 
 namespace PhotoBank.Api.Controllers;
@@ -105,6 +107,32 @@ public class AuthController(
     public record TelegramExchangeRequest(long TelegramUserId, string? Username);
     public record TelegramExchangeResponse(string AccessToken, int ExpiresIn);
 
+    [HttpGet("telegram/subscriptions")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(IEnumerable<TelegramSubscriptionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetTelegramSubscriptions()
+    {
+        var unauthorized = ValidateServiceKey();
+        if (unauthorized is not null)
+        {
+            return unauthorized;
+        }
+
+        var subscriptions = await userManager.Users
+            .AsNoTracking()
+            .Where(u => u.TelegramUserId != null && u.TelegramSendTimeUtc != null)
+            .OrderBy(u => u.TelegramSendTimeUtc)
+            .Select(u => new TelegramSubscriptionDto
+            {
+                TelegramUserId = u.TelegramUserId!.Value,
+                TelegramSendTimeUtc = u.TelegramSendTimeUtc!.Value
+            })
+            .ToListAsync();
+
+        return Ok(subscriptions);
+    }
+
     [HttpPost("telegram/exchange")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(TelegramExchangeResponse), StatusCodes.Status200OK)]
@@ -112,20 +140,9 @@ public class AuthController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> TelegramExchange([FromBody] TelegramExchangeRequest req)
     {
-        var configuredKey = configuration["Auth:Telegram:ServiceKey"];
-        var presentedKey = Request.Headers["X-Service-Key"].ToString();
-        if (string.IsNullOrWhiteSpace(configuredKey) || presentedKey != configuredKey)
+        var unauthorized = ValidateServiceKey();
+        if (unauthorized is not null)
         {
-            var unauthorized = Problem(
-                title: "Unauthorized",
-                statusCode: StatusCodes.Status401Unauthorized,
-                detail: "Invalid service key");
-
-            if (unauthorized is ObjectResult unauthorizedObject)
-            {
-                unauthorizedObject.ContentTypes.Add("application/problem+json");
-            }
-
             return unauthorized;
         }
 
@@ -154,6 +171,28 @@ public class AuthController(
         var expiresIn = 3600;
 
         return Ok(new TelegramExchangeResponse(token, expiresIn));
+    }
+
+    private ActionResult? ValidateServiceKey()
+    {
+        var configuredKey = configuration["Auth:Telegram:ServiceKey"];
+        var presentedKey = Request.Headers["X-Service-Key"].ToString();
+        if (string.IsNullOrWhiteSpace(configuredKey) || presentedKey != configuredKey)
+        {
+            var unauthorized = Problem(
+                title: "Unauthorized",
+                statusCode: StatusCodes.Status401Unauthorized,
+                detail: "Invalid service key");
+
+            if (unauthorized is ObjectResult unauthorizedObject)
+            {
+                unauthorizedObject.ContentTypes.Add("application/problem+json");
+            }
+
+            return unauthorized;
+        }
+
+        return null;
     }
 
     [HttpGet("debug/effective-access")]
