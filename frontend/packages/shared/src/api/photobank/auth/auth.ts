@@ -25,6 +25,7 @@ import type {
   RegisterRequestDto,
   TelegramExchangeRequest,
   TelegramExchangeResponse,
+  TelegramSubscriptionDto,
   UpdateUserDto,
   UserDto
 } from '../photoBankApi.schemas';
@@ -360,7 +361,88 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
       return useMutation(mutationOptions );
     }
-    export type authTelegramExchangeResponse200 = {
+    export type authGetTelegramSubscriptionsResponse200 = {
+  data: TelegramSubscriptionDto[]
+  status: 200
+}
+
+export type authGetTelegramSubscriptionsResponse401 = {
+  data: ProblemDetails
+  status: 401
+}
+    
+export type authGetTelegramSubscriptionsResponseComposite = authGetTelegramSubscriptionsResponse200 | authGetTelegramSubscriptionsResponse401;
+    
+export type authGetTelegramSubscriptionsResponse = authGetTelegramSubscriptionsResponseComposite & {
+  headers: Headers;
+}
+
+export const getAuthGetTelegramSubscriptionsUrl = () => {
+
+
+  
+
+  return `/auth/telegram/subscriptions`
+}
+
+export const authGetTelegramSubscriptions = async ( options?: RequestInit): Promise<authGetTelegramSubscriptionsResponse> => {
+  
+  return customFetcher<authGetTelegramSubscriptionsResponse>(getAuthGetTelegramSubscriptionsUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+export const getAuthGetTelegramSubscriptionsQueryKey = () => {
+    return [`/auth/telegram/subscriptions`] as const;
+    }
+
+    
+export const getAuthGetTelegramSubscriptionsQueryOptions = <TData = Awaited<ReturnType<typeof authGetTelegramSubscriptions>>, TError = ProblemDetails>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetTelegramSubscriptions>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAuthGetTelegramSubscriptionsQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetTelegramSubscriptions>>> = () => authGetTelegramSubscriptions(requestOptions);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authGetTelegramSubscriptions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type AuthGetTelegramSubscriptionsQueryResult = NonNullable<Awaited<ReturnType<typeof authGetTelegramSubscriptions>>>
+export type AuthGetTelegramSubscriptionsQueryError = ProblemDetails
+
+
+
+export function useAuthGetTelegramSubscriptions<TData = Awaited<ReturnType<typeof authGetTelegramSubscriptions>>, TError = ProblemDetails>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetTelegramSubscriptions>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getAuthGetTelegramSubscriptionsQueryOptions(options)
+
+  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+export type authTelegramExchangeResponse200 = {
   data: TelegramExchangeResponse
   status: 200
 }

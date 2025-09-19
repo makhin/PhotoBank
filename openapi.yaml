@@ -295,6 +295,34 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /auth/telegram/subscriptions:
+    get:
+      tags:
+        - Auth
+      operationId: Auth_GetTelegramSubscriptions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TelegramSubscriptionDto'
+            text/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TelegramSubscriptionDto'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /auth/telegram/exchange:
     post:
       tags:
@@ -1711,6 +1739,19 @@ components:
         expiresIn:
           type: integer
           format: int32
+      additionalProperties: false
+    TelegramSubscriptionDto:
+      required:
+        - telegramSendTimeUtc
+        - telegramUserId
+      type: object
+      properties:
+        telegramUserId:
+          type: integer
+          format: int64
+        telegramSendTimeUtc:
+          type: string
+          format: date-span
       additionalProperties: false
     ThisDayDto:
       type: object

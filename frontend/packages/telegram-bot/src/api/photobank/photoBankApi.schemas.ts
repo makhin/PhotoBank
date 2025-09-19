@@ -289,6 +289,11 @@ export interface TelegramExchangeResponse {
   expiresIn?: number;
 }
 
+export interface TelegramSubscriptionDto {
+  telegramUserId: number;
+  telegramSendTimeUtc: string;
+}
+
 export interface ThisDayDto {
   day?: number;
   month?: number;

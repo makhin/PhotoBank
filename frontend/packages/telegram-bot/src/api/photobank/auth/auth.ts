@@ -10,6 +10,7 @@ import type {
   RegisterRequestDto,
   TelegramExchangeRequest,
   TelegramExchangeResponse,
+  TelegramSubscriptionDto,
   UpdateUserDto,
   UserDto
 } from '../photoBankApi.schemas';
@@ -59,6 +60,14 @@ const authLogin = (
     },
       options);
     }
+  const authGetTelegramSubscriptions = (
+    
+ options?: SecondParameter<typeof photobankAxios>,) => {
+      return photobankAxios<TelegramSubscriptionDto[]>(
+      {url: `/auth/telegram/subscriptions`, method: 'GET'
+    },
+      options);
+    }
   const authTelegramExchange = (
     telegramExchangeRequest: TelegramExchangeRequest,
  options?: SecondParameter<typeof photobankAxios>,) => {
@@ -77,10 +86,11 @@ const authLogin = (
     },
       options);
     }
-  return {authLogin,authRegister,authGetUser,authUpdateUser,authTelegramExchange,authGetEffective}};
+  return {authLogin,authRegister,authGetUser,authUpdateUser,authGetTelegramSubscriptions,authTelegramExchange,authGetEffective}};
 export type AuthLoginResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authLogin']>>>
 export type AuthRegisterResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authRegister']>>>
 export type AuthGetUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetUser']>>>
 export type AuthUpdateUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authUpdateUser']>>>
+export type AuthGetTelegramSubscriptionsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetTelegramSubscriptions']>>>
 export type AuthTelegramExchangeResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authTelegramExchange']>>>
 export type AuthGetEffectiveResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAuth>['authGetEffective']>>>
