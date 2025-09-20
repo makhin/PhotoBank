@@ -5,6 +5,7 @@ using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace PhotoBank.Api.Controllers
 {
@@ -22,7 +23,8 @@ namespace PhotoBank.Api.Controllers
         public async Task<ActionResult<PageResponse<PhotoItemDto>>> SearchPhotos([FromBody] FilterDto request)
         {
             logger.LogInformation("Searching photos with filter {@Filter}", request);
-            var result = await photoService.GetAllPhotosAsync(request, HttpContext.RequestAborted);
+            var cancellationToken = HttpContext?.RequestAborted ?? CancellationToken.None;
+            var result = await photoService.GetAllPhotosAsync(request, cancellationToken);
             logger.LogInformation("Found {Count} photos", result.TotalCount);
             return Ok(result);
         }
