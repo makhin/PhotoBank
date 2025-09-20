@@ -69,10 +69,10 @@ export const loadMetadata = createAsyncThunk('metadata/load', async (_, { signal
     if (fromCache) return fromCache;
 
     const { tags, persons, paths, storages } = await fetchReferenceData({
-        fetchTags: () => Api.tagsGetAll({ signal }).then((response) => response.data),
+        fetchTags: () => Api.getTags({ signal }).then((response) => response.data),
         fetchPersons: () => Api.personsGetAll({ signal }).then((response) => response.data),
-        fetchStorages: () => Api.storagesGetAll({ signal }).then((response) => response.data),
-        fetchPaths: () => Api.pathsGetAll({ signal }).then((response) => response.data),
+        fetchStorages: () => Api.getStorages({ signal }).then((response) => response.data),
+        fetchPaths: () => Api.getPaths({ signal }).then((response) => response.data),
     });
 
     const result: MetadataPayload = {
