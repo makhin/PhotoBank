@@ -1,12 +1,9 @@
 import * as React from 'react';
 import { format, formatISO, isValid, parseISO } from 'date-fns';
 import type { ColumnDef } from '@tanstack/react-table';
-import type {
-  PhotoItemDto,
-  PersonItemDto,
-  TagItemDto,
-} from '@photobank/shared/api/photobank';
+import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 
+import MetadataBadgeList from '@/components/MetadataBadgeList';
 import { Badge } from '@/shared/ui/badge';
 import { buildThumbnailUrl } from '@/shared/utils/buildThumbnailUrl';
 import { useAppSelector } from '@/app/hook';
@@ -16,63 +13,10 @@ import {
   selectMetadataLoaded,
 } from '@/features/metadata/selectors';
 
-function BadgeList({
-                     items,
-                     max = 8,
-                     variant = 'outline',
-                   }: {
-  items: string[];
-  max?: number;
-  variant?: 'outline' | 'secondary' | 'destructive' | null | undefined;
-}) {
-  if (!items.length) return null;
-  const visible = items.slice(0, max);
-  const rest = items.length - visible.length;
-
-  return (
-    <div className="flex flex-wrap gap-1">
-      {visible.map((n) => (
-        <Badge key={n} variant={variant ?? 'outline'}>
-          {n}
-        </Badge>
-      ))}
-      {rest > 0 && <span className="text-xs text-muted-foreground">+{rest}</span>}
-    </div>
-  );
-}
-
-function extractNames<T>(
-  items: T[] | null | undefined,
-  pickId: (item: T) => number | null | undefined,
-  dict: Map<number, string>,
-  enabled: boolean,
-): string[] {
-  if (!enabled || !items?.length) return [];
-  const names = items
-    .map((it) => {
-      const id = pickId(it);
-      return id != null ? dict.get(id) : undefined;
-    })
-    .filter(Boolean) as string[];
-  return Array.from(new Set(names));
-}
-
 export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
   const personsMap = useAppSelector(selectPersonsMap);
   const tagsMap = useAppSelector(selectTagsMap);
   const metaLoaded = useAppSelector(selectMetadataLoaded);
-
-  const extractPersonNames = React.useCallback(
-    (persons: PersonItemDto[] | null | undefined) =>
-      extractNames(persons, (p) => p.personId, personsMap, metaLoaded),
-    [personsMap, metaLoaded],
-  );
-
-  const extractTagNames = React.useCallback(
-    (tags: TagItemDto[] | null | undefined) =>
-      extractNames(tags, (t) => t.tagId, tagsMap, metaLoaded),
-    [tagsMap, metaLoaded],
-  );
 
   return React.useMemo<ColumnDef<PhotoItemDto>[]>(() => [
     {
@@ -139,8 +83,17 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
       id: 'people',
       header: 'People',
       cell: ({ row }) => {
-        const names = extractPersonNames(row.original.persons);
-        return <BadgeList items={names} max={6} variant="secondary" />;
+        const items = metaLoaded
+          ? row.original.persons?.map((person) => person.personId) ?? []
+          : [];
+        return (
+          <MetadataBadgeList
+            items={items}
+            map={personsMap}
+            maxVisible={6}
+            variant="secondary"
+          />
+        );
       },
       size: 240,
     },
@@ -148,8 +101,17 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
       id: 'tags',
       header: 'Tags',
       cell: ({ row }) => {
-        const names = extractTagNames(row.original.tags);
-        return <BadgeList items={names} max={8} variant="outline" />;
+        const items = metaLoaded
+          ? row.original.tags?.map((tag) => tag.tagId) ?? []
+          : [];
+        return (
+          <MetadataBadgeList
+            items={items}
+            map={tagsMap}
+            maxVisible={8}
+            variant="outline"
+          />
+        );
       },
       size: 320,
     },
@@ -168,5 +130,5 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
       },
       size: 140,
     },
-  ], [extractPersonNames, extractTagNames]);
+  ], [metaLoaded, personsMap, tagsMap]);
 }
