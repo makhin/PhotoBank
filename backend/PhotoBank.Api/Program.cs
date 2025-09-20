@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using PhotoBank.DbContext.DbContext;
-using PhotoBank.DependencyInjection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Serilog;
-using HealthChecks.UI.Client;
+using PhotoBank.Api.MinimalApi;
 using PhotoBank.Api.Swagger;
+using PhotoBank.DbContext.DbContext;
+using PhotoBank.DependencyInjection;
+using PhotoBank.ViewModel.Dto;
+using HealthChecks.UI.Client;
+using Serilog;
 using System.Reflection;
 
 namespace PhotoBank.Api
@@ -117,6 +119,10 @@ namespace PhotoBank.Api
             app.UseAuthentication();
             // имперсонификация удалена
             app.UseAuthorization();
+
+            app.MapPhotoServiceCollection<PathDto>("/Paths", service => service.GetAllPathsAsync(), tag: "Paths");
+            app.MapPhotoServiceCollection<TagDto>("/Tags", service => service.GetAllTagsAsync(), tag: "Tags");
+            app.MapPhotoServiceCollection<StorageDto>("/Storages", service => service.GetAllStoragesAsync(), tag: "Storages");
 
             app.MapControllers();
 
