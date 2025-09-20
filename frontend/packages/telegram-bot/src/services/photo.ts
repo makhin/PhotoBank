@@ -6,32 +6,19 @@ import {
   type PhotosGetPhotoResult,
   type PhotosSearchPhotosResult,
 } from '../api/photobank/photos/photos';
-import { setRequestContext } from '../api/axios-instance';
-import { handleServiceError } from '../errorHandler';
+import { callWithContext } from './call-with-context';
 
 const { photosSearchPhotos, photosGetPhoto, photosUpload } = getPhotos();
 
 export async function searchPhotos(ctx: Context, filter: FilterDto): Promise<PhotosSearchPhotosResult> {
-  try {
-    setRequestContext(ctx);
-    return await photosSearchPhotos(filter);
-  } catch (err: unknown) {
-    handleServiceError(err);
-    throw err;
-  }
+  return callWithContext(ctx, photosSearchPhotos, filter);
 }
 
 export async function getPhoto(
   ctx: Context,
   id: number,
 ): Promise<PhotosGetPhotoResult> {
-  try {
-    setRequestContext(ctx);
-    return await photosGetPhoto(id);
-  } catch (err: unknown) {
-    handleServiceError(err);
-    throw err;
-  }
+  return callWithContext(ctx, photosGetPhoto, id);
 }
 
 export type UploadFile = { data: BlobPart | ArrayBuffer | Uint8Array; name: string };
@@ -42,11 +29,5 @@ export async function uploadPhotos(
 ) {
   const { files, storageId, path } = options;
   const blobs = files.map(({ data, name }) => new File([data as BlobPart], name));
-  try {
-    setRequestContext(ctx);
-    return await photosUpload({ files: blobs, storageId, path });
-  } catch (err: unknown) {
-    handleServiceError(err);
-    throw err;
-  }
+  return callWithContext(ctx, photosUpload, { files: blobs, storageId, path });
 }
