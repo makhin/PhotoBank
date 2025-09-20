@@ -30,6 +30,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IFaceStorageService, FaceStorageService>();
         services.AddScoped<MinioObjectService>();
         services.AddScoped<IPhotoService, PhotoService>();
+        services.AddScoped<ISearchReferenceDataService, SearchReferenceDataService>();
         services.AddPhotoEvents();
         if (configuration != null)
         {

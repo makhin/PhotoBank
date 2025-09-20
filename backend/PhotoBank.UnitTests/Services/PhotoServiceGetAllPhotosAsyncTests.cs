@@ -16,10 +16,12 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Internal;
+using PhotoBank.Services.Search;
 using PhotoBank.ViewModel.Dto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PhotoBank.UnitTests.Services
@@ -49,18 +51,26 @@ namespace PhotoBank.UnitTests.Services
             services.AddDbContext<PhotoBankDbContext>(o => o.UseInMemoryDatabase(dbName));
             var provider = services.BuildServiceProvider();
             var context = provider.GetRequiredService<PhotoBankDbContext>();
+            var referenceDataService = new Mock<ISearchReferenceDataService>();
+            referenceDataService
+                .Setup(s => s.GetPersonsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<PersonDto>());
+            referenceDataService
+                .Setup(s => s.GetTagsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<TagDto>());
+
             return new PhotoService(
                 context,
                 new Repository<Photo>(provider),
                 new Repository<Person>(provider),
                 new Repository<Face>(provider),
                 new Repository<Storage>(provider),
-                new Repository<Tag>(provider),
                 new Repository<PersonGroup>(provider),
                 new Repository<PersonFace>(provider),
                 _mapper,
                 new MemoryCache(new MemoryCacheOptions()),
                 new DummyCurrentUser(),
+                referenceDataService.Object,
                 new Mock<IS3ResourceService>().Object,
                 new MinioObjectService(new Mock<IMinioClient>().Object),
                 new Mock<IMinioClient>().Object,

@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -5,7 +6,6 @@ using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
 using NUnit.Framework;
-using PhotoBank.Services.Api;
 using PhotoBank.Services.Search;
 using PhotoBank.Services.Translator;
 using PhotoBank.ViewModel.Dto;
@@ -25,11 +25,15 @@ public class SearchFilterNormalizerTests
                 new TranslateResponse(req.Texts.Select(x => x + "_en").ToArray()));
 
         var cache = new MemoryCache(new MemoryCacheOptions());
-        var photoService = new Mock<IPhotoService>();
-        photoService.Setup(s => s.GetAllPersonsAsync()).ReturnsAsync(Enumerable.Empty<PersonDto>());
-        photoService.Setup(s => s.GetAllTagsAsync()).ReturnsAsync(Enumerable.Empty<TagDto>());
+        var referenceDataService = new Mock<ISearchReferenceDataService>();
+        referenceDataService
+            .Setup(s => s.GetPersonsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<PersonDto>());
+        referenceDataService
+            .Setup(s => s.GetTagsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<TagDto>());
 
-        var normalizer = new SearchFilterNormalizer(translator.Object, cache, photoService.Object);
+        var normalizer = new SearchFilterNormalizer(translator.Object, cache, referenceDataService.Object);
 
         var normalized1 = await normalizer.NormalizeAsync(new FilterDto { Caption = "Привет" });
         normalized1.Caption.Should().Be("Привет_en");
@@ -54,11 +58,15 @@ public class SearchFilterNormalizerTests
         var persons = new[] { new PersonDto { Id = 1, Name = "John" } };
         var tags = new[] { new TagDto { Id = 10, Name = "car" } };
 
-        var photoService = new Mock<IPhotoService>();
-        photoService.Setup(s => s.GetAllPersonsAsync()).ReturnsAsync(persons);
-        photoService.Setup(s => s.GetAllTagsAsync()).ReturnsAsync(tags);
+        var referenceDataService = new Mock<ISearchReferenceDataService>();
+        referenceDataService
+            .Setup(s => s.GetPersonsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(persons);
+        referenceDataService
+            .Setup(s => s.GetTagsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tags);
 
-        var normalizer = new SearchFilterNormalizer(translator.Object, cache, photoService.Object);
+        var normalizer = new SearchFilterNormalizer(translator.Object, cache, referenceDataService.Object);
 
         var filter = new FilterDto
         {
