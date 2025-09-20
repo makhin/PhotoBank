@@ -135,36 +135,71 @@ namespace PhotoBank.Services
 
         public async Task SyncFacesToPersonAsync()
         {
-            var dbPersonFaces = await _personFaceRepository.GetAll().Include(p => p.Person).AsNoTracking().ToListAsync();
+            var dbPersonFaces = await _personFaceRepository
+                .GetAll()
+                .Include(pf => pf.Person)
+                .Include(pf => pf.Face)
+                .AsNoTracking()
+                .Select(pf => new PersonFaceSyncProjection
+                {
+                    PersonFaceId = pf.Id,
+                    PersonId = pf.PersonId,
+                    PersonExternalGuid = pf.Person.ExternalGuid,
+                    FaceId = pf.FaceId,
+                    ExternalGuid = pf.ExternalGuid,
+                    FaceKey = pf.Face != null ? pf.Face.S3Key_Image : null
+                })
+                .ToListAsync();
 
-            var groupBy = dbPersonFaces.GroupBy(x => new { x.PersonId, x.Person.ExternalGuid }, p=> new { p.FaceId, p.ExternalGuid } ,
-                (key, g) => new { Key = key, Faces = g.ToList()});
+            var groupBy = dbPersonFaces
+                .GroupBy(x => new { x.PersonId, x.PersonExternalGuid }, p => p,
+                    (key, g) => new { Key = key, Faces = g.ToList() });
 
             foreach (var dbPerson in groupBy)
             {
-                var person = await _faceClient.PersonGroupPerson.GetAsync(PersonGroupId, dbPerson.Key.ExternalGuid);
+                if (dbPerson.Key.PersonExternalGuid == Guid.Empty)
+                {
+                    continue;
+                }
+
+                var person = await _faceClient.PersonGroupPerson.GetAsync(PersonGroupId, dbPerson.Key.PersonExternalGuid);
+                var existingExternalGuids = dbPerson.Faces
+                    .Where(f => f.ExternalGuid != Guid.Empty)
+                    .Select(f => f.ExternalGuid)
+                    .ToHashSet();
 
                 foreach (var personFace in dbPerson.Faces)
                 {
-                    if (person.PersistedFaceIds.Contains(personFace.ExternalGuid))
+                    if (personFace.ExternalGuid != Guid.Empty && person.PersistedFaceIds.Contains(personFace.ExternalGuid))
                     {
                         continue;
                     }
 
-                    var dbFace = await _faceRepository.GetAsync(personFace.FaceId);
-                    if (string.IsNullOrEmpty(dbFace.S3Key_Image))
+                    if (string.IsNullOrEmpty(personFace.FaceKey))
                     {
                         continue;
                     }
 
-                    var data = await GetObjectAsync(dbFace.S3Key_Image);
+                    var data = await GetObjectAsync(personFace.FaceKey);
                     await using (var stream = new MemoryStream(data))
                     {
                         try
                         {
-                            var face = await _faceClient.PersonGroupPerson.AddFaceFromStreamAsync(PersonGroupId, person.PersonId, stream, personFace.FaceId.ToString());
-                            var link = dbPersonFaces.Single(g => g.PersonId == dbPerson.Key.PersonId && g.FaceId == personFace.FaceId);
-                            link.ExternalGuid = face.PersistedFaceId;
+                            var face = await _faceClient.PersonGroupPerson.AddFaceFromStreamAsync(
+                                PersonGroupId,
+                                person.PersonId,
+                                stream,
+                                personFace.FaceId.ToString());
+
+                            var link = new PersonFace
+                            {
+                                Id = personFace.PersonFaceId,
+                                ExternalGuid = face.PersistedFaceId
+                            };
+
+                            personFace.ExternalGuid = face.PersistedFaceId;
+                            existingExternalGuids.Add(face.PersistedFaceId);
+
                             await _personFaceRepository.UpdateAsync(link, pgf => pgf.ExternalGuid);
                         }
                         catch (Exception e)
@@ -176,7 +211,12 @@ namespace PhotoBank.Services
 
                 foreach (var persistedFaceId in person.PersistedFaceIds.Where(f => f != null))
                 {
-                    if (dbPerson.Faces.Select(f => f.ExternalGuid).ToList().Contains(persistedFaceId.Value))
+                    if (persistedFaceId == null)
+                    {
+                        continue;
+                    }
+
+                    if (existingExternalGuids.Contains(persistedFaceId.Value))
                     {
                         continue;
                     }
@@ -184,9 +224,19 @@ namespace PhotoBank.Services
                     await _faceClient.PersonGroupPerson.DeleteFaceAsync(PersonGroupId, person.PersonId, persistedFaceId.Value);
                 }
             }
-            
+
             await _faceClient.PersonGroup.TrainAsync(PersonGroupId);
             IsPersonGroupTrained = await GetTrainingStatusAsync();
+        }
+
+        private sealed class PersonFaceSyncProjection
+        {
+            public int PersonFaceId { get; init; }
+            public int PersonId { get; init; }
+            public Guid PersonExternalGuid { get; init; }
+            public int FaceId { get; init; }
+            public Guid ExternalGuid { get; set; }
+            public string? FaceKey { get; init; }
         }
 
         public async Task AddFacesToLargeFaceListAsync()
