@@ -12,6 +12,7 @@ using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
+using PhotoBank.Services.Internal;
 using PhotoBank.Services.Search;
 using PhotoBank.ViewModel.Dto;
 using System;
@@ -20,7 +21,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using PhotoBank.Services.Internal;
 
 namespace PhotoBank.Services.Api;
 
@@ -80,12 +80,6 @@ public class PhotoService : IPhotoService
     private readonly IMinioClient _minioClient;
     private readonly S3Options _s3;
 
-    private static readonly MemoryCacheEntryOptions CacheOptions = new()
-    {
-        AbsoluteExpiration = null,
-        SlidingExpiration = null
-    };
-
     public PhotoService(
         PhotoBankDbContext db,
         IRepository<Photo> photoRepository,
@@ -122,7 +116,7 @@ public class PhotoService : IPhotoService
         _s3 = s3Options?.Value ?? new S3Options();
 
         _paths = new Lazy<Task<IReadOnlyList<PathDto>>>(() =>
-            GetCachedAsync(CacheKeys.Paths(_currentUser), async () =>
+            _cache.GetOrCreateAsync(CacheKeys.Paths(_currentUser), async () =>
             {
                 var query = photoRepository.GetAll()
                     .AsNoTracking()
@@ -146,7 +140,7 @@ public class PhotoService : IPhotoService
             }));
 
         _personGroups = new Lazy<Task<IReadOnlyList<PersonGroupDto>>>(() =>
-            GetCachedAsync(CacheKeys.PersonGroups, async () =>
+            _cache.GetOrCreateAsync(CacheKeys.PersonGroups, async () =>
                 (IReadOnlyList<PersonGroupDto>)await personGroupRepository.GetAll()
                     .AsNoTracking()
                     .OrderBy(pg => pg.Name).ThenBy(pg => pg.Id)
@@ -154,7 +148,7 @@ public class PhotoService : IPhotoService
                     .ToListAsync()));
 
         _storages = new Lazy<Task<IReadOnlyList<StorageDto>>>(() =>
-            GetCachedAsync(CacheKeys.Storages(_currentUser), async () =>
+            _cache.GetOrCreateAsync(CacheKeys.Storages(_currentUser), async () =>
             {
                 var q = _storageRepository.GetAll()
                     .AsNoTracking()
@@ -165,16 +159,6 @@ public class PhotoService : IPhotoService
                     .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
             }));
-    }
-
-    private async Task<IReadOnlyList<T>> GetCachedAsync<T>(string key, Func<Task<IReadOnlyList<T>>> factory)
-    {
-        if (!_cache.TryGetValue(key, out IReadOnlyList<T> values))
-        {
-            values = await factory();
-            _cache.Set(key, values, CacheOptions);
-        }
-        return values;
     }
 
     private IQueryable<Photo> ApplyFilter(IQueryable<Photo> query, FilterDto filter)
