@@ -29,6 +29,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IFaceStorageService, FaceStorageService>();
         services.AddScoped<MinioObjectService>();
+        services.AddScoped<ISearchFilterNormalizer, SearchFilterNormalizer>();
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<ISearchReferenceDataService, SearchReferenceDataService>();
         services.AddPhotoEvents();
@@ -45,7 +46,6 @@ public static partial class ServiceCollectionExtensions
         }
         services.AddHttpClient<ITranslatorService, TranslatorService>()
             .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(100 * attempt)));
-        services.AddScoped<ISearchFilterNormalizer, SearchFilterNormalizer>();
         services.AddAutoMapper(cfg =>
         {
             cfg.AddProfile<MappingProfile>();
