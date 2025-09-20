@@ -26,12 +26,6 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
     private readonly Lazy<Task<IReadOnlyList<PersonDto>>> _persons;
     private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
 
-    private static readonly MemoryCacheEntryOptions CacheOptions = new()
-    {
-        AbsoluteExpiration = null,
-        SlidingExpiration = null
-    };
-
     public SearchReferenceDataService(
         IRepository<Person> personRepository,
         IRepository<Tag> tagRepository,
@@ -46,7 +40,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
         _mapper = mapper;
 
         _persons = new Lazy<Task<IReadOnlyList<PersonDto>>>(() =>
-            GetCachedAsync(CacheKeys.Persons(_currentUser), async () =>
+            _cache.GetOrCreateAsync(CacheKeys.Persons(_currentUser), async () =>
             {
                 var query = _personRepository.GetAll()
                     .AsNoTracking()
@@ -60,7 +54,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             }));
 
         _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
-            GetCachedAsync(CacheKeys.Tags, async () =>
+            _cache.GetOrCreateAsync(CacheKeys.Tags, async () =>
             {
                 var items = await _tagRepository.GetAll()
                     .AsNoTracking()
@@ -95,16 +89,5 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
     {
         _cache.Remove(CacheKeys.PersonsAll);
         _cache.Remove(CacheKeys.PersonsOf(_currentUser.UserId));
-    }
-
-    private async Task<IReadOnlyList<T>> GetCachedAsync<T>(string key, Func<Task<IReadOnlyList<T>>> factory)
-    {
-        if (!_cache.TryGetValue(key, out IReadOnlyList<T> values))
-        {
-            values = await factory();
-            _cache.Set(key, values, CacheOptions);
-        }
-
-        return values;
     }
 }
