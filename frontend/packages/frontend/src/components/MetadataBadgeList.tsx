@@ -4,32 +4,65 @@ import type { ComponentProps } from 'react';
 import { Badge } from '@/shared/ui/badge';
 
 export type MetadataBadgeListProps = {
-  icon: LucideIcon;
-  items: number[];
-  map: Record<number, string>;
+  icon?: LucideIcon;
+  items?: Array<number | string>;
+  map?: Record<number, string> | Map<number, string>;
   maxVisible: number;
   variant?: ComponentProps<typeof Badge>['variant'];
 };
 
 const MetadataBadgeList = ({
   icon: Icon,
-  items,
+  items = [],
   map,
   maxVisible,
   variant = 'outline',
 }: MetadataBadgeListProps) => {
   if (!items || items.length === 0) return null;
+
+  const seen = new Set<string>();
+  const resolved = items.reduce<Array<string | number>>((acc, item) => {
+    const label =
+      typeof item === 'string'
+        ? item
+        : map instanceof Map
+          ? map.get(item) ?? item
+          : map
+            ? map[item] ?? item
+            : item;
+
+    if (label == null || label === '') {
+      return acc;
+    }
+
+    const key = typeof label === 'string' ? label : String(label);
+    if (seen.has(key)) {
+      return acc;
+    }
+
+    seen.add(key);
+    acc.push(label);
+    return acc;
+  }, []);
+
+  if (resolved.length === 0) {
+    return null;
+  }
+
+  const visible = resolved.slice(0, maxVisible);
+  const rest = resolved.length - visible.length;
+
   return (
     <div className="flex items-center gap-1 flex-wrap">
-      <Icon className="w-3 h-3 text-muted-foreground" />
-      {items.slice(0, maxVisible).map((id, index) => (
-        <Badge key={`${id}-${index}`} variant={variant} className="text-xs">
-          {map[id] ?? id}
+      {Icon ? <Icon className="w-3 h-3 text-muted-foreground" /> : null}
+      {visible.map((label, index) => (
+        <Badge key={`${String(label)}-${index}`} variant={variant} className="text-xs">
+          {label}
         </Badge>
       ))}
-      {items.length > maxVisible && (
+      {rest > 0 && (
         <Badge variant={variant} className="text-xs">
-          +{items.length - maxVisible}
+          +{rest}
         </Badge>
       )}
     </div>
