@@ -1,5 +1,6 @@
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using ImageMagick;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -474,13 +475,31 @@ public class PhotoService : IPhotoService
             return Enumerable.Empty<PhotoItemDto>();
         }
 
-        var photos = await _photoRepository.GetAll().AsNoTracking()
-            .Where(p => p.ImageHash != null && (!id.HasValue || p.Id != id.Value))
-            .ToListAsync();
+        var referenceHash = new PerceptualHash(hash);
 
-        var result = photos
-            .Where(p => ImageHashHelper.HammingDistance(hash, p.ImageHash) <= threshold)
-            .ToList();
+        var candidateIds = new List<int>();
+
+        await foreach (var photo in _photoRepository.GetAll().AsNoTracking()
+                           .Where(p => p.ImageHash != null && (!id.HasValue || p.Id != id.Value))
+                           .Select(p => new { p.Id, p.ImageHash, p.S3Key_Thumbnail })
+                           .AsAsyncEnumerable())
+        {
+            if (ImageHashHelper.HammingDistance(referenceHash, photo.ImageHash) <= threshold)
+            {
+                candidateIds.Add(photo.Id);
+            }
+        }
+
+        var matchedIds = candidateIds.Distinct().ToArray();
+
+        if (matchedIds.Length == 0)
+        {
+            return Enumerable.Empty<PhotoItemDto>();
+        }
+
+        var result = await _photoRepository.GetAll().AsNoTracking()
+            .Where(p => matchedIds.Contains(p.Id))
+            .ToListAsync();
 
         var dtos = _mapper.Map<List<PhotoItemDto>>(result);
         await FillUrlsAsync(dtos);
