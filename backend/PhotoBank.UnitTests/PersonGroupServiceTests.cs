@@ -16,7 +16,9 @@ using PhotoBank.Services.Api;
 using PhotoBank.Services.Internal;
 using PhotoBank.Services.Search;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.UnitTests;
 
@@ -44,6 +46,11 @@ public class PersonGroupServiceTests
         db.PersonGroups.Add(new PersonGroup { Id = 1, Name = "Family" });
         db.SaveChanges();
 
+        var normalizer = new Mock<ISearchFilterNormalizer>();
+        normalizer
+            .Setup(n => n.NormalizeAsync(It.IsAny<FilterDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((FilterDto f, CancellationToken _) => f);
+
         _service = new PhotoService(
             db,
             _provider.GetRequiredService<IRepository<Photo>>(),
@@ -56,6 +63,7 @@ public class PersonGroupServiceTests
             _provider.GetRequiredService<IMemoryCache>(),
             _provider.GetRequiredService<ICurrentUser>(),
             _provider.GetRequiredService<ISearchReferenceDataService>(),
+            normalizer.Object,
             new Mock<IS3ResourceService>().Object,
             new MinioObjectService(new Mock<IMinioClient>().Object),
             new Mock<IMinioClient>().Object,

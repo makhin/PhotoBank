@@ -45,7 +45,7 @@ namespace PhotoBank.UnitTests.Services
             _mapper = provider.GetRequiredService<IMapper>();
         }
 
-        private PhotoService CreateService(string dbName)
+        private PhotoService CreateService(string dbName, Mock<ISearchFilterNormalizer>? normalizerMock = null)
         {
             var services = new ServiceCollection();
             services.AddDbContext<PhotoBankDbContext>(o => o.UseInMemoryDatabase(dbName));
@@ -59,6 +59,15 @@ namespace PhotoBank.UnitTests.Services
                 .Setup(s => s.GetTagsAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<TagDto>());
 
+            var createdMock = normalizerMock is null;
+            normalizerMock ??= new Mock<ISearchFilterNormalizer>();
+            if (createdMock)
+            {
+                normalizerMock
+                    .Setup(n => n.NormalizeAsync(It.IsAny<FilterDto>(), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync((FilterDto f, CancellationToken _) => f);
+            }
+
             return new PhotoService(
                 context,
                 new Repository<Photo>(provider),
@@ -71,10 +80,36 @@ namespace PhotoBank.UnitTests.Services
                 new MemoryCache(new MemoryCacheOptions()),
                 new DummyCurrentUser(),
                 referenceDataService.Object,
+                normalizerMock.Object,
                 new Mock<IS3ResourceService>().Object,
                 new MinioObjectService(new Mock<IMinioClient>().Object),
                 new Mock<IMinioClient>().Object,
                 new Mock<IOptions<S3Options>>().Object);
+        }
+
+        [Test]
+        public async Task GetAllPhotosAsync_NormalizesFilter()
+        {
+            // Arrange
+            var dbName = Guid.NewGuid().ToString();
+            var services = new ServiceCollection();
+            services.AddDbContext<PhotoBankDbContext>(o => o.UseInMemoryDatabase(dbName));
+            var provider = services.BuildServiceProvider();
+            _ = provider.GetRequiredService<PhotoBankDbContext>();
+
+            var filter = new FilterDto();
+            var normalizer = new Mock<ISearchFilterNormalizer>();
+            normalizer
+                .Setup(n => n.NormalizeAsync(filter, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(filter);
+
+            var service = CreateService(dbName, normalizer);
+
+            // Act
+            await service.GetAllPhotosAsync(filter, CancellationToken.None);
+
+            // Assert
+            normalizer.Verify(n => n.NormalizeAsync(filter, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]

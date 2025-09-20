@@ -49,6 +49,11 @@ namespace PhotoBank.UnitTests.Services
                 .Setup(s => s.GetTagsAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<TagDto>());
 
+            var normalizer = new Mock<ISearchFilterNormalizer>();
+            normalizer
+                .Setup(n => n.NormalizeAsync(It.IsAny<FilterDto>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((FilterDto f, CancellationToken _) => f);
+
             return new PhotoService(
                 context,
                 new Repository<Photo>(provider),
@@ -61,6 +66,7 @@ namespace PhotoBank.UnitTests.Services
                 new MemoryCache(new MemoryCacheOptions()),
                 new DummyCurrentUser(),
                 referenceDataService.Object,
+                normalizer.Object,
                 new Mock<IS3ResourceService>().Object,
                 new MinioObjectService(new Mock<IMinioClient>().Object),
                 new Mock<IMinioClient>().Object,

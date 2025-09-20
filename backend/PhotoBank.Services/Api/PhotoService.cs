@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using PhotoBank.Services.Internal;
 
@@ -24,7 +25,7 @@ namespace PhotoBank.Services.Api;
 
 public interface IPhotoService
 {
-    Task<PageResponse<PhotoItemDto>> GetAllPhotosAsync(FilterDto filter);
+    Task<PageResponse<PhotoItemDto>> GetAllPhotosAsync(FilterDto filter, CancellationToken ct = default);
     Task<PhotoDto> GetPhotoAsync(int id);
     Task<IEnumerable<PersonDto>> GetAllPersonsAsync();
     Task<IEnumerable<StorageDto>> GetAllStoragesAsync();
@@ -72,6 +73,7 @@ public class PhotoService : IPhotoService
     private readonly Lazy<Task<IReadOnlyList<StorageDto>>> _storages;
     private readonly ICurrentUser _currentUser;
     private readonly ISearchReferenceDataService _searchReferenceDataService;
+    private readonly ISearchFilterNormalizer _searchFilterNormalizer;
     private readonly IS3ResourceService _s3ResourceService;
     private readonly MinioObjectService _minioObjectService;
     private readonly IMinioClient _minioClient;
@@ -95,6 +97,7 @@ public class PhotoService : IPhotoService
         IMemoryCache cache,
         ICurrentUser currentUser,
         ISearchReferenceDataService searchReferenceDataService,
+        ISearchFilterNormalizer searchFilterNormalizer,
         IS3ResourceService s3ResourceService,
         MinioObjectService minioObjectService,
         IMinioClient minioClient,
@@ -111,6 +114,7 @@ public class PhotoService : IPhotoService
         _cache = cache;
         _currentUser = currentUser;
         _searchReferenceDataService = searchReferenceDataService;
+        _searchFilterNormalizer = searchFilterNormalizer;
         _s3ResourceService = s3ResourceService;
         _minioObjectService = minioObjectService;
         _minioClient = minioClient;
@@ -119,18 +123,25 @@ public class PhotoService : IPhotoService
         _paths = new Lazy<Task<IReadOnlyList<PathDto>>>(() =>
             GetCachedAsync(CacheKeys.Paths(_currentUser), async () =>
             {
-                var q = photoRepository.GetAll()
+                var query = photoRepository.GetAll()
                     .AsNoTracking()
-                    .MaybeApplyAcl(_currentUser);
+                    .MaybeApplyAcl(_currentUser)
+                    .Where(p => p.RelativePath != null);
 
-                var q = _personRepository.GetAll()
-                    .AsNoTracking()
-                    .MaybeApplyAcl(_currentUser); // òîëüêî äëÿ íå-àäìèíà
-
-                return (IReadOnlyList<PersonDto>)await q
-                    .OrderBy(p => p.Name).ThenBy(p => p.Id)
-                    .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
+                var paths = await query
+                    .Select(p => new { p.StorageId, p.RelativePath })
+                    .Distinct()
+                    .OrderBy(p => p.StorageId)
+                    .ThenBy(p => p.RelativePath)
                     .ToListAsync();
+
+                return (IReadOnlyList<PathDto>)paths
+                    .Select(p => new PathDto
+                    {
+                        StorageId = p.StorageId,
+                        Path = p.RelativePath!
+                    })
+                    .ToList();
             }));
 
         _personGroups = new Lazy<Task<IReadOnlyList<PersonGroupDto>>>(() =>
@@ -208,13 +219,15 @@ public class PhotoService : IPhotoService
         return query;
     }
 
-    public async Task<PageResponse<PhotoItemDto>> GetAllPhotosAsync(FilterDto filter)
+    public async Task<PageResponse<PhotoItemDto>> GetAllPhotosAsync(FilterDto filter, CancellationToken ct = default)
     {
+        filter = await _searchFilterNormalizer.NormalizeAsync(filter, ct);
+
         var query = ApplyFilter(_photoRepository.GetAll().AsNoTracking(), filter)
             .MaybeApplyAcl(_currentUser);
 
         int? count = null;
-        count = await query.CountAsync(); // ïðè æåëàíèè ìîæíî ñ÷èòàòü òîëüêî íà 1-é ñòðàíèöå
+        count = await query.CountAsync(ct); // ïðè æåëàíèè ìîæíî ñ÷èòàòü òîëüêî íà 1-é ñòðàíèöå
 
         var pageSize = Math.Min(filter.PageSize, PageRequest.MaxPageSize);
         var skip = (filter.Page - 1) * pageSize;
@@ -225,7 +238,7 @@ public class PhotoService : IPhotoService
             .Skip(skip)
             .Take(pageSize)
             .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         await FillUrlsAsync(photos);
 
