@@ -25,28 +25,28 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
-export type pathsGetAllResponse200 = {
+export type getPathsResponse200 = {
   data: PathDto[]
   status: 200
 }
     
-export type pathsGetAllResponseComposite = pathsGetAllResponse200;
+export type getPathsResponseComposite = getPathsResponse200;
     
-export type pathsGetAllResponse = pathsGetAllResponseComposite & {
+export type getPathsResponse = getPathsResponseComposite & {
   headers: Headers;
 }
 
-export const getPathsGetAllUrl = () => {
+export const getGetPathsUrl = () => {
 
 
   
 
-  return `/paths`
+  return `/Paths`
 }
 
-export const pathsGetAll = async ( options?: RequestInit): Promise<pathsGetAllResponse> => {
+export const getPaths = async ( options?: RequestInit): Promise<getPathsResponse> => {
   
-  return customFetcher<pathsGetAllResponse>(getPathsGetAllUrl(),
+  return customFetcher<getPathsResponse>(getGetPathsUrl(),
   {      
     ...options,
     method: 'GET'
@@ -57,40 +57,40 @@ export const pathsGetAll = async ( options?: RequestInit): Promise<pathsGetAllRe
 
 
 
-export const getPathsGetAllQueryKey = () => {
-    return [`/paths`] as const;
+export const getGetPathsQueryKey = () => {
+    return [`/Paths`] as const;
     }
 
     
-export const getPathsGetAllQueryOptions = <TData = Awaited<ReturnType<typeof pathsGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof pathsGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
+export const getGetPathsQueryOptions = <TData = Awaited<ReturnType<typeof getPaths>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPaths>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getPathsGetAllQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetPathsQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof pathsGetAll>>> = () => pathsGetAll(requestOptions);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPaths>>> = () => getPaths(requestOptions);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof pathsGetAll>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPaths>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type PathsGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof pathsGetAll>>>
-export type PathsGetAllQueryError = unknown
+export type GetPathsQueryResult = NonNullable<Awaited<ReturnType<typeof getPaths>>>
+export type GetPathsQueryError = unknown
 
 
 
-export function usePathsGetAll<TData = Awaited<ReturnType<typeof pathsGetAll>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof pathsGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
+export function useGetPaths<TData = Awaited<ReturnType<typeof getPaths>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPaths>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getPathsGetAllQueryOptions(options)
+  const queryOptions = getGetPathsQueryOptions(options)
 
   const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

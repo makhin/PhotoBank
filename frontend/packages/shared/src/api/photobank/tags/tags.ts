@@ -25,28 +25,28 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
-export type tagsGetAllResponse200 = {
+export type getTagsResponse200 = {
   data: TagDto[]
   status: 200
 }
     
-export type tagsGetAllResponseComposite = tagsGetAllResponse200;
+export type getTagsResponseComposite = getTagsResponse200;
     
-export type tagsGetAllResponse = tagsGetAllResponseComposite & {
+export type getTagsResponse = getTagsResponseComposite & {
   headers: Headers;
 }
 
-export const getTagsGetAllUrl = () => {
+export const getGetTagsUrl = () => {
 
 
   
 
-  return `/tags`
+  return `/Tags`
 }
 
-export const tagsGetAll = async ( options?: RequestInit): Promise<tagsGetAllResponse> => {
+export const getTags = async ( options?: RequestInit): Promise<getTagsResponse> => {
   
-  return customFetcher<tagsGetAllResponse>(getTagsGetAllUrl(),
+  return customFetcher<getTagsResponse>(getGetTagsUrl(),
   {      
     ...options,
     method: 'GET'
@@ -57,40 +57,40 @@ export const tagsGetAll = async ( options?: RequestInit): Promise<tagsGetAllResp
 
 
 
-export const getTagsGetAllQueryKey = () => {
-    return [`/tags`] as const;
+export const getGetTagsQueryKey = () => {
+    return [`/Tags`] as const;
     }
 
     
-export const getTagsGetAllQueryOptions = <TData = Awaited<ReturnType<typeof tagsGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof tagsGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
+export const getGetTagsQueryOptions = <TData = Awaited<ReturnType<typeof getTags>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTags>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getTagsGetAllQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetTagsQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof tagsGetAll>>> = () => tagsGetAll(requestOptions);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTags>>> = () => getTags(requestOptions);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof tagsGetAll>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTags>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type TagsGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof tagsGetAll>>>
-export type TagsGetAllQueryError = unknown
+export type GetTagsQueryResult = NonNullable<Awaited<ReturnType<typeof getTags>>>
+export type GetTagsQueryError = unknown
 
 
 
-export function useTagsGetAll<TData = Awaited<ReturnType<typeof tagsGetAll>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof tagsGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
+export function useGetTags<TData = Awaited<ReturnType<typeof getTags>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTags>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getTagsGetAllQueryOptions(options)
+  const queryOptions = getGetTagsQueryOptions(options)
 
   const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

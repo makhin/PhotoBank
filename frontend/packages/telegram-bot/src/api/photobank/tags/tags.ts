@@ -15,13 +15,13 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
   export const getTags = () => {
-const tagsGetAll = (
+const getTags = (
     
  options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<TagDto[]>(
-      {url: `/tags`, method: 'GET'
+      {url: `/Tags`, method: 'GET'
     },
       options);
     }
-  return {tagsGetAll}};
-export type TagsGetAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTags>['tagsGetAll']>>>
+  return {getTags}};
+export type GetTagsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTags>['getTags']>>>

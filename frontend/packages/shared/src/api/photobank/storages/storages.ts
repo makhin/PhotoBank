@@ -25,28 +25,28 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
-export type storagesGetAllResponse200 = {
+export type getStoragesResponse200 = {
   data: StorageDto[]
   status: 200
 }
     
-export type storagesGetAllResponseComposite = storagesGetAllResponse200;
+export type getStoragesResponseComposite = getStoragesResponse200;
     
-export type storagesGetAllResponse = storagesGetAllResponseComposite & {
+export type getStoragesResponse = getStoragesResponseComposite & {
   headers: Headers;
 }
 
-export const getStoragesGetAllUrl = () => {
+export const getGetStoragesUrl = () => {
 
 
   
 
-  return `/storages`
+  return `/Storages`
 }
 
-export const storagesGetAll = async ( options?: RequestInit): Promise<storagesGetAllResponse> => {
+export const getStorages = async ( options?: RequestInit): Promise<getStoragesResponse> => {
   
-  return customFetcher<storagesGetAllResponse>(getStoragesGetAllUrl(),
+  return customFetcher<getStoragesResponse>(getGetStoragesUrl(),
   {      
     ...options,
     method: 'GET'
@@ -57,40 +57,40 @@ export const storagesGetAll = async ( options?: RequestInit): Promise<storagesGe
 
 
 
-export const getStoragesGetAllQueryKey = () => {
-    return [`/storages`] as const;
+export const getGetStoragesQueryKey = () => {
+    return [`/Storages`] as const;
     }
 
     
-export const getStoragesGetAllQueryOptions = <TData = Awaited<ReturnType<typeof storagesGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof storagesGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
+export const getGetStoragesQueryOptions = <TData = Awaited<ReturnType<typeof getStorages>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStorages>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getStoragesGetAllQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetStoragesQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof storagesGetAll>>> = () => storagesGetAll(requestOptions);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStorages>>> = () => getStorages(requestOptions);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof storagesGetAll>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStorages>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type StoragesGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof storagesGetAll>>>
-export type StoragesGetAllQueryError = unknown
+export type GetStoragesQueryResult = NonNullable<Awaited<ReturnType<typeof getStorages>>>
+export type GetStoragesQueryError = unknown
 
 
 
-export function useStoragesGetAll<TData = Awaited<ReturnType<typeof storagesGetAll>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof storagesGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
+export function useGetStorages<TData = Awaited<ReturnType<typeof getStorages>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStorages>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getStoragesGetAllQueryOptions(options)
+  const queryOptions = getGetStoragesQueryOptions(options)
 
   const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
