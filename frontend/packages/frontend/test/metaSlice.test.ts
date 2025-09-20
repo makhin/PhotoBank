@@ -37,21 +37,24 @@ describe('metaSlice', () => {
   });
 
   it('loadMetadata fetches when cache missing', async () => {
-    const getAllStorages = vi.fn().mockResolvedValue({ data: payload.storages });
-    const getAllTags = vi.fn().mockResolvedValue({ data: payload.tags });
-    const getAllPersons = vi.fn().mockResolvedValue({ data: payload.persons });
-    const getAllPaths = vi.fn().mockResolvedValue({ data: payload.paths });
-    vi.doMock('@photobank/shared/api/photobank', () => ({
-      storagesGetAll: getAllStorages,
-      tagsGetAll: getAllTags,
-      personsGetAll: getAllPersons,
-      pathsGetAll: getAllPaths,
-    }));
+    const fetchReferenceData = vi.fn().mockResolvedValue({
+      tags: payload.tags,
+      persons: payload.persons,
+      paths: payload.paths,
+      storages: payload.storages,
+    });
+    vi.doMock('@photobank/shared/api/photobank', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('@photobank/shared/api/photobank')>();
+      return {
+        ...actual,
+        fetchReferenceData,
+      };
+    });
     const { loadMetadata } = await import('../src/features/meta/model/metaSlice');
     const dispatch = vi.fn();
     const getState = vi.fn();
     const result = await loadMetadata()(dispatch, getState, undefined);
-    expect(getAllStorages).toHaveBeenCalled();
+    expect(fetchReferenceData).toHaveBeenCalledTimes(1);
     expect(result.payload).toEqual(payload);
     expect(store.get<typeof payload>(cacheKey)).toEqual(payload);
   });
