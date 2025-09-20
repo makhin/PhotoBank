@@ -448,21 +448,15 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-  /paths:
+  /Paths:
     get:
       tags:
         - Paths
-      operationId: Paths_GetAll
       responses:
         '200':
           description: OK
           content:
             application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/PathDto'
-            text/json:
               schema:
                 type: array
                 items:
@@ -939,11 +933,10 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PhotoItemDto'
-  /storages:
+  /Storages:
     get:
       tags:
         - Storages
-      operationId: Storages_GetAll
       responses:
         '200':
           description: OK
@@ -953,26 +946,15 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StorageDto'
-            text/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StorageDto'
-  /tags:
+  /Tags:
     get:
       tags:
         - Tags
-      operationId: Tags_GetAll
       responses:
         '200':
           description: OK
           content:
             application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TagDto'
-            text/json:
               schema:
                 type: array
                 items:
