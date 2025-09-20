@@ -1,22 +1,35 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { i18n } from '../src/i18n';
 
+const mockReferenceData = (data: {
+  tags?: Array<{ id: number; name: string }>;
+  persons?: Array<{ id: number; name: string }>;
+  storages?: Array<{ id: number; name: string }>;
+  paths?: Array<{ storageId: number; path: string }>;
+}) => {
+  const fetchReferenceData = vi.fn().mockResolvedValue({
+    tags: data.tags ?? [],
+    persons: data.persons ?? [],
+    storages: data.storages ?? [],
+    paths: data.paths ?? [],
+  });
+  vi.doMock('@photobank/shared/api/photobank', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('@photobank/shared/api/photobank')>();
+    return {
+      ...actual,
+      fetchReferenceData,
+    };
+  });
+  return fetchReferenceData;
+};
+
 describe('dictionaries', () => {
   beforeEach(() => {
     vi.resetModules();
   });
 
   it('getPersonName returns loaded name', async () => {
-    const getAllPersons = vi.fn().mockResolvedValue([{ id: 1, name: 'John' }]);
-    const getAllTags = vi.fn().mockResolvedValue([]);
-    const getAllStorages = vi.fn().mockResolvedValue([]);
-    const getAllPaths = vi.fn().mockResolvedValue([]);
-    vi.doMock('../src/services/dictionary', () => ({
-      fetchPersons: getAllPersons,
-      fetchTags: getAllTags,
-      fetchStorages: getAllStorages,
-      fetchPaths: getAllPaths,
-    }));
+    mockReferenceData({ persons: [{ id: 1, name: 'John' }] });
     const dict = await import('../src/dictionaries');
     await dict.loadDictionaries({} as any);
     expect(dict.getPersonName(1)).toBe('John');
@@ -39,22 +52,16 @@ describe('dictionaries', () => {
   });
 
   it('findBestPersonId and findBestTagId return closest match', async () => {
-    const getAllPersons = vi.fn().mockResolvedValue([
-      { id: 1, name: 'Alice' },
-      { id: 2, name: 'Bob' },
-    ]);
-    const getAllTags = vi.fn().mockResolvedValue([
-      { id: 10, name: 'portrait' },
-      { id: 11, name: 'sea' },
-    ]);
-    const getAllStorages = vi.fn().mockResolvedValue([]);
-    const getAllPaths = vi.fn().mockResolvedValue([]);
-    vi.doMock('../src/services/dictionary', () => ({
-      fetchPersons: getAllPersons,
-      fetchTags: getAllTags,
-      fetchStorages: getAllStorages,
-      fetchPaths: getAllPaths,
-    }));
+    mockReferenceData({
+      persons: [
+        { id: 1, name: 'Alice' },
+        { id: 2, name: 'Bob' },
+      ],
+      tags: [
+        { id: 10, name: 'portrait' },
+        { id: 11, name: 'sea' },
+      ],
+    });
     const dict = await import('../src/dictionaries');
     await dict.loadDictionaries({} as any);
     expect(dict.findBestPersonId('Alic')).toBe(1);
@@ -62,17 +69,13 @@ describe('dictionaries', () => {
   });
 
   it('getAllStoragesWithPaths returns loaded data', async () => {
-    const getAllStorages = vi.fn().mockResolvedValue([{ id: 1, name: 'S1' }]);
-    const getAllPaths = vi.fn().mockResolvedValue([
-      { storageId: 1, path: '/a' },
-      { storageId: 1, path: '/b' },
-    ]);
-    vi.doMock('../src/services/dictionary', () => ({
-      fetchPersons: vi.fn().mockResolvedValue([]),
-      fetchTags: vi.fn().mockResolvedValue([]),
-      fetchStorages: getAllStorages,
-      fetchPaths: getAllPaths,
-    }));
+    mockReferenceData({
+      storages: [{ id: 1, name: 'S1' }],
+      paths: [
+        { storageId: 1, path: '/a' },
+        { storageId: 1, path: '/b' },
+      ],
+    });
     const dict = await import('../src/dictionaries');
     await dict.loadDictionaries({} as any);
     expect(dict.getAllStoragesWithPaths()).toEqual([
