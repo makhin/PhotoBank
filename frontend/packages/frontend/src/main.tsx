@@ -12,9 +12,8 @@ import App from './app/App';
 
 import './index.css';
 
-async function start() {
+function start() {
   configureApi(API_BASE_URL);
-
 
   const root = document.getElementById('root')!;
   ReactDOM.createRoot(root).render(
