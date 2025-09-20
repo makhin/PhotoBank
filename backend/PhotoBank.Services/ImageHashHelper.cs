@@ -18,7 +18,15 @@ public static class ImageHashHelper
             return double.MaxValue;
 
         var h1 = new PerceptualHash(hash1);
+        return HammingDistance(h1, hash2);
+    }
+
+    public static double HammingDistance(PerceptualHash referenceHash, string? hash2)
+    {
+        if (referenceHash == null || string.IsNullOrEmpty(hash2))
+            return double.MaxValue;
+
         var h2 = new PerceptualHash(hash2);
-        return h1.SumSquaredDistance(h2);
+        return referenceHash.SumSquaredDistance(h2);
     }
 }
