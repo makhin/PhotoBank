@@ -5,12 +5,19 @@ export type UploadFileData = BlobPart | ArrayBuffer | Uint8Array;
 export type UploadFile = { data: UploadFileData; name: string };
 
 function normalizeToBlobPart(data: UploadFileData): BlobPart {
-  if (data instanceof Uint8Array) {
-    return data;
+  if (ArrayBuffer.isView(data)) {
+    const { buffer, byteOffset, byteLength } = data;
+    if (buffer instanceof ArrayBuffer) {
+      return buffer.slice(byteOffset, byteOffset + byteLength);
+    }
+
+    const copy = new Uint8Array(byteLength);
+    copy.set(new Uint8Array(buffer, byteOffset, byteLength));
+    return copy.buffer;
   }
 
   if (data instanceof ArrayBuffer) {
-    return new Uint8Array(data);
+    return data;
   }
 
   return data;
