@@ -5,7 +5,6 @@ using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mime;
 
 namespace PhotoBank.Api.Controllers
 {
@@ -59,25 +58,14 @@ namespace PhotoBank.Api.Controllers
                 return NotFound();
             }
 
-            var etag = $"\"{result.ETag}\"";
-            Response.Headers.ETag = etag;
-            Response.Headers.CacheControl = "public, max-age=31536000, immutable";
-
-            if (Request.Headers.IfNoneMatch.Contains(etag))
-            {
-                logger.LogInformation("Preview for photo {Id} not modified", id);
-                return StatusCode(StatusCodes.Status304NotModified);
-            }
-
-            if (result.PreSignedUrl is not null)
-            {
-                logger.LogInformation("Redirecting to pre-signed URL for photo {Id}", id);
-                Response.Headers.Location = result.PreSignedUrl;
-                return StatusCode(StatusCodes.Status301MovedPermanently);
-            }
-
-            logger.LogInformation("Streaming preview for photo {Id}", id);
-            return File(result.Data!, MediaTypeNames.Image.Jpeg);
+            return CachedImageResponseBuilder.Build(
+                this,
+                result,
+                logger,
+                new CachedImageResponseCallbacks(
+                    OnNotModified: () => logger.LogInformation("Preview for photo {Id} not modified", id),
+                    OnRedirect: () => logger.LogInformation("Redirecting to pre-signed URL for photo {Id}", id),
+                    OnStream: () => logger.LogInformation("Streaming preview for photo {Id}", id)));
         }
 
         [HttpPost("upload")]
