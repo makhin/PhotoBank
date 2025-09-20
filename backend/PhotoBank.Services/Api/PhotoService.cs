@@ -11,6 +11,7 @@ using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
+using PhotoBank.Services.Search;
 using PhotoBank.ViewModel.Dto;
 using System;
 using System.Collections.Generic;
@@ -66,12 +67,11 @@ public class PhotoService : IPhotoService
     private readonly IRepository<PersonFace> _personFaceRepository;
     private readonly IMapper _mapper;
     private readonly IMemoryCache _cache;
-    private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
     private readonly Lazy<Task<IReadOnlyList<PathDto>>> _paths;
-    private readonly Lazy<Task<IReadOnlyList<PersonDto>>> _persons;
     private readonly Lazy<Task<IReadOnlyList<PersonGroupDto>>> _personGroups;
     private readonly Lazy<Task<IReadOnlyList<StorageDto>>> _storages;
     private readonly ICurrentUser _currentUser;
+    private readonly ISearchReferenceDataService _searchReferenceDataService;
     private readonly IS3ResourceService _s3ResourceService;
     private readonly MinioObjectService _minioObjectService;
     private readonly IMinioClient _minioClient;
@@ -89,12 +89,12 @@ public class PhotoService : IPhotoService
         IRepository<Person> personRepository,
         IRepository<Face> faceRepository,
         IRepository<Storage> storageRepository,
-        IRepository<Tag> tagRepository,
         IRepository<PersonGroup> personGroupRepository,
         IRepository<PersonFace> personFaceRepository,
         IMapper mapper,
         IMemoryCache cache,
         ICurrentUser currentUser,
+        ISearchReferenceDataService searchReferenceDataService,
         IS3ResourceService s3ResourceService,
         MinioObjectService minioObjectService,
         IMinioClient minioClient,
@@ -110,18 +110,11 @@ public class PhotoService : IPhotoService
         _mapper = mapper;
         _cache = cache;
         _currentUser = currentUser;
+        _searchReferenceDataService = searchReferenceDataService;
         _s3ResourceService = s3ResourceService;
         _minioObjectService = minioObjectService;
         _minioClient = minioClient;
         _s3 = s3Options?.Value ?? new S3Options();
-
-        _tags = new Lazy<Task<IReadOnlyList<TagDto>>>(() =>
-            GetCachedAsync(CacheKeys.Tags, async () =>
-                (IReadOnlyList<TagDto>)await tagRepository.GetAll()
-                    .AsNoTracking()
-                    .OrderBy(p => p.Name).ThenBy(p => p.Id)
-                    .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
-                    .ToListAsync()));
 
         _paths = new Lazy<Task<IReadOnlyList<PathDto>>>(() =>
             GetCachedAsync(CacheKeys.Paths(_currentUser), async () =>
@@ -130,22 +123,9 @@ public class PhotoService : IPhotoService
                     .AsNoTracking()
                     .MaybeApplyAcl(_currentUser);
 
-                // безопасный Distinct по ключам, затем проекция
-                var items = await q
-                    .Select(p => new { p.StorageId, p.RelativePath })
-                    .Distinct()
-                    .OrderBy(p => p.RelativePath).ThenBy(p => p.StorageId)
-                    .Select(p => new PathDto { StorageId = p.StorageId, Path = p.RelativePath })
-                    .ToListAsync();
-                return (IReadOnlyList<PathDto>)items;
-            }));
-
-        _persons = new Lazy<Task<IReadOnlyList<PersonDto>>>(() =>
-            GetCachedAsync(CacheKeys.Persons(_currentUser), async () =>
-            {
                 var q = _personRepository.GetAll()
                     .AsNoTracking()
-                    .MaybeApplyAcl(_currentUser); // только для не-админа
+                    .MaybeApplyAcl(_currentUser); // ГІГ®Г«ГјГЄГ® Г¤Г«Гї Г­ГҐ-Г Г¤Г¬ГЁГ­Г 
 
                 return (IReadOnlyList<PersonDto>)await q
                     .OrderBy(p => p.Name).ThenBy(p => p.Id)
@@ -210,7 +190,7 @@ public class PhotoService : IPhotoService
         if (!string.IsNullOrEmpty(filter.Caption))
             query = query.Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption!)));
 
-        // Оптимизированные фильтры (один Any + Contains)
+        // ГЋГЇГІГЁГ¬ГЁГ§ГЁГ°Г®ГўГ Г­Г­Г»ГҐ ГґГЁГ«ГјГІГ°Г» (Г®Г¤ГЁГ­ Any + Contains)
         if (filter.Persons?.Any() == true)
         {
             var personIds = filter.Persons.ToList();
@@ -234,7 +214,7 @@ public class PhotoService : IPhotoService
             .MaybeApplyAcl(_currentUser);
 
         int? count = null;
-        count = await query.CountAsync(); // при желании можно считать только на 1-й странице
+        count = await query.CountAsync(); // ГЇГ°ГЁ Г¦ГҐГ«Г Г­ГЁГЁ Г¬Г®Г¦Г­Г® Г±Г·ГЁГІГ ГІГј ГІГ®Г«ГјГЄГ® Г­Г  1-Г© Г±ГІГ°Г Г­ГЁГ¶ГҐ
 
         var pageSize = Math.Min(filter.PageSize, PageRequest.MaxPageSize);
         var skip = (filter.Page - 1) * pageSize;
@@ -284,10 +264,10 @@ public class PhotoService : IPhotoService
         return dto!;
     }
 
-    public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync() => await _persons.Value;
+    public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync() => await _searchReferenceDataService.GetPersonsAsync();
     public async Task<IEnumerable<PathDto>> GetAllPathsAsync() => await _paths.Value;
     public async Task<IEnumerable<StorageDto>> GetAllStoragesAsync() => await _storages.Value;
-    public async Task<IEnumerable<TagDto>> GetAllTagsAsync() => await _tags.Value;
+    public async Task<IEnumerable<TagDto>> GetAllTagsAsync() => await _searchReferenceDataService.GetTagsAsync();
     public async Task<IEnumerable<PersonGroupDto>> GetAllPersonGroupsAsync() => await _personGroups.Value;
 
     public async Task<PersonDto> CreatePersonAsync(string name)
@@ -528,7 +508,7 @@ public class PhotoService : IPhotoService
 
     private async Task FillUrlsAsync(IEnumerable<PhotoItemDto> dtos)
     {
-        // параллельная генерация presigned URL
+        // ГЇГ Г°Г Г«Г«ГҐГ«ГјГ­Г Гї ГЈГҐГ­ГҐГ°Г Г¶ГЁГї presigned URL
         var list = dtos.ToList();
         var tasks = list.Select(async dto =>
         {
@@ -560,7 +540,6 @@ public class PhotoService : IPhotoService
 
     private void InvalidatePersonsCache()
     {
-        _cache.Remove(CacheKeys.PersonsAll);
-        _cache.Remove(CacheKeys.PersonsOf(_currentUser.UserId));
+        _searchReferenceDataService.InvalidatePersonsCache();
     }
 }

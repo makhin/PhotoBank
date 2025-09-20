@@ -14,6 +14,7 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Internal;
+using PhotoBank.Services.Search;
 using System;
 using System.Threading.Tasks;
 
@@ -35,6 +36,7 @@ public class PersonGroupServiceTests
         services.AddMemoryCache();
         services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
         services.AddScoped<ICurrentUser, DummyCurrentUser>();
+        services.AddScoped<ISearchReferenceDataService, SearchReferenceDataService>();
         _provider = services.BuildServiceProvider();
 
         var db = _provider.GetRequiredService<PhotoBankDbContext>();
@@ -48,12 +50,12 @@ public class PersonGroupServiceTests
             _provider.GetRequiredService<IRepository<Person>>(),
             _provider.GetRequiredService<IRepository<Face>>(),
             _provider.GetRequiredService<IRepository<Storage>>(),
-            _provider.GetRequiredService<IRepository<Tag>>(),
             _provider.GetRequiredService<IRepository<PersonGroup>>(),
             _provider.GetRequiredService<IRepository<PersonFace>>(),
             _provider.GetRequiredService<IMapper>(),
             _provider.GetRequiredService<IMemoryCache>(),
             _provider.GetRequiredService<ICurrentUser>(),
+            _provider.GetRequiredService<ISearchReferenceDataService>(),
             new Mock<IS3ResourceService>().Object,
             new MinioObjectService(new Mock<IMinioClient>().Object),
             new Mock<IMinioClient>().Object,

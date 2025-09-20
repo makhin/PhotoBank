@@ -15,9 +15,12 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Internal;
+using PhotoBank.Services.Search;
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
+using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.UnitTests.Services
 {
@@ -36,6 +39,34 @@ namespace PhotoBank.UnitTests.Services
             _mapper = provider.GetRequiredService<IMapper>();
         }
 
+        private PhotoService CreateService(PhotoBankDbContext context, IServiceProvider provider)
+        {
+            var referenceDataService = new Mock<ISearchReferenceDataService>();
+            referenceDataService
+                .Setup(s => s.GetPersonsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<PersonDto>());
+            referenceDataService
+                .Setup(s => s.GetTagsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<TagDto>());
+
+            return new PhotoService(
+                context,
+                new Repository<Photo>(provider),
+                new Repository<Person>(provider),
+                new Repository<Face>(provider),
+                new Repository<Storage>(provider),
+                new Repository<PersonGroup>(provider),
+                new Repository<PersonFace>(provider),
+                _mapper,
+                new MemoryCache(new MemoryCacheOptions()),
+                new DummyCurrentUser(),
+                referenceDataService.Object,
+                new Mock<IS3ResourceService>().Object,
+                new MinioObjectService(new Mock<IMinioClient>().Object),
+                new Mock<IMinioClient>().Object,
+                new Mock<IOptions<S3Options>>().Object);
+        }
+
         [Test]
         public async Task UploadPhotosAsync_SavesFilesToStorage()
         {
@@ -49,22 +80,7 @@ namespace PhotoBank.UnitTests.Services
             context.Storages.Add(storage);
             await context.SaveChangesAsync();
 
-            var service = new PhotoService(
-                context,
-                new Repository<Photo>(provider),
-                new Repository<Person>(provider),
-                new Repository<Face>(provider),
-                new Repository<Storage>(provider),
-                new Repository<Tag>(provider),
-                new Repository<PersonGroup>(provider),
-                new Repository<PersonFace>(provider),
-                _mapper,
-                new MemoryCache(new MemoryCacheOptions()),
-                new DummyCurrentUser(),
-                new Mock<IS3ResourceService>().Object,
-                new MinioObjectService(new Mock<IMinioClient>().Object),
-                new Mock<IMinioClient>().Object,
-                new Mock<IOptions<S3Options>>().Object);
+            var service = CreateService(context, provider);
 
             var bytes = new byte[] { 1, 2, 3, 4 };
             await using var ms = new MemoryStream(bytes);
@@ -91,22 +107,7 @@ namespace PhotoBank.UnitTests.Services
             context.Storages.Add(storage);
             await context.SaveChangesAsync();
 
-            var service = new PhotoService(
-                context,
-                new Repository<Photo>(provider),
-                new Repository<Person>(provider),
-                new Repository<Face>(provider),
-                new Repository<Storage>(provider),
-                new Repository<Tag>(provider),
-                new Repository<PersonGroup>(provider),
-                new Repository<PersonFace>(provider),
-                _mapper,
-                new MemoryCache(new MemoryCacheOptions()),
-                new DummyCurrentUser(),
-                new Mock<IS3ResourceService>().Object,
-                new MinioObjectService(new Mock<IMinioClient>().Object),
-                new Mock<IMinioClient>().Object,
-                new Mock<IOptions<S3Options>>().Object);
+            var service = CreateService(context, provider);
 
             var bytes = new byte[] { 1, 2, 3, 4 };
             await using var ms1 = new MemoryStream(bytes);
@@ -137,22 +138,7 @@ namespace PhotoBank.UnitTests.Services
             context.Storages.Add(storage);
             await context.SaveChangesAsync();
 
-            var service = new PhotoService(
-                context,
-                new Repository<Photo>(provider),
-                new Repository<Person>(provider),
-                new Repository<Face>(provider),
-                new Repository<Storage>(provider),
-                new Repository<Tag>(provider),
-                new Repository<PersonGroup>(provider),
-                new Repository<PersonFace>(provider),
-                _mapper,
-                new MemoryCache(new MemoryCacheOptions()),
-                new DummyCurrentUser(),
-                new Mock<IS3ResourceService>().Object,
-                new MinioObjectService(new Mock<IMinioClient>().Object),
-                new Mock<IMinioClient>().Object,
-                new Mock<IOptions<S3Options>>().Object);
+            var service = CreateService(context, provider);
 
             var bytes1 = new byte[] { 1, 2, 3, 4 };
             await using var ms1 = new MemoryStream(bytes1);

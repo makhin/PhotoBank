@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
-using PhotoBank.Services.Api;
 using PhotoBank.Services.Translator;
 using PhotoBank.ViewModel.Dto;
 
@@ -15,7 +14,7 @@ namespace PhotoBank.Services.Search;
 public sealed class SearchFilterNormalizer(
     ITranslatorService translator,
     IMemoryCache cache,
-    IPhotoService photoService
+    ISearchReferenceDataService referenceDataService
 ) : ISearchFilterNormalizer
 {
     public async Task<FilterDto> NormalizeAsync(FilterDto filter, CancellationToken ct = default)
@@ -92,18 +91,20 @@ public sealed class SearchFilterNormalizer(
 
         await PopulateIdsAsync(
             filter.PersonNames,
-            photoService.GetAllPersonsAsync,
+            referenceDataService.GetPersonsAsync,
             p => p.Id,
             p => p.Name,
-            ids => filter.Persons = ids
+            ids => filter.Persons = ids,
+            ct
         );
 
         await PopulateIdsAsync(
             filter.TagNames,
-            photoService.GetAllTagsAsync,
+            referenceDataService.GetTagsAsync,
             t => t.Id,
             t => t.Name,
-            ids => filter.Tags = ids
+            ids => filter.Tags = ids,
+            ct
         );
 
         return filter;
@@ -111,14 +112,15 @@ public sealed class SearchFilterNormalizer(
 
     private static async Task PopulateIdsAsync<T>(
         string[]? names,
-        Func<Task<IEnumerable<T>>> getAll,
+        Func<CancellationToken, Task<IReadOnlyList<T>>> getAll,
         Func<T, int> idSelector,
         Func<T, string> nameSelector,
-        Action<int[]> apply)
+        Action<int[]> apply,
+        CancellationToken ct)
     {
         if (names is not { Length: > 0 }) return;
 
-        var items = await getAll();
+        var items = await getAll(ct);
         var lookup = items.Select(i => (Id: idSelector(i), Name: nameSelector(i)));
 
         var ids = MatchIds(names, lookup);
