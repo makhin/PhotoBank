@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.ViewModel.Dto;
+using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace PhotoBank.Api.Controllers.Admin;
 
@@ -15,9 +18,44 @@ public class UsersController(UserManager<ApplicationUser> userManager, RoleManag
 {
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<UserDto>>> GetAllAsync()
+    public async Task<ActionResult<IEnumerable<UserDto>>> GetAllAsync([FromQuery] UsersQuery query)
     {
-        var users = await userManager.Users.AsNoTracking().ToListAsync();
+        var usersQuery = userManager.Users.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var searchPattern = $"%{query.Search.Trim()}%";
+            usersQuery = usersQuery.Where(user =>
+                (user.Email != null && EF.Functions.Like(user.Email, searchPattern)) ||
+                (user.PhoneNumber != null && EF.Functions.Like(user.PhoneNumber, searchPattern)));
+        }
+
+        if (query.HasTelegram is not null)
+        {
+            usersQuery = query.HasTelegram.Value
+                ? usersQuery.Where(user => user.TelegramUserId != null)
+                : usersQuery.Where(user => user.TelegramUserId == null);
+        }
+
+        usersQuery = query.SortField switch
+        {
+            UsersQuery.SortEmail => query.SortDescending
+                ? usersQuery.OrderByDescending(user => user.Email)
+                : usersQuery.OrderBy(user => user.Email),
+            UsersQuery.SortPhone => query.SortDescending
+                ? usersQuery.OrderByDescending(user => user.PhoneNumber)
+                : usersQuery.OrderBy(user => user.PhoneNumber),
+            UsersQuery.SortTelegram => query.SortDescending
+                ? usersQuery.OrderByDescending(user => user.TelegramUserId)
+                : usersQuery.OrderBy(user => user.TelegramUserId),
+            _ => usersQuery.OrderBy(user => user.Email)
+        };
+
+        var users = await usersQuery
+            .Skip(query.Offset)
+            .Take(query.Limit)
+            .ToListAsync();
+
         var result = users.Select(user => new UserDto
         {
             Id = user.Id,
@@ -36,7 +74,16 @@ public class UsersController(UserManager<ApplicationUser> userManager, RoleManag
     {
         var user = new ApplicationUser { UserName = dto.Email, Email = dto.Email, PhoneNumber = dto.PhoneNumber };
         var result = await userManager.CreateAsync(user, dto.Password);
-        if (!result.Succeeded) return BadRequest(result.Errors);
+        if (!result.Succeeded)
+        {
+            if (result.Errors.Any(error => string.Equals(error.Code, nameof(IdentityErrorDescriber.DuplicateUserName), StringComparison.OrdinalIgnoreCase)
+                                           || string.Equals(error.Code, nameof(IdentityErrorDescriber.DuplicateEmail), StringComparison.OrdinalIgnoreCase)))
+            {
+                return Conflict(result.Errors);
+            }
+
+            return BadRequest(result.Errors);
+        }
 
         if (dto.Roles?.Any() == true)
         {
@@ -130,5 +177,57 @@ public class UsersController(UserManager<ApplicationUser> userManager, RoleManag
             }
 
         return NoContent();
+    }
+}
+
+public sealed class UsersQuery : IValidatableObject
+{
+    public const string SortEmail = "email";
+    public const string SortPhone = "phone";
+    public const string SortTelegram = "telegram";
+
+    private const int DefaultLimit = 50;
+    private const int MaxLimit = 200;
+    private static readonly HashSet<string> AllowedSorts = new(StringComparer.OrdinalIgnoreCase)
+    {
+        SortEmail,
+        $"-{SortEmail}",
+        SortPhone,
+        $"-{SortPhone}",
+        SortTelegram,
+        $"-{SortTelegram}"
+    };
+
+    [Range(1, MaxLimit)]
+    public int Limit { get; init; } = DefaultLimit;
+
+    [Range(0, int.MaxValue)]
+    public int Offset { get; init; }
+
+    public string? Sort { get; init; } = SortEmail;
+
+    public string? Search { get; init; }
+
+    public bool? HasTelegram { get; init; }
+
+    private string SortOrDefault => string.IsNullOrWhiteSpace(Sort) ? SortEmail : Sort;
+
+    public string SortField
+    {
+        get
+        {
+            var value = SortOrDefault;
+            return (value.StartsWith("-", StringComparison.Ordinal) ? value[1..] : value).ToLowerInvariant();
+        }
+    }
+
+    public bool SortDescending => SortOrDefault.StartsWith("-", StringComparison.Ordinal);
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (!AllowedSorts.Contains(SortOrDefault))
+        {
+            yield return new ValidationResult($"Sort '{Sort}' is not supported.", new[] { nameof(Sort) });
+        }
     }
 }
