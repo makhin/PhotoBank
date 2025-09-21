@@ -2,31 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Hosting;
-using Minio;
-using Moq;
 using NUnit.Framework;
 using PhotoBank.AccessControl;
-using PhotoBank.Api;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
+using PhotoBank.IntegrationTests.Infra;
 
 namespace PhotoBank.IntegrationTests;
 
@@ -34,10 +23,8 @@ namespace PhotoBank.IntegrationTests;
 public class FacesControllerUploadIntegrationTests
 {
     private const string AdminRole = "Admin";
-    private const string UserHeader = "X-Test-User";
-    private const string RolesHeader = "X-Test-Roles";
 
-    private TestWebApplicationFactory _factory = null!;
+    private ApiWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
     private FacesTestPhotoService _photoService = null!;
 
@@ -45,7 +32,32 @@ public class FacesControllerUploadIntegrationTests
     public void Setup()
     {
         _photoService = new FacesTestPhotoService();
-        _factory = new TestWebApplicationFactory(_photoService);
+        var configuration = TestConfiguration.Build(
+            "Server=(localdb)\\mssqllocaldb;Database=PhotoBankTests;Trusted_Connection=True;Encrypt=False;");
+
+        _factory = new ApiWebApplicationFactory(
+            configuration: configuration,
+            configureServices: services =>
+            {
+                services.RemoveAll<DbContextOptions<PhotoBankDbContext>>();
+                services.RemoveAll<PhotoBankDbContext>();
+                services.AddDbContext<PhotoBankDbContext>(options =>
+                    options.UseInMemoryDatabase($"faces-tests-{Guid.NewGuid():N}"));
+
+                services.RemoveAll<DbContextOptions<AccessControlDbContext>>();
+                services.RemoveAll<AccessControlDbContext>();
+                services.AddDbContext<AccessControlDbContext>(options =>
+                    options.UseInMemoryDatabase($"faces-access-tests-{Guid.NewGuid():N}"));
+
+                services.RemoveAll<IPhotoService>();
+                services.AddSingleton<IPhotoService>(_photoService);
+
+                services.AddTestAuthentication(options =>
+                {
+                    options.SchemeName = "FacesTests";
+                    options.ConfigureFallbackPolicy = true;
+                });
+            });
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("http://localhost")
@@ -123,118 +135,11 @@ public class FacesControllerUploadIntegrationTests
     private static HttpRequestMessage CreateRequest(string url)
     {
         var request = new HttpRequestMessage(HttpMethod.Get, url);
-        request.Headers.Add(UserHeader, "integration-admin");
-        request.Headers.Add(RolesHeader, AdminRole);
+        request.Headers.Add(TestAuthenticationDefaults.UserHeader, "integration-admin");
+        request.Headers.Add(TestAuthenticationDefaults.RolesHeader, AdminRole);
         return request;
     }
 
-    private sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
-    {
-        private readonly FacesTestPhotoService _photoService;
-
-        public TestWebApplicationFactory(FacesTestPhotoService photoService)
-        {
-            _photoService = photoService;
-        }
-
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
-        {
-            builder.UseEnvironment(Environments.Development);
-            builder.ConfigureAppConfiguration((_, configBuilder) =>
-            {
-                var overrides = new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:DefaultConnection"] = "Server=(localdb)\\mssqllocaldb;Database=PhotoBankTests;Trusted_Connection=True;Encrypt=False;",
-                    ["Jwt:Issuer"] = "issuer",
-                    ["Jwt:Audience"] = "audience",
-                    ["Jwt:Key"] = "super-secret-test-key"
-                };
-                configBuilder.AddInMemoryCollection(overrides);
-            });
-
-            builder.ConfigureTestServices(services =>
-            {
-                services.RemoveAll<DbContextOptions<PhotoBankDbContext>>();
-                services.RemoveAll<PhotoBankDbContext>();
-                services.AddDbContext<PhotoBankDbContext>(options =>
-                    options.UseInMemoryDatabase($"faces-tests-{Guid.NewGuid():N}"));
-
-                services.RemoveAll<DbContextOptions<AccessControlDbContext>>();
-                services.RemoveAll<AccessControlDbContext>();
-                services.AddDbContext<AccessControlDbContext>(options =>
-                    options.UseInMemoryDatabase($"faces-access-tests-{Guid.NewGuid():N}"));
-
-                services.RemoveAll<IMinioClient>();
-                services.AddSingleton(Mock.Of<IMinioClient>());
-
-                services.RemoveAll<IPhotoService>();
-                services.AddSingleton<IPhotoService>(_photoService);
-
-                services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
-                    options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
-                    options.DefaultScheme = TestAuthHandler.SchemeName;
-                }).AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
-
-                services.PostConfigure<AuthorizationOptions>(options =>
-                {
-                    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                        .AddAuthenticationSchemes(TestAuthHandler.SchemeName)
-                        .RequireAuthenticatedUser()
-                        .Build();
-                });
-            });
-        }
-    }
-
-    private sealed class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
-    {
-        public const string SchemeName = "FacesTests";
-
-        public TestAuthHandler(
-            IOptionsMonitor<AuthenticationSchemeOptions> options,
-            ILoggerFactory logger,
-            System.Text.Encodings.Web.UrlEncoder encoder,
-            ISystemClock clock)
-            : base(options, logger, encoder, clock)
-        {
-        }
-
-        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-        {
-            if (!Request.Headers.TryGetValue(UserHeader, out var userValues))
-            {
-                return Task.FromResult(AuthenticateResult.NoResult());
-            }
-
-            var user = userValues.ToString();
-            if (string.IsNullOrWhiteSpace(user))
-            {
-                return Task.FromResult(AuthenticateResult.Fail("User header missing"));
-            }
-
-            var claims = new List<Claim>
-            {
-                new(ClaimTypes.NameIdentifier, user),
-                new(ClaimTypes.Name, user)
-            };
-
-            if (Request.Headers.TryGetValue(RolesHeader, out var rolesValues))
-            {
-                var roles = rolesValues.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                foreach (var role in roles)
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, role));
-                }
-            }
-
-            var identity = new ClaimsIdentity(claims, Scheme.Name);
-            var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, Scheme.Name);
-            return Task.FromResult(AuthenticateResult.Success(ticket));
-        }
-    }
 
     private sealed class FacesTestPhotoService : IPhotoService
     {

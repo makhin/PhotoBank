@@ -7,24 +7,17 @@ using System.Threading.Tasks;
 using DotNet.Testcontainers.Builders;
 using Testcontainers.MsSql;
 using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
-using Minio;
-using Moq;
 using NUnit.Framework;
-using PhotoBank.Api;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.ViewModel.Dto;
 using Respawn;
+using PhotoBank.IntegrationTests.Infra;
 
 namespace PhotoBank.IntegrationTests.Auth;
 
@@ -36,7 +29,7 @@ public class TelegramSubscriptionsTests
     private MsSqlContainer _dbContainer = null!;
     private Respawner _respawner = null!;
     private string _connectionString = string.Empty;
-    private TestWebApplicationFactory _factory = null!;
+    private ApiWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
 
     [OneTimeSetUp]
@@ -104,7 +97,14 @@ public class TelegramSubscriptionsTests
             await _respawner.ResetAsync(conn);
         }
 
-        _factory = new TestWebApplicationFactory(_connectionString, ServiceKey);
+        var configuration = TestConfiguration.Build(
+            _connectionString,
+            new Dictionary<string, string?>
+            {
+                ["Auth:Telegram:ServiceKey"] = ServiceKey
+            });
+
+        _factory = new ApiWebApplicationFactory(configuration: configuration);
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("http://localhost")
@@ -210,38 +210,4 @@ public class TelegramSubscriptionsTests
         result4.Succeeded.Should().BeTrue();
     }
 
-    private sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
-    {
-        private readonly string _connectionString;
-        private readonly string _serviceKey;
-
-        public TestWebApplicationFactory(string connectionString, string serviceKey)
-        {
-            _connectionString = connectionString;
-            _serviceKey = serviceKey;
-        }
-
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
-        {
-            builder.UseEnvironment(Environments.Development);
-            builder.ConfigureAppConfiguration((context, configBuilder) =>
-            {
-                var overrides = new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:DefaultConnection"] = _connectionString,
-                    ["Jwt:Issuer"] = "issuer",
-                    ["Jwt:Audience"] = "audience",
-                    ["Jwt:Key"] = "super-secret",
-                    ["Auth:Telegram:ServiceKey"] = _serviceKey
-                };
-                configBuilder.AddInMemoryCollection(overrides);
-            });
-
-            builder.ConfigureTestServices(services =>
-            {
-                services.RemoveAll<IMinioClient>();
-                services.AddSingleton(Mock.Of<IMinioClient>());
-            });
-        }
-    }
 }
