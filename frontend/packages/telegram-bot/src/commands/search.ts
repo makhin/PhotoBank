@@ -9,6 +9,7 @@ import {
   startOfDay,
   startOfMonth,
   startOfYear,
+  subMilliseconds,
 } from 'date-fns';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 
@@ -103,7 +104,9 @@ function parseDateExpr(expr: string): { from?: Date; to?: Date } {
 function parseBefore(val?: string): { to?: Date } {
   if (!val) return {};
   const p = parseSingleLoose(val);
-  return p ? { to: endOfDay(p.to) } : {};
+  if (!p) return {};
+  const start = startOfDay(p.from);
+  return { to: subMilliseconds(start, 1) };
 }
 
 /** after:VAL → только нижняя граница */
@@ -125,7 +128,7 @@ function parseAfter(val?: string): { from?: Date } {
  *
  * ⚠️ В фильтре используем только имена.
  */
-function parseArgsToFilter(raw: string): FilterDto {
+export function parseArgsToFilter(raw: string): FilterDto {
   const tokens = tokenize(raw);
 
   const tagNames: string[] = [];
