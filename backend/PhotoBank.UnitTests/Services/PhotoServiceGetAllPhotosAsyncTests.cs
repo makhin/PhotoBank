@@ -31,6 +31,23 @@ namespace PhotoBank.UnitTests.Services
     {
         private IMapper _mapper;
 
+        private static Face CreateFace(Photo photo, Person person)
+        {
+            return new Face
+            {
+                Photo = photo,
+                PhotoId = photo.Id,
+                Person = person,
+                PersonId = person.Id,
+                Rectangle = new Point(0, 0),
+                S3Key_Image = "image",
+                S3ETag_Image = "etag",
+                Sha256_Image = "hash",
+                FaceAttributes = "{}",
+                IdentityStatus = IdentityStatus.Identified
+            };
+        }
+
         [SetUp]
         public void Setup()
         {
@@ -194,7 +211,6 @@ namespace PhotoBank.UnitTests.Services
             result.Items.Should().ContainSingle(p => p.Name == "bw");
         }
 
-        [Ignore("Could not translated")]
         [Test]
         public async Task GetAllPhotosAsync_FilterByTag_ReturnsMatchingPhotos()
         {
@@ -243,9 +259,9 @@ namespace PhotoBank.UnitTests.Services
             // Assert
             result.TotalCount.Should().Be(1);
             result.Items.Should().ContainSingle(p => p.Name == "withTag");
+            result.Items.Should().NotContain(p => p.Name == "withoutTag");
         }
 
-        [Ignore("Could not translated")]
         [Test]
         public async Task GetAllPhotosAsync_FilterByMultipleTags_ReturnsPhotosWithAllTags()
         {
@@ -307,7 +323,7 @@ namespace PhotoBank.UnitTests.Services
             await context.SaveChangesAsync();
 
             var service = CreateService(dbName);
-            var filter = new FilterDto { Tags = new[] { tag1.Id, tag2.Id } };
+            var filter = new FilterDto { Tags = new[] { tag1.Id, tag2.Id, tag1.Id } };
 
             // Act
             var result = await service.GetAllPhotosAsync(filter);
@@ -315,9 +331,10 @@ namespace PhotoBank.UnitTests.Services
             // Assert
             result.TotalCount.Should().Be(1);
             result.Items.Should().ContainSingle(p => p.Name == "all");
+            result.Items.Should().NotContain(p => p.Name == "t1");
+            result.Items.Should().NotContain(p => p.Name == "t2");
         }
 
-        [Ignore("Could not translated")]
         [Test]
         public async Task GetAllPhotosAsync_FilterByMultiplePersons_ReturnsPhotosWithAllPersons()
         {
@@ -345,8 +362,8 @@ namespace PhotoBank.UnitTests.Services
                 .Build();
             photoBoth.Faces = new List<Face>
             {
-                new Face { Photo = photoBoth, Person = person1, PersonId = person1.Id },
-                new Face { Photo = photoBoth, Person = person2, PersonId = person2.Id }
+                CreateFace(photoBoth, person1),
+                CreateFace(photoBoth, person2)
             };
 
             var photoOnlyP1 = Builder<Photo>.CreateNew()
@@ -359,7 +376,7 @@ namespace PhotoBank.UnitTests.Services
                 .Build();
             photoOnlyP1.Faces = new List<Face>
             {
-                new Face { Photo = photoOnlyP1, Person = person1, PersonId = person1.Id }
+                CreateFace(photoOnlyP1, person1)
             };
 
             var photoOnlyP2 = Builder<Photo>.CreateNew()
@@ -372,14 +389,14 @@ namespace PhotoBank.UnitTests.Services
                 .Build();
             photoOnlyP2.Faces = new List<Face>
             {
-                new Face { Photo = photoOnlyP2, Person = person2, PersonId = person2.Id }
+                CreateFace(photoOnlyP2, person2)
             };
 
             context.Photos.AddRange(photoBoth, photoOnlyP1, photoOnlyP2);
             await context.SaveChangesAsync();
 
             var service = CreateService(dbName);
-            var filter = new FilterDto { Persons = new[] { person1.Id, person2.Id } };
+            var filter = new FilterDto { Persons = new[] { person1.Id, person2.Id, person1.Id } };
 
             // Act
             var result = await service.GetAllPhotosAsync(filter);
@@ -387,6 +404,8 @@ namespace PhotoBank.UnitTests.Services
             // Assert
             result.TotalCount.Should().Be(1);
             result.Items.Should().ContainSingle(p => p.Name == "both");
+            result.Items.Should().NotContain(p => p.Name == "p1");
+            result.Items.Should().NotContain(p => p.Name == "p2");
         }
     }
 }

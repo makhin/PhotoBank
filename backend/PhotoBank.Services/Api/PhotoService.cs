@@ -189,16 +189,34 @@ public class PhotoService : IPhotoService
         // Îïòèìèçèðîâàííûå ôèëüòðû (îäèí Any + Contains)
         if (filter.Persons?.Any() == true)
         {
-            var personIds = filter.Persons.ToList();
-            query = query.Where(p =>
-                _db.Faces.Any(f => f.PhotoId == p.Id && f.PersonId != null && personIds.Contains(f.PersonId.Value)));
+            var personIds = filter.Persons.Distinct().ToArray();
+            var requiredPersons = personIds.Length;
+
+            if (requiredPersons > 0)
+            {
+                query = query.Where(p =>
+                    _db.Faces
+                        .Where(f => f.PhotoId == p.Id && f.PersonId != null && personIds.Contains(f.PersonId.Value))
+                        .Select(f => f.PersonId.Value)
+                        .Distinct()
+                        .Count() == requiredPersons);
+            }
         }
 
         if (filter.Tags?.Any() == true)
         {
-            var tagIds = filter.Tags.ToList();
-            query = query.Where(p =>
-                _db.PhotoTags.Any(pt => pt.PhotoId == p.Id && tagIds.Contains(pt.TagId)));
+            var tagIds = filter.Tags.Distinct().ToArray();
+            var requiredTags = tagIds.Length;
+
+            if (requiredTags > 0)
+            {
+                query = query.Where(p =>
+                    _db.PhotoTags
+                        .Where(pt => pt.PhotoId == p.Id && tagIds.Contains(pt.TagId))
+                        .Select(pt => pt.TagId)
+                        .Distinct()
+                        .Count() == requiredTags);
+            }
         }
 
         return query;
