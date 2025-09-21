@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +14,9 @@ using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using PhotoBank.Services.FaceRecognition.Abstractions;
 using PhotoBank.Services.FaceRecognition.Azure;
+using PhotoBank.UnitTests.Infrastructure.FaceRecognition;
+using PhotoBank.UnitTests.Infrastructure.Http;
+using PhotoBank.UnitTests.Infrastructure.Logging;
 
 namespace PhotoBank.UnitTests.FaceRecognition;
 
@@ -34,19 +36,27 @@ public class AzureFaceProviderTests
             DetectionModel = "detection_01",
             RecognitionModel = "recognition_04"
         };
-        var handler = new SequenceHandler();
-        RequestSnapshot? detectedRequest = null;
+        var handler = new HttpMockSequenceHandler();
+        HttpRequestSnapshot? detectedRequest = null;
         handler.Enqueue((req, _) =>
         {
-            detectedRequest = RequestSnapshot.From(req);
-            var json = "[" +
-                       "{\"faceId\":\"11111111-1111-1111-1111-111111111111\",\"faceAttributes\":{\"age\":25.4,\"gender\":\"male\"}}," +
-                       "{\"faceId\":\"22222222-2222-2222-2222-222222222222\",\"faceAttributes\":{\"age\":32.1,\"gender\":\"female\"}}" +
-                       "]";
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(json, Encoding.UTF8, "application/json")
-            });
+            detectedRequest = HttpRequestSnapshot.Capture(req);
+            var response = HttpResponseBuilder.Create()
+                .WithJson(new[]
+                {
+                    new
+                    {
+                        faceId = "11111111-1111-1111-1111-111111111111",
+                        faceAttributes = new { age = 25.4, gender = "male" }
+                    },
+                    new
+                    {
+                        faceId = "22222222-2222-2222-2222-222222222222",
+                        faceAttributes = new { age = 32.1, gender = "female" }
+                    }
+                })
+                .Build();
+            return Task.FromResult(response);
         });
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
@@ -60,7 +70,7 @@ public class AzureFaceProviderTests
         detectedRequest.Headers.Should().ContainKey("Ocp-Apim-Subscription-Key");
         detectedRequest.Headers["Ocp-Apim-Subscription-Key"].Should().Contain(ApiKey);
 
-        var query = ParseQuery(detectedRequest.Query);
+        var query = QueryStringParser.Parse(detectedRequest.Query);
         query.Should().ContainKey("recognitionModel");
         query["recognitionModel"].Should().ContainSingle().Which.Should().Be("recognition_04");
         query.Should().ContainKey("detectionModel");
@@ -99,15 +109,18 @@ public class AzureFaceProviderTests
             DetectionModel = "detection_02",
             RecognitionModel = "recognition_04"
         };
-        var handler = new SequenceHandler();
-        RequestSnapshot? detectedRequest = null;
+        var handler = new HttpMockSequenceHandler();
+        HttpRequestSnapshot? detectedRequest = null;
         handler.Enqueue((req, _) =>
         {
-            detectedRequest = RequestSnapshot.From(req);
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("[{\"faceId\":\"33333333-3333-3333-3333-333333333333\"}]", Encoding.UTF8, "application/json")
-            });
+            detectedRequest = HttpRequestSnapshot.Capture(req);
+            var response = HttpResponseBuilder.Create()
+                .WithJson(new[]
+                {
+                    new { faceId = "33333333-3333-3333-3333-333333333333" }
+                })
+                .Build();
+            return Task.FromResult(response);
         });
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
@@ -116,7 +129,7 @@ public class AzureFaceProviderTests
         var faces = await provider.DetectAsync(image, CancellationToken.None);
 
         detectedRequest.Should().NotBeNull();
-        var query = ParseQuery(detectedRequest!.Query);
+        var query = QueryStringParser.Parse(detectedRequest!.Query);
         query.Should().NotContainKey("returnFaceAttributes");
         faces.Should().ContainSingle(f => f.ProviderFaceId == "33333333-3333-3333-3333-333333333333");
     }
@@ -131,21 +144,22 @@ public class AzureFaceProviderTests
             PersonGroupId = "group-1",
             RecognitionModel = "recognition_03"
         };
-        var handler = new SequenceHandler();
-        RequestSnapshot? getRequest = null;
-        RequestSnapshot? createRequest = null;
+        var handler = new HttpMockSequenceHandler();
+        HttpRequestSnapshot? getRequest = null;
+        HttpRequestSnapshot? createRequest = null;
         handler.Enqueue((req, _) =>
         {
-            getRequest = RequestSnapshot.From(req);
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)
-            {
-                Content = new StringContent("{\"error\":{\"code\":\"PersonGroupNotFound\",\"message\":\"not found\"}}", Encoding.UTF8, "application/json")
-            });
+            getRequest = HttpRequestSnapshot.Capture(req);
+            var response = HttpResponseBuilder.Create()
+                .WithStatus(HttpStatusCode.NotFound)
+                .WithError("PersonGroupNotFound", "not found")
+                .Build();
+            return Task.FromResult(response);
         });
         handler.Enqueue((req, _) =>
         {
-            createRequest = RequestSnapshot.From(req);
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+            createRequest = HttpRequestSnapshot.Capture(req);
+            return Task.FromResult(HttpResponseBuilder.Create().Build());
         });
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
@@ -178,49 +192,49 @@ public class AzureFaceProviderTests
             PersonGroupId = "group-1",
             TrainTimeoutSeconds = 30
         };
-        var handler = new SequenceHandler();
-        RequestSnapshot? addFaceRequest = null;
-        RequestSnapshot? trainRequest = null;
+        var handler = new HttpMockSequenceHandler();
+        HttpRequestSnapshot? addFaceRequest = null;
+        HttpRequestSnapshot? trainRequest = null;
         handler.Enqueue((req, _) => // list persons
         {
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("[]", Encoding.UTF8, "application/json")
-            });
+            var response = HttpResponseBuilder.Create()
+                .WithJson(Array.Empty<object>())
+                .Build();
+            return Task.FromResult(response);
         });
         handler.Enqueue((req, _) => // create person
         {
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("{\"personId\":\"11111111-1111-1111-1111-111111111111\"}", Encoding.UTF8, "application/json")
-            });
+            var response = HttpResponseBuilder.Create()
+                .WithJson(new { personId = "11111111-1111-1111-1111-111111111111" })
+                .Build();
+            return Task.FromResult(response);
         });
         handler.Enqueue((req, _) => // get person
         {
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("{\"persistedFaceIds\":[]}", Encoding.UTF8, "application/json")
-            });
+            var response = HttpResponseBuilder.Create()
+                .WithJson(new { persistedFaceIds = Array.Empty<string>() })
+                .Build();
+            return Task.FromResult(response);
         });
         handler.Enqueue((req, _) => // add face
         {
-            addFaceRequest = RequestSnapshot.From(req);
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("{\"persistedFaceId\":\"22222222-2222-2222-2222-222222222222\"}", Encoding.UTF8, "application/json")
-            });
+            addFaceRequest = HttpRequestSnapshot.Capture(req);
+            var response = HttpResponseBuilder.Create()
+                .WithJson(new { persistedFaceId = "22222222-2222-2222-2222-222222222222" })
+                .Build();
+            return Task.FromResult(response);
         });
         handler.Enqueue((req, _) => // train
         {
-            trainRequest = RequestSnapshot.From(req);
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted));
+            trainRequest = HttpRequestSnapshot.Capture(req);
+            return Task.FromResult(HttpResponseBuilder.Create().WithStatus(HttpStatusCode.Accepted).Build());
         });
         handler.Enqueue((req, _) => // training status
         {
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("{\"status\":\"failed\",\"message\":\"boom\"}", Encoding.UTF8, "application/json")
-            });
+            var response = HttpResponseBuilder.Create()
+                .WithJson(new { status = "failed", message = "boom" })
+                .Build();
+            return Task.FromResult(response);
         });
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
@@ -231,7 +245,7 @@ public class AzureFaceProviderTests
         addFaceRequest.Should().NotBeNull();
         addFaceRequest!.Method.Should().Be(HttpMethod.Post);
         addFaceRequest.Path.Should().Be("/face/v1.0/persongroups/group-1/persons/11111111-1111-1111-1111-111111111111/persistedfaces");
-        var addQuery = ParseQuery(addFaceRequest.Query);
+        var addQuery = QueryStringParser.Parse(addFaceRequest.Query);
         addQuery.Should().ContainKey("userData");
         addQuery["userData"].Should().ContainSingle().Which.Should().Be("42");
 
@@ -254,24 +268,23 @@ public class AzureFaceProviderTests
             PersonGroupId = "group-1",
             TrainTimeoutSeconds = 0
         };
-        var handler = new SequenceHandler();
-        handler.Enqueue((req, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent("[{\"personId\":\"11111111-1111-1111-1111-111111111111\",\"userData\":\"10\"}]", Encoding.UTF8, "application/json")
-        }));
-        handler.Enqueue((req, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent("{\"persistedFaceIds\":[]}", Encoding.UTF8, "application/json")
-        }));
-        handler.Enqueue((req, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent("{\"persistedFaceId\":\"22222222-2222-2222-2222-222222222222\"}", Encoding.UTF8, "application/json")
-        }));
-        handler.Enqueue((req, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Accepted)));
-        handler.Enqueue((req, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent("{\"status\":\"running\"}", Encoding.UTF8, "application/json")
-        }));
+        var handler = new HttpMockSequenceHandler();
+        handler.Enqueue((req, _) => Task.FromResult(
+            HttpResponseBuilder.Create()
+                .WithJson(new[] { new { personId = "11111111-1111-1111-1111-111111111111", userData = "10" } })
+                .Build()));
+        handler.Enqueue((req, _) => Task.FromResult(
+            HttpResponseBuilder.Create()
+                .WithJson(new { persistedFaceIds = Array.Empty<string>() })
+                .Build()));
+        handler.Enqueue((req, _) => Task.FromResult(
+            HttpResponseBuilder.Create()
+                .WithJson(new { persistedFaceId = "22222222-2222-2222-2222-222222222222" })
+                .Build()));
+        handler.Enqueue((req, _) => Task.FromResult(
+            HttpResponseBuilder.Create().WithStatus(HttpStatusCode.Accepted).Build()));
+        handler.Enqueue((req, _) => Task.FromResult(
+            HttpResponseBuilder.Create().WithJson(new { status = "running" }).Build()));
 
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
@@ -291,19 +304,19 @@ public class AzureFaceProviderTests
             Key = ApiKey,
             PersonGroupId = "group-1"
         };
-        var handler = new SequenceHandler();
-        RequestSnapshot? createRequest = null;
-        handler.Enqueue((req, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent("[{\"personId\":\"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa\",\"userData\":\"1\"}]", Encoding.UTF8, "application/json")
-        }));
+        var handler = new HttpMockSequenceHandler();
+        HttpRequestSnapshot? createRequest = null;
+        handler.Enqueue((req, _) => Task.FromResult(
+            HttpResponseBuilder.Create()
+                .WithJson(new[] { new { personId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", userData = "1" } })
+                .Build()));
         handler.Enqueue((req, _) =>
         {
-            createRequest = RequestSnapshot.From(req);
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("{\"personId\":\"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb\"}", Encoding.UTF8, "application/json")
-            });
+            createRequest = HttpRequestSnapshot.Capture(req);
+            var response = HttpResponseBuilder.Create()
+                .WithJson(new { personId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" })
+                .Build();
+            return Task.FromResult(response);
         });
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
@@ -337,26 +350,42 @@ public class AzureFaceProviderTests
             PersonGroupId = "group-1",
             IdentifyChunkSize = 2
         };
-        var handler = new SequenceHandler();
+        var handler = new HttpMockSequenceHandler();
         var firstRequestBodies = new List<string>();
         handler.Enqueue(async (req, _) =>
         {
             firstRequestBodies.Add(await req.Content!.ReadAsStringAsync());
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("[" +
-                    "{\"faceId\":\"11111111-1111-1111-1111-111111111111\",\"candidates\":[{\"personId\":\"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa\",\"confidence\":0.9}]} ," +
-                    "{\"faceId\":\"22222222-2222-2222-2222-222222222222\",\"candidates\":[]}" +
-                    "]", Encoding.UTF8, "application/json")
-            };
+            var response = HttpResponseBuilder.Create()
+                .WithJson(new[]
+                {
+                    new
+                    {
+                        faceId = "11111111-1111-1111-1111-111111111111",
+                        candidates = new object[] { new { personId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", confidence = 0.9 } }
+                    },
+                    new
+                    {
+                        faceId = "22222222-2222-2222-2222-222222222222",
+                        candidates = Array.Empty<object>()
+                    }
+                })
+                .Build();
+            return response;
         });
         handler.Enqueue(async (req, _) =>
         {
             firstRequestBodies.Add(await req.Content!.ReadAsStringAsync());
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("[{\"faceId\":\"33333333-3333-3333-3333-333333333333\",\"candidates\":[{\"personId\":\"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb\",\"confidence\":0.42}]}]", Encoding.UTF8, "application/json")
-            };
+            var response = HttpResponseBuilder.Create()
+                .WithJson(new[]
+                {
+                    new
+                    {
+                        faceId = "33333333-3333-3333-3333-333333333333",
+                        candidates = new object[] { new { personId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", confidence = 0.42 } }
+                    }
+                })
+                .Build();
+            return response;
         });
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
@@ -392,7 +421,7 @@ public class AzureFaceProviderTests
             Key = ApiKey,
             PersonGroupId = "group-1"
         };
-        var handler = new SequenceHandler();
+        var handler = new HttpMockSequenceHandler();
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
 
@@ -402,87 +431,9 @@ public class AzureFaceProviderTests
         handler.PendingHandlers.Should().Be(0);
     }
 
-    private static AzureFaceProvider CreateProvider(AzureFaceOptions options, SequenceHandler handler, ILogger<AzureFaceProvider> logger)
+    private static AzureFaceProvider CreateProvider(AzureFaceOptions options, HttpMockSequenceHandler handler, ILogger<AzureFaceProvider> logger)
     {
-        var client = new FaceClient(new ApiKeyServiceClientCredentials(options.Key), new HttpClient(handler), true)
-        {
-            Endpoint = options.Endpoint
-        };
+        var client = AzureFaceClientFactory.Create(options, handler);
         return new AzureFaceProvider(client, Options.Create(options), logger);
-    }
-
-    private static IReadOnlyDictionary<string, List<string>> ParseQuery(string query)
-    {
-        if (string.IsNullOrEmpty(query))
-        {
-            return new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
-        }
-
-        return query.TrimStart('?')
-            .Split('&', StringSplitOptions.RemoveEmptyEntries)
-            .Select(part => part.Split('=', 2))
-            .GroupBy(parts => Uri.UnescapeDataString(parts[0]), StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(g => g.Key,
-                          g => g.Select(parts => parts.Length > 1 ? Uri.UnescapeDataString(parts[1]) : string.Empty).ToList(),
-                          StringComparer.OrdinalIgnoreCase);
-    }
-
-    private sealed class SequenceHandler : HttpMessageHandler
-    {
-        private readonly Queue<Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>> _queue = new();
-
-        public void Enqueue(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler)
-            => _queue.Enqueue(handler);
-
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            if (_queue.Count == 0)
-            {
-                throw new InvalidOperationException($"Unexpected request: {request.Method} {request.RequestUri}");
-            }
-
-            return _queue.Dequeue().Invoke(request, cancellationToken);
-        }
-
-        public int PendingHandlers => _queue.Count;
-    }
-
-    private sealed record RequestSnapshot(HttpMethod Method, string Path, string Query, Dictionary<string, string[]> Headers, string? Body)
-    {
-        public static RequestSnapshot From(HttpRequestMessage request)
-        {
-            var headers = request.Headers.ToDictionary(h => h.Key, h => h.Value.ToArray(), StringComparer.OrdinalIgnoreCase);
-            string? body = null;
-            if (request.Content != null)
-            {
-                body = request.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            }
-            return new RequestSnapshot(request.Method, request.RequestUri!.AbsolutePath, request.RequestUri!.Query, headers, body);
-        }
-    }
-
-    private sealed class TestLogger<T> : ILogger<T>
-    {
-        public List<LogEntry> Entries { get; } = new();
-
-        public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
-
-        public bool IsEnabled(LogLevel logLevel) => true;
-
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        {
-            Entries.Add(new LogEntry(logLevel, formatter(state, exception), exception));
-        }
-    }
-
-    private sealed record LogEntry(LogLevel Level, string Message, Exception? Exception);
-
-    private sealed class NullScope : IDisposable
-    {
-        public static readonly NullScope Instance = new();
-
-        public void Dispose()
-        {
-        }
     }
 }
