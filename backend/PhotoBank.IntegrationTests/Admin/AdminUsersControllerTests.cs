@@ -4,33 +4,22 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
 using DotNet.Testcontainers.Builders;
 using Testcontainers.MsSql;
 using FluentAssertions;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Minio;
-using Moq;
 using NUnit.Framework;
-using PhotoBank.Api;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.ViewModel.Dto;
 using Respawn;
+using PhotoBank.IntegrationTests.Infra;
 
 namespace PhotoBank.IntegrationTests.Admin;
 
@@ -38,13 +27,11 @@ namespace PhotoBank.IntegrationTests.Admin;
 public class AdminUsersControllerTests
 {
     private const string AdminRole = "Admin";
-    private const string UserHeader = "X-Test-User";
-    private const string RolesHeader = "X-Test-Roles";
 
     private MsSqlContainer _dbContainer = null!;
     private Respawner _respawner = null!;
     private string _connectionString = string.Empty;
-    private TestWebApplicationFactory _factory = null!;
+    private ApiWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
     private JsonSerializerOptions _jsonOptions = null!;
 
@@ -117,7 +104,14 @@ public class AdminUsersControllerTests
             await _respawner.ResetAsync(conn);
         }
 
-        _factory = new TestWebApplicationFactory(_connectionString);
+        var configuration = TestConfiguration.Build(_connectionString);
+
+        _factory = new ApiWebApplicationFactory(
+            configuration: configuration,
+            configureServices: services =>
+            {
+                services.AddTestAuthentication();
+            });
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("http://localhost")
@@ -256,8 +250,8 @@ public class AdminUsersControllerTests
 
     private static void AddAdminHeaders(HttpRequestMessage request)
     {
-        request.Headers.Add(UserHeader, "admin");
-        request.Headers.Add(RolesHeader, AdminRole);
+        request.Headers.Add(TestAuthenticationDefaults.UserHeader, "admin");
+        request.Headers.Add(TestAuthenticationDefaults.RolesHeader, AdminRole);
     }
 
     private async Task SeedUsersAsync(params ApplicationUser[] users)
@@ -272,86 +266,4 @@ public class AdminUsersControllerTests
         }
     }
 
-    private sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
-    {
-        private readonly string _connectionString;
-
-        public TestWebApplicationFactory(string connectionString)
-        {
-            _connectionString = connectionString;
-        }
-
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
-        {
-            builder.UseEnvironment(Environments.Development);
-            builder.ConfigureAppConfiguration((context, configBuilder) =>
-            {
-                var overrides = new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:DefaultConnection"] = _connectionString,
-                    ["Jwt:Issuer"] = "issuer",
-                    ["Jwt:Audience"] = "audience",
-                    ["Jwt:Key"] = "super-secret"
-                };
-                configBuilder.AddInMemoryCollection(overrides);
-            });
-
-            builder.ConfigureTestServices(services =>
-            {
-                services.RemoveAll<IMinioClient>();
-                services.AddSingleton(Mock.Of<IMinioClient>());
-
-                services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
-                    options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
-                    options.DefaultScheme = TestAuthHandler.SchemeName;
-                }).AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
-            });
-        }
-    }
-
-    private sealed class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
-    {
-        public const string SchemeName = "Test";
-
-        public TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, System.Text.Encodings.Web.UrlEncoder encoder, ISystemClock clock)
-            : base(options, logger, encoder, clock)
-        {
-        }
-
-        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-        {
-            if (!Request.Headers.TryGetValue(UserHeader, out var userValues))
-            {
-                return Task.FromResult(AuthenticateResult.NoResult());
-            }
-
-            var user = userValues.ToString();
-            if (string.IsNullOrWhiteSpace(user))
-            {
-                return Task.FromResult(AuthenticateResult.Fail("User header missing"));
-            }
-
-            var claims = new List<Claim>
-            {
-                new(ClaimTypes.NameIdentifier, user),
-                new(ClaimTypes.Name, user)
-            };
-
-            if (Request.Headers.TryGetValue(RolesHeader, out var rolesValues))
-            {
-                var roles = rolesValues.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-                foreach (var role in roles)
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, role));
-                }
-            }
-
-            var identity = new ClaimsIdentity(claims, Scheme.Name);
-            var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, Scheme.Name);
-            return Task.FromResult(AuthenticateResult.Success(ticket));
-        }
-    }
 }
