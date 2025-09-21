@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -14,8 +13,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Rest;
 using Minio;
-using Minio.DataModel;
-using Minio.DataModel.Args;
 using NetTopologySuite.Geometries;
 using Moq;
 using NUnit.Framework;
@@ -28,6 +25,7 @@ using DbPersonFace = PhotoBank.DbContext.Models.PersonFace;
 using DbPhoto = PhotoBank.DbContext.Models.Photo;
 using DbStorage = PhotoBank.DbContext.Models.Storage;
 using IdentityStatus = PhotoBank.DbContext.Models.IdentityStatus;
+using PhotoBank.UnitTests.Infrastructure.Minio;
 
 namespace PhotoBank.UnitTests;
 
@@ -79,7 +77,7 @@ public class FaceServiceIdentifyTests
         var faceId = Guid.NewGuid();
         var face = await SeedFaceAsync(storageId: 9, identityStatus: IdentityStatus.ForReprocessing, s3Key: "face1");
 
-        SetupMinioReturning(new byte[] { 1, 2, 3 });
+        _minioClient.SetupGetObjectReturning(new byte[] { 1, 2, 3 });
         SetupDetection(new List<DetectedFace> { new DetectedFace { FaceId = faceId } });
         SetupIdentify(new List<IdentifyResult>());
 
@@ -98,7 +96,7 @@ public class FaceServiceIdentifyTests
         var faceId = Guid.NewGuid();
         var face = await SeedFaceAsync(storageId: 9, identityStatus: IdentityStatus.ForReprocessing, s3Key: "face2");
 
-        SetupMinioReturning(new byte[] { 4, 5, 6 });
+        _minioClient.SetupGetObjectReturning(new byte[] { 4, 5, 6 });
         SetupDetection(new List<DetectedFace> { new DetectedFace { FaceId = faceId } });
         SetupIdentify(new List<IdentifyResult>
         {
@@ -128,7 +126,7 @@ public class FaceServiceIdentifyTests
         await _dbContext.SaveChangesAsync();
 
         var detectionFaceId = Guid.NewGuid();
-        SetupMinioReturning(new byte[] { 7, 8, 9 });
+        _minioClient.SetupGetObjectReturning(new byte[] { 7, 8, 9 });
         SetupDetection(new List<DetectedFace> { new DetectedFace { FaceId = detectionFaceId } });
         SetupIdentify(new List<IdentifyResult>
         {
@@ -254,18 +252,4 @@ public class FaceServiceIdentifyTests
             .ReturnsAsync(new HttpOperationResponse<IList<IdentifyResult>> { Body = results });
     }
 
-    private void SetupMinioReturning(byte[] data)
-    {
-        _minioClient
-            .Setup(m => m.GetObjectAsync(It.IsAny<GetObjectArgs>(), It.IsAny<CancellationToken>()))
-            .Callback<GetObjectArgs, CancellationToken>((args, token) =>
-            {
-                var field = args.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
-                    .FirstOrDefault(f => typeof(Delegate).IsAssignableFrom(f.FieldType));
-                var del = field?.GetValue(args) as Delegate;
-                using var stream = new MemoryStream(data);
-                del?.DynamicInvoke(stream, CancellationToken.None);
-            })
-            .ReturnsAsync((ObjectStat)Activator.CreateInstance(typeof(ObjectStat), nonPublic: true)!);
-    }
 }

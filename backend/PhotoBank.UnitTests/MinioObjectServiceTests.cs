@@ -1,16 +1,12 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Minio;
-using Minio.DataModel;
 using Minio.DataModel.Args;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.Services;
+using PhotoBank.UnitTests.Infrastructure.Minio;
 
 namespace PhotoBank.UnitTests;
 
@@ -23,16 +19,7 @@ public class MinioObjectServiceTests
         var data = new byte[] { 1, 2, 3 };
         GetObjectArgs? capturedArgs = null;
         var minio = new Mock<IMinioClient>();
-        minio.Setup(m => m.GetObjectAsync(It.IsAny<GetObjectArgs>(), It.IsAny<CancellationToken>()))
-            .Callback<GetObjectArgs, CancellationToken>((args, ct) =>
-            {
-                capturedArgs = args;
-                var field = args.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
-                    .FirstOrDefault(f => typeof(Delegate).IsAssignableFrom(f.FieldType));
-                var del = field?.GetValue(args) as Delegate;
-                del?.DynamicInvoke(new MemoryStream(data), CancellationToken.None);
-            })
-            .ReturnsAsync((ObjectStat)Activator.CreateInstance(typeof(ObjectStat), nonPublic: true)!);
+        minio.SetupGetObjectReturning(data, args => capturedArgs = args);
 
         var service = new MinioObjectService(minio.Object);
         var result = await service.GetObjectAsync("key1");
