@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Rest;
 using Minio;
 using Moq;
+using Moq.Language.Flow;
 using NUnit.Framework;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
@@ -66,17 +67,7 @@ public class FaceServiceErrorHandlingTests
     [Test]
     public async Task DetectFacesAsync_WhenApiReturnsNull_ShouldReturnEmptyList()
     {
-        _faceOperations
-            .Setup(x => x.DetectWithStreamWithHttpMessagesAsync(
-                It.IsAny<Stream>(),
-                It.IsAny<bool?>(),
-                It.IsAny<bool?>(),
-                It.IsAny<IList<FaceAttributeType?>>(),
-                It.IsAny<string?>(),
-                It.IsAny<bool?>(),
-                It.IsAny<string?>(),
-                It.IsAny<Dictionary<string, List<string>>>(),
-                It.IsAny<CancellationToken>()))
+        SetupDetectCall()
             .ReturnsAsync(new HttpOperationResponse<IList<DetectedFace>>
             {
                 Body = null!
@@ -85,17 +76,7 @@ public class FaceServiceErrorHandlingTests
         var result = await _service.DetectFacesAsync(new byte[] { 1, 2, 3 });
 
         result.Should().NotBeNull().And.BeEmpty();
-        _faceOperations.Verify(x => x.DetectWithStreamWithHttpMessagesAsync(
-                It.IsAny<Stream>(),
-                It.IsAny<bool?>(),
-                It.IsAny<bool?>(),
-                It.IsAny<IList<FaceAttributeType?>>(),
-                It.IsAny<string?>(),
-                It.IsAny<bool?>(),
-                It.IsAny<string?>(),
-                It.IsAny<Dictionary<string, List<string>>>(),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
+        VerifyDetectCalled(Times.Once());
     }
 
     [Test]
@@ -103,17 +84,7 @@ public class FaceServiceErrorHandlingTests
     {
         var exception = CreateHttpException(HttpStatusCode.BadRequest);
 
-        _faceOperations
-            .Setup(x => x.DetectWithStreamWithHttpMessagesAsync(
-                It.IsAny<Stream>(),
-                It.IsAny<bool?>(),
-                It.IsAny<bool?>(),
-                It.IsAny<IList<FaceAttributeType?>>(),
-                It.IsAny<string?>(),
-                It.IsAny<bool?>(),
-                It.IsAny<string?>(),
-                It.IsAny<Dictionary<string, List<string>>>(),
-                It.IsAny<CancellationToken>()))
+        SetupDetectCall()
             .ThrowsAsync(exception);
 
         Func<Task> act = () => _service.DetectFacesAsync(new byte[] { 4, 5, 6 });
@@ -127,17 +98,7 @@ public class FaceServiceErrorHandlingTests
     {
         var exception = CreateHttpException(HttpStatusCode.ServiceUnavailable);
 
-        _faceOperations
-            .Setup(x => x.DetectWithStreamWithHttpMessagesAsync(
-                It.IsAny<Stream>(),
-                It.IsAny<bool?>(),
-                It.IsAny<bool?>(),
-                It.IsAny<IList<FaceAttributeType?>>(),
-                It.IsAny<string?>(),
-                It.IsAny<bool?>(),
-                It.IsAny<string?>(),
-                It.IsAny<Dictionary<string, List<string>>>(),
-                It.IsAny<CancellationToken>()))
+        SetupDetectCall()
             .ThrowsAsync(exception);
 
         Func<Task> act = () => _service.DetectFacesAsync(new byte[] { 7, 8, 9 });
@@ -149,17 +110,7 @@ public class FaceServiceErrorHandlingTests
     [Test]
     public async Task FaceIdentityAsync_WhenDetectionTimeouts_ShouldReturnNullAndSkipIdentify()
     {
-        _faceOperations
-            .Setup(x => x.DetectWithStreamWithHttpMessagesAsync(
-                It.IsAny<Stream>(),
-                It.IsAny<bool?>(),
-                It.IsAny<bool?>(),
-                It.IsAny<IList<FaceAttributeType?>>(),
-                It.IsAny<string?>(),
-                It.IsAny<bool?>(),
-                It.IsAny<string?>(),
-                It.IsAny<Dictionary<string, List<string>>>(),
-                It.IsAny<CancellationToken>()))
+        SetupDetectCall()
             .ThrowsAsync(new TaskCanceledException("timeout"));
 
         var result = await _service.FaceIdentityAsync(new byte[] { 10, 11 });
@@ -176,17 +127,7 @@ public class FaceServiceErrorHandlingTests
         var faceId = Guid.NewGuid();
         var exception = CreateHttpException(HttpStatusCode.InternalServerError);
 
-        _faceOperations
-            .Setup(x => x.DetectWithStreamWithHttpMessagesAsync(
-                It.IsAny<Stream>(),
-                It.IsAny<bool?>(),
-                It.IsAny<bool?>(),
-                It.IsAny<IList<FaceAttributeType?>>(),
-                It.IsAny<string?>(),
-                It.IsAny<bool?>(),
-                It.IsAny<string?>(),
-                It.IsAny<Dictionary<string, List<string>>>(),
-                It.IsAny<CancellationToken>()))
+        SetupDetectCall()
             .ReturnsAsync(new HttpOperationResponse<IList<DetectedFace>>
             {
                 Body = new List<DetectedFace> { new() { FaceId = faceId } }
@@ -207,6 +148,36 @@ public class FaceServiceErrorHandlingTests
 
         act.Should().ThrowAsync<HttpOperationException>()
             .WithMessage(exception.Message);
+    }
+
+    private ISetup<IFaceOperations, Task<HttpOperationResponse<IList<DetectedFace>>>> SetupDetectCall()
+    {
+        return _faceOperations
+            .Setup(x => x.DetectWithStreamWithHttpMessagesAsync(
+                It.IsAny<Stream>(),
+                It.IsAny<bool?>(),
+                It.IsAny<bool?>(),
+                It.IsAny<IList<FaceAttributeType?>>(),
+                It.IsAny<string?>(),
+                It.IsAny<bool?>(),
+                It.IsAny<string?>(),
+                It.IsAny<Dictionary<string, List<string>>>(),
+                It.IsAny<CancellationToken>()));
+    }
+
+    private void VerifyDetectCalled(Times times)
+    {
+        _faceOperations.Verify(x => x.DetectWithStreamWithHttpMessagesAsync(
+                It.IsAny<Stream>(),
+                It.IsAny<bool?>(),
+                It.IsAny<bool?>(),
+                It.IsAny<IList<FaceAttributeType?>>(),
+                It.IsAny<string?>(),
+                It.IsAny<bool?>(),
+                It.IsAny<string?>(),
+                It.IsAny<Dictionary<string, List<string>>>(),
+                It.IsAny<CancellationToken>()),
+            times);
     }
 
     private static HttpOperationException CreateHttpException(HttpStatusCode statusCode)
