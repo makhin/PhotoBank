@@ -5,10 +5,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon;
 using Amazon.Rekognition;
 using Amazon.Rekognition.Model;
-using Amazon.Runtime;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -18,6 +16,7 @@ using NUnit.Framework;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
+using PhotoBank.UnitTests.Infrastructure.FaceRecognition.Aws;
 using DbFace = PhotoBank.DbContext.Models.Face;
 using DbPerson = PhotoBank.DbContext.Models.Person;
 using DbPersonFace = PhotoBank.DbContext.Models.PersonFace;
@@ -40,12 +39,7 @@ public class FaceServiceAwsTests
     [SetUp]
     public void SetUp()
     {
-        _rekognitionClient = new Mock<AmazonRekognitionClient>(
-            new AnonymousAWSCredentials(),
-            new AmazonRekognitionConfig { RegionEndpoint = RegionEndpoint.USEast1 })
-        {
-            CallBase = false
-        };
+        _rekognitionClient = RekognitionClientMockFactory.Create();
 
         _faceRepository = new Mock<IRepository<DbFace>>();
         _personRepository = new Mock<IRepository<DbPerson>>();
@@ -79,44 +73,34 @@ public class FaceServiceAwsTests
             .Setup(c => c.ListCollectionsAsync(
                 It.Is<ListCollectionsRequest>(r => r.MaxResults == 1000),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ListCollectionsResponse
-            {
-                CollectionIds = new List<string> { "other-collection" }
-            })
+            .ReturnsAsync(RekognitionResponseBuilder.Collections("other-collection"))
             .Verifiable();
 
         _rekognitionClient
             .Setup(c => c.CreateCollectionAsync(
                 It.Is<CreateCollectionRequest>(r => r.CollectionId == PersonGroupId),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CreateCollectionResponse())
+            .ReturnsAsync(RekognitionResponseBuilder.CollectionCreated())
             .Verifiable();
 
         _rekognitionClient
             .Setup(c => c.ListUsersAsync(
                 It.Is<ListUsersRequest>(r => r.CollectionId == PersonGroupId && r.MaxResults == 500),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ListUsersResponse
-            {
-                Users = new List<User>
-                {
-                    new() { UserId = "2" },
-                    new() { UserId = "3" }
-                }
-            });
+            .ReturnsAsync(RekognitionResponseBuilder.Users("2", "3"));
 
         _rekognitionClient
             .Setup(c => c.CreateUserAsync(
                 It.Is<CreateUserRequest>(r => r.CollectionId == PersonGroupId && r.UserId == "1"),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CreateUserResponse())
+            .ReturnsAsync(RekognitionResponseBuilder.UserCreated())
             .Verifiable();
 
         _rekognitionClient
             .Setup(c => c.DeleteUserAsync(
                 It.Is<DeleteUserRequest>(r => r.CollectionId == PersonGroupId && r.UserId == "3"),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new DeleteUserResponse())
+            .ReturnsAsync(RekognitionResponseBuilder.UserDeleted())
             .Verifiable();
 
         await _service.SyncPersonsAsync();
@@ -155,10 +139,7 @@ public class FaceServiceAwsTests
             .Setup(c => c.ListFacesAsync(
                 It.Is<ListFacesRequest>(r => r.CollectionId == PersonGroupId && r.UserId == personFace.PersonId.ToString()),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ListFacesResponse
-            {
-                Faces = new List<Amazon.Rekognition.Model.Face>()
-            });
+            .ReturnsAsync(RekognitionResponseBuilder.Faces());
 
         var indexedFaceId = Guid.NewGuid().ToString();
 
@@ -169,19 +150,7 @@ public class FaceServiceAwsTests
                     r.DetectionAttributes.Contains("ALL") &&
                     r.MaxFaces == 1),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new IndexFacesResponse
-            {
-                FaceRecords = new List<FaceRecord>
-                {
-                    new()
-                    {
-                        Face = new Amazon.Rekognition.Model.Face
-                        {
-                            FaceId = indexedFaceId
-                        }
-                    }
-                }
-            });
+            .ReturnsAsync(RekognitionResponseBuilder.IndexedFaces(indexedFaceId));
 
         _rekognitionClient
             .Setup(c => c.AssociateFacesAsync(
@@ -190,13 +159,7 @@ public class FaceServiceAwsTests
                     r.UserId == personFace.PersonId.ToString() &&
                     r.FaceIds.Single() == indexedFaceId),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AssociateFacesResponse
-            {
-                AssociatedFaces = new List<AssociatedFace>
-                {
-                    new() { FaceId = indexedFaceId }
-                }
-            });
+            .ReturnsAsync(RekognitionResponseBuilder.AssociatedFaces(indexedFaceId));
 
         _personFaceRepository
             .Setup(r => r.UpdateAsync(
@@ -238,13 +201,7 @@ public class FaceServiceAwsTests
             .Setup(c => c.ListFacesAsync(
                 It.Is<ListFacesRequest>(r => r.CollectionId == PersonGroupId && r.UserId == personFace.PersonId.ToString()),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ListFacesResponse
-            {
-                Faces = new List<Amazon.Rekognition.Model.Face>
-                {
-                    new() { FaceId = existingGuid.ToString() }
-                }
-            });
+            .ReturnsAsync(RekognitionResponseBuilder.Faces(existingGuid.ToString()));
 
         await _service.SyncFacesToPersonAsync();
 
@@ -289,14 +246,11 @@ public class FaceServiceAwsTests
             .Setup(c => c.DetectFacesAsync(
                 It.IsAny<DetectFacesRequest>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new DetectFacesResponse
-            {
-                FaceDetails = expectedFaces
-            });
+            .ReturnsAsync(RekognitionResponseBuilder.DetectedFaces((IList<FaceDetail>)expectedFaces));
 
         var result = await _service.DetectFacesAsync(new byte[] { 4, 5 });
 
-        result.Should().BeSameAs(expectedFaces);
+        result.Should().BeEquivalentTo(expectedFaces);
     }
 
     [Test]
@@ -310,10 +264,7 @@ public class FaceServiceAwsTests
                 It.IsAny<SearchUsersByImageRequest>(),
                 It.IsAny<CancellationToken>()))
             .Callback((SearchUsersByImageRequest request, CancellationToken _) => capturedRequest = request)
-            .ReturnsAsync(new SearchUsersByImageResponse
-            {
-                UserMatches = matches
-            });
+            .ReturnsAsync(RekognitionResponseBuilder.UserMatches(matches));
 
         var result = await _service.SearchUsersByImageAsync(new byte[] { 9, 9 });
 
@@ -330,10 +281,7 @@ public class FaceServiceAwsTests
             .Setup(c => c.SearchUsersByImageAsync(
                 It.IsAny<SearchUsersByImageRequest>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new SearchUsersByImageResponse
-            {
-                UserMatches = new List<UserMatch>()
-            });
+            .ReturnsAsync(RekognitionResponseBuilder.UserMatches());
 
         var result = await _service.SearchUsersByImageAsync(new byte[] { 2, 1 });
 
