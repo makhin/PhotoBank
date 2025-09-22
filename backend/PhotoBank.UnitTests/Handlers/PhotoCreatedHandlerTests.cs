@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Reflection;
 using NetTopologySuite.Geometries;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
@@ -248,7 +246,7 @@ public class PhotoCreatedHandlerTests
         var etagQueue = new Queue<string>(etags);
 
         _minioMock.Setup(m => m.PutObjectAsync(It.IsAny<PutObjectArgs>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(() => CreatePutObjectResponse());
+            .ReturnsAsync((PutObjectResponse)null!);
 
         _minioMock.Setup(m => m.StatObjectAsync(It.IsAny<StatObjectArgs>(), It.IsAny<CancellationToken>()))
             .Returns(() => Task.FromResult(CreateObjectStat(etagQueue.Dequeue())));
@@ -268,7 +266,7 @@ public class PhotoCreatedHandlerTests
                     return Task.FromException<PutObjectResponse>(new IOException("transient"));
                 }
 
-                return Task.FromResult(CreatePutObjectResponse());
+                return Task.FromResult((PutObjectResponse)null!);
             });
 
         _minioMock.Setup(m => m.StatObjectAsync(It.IsAny<StatObjectArgs>(), It.IsAny<CancellationToken>()))
@@ -285,22 +283,5 @@ public class PhotoCreatedHandlerTests
         var stat = (ObjectStat)Activator.CreateInstance(typeof(ObjectStat), true)!;
         typeof(ObjectStat).GetProperty("ETag")!.SetValue(stat, etag);
         return stat;
-    }
-
-    private static PutObjectResponse CreatePutObjectResponse()
-    {
-        return (PutObjectResponse)Activator.CreateInstance(
-            typeof(PutObjectResponse),
-            BindingFlags.Instance | BindingFlags.NonPublic,
-            binder: null,
-            args: new object?[]
-            {
-                HttpStatusCode.OK,
-                string.Empty,
-                new Dictionary<string, string>(),
-                0L,
-                string.Empty
-            },
-            culture: null)!;
     }
 }
