@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Minio;
 using Minio.DataModel.Args;
 using PhotoBank.DbContext.DbContext;
@@ -36,7 +37,7 @@ public class PhotoCreatedHandler : INotificationHandler<PhotoCreated>
             .Select(p => new { Storage = p.Storage.Name, p.RelativePath })
             .SingleAsync(cancellationToken);
 
-        var photoEntry = _context.Photos.Attach(new Photo { Id = notification.PhotoId });
+        var photoEntry = GetPhotoEntry(notification.PhotoId);
 
         var previewKey = S3KeyBuilder.BuildPreviewKey(info.Storage, info.RelativePath, notification.PhotoId);
         var (previewEtag, previewSha, previewSize) = await UploadAsync(previewKey, notification.Preview, cancellationToken);
@@ -67,7 +68,7 @@ public class PhotoCreatedHandler : INotificationHandler<PhotoCreated>
         {
             var key = S3KeyBuilder.BuildFaceKey(face.FaceId);
             var (etag, sha, size) = await UploadAsync(key, face.Image, cancellationToken);
-            var faceEntry = _context.Faces.Attach(new Face { Id = face.FaceId });
+            var faceEntry = GetFaceEntry(face.FaceId);
             faceEntry.Property(f => f.S3Key_Image).CurrentValue = key;
             faceEntry.Property(f => f.S3Key_Image).IsModified = true;
             faceEntry.Property(f => f.S3ETag_Image).CurrentValue = etag;
@@ -98,5 +99,41 @@ public class PhotoCreatedHandler : INotificationHandler<PhotoCreated>
             .WithContentType("image/jpeg"), ct);
         var stat = await _minio.StatObjectAsync(new StatObjectArgs().WithBucket("photobank").WithObject(key), ct);
         return (stat.ETag ?? string.Empty, sha, ms.Length);
+    }
+
+    private EntityEntry<Photo> GetPhotoEntry(int photoId)
+    {
+        var tracked = _context.ChangeTracker.Entries<Photo>()
+            .FirstOrDefault(e => e.Entity.Id == photoId);
+        if (tracked != null)
+        {
+            return tracked;
+        }
+
+        var local = _context.Photos.Local.FirstOrDefault(p => p.Id == photoId);
+        if (local != null)
+        {
+            return _context.Entry(local);
+        }
+
+        return _context.Photos.Attach(new Photo { Id = photoId });
+    }
+
+    private EntityEntry<Face> GetFaceEntry(int faceId)
+    {
+        var tracked = _context.ChangeTracker.Entries<Face>()
+            .FirstOrDefault(e => e.Entity.Id == faceId);
+        if (tracked != null)
+        {
+            return tracked;
+        }
+
+        var local = _context.Faces.Local.FirstOrDefault(f => f.Id == faceId);
+        if (local != null)
+        {
+            return _context.Entry(local);
+        }
+
+        return _context.Faces.Attach(new Face { Id = faceId });
     }
 }
