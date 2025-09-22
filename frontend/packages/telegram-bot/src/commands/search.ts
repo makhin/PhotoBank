@@ -2,10 +2,8 @@ import {
   endOfDay,
   endOfMonth,
   endOfYear,
-  formatISO,
   isValid,
   parse as parseDfns,
-  parseISO,
   startOfDay,
   startOfMonth,
   startOfYear,
@@ -14,6 +12,10 @@ import {
 import type { FilterDto } from '@photobank/shared/api/photobank';
 
 import type { MyContext } from '@/i18n';
+import {
+  registerSearchFilterToken,
+  resolveSearchFilterToken,
+} from '@/cache/searchFilterCache';
 
 import { sendPhotosPage } from './photosPage';
 
@@ -227,68 +229,6 @@ export function parseArgsToFilter(raw: string): FilterDto {
   return filter;
 }
 
-/* ===================== callback_data кодек ===================== */
-
-type SerializableFilter = Omit<FilterDto, "takenDateFrom" | "takenDateTo"> & {
-  takenDateFrom?: string | null;
-  takenDateTo?: string | null;
-};
-
-function encodeFilter(filter: FilterDto): string {
-  const { takenDateFrom, takenDateTo, ...rest } = filter;
-  const payload: SerializableFilter = {
-    ...rest,
-    ...(takenDateFrom !== undefined && {
-      takenDateFrom:
-        takenDateFrom instanceof Date
-          ? formatISO(takenDateFrom)
-          : takenDateFrom,
-    }),
-    ...(takenDateTo !== undefined && {
-      takenDateTo:
-        takenDateTo instanceof Date ? formatISO(takenDateTo) : takenDateTo,
-    }),
-  };
-  return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
-}
-function decodeFilter(b64: string): FilterDto | null {
-  try {
-    const payload = JSON.parse(
-      Buffer.from(b64, "base64url").toString("utf8"),
-    ) as SerializableFilter;
-
-    const { takenDateFrom, takenDateTo, ...rest } = payload;
-
-    let parsedTakenDateFrom: Date | null | undefined;
-    if (typeof takenDateFrom === "string") {
-      const parsed = parseISO(takenDateFrom);
-      if (isValid(parsed)) parsedTakenDateFrom = parsed;
-    } else if (takenDateFrom === null) {
-      parsedTakenDateFrom = null;
-    }
-
-    let parsedTakenDateTo: Date | null | undefined;
-    if (typeof takenDateTo === "string") {
-      const parsed = parseISO(takenDateTo);
-      if (isValid(parsed)) parsedTakenDateTo = parsed;
-    } else if (takenDateTo === null) {
-      parsedTakenDateTo = null;
-    }
-
-    const filter: FilterDto = {
-      ...rest,
-      ...(parsedTakenDateFrom !== undefined && {
-        takenDateFrom: parsedTakenDateFrom,
-      }),
-      ...(parsedTakenDateTo !== undefined && { takenDateTo: parsedTakenDateTo }),
-    };
-
-    return filter;
-  } catch {
-    return null;
-  }
-}
-
 /** Извлекаем сырые аргументы: ctx.match (grammY) или текст /search ... */
 function extractRawArgs(ctx: MyContext): string {
   const anyCtx = ctx as unknown as { match?: string };
@@ -327,21 +267,26 @@ export async function handleSearch(ctx: MyContext) {
 
 export const searchCommand = handleSearch;
 
-/** callback_data: "search:<page>:<base64url(JSON(FilterDto))>" */
 export async function sendSearchPage(
   ctx: MyContext,
   filter: FilterDto,
   page: number,
   edit = false,
 ) {
-  const payload = encodeFilter(filter);
+  const token = registerSearchFilterToken(filter);
   await sendPhotosPage({
     ctx,
     filter,
     page,
     edit,
     fallbackMessage: ctx.t("search-photos-empty"),
-    buildCallbackData: (p) => `search:${p}:${payload}`,
+    buildCallbackData: (p) => {
+      const callbackData = `search:${p}:${token}`;
+      if (callbackData.length > 64) {
+        throw new Error("search callback_data exceeds Telegram limit");
+      }
+      return callbackData;
+    },
   });
 }
 
@@ -353,7 +298,10 @@ export function decodeSearchCallback(data: string): { page: number; filter: Filt
   const page = Number(parts[1]);
   if (!Number.isInteger(page) || page < 1) return null;
 
-  const filter = parts[2] ? decodeFilter(parts[2]) : null;
+  const token = parts[2];
+  if (!token) return null;
+
+  const filter = resolveSearchFilterToken(token);
   if (!filter) return null;
 
   return { page, filter };

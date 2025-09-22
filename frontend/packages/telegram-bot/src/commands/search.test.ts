@@ -1,23 +1,50 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { FilterDto } from '@photobank/shared/api/photobank';
 
-import { parseArgsToFilter } from './search';
+vi.mock('./photosPage', () => ({
+  sendPhotosPage: vi.fn(),
+}));
 
-describe('parseArgsToFilter before:... handling', () => {
-  it('excludes entire year when using before:YYYY', () => {
-    const filter = parseArgsToFilter('before:2015');
+import { sendSearchPage, decodeSearchCallback } from './search';
+import { sendPhotosPage } from './photosPage';
+import { clearSearchFilterTokens } from '../cache/searchFilterCache';
+import type { MyContext } from '../i18n';
 
-    expect(filter.takenDateTo?.toISOString()).toBe('2014-12-31T23:59:59.999Z');
+const sendPhotosPageMock = vi.mocked(sendPhotosPage);
+
+function createContext(): MyContext {
+  return {
+    t: vi.fn((key: string) => key),
+  } as unknown as MyContext;
+}
+
+describe('sendSearchPage', () => {
+  beforeEach(() => {
+    clearSearchFilterTokens();
+    sendPhotosPageMock.mockReset();
+    sendPhotosPageMock.mockResolvedValue(undefined);
   });
 
-  it('excludes entire month when using before:YYYY-MM', () => {
-    const filter = parseArgsToFilter('before:2015-06');
+  it('creates compact callback tokens that round-trip long filters', async () => {
+    const ctx = createContext();
+    const filter: FilterDto = {
+      caption: 'a'.repeat(256),
+      tagNames: Array.from({ length: 8 }, (_, i) => `tag-${'x'.repeat(16)}-${i}`),
+      personNames: Array.from({ length: 5 }, (_, i) => `person-${'y'.repeat(12)}-${i}`),
+    };
 
-    expect(filter.takenDateTo?.toISOString()).toBe('2015-05-31T23:59:59.999Z');
-  });
+    await sendSearchPage(ctx, filter, 42);
 
-  it('excludes the given day when using before:YYYY-MM-DD', () => {
-    const filter = parseArgsToFilter('before:2015-06-10');
+    expect(sendPhotosPageMock).toHaveBeenCalledTimes(1);
+    const [[options]] = sendPhotosPageMock.mock.calls;
+    expect(options?.buildCallbackData).toBeTypeOf('function');
 
-    expect(filter.takenDateTo?.toISOString()).toBe('2015-06-09T23:59:59.999Z');
+    const callbackData = options!.buildCallbackData(42);
+    expect(callbackData.length).toBeLessThanOrEqual(64);
+
+    const decoded = decodeSearchCallback(callbackData);
+    expect(decoded).not.toBeNull();
+    expect(decoded?.page).toBe(42);
+    expect(decoded?.filter).toEqual(filter);
   });
 });
