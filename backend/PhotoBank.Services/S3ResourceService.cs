@@ -20,7 +20,8 @@ public interface IS3ResourceService
         IRepository<TEntity> repository,
         int id,
         Expression<Func<TEntity, string?>> keySelector,
-        Expression<Func<TEntity, string>> etagSelector)
+        Expression<Func<TEntity, string>> etagSelector,
+        Func<IQueryable<TEntity>, IQueryable<TEntity>>? queryCustomizer = null)
         where TEntity : class, IEntityBase, new();
 }
 
@@ -37,14 +38,22 @@ public class S3ResourceService : IS3ResourceService
         IRepository<TEntity> repository,
         int id,
         Expression<Func<TEntity, string?>> keySelector,
-        Expression<Func<TEntity, string>> etagSelector)
+        Expression<Func<TEntity, string>> etagSelector,
+        Func<IQueryable<TEntity>, IQueryable<TEntity>>? queryCustomizer = null)
         where TEntity : class, IEntityBase, new()
     {
         var keyName = GetPropertyName(keySelector);
         var etagName = GetPropertyName(etagSelector);
 
         S3Info? info;
-        var baseQuery = repository.GetByCondition(e => e.Id == id).AsNoTracking();
+        var baseQuery = repository.GetAll().AsNoTracking();
+
+        if (queryCustomizer != null)
+        {
+            baseQuery = queryCustomizer(baseQuery);
+        }
+
+        baseQuery = baseQuery.Where(e => e.Id == id);
         if (baseQuery.Provider is IAsyncQueryProvider)
         {
             info = await baseQuery

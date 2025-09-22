@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
@@ -21,8 +20,8 @@ public class S3ResourceServiceTests
     {
         var photo = new Photo { Id = 1, StorageId = 1, Storage = new Storage { Id = 1, Name = "s", Folder = "f" }, Name = "n", S3Key_Preview = "k", S3ETag_Preview = "e" };
         var repo = new Mock<IRepository<Photo>>();
-        repo.Setup(r => r.GetByCondition(It.IsAny<Expression<Func<Photo, bool>>>() ))
-            .Returns((Expression<Func<Photo, bool>> predicate) => new[] { photo }.AsQueryable().Where(predicate));
+        repo.Setup(r => r.GetAll())
+            .Returns(new[] { photo }.AsQueryable());
 
         var service = new TestS3ResourceService(_ => "url", _ => Array.Empty<byte>());
         var result = await service.GetAsync(repo.Object, 1, p => p.S3Key_Preview, p => p.S3ETag_Preview);
@@ -38,8 +37,8 @@ public class S3ResourceServiceTests
     {
         var photo = new Photo { Id = 2, StorageId = 1, Storage = new Storage { Id = 1, Name = "s", Folder = "f" }, Name = "n", S3Key_Preview = "k2", S3ETag_Preview = "e2" };
         var repo = new Mock<IRepository<Photo>>();
-        repo.Setup(r => r.GetByCondition(It.IsAny<Expression<Func<Photo, bool>>>() ))
-            .Returns((Expression<Func<Photo, bool>> predicate) => new[] { photo }.AsQueryable().Where(predicate));
+        repo.Setup(r => r.GetAll())
+            .Returns(new[] { photo }.AsQueryable());
 
         var service = new TestS3ResourceService(_ => null, _ => new byte[] {1,2,3});
         var result = await service.GetAsync(repo.Object, 2, p => p.S3Key_Preview, p => p.S3ETag_Preview);

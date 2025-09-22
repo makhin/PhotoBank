@@ -514,7 +514,8 @@ public class PhotoService : IPhotoService
             _photoRepository,
             id,
             p => p.S3Key_Preview,
-            p => p.S3ETag_Preview);
+            p => p.S3ETag_Preview,
+            q => q.MaybeApplyAcl(_currentUser));
     }
 
     public async Task<PhotoPreviewResult?> GetPhotoThumbnailAsync(int id)
@@ -523,7 +524,8 @@ public class PhotoService : IPhotoService
             _photoRepository,
             id,
             p => p.S3Key_Thumbnail,
-            p => p.S3ETag_Thumbnail);
+            p => p.S3ETag_Thumbnail,
+            q => q.MaybeApplyAcl(_currentUser));
     }
 
     public async Task<PhotoPreviewResult?> GetFaceImageAsync(int id)
@@ -532,7 +534,13 @@ public class PhotoService : IPhotoService
             _faceRepository,
             id,
             f => f.S3Key_Image,
-            f => f.S3ETag_Image);
+            f => f.S3ETag_Image,
+            faces => faces.Where(face => _photoRepository
+                .GetAll()
+                .AsNoTracking()
+                .MaybeApplyAcl(_currentUser)
+                .Select(p => p.Id)
+                .Contains(face.PhotoId)));
     }
 
     private async Task FillUrlsAsync(PhotoDto dto)
