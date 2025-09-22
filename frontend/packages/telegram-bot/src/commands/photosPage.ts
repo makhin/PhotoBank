@@ -6,6 +6,7 @@ import type { MyContext } from '../i18n';
 import { searchPhotos } from '../services/photo';
 import { handleCommandError } from '../errorHandler';
 import { captionCache, currentPagePhotos, deletePhotoMessage } from '../photo';
+import { escapeHtml } from '../utils/escapeHtml';
 
 export const PHOTOS_PAGE_SIZE = 10;
 
@@ -96,24 +97,37 @@ export async function sendPhotosPage({
   [...byYear.entries()]
     .sort(([a], [b]) => b - a)
     .forEach(([year, folders]) => {
-      sections.push(`\n📅 <b>${year || ctx.t('unknown-year')}</b>`);
+      const yearLabel = year ? String(year) : escapeHtml(ctx.t('unknown-year'));
+      sections.push(`\n📅 <b>${yearLabel}</b>`);
       [...folders.entries()].forEach(([folder, photos]) => {
-        sections.push(`📁 ${folder}`);
+        const safeFolder = escapeHtml(folder);
+        sections.push(`📁 ${safeFolder}`);
         photos.forEach((photo) => {
-          const title = photo.name.slice(0, 10) || ctx.t('untitled');
+          const rawTitle = photo.name?.slice(0, 10) || ctx.t('untitled');
+          const title = escapeHtml(rawTitle);
           const peopleCount = photo.persons?.length ?? 0;
           const isAdult = photo.isAdultContent ? '🔞' : '';
           const isRacy = photo.isRacyContent ? '⚠️' : '';
 
           const metaParts: string[] = [];
-          if (peopleCount > 0) metaParts.push(ctx.t('people-count', { count: peopleCount }));
+          if (peopleCount > 0) {
+            metaParts.push(escapeHtml(ctx.t('people-count', { count: peopleCount })));
+          }
           if (isAdult) metaParts.push(isAdult);
           if (isRacy) metaParts.push(isRacy);
-          const metaLine = metaParts.length ? `\n${metaParts.join(' ')}` : '';
+          const metaLine = metaParts.length ? metaParts.join(' ') : '';
 
           const cap = photo.captions?.join(' ') ?? '';
+          const preview = escapeHtml(firstNWords(cap, 5).trimEnd());
+          const detailSegments: string[] = [];
+          if (preview) detailSegments.push(preview);
+          if (metaLine) detailSegments.push(metaLine);
+          const details = detailSegments.join('\n');
           const index = photoIds.length + 1;
-          sections.push(`[${index}] <b>${title}</b>\n${firstNWords(cap, 5)} ${metaLine}`);
+          const section = details
+            ? `[${index}] <b>${title}</b>\n${details}`
+            : `[${index}] <b>${title}</b>`;
+          sections.push(section);
           captionCache.set(photo.id, cap);
           photoIds.push(photo.id);
         });
@@ -131,7 +145,7 @@ export async function sendPhotosPage({
 
   keyboard.row();
 
-  sections.push(`\n${ctx.t('page-info', { page, total: totalPages })}`);
+  sections.push(`\n${escapeHtml(ctx.t('page-info', { page, total: totalPages }))}`);
 
   if (page > 1) {
     keyboard.text(ctx.t('first-page'), buildCallbackData(1));
