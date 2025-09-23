@@ -10,9 +10,10 @@ using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
 using Minio;
 using Moq;
-using System.Diagnostics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace PhotoBank.IntegrationTests;
@@ -127,6 +128,40 @@ public class GetAllPhotosIntegrationTests
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
         result.Items.Should().HaveCount(10);
+    }
+
+    [Test]
+    public async Task GetAllPhotosAsync_FilterBySingleDay_ReturnsPhotosWithinDay()
+    {
+        var discoveryFilter = new FilterDto()
+        {
+            TakenDateFrom = new DateTime(2015, 1, 1),
+            TakenDateTo = new DateTime(2016, 1, 1),
+            PageSize = PageRequest.MaxPageSize
+        };
+
+        var discoveryResult = await MeasureGetAllPhotosAsync(discoveryFilter);
+        var samplePhoto = discoveryResult.Items
+            .FirstOrDefault(p => p.TakenDate.HasValue && p.TakenDate.Value.TimeOfDay > TimeSpan.Zero);
+        samplePhoto.Should().NotBeNull("the seeded dataset should contain a photo with a time component within the selected range");
+
+        var targetDate = samplePhoto!.TakenDate!.Value.Date;
+
+        var db = _provider.GetRequiredService<PhotoBankDbContext>();
+        var expectedCount = await db.Photos.CountAsync(p => p.TakenDate.HasValue && p.TakenDate.Value.Date == targetDate);
+        expectedCount.Should().BeGreaterThan(0);
+
+        var singleDayFilter = new FilterDto()
+        {
+            TakenDateFrom = targetDate,
+            TakenDateTo = targetDate,
+            PageSize = PageRequest.MaxPageSize
+        };
+
+        var singleDayResult = await MeasureGetAllPhotosAsync(singleDayFilter);
+
+        singleDayResult.TotalCount.Should().Be(expectedCount);
+        singleDayResult.Items.Should().OnlyContain(p => p.TakenDate.HasValue && p.TakenDate.Value.Date == targetDate);
     }
 
     [Test]
