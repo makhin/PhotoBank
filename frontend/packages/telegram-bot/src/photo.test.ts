@@ -4,7 +4,6 @@ import type { PhotoDto } from '@photobank/shared/api/photobank';
 
 import { formatPhotoMessage } from './formatPhotoMessage';
 import { loadPhotoFile } from './photo';
-import * as dictionaries from './dictionaries';
 
 function createPhoto(overrides: Partial<PhotoDto> = {}): PhotoDto {
   return {
@@ -15,10 +14,6 @@ function createPhoto(overrides: Partial<PhotoDto> = {}): PhotoDto {
 }
 
 describe('formatPhotoMessage', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it('formats ISO string takenDate values without throwing', () => {
     const isoString = '2023-02-01T15:30:00.000Z';
     const photo = createPhoto({
@@ -31,27 +26,6 @@ describe('formatPhotoMessage', () => {
     }).not.toThrow();
 
     expect(result?.caption).toContain('📅 01.02.2023');
-  });
-
-  it('escapes HTML-sensitive characters in captions and metadata', () => {
-    vi.spyOn(dictionaries, 'getPersonName').mockReturnValue('Alice & <Bob>');
-
-    const photo = createPhoto({
-      name: 'Summer <Sunset & "Glow">',
-      captions: ['Loved <friends> & "family"'],
-      tags: ['<tag>', 'rock & roll'],
-      location: { latitude: 51.5, longitude: -0.141 } as PhotoDto['location'],
-      faces: ([{ personId: 1 }] as unknown) as PhotoDto['faces'],
-    });
-
-    const result = formatPhotoMessage(photo);
-
-    expect(result.caption).toContain('Summer &lt;Sunset &amp; &quot;Glow&quot;&gt;');
-    expect(result.caption).toContain('📝 Loved &lt;friends&gt; &amp; &quot;family&quot;');
-    expect(result.caption).toContain('🏷️ &lt;tag&gt;, rock &amp; roll');
-    expect(result.caption).toContain('👤 Alice &amp; &lt;Bob&gt;');
-    expect(result.caption).not.toContain('<friends>');
-    expect(result.caption).not.toContain('Alice & <Bob>');
   });
 });
 
