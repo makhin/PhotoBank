@@ -26,3 +26,4 @@ pnpm-debug.log*
 *~
 .tmp/
 tmp/
+/backend/PhotoBank.Api/appsettings.Development.json
