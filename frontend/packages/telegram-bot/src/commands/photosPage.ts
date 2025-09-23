@@ -29,7 +29,7 @@ export async function sendPhotosPage({
   const chatId = ctx.chat?.id;
   if (chatId) {
     const prev = currentPagePhotos.get(chatId);
-    if (prev && prev.page !== page) {
+    if (!edit || (prev && prev.page !== page)) {
       await deletePhotoMessage(ctx);
     }
   }
