@@ -1,8 +1,12 @@
-import { formatDate, type PhotoDto } from "@photobank/shared";
+import { formatDate, getPlaceByGeoPoint, type PhotoDto } from "@photobank/shared";
 
 import { getPersonName } from "./dictionaries";
 
-export function formatPhotoMessage(photo: PhotoDto): { caption: string; hasSpoiler: boolean; imageUrl?: string } {
+export async function formatPhotoMessage(photo: PhotoDto): Promise<{
+  caption: string;
+  hasSpoiler: boolean;
+  imageUrl?: string;
+}> {
   const lines: string[] = [];
 
   lines.push(`📸 <b>${photo.name}</b>`);
@@ -17,8 +21,15 @@ export function formatPhotoMessage(photo: PhotoDto): { caption: string; hasSpoil
 
   if (photo.location) {
     const { latitude, longitude } = photo.location;
-    const coords = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-    lines.push(`📍 <a href="https://www.google.com/maps?q=${latitude},${longitude}">${coords}</a>`);
+    if (Math.abs(latitude) + Math.abs(longitude) !== 0) {
+      const coords = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+      const placeName = await getPlaceByGeoPoint({ latitude, longitude });
+      lines.push(
+        `📍 <a href="https://www.google.com/maps?q=${latitude},${longitude}">${
+          placeName || coords
+        }</a>`
+      );
+    }
   }
 
   if (photo.faces?.length) {

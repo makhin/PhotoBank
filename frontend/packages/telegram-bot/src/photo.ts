@@ -48,7 +48,7 @@ export async function loadPhotoFile(photo: PhotoDto): Promise<{
   hasSpoiler: boolean;
   photoFile?: InputFile;
 }> {
-  const { caption, hasSpoiler, imageUrl } = formatPhotoMessage(photo);
+  const { caption, hasSpoiler, imageUrl } = await formatPhotoMessage(photo);
   if (!imageUrl) {
     return { caption, hasSpoiler };
   }
