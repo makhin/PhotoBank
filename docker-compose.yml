@@ -8,6 +8,9 @@ services:
       - Minio__Endpoint=${MINIO_ENDPOINT}
       - Minio__AccessKey=${MINIO_ACCESS} 
       - Minio__SecretKey=${MINIO_SECRET}
+      - Translator__Endpoint=${TRANSLATOR_ENDPOINT}
+      - Translator__Region=${TRANSLATOR_REGION} 
+      - Translator__Key=${TRANSLATOR_KEY}
     ports:
       - "5066:5066"
 

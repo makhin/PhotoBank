@@ -36,7 +36,8 @@ describe('sendSearchPage', () => {
     await sendSearchPage(ctx, filter, 42);
 
     expect(sendPhotosPageMock).toHaveBeenCalledTimes(1);
-    const [[options]] = sendPhotosPageMock.mock.calls;
+    const callArgs = sendPhotosPageMock.mock.calls[0];
+    const options = callArgs ? callArgs[0] : undefined;
     expect(options?.buildCallbackData).toBeTypeOf('function');
 
     const callbackData = options!.buildCallbackData(42);
