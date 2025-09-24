@@ -131,10 +131,31 @@ public sealed class SearchFilterNormalizer(
     private static int[] MatchIds(IEnumerable<string> names, IEnumerable<(int Id, string Name)> dictionary)
     {
         var ids = new List<int>();
+        var candidates = dictionary
+            .Select(item => (item.Id, Normalized: NormalizeName(item.Name)))
+            .Where(item => item.Normalized.Length > 0)
+            .ToArray();
+
         foreach (var name in names)
         {
-            var match = dictionary
-                .Select(item => new { item.Id, Distance = Levenshtein(item.Name, name) })
+            var normalizedQuery = NormalizeName(name);
+            if (normalizedQuery.Length == 0)
+                continue;
+
+            var partialMatches = candidates
+                .Where(item => item.Normalized.Contains(normalizedQuery, StringComparison.Ordinal)
+                               || normalizedQuery.Contains(item.Normalized, StringComparison.Ordinal))
+                .Select(item => item.Id)
+                .ToArray();
+
+            if (partialMatches.Length > 0)
+            {
+                ids.AddRange(partialMatches);
+                continue;
+            }
+
+            var match = candidates
+                .Select(item => new { item.Id, Distance = Levenshtein(item.Normalized, normalizedQuery) })
                 .OrderBy(x => x.Distance)
                 .FirstOrDefault();
 
@@ -143,6 +164,29 @@ public sealed class SearchFilterNormalizer(
         }
 
         return ids.Distinct().ToArray();
+    }
+
+    private static string NormalizeName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        var span = value.AsSpan().Trim();
+        while (span.Length > 0 && span[0] == '@')
+        {
+            span = span[1..].TrimStart();
+        }
+
+        var builder = new StringBuilder(span.Length);
+        foreach (var ch in span)
+        {
+            if (char.IsLetterOrDigit(ch))
+            {
+                builder.Append(char.ToLowerInvariant(ch));
+            }
+        }
+
+        return builder.ToString();
     }
 
     private static string CacheKey(string text)
