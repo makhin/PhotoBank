@@ -70,6 +70,22 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
         },
     });
 
+    const location = photoData?.location;
+
+    const hasValidLocation = useMemo(() => {
+        if (!location) {
+            return false;
+        }
+
+        const { latitude, longitude } = location;
+
+        if (latitude == null || longitude == null) {
+            return false;
+        }
+
+        return !(latitude === 0 && longitude === 0);
+    }, [location]);
+
     const formattedTakenDate = useMemo(
         () => (photoData?.takenDate ? formatDate(photoData.takenDate) : ''),
         [photoData?.takenDate],
@@ -144,11 +160,10 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     }, [error]);
 
     useEffect(() => {
-        if (!photoData?.location) {
+        if (!location || !hasValidLocation) {
             setPlaceName('');
             return;
         }
-        const location = photoData.location;
         const controller = new AbortController();
         (async () => {
             const name = await getPlaceByGeoPoint(location);
@@ -157,7 +172,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
         return () => {
             controller.abort();
         };
-    }, [photoData?.location]);
+    }, [hasValidLocation, location]);
 
     const calculateFacePosition = (faceBox: FaceBoxDto) => {
         if (!imageDisplaySize.width || !imageDisplaySize.height) {
@@ -309,11 +324,11 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                         </div>
                                     )}
 
-                                      {photoData.location != null && placeName && (
+                                      {hasValidLocation && placeName && location && (
                                         <div>
                                             <Label className="text-muted-foreground text-xs">{t('locationLabel')}</Label>
                                               <a
-                                                  href={`https://www.google.com/maps?q=${photoData.location.latitude},${photoData.location.longitude}`}
+                                                  href={`https://www.google.com/maps?q=${location.latitude},${location.longitude}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="mt-1 block text-primary underline"
