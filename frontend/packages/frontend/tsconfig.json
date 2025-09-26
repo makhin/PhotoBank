@@ -3,7 +3,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@photobank/shared": ["../shared/src/index.ts"],
+      "@photobank/shared/*": ["../shared/src/*"]
     },
     "noImplicitOverride": false,
     "exactOptionalPropertyTypes": false
