@@ -47,7 +47,7 @@ const PhotoListPage = () => {
   }: UseInfinitePhotosResult = useInfinitePhotos(filter);
   const navigate = useNavigate();
   const location = useLocation();
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollViewportRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const [detailsId, setDetailsId] = useState<number | null>(null);
@@ -126,7 +126,7 @@ const PhotoListPage = () => {
 
   useEffect(() => {
     const element = sentinelRef.current;
-    const root = scrollAreaRef.current ?? undefined;
+    const root = scrollViewportRef.current ?? undefined;
     if (!element || !root) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -147,7 +147,7 @@ const PhotoListPage = () => {
   }, []);
 
   return (
-    <div className="w-full h-screen flex flex-col bg-background">
+    <div className="flex w-full flex-1 min-h-0 flex-col bg-background">
       <div className="p-6 border-b flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{t('photoGalleryTitle')}</h1>
@@ -160,10 +160,7 @@ const PhotoListPage = () => {
         </Button>
       </div>
 
-      <ScrollArea
-        className="h-[calc(100vh-240px)]"
-        ref={scrollAreaRef}
-      >
+      <ScrollArea className="flex-1 min-h-0" viewportRef={scrollViewportRef}>
         <div className="p-6">
           {/* Desktop/Tablet View */}
           <div className="hidden lg:block">
