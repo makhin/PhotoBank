@@ -21,8 +21,12 @@ export default function App() {
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-      {loggedIn && <NavBar />}
-      <AppRoutes />
+      <div className="min-h-screen flex flex-col">
+        {loggedIn && <NavBar />}
+        <main className="flex-1 min-h-0">
+          <AppRoutes />
+        </main>
+      </div>
       <Lightbox />
     </ThemeProvider>
   );
