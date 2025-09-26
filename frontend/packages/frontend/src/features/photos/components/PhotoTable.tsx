@@ -73,60 +73,109 @@ export function PhotoTable({
     }
   }, [last, hasNextPage, isFetchingNextPage, fetchNextPage, table]);
 
+  const visibleColumns = table.getVisibleLeafColumns();
+
+  let gridTemplateColumns = '1fr';
+  let minTableWidth = 0;
+
+  if (visibleColumns.length) {
+    const tracks: string[] = [];
+
+    visibleColumns.forEach((column) => {
+      const size = column.columnDef.size;
+      if (typeof size === 'number' && Number.isFinite(size)) {
+        tracks.push(`${size}px`);
+        minTableWidth += size;
+        return;
+      }
+
+      const minSize = column.columnDef.minSize;
+      if (typeof minSize === 'number' && Number.isFinite(minSize)) {
+        tracks.push(`minmax(${minSize}px, 1fr)`);
+        minTableWidth += minSize;
+        return;
+      }
+
+      const fallback = 180;
+      tracks.push(`minmax(${fallback}px, 1fr)`);
+      minTableWidth += fallback;
+    });
+
+    gridTemplateColumns = tracks.join(' ');
+  }
+
   return (
     <Card className="w-full overflow-hidden">
-      {/* Header */}
-      <div className="grid grid-cols-[96px_1fr_120px_240px_320px_140px] gap-4 px-4 py-2 border-b bg-muted/30">
-        {table.getFlatHeaders().map((header) => (
-          <div key={header.id} className="text-xs font-medium uppercase text-muted-foreground truncate">
-            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-          </div>
-        ))}
-      </div>
-
-      {/* Body with virtualization */}
-      <div
-        ref={parentRef}
-        style={{ height: DEFAULT_HEIGHT, overflow: 'auto', position: 'relative' }}
-      >
-        <div
-          style={{
-            height: rowVirtualizer.getTotalSize(),
-            position: 'relative',
-          }}
-        >
-          {virtualRows.map((vr) => {
-            const isLoaderRow = hasNextPage && vr.index === table.getRowModel().rows.length;
-            const row = table.getRowModel().rows[vr.index];
-
-            return (
-              <div
-                key={vr.key}
-                data-index={vr.index}
-                ref={rowVirtualizer.measureElement}
-                className="grid grid-cols-[96px_1fr_120px_240px_320px_140px] gap-4 px-4 py-3 items-start"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  transform: `translateY(${vr.start}px)`,
-                }}
-              >
-                {isLoaderRow ? (
-                  <div className="col-span-6 text-center text-sm text-muted-foreground py-3">
-                    {isFetchingNextPage ? 'Loading more…' : 'Load more'}
-                  </div>
-                ) : row ? (
-                  row.getVisibleCells().map((cell) => (
-                    <div key={cell.id} className="min-w-0">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </div>
-                  ))
-                ) : null}
+      <div className="overflow-x-auto">
+        <div className="min-w-full">
+          {/* Header */}
+          <div
+            className="grid gap-4 px-4 py-2 border-b bg-muted/30"
+            style={{
+              gridTemplateColumns,
+              minWidth: minTableWidth ? `${minTableWidth}px` : undefined,
+            }}
+          >
+            {table.getFlatHeaders().map((header) => (
+              <div key={header.id} className="text-xs font-medium uppercase text-muted-foreground truncate">
+                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
               </div>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* Body with virtualization */}
+          <div
+            ref={parentRef}
+            className="relative overflow-y-auto"
+            style={{
+              minWidth: minTableWidth ? `${minTableWidth}px` : undefined,
+              maxHeight: `var(--photo-table-max-height, ${DEFAULT_HEIGHT}px)`,
+            }}
+          >
+            <div
+              style={{
+                height: rowVirtualizer.getTotalSize(),
+                position: 'relative',
+              }}
+            >
+              {virtualRows.map((vr) => {
+                const isLoaderRow = hasNextPage && vr.index === table.getRowModel().rows.length;
+                const row = table.getRowModel().rows[vr.index];
+
+                return (
+                  <div
+                    key={vr.key}
+                    data-index={vr.index}
+                    ref={rowVirtualizer.measureElement}
+                    className="grid gap-4 px-4 py-3 items-start"
+                    style={{
+                      gridTemplateColumns,
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${vr.start}px)`,
+                    }}
+                  >
+                    {isLoaderRow ? (
+                      <div
+                        className="text-center text-sm text-muted-foreground py-3"
+                        style={{ gridColumn: '1 / -1' }}
+                      >
+                        {isFetchingNextPage ? 'Loading more…' : 'Load more'}
+                      </div>
+                    ) : row ? (
+                      row.getVisibleCells().map((cell) => (
+                        <div key={cell.id} className="min-w-0">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </div>
+                      ))
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </Card>
