@@ -167,9 +167,16 @@ public class PhotoService : IPhotoService
         if (filter.IsAdultContent is true) query = query.Where(p => p.IsAdultContent);
         if (filter.IsRacyContent is true) query = query.Where(p => p.IsRacyContent);
         if (filter.TakenDateFrom.HasValue)
-            query = query.Where(p => p.TakenDate.HasValue && p.TakenDate >= filter.TakenDateFrom.Value);
+        {
+            var from = filter.TakenDateFrom.Value.Date;
+            query = query.Where(p => p.TakenDate.HasValue && p.TakenDate >= from);
+        }
+
         if (filter.TakenDateTo.HasValue)
-            query = query.Where(p => p.TakenDate.HasValue && p.TakenDate <= filter.TakenDateTo.Value);
+        {
+            var toExclusive = filter.TakenDateTo.Value.Date.AddDays(1);
+            query = query.Where(p => p.TakenDate.HasValue && p.TakenDate < toExclusive);
+        }
         if (filter.ThisDay != null)
             query = query.Where(p => p.TakenDate.HasValue &&
                                      p.TakenDate.Value.Day == filter.ThisDay.Day &&

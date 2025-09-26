@@ -14,18 +14,15 @@ function createPhoto(overrides: Partial<PhotoDto> = {}): PhotoDto {
 }
 
 describe('formatPhotoMessage', () => {
-  it('formats ISO string takenDate values without throwing', () => {
+  it('formats ISO string takenDate values without throwing', async () => {
     const isoString = '2023-02-01T15:30:00.000Z';
     const photo = createPhoto({
       takenDate: isoString as unknown as Date,
     });
 
-    let result: ReturnType<typeof formatPhotoMessage> | undefined;
-    expect(() => {
-      result = formatPhotoMessage(photo);
-    }).not.toThrow();
-
-    expect(result?.caption).toContain('📅 01.02.2023');
+    await expect(formatPhotoMessage(photo)).resolves.toMatchObject({
+      caption: expect.stringContaining('📅 01.02.2023'),
+    });
   });
 });
 

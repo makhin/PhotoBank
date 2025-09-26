@@ -10,9 +10,17 @@ vi.mock('../errorHandler', () => ({
   handleCommandError: vi.fn(),
 }));
 
+vi.mock('../photo', async () => {
+  const actual = await vi.importActual<typeof import('../photo')>('../photo');
+  return {
+    ...actual,
+    deletePhotoMessage: vi.fn(),
+  };
+});
+
 import { sendPhotosPage, PHOTOS_PAGE_SIZE } from './photosPage';
 import type { MyContext } from '../i18n';
-import { captionCache, currentPagePhotos } from '../photo';
+import { captionCache, currentPagePhotos, deletePhotoMessage, photoMessages } from '../photo';
 import { searchPhotos } from '../services/photo';
 
 const searchPhotosMock = vi.mocked(searchPhotos);
@@ -58,6 +66,7 @@ describe('sendPhotosPage', () => {
     vi.clearAllMocks();
     captionCache.clear();
     currentPagePhotos.clear();
+    photoMessages.clear();
   });
 
   it('renders the year for a valid ISO takenDate', async () => {
@@ -104,5 +113,31 @@ describe('sendPhotosPage', () => {
       expect.stringContaining('<b>Unknown Year</b>'),
       expect.objectContaining({ parse_mode: 'HTML' })
     );
+  });
+
+  it('deletes any previous photo preview when starting a fresh search', async () => {
+    const ctx = createContext();
+    const chatId = ctx.chat?.id ?? 0;
+
+    currentPagePhotos.set(chatId, { page: 2, ids: [42] });
+    photoMessages.set(chatId, 101);
+
+    const deletePhotoMessageMock = vi.mocked(deletePhotoMessage);
+
+    searchPhotosMock.mockResolvedValue({
+      totalCount: 1,
+      items: [createPhoto({ id: 42 })],
+    });
+
+    await sendPhotosPage({
+      ctx,
+      filter: {} as FilterDto,
+      page: 1,
+      fallbackMessage: 'No photos found',
+      buildCallbackData: (page) => `page:${page}`,
+    });
+
+    expect(deletePhotoMessageMock).toHaveBeenCalledWith(ctx);
+    expect(ctx.reply).toHaveBeenCalled();
   });
 });

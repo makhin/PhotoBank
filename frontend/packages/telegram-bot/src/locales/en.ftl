@@ -15,7 +15,12 @@ caption-missing = No caption.
 photo-usage = ❗ Use: /photo <id>
 photo-not-found = ❌ Photo not found.
 subscribe-usage = ❗ Use: /subscribe HH:MM
-search-usage = ❗ Use: /search <caption>
+search-usage =
+    ❗ Tips for /search:
+    1. Type caption keywords or wrap phrases in quotes — searches by caption.
+    2. Add tags: #family or tags:family,kids.
+    3. Narrow by people: @anna or people:anna,ivan.
+    4. Filter by dates: date:2020, date:2020-07..2020-08, single 2020-05-15, or bounds like before:2020-01 / after:2019.
 ai-usage = ❗ Use: /ai <prompt>
 ai-filter-empty = ⚠️ Could not determine filter from request. Please clarify.
 todays-photos-empty = 📭 No photos for today yet.

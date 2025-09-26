@@ -81,4 +81,43 @@ public class SearchFilterNormalizerTests
         normalized.TagNames![0].Should().Be("car");
     }
 
+
+
+    [Test]
+    public async Task NormalizeAsync_MatchesPartialPersonNames()
+    {
+        var translator = new Mock<ITranslatorService>();
+        translator
+            .Setup(t => t.TranslateAsync(It.IsAny<TranslateRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TranslateResponse(Array.Empty<string>()));
+
+        var cache = new MemoryCache(new MemoryCacheOptions());
+
+        var persons = new[]
+        {
+            new PersonDto { Id = 5, Name = "Даня Каляев" },
+            new PersonDto { Id = 7, Name = "Иван Иванов" }
+        };
+
+        var referenceDataService = new Mock<ISearchReferenceDataService>();
+        referenceDataService
+            .Setup(s => s.GetPersonsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(persons);
+        referenceDataService
+            .Setup(s => s.GetTagsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<TagDto>());
+
+        var normalizer = new SearchFilterNormalizer(translator.Object, cache, referenceDataService.Object);
+
+        var filter = new FilterDto
+        {
+            PersonNames = new[] { "@Даня", "Каля" }
+        };
+
+        var normalized = await normalizer.NormalizeAsync(filter);
+
+        normalized.Persons.Should().ContainSingle().Which.Should().Be(5);
+        translator.Verify(t => t.TranslateAsync(It.IsAny<TranslateRequest>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
 }

@@ -68,6 +68,9 @@ export function resolveSearchFilterToken(token: string): FilterDto | undefined {
     return undefined;
   }
 
+  entry.expiresAt = now + TOKEN_TTL_MS;
+  cache.set(token, entry);
+
   return entry.filter;
 }
 
