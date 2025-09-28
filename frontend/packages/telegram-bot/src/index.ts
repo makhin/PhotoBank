@@ -12,7 +12,7 @@ import { bot } from './bot';
 import { sendThisDayPage, thisDayCommand } from "./commands/thisday";
 import { captionCache } from "./photo";
 import { sendSearchPage, searchCommand, decodeSearchCallback } from "./commands/search";
-import { aiCommand, sendAiPage } from "./commands/ai";
+import { aiCommand, sendAiPage, decodeAiCallback } from "./commands/ai";
 import { helpCommand } from "./commands/help";
 import { subscribeCommand, initSubscriptionScheduler, restoreSubscriptions } from "./commands/subscribe";
 import { registerTagsDictionary } from "./commands/tags";
@@ -138,13 +138,17 @@ bot.callbackQuery(/^search:(\d+):(.+)$/, withRegistered(async (ctx) => {
 }));
 
 bot.callbackQuery(/^ai:(\d+):([\w-]+)$/, withRegistered(async (ctx) => {
-  if (!ctx.match || typeof ctx.match === 'string') {
-    throw new Error("Callback query match is undefined.");
+  const data = ctx.callbackQuery?.data;
+  if (!data) {
+    throw new Error("Callback query data is undefined.");
   }
-  const page = parseInt(ctx.match[1]!, 10);
-  const hash = ctx.match[2]!;
+  const decoded = decodeAiCallback(data);
+  if (!decoded) {
+    await ctx.answerCallbackQuery();
+    return;
+  }
   await ctx.answerCallbackQuery();
-  await sendAiPage(ctx, hash, page, true);
+  await sendAiPage(ctx, decoded.filter, decoded.page, true);
 }));
 
 bot.on('message:text', withRegistered(async (ctx) => {

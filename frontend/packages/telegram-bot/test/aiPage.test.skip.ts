@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { sendAiPage, aiFilters } from '../src/commands/ai';
+import { sendAiPage } from '../src/commands/ai';
 import * as photoService from '../src/services/photo';
 import * as photo from '../src/photo';
 import { i18n } from '../src/i18n';
@@ -19,7 +19,6 @@ const basePhoto = {
 beforeEach(() => {
   vi.restoreAllMocks();
   photo.currentPagePhotos.clear();
-  aiFilters.clear();
 });
 
 describe('sendAiPage', () => {
@@ -30,7 +29,6 @@ describe('sendAiPage', () => {
       editMessageText: vi.fn().mockResolvedValue(undefined),
       t: (k: string, p?: any) => i18n.t('en', k, p),
     } as any;
-    aiFilters.set('hash', {} as any);
     photo.currentPagePhotos.set(1, { page: 1, ids: [1] });
     vi.spyOn(photo, 'deletePhotoMessage').mockResolvedValue();
     vi.spyOn(photoService, 'searchPhotos').mockResolvedValue({
@@ -38,7 +36,7 @@ describe('sendAiPage', () => {
       photos: [basePhoto],
     } as any);
 
-    await sendAiPage(ctx, 'hash', 2, true);
+    await sendAiPage(ctx, {} as any, 2, true);
 
     expect(photo.deletePhotoMessage).toHaveBeenCalled();
   });
@@ -50,7 +48,6 @@ describe('sendAiPage', () => {
       editMessageText: vi.fn().mockResolvedValue(undefined),
       t: (k: string, p?: any) => i18n.t('en', k, p),
     } as any;
-    aiFilters.set('hash', {} as any);
     photo.currentPagePhotos.set(1, { page: 1, ids: [1] });
     vi.spyOn(photo, 'deletePhotoMessage').mockResolvedValue();
     vi.spyOn(photoService, 'searchPhotos').mockResolvedValue({
@@ -58,7 +55,7 @@ describe('sendAiPage', () => {
       photos: [basePhoto],
     } as any);
 
-    await sendAiPage(ctx, 'hash', 1, true);
+    await sendAiPage(ctx, {} as any, 1, true);
 
     expect(photo.deletePhotoMessage).not.toHaveBeenCalled();
   });
