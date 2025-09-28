@@ -1,12 +1,8 @@
 import { parseQueryWithOpenAI } from '@photobank/shared/ai/openai';
 import type { FilterDto } from '@photobank/shared/api/photobank';
-import { getFilterHash } from '@photobank/shared';
-
 import type { MyContext } from '../i18n';
-import { sendPhotosPage } from './photosPage';
 import { logger } from '../logger';
-
-export const aiFilters = new Map<string, FilterDto>();
+import { decodeFilterCallback, sendFilterPage } from './filterPage';
 
 export function parseAiPrompt(text?: string): string | null {
   if (!text) return null;
@@ -16,22 +12,17 @@ export function parseAiPrompt(text?: string): string | null {
 
 export async function sendAiPage(
   ctx: MyContext,
-  hash: string,
+  filter: FilterDto,
   page: number,
-  edit = false
+  edit = false,
 ) {
-  const filter = aiFilters.get(hash);
-  if (!filter) {
-    await ctx.reply(ctx.t('sorry-try-later'));
-    return;
-  }
-  await sendPhotosPage({
+  await sendFilterPage({
     ctx,
     filter,
     page,
     edit,
     fallbackMessage: ctx.t('search-photos-empty'),
-    buildCallbackData: (p) => `ai:${p}:${hash}`,
+    callbackPrefix: 'ai',
   });
 }
 
@@ -60,12 +51,13 @@ export async function aiCommand(ctx: MyContext, promptOverride?: string) {
       return;
     }
 
-    const hash = getFilterHash(dto);
-    aiFilters.set(hash, dto);
-
-    await sendAiPage(ctx, hash, 1);
+    await sendAiPage(ctx, dto, 1);
   } catch (err: unknown) {
     logger.error(err);
     await ctx.reply(ctx.t('sorry-try-later'));
   }
+}
+
+export function decodeAiCallback(data: string): { page: number; filter: FilterDto } | null {
+  return decodeFilterCallback('ai', data);
 }

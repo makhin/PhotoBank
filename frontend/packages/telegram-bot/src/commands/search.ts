@@ -12,12 +12,7 @@ import {
 import type { FilterDto } from '@photobank/shared/api/photobank';
 
 import type { MyContext } from '@/i18n';
-import {
-  registerSearchFilterToken,
-  resolveSearchFilterToken,
-} from '@/cache/searchFilterCache';
-
-import { sendPhotosPage } from './photosPage';
+import { sendFilterPage, decodeFilterCallback } from './filterPage';
 
 /* ===================== токенизация ===================== */
 
@@ -273,36 +268,16 @@ export async function sendSearchPage(
   page: number,
   edit = false,
 ) {
-  const token = registerSearchFilterToken(filter);
-  await sendPhotosPage({
+  await sendFilterPage({
     ctx,
     filter,
     page,
     edit,
     fallbackMessage: ctx.t("search-photos-empty"),
-    buildCallbackData: (p) => {
-      const callbackData = `search:${p}:${token}`;
-      if (callbackData.length > 64) {
-        throw new Error("search callback_data exceeds Telegram limit");
-      }
-      return callbackData;
-    },
+    callbackPrefix: "search",
   });
 }
 
 export function decodeSearchCallback(data: string): { page: number; filter: FilterDto } | null {
-  if (!data.startsWith("search:")) return null;
-  const parts = data.split(":");
-  if (parts.length !== 3) return null;
-
-  const page = Number(parts[1]);
-  if (!Number.isInteger(page) || page < 1) return null;
-
-  const token = parts[2];
-  if (!token) return null;
-
-  const filter = resolveSearchFilterToken(token);
-  if (!filter) return null;
-
-  return { page, filter };
+  return decodeFilterCallback("search", data);
 }

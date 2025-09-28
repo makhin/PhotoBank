@@ -1,8 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { aiCommand, parseAiPrompt, aiFilters } from '../src/commands/ai';
+import { aiCommand, parseAiPrompt } from '../src/commands/ai';
 import * as openai from '@photobank/shared/ai/openai';
 import * as photoService from '../src/services/photo';
-import * as utils from '@photobank/shared/';
 import { i18n } from '../src/i18n';
 
 describe('parseAiPrompt', () => {
@@ -39,15 +38,12 @@ describe('aiCommand', () => {
       dateFrom: new Date('2020-01-01T00:00:00Z'),
       dateTo: null,
     });
-    vi.spyOn(utils, 'getFilterHash').mockReturnValue('hash');
     const searchSpy = vi
       .spyOn(photoService, 'searchPhotos')
       .mockResolvedValue({ count: 0, photos: [] } as any);
-    aiFilters.clear();
 
     await aiCommand(ctx);
 
-    expect(aiFilters.has('hash')).toBe(true);
     expect(searchSpy).toHaveBeenCalledWith(
       ctx,
       expect.objectContaining({
@@ -69,13 +65,9 @@ describe('aiCommand', () => {
       dateFrom: null,
       dateTo: null,
     });
-    const hashSpy = vi.spyOn(utils, 'getFilterHash');
-    aiFilters.clear();
 
     await aiCommand(ctx);
 
-    expect(hashSpy).not.toHaveBeenCalled();
-    expect(aiFilters.size).toBe(0);
     expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'ai-filter-empty'));
   });
 
@@ -89,12 +81,10 @@ describe('aiCommand', () => {
         dateFrom: null,
         dateTo: null,
       });
-    vi.spyOn(utils, 'getFilterHash').mockResolvedValue('hash');
     vi.spyOn(photoService, 'searchPhotos').mockResolvedValue({
       count: 0,
       photos: [],
     } as any);
-    aiFilters.clear();
 
     await aiCommand(ctx, 'cats');
 
