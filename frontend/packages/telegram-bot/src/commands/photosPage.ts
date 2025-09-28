@@ -6,6 +6,7 @@ import type { MyContext } from '../i18n';
 import { searchPhotos } from '../services/photo';
 import { handleCommandError } from '../errorHandler';
 import { captionCache, currentPagePhotos, deletePhotoMessage } from '../photo';
+import { setLastFilter } from '../cache/lastFilterCache';
 
 export const PHOTOS_PAGE_SIZE = 10;
 
@@ -16,6 +17,7 @@ export interface SendPhotosPageOptions {
   edit?: boolean;
   fallbackMessage: string;
   buildCallbackData: (page: number) => string;
+  saveLastFilterSource?: 'search' | 'ai';
 }
 
 export async function sendPhotosPage({
@@ -25,6 +27,7 @@ export async function sendPhotosPage({
   edit = false,
   fallbackMessage,
   buildCallbackData,
+  saveLastFilterSource,
 }: SendPhotosPageOptions) {
   const chatId = ctx.chat?.id;
   if (chatId) {
@@ -34,13 +37,19 @@ export async function sendPhotosPage({
     }
   }
 
+  const pagedFilter: FilterDto = {
+    ...filter,
+    page,
+    pageSize: PHOTOS_PAGE_SIZE,
+  };
+
+  if (chatId && saveLastFilterSource) {
+    setLastFilter(chatId, pagedFilter, saveLastFilterSource);
+  }
+
   let queryResult;
   try {
-    queryResult = await searchPhotos(ctx, {
-      ...filter,
-      page,
-      pageSize: PHOTOS_PAGE_SIZE,
-    });
+    queryResult = await searchPhotos(ctx, pagedFilter);
   } catch (err: unknown) {
     await handleCommandError(ctx, err);
     return;

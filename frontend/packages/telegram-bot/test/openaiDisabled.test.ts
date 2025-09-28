@@ -17,6 +17,7 @@ describe('bot without OpenAI', () => {
     vi.mock('../src/photo', () => ({ captionCache: new Map<number, string>() }));
     vi.mock('../src/commands/search', () => ({ sendSearchPage: vi.fn(), searchCommand: vi.fn(), decodeSearchCallback: vi.fn(() => null) }));
     vi.mock('../src/commands/ai', () => ({ aiCommand: vi.fn(), sendAiPage: vi.fn() }));
+    vi.mock('../src/commands/filter', () => ({ filterCommand: vi.fn() }));
     vi.mock('../src/commands/help', () => ({ helpCommand: vi.fn() }));
     vi.mock('../src/commands/subscribe', () => ({
       subscribeCommand: vi.fn(),

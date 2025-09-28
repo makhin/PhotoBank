@@ -44,6 +44,7 @@ export async function sendFilterPage({
       }
       return callbackData;
     },
+    saveLastFilterSource: callbackPrefix === 'ai' ? 'ai' : 'search',
   });
 }
 

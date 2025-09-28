@@ -14,6 +14,7 @@ import { captionCache } from "./photo";
 import { sendSearchPage, searchCommand, decodeSearchCallback } from "./commands/search";
 import { aiCommand, sendAiPage, decodeAiCallback } from "./commands/ai";
 import { helpCommand } from "./commands/help";
+import { filterCommand } from './commands/filter';
 import { subscribeCommand, initSubscriptionScheduler, restoreSubscriptions } from "./commands/subscribe";
 import { registerTagsDictionary } from "./commands/tags";
 import { registerPersonsDictionary } from "./commands/persons";
@@ -32,6 +33,7 @@ const privateCommands = (lang: string) => [
   { command: 'thisday', description: i18n.t(lang, 'cmd-thisday') },
   { command: 'search', description: i18n.t(lang, 'cmd-search') },
   { command: 'ai', description: i18n.t(lang, 'cmd-ai') },
+  { command: 'filter', description: i18n.t(lang, 'cmd-filter') },
   { command: 'profile', description: i18n.t(lang, 'cmd-profile') },
   { command: 'subscribe', description: i18n.t(lang, 'cmd-subscribe') },
   { command: 'tags', description: i18n.t(lang, 'cmd-tags') },
@@ -94,6 +96,7 @@ bot.command("help", helpCommand);
 bot.command("thisday", withRegistered(thisDayCommand));
 bot.command("search", withRegistered(searchCommand));
 bot.command("ai", withRegistered(aiCommand));
+bot.command("filter", withRegistered(filterCommand));
 
 bot.command("profile", profileCommand);
 
