@@ -142,15 +142,30 @@ public sealed class SearchFilterNormalizer(
             if (normalizedQuery.Length == 0)
                 continue;
 
-            var partialMatches = candidates
+            var exact = candidates.FirstOrDefault(item => item.Normalized.Equals(normalizedQuery, StringComparison.Ordinal));
+            if (exact.Normalized is not null)
+            {
+                ids.Add(exact.Id);
+                continue;
+            }
+
+            var partialMatch = candidates
                 .Where(item => item.Normalized.Contains(normalizedQuery, StringComparison.Ordinal)
                                || normalizedQuery.Contains(item.Normalized, StringComparison.Ordinal))
-                .Select(item => item.Id)
-                .ToArray();
+                .Select(item => new
+                {
+                    item.Id,
+                    item.Normalized,
+                    Distance = Levenshtein(item.Normalized, normalizedQuery)
+                })
+                .OrderBy(x => x.Distance)
+                .ThenBy(x => Math.Abs(x.Normalized.Length - normalizedQuery.Length))
+                .FirstOrDefault();
 
-            if (partialMatches.Length > 0)
+            if (partialMatch is not null)
             {
-                ids.AddRange(partialMatches);
+                // Ambiguous partial matches map to the closest known person to avoid over-filtering.
+                ids.Add(partialMatch.Id);
                 continue;
             }
 
