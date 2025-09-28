@@ -15,10 +15,9 @@ import { sendSearchPage, searchCommand, decodeSearchCallback } from "./commands/
 import { aiCommand, sendAiPage } from "./commands/ai";
 import { helpCommand } from "./commands/help";
 import { subscribeCommand, initSubscriptionScheduler, restoreSubscriptions } from "./commands/subscribe";
-import { tagsCommand, sendTagsPage } from "./commands/tags";
-import { personsCommand, sendPersonsPage } from "./commands/persons";
-import { storagesCommand, sendStoragesPage } from "./commands/storages";
-import { tagsCallbackPattern, personsCallbackPattern, storagesCallbackPattern } from "./patterns";
+import { registerTagsDictionary } from "./commands/tags";
+import { registerPersonsDictionary } from "./commands/persons";
+import { registerStoragesDictionary } from "./commands/storages";
 import { registerPhotoRoutes } from "./commands/photoRouter";
 import { profileCommand } from "./commands/profile";
 import { uploadCommand } from "./commands/upload";
@@ -101,9 +100,9 @@ bot.command("profile", profileCommand);
 bot.command("subscribe", withRegistered(subscribeCommand));
 bot.command("upload", withRegistered(uploadCommand));
 
-bot.command("tags", withRegistered(tagsCommand));
-bot.command("persons", withRegistered(personsCommand));
-bot.command("storages", withRegistered(storagesCommand));
+registerTagsDictionary(bot, withRegistered);
+registerPersonsDictionary(bot, withRegistered);
+registerStoragesDictionary(bot, withRegistered);
 
 bot.callbackQuery(/^thisday:(\d+)$/, withRegistered(async (ctx) => {
   if (!ctx.match || typeof ctx.match === 'string') {
@@ -123,35 +122,6 @@ bot.callbackQuery(/^caption:(\d+)$/, withRegistered(async (ctx) => {
   await ctx.answerCallbackQuery(caption ?? ctx.t('caption-missing'));
 }));
 
-bot.callbackQuery(tagsCallbackPattern, withRegistered(async (ctx) => {
-  if (!ctx.match || typeof ctx.match === 'string') {
-    throw new Error("Callback query match is undefined.");
-  }
-  const page = parseInt(ctx.match[1]!, 10);
-  const prefix = decodeURIComponent(ctx.match[2]!);
-  await ctx.answerCallbackQuery();
-  await sendTagsPage(ctx, prefix, page, true);
-}));
-
-bot.callbackQuery(personsCallbackPattern, withRegistered(async (ctx) => {
-  if (!ctx.match || typeof ctx.match === 'string') {
-    throw new Error("Callback query match is undefined.");
-  }
-  const page = parseInt(ctx.match[1]!, 10);
-  const prefix = decodeURIComponent(ctx.match[2]!);
-  await ctx.answerCallbackQuery();
-  await sendPersonsPage(ctx, prefix, page, true);
-}));
-
-bot.callbackQuery(storagesCallbackPattern, withRegistered(async (ctx) => {
-  if (!ctx.match || typeof ctx.match === 'string') {
-    throw new Error("Callback query match is undefined.");
-  }
-  const page = parseInt(ctx.match[1]!, 10);
-  const prefix = decodeURIComponent(ctx.match[2]!);
-  await ctx.answerCallbackQuery();
-  await sendStoragesPage(ctx, prefix, page, true);
-}));
 
 bot.callbackQuery(/^search:(\d+):(.+)$/, withRegistered(async (ctx) => {
   const data = ctx.callbackQuery?.data;

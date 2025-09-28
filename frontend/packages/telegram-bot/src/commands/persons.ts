@@ -1,27 +1,14 @@
-import type { MyContext } from "../i18n";
 import { getAllPersons } from '../dictionaries';
-import { parsePrefix, sendNamedItemsPage } from "./helpers";
+import { createDictionaryCommand } from './dictionaryFactory';
 
-export async function sendPersonsPage(
-  ctx: MyContext,
-  prefix: string,
-  page: number,
-  edit = false,
-) {
-  await sendNamedItemsPage({
-    ctx,
-    command: "persons",
-    fetchAll: () => Promise.resolve(getAllPersons()),
-    prefix,
-    page,
-    edit,
-    errorMsg: ctx.t('persons-error'),
-    filter: (p) => p.id >= 1,
-  });
-}
+export const personsDictionary = createDictionaryCommand({
+  command: 'persons',
+  fetchAll: () => Promise.resolve(getAllPersons()),
+  errorKey: 'persons-error',
+  filter: (person) => person.id >= 1,
+});
 
-export async function personsCommand(ctx: MyContext) {
-  const prefix = parsePrefix(ctx.message?.text);
-  await sendPersonsPage(ctx, prefix, 1);
-}
-
+export const sendPersonsPage = personsDictionary.sendPage;
+export const personsCommand = personsDictionary.commandHandler;
+export const personsCallbackPattern = personsDictionary.callbackPattern;
+export const registerPersonsDictionary = personsDictionary.register;

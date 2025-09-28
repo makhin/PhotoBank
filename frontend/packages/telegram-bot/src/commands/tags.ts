@@ -1,26 +1,13 @@
-import type { MyContext } from '../i18n';
 import { getAllTags } from '../dictionaries';
-import { parsePrefix, sendNamedItemsPage } from './helpers';
+import { createDictionaryCommand } from './dictionaryFactory';
 
-export async function sendTagsPage(
-  ctx: MyContext,
-  prefix: string,
-  page: number,
-  edit = false,
-) {
-  await sendNamedItemsPage({
-    ctx,
-    command: "tags",
-    fetchAll: () => Promise.resolve(getAllTags()),
-    prefix,
-    page,
-    edit,
-    errorMsg: ctx.t('tags-error'),
-  });
-}
+export const tagsDictionary = createDictionaryCommand({
+  command: 'tags',
+  fetchAll: () => Promise.resolve(getAllTags()),
+  errorKey: 'tags-error',
+});
 
-export async function tagsCommand(ctx: MyContext) {
-  const prefix = parsePrefix(ctx.message?.text);
-  await sendTagsPage(ctx, prefix, 1);
-}
-
+export const sendTagsPage = tagsDictionary.sendPage;
+export const tagsCommand = tagsDictionary.commandHandler;
+export const tagsCallbackPattern = tagsDictionary.callbackPattern;
+export const registerTagsDictionary = tagsDictionary.register;
