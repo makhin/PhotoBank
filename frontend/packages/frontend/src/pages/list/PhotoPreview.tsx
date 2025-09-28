@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Image } from 'lucide-react';
 
 interface PhotoPreviewProps {
@@ -7,7 +7,7 @@ interface PhotoPreviewProps {
     className?: string;
 }
 
-const PhotoPreview = ({ thumbnailUrl, alt, className = "" }: PhotoPreviewProps) => {
+const PhotoPreviewComponent = ({ thumbnailUrl, alt, className = "" }: PhotoPreviewProps) => {
     const [imageError, setImageError] = useState(false);
 
     return (
@@ -27,5 +27,11 @@ const PhotoPreview = ({ thumbnailUrl, alt, className = "" }: PhotoPreviewProps) 
         </div>
     );
 };
+
+const PhotoPreview = memo(PhotoPreviewComponent);
+PhotoPreview.displayName = 'PhotoPreview';
+
+export { PhotoPreviewComponent };
+export type { PhotoPreviewProps };
 
 export default PhotoPreview;

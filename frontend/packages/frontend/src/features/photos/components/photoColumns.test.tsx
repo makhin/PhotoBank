@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { render, screen, renderHook } from '@testing-library/react';
-import { compareAsc, parseISO } from 'date-fns';
+import { compareAsc, format, parseISO } from 'date-fns';
 import type {
   AccessorFnColumnDef,
   CellContext,
@@ -14,6 +14,7 @@ import {
   vi,
 } from 'vitest';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
+import '@testing-library/jest-dom';
 
 import { usePhotoColumns } from './photoColumns';
 
@@ -61,7 +62,7 @@ describe('usePhotoColumns - date column', () => {
     };
   });
 
-  it('renders taken date in DD.MM.YYYY format', () => {
+  it('renders taken date in DD.MM.YYYY hh:mm format', () => {
     const { result } = renderHook(() => usePhotoColumns());
     const dateColumn = result.current.find((column) => column.id === 'date');
     expect(dateColumn).toBeDefined();
@@ -69,15 +70,19 @@ describe('usePhotoColumns - date column', () => {
       return;
     }
     const photo = createPhoto(1, '2024-06-07T10:15:00+03:00');
-    const isoValue = dateColumn.accessorFn(photo, 0) as string;
-    const cellNode = dateColumn.cell({ getValue: () => isoValue } as never);
+    const timestamp = dateColumn.accessorFn(photo, 0) as number;
+    const cellNode = dateColumn.cell({ getValue: () => timestamp } as never);
 
     render(<>{cellNode}</>);
 
-    expect(screen.getByText('07.06.2024')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        format(parseISO('2024-06-07T10:15:00+03:00'), 'dd.MM.yyyy hh:mm'),
+      ),
+    ).toBeInTheDocument();
   });
 
-  it('returns ISO strings that preserve chronological sorting', () => {
+  it('returns timestamps that preserve chronological sorting', () => {
     const { result } = renderHook(() => usePhotoColumns());
     const dateColumn = result.current.find((column) => column.id === 'date');
     expect(dateColumn).toBeDefined();
@@ -104,9 +109,9 @@ describe('usePhotoColumns - date column', () => {
     const sortedByAccessor = photos
       .slice()
       .sort((a, b) => {
-        const isoA = (dateColumn.accessorFn(a, 0) as string) ?? '';
-        const isoB = (dateColumn.accessorFn(b, 0) as string) ?? '';
-        return isoA.localeCompare(isoB);
+        const tsA = (dateColumn.accessorFn(a, 0) as number | null) ?? 0;
+        const tsB = (dateColumn.accessorFn(b, 0) as number | null) ?? 0;
+        return tsA - tsB;
       })
       .map((p) => p.id);
 

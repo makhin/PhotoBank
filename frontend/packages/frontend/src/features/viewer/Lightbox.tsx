@@ -7,8 +7,24 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/
 import { useAppDispatch, useAppSelector } from '@/app/hook';
 
 import ImageCanvas from './ImageCanvas';
-import { close, next, prev } from './viewerSlice';
-import { prefetchAround } from './prefetch';
+import { close, next, prev, type ViewerItem } from './viewerSlice';
+
+const prefetchImage = (src: string) => {
+  if (!src) return;
+  const img = new Image();
+  img.onload = () => undefined;
+  img.onerror = () => undefined;
+  img.src = src;
+};
+
+const prefetchAround = (items: ViewerItem[], index: number, radius = 1) => {
+  for (let i = Math.max(0, index - radius); i <= Math.min(items.length - 1, index + radius); i++) {
+    if (i === index) continue;
+    const item = items[i];
+    if (!item?.preview) continue;
+    prefetchImage(item.preview);
+  }
+};
 
 const Lightbox = () => {
   const dispatch = useAppDispatch();
