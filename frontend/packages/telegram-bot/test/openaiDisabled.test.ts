@@ -23,10 +23,9 @@ describe('bot without OpenAI', () => {
       initSubscriptionScheduler: vi.fn(),
       restoreSubscriptions: vi.fn(() => Promise.resolve()),
     }));
-    vi.mock('../src/commands/tags', () => ({ tagsCommand: vi.fn(), sendTagsPage: vi.fn() }));
-    vi.mock('../src/commands/persons', () => ({ personsCommand: vi.fn(), sendPersonsPage: vi.fn() }));
-    vi.mock('../src/commands/storages', () => ({ storagesCommand: vi.fn(), sendStoragesPage: vi.fn() }));
-    vi.mock('../src/patterns', () => ({ tagsCallbackPattern: /.*/, personsCallbackPattern: /.*/, storagesCallbackPattern: /.*/ }));
+    vi.mock('../src/commands/tags', () => ({ registerTagsDictionary: vi.fn() }));
+    vi.mock('../src/commands/persons', () => ({ registerPersonsDictionary: vi.fn() }));
+    vi.mock('../src/commands/storages', () => ({ registerStoragesDictionary: vi.fn() }));
     vi.mock('../src/commands/photoRouter', () => ({ registerPhotoRoutes: vi.fn() }));
     vi.mock('../src/commands/profile', () => ({ profileCommand: vi.fn() }));
     vi.mock('../src/commands/upload', () => ({ uploadCommand: vi.fn() }));
