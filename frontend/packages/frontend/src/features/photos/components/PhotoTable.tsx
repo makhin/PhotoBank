@@ -18,13 +18,20 @@ type Props = {
   onRowClick?: (photoId: number) => void;
 };
 
-const DEFAULT_COLUMN_FLEX_STYLE: CSSProperties = { flex: '1.5 1 0%' };
+const CONTENT_BASE_FLEX_STYLE: CSSProperties = {
+  flexGrow: 1,
+  flexShrink: 1,
+  flexBasis: 'auto',
+  minWidth: 'fit-content',
+};
+
+const DEFAULT_COLUMN_FLEX_STYLE: CSSProperties = CONTENT_BASE_FLEX_STYLE;
 const COLUMN_FLEX_STYLES: Record<string, CSSProperties> = {
   thumbnail: { flexBasis: '80px', flexShrink: 0 },
   flags: { flexBasis: '100px', flexShrink: 0 },
   takenDate: { flexBasis: '150px', flexShrink: 0 },
-  path: { flex: '1 1 0%' },
-  caption: { flex: '1.5 1 0%' },
+  path: CONTENT_BASE_FLEX_STYLE,
+  caption: { ...CONTENT_BASE_FLEX_STYLE, flexGrow: 1.5 },
 };
 
 function getColumnFlexStyle(columnId: string): CSSProperties {
