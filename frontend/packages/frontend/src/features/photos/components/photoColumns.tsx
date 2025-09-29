@@ -36,24 +36,20 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
           </div>
         ),
         size: 80,
-        minSize: 60,
-        maxSize: 120,
         enableSorting: false,
-        enableResizing: true,
+        enableResizing: false,
       },
       {
         accessorKey: 'path',
         id: 'path',
         header: 'Path',
         cell: ({ row }) => (
-          <div className="font-mono text-sm text-muted-foreground truncate max-w-[200px]">
+          <div className="font-mono text-sm text-muted-foreground truncate">
             {row.original.storageName}
-            {row.original.relativePath && row.original.relativePath}
+            {row.original.relativePath && '/' + row.original.relativePath}
+            {'/' + row.original.name}
           </div>
         ),
-        size: 450,
-        minSize: 250,
-        maxSize: 600,
         enableSorting: false,
         enableResizing: true,
       },
@@ -62,7 +58,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
         id: 'caption',
         header: 'Caption',
         cell: ({ row }) => (
-          <div className="text-sm text-foreground max-w-[300px] truncate">
+          <div className="text-sm text-foreground truncate">
             {row.original.captions ? (
               row.original.captions[0]
             ) : (
@@ -70,9 +66,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
             )}
           </div>
         ),
-        size: 350,
-        minSize: 200,
-        maxSize: 500,
+        // 30% of available width
         enableSorting: false,
         enableResizing: true,
       },
@@ -91,13 +85,13 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
         },
         cell: ({ getValue }) => {
           const timestamp = getValue() as number | null;
-          return timestamp
-            ? format(new Date(timestamp), 'dd.MM.yyyy hh:mm')
-            : null;
+          return (
+            <div className="text-sm text-muted-foreground font-mono whitespace-nowrap">
+              {timestamp ? format(new Date(timestamp), 'dd.MM.yyyy hh:mm') : null}
+            </div>
+          );
         },
         size: 200,
-        minSize: 180,
-        maxSize: 250,
         enableSorting: false,
         enableResizing: true,
       },
@@ -115,9 +109,6 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
             variant="outline"
           />
         ),
-        size: 450,
-        minSize: 400,
-        maxSize: 600,
         enableSorting: false,
         enableResizing: true,
       },
@@ -137,9 +128,6 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
             variant="secondary"
           />
         ),
-        size: 200,
-        minSize: 120,
-        maxSize: 280,
         enableSorting: false,
         enableResizing: true,
       },
@@ -158,9 +146,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
             )}
           </>
         ),
-        size: 170,
-        minSize: 100,
-        maxSize: 250,
+        size: 100,
         enableSorting: false,
         enableResizing: true,
       },
