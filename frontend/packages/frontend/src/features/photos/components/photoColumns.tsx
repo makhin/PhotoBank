@@ -58,7 +58,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
         id: 'caption',
         header: 'Caption',
         cell: ({ row }) => (
-          <div className="text-sm text-foreground truncate">
+          <div className="text-sm text-foreground whitespace-pre-wrap break-words">
             {row.original.captions ? (
               row.original.captions[0]
             ) : (
