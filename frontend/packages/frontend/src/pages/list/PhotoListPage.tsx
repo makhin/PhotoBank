@@ -166,19 +166,13 @@ const PhotoListPage = () => {
       >
         <div className="p-6">
           {/* Desktop/Tablet View */}
-          <div className="hidden lg:block">
-            {loading ? (
-              <PhotoTable rows={[]} isFetchingNextPage />
-            ) : photos.length === 0 ? (
-              <EmptyState text="No photos" />
-            ) : (
+          <div className="h-screen w-screen overflow-hidden">
               <PhotoTable
-                rows={photos}
+                photos={photos}
                 isFetchingNextPage={isFetchingNextPage}
                 hasNextPage={hasNextPage}
                 fetchNextPage={() => void fetchNextPage()}
               />
-            )}
           </div>
 
           {/* Mobile View */}

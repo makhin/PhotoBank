@@ -1,134 +1,147 @@
-import * as React from 'react';
+import React, { useRef } from 'react';
 import {
-  flexRender,
-  getCoreRowModel,
   useReactTable,
-  type VisibilityState,
+  getCoreRowModel,
+  flexRender,
+  type ColumnSizingState,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { type PhotoItemDto } from '@photobank/shared/api/photobank';
 
-import { Card } from '@/shared/ui/card';
-
 import { usePhotoColumns } from './photoColumns';
 
 type Props = {
-  rows: PhotoItemDto[];
-  isFetchingNextPage?: boolean;
-  hasNextPage?: boolean;
+  photos: PhotoItemDto[];
   fetchNextPage?: () => void;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
   storageKey?: string; // ключ для localStorage (состояние видимости колонок)
 };
 
-const DEFAULT_HEIGHT = 640;
-
 export function PhotoTable({
-  rows,
-  isFetchingNextPage,
-  hasNextPage,
-  fetchNextPage,
-  storageKey = 'photoTable.columns',
-}: Props) {
-  const columns = usePhotoColumns();
-
-  // column visibility persistence
-  const [visibility, setVisibility] = React.useState<VisibilityState>(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      return raw ? (JSON.parse(raw) as VisibilityState) : {};
-    } catch {
-      return {};
-    }
-  });
-
-  React.useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(visibility));
-  }, [visibility, storageKey]);
+                             photos,
+                             fetchNextPage,
+                             hasNextPage,
+                             isFetchingNextPage,
+                           }: Props) {
+  const [columnSizing, setColumnSizing] = React.useState<ColumnSizingState>({});
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   const table = useReactTable({
-    data: rows,
-    columns: columns,
-    state: { columnVisibility: visibility },
-    onColumnVisibilityChange: setVisibility,
+    data: photos,
+    columns: usePhotoColumns(),
+    state: { columnSizing },
+    onColumnSizingChange: setColumnSizing,
     getCoreRowModel: getCoreRowModel(),
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
   });
 
-  // virtualization
-  const parentRef = React.useRef<HTMLDivElement | null>(null);
+  const { rows } = table.getRowModel();
+
   const rowVirtualizer = useVirtualizer({
     count: table.getRowModel().rows.length + (hasNextPage ? 1 : 0),
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 92, // средняя высота строки (preview 80px + отступы)
-    overscan: 8,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 80,
+    overscan: 10,
   });
 
-  // infinite load sentinel
-  const virtualRows = rowVirtualizer.getVirtualItems();
-  const last = virtualRows[virtualRows.length - 1];
   React.useEffect(() => {
-    if (!last) return;
-    const isLoaderRow = hasNextPage && last.index === table.getRowModel().rows.length;
-    if (isLoaderRow && !isFetchingNextPage && fetchNextPage) {
+    const lastItem = rowVirtualizer.getVirtualItems().at(-1);
+    if (
+      lastItem &&
+      lastItem.index >= rows.length - 10 &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      fetchNextPage
+    ) {
       fetchNextPage();
     }
-  }, [last, hasNextPage, isFetchingNextPage, fetchNextPage, table]);
+  }, [rows.length, hasNextPage, isFetchingNextPage, fetchNextPage, rowVirtualizer]);
 
   return (
-    <Card className="w-full overflow-hidden">
-      {/* Header */}
-      <div className="grid grid-cols-[96px_1fr_120px_240px_320px_140px] gap-4 px-4 py-2 border-b bg-muted/30">
-        {table.getFlatHeaders().map((header) => (
-          <div key={header.id} className="text-xs font-medium uppercase text-muted-foreground truncate">
-            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-          </div>
-        ))}
-      </div>
-
-      {/* Body with virtualization */}
+    <div className="w-full h-full flex flex-col bg-background">
+      {/* Table Container */}
       <div
-        ref={parentRef}
-        style={{ height: DEFAULT_HEIGHT, overflow: 'auto', position: 'relative' }}
+        ref={tableContainerRef}
+        className="flex-1 overflow-auto"
+        style={{ contain: 'strict' }}
       >
-        <div
-          style={{
-            height: rowVirtualizer.getTotalSize(),
-            position: 'relative',
-          }}
-        >
-          {virtualRows.map((vr) => {
-            const isLoaderRow = hasNextPage && vr.index === table.getRowModel().rows.length;
-            const row = table.getRowModel().rows[vr.index];
-
-            return (
-              <div
-                key={vr.key}
-                data-index={vr.index}
-                ref={rowVirtualizer.measureElement}
-                className="grid grid-cols-[96px_1fr_120px_240px_320px_140px] gap-4 px-4 py-3 items-start"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  transform: `translateY(${vr.start}px)`,
-                }}
-              >
-                {isLoaderRow ? (
-                  <div className="col-span-6 text-center text-sm text-muted-foreground py-3">
-                    {isFetchingNextPage ? 'Loading more…' : 'Load more'}
+        <div style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+          {/* Table Header */}
+          <div className="sticky top-0 z-10 bg-card border-b border-border shadow-sm h-[52px]">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <div key={headerGroup.id} className="flex">
+                {headerGroup.headers.map((header) => (
+                  <div
+                    key={header.id}
+                    className="px-4 py-3 text-left relative group shrink-0"
+                    style={{ width: header.getSize() }}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                    {header.column.getCanResize() && (
+                      // eslint-disable-next-line jsx-a11y/no-static-element-interactions
+                      <div
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        className="absolute right-0 top-0 h-full w-1 bg-border hover:bg-primary cursor-col-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{
+                          transform: header.column.getIsResizing()
+                            ? 'scaleX(1.5)'
+                            : '',
+                        }}
+                      />
+                    )}
                   </div>
-                ) : row ? (
-                  row.getVisibleCells().map((cell) => (
-                    <div key={cell.id} className="min-w-0">
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Virtualized Rows */}
+          <div className="relative" style={{ paddingTop: '52px' }}>
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const photoItemDto = photos[virtualRow.index];
+              if (!photoItemDto) return null;
+              return (
+                <div
+                  key={photoItemDto.id}
+                  className="absolute top-0 left-0 w-full flex items-center border-b border-border hover:bg-gallery-hover transition-colors duration-150"
+                  style={{
+                    height: `${virtualRow.size}px`,
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  {table.getRowModel().rows[virtualRow.index]?.getVisibleCells().map((cell) => (
+                    <div
+                      key={cell.id}
+                      className="px-4 py-2 flex items-center shrink-0"
+                      style={{ width: cell.column.getSize() }}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </div>
-                  ))
-                ) : null}
-              </div>
-            );
-          })}
+                  ))}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </Card>
+
+      {/* Loading indicator */}
+      {isFetchingNextPage && (
+        <div className="border-t border-border px-6 py-3 bg-muted">
+          <div className="flex items-center justify-center text-muted-foreground">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+            Loading more photos...
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
