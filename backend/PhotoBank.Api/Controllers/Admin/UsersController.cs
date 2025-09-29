@@ -8,6 +8,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PhotoBank.Api.Controllers.Admin;
 
@@ -56,13 +57,24 @@ public class UsersController(UserManager<ApplicationUser> userManager, RoleManag
             .Take(query.Limit)
             .ToListAsync();
 
-        var result = users.Select(user => new UserDto
+        var usersWithRoles = await Task.WhenAll(users.Select(async user =>
         {
-            Id = user.Id,
-            Email = user.Email ?? string.Empty,
-            PhoneNumber = user.PhoneNumber,
-            TelegramUserId = user.TelegramUserId,
-            TelegramSendTimeUtc = user.TelegramSendTimeUtc
+            var roles = await userManager.GetRolesAsync(user);
+            return new
+            {
+                User = user,
+                Roles = (IReadOnlyCollection<string>)roles.ToArray()
+            };
+        }));
+
+        var result = usersWithRoles.Select(userWithRoles => new UserDto
+        {
+            Id = userWithRoles.User.Id,
+            Email = userWithRoles.User.Email ?? string.Empty,
+            PhoneNumber = userWithRoles.User.PhoneNumber,
+            TelegramUserId = userWithRoles.User.TelegramUserId,
+            TelegramSendTimeUtc = userWithRoles.User.TelegramSendTimeUtc,
+            Roles = userWithRoles.Roles
         });
         return Ok(result);
     }
@@ -92,13 +104,16 @@ public class UsersController(UserManager<ApplicationUser> userManager, RoleManag
                     await userManager.AddToRoleAsync(user, role);
         }
 
+        var createdRoles = await userManager.GetRolesAsync(user);
+
         var created = new UserDto
         {
             Id = user.Id,
             Email = user.Email!,
             PhoneNumber = user.PhoneNumber,
             TelegramUserId = user.TelegramUserId,
-            TelegramSendTimeUtc = user.TelegramSendTimeUtc
+            TelegramSendTimeUtc = user.TelegramSendTimeUtc,
+            Roles = createdRoles.ToArray()
         };
         return CreatedAtAction(nameof(GetAllAsync), new { id = user.Id }, created);
     }
