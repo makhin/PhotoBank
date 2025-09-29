@@ -15,6 +15,7 @@ type Props = {
   fetchNextPage?: () => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
+  onRowClick?: (photoId: number) => void;
 };
 
 const DEFAULT_COLUMN_FLEX_STYLE: CSSProperties = { flex: '1.5 1 0%' };
@@ -35,6 +36,7 @@ export function PhotoTable({
                              fetchNextPage,
                              hasNextPage,
                              isFetchingNextPage,
+                             onRowClick,
                            }: Props) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
@@ -130,7 +132,16 @@ export function PhotoTable({
               return (
                 <div
                   key={rowKey}
-                  className="absolute top-0 left-0 w-full flex items-center border-b border-border hover:bg-gallery-hover transition-colors duration-150"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onRowClick?.(row.original.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      onRowClick?.(row.original.id);
+                    }
+                  }}
+                  className="absolute top-0 left-0 w-full flex items-center border-b border-border hover:bg-gallery-hover transition-colors duration-150 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   style={{
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,

@@ -167,12 +167,13 @@ const PhotoListPage = () => {
         <div className="p-6">
           {/* Desktop/Tablet View */}
           <div className="h-screen w-screen overflow-hidden">
-              <PhotoTable
-                photos={photos}
-                isFetchingNextPage={isFetchingNextPage}
-                hasNextPage={hasNextPage}
-                fetchNextPage={() => void fetchNextPage()}
-              />
+            <PhotoTable
+              photos={photos}
+              isFetchingNextPage={isFetchingNextPage}
+              hasNextPage={hasNextPage}
+              fetchNextPage={() => void fetchNextPage()}
+              onRowClick={handleOpenDetails}
+            />
           </div>
 
           {/* Mobile View */}
