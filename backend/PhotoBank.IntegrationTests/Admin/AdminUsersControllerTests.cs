@@ -134,9 +134,9 @@ public class AdminUsersControllerTests
     public async Task List_WithLimitOffsetAndSort_ReturnsPagedSortedUsers()
     {
         await SeedUsersAsync(
-            new ApplicationUser { UserName = "alice@example.com", Email = "alice@example.com", PhoneNumber = "100", TelegramUserId = 1 },
-            new ApplicationUser { UserName = "bob@example.com", Email = "bob@example.com", PhoneNumber = "200", TelegramUserId = 2 },
-            new ApplicationUser { UserName = "charlie@example.com", Email = "charlie@example.com", PhoneNumber = "300", TelegramUserId = 3 });
+            (new ApplicationUser { UserName = "alice@example.com", Email = "alice@example.com", PhoneNumber = "100", TelegramUserId = 1 }, new[] { "Viewer" }),
+            (new ApplicationUser { UserName = "bob@example.com", Email = "bob@example.com", PhoneNumber = "200", TelegramUserId = 2 }, new[] { "Manager", "Editor" }),
+            (new ApplicationUser { UserName = "charlie@example.com", Email = "charlie@example.com", PhoneNumber = "300", TelegramUserId = 3 }, Array.Empty<string>()));
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/admin/users?limit=2&offset=1&sort=-email");
         AddAdminHeaders(request);
@@ -150,15 +150,17 @@ public class AdminUsersControllerTests
         users.Should().NotBeNull();
         users!.Should().HaveCount(2);
         users.Select(u => u.Email).Should().ContainInOrder("bob@example.com", "alice@example.com");
+        users[0].Roles.Should().BeEquivalentTo(new[] { "Manager", "Editor" });
+        users[1].Roles.Should().BeEquivalentTo(new[] { "Viewer" });
     }
 
     [Test]
     public async Task List_WithFilters_ReturnsOnlyMatchingUsers()
     {
         await SeedUsersAsync(
-            new ApplicationUser { UserName = "john@example.com", Email = "john@example.com", PhoneNumber = "111", TelegramUserId = 11 },
-            new ApplicationUser { UserName = "jane@example.com", Email = "jane@example.com", PhoneNumber = "222", TelegramUserId = null },
-            new ApplicationUser { UserName = "josh@example.com", Email = "josh@example.com", PhoneNumber = "333", TelegramUserId = 33 });
+            (new ApplicationUser { UserName = "john@example.com", Email = "john@example.com", PhoneNumber = "111", TelegramUserId = 11 }, new[] { "Support" }),
+            (new ApplicationUser { UserName = "jane@example.com", Email = "jane@example.com", PhoneNumber = "222", TelegramUserId = null }, new[] { "Auditor" }),
+            (new ApplicationUser { UserName = "josh@example.com", Email = "josh@example.com", PhoneNumber = "333", TelegramUserId = 33 }, Array.Empty<string>()));
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/admin/users?search=j&hasTelegram=false&sort=phone");
         AddAdminHeaders(request);
@@ -173,15 +175,16 @@ public class AdminUsersControllerTests
         users!.Should().HaveCount(1);
         users[0].Email.Should().Be("jane@example.com");
         users[0].PhoneNumber.Should().Be("222");
+        users[0].Roles.Should().BeEquivalentTo(new[] { "Auditor" });
     }
 
     [Test]
     public async Task List_WithHasTelegramTrueAndTelegramSort_ReturnsOnlyTelegramUsers()
     {
         await SeedUsersAsync(
-            new ApplicationUser { UserName = "adam@example.com", Email = "adam@example.com", TelegramUserId = 44 },
-            new ApplicationUser { UserName = "bella@example.com", Email = "bella@example.com", TelegramUserId = null },
-            new ApplicationUser { UserName = "carol@example.com", Email = "carol@example.com", TelegramUserId = 11 });
+            (new ApplicationUser { UserName = "adam@example.com", Email = "adam@example.com", TelegramUserId = 44 }, new[] { "Moderator" }),
+            (new ApplicationUser { UserName = "bella@example.com", Email = "bella@example.com", TelegramUserId = null }, Array.Empty<string>()),
+            (new ApplicationUser { UserName = "carol@example.com", Email = "carol@example.com", TelegramUserId = 11 }, new[] { "Contributor", "Uploader" }));
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/admin/users?hasTelegram=true&sort=-telegram");
         AddAdminHeaders(request);
@@ -194,6 +197,8 @@ public class AdminUsersControllerTests
 
         users.Should().NotBeNull();
         users!.Select(u => u.TelegramUserId).Should().Equal(44, 11);
+        users[0].Roles.Should().BeEquivalentTo(new[] { "Moderator" });
+        users[1].Roles.Should().BeEquivalentTo(new[] { "Contributor", "Uploader" });
     }
 
     [Test]
@@ -220,7 +225,7 @@ public class AdminUsersControllerTests
             UserName = "duplicate@example.com",
             Email = "duplicate@example.com"
         };
-        await SeedUsersAsync(existing);
+        await SeedUsersAsync((existing, Array.Empty<string>()));
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/admin/users");
         AddAdminHeaders(request);
@@ -254,15 +259,34 @@ public class AdminUsersControllerTests
         request.Headers.Add(TestAuthenticationDefaults.RolesHeader, AdminRole);
     }
 
-    private async Task SeedUsersAsync(params ApplicationUser[] users)
+    private async Task SeedUsersAsync(params (ApplicationUser User, IEnumerable<string> Roles)[] users)
     {
         using var scope = _factory.Services.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        foreach (var user in users)
+        foreach (var (user, roles) in users)
         {
             var result = await userManager.CreateAsync(user, "P@ssw0rd!");
             result.Succeeded.Should().BeTrue(result.Errors.FirstOrDefault()?.Description);
+
+            var distinctRoles = roles.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+            if (distinctRoles.Length == 0)
+            {
+                continue;
+            }
+
+            foreach (var role in distinctRoles)
+            {
+                if (!await roleManager.RoleExistsAsync(role))
+                {
+                    var createRoleResult = await roleManager.CreateAsync(new IdentityRole(role));
+                    createRoleResult.Succeeded.Should().BeTrue(createRoleResult.Errors.FirstOrDefault()?.Description);
+                }
+
+                var addResult = await userManager.AddToRoleAsync(user, role);
+                addResult.Succeeded.Should().BeTrue(addResult.Errors.FirstOrDefault()?.Description);
+            }
         }
     }
 
