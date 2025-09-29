@@ -54,14 +54,24 @@ export function PhotoTable({
   });
 
   React.useEffect(() => {
+    const scrollEl = tableContainerRef.current;
+    if (!scrollEl || !hasNextPage || isFetchingNextPage || !fetchNextPage) {
+      return;
+    }
+
     const lastItem = rowVirtualizer.getVirtualItems().at(-1);
-    if (
-      lastItem &&
-      lastItem.index >= rows.length - 10 &&
-      hasNextPage &&
-      !isFetchingNextPage &&
-      fetchNextPage
-    ) {
+    if (!lastItem) {
+      return;
+    }
+
+    const distanceToBottom = Math.max(
+      0,
+      rowVirtualizer.getTotalSize() - (scrollEl.scrollTop + scrollEl.clientHeight)
+    );
+
+    const triggerThreshold = lastItem.size ?? 150;
+
+    if (distanceToBottom <= triggerThreshold) {
       fetchNextPage();
     }
   }, [rows.length, hasNextPage, isFetchingNextPage, fetchNextPage, rowVirtualizer]);
