@@ -10,10 +10,10 @@ import { Badge } from '@/shared/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { Label } from '@/shared/ui/label';
 import { useToast } from '@/hooks/use-toast';
-
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/shared/ui/alert-dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/shared/ui/pagination';
+
 import { mockPersons } from '@/data/mockData';
 import { Person } from '@/types/admin';
 

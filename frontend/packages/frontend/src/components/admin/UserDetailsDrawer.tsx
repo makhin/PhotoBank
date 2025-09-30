@@ -1,12 +1,8 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { X, User as UserIcon, Key, UserX, Plus, Trash2 } from 'lucide-react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/shared/ui/sheet';
+import { User as UserIcon, Key, UserX, Plus, Trash2 } from 'lucide-react';
+import type { UserDto } from '@photobank/shared';
+
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
@@ -15,11 +11,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
 import { Separator } from '@/shared/ui/separator';
-import { User } from '@/types/admin';
 import { useToast } from '@/hooks/use-toast';
 
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/shared/ui/sheet';
+
+
 interface UserDetailsDrawerProps {
-  user: User;
+  user: UserDto;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

@@ -1,4 +1,6 @@
 import { Shield, Calendar, Database, Users, Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import type { AccessProfile } from '@photobank/shared';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
@@ -8,22 +10,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu';
-import { AccessProfileUI } from '@/types/admin';
 import { useToast } from '@/hooks/use-toast';
 
 interface AccessProfilesGridProps {
-  profiles: AccessProfileUI[];
-  onEditProfile: (profile: AccessProfileUI) => void;
+  profiles: AccessProfile[];
+  onEditProfile: (profile: AccessProfile) => void;
 }
 
 export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGridProps) {
   const { toast } = useToast();
 
-  const handleEdit = (profile: AccessProfileUI) => {
+  const handleEdit = (profile: AccessProfile) => {
     onEditProfile(profile);
   };
 
-  const handleDelete = (profile: AccessProfileUI) => {
+  const handleDelete = (profile: AccessProfile) => {
     toast({
       title: 'Profile Deleted',
       description: `${profile.name} has been removed`,

@@ -3,7 +3,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Save, X, Plus, Trash2 } from 'lucide-react';
+import { Save, X, Plus, Trash2 } from 'lucide-react';
+
 import {
   Dialog,
   DialogContent,
@@ -15,12 +16,6 @@ import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
 import { Label } from '@/shared/ui/label';
 import { Checkbox } from '@/shared/ui/checkbox';
-import { Calendar } from '@/shared/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/ui/popover';
 import {
   Form,
   FormControl,
@@ -32,10 +27,9 @@ import {
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Separator } from '@/shared/ui/separator';
-import { cn } from '@/lib/utils';
-import { Role } from '@/types/admin';
-import { mockStorages, mockPersonGroups, mockUsers } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
+
+import { mockStorages, mockPersonGroups } from '@/data/mockData';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Profile name is required').max(128, 'Name must be 128 characters or less'),

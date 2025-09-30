@@ -12,7 +12,6 @@ import {
 } from '@/shared/ui/table';
 import { Badge } from '@/shared/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,8 +76,8 @@ export function UsersTable({ users, onUserSelect }: UsersTableProps) {
           </TableHeader>
           <TableBody>
             {users.map((user) => (
-              <TableRow 
-                key={user.id} 
+              <TableRow
+                key={user.id}
                 className="cursor-pointer hover:bg-muted/50 border-border/50"
                 onClick={() => onUserSelect(user)}
               >
@@ -117,8 +116,8 @@ export function UsersTable({ users, onUserSelect }: UsersTableProps) {
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         className="h-8 w-8 p-0"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -169,7 +168,15 @@ export function UsersTable({ users, onUserSelect }: UsersTableProps) {
           <div
             key={user.id}
             className="bg-card rounded-lg border border-border p-4 shadow-card cursor-pointer hover:bg-muted/50 transition-colors"
+            role="button"
+            tabIndex={0}
             onClick={() => onUserSelect(user)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onUserSelect(user);
+              }
+            }}
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
@@ -187,8 +194,8 @@ export function UsersTable({ users, onUserSelect }: UsersTableProps) {
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
                     className="h-8 w-8 p-0"
                     onClick={(e) => e.stopPropagation()}
@@ -237,14 +244,14 @@ export function UsersTable({ users, onUserSelect }: UsersTableProps) {
                   </Badge>
                 ))}
               </div>
-              
+
               {user.telegramUserId && (
                 <div className="text-sm text-muted-foreground">
                   <div>Telegram ID: {user.telegramUserId}</div>
                   <div className="text-xs">Send: {user.telegramSendTimeUtc || 'Not set'}</div>
                 </div>
               )}
-              
+
             </div>
           </div>
         ))}

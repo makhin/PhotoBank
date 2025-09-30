@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import type { PersonGroupDto } from '@photobank/shared';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
-import { PersonGroupWithMembers } from '@/types/admin';
+
 import { mockPersonGroupsWithMembers } from '@/data/mockData';
 
 const createGroupSchema = z.object({
@@ -20,7 +22,7 @@ type CreateGroupForm = z.infer<typeof createGroupSchema>;
 interface CreatePersonGroupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateGroup: (group: PersonGroupWithMembers) => void;
+  onCreateGroup: (group: PersonGroupDto) => void;
 }
 
 export function CreatePersonGroupDialog({
@@ -44,10 +46,10 @@ export function CreatePersonGroupDialog({
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    const newGroup: PersonGroupWithMembers = {
+    const newGroup: PersonGroupDto = {
       id: Math.max(...mockPersonGroupsWithMembers.map(g => g.id), 0) + 1,
       name: data.name,
-      members: []
+      persons: []
     };
 
     onCreateGroup(newGroup);

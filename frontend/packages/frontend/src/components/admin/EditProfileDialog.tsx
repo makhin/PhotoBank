@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { Save, X, Plus, Trash2 } from 'lucide-react';
+import type { AccessProfile } from '@photobank/shared';
 
 import {
   Dialog,
@@ -27,9 +28,9 @@ import {
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Separator } from '@/shared/ui/separator';
-import { AccessProfile } from '@/types/admin';
-import { mockStorages, mockPersonGroups } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
+
+import { mockStorages, mockPersonGroups } from '@/data/mockData';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Profile name is required').max(128, 'Name must be 128 characters or less'),
@@ -301,7 +302,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                   
                   {dateRanges.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-lg">
-                      No date ranges defined. Click "Add Range" to add one.
+                      No date ranges defined. Click &ldquo;Add Range&rdquo; to add one.
                     </p>
                   ) : (
                     <div className="space-y-2">

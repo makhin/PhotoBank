@@ -1,22 +1,23 @@
 import { useState, useEffect } from 'react';
+import type { FaceDto, PersonDto } from '@photobank/shared';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
-import { Face, Person } from '@/types/admin';
+
 import { mockPersons } from '@/data/mockData';
 
 interface EditFaceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  face: Face | null;
-  onSave: (face: Face) => void;
+  face: FaceDto | null;
+  onSave: (face: FaceDto) => void;
 }
 
 export function EditFaceDialog({ open, onOpenChange, face, onSave }: EditFaceDialogProps) {
-  const [formData, setFormData] = useState<Partial<Face>>({});
-  const [availablePersons] = useState<Person[]>(mockPersons);
+  const [formData, setFormData] = useState<Partial<FaceDto>>({});
+  const [availablePersons] = useState<PersonDto[]>(mockPersons);
 
   useEffect(() => {
     if (face) {
@@ -31,13 +32,10 @@ export function EditFaceDialog({ open, onOpenChange, face, onSave }: EditFaceDia
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (face && formData) {
-      const updatedFace: Face = {
+      const updatedFace: FaceDto = {
         ...face,
         ...formData,
-        personName: formData.personId 
-          ? availablePersons.find(p => p.id === formData.personId)?.name
-          : undefined,
-        updatedAt: new Date().toISOString(),
+        personId: formData.personId,
       };
       onSave(updatedFace);
       onOpenChange(false);

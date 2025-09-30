@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Clock, Save, X } from 'lucide-react';
+
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select';
-import { CreateUserDto, Role } from '@/types/admin';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
@@ -161,7 +161,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
                 <FormItem>
                   <FormLabel className="text-sm font-medium">Roles *</FormLabel>
                    <div className="flex flex-col sm:flex-row gap-4">
-                     {(['Administrator', 'User'] as Role[]).map((role) => (
+                     {(['Administrator', 'User'] as string[]).map((role) => (
                        <div key={role} className="flex items-center space-x-3 p-3 sm:p-0 rounded-lg sm:rounded-none bg-muted/30 sm:bg-transparent">
                          <Checkbox
                            id={role}
