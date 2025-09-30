@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace PhotoBank.ViewModel.Dto
 {
     public class PersonGroupDto : IHasId<int>
@@ -7,6 +10,8 @@ namespace PhotoBank.ViewModel.Dto
 
         [System.ComponentModel.DataAnnotations.Required]
         public required string Name { get; set; } = default!;
+
+        public IReadOnlyCollection<PersonDto> Persons { get; set; } = Array.Empty<PersonDto>();
     }
 }
 
