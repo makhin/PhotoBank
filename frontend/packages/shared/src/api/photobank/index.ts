@@ -3,6 +3,7 @@ export * from './photoBankApi.schemas';
 export * from './users/users';
 export * from './faces/faces';
 export * from './persons/persons';
+export * from './person-faces/person-faces';
 export * from './paths/paths';
 export * from './storages/storages';
 export * from './tags/tags';
