@@ -9,7 +9,8 @@ import type {
   ResetPasswordDto,
   SetRolesDto,
   UpdateUserDto,
-  UserDto
+  UserDto,
+  UsersGetAllParams
 } from '../photoBankApi.schemas';
 
 import { photobankAxios } from '../../axios-instance';
@@ -20,10 +21,11 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
   export const getUsers = () => {
 const usersGetAll = (
-    
+    params?: UsersGetAllParams,
  options?: SecondParameter<typeof photobankAxios>,) => {
       return photobankAxios<UserDto[]>(
-      {url: `/admin/users`, method: 'GET'
+      {url: `/admin/users`, method: 'GET',
+        params
     },
       options);
     }

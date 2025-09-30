@@ -326,6 +326,8 @@ export interface UserDto {
   telegramUserId?: number | null;
   /** @nullable */
   telegramSendTimeUtc?: string | null;
+  /** @nullable */
+  roles?: string[] | null;
 }
 
 export type FacesGetParams = {
@@ -343,5 +345,23 @@ export type PhotosGetDuplicatesParams = {
 id?: number;
 hash?: string;
 threshold?: number;
+};
+
+export type UsersGetAllParams = {
+/**
+ * @minimum 1
+ * @maximum 200
+ */
+Limit?: number;
+/**
+ * @minimum 0
+ * @maximum 2147483647
+ */
+Offset?: number;
+Sort?: string;
+Search?: string;
+HasTelegram?: boolean;
+SortField?: string;
+SortDescending?: boolean;
 };
 

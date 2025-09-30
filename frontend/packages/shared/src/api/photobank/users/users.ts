@@ -24,7 +24,8 @@ import type {
   ResetPasswordDto,
   SetRolesDto,
   UpdateUserDto,
-  UserDto
+  UserDto,
+  UsersGetAllParams
 } from '../photoBankApi.schemas';
 
 import { customFetcher } from '.././fetcher';
@@ -45,17 +46,24 @@ export type usersGetAllResponse = usersGetAllResponseComposite & {
   headers: Headers;
 }
 
-export const getUsersGetAllUrl = () => {
+export const getUsersGetAllUrl = (params?: UsersGetAllParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
 
-  
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/admin/users`
+  return stringifiedParams.length > 0 ? `/admin/users?${stringifiedParams}` : `/admin/users`
 }
 
-export const usersGetAll = async ( options?: RequestInit): Promise<usersGetAllResponse> => {
+export const usersGetAll = async (params?: UsersGetAllParams, options?: RequestInit): Promise<usersGetAllResponse> => {
   
-  return customFetcher<usersGetAllResponse>(getUsersGetAllUrl(),
+  return customFetcher<usersGetAllResponse>(getUsersGetAllUrl(params),
   {      
     ...options,
     method: 'GET'
@@ -66,21 +74,21 @@ export const usersGetAll = async ( options?: RequestInit): Promise<usersGetAllRe
 
 
 
-export const getUsersGetAllQueryKey = () => {
-    return [`/admin/users`] as const;
+export const getUsersGetAllQueryKey = (params?: UsersGetAllParams,) => {
+    return [`/admin/users`, ...(params ? [params]: [])] as const;
     }
 
     
-export const getUsersGetAllQueryOptions = <TData = Awaited<ReturnType<typeof usersGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof usersGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
+export const getUsersGetAllQueryOptions = <TData = Awaited<ReturnType<typeof usersGetAll>>, TError = unknown>(params?: UsersGetAllParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof usersGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getUsersGetAllQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getUsersGetAllQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersGetAll>>> = () => usersGetAll(requestOptions);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersGetAll>>> = () => usersGetAll(params, requestOptions);
 
       
 
@@ -95,11 +103,11 @@ export type UsersGetAllQueryError = unknown
 
 
 export function useUsersGetAll<TData = Awaited<ReturnType<typeof usersGetAll>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof usersGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
+ params?: UsersGetAllParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof usersGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getUsersGetAllQueryOptions(options)
+  const queryOptions = getUsersGetAllQueryOptions(params,options)
 
   const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

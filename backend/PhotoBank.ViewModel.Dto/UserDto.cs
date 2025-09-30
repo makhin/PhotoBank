@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace PhotoBank.ViewModel.Dto;
 
@@ -9,4 +10,5 @@ public class UserDto : IHasId<string>
     public string? PhoneNumber { get; set; }
     public long? TelegramUserId { get; set; }
     public TimeSpan? TelegramSendTimeUtc { get; set; }
+    public IReadOnlyCollection<string> Roles { get; init; } = Array.Empty<string>();
 }
