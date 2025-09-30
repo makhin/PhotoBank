@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
+import type { AccessProfile } from '@photobank/shared';
+import { useAdminAccessProfilesList } from '@photobank/shared/api/photobank/admin-access-profiles/admin-access-profiles';
 
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -7,44 +9,55 @@ import { Card, CardContent } from '@/shared/ui/card';
 import { AccessProfilesGrid } from '@/components/admin/AccessProfilesGrid';
 import { CreateProfileDialog } from '@/components/admin/CreateProfileDialog';
 import { EditProfileDialog } from '@/components/admin/EditProfileDialog';
-import { mockAccessProfiles } from '@/data/mockData';
-import { AccessProfileUI, AccessProfile } from '@/types/admin';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AccessProfilesPage() {
-  const [profiles] = useState<AccessProfileUI[]>(mockAccessProfiles);
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<AccessProfile | null>(null);
 
-  const filteredProfiles = profiles.filter((profile) =>
-    profile.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    profile.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const {
+    data,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useAdminAccessProfilesList();
 
-  const handleEditProfile = (profile: AccessProfileUI) => {
-    // Convert AccessProfileUI to AccessProfile format for editing
-    const accessProfile: AccessProfile = {
-      id: profile.id,
-      name: profile.name,
-      description: profile.description,
-      flags_CanSeeNsfw: profile.flags_CanSeeNsfw || false,
-      storages: profile.storages.map((storageName, index) => ({
-        profileId: profile.id,
-        storageId: index + 1, // Mock mapping - in real app this would be proper lookup
-      })),
-      personGroups: profile.personGroups.map((groupName, index) => ({
-        profileId: profile.id,
-        personGroupId: index + 1, // Mock mapping - in real app this would be proper lookup
-      })),
-      dateRanges: profile.dateRanges.map(range => ({
-        profileId: profile.id,
-        fromDate: range.from,
-        toDate: range.to,
-      })),
-    };
-    
-    setSelectedProfile(accessProfile);
+  const profiles = useMemo<AccessProfile[]>(() => data?.data ?? [], [data]);
+
+  const filteredProfiles = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return profiles;
+    }
+
+    return profiles.filter((profile) => {
+      const name = profile.name?.toLowerCase() ?? '';
+      const description = profile.description?.toLowerCase() ?? '';
+
+      return name.includes(normalizedQuery) || description.includes(normalizedQuery);
+    });
+  }, [profiles, searchQuery]);
+
+  const showLoading = isLoading && profiles.length === 0;
+  const showError = isError && profiles.length === 0;
+  const isRefreshing = isFetching && profiles.length > 0;
+
+  const handleEditProfile = (profile: AccessProfile) => {
+    if (!profile.id) {
+      toast({
+        title: 'Unable to edit profile',
+        description: 'This profile is missing an identifier.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSelectedProfile(profile);
     setIsEditDialogOpen(true);
   };
 
@@ -88,14 +101,37 @@ export default function AccessProfilesPage() {
         <div className="mb-4">
           <h2 className="text-lg sm:text-xl font-semibold text-foreground">
             Profiles ({filteredProfiles.length})
+            {isRefreshing && (
+              <span className="ml-2 text-sm font-normal text-muted-foreground">Refreshing…</span>
+            )}
           </h2>
         </div>
-        <AccessProfilesGrid profiles={filteredProfiles} onEditProfile={handleEditProfile} />
+
+        {showError ? (
+          <Card className="shadow-card border-border/50">
+            <CardContent className="py-12 flex flex-col items-center justify-center gap-4 text-center">
+              <p className="text-muted-foreground">We couldn&apos;t load the access profiles right now.</p>
+              <Button variant="outline" onClick={() => refetch()}>
+                Try again
+              </Button>
+            </CardContent>
+          </Card>
+        ) : showLoading ? (
+          <Card className="shadow-card border-border/50">
+            <CardContent className="space-y-3 p-6">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="h-12 bg-muted/60 animate-pulse rounded-lg" />
+              ))}
+            </CardContent>
+          </Card>
+        ) : (
+          <AccessProfilesGrid profiles={filteredProfiles} onEditProfile={handleEditProfile} />
+        )}
       </div>
 
       {/* Create Dialog */}
-      <CreateProfileDialog 
-        open={isCreateDialogOpen} 
+      <CreateProfileDialog
+        open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen} 
       />
 

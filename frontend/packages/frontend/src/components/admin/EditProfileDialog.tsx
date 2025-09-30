@@ -1,10 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { Save, X, Plus, Trash2 } from 'lucide-react';
 import type { AccessProfile } from '@photobank/shared';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  getAdminAccessProfilesListQueryKey,
+  useAdminAccessProfilesUpdate,
+} from '@photobank/shared/api/photobank/admin-access-profiles/admin-access-profiles';
+import { useGetStorages } from '@photobank/shared/api/photobank/storages/storages';
+import { usePersonGroupsGetAll } from '@photobank/shared/api/photobank/person-groups/person-groups';
 
 import {
   Dialog,
@@ -30,8 +37,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Separator } from '@/shared/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 
-import { mockStorages, mockPersonGroups } from '@/data/mockData';
-
 const formSchema = z.object({
   name: z.string().min(1, 'Profile name is required').max(128, 'Name must be 128 characters or less'),
   description: z.string().min(1, 'Description is required').max(512, 'Description must be 512 characters or less'),
@@ -52,8 +57,20 @@ interface EditProfileDialogProps {
 
 export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDialogProps) {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [dateRanges, setDateRanges] = useState<{ fromDate: string; toDate: string; }[]>([]);
+  const queryClient = useQueryClient();
+  const accessProfilesQueryKey = useMemo(
+    () => getAdminAccessProfilesListQueryKey(),
+    []
+  );
+
+  const storagesQuery = useGetStorages();
+  const storages = useMemo(() => storagesQuery.data?.data ?? [], [storagesQuery.data]);
+
+  const personGroupsQuery = usePersonGroupsGetAll();
+  const personGroups = useMemo(
+    () => personGroupsQuery.data?.data ?? [],
+    [personGroupsQuery.data]
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -70,48 +87,92 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
   // Populate form when profile changes
   useEffect(() => {
     if (profile && open) {
-      form.setValue('name', profile.name || '');
-      form.setValue('description', profile.description || '');
-      form.setValue('flags_CanSeeNsfw', profile.flags_CanSeeNsfw);
-      
-      // Extract storage IDs
-      const storageIds = profile.storages?.map(s => s.storageId) || [];
-      form.setValue('storages', storageIds);
-      
-      // Extract person group IDs
-      const personGroupIds = profile.personGroups?.map(pg => pg.personGroupId) || [];
-      form.setValue('personGroups', personGroupIds);
-      
-      // Extract date ranges
-      const ranges = profile.dateRanges?.map(dr => ({
-        fromDate: dr.fromDate,
-        toDate: dr.toDate,
-      })) || [];
-      setDateRanges(ranges);
-      form.setValue('dateRanges', ranges);
+      const storageIds = profile.storages?.flatMap((storage) =>
+        typeof storage.storageId === 'number' ? [storage.storageId] : []
+      ) ?? [];
+
+      const personGroupIds = profile.personGroups?.flatMap((group) =>
+        typeof group.personGroupId === 'number' ? [group.personGroupId] : []
+      ) ?? [];
+
+      const ranges = profile.dateRanges?.map((range) => ({
+        fromDate: range.fromDate
+          ? format(new Date(range.fromDate), 'yyyy-MM-dd')
+          : '',
+        toDate: range.toDate ? format(new Date(range.toDate), 'yyyy-MM-dd') : '',
+      })) ?? [];
+
+      form.reset({
+        name: profile.name ?? '',
+        description: profile.description ?? '',
+        flags_CanSeeNsfw: profile.flags_CanSeeNsfw ?? false,
+        storages: storageIds,
+        personGroups: personGroupIds,
+        dateRanges: ranges,
+      });
     }
   }, [profile, open, form]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+  const updateProfileMutation = useAdminAccessProfilesUpdate({
+    mutation: {
+      onSuccess: async (_, variables) => {
+        await queryClient.invalidateQueries({ queryKey: accessProfilesQueryKey });
+
+        toast({
+          title: 'Profile updated',
+          description: variables.data.name
+            ? `${variables.data.name} has been successfully updated.`
+            : 'Profile has been successfully updated.',
+        });
+      },
+      onError: () => {
+        toast({
+          title: 'Failed to update profile',
+          description: 'Something went wrong while updating the profile. Please try again.',
+          variant: 'destructive',
+        });
+      },
+      onSettled: () => {
+        form.reset();
+        onOpenChange(false);
+      },
+    },
+  });
+
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!profile?.id) {
       toast({
-        title: 'Profile Updated',
-        description: `${values.name} has been successfully updated.`,
-      });
-      
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update profile. Please try again.',
+        title: 'Unable to update profile',
+        description: 'This profile is missing an identifier.',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
+      return;
+    }
+
+    const payload: AccessProfile = {
+      id: profile.id,
+      name: values.name,
+      description: values.description,
+      flags_CanSeeNsfw: values.flags_CanSeeNsfw,
+      storages: values.storages.map((storageId) => ({
+        profileId: profile.id,
+        storageId,
+      })),
+      personGroups: values.personGroups.map((personGroupId) => ({
+        profileId: profile.id,
+        personGroupId,
+      })),
+      dateRanges: values.dateRanges.map((range) => ({
+        profileId: profile.id,
+        fromDate: range.fromDate ? new Date(range.fromDate) : undefined,
+        toDate: range.toDate ? new Date(range.toDate) : undefined,
+      })),
+    };
+
+    try {
+      await updateProfileMutation.mutateAsync({ id: profile.id, data: payload });
+    } catch {
+      // Error handling is managed by the mutation callbacks.
     }
   };
 
@@ -119,38 +180,46 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
     const today = new Date();
     const oneYearLater = new Date();
     oneYearLater.setFullYear(today.getFullYear() + 1);
-    
+
     const newRange = {
       fromDate: format(today, 'yyyy-MM-dd'),
       toDate: format(oneYearLater, 'yyyy-MM-dd'),
     };
-    
-    const newRanges = [...dateRanges, newRange];
-    setDateRanges(newRanges);
-    form.setValue('dateRanges', newRanges);
+
+    const currentRanges = form.getValues('dateRanges');
+    const updatedRanges = [...currentRanges, newRange];
+    form.setValue('dateRanges', updatedRanges, { shouldValidate: true });
   };
 
   const removeDateRange = (index: number) => {
-    const newRanges = dateRanges.filter((_, i) => i !== index);
-    setDateRanges(newRanges);
-    form.setValue('dateRanges', newRanges);
+    const currentRanges = form.getValues('dateRanges');
+    const updatedRanges = currentRanges.filter((_, i) => i !== index);
+    form.setValue('dateRanges', updatedRanges, { shouldValidate: true });
   };
 
-  const handleClose = () => {
-    form.reset();
-    setDateRanges([]);
-    onOpenChange(false);
+  const dateRanges = form.watch('dateRanges') ?? [];
+
+  const handleDialogChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      if (updateProfileMutation.isPending) {
+        return;
+      }
+
+      form.reset();
+    }
+
+    onOpenChange(nextOpen);
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Edit Access Profile</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* General Information */}
             <Card>
               <CardHeader>
@@ -202,7 +271,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                       <FormControl>
                         <Checkbox
                           checked={field.value}
-                          onCheckedChange={field.onChange}
+                          onCheckedChange={(checked) => field.onChange(checked === true)}
                         />
                       </FormControl>
                     </FormItem>
@@ -225,13 +294,21 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                     <FormItem>
                       <FormLabel>Storages *</FormLabel>
                       <div className="grid grid-cols-2 gap-2">
-                        {mockStorages.map((storage) => (
-                          <div key={storage.id} className="flex items-center space-x-2">
+                        {storages.length === 0 ? (
+                          <p className="col-span-2 text-sm text-muted-foreground">
+                            {storagesQuery.isLoading
+                              ? 'Loading storages...'
+                              : 'No storages available yet.'}
+                          </p>
+                        ) : (
+                          storages.map((storage) => (
+                            <div key={storage.id} className="flex items-center space-x-2">
                             <Checkbox
                               id={`storage-${storage.id}`}
                               checked={field.value.includes(storage.id)}
+                              disabled={storagesQuery.isLoading || updateProfileMutation.isPending}
                               onCheckedChange={(checked) => {
-                                if (checked) {
+                                if (checked === true) {
                                   field.onChange([...field.value, storage.id]);
                                 } else {
                                   field.onChange(field.value.filter((s) => s !== storage.id));
@@ -242,7 +319,8 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                               {storage.name}
                             </Label>
                           </div>
-                        ))}
+                          ))
+                        )}
                       </div>
                       <FormMessage />
                     </FormItem>
@@ -259,24 +337,33 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                     <FormItem>
                       <FormLabel>Person Groups *</FormLabel>
                       <div className="grid grid-cols-2 gap-2">
-                        {mockPersonGroups.map((group) => (
-                          <div key={group.id} className="flex items-center space-x-2">
-                             <Checkbox
-                               id={`group-${group.id}`}
-                               checked={field.value.includes(group.id)}
-                               onCheckedChange={(checked) => {
-                                 if (checked) {
-                                   field.onChange([...field.value, group.id]);
-                                 } else {
-                                   field.onChange(field.value.filter((g) => g !== group.id));
-                                 }
-                               }}
-                             />
-                             <Label htmlFor={`group-${group.id}`} className="text-sm">
-                               {group.name}
-                             </Label>
-                          </div>
-                        ))}
+                        {personGroups.length === 0 ? (
+                          <p className="col-span-2 text-sm text-muted-foreground">
+                            {personGroupsQuery.isLoading
+                              ? 'Loading person groups...'
+                              : 'No person groups available yet.'}
+                          </p>
+                        ) : (
+                          personGroups.map((group) => (
+                            <div key={group.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`group-${group.id}`}
+                                checked={field.value.includes(group.id)}
+                                disabled={personGroupsQuery.isLoading || updateProfileMutation.isPending}
+                                onCheckedChange={(checked) => {
+                                  if (checked === true) {
+                                    field.onChange([...field.value, group.id]);
+                                  } else {
+                                    field.onChange(field.value.filter((g) => g !== group.id));
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`group-${group.id}`} className="text-sm">
+                                {group.name}
+                              </Label>
+                            </div>
+                          ))
+                        )}
                       </div>
                       <FormMessage />
                     </FormItem>
@@ -333,15 +420,15 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleClose}
-                disabled={isLoading}
+                onClick={() => handleDialogChange(false)}
+                disabled={updateProfileMutation.isPending}
               >
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={updateProfileMutation.isPending}>
                 <Save className="w-4 h-4 mr-2" />
-                {isLoading ? 'Updating...' : 'Update Profile'}
+                {updateProfileMutation.isPending ? 'Updating...' : 'Update Profile'}
               </Button>
             </div>
           </form>

@@ -1,9 +1,17 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { Save, X, Plus, Trash2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import type { AccessProfile } from '@photobank/shared';
+import {
+  getAdminAccessProfilesListQueryKey,
+  useAdminAccessProfilesCreate,
+} from '@photobank/shared/api/photobank/admin-access-profiles/admin-access-profiles';
+import { useGetStorages } from '@photobank/shared/api/photobank/storages/storages';
+import { usePersonGroupsGetAll } from '@photobank/shared/api/photobank/person-groups/person-groups';
 
 import {
   Dialog,
@@ -29,8 +37,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Separator } from '@/shared/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 
-import { mockStorages, mockPersonGroups } from '@/data/mockData';
-
 const formSchema = z.object({
   name: z.string().min(1, 'Profile name is required').max(128, 'Name must be 128 characters or less'),
   description: z.string().min(1, 'Description is required').max(512, 'Description must be 512 characters or less'),
@@ -50,8 +56,20 @@ interface CreateProfileDialogProps {
 
 export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogProps) {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [dateRanges, setDateRanges] = useState<{ fromDate: string; toDate: string; }[]>([]);
+  const queryClient = useQueryClient();
+  const accessProfilesQueryKey = useMemo(
+    () => getAdminAccessProfilesListQueryKey(),
+    []
+  );
+
+  const storagesQuery = useGetStorages();
+  const storages = useMemo(() => storagesQuery.data?.data ?? [], [storagesQuery.data]);
+
+  const personGroupsQuery = usePersonGroupsGetAll();
+  const personGroups = useMemo(
+    () => personGroupsQuery.data?.data ?? [],
+    [personGroupsQuery.data]
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -65,28 +83,48 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsLoading(true);
+  const createProfileMutation = useAdminAccessProfilesCreate({
+    mutation: {
+      onSuccess: async (_, variables) => {
+        await queryClient.invalidateQueries({ queryKey: accessProfilesQueryKey });
+
+        toast({
+          title: 'Profile created',
+          description: variables.data.name
+            ? `${variables.data.name} has been successfully created.`
+            : 'Profile has been successfully created.',
+        });
+
+        form.reset();
+        onOpenChange(false);
+      },
+      onError: () => {
+        toast({
+          title: 'Failed to create profile',
+          description: 'Something went wrong while creating the profile. Please try again.',
+          variant: 'destructive',
+        });
+      },
+    },
+  });
+
+  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+    const payload: AccessProfile = {
+      name: values.name,
+      description: values.description,
+      flags_CanSeeNsfw: values.flags_CanSeeNsfw,
+      storages: values.storages.map((storageId) => ({ storageId })),
+      personGroups: values.personGroups.map((personGroupId) => ({ personGroupId })),
+      dateRanges: values.dateRanges.map((range) => ({
+        fromDate: range.fromDate ? new Date(range.fromDate) : undefined,
+        toDate: range.toDate ? new Date(range.toDate) : undefined,
+      })),
+    };
+
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: 'Profile Created',
-        description: `${values.name} has been successfully created.`,
-      });
-      
-      form.reset();
-      setDateRanges([]);
-      onOpenChange(false);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create profile. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+      await createProfileMutation.mutateAsync({ data: payload });
+    } catch {
+      // Errors are handled in the mutation callbacks.
     }
   };
 
@@ -94,28 +132,42 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
     const today = new Date();
     const oneYearLater = new Date();
     oneYearLater.setFullYear(today.getFullYear() + 1);
-    
+
     const newRange = {
       fromDate: format(today, 'yyyy-MM-dd'),
       toDate: format(oneYearLater, 'yyyy-MM-dd'),
     };
-    
-    setDateRanges([...dateRanges, newRange]);
+
+    const currentRanges = form.getValues('dateRanges');
+    const updatedRanges = [...currentRanges, newRange];
+    form.setValue('dateRanges', updatedRanges, { shouldValidate: true });
   };
 
   const removeDateRange = (index: number) => {
-    setDateRanges(dateRanges.filter((_, i) => i !== index));
+    const currentRanges = form.getValues('dateRanges');
+    const updatedRanges = currentRanges.filter((_, i) => i !== index);
+    form.setValue('dateRanges', updatedRanges, { shouldValidate: true });
+  };
+
+  const dateRanges = form.watch('dateRanges') ?? [];
+
+  const handleDialogChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      form.reset();
+    }
+
+    onOpenChange(nextOpen);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Create Access Profile</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* General Information */}
             <Card>
               <CardHeader>
@@ -167,7 +219,7 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                       <FormControl>
                         <Checkbox
                           checked={field.value}
-                          onCheckedChange={field.onChange}
+                          onCheckedChange={(checked) => field.onChange(checked === true)}
                         />
                       </FormControl>
                     </FormItem>
@@ -190,13 +242,21 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                     <FormItem>
                       <FormLabel>Storages *</FormLabel>
                       <div className="grid grid-cols-2 gap-2">
-                        {mockStorages.map((storage) => (
-                          <div key={storage.id} className="flex items-center space-x-2">
+                        {storages.length === 0 ? (
+                          <p className="col-span-2 text-sm text-muted-foreground">
+                            {storagesQuery.isLoading
+                              ? 'Loading storages...'
+                              : 'No storages available yet.'}
+                          </p>
+                        ) : (
+                          storages.map((storage) => (
+                            <div key={storage.id} className="flex items-center space-x-2">
                             <Checkbox
                               id={`storage-${storage.id}`}
                               checked={field.value.includes(storage.id)}
+                              disabled={storagesQuery.isLoading}
                               onCheckedChange={(checked) => {
-                                if (checked) {
+                                if (checked === true) {
                                   field.onChange([...field.value, storage.id]);
                                 } else {
                                   field.onChange(field.value.filter((s) => s !== storage.id));
@@ -207,7 +267,8 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                               {storage.name}
                             </Label>
                           </div>
-                        ))}
+                          ))
+                        )}
                       </div>
                       <FormMessage />
                     </FormItem>
@@ -224,24 +285,33 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                     <FormItem>
                       <FormLabel>Person Groups *</FormLabel>
                       <div className="grid grid-cols-2 gap-2">
-                        {mockPersonGroups.map((group) => (
-                          <div key={group.id} className="flex items-center space-x-2">
-                             <Checkbox
-                               id={`group-${group.id}`}
-                               checked={field.value.includes(group.id)}
-                               onCheckedChange={(checked) => {
-                                 if (checked) {
-                                   field.onChange([...field.value, group.id]);
-                                 } else {
-                                   field.onChange(field.value.filter((g) => g !== group.id));
-                                 }
-                               }}
-                             />
-                             <Label htmlFor={`group-${group.id}`} className="text-sm">
-                               {group.name}
-                             </Label>
-                          </div>
-                        ))}
+                        {personGroups.length === 0 ? (
+                          <p className="col-span-2 text-sm text-muted-foreground">
+                            {personGroupsQuery.isLoading
+                              ? 'Loading person groups...'
+                              : 'No person groups available yet.'}
+                          </p>
+                        ) : (
+                          personGroups.map((group) => (
+                            <div key={group.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`group-${group.id}`}
+                                checked={field.value.includes(group.id)}
+                                disabled={personGroupsQuery.isLoading}
+                                onCheckedChange={(checked) => {
+                                  if (checked === true) {
+                                    field.onChange([...field.value, group.id]);
+                                  } else {
+                                    field.onChange(field.value.filter((g) => g !== group.id));
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`group-${group.id}`} className="text-sm">
+                                {group.name}
+                              </Label>
+                            </div>
+                          ))
+                        )}
                       </div>
                       <FormMessage />
                     </FormItem>
@@ -299,15 +369,15 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isLoading}
+                onClick={() => handleDialogChange(false)}
+                disabled={createProfileMutation.isPending}
               >
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={createProfileMutation.isPending}>
                 <Save className="w-4 h-4 mr-2" />
-                {isLoading ? 'Creating...' : 'Create Profile'}
+                {createProfileMutation.isPending ? 'Creating...' : 'Create Profile'}
               </Button>
             </div>
           </form>
