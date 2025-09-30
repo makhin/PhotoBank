@@ -5,6 +5,12 @@ import { useIsAdmin } from '@photobank/shared';
 
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { Button } from '@/shared/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu';
 
 export default function NavBar() {
   // useLocation to trigger re-render on route changes
@@ -45,14 +51,26 @@ export default function NavBar() {
             <NavLink to="/openai">{t('navbarOpenAiLabel')}</NavLink>
           </Button>
         </li>
-        {isAdmin &&
-          adminLinks.map(({ to, label }) => (
-            <li key={to}>
-              <Button variant="link" className={linkClass} asChild>
-                <NavLink to={to}>{label}</NavLink>
-              </Button>
-            </li>
-          ))}
+        {isAdmin && (
+          <li>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="link" className={linkClass}>
+                  {t('navbarAdminLabel')}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {adminLinks.map(({ to, label }) => (
+                  <DropdownMenuItem key={to} asChild>
+                    <NavLink to={to} className={linkClass}>
+                      {label}
+                    </NavLink>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </li>
+        )}
         {loggedIn ? (
           <li className="ml-auto">
             <Button variant="link" className={linkClass} asChild>
