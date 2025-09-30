@@ -4,100 +4,88 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useQuery
-} from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import type {
   QueryFunction,
   QueryKey,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
 } from '@tanstack/react-query';
 
-import type {
-  TagDto
-} from '../photoBankApi.schemas';
+import type { TagDto } from '../photoBankApi.schemas';
 
 import { customFetcher } from '.././fetcher';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
 export type getTagsResponse200 = {
-  data: TagDto[]
-  status: 200
-}
-    
+  data: TagDto[];
+  status: 200;
+};
+
 export type getTagsResponseComposite = getTagsResponse200;
-    
+
 export type getTagsResponse = getTagsResponseComposite & {
   headers: Headers;
-}
+};
 
 export const getGetTagsUrl = () => {
+  return `/Tags`;
+};
 
-
-  
-
-  return `/Tags`
-}
-
-export const getTags = async ( options?: RequestInit): Promise<getTagsResponse> => {
-  
-  return customFetcher<getTagsResponse>(getGetTagsUrl(),
-  {      
+export const getTags = async (
+  options?: RequestInit
+): Promise<getTagsResponse> => {
+  return customFetcher<getTagsResponse>(getGetTagsUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+    method: 'GET',
+  });
+};
 
 export const getGetTagsQueryKey = () => {
-    return [`/Tags`] as const;
-    }
+  return [`/Tags`] as const;
+};
 
-    
-export const getGetTagsQueryOptions = <TData = Awaited<ReturnType<typeof getTags>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTags>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-) => {
+export const getGetTagsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTags>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getTags>>, TError, TData>;
+  request?: SecondParameter<typeof customFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetTagsQueryKey();
 
-  const queryKey =  queryOptions?.queryKey ?? getGetTagsQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTags>>> = () =>
+    getTags(requestOptions);
 
-  
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTags>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTags>>> = () => getTags(requestOptions);
+export type GetTagsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTags>>
+>;
+export type GetTagsQueryError = unknown;
 
-      
+export function useGetTags<
+  TData = Awaited<ReturnType<typeof getTags>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getTags>>, TError, TData>;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTagsQueryOptions(options);
 
-      
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTags>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type GetTagsQueryResult = NonNullable<Awaited<ReturnType<typeof getTags>>>
-export type GetTagsQueryError = unknown
-
-
-
-export function useGetTags<TData = Awaited<ReturnType<typeof getTags>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTags>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getGetTagsQueryOptions(options)
-
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
+  query.queryKey = queryOptions.queryKey;
 
   return query;
 }
-
-
-

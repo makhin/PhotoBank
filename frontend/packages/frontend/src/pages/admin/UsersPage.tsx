@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Plus, Search, Filter } from 'lucide-react';
+import type { UserDto } from '@photobank/shared';
 
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Card, CardContent } from '@/shared/ui/card';
 import {
   Select,
   SelectContent,
@@ -11,11 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui/select';
-
 import { UsersTable } from '@/components/admin/UsersTable';
 import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 import { UserDetailsDrawer } from '@/components/admin/UserDetailsDrawer';
-import type { UserDto } from '@photobank/shared';
 
 export default function UsersPage() {
   const [users] = useState<UserDto[]>(mockUsers);
@@ -27,12 +26,12 @@ export default function UsersPage() {
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch = 
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (user.phoneNumber && user.phoneNumber.includes(searchQuery));
     
     const matchesRole = 
       roleFilter === 'all' || 
-      (user.roles && user.roles.includes(roleFilter as any));
+      (user.roles && user.roles.includes(roleFilter));
     
     return matchesSearch && matchesRole;
   });

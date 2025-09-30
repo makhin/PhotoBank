@@ -25,6 +25,7 @@ using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.OpenApi.Models;
+using PhotoBank.DependencyInjection.Swagger;
 
 namespace PhotoBank.DependencyInjection;
 
@@ -159,6 +160,8 @@ public static partial class ServiceCollectionExtensions
                 Title = title,
                 Version = version
             });
+
+            options.SchemaFilter<StringEnumSchemaFilter>();
 
             options.CustomOperationIds(apiDesc =>
             {

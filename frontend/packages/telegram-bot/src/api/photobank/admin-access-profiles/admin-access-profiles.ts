@@ -4,105 +4,196 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import type {
-  AccessProfile
-} from '../photoBankApi.schemas';
+import type { AccessProfile } from '../photoBankApi.schemas';
 
 import { photobankAxios } from '../../axios-instance';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-  export const getAdminAccessProfiles = () => {
-const adminAccessProfilesList = (
-    
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<AccessProfile[]>(
-      {url: `/admin/access-profiles`, method: 'GET'
-    },
-      options);
-    }
+export const getAdminAccessProfiles = () => {
+  const adminAccessProfilesList = (
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<AccessProfile[]>(
+      { url: `/admin/access-profiles`, method: 'GET' },
+      options
+    );
+  };
   const adminAccessProfilesCreate = (
     accessProfile: AccessProfile,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/admin/access-profiles`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: accessProfile
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      {
+        url: `/admin/access-profiles`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        data: accessProfile,
+      },
+      options
+    );
+  };
   const adminAccessProfilesGet = (
     id: number,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<AccessProfile>(
-      {url: `/admin/access-profiles/${id}`, method: 'GET'
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<AccessProfile>(
+      { url: `/admin/access-profiles/${id}`, method: 'GET' },
+      options
+    );
+  };
   const adminAccessProfilesUpdate = (
     id: number,
     accessProfile: AccessProfile,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/admin/access-profiles/${id}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: accessProfile
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      {
+        url: `/admin/access-profiles/${id}`,
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        data: accessProfile,
+      },
+      options
+    );
+  };
   const adminAccessProfilesDelete = (
     id: number,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/admin/access-profiles/${id}`, method: 'DELETE'
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      { url: `/admin/access-profiles/${id}`, method: 'DELETE' },
+      options
+    );
+  };
   const adminAccessProfilesAssignUser = (
     id: number,
     userId: string,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/admin/access-profiles/${id}/assign-user/${userId}`, method: 'POST'
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      {
+        url: `/admin/access-profiles/${id}/assign-user/${userId}`,
+        method: 'POST',
+      },
+      options
+    );
+  };
   const adminAccessProfilesUnassignUser = (
     id: number,
     userId: string,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/admin/access-profiles/${id}/assign-user/${userId}`, method: 'DELETE'
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      {
+        url: `/admin/access-profiles/${id}/assign-user/${userId}`,
+        method: 'DELETE',
+      },
+      options
+    );
+  };
   const adminAccessProfilesAssignRole = (
     id: number,
     roleId: string,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/admin/access-profiles/${id}/assign-role/${roleId}`, method: 'POST'
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      {
+        url: `/admin/access-profiles/${id}/assign-role/${roleId}`,
+        method: 'POST',
+      },
+      options
+    );
+  };
   const adminAccessProfilesUnassignRole = (
     id: number,
     roleId: string,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/admin/access-profiles/${id}/assign-role/${roleId}`, method: 'DELETE'
-    },
-      options);
-    }
-  return {adminAccessProfilesList,adminAccessProfilesCreate,adminAccessProfilesGet,adminAccessProfilesUpdate,adminAccessProfilesDelete,adminAccessProfilesAssignUser,adminAccessProfilesUnassignUser,adminAccessProfilesAssignRole,adminAccessProfilesUnassignRole}};
-export type AdminAccessProfilesListResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesList']>>>
-export type AdminAccessProfilesCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesCreate']>>>
-export type AdminAccessProfilesGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesGet']>>>
-export type AdminAccessProfilesUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesUpdate']>>>
-export type AdminAccessProfilesDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesDelete']>>>
-export type AdminAccessProfilesAssignUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesAssignUser']>>>
-export type AdminAccessProfilesUnassignUserResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesUnassignUser']>>>
-export type AdminAccessProfilesAssignRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesAssignRole']>>>
-export type AdminAccessProfilesUnassignRoleResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesUnassignRole']>>>
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      {
+        url: `/admin/access-profiles/${id}/assign-role/${roleId}`,
+        method: 'DELETE',
+      },
+      options
+    );
+  };
+  return {
+    adminAccessProfilesList,
+    adminAccessProfilesCreate,
+    adminAccessProfilesGet,
+    adminAccessProfilesUpdate,
+    adminAccessProfilesDelete,
+    adminAccessProfilesAssignUser,
+    adminAccessProfilesUnassignUser,
+    adminAccessProfilesAssignRole,
+    adminAccessProfilesUnassignRole,
+  };
+};
+export type AdminAccessProfilesListResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesList']
+    >
+  >
+>;
+export type AdminAccessProfilesCreateResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesCreate']
+    >
+  >
+>;
+export type AdminAccessProfilesGetResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesGet']
+    >
+  >
+>;
+export type AdminAccessProfilesUpdateResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesUpdate']
+    >
+  >
+>;
+export type AdminAccessProfilesDeleteResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesDelete']
+    >
+  >
+>;
+export type AdminAccessProfilesAssignUserResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesAssignUser']
+    >
+  >
+>;
+export type AdminAccessProfilesUnassignUserResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAdminAccessProfiles
+      >['adminAccessProfilesUnassignUser']
+    >
+  >
+>;
+export type AdminAccessProfilesAssignRoleResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesAssignRole']
+    >
+  >
+>;
+export type AdminAccessProfilesUnassignRoleResult = NonNullable<
+  Awaited<
+    ReturnType<
+      ReturnType<
+        typeof getAdminAccessProfiles
+      >['adminAccessProfilesUnassignRole']
+    >
+  >
+>;

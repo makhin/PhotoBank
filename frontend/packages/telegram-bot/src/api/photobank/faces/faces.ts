@@ -7,44 +7,54 @@
 import type {
   FaceIdentityDto,
   FacesGetParams,
-  UpdateFaceIdentityDto
+  UpdateFaceIdentityDto,
 } from '../photoBankApi.schemas';
 
 import { photobankAxios } from '../../axios-instance';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-  export const getFaces = () => {
-const facesGet = (
+export const getFaces = () => {
+  const facesGet = (
     params?: FacesGetParams,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<FaceIdentityDto[]>(
-      {url: `/faces`, method: 'GET',
-        params
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<FaceIdentityDto[]>(
+      { url: `/faces`, method: 'GET', params },
+      options
+    );
+  };
   const facesUpdate = (
     updateFaceIdentityDto: UpdateFaceIdentityDto,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/faces`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateFaceIdentityDto
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      {
+        url: `/faces`,
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        data: updateFaceIdentityDto,
+      },
+      options
+    );
+  };
   const facesGetImage = (
     id: number,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/faces/${id}/image`, method: 'GET'
-    },
-      options);
-    }
-  return {facesGet,facesUpdate,facesGetImage}};
-export type FacesGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFaces>['facesGet']>>>
-export type FacesUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFaces>['facesUpdate']>>>
-export type FacesGetImageResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getFaces>['facesGetImage']>>>
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      { url: `/faces/${id}/image`, method: 'GET' },
+      options
+    );
+  };
+  return { facesGet, facesUpdate, facesGetImage };
+};
+export type FacesGetResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getFaces>['facesGet']>>
+>;
+export type FacesUpdateResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getFaces>['facesUpdate']>>
+>;
+export type FacesGetImageResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getFaces>['facesGetImage']>>
+>;

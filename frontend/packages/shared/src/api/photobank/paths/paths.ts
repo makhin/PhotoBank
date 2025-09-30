@@ -4,100 +4,88 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useQuery
-} from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import type {
   QueryFunction,
   QueryKey,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
 } from '@tanstack/react-query';
 
-import type {
-  PathDto
-} from '../photoBankApi.schemas';
+import type { PathDto } from '../photoBankApi.schemas';
 
 import { customFetcher } from '.././fetcher';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
 export type getPathsResponse200 = {
-  data: PathDto[]
-  status: 200
-}
-    
+  data: PathDto[];
+  status: 200;
+};
+
 export type getPathsResponseComposite = getPathsResponse200;
-    
+
 export type getPathsResponse = getPathsResponseComposite & {
   headers: Headers;
-}
+};
 
 export const getGetPathsUrl = () => {
+  return `/Paths`;
+};
 
-
-  
-
-  return `/Paths`
-}
-
-export const getPaths = async ( options?: RequestInit): Promise<getPathsResponse> => {
-  
-  return customFetcher<getPathsResponse>(getGetPathsUrl(),
-  {      
+export const getPaths = async (
+  options?: RequestInit
+): Promise<getPathsResponse> => {
+  return customFetcher<getPathsResponse>(getGetPathsUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+    method: 'GET',
+  });
+};
 
 export const getGetPathsQueryKey = () => {
-    return [`/Paths`] as const;
-    }
+  return [`/Paths`] as const;
+};
 
-    
-export const getGetPathsQueryOptions = <TData = Awaited<ReturnType<typeof getPaths>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPaths>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-) => {
+export const getGetPathsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPaths>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getPaths>>, TError, TData>;
+  request?: SecondParameter<typeof customFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetPathsQueryKey();
 
-  const queryKey =  queryOptions?.queryKey ?? getGetPathsQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPaths>>> = () =>
+    getPaths(requestOptions);
 
-  
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPaths>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPaths>>> = () => getPaths(requestOptions);
+export type GetPathsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPaths>>
+>;
+export type GetPathsQueryError = unknown;
 
-      
+export function useGetPaths<
+  TData = Awaited<ReturnType<typeof getPaths>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getPaths>>, TError, TData>;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPathsQueryOptions(options);
 
-      
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPaths>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type GetPathsQueryResult = NonNullable<Awaited<ReturnType<typeof getPaths>>>
-export type GetPathsQueryError = unknown
-
-
-
-export function useGetPaths<TData = Awaited<ReturnType<typeof getPaths>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPaths>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getGetPathsQueryOptions(options)
-
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
+  query.queryKey = queryOptions.queryKey;
 
   return query;
 }
-
-
-

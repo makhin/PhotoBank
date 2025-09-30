@@ -4,96 +4,94 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useQuery
-} from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import type {
   QueryFunction,
   QueryKey,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
 } from '@tanstack/react-query';
 
 import { customFetcher } from '.././fetcher';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
 export type versionGetResponse200 = {
-  data: string
-  status: 200
-}
-    
+  data: string;
+  status: 200;
+};
+
 export type versionGetResponseComposite = versionGetResponse200;
-    
+
 export type versionGetResponse = versionGetResponseComposite & {
   headers: Headers;
-}
+};
 
 export const getVersionGetUrl = () => {
+  return `/version`;
+};
 
-
-  
-
-  return `/version`
-}
-
-export const versionGet = async ( options?: RequestInit): Promise<versionGetResponse> => {
-  
-  return customFetcher<versionGetResponse>(getVersionGetUrl(),
-  {      
+export const versionGet = async (
+  options?: RequestInit
+): Promise<versionGetResponse> => {
+  return customFetcher<versionGetResponse>(getVersionGetUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+    method: 'GET',
+  });
+};
 
 export const getVersionGetQueryKey = () => {
-    return [`/version`] as const;
-    }
+  return [`/version`] as const;
+};
 
-    
-export const getVersionGetQueryOptions = <TData = Awaited<ReturnType<typeof versionGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof versionGet>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-) => {
+export const getVersionGetQueryOptions = <
+  TData = Awaited<ReturnType<typeof versionGet>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof versionGet>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getVersionGetQueryKey();
 
-  const queryKey =  queryOptions?.queryKey ?? getVersionGetQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof versionGet>>> = () =>
+    versionGet(requestOptions);
 
-  
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof versionGet>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof versionGet>>> = () => versionGet(requestOptions);
+export type VersionGetQueryResult = NonNullable<
+  Awaited<ReturnType<typeof versionGet>>
+>;
+export type VersionGetQueryError = unknown;
 
-      
+export function useVersionGet<
+  TData = Awaited<ReturnType<typeof versionGet>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof versionGet>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getVersionGetQueryOptions(options);
 
-      
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof versionGet>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type VersionGetQueryResult = NonNullable<Awaited<ReturnType<typeof versionGet>>>
-export type VersionGetQueryError = unknown
-
-
-
-export function useVersionGet<TData = Awaited<ReturnType<typeof versionGet>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof versionGet>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getVersionGetQueryOptions(options)
-
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
+  query.queryKey = queryOptions.queryKey;
 
   return query;
 }
-
-
-

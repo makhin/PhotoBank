@@ -4,56 +4,75 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import type {
-  PersonFaceDto
-} from '../photoBankApi.schemas';
+import type { PersonFaceDto } from '../photoBankApi.schemas';
 
 import { photobankAxios } from '../../axios-instance';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-  export const getPersonFaces = () => {
-const personFacesGetAll = (
-    
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<PersonFaceDto[]>(
-      {url: `/personfaces`, method: 'GET'
-    },
-      options);
-    }
+export const getPersonFaces = () => {
+  const personFacesGetAll = (
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<PersonFaceDto[]>(
+      { url: `/personfaces`, method: 'GET' },
+      options
+    );
+  };
   const personFacesCreate = (
     personFaceDto: PersonFaceDto,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<PersonFaceDto>(
-      {url: `/personfaces`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: personFaceDto
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<PersonFaceDto>(
+      {
+        url: `/personfaces`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        data: personFaceDto,
+      },
+      options
+    );
+  };
   const personFacesUpdate = (
     id: number,
     personFaceDto: PersonFaceDto,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<PersonFaceDto>(
-      {url: `/personfaces/${id}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: personFaceDto
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<PersonFaceDto>(
+      {
+        url: `/personfaces/${id}`,
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        data: personFaceDto,
+      },
+      options
+    );
+  };
   const personFacesDelete = (
     id: number,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/personfaces/${id}`, method: 'DELETE'
-    },
-      options);
-    }
-  return {personFacesGetAll,personFacesCreate,personFacesUpdate,personFacesDelete}};
-export type PersonFacesGetAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPersonFaces>['personFacesGetAll']>>>
-export type PersonFacesCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPersonFaces>['personFacesCreate']>>>
-export type PersonFacesUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPersonFaces>['personFacesUpdate']>>>
-export type PersonFacesDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPersonFaces>['personFacesDelete']>>>
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      { url: `/personfaces/${id}`, method: 'DELETE' },
+      options
+    );
+  };
+  return {
+    personFacesGetAll,
+    personFacesCreate,
+    personFacesUpdate,
+    personFacesDelete,
+  };
+};
+export type PersonFacesGetAllResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getPersonFaces>['personFacesGetAll']>>
+>;
+export type PersonFacesCreateResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getPersonFaces>['personFacesCreate']>>
+>;
+export type PersonFacesUpdateResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getPersonFaces>['personFacesUpdate']>>
+>;
+export type PersonFacesDeleteResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getPersonFaces>['personFacesDelete']>>
+>;

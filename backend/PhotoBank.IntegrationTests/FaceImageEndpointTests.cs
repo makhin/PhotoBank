@@ -27,6 +27,7 @@ using PhotoBank.Services.Api;
 using Respawn;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
+using PhotoBank.Api.Controllers.Admin;
 
 namespace PhotoBank.IntegrationTests;
 

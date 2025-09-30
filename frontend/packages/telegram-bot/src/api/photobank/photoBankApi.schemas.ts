@@ -116,17 +116,17 @@ export interface GeoPointDto {
   longitude: number;
 }
 
-export type IdentityStatus = typeof IdentityStatus[keyof typeof IdentityStatus];
-
+export type IdentityStatus =
+  (typeof IdentityStatus)[keyof typeof IdentityStatus];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const IdentityStatus = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
-  NUMBER_4: 4,
-  NUMBER_5: 5,
+  Undefined: 'Undefined',
+  NotDetected: 'NotDetected',
+  NotIdentified: 'NotIdentified',
+  Identified: 'Identified',
+  ForReprocessing: 'ForReprocessing',
+  StopProcessing: 'StopProcessing',
 } as const;
 
 export interface LoginRequestDto {
@@ -169,7 +169,8 @@ export interface PersonGroupDto {
   id: number;
   /** @minLength 1 */
   name: string;
-  persons: PersonDto[];
+  /** @nullable */
+  persons?: PersonDto[] | null;
 }
 
 export interface PersonItemDto {
@@ -332,8 +333,8 @@ export interface UserDto {
 }
 
 export type FacesGetParams = {
-status?: IdentityStatus;
-personId?: number;
+  status?: IdentityStatus;
+  personId?: number;
 };
 
 export type PhotosUploadBody = {
@@ -343,26 +344,25 @@ export type PhotosUploadBody = {
 };
 
 export type PhotosGetDuplicatesParams = {
-id?: number;
-hash?: string;
-threshold?: number;
+  id?: number;
+  hash?: string;
+  threshold?: number;
 };
 
 export type UsersGetAllParams = {
-/**
- * @minimum 1
- * @maximum 200
- */
-Limit?: number;
-/**
- * @minimum 0
- * @maximum 2147483647
- */
-Offset?: number;
-Sort?: string;
-Search?: string;
-HasTelegram?: boolean;
-SortField?: string;
-SortDescending?: boolean;
+  /**
+   * @minimum 1
+   * @maximum 200
+   */
+  Limit?: number;
+  /**
+   * @minimum 0
+   * @maximum 2147483647
+   */
+  Offset?: number;
+  Sort?: string;
+  Search?: string;
+  HasTelegram?: boolean;
+  SortField?: string;
+  SortDescending?: boolean;
 };
-

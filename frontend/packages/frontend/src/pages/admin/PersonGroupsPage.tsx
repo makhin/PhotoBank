@@ -1,27 +1,27 @@
 import { useState } from 'react';
 import { Plus, MoreVertical, Users, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import type { PersonGroupDto } from '@photobank/shared';
 
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import { CreatePersonGroupDialog } from '@/components/admin/CreatePersonGroupDialog';
-
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/shared/ui/alert-dialog';
-import { mockPersonGroupsWithMembers } from '@/data/mockData';
-import { PersonGroupWithMembers } from '@/types/admin';
 import { useToast } from '@/hooks/use-toast';
+
+import { mockPersonGroupsWithMembers } from '@/data/mockData';
 
 export default function PersonGroupsPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [groups, setGroups] = useState<PersonGroupWithMembers[]>(mockPersonGroupsWithMembers);
+  const [groups, setGroups] = useState<PersonGroupDto[]>(mockPersonGroupsWithMembers);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<PersonGroupWithMembers | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<PersonGroupDto | null>(null);
 
-  const handleDeleteGroup = (group: PersonGroupWithMembers) => {
+  const handleDeleteGroup = (group: PersonGroupDto) => {
     setSelectedGroup(group);
     setShowDeleteDialog(true);
   };
@@ -38,7 +38,7 @@ export default function PersonGroupsPage() {
     setSelectedGroup(null);
   };
 
-  const handleCreateGroup = (group: PersonGroupWithMembers) => {
+  const handleCreateGroup = (group: PersonGroupDto) => {
     setGroups([...groups, group]);
     setShowCreateDialog(false);
     toast({
@@ -70,7 +70,7 @@ export default function PersonGroupsPage() {
               <div className="flex-1">
                 <h3 className="font-medium truncate">{group.name}</h3>
                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                  {group.members.length} members
+                  {group.persons?.length} persons
                 </p>
               </div>
               <DropdownMenu>
@@ -99,7 +99,7 @@ export default function PersonGroupsPage() {
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <Badge variant="secondary">
-                  {group.members.length} members
+                  {group.persons?.length} persons
                 </Badge>
               </div>
               <Button 
@@ -128,7 +128,7 @@ export default function PersonGroupsPage() {
                     <div className="flex items-center gap-3">
                       <div>
                         <h3 className="font-medium">{group.name}</h3>
-                        <p className="text-sm text-muted-foreground">{group.members.length} members</p>
+                        <p className="text-sm text-muted-foreground">{group.persons?.length} persons</p>
                       </div>
                     </div>
                   </div>
@@ -136,7 +136,7 @@ export default function PersonGroupsPage() {
                   <div className="flex items-center gap-4">
                     <Badge variant="secondary" className="flex items-center gap-1">
                       <Users className="h-3 w-3" />
-                      {group.members.length} members
+                      {group.persons?.length} persons
                     </Badge>
                     
                     <div className="flex items-center gap-2">
@@ -193,7 +193,7 @@ export default function PersonGroupsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Group</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{selectedGroup?.name}"? This action cannot be undone.
+              Are you sure you want to delete &ldquo;{selectedGroup?.name}&rdquo;? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

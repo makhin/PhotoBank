@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, MoreVertical, User, Edit, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import type { PersonDto } from '@photobank/shared';
 
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -8,27 +9,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/shared/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { Label } from '@/shared/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/shared/ui/alert-dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/shared/ui/pagination';
 import { mockPersons } from '@/data/mockData';
 import { Person } from '@/types/admin';
-import { useToast } from '@/hooks/use-toast';
 
 const ITEMS_PER_PAGE = 20;
 
 export default function PersonsPage() {
   const { toast } = useToast();
-  const [persons, setPersons] = useState<Person[]>(mockPersons);
+  const [persons, setPersons] = useState<PersonDto[]>(mockPersons);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<PersonDto | null>(null);
   const [newPersonName, setNewPersonName] = useState('');
-  const [newPersonIdentityStatus, setNewPersonIdentityStatus] = useState<Person['identityStatus']>('Pending');
+  const [newPersonIdentityStatus, setNewPersonIdentityStatus] = useState<PersonDto['identityStatus']>('Pending');
 
   const filteredPersons = persons.filter(person =>
     person.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -39,7 +40,7 @@ export default function PersonsPage() {
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentPersons = filteredPersons.slice(startIndex, endIndex);
 
-  const getStatusColor = (status: Person['identityStatus']) => {
+  const getStatusColor = (status: PersonDto['identityStatus']) => {
     switch (status) {
       case 'Verified': return 'bg-green-500/10 text-green-700 border-green-200 dark:text-green-400 dark:border-green-800';
       case 'Pending': return 'bg-yellow-500/10 text-yellow-700 border-yellow-200 dark:text-yellow-400 dark:border-yellow-800';

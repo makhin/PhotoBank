@@ -4,10 +4,7 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   MutationFunction,
   QueryFunction,
@@ -15,322 +12,368 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
 } from '@tanstack/react-query';
 
-import type {
-  PersonDto
-} from '../photoBankApi.schemas';
+import type { PersonDto } from '../photoBankApi.schemas';
 
 import { customFetcher } from '.././fetcher';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
 export type personsGetAllResponse200 = {
-  data: PersonDto[]
-  status: 200
-}
-    
+  data: PersonDto[];
+  status: 200;
+};
+
 export type personsGetAllResponseComposite = personsGetAllResponse200;
-    
+
 export type personsGetAllResponse = personsGetAllResponseComposite & {
   headers: Headers;
-}
+};
 
 export const getPersonsGetAllUrl = () => {
+  return `/persons`;
+};
 
-
-  
-
-  return `/persons`
-}
-
-export const personsGetAll = async ( options?: RequestInit): Promise<personsGetAllResponse> => {
-  
-  return customFetcher<personsGetAllResponse>(getPersonsGetAllUrl(),
-  {      
+export const personsGetAll = async (
+  options?: RequestInit
+): Promise<personsGetAllResponse> => {
+  return customFetcher<personsGetAllResponse>(getPersonsGetAllUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+    method: 'GET',
+  });
+};
 
 export const getPersonsGetAllQueryKey = () => {
-    return [`/persons`] as const;
-    }
+  return [`/persons`] as const;
+};
 
-    
-export const getPersonsGetAllQueryOptions = <TData = Awaited<ReturnType<typeof personsGetAll>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof personsGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-) => {
+export const getPersonsGetAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof personsGetAll>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof personsGetAll>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getPersonsGetAllQueryKey();
 
-  const queryKey =  queryOptions?.queryKey ?? getPersonsGetAllQueryKey();
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof personsGetAll>>
+  > = () => personsGetAll(requestOptions);
 
-  
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof personsGetAll>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof personsGetAll>>> = () => personsGetAll(requestOptions);
+export type PersonsGetAllQueryResult = NonNullable<
+  Awaited<ReturnType<typeof personsGetAll>>
+>;
+export type PersonsGetAllQueryError = unknown;
 
-      
+export function usePersonsGetAll<
+  TData = Awaited<ReturnType<typeof personsGetAll>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof personsGetAll>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getPersonsGetAllQueryOptions(options);
 
-      
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof personsGetAll>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type PersonsGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof personsGetAll>>>
-export type PersonsGetAllQueryError = unknown
-
-
-
-export function usePersonsGetAll<TData = Awaited<ReturnType<typeof personsGetAll>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof personsGetAll>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getPersonsGetAllQueryOptions(options)
-
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
+  query.queryKey = queryOptions.queryKey;
 
   return query;
 }
 
-
-
 export type personsCreateResponse201 = {
-  data: PersonDto
-  status: 201
-}
-    
+  data: PersonDto;
+  status: 201;
+};
+
 export type personsCreateResponseComposite = personsCreateResponse201;
-    
+
 export type personsCreateResponse = personsCreateResponseComposite & {
   headers: Headers;
-}
+};
 
 export const getPersonsCreateUrl = () => {
+  return `/persons`;
+};
 
-
-  
-
-  return `/persons`
-}
-
-export const personsCreate = async (personDto: PersonDto, options?: RequestInit): Promise<personsCreateResponse> => {
-  
-  return customFetcher<personsCreateResponse>(getPersonsCreateUrl(),
-  {      
+export const personsCreate = async (
+  personDto: PersonDto,
+  options?: RequestInit
+): Promise<personsCreateResponse> => {
+  return customFetcher<personsCreateResponse>(getPersonsCreateUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      personDto,)
-  }
-);}
+    body: JSON.stringify(personDto),
+  });
+};
 
+export const getPersonsCreateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof personsCreate>>,
+    TError,
+    { data: PersonDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof personsCreate>>,
+  TError,
+  { data: PersonDto },
+  TContext
+> => {
+  const mutationKey = ['personsCreate'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof personsCreate>>,
+    { data: PersonDto }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return personsCreate(data, requestOptions);
+  };
 
-export const getPersonsCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personsCreate>>, TError,{data: PersonDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
-): UseMutationOptions<Awaited<ReturnType<typeof personsCreate>>, TError,{data: PersonDto}, TContext> => {
+  return { mutationFn, ...mutationOptions };
+};
 
-const mutationKey = ['personsCreate'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export type PersonsCreateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof personsCreate>>
+>;
+export type PersonsCreateMutationBody = PersonDto;
+export type PersonsCreateMutationError = unknown;
 
-      
+export const usePersonsCreate = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof personsCreate>>,
+    TError,
+    { data: PersonDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof personsCreate>>,
+  TError,
+  { data: PersonDto },
+  TContext
+> => {
+  const mutationOptions = getPersonsCreateMutationOptions(options);
 
+  return useMutation(mutationOptions);
+};
+export type personsUpdateResponse200 = {
+  data: PersonDto;
+  status: 200;
+};
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof personsCreate>>, {data: PersonDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  personsCreate(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PersonsCreateMutationResult = NonNullable<Awaited<ReturnType<typeof personsCreate>>>
-    export type PersonsCreateMutationBody = PersonDto
-    export type PersonsCreateMutationError = unknown
-
-    export const usePersonsCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personsCreate>>, TError,{data: PersonDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof personsCreate>>,
-        TError,
-        {data: PersonDto},
-        TContext
-      > => {
-
-      const mutationOptions = getPersonsCreateMutationOptions(options);
-
-      return useMutation(mutationOptions );
-    }
-    export type personsUpdateResponse200 = {
-  data: PersonDto
-  status: 200
-}
-    
 export type personsUpdateResponseComposite = personsUpdateResponse200;
-    
+
 export type personsUpdateResponse = personsUpdateResponseComposite & {
   headers: Headers;
-}
+};
 
-export const getPersonsUpdateUrl = (personId: number,) => {
+export const getPersonsUpdateUrl = (personId: number) => {
+  return `/persons/${personId}`;
+};
 
-
-  
-
-  return `/persons/${personId}`
-}
-
-export const personsUpdate = async (personId: number,
-    personDto: PersonDto, options?: RequestInit): Promise<personsUpdateResponse> => {
-  
-  return customFetcher<personsUpdateResponse>(getPersonsUpdateUrl(personId),
-  {      
+export const personsUpdate = async (
+  personId: number,
+  personDto: PersonDto,
+  options?: RequestInit
+): Promise<personsUpdateResponse> => {
+  return customFetcher<personsUpdateResponse>(getPersonsUpdateUrl(personId), {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      personDto,)
-  }
-);}
+    body: JSON.stringify(personDto),
+  });
+};
 
+export const getPersonsUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof personsUpdate>>,
+    TError,
+    { personId: number; data: PersonDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof personsUpdate>>,
+  TError,
+  { personId: number; data: PersonDto },
+  TContext
+> => {
+  const mutationKey = ['personsUpdate'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof personsUpdate>>,
+    { personId: number; data: PersonDto }
+  > = (props) => {
+    const { personId, data } = props ?? {};
 
+    return personsUpdate(personId, data, requestOptions);
+  };
 
-export const getPersonsUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personsUpdate>>, TError,{personId: number;data: PersonDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
-): UseMutationOptions<Awaited<ReturnType<typeof personsUpdate>>, TError,{personId: number;data: PersonDto}, TContext> => {
+  return { mutationFn, ...mutationOptions };
+};
 
-const mutationKey = ['personsUpdate'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export type PersonsUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof personsUpdate>>
+>;
+export type PersonsUpdateMutationBody = PersonDto;
+export type PersonsUpdateMutationError = unknown;
 
-      
+export const usePersonsUpdate = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof personsUpdate>>,
+    TError,
+    { personId: number; data: PersonDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof personsUpdate>>,
+  TError,
+  { personId: number; data: PersonDto },
+  TContext
+> => {
+  const mutationOptions = getPersonsUpdateMutationOptions(options);
 
+  return useMutation(mutationOptions);
+};
+export type personsDeleteResponse204 = {
+  data: null;
+  status: 204;
+};
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof personsUpdate>>, {personId: number;data: PersonDto}> = (props) => {
-          const {personId,data} = props ?? {};
-
-          return  personsUpdate(personId,data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PersonsUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof personsUpdate>>>
-    export type PersonsUpdateMutationBody = PersonDto
-    export type PersonsUpdateMutationError = unknown
-
-    export const usePersonsUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personsUpdate>>, TError,{personId: number;data: PersonDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof personsUpdate>>,
-        TError,
-        {personId: number;data: PersonDto},
-        TContext
-      > => {
-
-      const mutationOptions = getPersonsUpdateMutationOptions(options);
-
-      return useMutation(mutationOptions );
-    }
-    export type personsDeleteResponse204 = {
-  data: null
-  status: 204
-}
-    
 export type personsDeleteResponseComposite = personsDeleteResponse204;
-    
+
 export type personsDeleteResponse = personsDeleteResponseComposite & {
   headers: Headers;
-}
+};
 
-export const getPersonsDeleteUrl = (personId: number,) => {
+export const getPersonsDeleteUrl = (personId: number) => {
+  return `/persons/${personId}`;
+};
 
-
-  
-
-  return `/persons/${personId}`
-}
-
-export const personsDelete = async (personId: number, options?: RequestInit): Promise<personsDeleteResponse> => {
-  
-  return customFetcher<personsDeleteResponse>(getPersonsDeleteUrl(personId),
-  {      
+export const personsDelete = async (
+  personId: number,
+  options?: RequestInit
+): Promise<personsDeleteResponse> => {
+  return customFetcher<personsDeleteResponse>(getPersonsDeleteUrl(personId), {
     ...options,
-    method: 'DELETE'
-    
-    
-  }
-);}
+    method: 'DELETE',
+  });
+};
 
+export const getPersonsDeleteMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof personsDelete>>,
+    TError,
+    { personId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof personsDelete>>,
+  TError,
+  { personId: number },
+  TContext
+> => {
+  const mutationKey = ['personsDelete'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof personsDelete>>,
+    { personId: number }
+  > = (props) => {
+    const { personId } = props ?? {};
 
+    return personsDelete(personId, requestOptions);
+  };
 
-export const getPersonsDeleteMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personsDelete>>, TError,{personId: number}, TContext>, request?: SecondParameter<typeof customFetcher>}
-): UseMutationOptions<Awaited<ReturnType<typeof personsDelete>>, TError,{personId: number}, TContext> => {
+  return { mutationFn, ...mutationOptions };
+};
 
-const mutationKey = ['personsDelete'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export type PersonsDeleteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof personsDelete>>
+>;
 
-      
+export type PersonsDeleteMutationError = unknown;
 
+export const usePersonsDelete = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof personsDelete>>,
+    TError,
+    { personId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof personsDelete>>,
+  TError,
+  { personId: number },
+  TContext
+> => {
+  const mutationOptions = getPersonsDeleteMutationOptions(options);
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof personsDelete>>, {personId: number}> = (props) => {
-          const {personId} = props ?? {};
-
-          return  personsDelete(personId,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PersonsDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof personsDelete>>>
-    
-    export type PersonsDeleteMutationError = unknown
-
-    export const usePersonsDelete = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof personsDelete>>, TError,{personId: number}, TContext>, request?: SecondParameter<typeof customFetcher>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof personsDelete>>,
-        TError,
-        {personId: number},
-        TContext
-      > => {
-
-      const mutationOptions = getPersonsDeleteMutationOptions(options);
-
-      return useMutation(mutationOptions );
-    }
-    
+  return useMutation(mutationOptions);
+};

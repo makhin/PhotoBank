@@ -4,100 +4,96 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useQuery
-} from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import type {
   QueryFunction,
   QueryKey,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
 } from '@tanstack/react-query';
 
-import type {
-  StorageDto
-} from '../photoBankApi.schemas';
+import type { StorageDto } from '../photoBankApi.schemas';
 
 import { customFetcher } from '.././fetcher';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
 export type getStoragesResponse200 = {
-  data: StorageDto[]
-  status: 200
-}
-    
+  data: StorageDto[];
+  status: 200;
+};
+
 export type getStoragesResponseComposite = getStoragesResponse200;
-    
+
 export type getStoragesResponse = getStoragesResponseComposite & {
   headers: Headers;
-}
+};
 
 export const getGetStoragesUrl = () => {
+  return `/Storages`;
+};
 
-
-  
-
-  return `/Storages`
-}
-
-export const getStorages = async ( options?: RequestInit): Promise<getStoragesResponse> => {
-  
-  return customFetcher<getStoragesResponse>(getGetStoragesUrl(),
-  {      
+export const getStorages = async (
+  options?: RequestInit
+): Promise<getStoragesResponse> => {
+  return customFetcher<getStoragesResponse>(getGetStoragesUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+    method: 'GET',
+  });
+};
 
 export const getGetStoragesQueryKey = () => {
-    return [`/Storages`] as const;
-    }
+  return [`/Storages`] as const;
+};
 
-    
-export const getGetStoragesQueryOptions = <TData = Awaited<ReturnType<typeof getStorages>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStorages>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-) => {
+export const getGetStoragesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getStorages>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getStorages>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetStoragesQueryKey();
 
-  const queryKey =  queryOptions?.queryKey ?? getGetStoragesQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getStorages>>> = () =>
+    getStorages(requestOptions);
 
-  
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getStorages>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStorages>>> = () => getStorages(requestOptions);
+export type GetStoragesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getStorages>>
+>;
+export type GetStoragesQueryError = unknown;
 
-      
+export function useGetStorages<
+  TData = Awaited<ReturnType<typeof getStorages>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getStorages>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetStoragesQueryOptions(options);
 
-      
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStorages>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type GetStoragesQueryResult = NonNullable<Awaited<ReturnType<typeof getStorages>>>
-export type GetStoragesQueryError = unknown
-
-
-
-export function useGetStorages<TData = Awaited<ReturnType<typeof getStorages>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStorages>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getGetStoragesQueryOptions(options)
-
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
+  query.queryKey = queryOptions.queryKey;
 
   return query;
 }
-
-
-

@@ -4,10 +4,7 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   MutationFunction,
   QueryFunction,
@@ -15,7 +12,7 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
 } from '@tanstack/react-query';
 
 import type {
@@ -27,580 +24,675 @@ import type {
   TelegramExchangeResponse,
   TelegramSubscriptionDto,
   UpdateUserDto,
-  UserDto
+  UserDto,
 } from '../photoBankApi.schemas';
 
 import { customFetcher } from '.././fetcher';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
 export type authLoginResponse200 = {
-  data: LoginResponseDto
-  status: 200
-}
+  data: LoginResponseDto;
+  status: 200;
+};
 
 export type authLoginResponse400 = {
-  data: ProblemDetails
-  status: 400
-}
+  data: ProblemDetails;
+  status: 400;
+};
 
 export type authLoginResponse401 = {
-  data: ProblemDetails
-  status: 401
-}
-    
-export type authLoginResponseComposite = authLoginResponse200 | authLoginResponse400 | authLoginResponse401;
-    
+  data: ProblemDetails;
+  status: 401;
+};
+
+export type authLoginResponseComposite =
+  | authLoginResponse200
+  | authLoginResponse400
+  | authLoginResponse401;
+
 export type authLoginResponse = authLoginResponseComposite & {
   headers: Headers;
-}
+};
 
 export const getAuthLoginUrl = () => {
+  return `/auth/login`;
+};
 
-
-  
-
-  return `/auth/login`
-}
-
-export const authLogin = async (loginRequestDto: LoginRequestDto, options?: RequestInit): Promise<authLoginResponse> => {
-  
-  return customFetcher<authLoginResponse>(getAuthLoginUrl(),
-  {      
+export const authLogin = async (
+  loginRequestDto: LoginRequestDto,
+  options?: RequestInit
+): Promise<authLoginResponse> => {
+  return customFetcher<authLoginResponse>(getAuthLoginUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      loginRequestDto,)
-  }
-);}
+    body: JSON.stringify(loginRequestDto),
+  });
+};
 
+export const getAuthLoginMutationOptions = <
+  TError = ProblemDetails | ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authLogin>>,
+    TError,
+    { data: LoginRequestDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authLogin>>,
+  TError,
+  { data: LoginRequestDto },
+  TContext
+> => {
+  const mutationKey = ['authLogin'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authLogin>>,
+    { data: LoginRequestDto }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return authLogin(data, requestOptions);
+  };
 
-export const getAuthLoginMutationOptions = <TError = ProblemDetails | ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
-): UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext> => {
+  return { mutationFn, ...mutationOptions };
+};
 
-const mutationKey = ['authLogin'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export type AuthLoginMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authLogin>>
+>;
+export type AuthLoginMutationBody = LoginRequestDto;
+export type AuthLoginMutationError = ProblemDetails | ProblemDetails;
 
-      
+export const useAuthLogin = <
+  TError = ProblemDetails | ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authLogin>>,
+    TError,
+    { data: LoginRequestDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof authLogin>>,
+  TError,
+  { data: LoginRequestDto },
+  TContext
+> => {
+  const mutationOptions = getAuthLoginMutationOptions(options);
 
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authLogin>>, {data: LoginRequestDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  authLogin(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthLoginMutationResult = NonNullable<Awaited<ReturnType<typeof authLogin>>>
-    export type AuthLoginMutationBody = LoginRequestDto
-    export type AuthLoginMutationError = ProblemDetails | ProblemDetails
-
-    export const useAuthLogin = <TError = ProblemDetails | ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authLogin>>, TError,{data: LoginRequestDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof authLogin>>,
-        TError,
-        {data: LoginRequestDto},
-        TContext
-      > => {
-
-      const mutationOptions = getAuthLoginMutationOptions(options);
-
-      return useMutation(mutationOptions );
-    }
-    export type authRegisterResponse200 = {
-  data: null
-  status: 200
-}
+  return useMutation(mutationOptions);
+};
+export type authRegisterResponse200 = {
+  data: null;
+  status: 200;
+};
 
 export type authRegisterResponse400 = {
-  data: ProblemDetails
-  status: 400
-}
-    
-export type authRegisterResponseComposite = authRegisterResponse200 | authRegisterResponse400;
-    
+  data: ProblemDetails;
+  status: 400;
+};
+
+export type authRegisterResponseComposite =
+  | authRegisterResponse200
+  | authRegisterResponse400;
+
 export type authRegisterResponse = authRegisterResponseComposite & {
   headers: Headers;
-}
+};
 
 export const getAuthRegisterUrl = () => {
+  return `/auth/register`;
+};
 
-
-  
-
-  return `/auth/register`
-}
-
-export const authRegister = async (registerRequestDto: RegisterRequestDto, options?: RequestInit): Promise<authRegisterResponse> => {
-  
-  return customFetcher<authRegisterResponse>(getAuthRegisterUrl(),
-  {      
+export const authRegister = async (
+  registerRequestDto: RegisterRequestDto,
+  options?: RequestInit
+): Promise<authRegisterResponse> => {
+  return customFetcher<authRegisterResponse>(getAuthRegisterUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      registerRequestDto,)
-  }
-);}
+    body: JSON.stringify(registerRequestDto),
+  });
+};
 
+export const getAuthRegisterMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authRegister>>,
+    TError,
+    { data: RegisterRequestDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authRegister>>,
+  TError,
+  { data: RegisterRequestDto },
+  TContext
+> => {
+  const mutationKey = ['authRegister'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authRegister>>,
+    { data: RegisterRequestDto }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return authRegister(data, requestOptions);
+  };
 
-export const getAuthRegisterMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authRegister>>, TError,{data: RegisterRequestDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
-): UseMutationOptions<Awaited<ReturnType<typeof authRegister>>, TError,{data: RegisterRequestDto}, TContext> => {
+  return { mutationFn, ...mutationOptions };
+};
 
-const mutationKey = ['authRegister'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export type AuthRegisterMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authRegister>>
+>;
+export type AuthRegisterMutationBody = RegisterRequestDto;
+export type AuthRegisterMutationError = ProblemDetails;
 
-      
+export const useAuthRegister = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authRegister>>,
+    TError,
+    { data: RegisterRequestDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof authRegister>>,
+  TError,
+  { data: RegisterRequestDto },
+  TContext
+> => {
+  const mutationOptions = getAuthRegisterMutationOptions(options);
 
+  return useMutation(mutationOptions);
+};
+export type authGetUserResponse200 = {
+  data: UserDto;
+  status: 200;
+};
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authRegister>>, {data: RegisterRequestDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  authRegister(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof authRegister>>>
-    export type AuthRegisterMutationBody = RegisterRequestDto
-    export type AuthRegisterMutationError = ProblemDetails
-
-    export const useAuthRegister = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authRegister>>, TError,{data: RegisterRequestDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof authRegister>>,
-        TError,
-        {data: RegisterRequestDto},
-        TContext
-      > => {
-
-      const mutationOptions = getAuthRegisterMutationOptions(options);
-
-      return useMutation(mutationOptions );
-    }
-    export type authGetUserResponse200 = {
-  data: UserDto
-  status: 200
-}
-    
 export type authGetUserResponseComposite = authGetUserResponse200;
-    
+
 export type authGetUserResponse = authGetUserResponseComposite & {
   headers: Headers;
-}
+};
 
 export const getAuthGetUserUrl = () => {
+  return `/auth/user`;
+};
 
-
-  
-
-  return `/auth/user`
-}
-
-export const authGetUser = async ( options?: RequestInit): Promise<authGetUserResponse> => {
-  
-  return customFetcher<authGetUserResponse>(getAuthGetUserUrl(),
-  {      
+export const authGetUser = async (
+  options?: RequestInit
+): Promise<authGetUserResponse> => {
+  return customFetcher<authGetUserResponse>(getAuthGetUserUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+    method: 'GET',
+  });
+};
 
 export const getAuthGetUserQueryKey = () => {
-    return [`/auth/user`] as const;
-    }
+  return [`/auth/user`] as const;
+};
 
-    
-export const getAuthGetUserQueryOptions = <TData = Awaited<ReturnType<typeof authGetUser>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUser>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-) => {
+export const getAuthGetUserQueryOptions = <
+  TData = Awaited<ReturnType<typeof authGetUser>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof authGetUser>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAuthGetUserQueryKey();
 
-  const queryKey =  queryOptions?.queryKey ?? getAuthGetUserQueryKey();
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUser>>> = () =>
+    authGetUser(requestOptions);
 
-  
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof authGetUser>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetUser>>> = () => authGetUser(requestOptions);
+export type AuthGetUserQueryResult = NonNullable<
+  Awaited<ReturnType<typeof authGetUser>>
+>;
+export type AuthGetUserQueryError = unknown;
 
-      
+export function useAuthGetUser<
+  TData = Awaited<ReturnType<typeof authGetUser>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof authGetUser>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAuthGetUserQueryOptions(options);
 
-      
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authGetUser>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type AuthGetUserQueryResult = NonNullable<Awaited<ReturnType<typeof authGetUser>>>
-export type AuthGetUserQueryError = unknown
-
-
-
-export function useAuthGetUser<TData = Awaited<ReturnType<typeof authGetUser>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetUser>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getAuthGetUserQueryOptions(options)
-
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
+  query.queryKey = queryOptions.queryKey;
 
   return query;
 }
 
-
-
 export type authUpdateUserResponse200 = {
-  data: null
-  status: 200
-}
+  data: null;
+  status: 200;
+};
 
 export type authUpdateUserResponse400 = {
-  data: ProblemDetails
-  status: 400
-}
-    
-export type authUpdateUserResponseComposite = authUpdateUserResponse200 | authUpdateUserResponse400;
-    
+  data: ProblemDetails;
+  status: 400;
+};
+
+export type authUpdateUserResponseComposite =
+  | authUpdateUserResponse200
+  | authUpdateUserResponse400;
+
 export type authUpdateUserResponse = authUpdateUserResponseComposite & {
   headers: Headers;
-}
+};
 
 export const getAuthUpdateUserUrl = () => {
+  return `/auth/user`;
+};
 
-
-  
-
-  return `/auth/user`
-}
-
-export const authUpdateUser = async (updateUserDto: UpdateUserDto, options?: RequestInit): Promise<authUpdateUserResponse> => {
-  
-  return customFetcher<authUpdateUserResponse>(getAuthUpdateUserUrl(),
-  {      
+export const authUpdateUser = async (
+  updateUserDto: UpdateUserDto,
+  options?: RequestInit
+): Promise<authUpdateUserResponse> => {
+  return customFetcher<authUpdateUserResponse>(getAuthUpdateUserUrl(), {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      updateUserDto,)
-  }
-);}
+    body: JSON.stringify(updateUserDto),
+  });
+};
 
+export const getAuthUpdateUserMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authUpdateUser>>,
+    TError,
+    { data: UpdateUserDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authUpdateUser>>,
+  TError,
+  { data: UpdateUserDto },
+  TContext
+> => {
+  const mutationKey = ['authUpdateUser'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authUpdateUser>>,
+    { data: UpdateUserDto }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return authUpdateUser(data, requestOptions);
+  };
 
-export const getAuthUpdateUserMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authUpdateUser>>, TError,{data: UpdateUserDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
-): UseMutationOptions<Awaited<ReturnType<typeof authUpdateUser>>, TError,{data: UpdateUserDto}, TContext> => {
+  return { mutationFn, ...mutationOptions };
+};
 
-const mutationKey = ['authUpdateUser'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export type AuthUpdateUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authUpdateUser>>
+>;
+export type AuthUpdateUserMutationBody = UpdateUserDto;
+export type AuthUpdateUserMutationError = ProblemDetails;
 
-      
+export const useAuthUpdateUser = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authUpdateUser>>,
+    TError,
+    { data: UpdateUserDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof authUpdateUser>>,
+  TError,
+  { data: UpdateUserDto },
+  TContext
+> => {
+  const mutationOptions = getAuthUpdateUserMutationOptions(options);
 
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authUpdateUser>>, {data: UpdateUserDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  authUpdateUser(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthUpdateUserMutationResult = NonNullable<Awaited<ReturnType<typeof authUpdateUser>>>
-    export type AuthUpdateUserMutationBody = UpdateUserDto
-    export type AuthUpdateUserMutationError = ProblemDetails
-
-    export const useAuthUpdateUser = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authUpdateUser>>, TError,{data: UpdateUserDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof authUpdateUser>>,
-        TError,
-        {data: UpdateUserDto},
-        TContext
-      > => {
-
-      const mutationOptions = getAuthUpdateUserMutationOptions(options);
-
-      return useMutation(mutationOptions );
-    }
-    export type authGetTelegramSubscriptionsResponse200 = {
-  data: TelegramSubscriptionDto[]
-  status: 200
-}
+  return useMutation(mutationOptions);
+};
+export type authGetTelegramSubscriptionsResponse200 = {
+  data: TelegramSubscriptionDto[];
+  status: 200;
+};
 
 export type authGetTelegramSubscriptionsResponse401 = {
-  data: ProblemDetails
-  status: 401
-}
-    
-export type authGetTelegramSubscriptionsResponseComposite = authGetTelegramSubscriptionsResponse200 | authGetTelegramSubscriptionsResponse401;
-    
-export type authGetTelegramSubscriptionsResponse = authGetTelegramSubscriptionsResponseComposite & {
-  headers: Headers;
-}
+  data: ProblemDetails;
+  status: 401;
+};
+
+export type authGetTelegramSubscriptionsResponseComposite =
+  | authGetTelegramSubscriptionsResponse200
+  | authGetTelegramSubscriptionsResponse401;
+
+export type authGetTelegramSubscriptionsResponse =
+  authGetTelegramSubscriptionsResponseComposite & {
+    headers: Headers;
+  };
 
 export const getAuthGetTelegramSubscriptionsUrl = () => {
+  return `/auth/telegram/subscriptions`;
+};
 
-
-  
-
-  return `/auth/telegram/subscriptions`
-}
-
-export const authGetTelegramSubscriptions = async ( options?: RequestInit): Promise<authGetTelegramSubscriptionsResponse> => {
-  
-  return customFetcher<authGetTelegramSubscriptionsResponse>(getAuthGetTelegramSubscriptionsUrl(),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+export const authGetTelegramSubscriptions = async (
+  options?: RequestInit
+): Promise<authGetTelegramSubscriptionsResponse> => {
+  return customFetcher<authGetTelegramSubscriptionsResponse>(
+    getAuthGetTelegramSubscriptionsUrl(),
+    {
+      ...options,
+      method: 'GET',
+    }
+  );
+};
 
 export const getAuthGetTelegramSubscriptionsQueryKey = () => {
-    return [`/auth/telegram/subscriptions`] as const;
-    }
+  return [`/auth/telegram/subscriptions`] as const;
+};
 
-    
-export const getAuthGetTelegramSubscriptionsQueryOptions = <TData = Awaited<ReturnType<typeof authGetTelegramSubscriptions>>, TError = ProblemDetails>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetTelegramSubscriptions>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-) => {
+export const getAuthGetTelegramSubscriptionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof authGetTelegramSubscriptions>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof authGetTelegramSubscriptions>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey =
+    queryOptions?.queryKey ?? getAuthGetTelegramSubscriptionsQueryKey();
 
-  const queryKey =  queryOptions?.queryKey ?? getAuthGetTelegramSubscriptionsQueryKey();
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof authGetTelegramSubscriptions>>
+  > = () => authGetTelegramSubscriptions(requestOptions);
 
-  
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof authGetTelegramSubscriptions>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetTelegramSubscriptions>>> = () => authGetTelegramSubscriptions(requestOptions);
+export type AuthGetTelegramSubscriptionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof authGetTelegramSubscriptions>>
+>;
+export type AuthGetTelegramSubscriptionsQueryError = ProblemDetails;
 
-      
+export function useAuthGetTelegramSubscriptions<
+  TData = Awaited<ReturnType<typeof authGetTelegramSubscriptions>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof authGetTelegramSubscriptions>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAuthGetTelegramSubscriptionsQueryOptions(options);
 
-      
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authGetTelegramSubscriptions>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type AuthGetTelegramSubscriptionsQueryResult = NonNullable<Awaited<ReturnType<typeof authGetTelegramSubscriptions>>>
-export type AuthGetTelegramSubscriptionsQueryError = ProblemDetails
-
-
-
-export function useAuthGetTelegramSubscriptions<TData = Awaited<ReturnType<typeof authGetTelegramSubscriptions>>, TError = ProblemDetails>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetTelegramSubscriptions>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getAuthGetTelegramSubscriptionsQueryOptions(options)
-
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
+  query.queryKey = queryOptions.queryKey;
 
   return query;
 }
-
-
 
 export type authTelegramExchangeResponse200 = {
-  data: TelegramExchangeResponse
-  status: 200
-}
+  data: TelegramExchangeResponse;
+  status: 200;
+};
 
 export type authTelegramExchangeResponse401 = {
-  data: ProblemDetails
-  status: 401
-}
+  data: ProblemDetails;
+  status: 401;
+};
 
 export type authTelegramExchangeResponse403 = {
-  data: ProblemDetails
-  status: 403
-}
-    
-export type authTelegramExchangeResponseComposite = authTelegramExchangeResponse200 | authTelegramExchangeResponse401 | authTelegramExchangeResponse403;
-    
-export type authTelegramExchangeResponse = authTelegramExchangeResponseComposite & {
-  headers: Headers;
-}
+  data: ProblemDetails;
+  status: 403;
+};
+
+export type authTelegramExchangeResponseComposite =
+  | authTelegramExchangeResponse200
+  | authTelegramExchangeResponse401
+  | authTelegramExchangeResponse403;
+
+export type authTelegramExchangeResponse =
+  authTelegramExchangeResponseComposite & {
+    headers: Headers;
+  };
 
 export const getAuthTelegramExchangeUrl = () => {
+  return `/auth/telegram/exchange`;
+};
 
-
-  
-
-  return `/auth/telegram/exchange`
-}
-
-export const authTelegramExchange = async (telegramExchangeRequest: TelegramExchangeRequest, options?: RequestInit): Promise<authTelegramExchangeResponse> => {
-  
-  return customFetcher<authTelegramExchangeResponse>(getAuthTelegramExchangeUrl(),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      telegramExchangeRequest,)
-  }
-);}
-
-
-
-
-export const getAuthTelegramExchangeMutationOptions = <TError = ProblemDetails | ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext>, request?: SecondParameter<typeof customFetcher>}
-): UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext> => {
-
-const mutationKey = ['authTelegramExchange'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof authTelegramExchange>>, {data: TelegramExchangeRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  authTelegramExchange(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AuthTelegramExchangeMutationResult = NonNullable<Awaited<ReturnType<typeof authTelegramExchange>>>
-    export type AuthTelegramExchangeMutationBody = TelegramExchangeRequest
-    export type AuthTelegramExchangeMutationError = ProblemDetails | ProblemDetails
-
-    export const useAuthTelegramExchange = <TError = ProblemDetails | ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof authTelegramExchange>>, TError,{data: TelegramExchangeRequest}, TContext>, request?: SecondParameter<typeof customFetcher>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof authTelegramExchange>>,
-        TError,
-        {data: TelegramExchangeRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getAuthTelegramExchangeMutationOptions(options);
-
-      return useMutation(mutationOptions );
+export const authTelegramExchange = async (
+  telegramExchangeRequest: TelegramExchangeRequest,
+  options?: RequestInit
+): Promise<authTelegramExchangeResponse> => {
+  return customFetcher<authTelegramExchangeResponse>(
+    getAuthTelegramExchangeUrl(),
+    {
+      ...options,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      body: JSON.stringify(telegramExchangeRequest),
     }
-    export type authGetEffectiveResponse200 = {
-  data: null
-  status: 200
-}
-    
+  );
+};
+
+export const getAuthTelegramExchangeMutationOptions = <
+  TError = ProblemDetails | ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authTelegramExchange>>,
+    TError,
+    { data: TelegramExchangeRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof authTelegramExchange>>,
+  TError,
+  { data: TelegramExchangeRequest },
+  TContext
+> => {
+  const mutationKey = ['authTelegramExchange'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof authTelegramExchange>>,
+    { data: TelegramExchangeRequest }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return authTelegramExchange(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AuthTelegramExchangeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof authTelegramExchange>>
+>;
+export type AuthTelegramExchangeMutationBody = TelegramExchangeRequest;
+export type AuthTelegramExchangeMutationError = ProblemDetails | ProblemDetails;
+
+export const useAuthTelegramExchange = <
+  TError = ProblemDetails | ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof authTelegramExchange>>,
+    TError,
+    { data: TelegramExchangeRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof authTelegramExchange>>,
+  TError,
+  { data: TelegramExchangeRequest },
+  TContext
+> => {
+  const mutationOptions = getAuthTelegramExchangeMutationOptions(options);
+
+  return useMutation(mutationOptions);
+};
+export type authGetEffectiveResponse200 = {
+  data: null;
+  status: 200;
+};
+
 export type authGetEffectiveResponseComposite = authGetEffectiveResponse200;
-    
+
 export type authGetEffectiveResponse = authGetEffectiveResponseComposite & {
   headers: Headers;
-}
+};
 
 export const getAuthGetEffectiveUrl = () => {
+  return `/auth/debug/effective-access`;
+};
 
-
-  
-
-  return `/auth/debug/effective-access`
-}
-
-export const authGetEffective = async ( options?: RequestInit): Promise<authGetEffectiveResponse> => {
-  
-  return customFetcher<authGetEffectiveResponse>(getAuthGetEffectiveUrl(),
-  {      
+export const authGetEffective = async (
+  options?: RequestInit
+): Promise<authGetEffectiveResponse> => {
+  return customFetcher<authGetEffectiveResponse>(getAuthGetEffectiveUrl(), {
     ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
+    method: 'GET',
+  });
+};
 
 export const getAuthGetEffectiveQueryKey = () => {
-    return [`/auth/debug/effective-access`] as const;
-    }
+  return [`/auth/debug/effective-access`] as const;
+};
 
-    
-export const getAuthGetEffectiveQueryOptions = <TData = Awaited<ReturnType<typeof authGetEffective>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetEffective>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-) => {
+export const getAuthGetEffectiveQueryOptions = <
+  TData = Awaited<ReturnType<typeof authGetEffective>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof authGetEffective>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAuthGetEffectiveQueryKey();
 
-  const queryKey =  queryOptions?.queryKey ?? getAuthGetEffectiveQueryKey();
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof authGetEffective>>
+  > = () => authGetEffective(requestOptions);
 
-  
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof authGetEffective>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof authGetEffective>>> = () => authGetEffective(requestOptions);
+export type AuthGetEffectiveQueryResult = NonNullable<
+  Awaited<ReturnType<typeof authGetEffective>>
+>;
+export type AuthGetEffectiveQueryError = unknown;
 
-      
+export function useAuthGetEffective<
+  TData = Awaited<ReturnType<typeof authGetEffective>>,
+  TError = unknown,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof authGetEffective>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAuthGetEffectiveQueryOptions(options);
 
-      
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof authGetEffective>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type AuthGetEffectiveQueryResult = NonNullable<Awaited<ReturnType<typeof authGetEffective>>>
-export type AuthGetEffectiveQueryError = unknown
-
-
-
-export function useAuthGetEffective<TData = Awaited<ReturnType<typeof authGetEffective>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof authGetEffective>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getAuthGetEffectiveQueryOptions(options)
-
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
+  query.queryKey = queryOptions.queryKey;
 
   return query;
 }
-
-
-

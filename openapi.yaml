@@ -1422,14 +1422,13 @@ components:
       additionalProperties: false
     IdentityStatus:
       enum:
-        - 0
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-      type: integer
-      format: int32
+        - Undefined
+        - NotDetected
+        - NotIdentified
+        - Identified
+        - ForReprocessing
+        - StopProcessing
+      type: string
     LoginRequestDto:
       required:
         - email
@@ -1468,19 +1467,19 @@ components:
           minLength: 1
           type: string
       additionalProperties: false
-      PersonDto:
-        required:
-          - id
-          - name
-        type: object
-        properties:
-          id:
-            type: integer
-            format: int32
-          name:
-            minLength: 1
-            type: string
-        additionalProperties: false
+    PersonDto:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          minLength: 1
+          type: string
+      additionalProperties: false
     PersonFaceDto:
       required:
         - faceId
@@ -1506,24 +1505,24 @@ components:
           type: string
           format: uuid
       additionalProperties: false
-      PersonGroupDto:
-        required:
-          - id
-          - name
-          - persons
-        type: object
-        properties:
-          id:
-            type: integer
-            format: int32
-          name:
-            minLength: 1
-            type: string
-          persons:
-            type: array
-            items:
-              $ref: '#/components/schemas/PersonDto'
-        additionalProperties: false
+    PersonGroupDto:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          minLength: 1
+          type: string
+        persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonDto'
+          nullable: true
+      additionalProperties: false
     PersonItemDto:
       required:
         - personId

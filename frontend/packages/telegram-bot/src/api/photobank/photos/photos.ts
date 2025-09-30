@@ -10,74 +10,102 @@ import type {
   PhotoItemDto,
   PhotoItemDtoPageResponse,
   PhotosGetDuplicatesParams,
-  PhotosUploadBody
+  PhotosUploadBody,
 } from '../photoBankApi.schemas';
 
 import { photobankAxios } from '../../axios-instance';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-  export const getPhotos = () => {
-const photosSearchPhotos = (
+export const getPhotos = () => {
+  const photosSearchPhotos = (
     filterDto: FilterDto,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<PhotoItemDtoPageResponse>(
-      {url: `/photos/search`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: filterDto
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<PhotoItemDtoPageResponse>(
+      {
+        url: `/photos/search`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        data: filterDto,
+      },
+      options
+    );
+  };
   const photosGetPhoto = (
     id: number,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<PhotoDto>(
-      {url: `/photos/${id}`, method: 'GET'
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<PhotoDto>(
+      { url: `/photos/${id}`, method: 'GET' },
+      options
+    );
+  };
   const photosGetPreview = (
     id: number,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/photos/${id}/preview`, method: 'GET'
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      { url: `/photos/${id}/preview`, method: 'GET' },
+      options
+    );
+  };
   const photosUpload = (
     photosUploadBody: PhotosUploadBody,
- options?: SecondParameter<typeof photobankAxios>,) => {const formData = new FormData();
-if(photosUploadBody.files !== undefined) {
- photosUploadBody.files.forEach(value => formData.append(`files`, value));
- }
-if(photosUploadBody.storageId !== undefined) {
- formData.append(`storageId`, photosUploadBody.storageId.toString())
- }
-if(photosUploadBody.path !== undefined) {
- formData.append(`path`, photosUploadBody.path)
- }
-
-      return photobankAxios<null>(
-      {url: `/photos/upload`, method: 'POST',
-      headers: {'Content-Type': 'multipart/form-data', },
-       data: formData
-    },
-      options);
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    const formData = new FormData();
+    if (photosUploadBody.files !== undefined) {
+      photosUploadBody.files.forEach((value) =>
+        formData.append(`files`, value)
+      );
     }
+    if (photosUploadBody.storageId !== undefined) {
+      formData.append(`storageId`, photosUploadBody.storageId.toString());
+    }
+    if (photosUploadBody.path !== undefined) {
+      formData.append(`path`, photosUploadBody.path);
+    }
+
+    return photobankAxios<null>(
+      {
+        url: `/photos/upload`,
+        method: 'POST',
+        headers: { 'Content-Type': 'multipart/form-data' },
+        data: formData,
+      },
+      options
+    );
+  };
   const photosGetDuplicates = (
     params?: PhotosGetDuplicatesParams,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<PhotoItemDto[]>(
-      {url: `/photos/duplicates`, method: 'GET',
-        params
-    },
-      options);
-    }
-  return {photosSearchPhotos,photosGetPhoto,photosGetPreview,photosUpload,photosGetDuplicates}};
-export type PhotosSearchPhotosResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosSearchPhotos']>>>
-export type PhotosGetPhotoResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetPhoto']>>>
-export type PhotosGetPreviewResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetPreview']>>>
-export type PhotosUploadResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosUpload']>>>
-export type PhotosGetDuplicatesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetDuplicates']>>>
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<PhotoItemDto[]>(
+      { url: `/photos/duplicates`, method: 'GET', params },
+      options
+    );
+  };
+  return {
+    photosSearchPhotos,
+    photosGetPhoto,
+    photosGetPreview,
+    photosUpload,
+    photosGetDuplicates,
+  };
+};
+export type PhotosSearchPhotosResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getPhotos>['photosSearchPhotos']>>
+>;
+export type PhotosGetPhotoResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetPhoto']>>
+>;
+export type PhotosGetPreviewResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetPreview']>>
+>;
+export type PhotosUploadResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getPhotos>['photosUpload']>>
+>;
+export type PhotosGetDuplicatesResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetDuplicates']>>
+>;

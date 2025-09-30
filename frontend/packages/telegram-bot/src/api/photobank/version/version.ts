@@ -6,18 +6,14 @@
  */
 import { photobankAxios } from '../../axios-instance';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-  export const getVersion = () => {
-const versionGet = (
-    
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<string>(
-      {url: `/version`, method: 'GET'
-    },
-      options);
-    }
-  return {versionGet}};
-export type VersionGetResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getVersion>['versionGet']>>>
+export const getVersion = () => {
+  const versionGet = (options?: SecondParameter<typeof photobankAxios>) => {
+    return photobankAxios<string>({ url: `/version`, method: 'GET' }, options);
+  };
+  return { versionGet };
+};
+export type VersionGetResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getVersion>['versionGet']>>
+>;

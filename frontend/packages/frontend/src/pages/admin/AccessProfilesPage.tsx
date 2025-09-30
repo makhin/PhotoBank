@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
+
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Card, CardContent } from '@/shared/ui/card';
 import { AccessProfilesGrid } from '@/components/admin/AccessProfilesGrid';
 import { CreateProfileDialog } from '@/components/admin/CreateProfileDialog';
 import { EditProfileDialog } from '@/components/admin/EditProfileDialog';

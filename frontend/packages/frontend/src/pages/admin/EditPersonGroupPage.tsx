@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, UserPlus, UserMinus, Users } from 'lucide-react';
+import type {
+  PersonDto,
+  PersonGroupDto,
+} from '@photobank/shared';
 
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -9,7 +13,6 @@ import { Input } from '@/shared/ui/input';
 
 import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
 import { mockPersonGroupsWithMembers, mockPersons } from '@/data/mockData';
-import { Person, PersonGroupWithMembers } from '@/types/admin';
 import { useToast } from '@/hooks/use-toast';
 
 export default function EditPersonGroupPage() {
@@ -17,10 +20,10 @@ export default function EditPersonGroupPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [group, setGroup] = useState<PersonGroupWithMembers | null>(null);
+  const [group, setGroup] = useState<PersonGroupDto | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [availablePersons, setAvailablePersons] = useState<Person[]>([]);
-  const [groupMembers, setGroupMembers] = useState<Person[]>([]);
+  const [availablePersons, setAvailablePersons] = useState<PersonDto[]>([]);
+  const [groupMembers, setGroupMembers] = useState<PersonDto[]>([]);
 
   useEffect(() => {
     const foundGroup = mockPersonGroupsWithMembers.find(g => g.id === Number(id));
@@ -41,7 +44,7 @@ export default function EditPersonGroupPage() {
     person.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const addPersonToGroup = (person: Person) => {
+  const addPersonToGroup = (person: PersonDto) => {
     setAvailablePersons(availablePersons.filter(p => p.id !== person.id));
     setGroupMembers([...groupMembers, person]);
     toast({
@@ -50,7 +53,7 @@ export default function EditPersonGroupPage() {
     });
   };
 
-  const removePersonFromGroup = (person: Person) => {
+  const removePersonFromGroup = (person: PersonDto) => {
     setGroupMembers(groupMembers.filter(p => p.id !== person.id));
     setAvailablePersons([...availablePersons, person]);
     toast({

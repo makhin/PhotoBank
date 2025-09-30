@@ -4,24 +4,18 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import type {
-  TagDto
-} from '../photoBankApi.schemas';
+import type { TagDto } from '../photoBankApi.schemas';
 
 import { photobankAxios } from '../../axios-instance';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-  export const getTags = () => {
-const getTags = (
-    
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<TagDto[]>(
-      {url: `/Tags`, method: 'GET'
-    },
-      options);
-    }
-  return {getTags}};
-export type GetTagsResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getTags>['getTags']>>>
+export const getTags = () => {
+  const getTags = (options?: SecondParameter<typeof photobankAxios>) => {
+    return photobankAxios<TagDto[]>({ url: `/Tags`, method: 'GET' }, options);
+  };
+  return { getTags };
+};
+export type GetTagsResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getTags>['getTags']>>
+>;

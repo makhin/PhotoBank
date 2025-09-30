@@ -10,80 +10,115 @@ import type {
   SetRolesDto,
   UpdateUserDto,
   UserDto,
-  UsersGetAllParams
+  UsersGetAllParams,
 } from '../photoBankApi.schemas';
 
 import { photobankAxios } from '../../axios-instance';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-  export const getUsers = () => {
-const usersGetAll = (
+export const getUsers = () => {
+  const usersGetAll = (
     params?: UsersGetAllParams,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<UserDto[]>(
-      {url: `/admin/users`, method: 'GET',
-        params
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<UserDto[]>(
+      { url: `/admin/users`, method: 'GET', params },
+      options
+    );
+  };
   const usersCreate = (
     createUserDto: CreateUserDto,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<UserDto>(
-      {url: `/admin/users`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: createUserDto
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<UserDto>(
+      {
+        url: `/admin/users`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        data: createUserDto,
+      },
+      options
+    );
+  };
   const usersUpdate = (
     id: string,
     updateUserDto: UpdateUserDto,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/admin/users/${id}`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: updateUserDto
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      {
+        url: `/admin/users/${id}`,
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        data: updateUserDto,
+      },
+      options
+    );
+  };
   const usersDelete = (
     id: string,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/admin/users/${id}`, method: 'DELETE'
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      { url: `/admin/users/${id}`, method: 'DELETE' },
+      options
+    );
+  };
   const usersResetPassword = (
     id: string,
     resetPasswordDto: ResetPasswordDto,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/admin/users/${id}/reset-password`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: resetPasswordDto
-    },
-      options);
-    }
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      {
+        url: `/admin/users/${id}/reset-password`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        data: resetPasswordDto,
+      },
+      options
+    );
+  };
   const usersSetRoles = (
     id: string,
     setRolesDto: SetRolesDto,
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<null>(
-      {url: `/admin/users/${id}/roles`, method: 'PUT',
-      headers: {'Content-Type': 'application/json', },
-      data: setRolesDto
-    },
-      options);
-    }
-  return {usersGetAll,usersCreate,usersUpdate,usersDelete,usersResetPassword,usersSetRoles}};
-export type UsersGetAllResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersGetAll']>>>
-export type UsersCreateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersCreate']>>>
-export type UsersUpdateResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersUpdate']>>>
-export type UsersDeleteResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersDelete']>>>
-export type UsersResetPasswordResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersResetPassword']>>>
-export type UsersSetRolesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getUsers>['usersSetRoles']>>>
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      {
+        url: `/admin/users/${id}/roles`,
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        data: setRolesDto,
+      },
+      options
+    );
+  };
+  return {
+    usersGetAll,
+    usersCreate,
+    usersUpdate,
+    usersDelete,
+    usersResetPassword,
+    usersSetRoles,
+  };
+};
+export type UsersGetAllResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getUsers>['usersGetAll']>>
+>;
+export type UsersCreateResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getUsers>['usersCreate']>>
+>;
+export type UsersUpdateResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getUsers>['usersUpdate']>>
+>;
+export type UsersDeleteResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getUsers>['usersDelete']>>
+>;
+export type UsersResetPasswordResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getUsers>['usersResetPassword']>>
+>;
+export type UsersSetRolesResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getUsers>['usersSetRoles']>>
+>;

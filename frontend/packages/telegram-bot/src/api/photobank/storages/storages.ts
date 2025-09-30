@@ -4,24 +4,21 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import type {
-  StorageDto
-} from '../photoBankApi.schemas';
+import type { StorageDto } from '../photoBankApi.schemas';
 
 import { photobankAxios } from '../../axios-instance';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-  export const getStorages = () => {
-const getStorages = (
-    
- options?: SecondParameter<typeof photobankAxios>,) => {
-      return photobankAxios<StorageDto[]>(
-      {url: `/Storages`, method: 'GET'
-    },
-      options);
-    }
-  return {getStorages}};
-export type GetStoragesResult = NonNullable<Awaited<ReturnType<ReturnType<typeof getStorages>['getStorages']>>>
+export const getStorages = () => {
+  const getStorages = (options?: SecondParameter<typeof photobankAxios>) => {
+    return photobankAxios<StorageDto[]>(
+      { url: `/Storages`, method: 'GET' },
+      options
+    );
+  };
+  return { getStorages };
+};
+export type GetStoragesResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getStorages>['getStorages']>>
+>;

@@ -9,6 +9,7 @@ export default defineConfig({
     output: {
       target: path.resolve(__dirname, 'packages/shared/src/api/photobank'),
       client: 'react-query',
+      prettier: true,
       httpClient: 'fetch',
       mode: 'tags-split',
        override: {
@@ -32,6 +33,7 @@ export default defineConfig({
       target: path.resolve(__dirname, 'packages/telegram-bot/src/api/photobank'),
       client: 'axios',
       mode: 'tags-split',
+      prettier: true,
       override: {
         useDates: true,
         mutator: {

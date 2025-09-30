@@ -4,10 +4,7 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type {
   MutationFunction,
   QueryFunction,
@@ -15,265 +12,310 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
 } from '@tanstack/react-query';
 
 import type {
   FaceIdentityDto,
   FacesGetParams,
   ProblemDetails,
-  UpdateFaceIdentityDto
+  UpdateFaceIdentityDto,
 } from '../photoBankApi.schemas';
 
 import { customFetcher } from '.././fetcher';
 
-
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
 export type facesGetResponse200 = {
-  data: FaceIdentityDto[]
-  status: 200
-}
-    
+  data: FaceIdentityDto[];
+  status: 200;
+};
+
 export type facesGetResponseComposite = facesGetResponse200;
-    
+
 export type facesGetResponse = facesGetResponseComposite & {
   headers: Headers;
-}
+};
 
-export const getFacesGetUrl = (params?: FacesGetParams,) => {
+export const getFacesGetUrl = (params?: FacesGetParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
-    
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString())
+      normalizedParams.append(key, value === null ? 'null' : value.toString());
     }
   });
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/faces?${stringifiedParams}` : `/faces`
-}
+  return stringifiedParams.length > 0
+    ? `/faces?${stringifiedParams}`
+    : `/faces`;
+};
 
-export const facesGet = async (params?: FacesGetParams, options?: RequestInit): Promise<facesGetResponse> => {
-  
-  return customFetcher<facesGetResponse>(getFacesGetUrl(params),
-  {      
+export const facesGet = async (
+  params?: FacesGetParams,
+  options?: RequestInit
+): Promise<facesGetResponse> => {
+  return customFetcher<facesGetResponse>(getFacesGetUrl(params), {
     ...options,
-    method: 'GET'
-    
-    
+    method: 'GET',
+  });
+};
+
+export const getFacesGetQueryKey = (params?: FacesGetParams) => {
+  return [`/faces`, ...(params ? [params] : [])] as const;
+};
+
+export const getFacesGetQueryOptions = <
+  TData = Awaited<ReturnType<typeof facesGet>>,
+  TError = unknown,
+>(
+  params?: FacesGetParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof facesGet>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetcher>;
   }
-);}
-
-
-
-export const getFacesGetQueryKey = (params?: FacesGetParams,) => {
-    return [`/faces`, ...(params ? [params]: [])] as const;
-    }
-
-    
-export const getFacesGetQueryOptions = <TData = Awaited<ReturnType<typeof facesGet>>, TError = unknown>(params?: FacesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGet>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getFacesGetQueryKey(params);
 
-  const queryKey =  queryOptions?.queryKey ?? getFacesGetQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGet>>> = () =>
+    facesGet(params, requestOptions);
 
-  
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof facesGet>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGet>>> = () => facesGet(params, requestOptions);
+export type FacesGetQueryResult = NonNullable<
+  Awaited<ReturnType<typeof facesGet>>
+>;
+export type FacesGetQueryError = unknown;
 
-      
+export function useFacesGet<
+  TData = Awaited<ReturnType<typeof facesGet>>,
+  TError = unknown,
+>(
+  params?: FacesGetParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof facesGet>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetcher>;
+  }
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getFacesGetQueryOptions(params, options);
 
-      
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof facesGet>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type FacesGetQueryResult = NonNullable<Awaited<ReturnType<typeof facesGet>>>
-export type FacesGetQueryError = unknown
-
-
-
-export function useFacesGet<TData = Awaited<ReturnType<typeof facesGet>>, TError = unknown>(
- params?: FacesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGet>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getFacesGetQueryOptions(params,options)
-
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
+  query.queryKey = queryOptions.queryKey;
 
   return query;
 }
 
-
-
 export type facesUpdateResponse200 = {
-  data: null
-  status: 200
-}
-    
+  data: null;
+  status: 200;
+};
+
 export type facesUpdateResponseComposite = facesUpdateResponse200;
-    
+
 export type facesUpdateResponse = facesUpdateResponseComposite & {
   headers: Headers;
-}
+};
 
 export const getFacesUpdateUrl = () => {
+  return `/faces`;
+};
 
-
-  
-
-  return `/faces`
-}
-
-export const facesUpdate = async (updateFaceIdentityDto: UpdateFaceIdentityDto, options?: RequestInit): Promise<facesUpdateResponse> => {
-  
-  return customFetcher<facesUpdateResponse>(getFacesUpdateUrl(),
-  {      
+export const facesUpdate = async (
+  updateFaceIdentityDto: UpdateFaceIdentityDto,
+  options?: RequestInit
+): Promise<facesUpdateResponse> => {
+  return customFetcher<facesUpdateResponse>(getFacesUpdateUrl(), {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      updateFaceIdentityDto,)
-  }
-);}
+    body: JSON.stringify(updateFaceIdentityDto),
+  });
+};
 
+export const getFacesUpdateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof facesUpdate>>,
+    TError,
+    { data: UpdateFaceIdentityDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof facesUpdate>>,
+  TError,
+  { data: UpdateFaceIdentityDto },
+  TContext
+> => {
+  const mutationKey = ['facesUpdate'];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      'mutationKey' in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof facesUpdate>>,
+    { data: UpdateFaceIdentityDto }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return facesUpdate(data, requestOptions);
+  };
 
-export const getFacesUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceIdentityDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
-): UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceIdentityDto}, TContext> => {
+  return { mutationFn, ...mutationOptions };
+};
 
-const mutationKey = ['facesUpdate'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export type FacesUpdateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof facesUpdate>>
+>;
+export type FacesUpdateMutationBody = UpdateFaceIdentityDto;
+export type FacesUpdateMutationError = unknown;
 
-      
+export const useFacesUpdate = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof facesUpdate>>,
+    TError,
+    { data: UpdateFaceIdentityDto },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof facesUpdate>>,
+  TError,
+  { data: UpdateFaceIdentityDto },
+  TContext
+> => {
+  const mutationOptions = getFacesUpdateMutationOptions(options);
 
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof facesUpdate>>, {data: UpdateFaceIdentityDto}> = (props) => {
-          const {data} = props ?? {};
-
-          return  facesUpdate(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type FacesUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof facesUpdate>>>
-    export type FacesUpdateMutationBody = UpdateFaceIdentityDto
-    export type FacesUpdateMutationError = unknown
-
-    export const useFacesUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facesUpdate>>, TError,{data: UpdateFaceIdentityDto}, TContext>, request?: SecondParameter<typeof customFetcher>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof facesUpdate>>,
-        TError,
-        {data: UpdateFaceIdentityDto},
-        TContext
-      > => {
-
-      const mutationOptions = getFacesUpdateMutationOptions(options);
-
-      return useMutation(mutationOptions );
-    }
-    export type facesGetImageResponse200 = {
-  data: null
-  status: 200
-}
+  return useMutation(mutationOptions);
+};
+export type facesGetImageResponse200 = {
+  data: null;
+  status: 200;
+};
 
 export type facesGetImageResponse301 = {
-  data: null
-  status: 301
-}
+  data: null;
+  status: 301;
+};
 
 export type facesGetImageResponse404 = {
-  data: ProblemDetails
-  status: 404
-}
-    
-export type facesGetImageResponseComposite = facesGetImageResponse200 | facesGetImageResponse301 | facesGetImageResponse404;
-    
+  data: ProblemDetails;
+  status: 404;
+};
+
+export type facesGetImageResponseComposite =
+  | facesGetImageResponse200
+  | facesGetImageResponse301
+  | facesGetImageResponse404;
+
 export type facesGetImageResponse = facesGetImageResponseComposite & {
   headers: Headers;
-}
+};
 
-export const getFacesGetImageUrl = (id: number,) => {
+export const getFacesGetImageUrl = (id: number) => {
+  return `/faces/${id}/image`;
+};
 
-
-  
-
-  return `/faces/${id}/image`
-}
-
-export const facesGetImage = async (id: number, options?: RequestInit): Promise<facesGetImageResponse> => {
-  
-  return customFetcher<facesGetImageResponse>(getFacesGetImageUrl(id),
-  {      
+export const facesGetImage = async (
+  id: number,
+  options?: RequestInit
+): Promise<facesGetImageResponse> => {
+  return customFetcher<facesGetImageResponse>(getFacesGetImageUrl(id), {
     ...options,
-    method: 'GET'
-    
-    
+    method: 'GET',
+  });
+};
+
+export const getFacesGetImageQueryKey = (id?: number) => {
+  return [`/faces/${id}/image`] as const;
+};
+
+export const getFacesGetImageQueryOptions = <
+  TData = Awaited<ReturnType<typeof facesGetImage>>,
+  TError = null | ProblemDetails,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof facesGetImage>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetcher>;
   }
-);}
-
-
-
-export const getFacesGetImageQueryKey = (id?: number,) => {
-    return [`/faces/${id}/image`] as const;
-    }
-
-    
-export const getFacesGetImageQueryOptions = <TData = Awaited<ReturnType<typeof facesGetImage>>, TError = null | ProblemDetails>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGetImage>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getFacesGetImageQueryKey(id);
 
-  const queryKey =  queryOptions?.queryKey ?? getFacesGetImageQueryKey(id);
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof facesGetImage>>
+  > = () => facesGetImage(id, requestOptions);
 
-  
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof facesGetImage>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGetImage>>> = () => facesGetImage(id, requestOptions);
+export type FacesGetImageQueryResult = NonNullable<
+  Awaited<ReturnType<typeof facesGetImage>>
+>;
+export type FacesGetImageQueryError = null | ProblemDetails;
 
-      
+export function useFacesGetImage<
+  TData = Awaited<ReturnType<typeof facesGetImage>>,
+  TError = null | ProblemDetails,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof facesGetImage>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetcher>;
+  }
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getFacesGetImageQueryOptions(id, options);
 
-      
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof facesGetImage>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type FacesGetImageQueryResult = NonNullable<Awaited<ReturnType<typeof facesGetImage>>>
-export type FacesGetImageQueryError = null | ProblemDetails
-
-
-
-export function useFacesGetImage<TData = Awaited<ReturnType<typeof facesGetImage>>, TError = null | ProblemDetails>(
- id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof facesGetImage>>, TError, TData>, request?: SecondParameter<typeof customFetcher>}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getFacesGetImageQueryOptions(id,options)
-
-  const query = useQuery(queryOptions ) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
+  query.queryKey = queryOptions.queryKey;
 
   return query;
 }
-
-
-

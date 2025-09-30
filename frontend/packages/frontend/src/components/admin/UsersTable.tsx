@@ -1,4 +1,3 @@
-import { format } from 'date-fns';
 import { MoreHorizontal, Edit, Key, Trash2, User as UserIcon } from 'lucide-react';
 import type { UserDto } from '@photobank/shared';
 
@@ -12,6 +11,7 @@ import {
   TableRow,
 } from '@/shared/ui/table';
 import { Badge } from '@/shared/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 import {
   DropdownMenu,
@@ -20,7 +20,6 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
-import { useToast } from '@/hooks/use-toast';
 
 interface UsersTableProps {
   users: UserDto[];
@@ -49,11 +48,6 @@ export function UsersTable({ users, onUserSelect }: UsersTableProps) {
     return role === 'Administrator' ? 'default' : 'secondary';
   };
 
-  const formatLastLogin = (lastLogin?: string) => {
-    if (!lastLogin) return 'Never';
-    return format(new Date(lastLogin), 'MMM d, yyyy HH:mm');
-  };
-
   if (users.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -78,7 +72,6 @@ export function UsersTable({ users, onUserSelect }: UsersTableProps) {
               <TableHead>Phone</TableHead>
               <TableHead>Roles</TableHead>
               <TableHead>Telegram</TableHead>
-              <TableHead>Last Login</TableHead>
               <TableHead className="w-[70px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -92,7 +85,7 @@ export function UsersTable({ users, onUserSelect }: UsersTableProps) {
                 <TableCell>
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                      {user.email.slice(0, 2).toUpperCase()}
+                      {user.email?.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </TableCell>
@@ -120,9 +113,6 @@ export function UsersTable({ users, onUserSelect }: UsersTableProps) {
                   ) : (
                     '—'
                   )}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {formatLastLogin(user.lastLogin)}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -185,7 +175,7 @@ export function UsersTable({ users, onUserSelect }: UsersTableProps) {
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                    {user.email.slice(0, 2).toUpperCase()}
+                    {user.email?.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
@@ -255,9 +245,6 @@ export function UsersTable({ users, onUserSelect }: UsersTableProps) {
                 </div>
               )}
               
-              <div className="text-sm text-muted-foreground">
-                Last login: {formatLastLogin(user.lastLogin)}
-              </div>
             </div>
           </div>
         ))}
