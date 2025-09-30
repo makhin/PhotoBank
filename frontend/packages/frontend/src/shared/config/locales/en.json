@@ -52,6 +52,7 @@
   "navbarPersonsLabel": "Persons",
   "navbarFacesLabel": "Faces",
   "navbarOpenAiLabel": "OpenAI",
+  "navbarAdminLabel": "Admin",
   "faceDetailsTitle": "Face Details",
   "ageLabel": "Age",
   "genderLabel": "Gender",
