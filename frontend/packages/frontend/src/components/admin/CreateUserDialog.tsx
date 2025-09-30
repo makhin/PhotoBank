@@ -31,11 +31,13 @@ import {
 } from '@/shared/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
+const roles = ['Administrator', 'User'] as const;
+
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   phoneNumber: z.string().optional(),
-  roles: z.array(z.enum(['Administrator', 'User'])).min(1, 'At least one role is required'),
+  roles: z.array(z.enum(roles)).min(1, 'At least one role is required'),
   telegramUserId: z.number().optional(),
   telegramSendTimeUtc: z.string().optional(),
 });
@@ -160,27 +162,30 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium">Roles *</FormLabel>
-                   <div className="flex flex-col sm:flex-row gap-4">
-                     {(['Administrator', 'User'] as string[]).map((role) => (
-                       <div key={role} className="flex items-center space-x-3 p-3 sm:p-0 rounded-lg sm:rounded-none bg-muted/30 sm:bg-transparent">
-                         <Checkbox
-                           id={role}
-                           checked={field.value.includes(role)}
-                           className="h-5 w-5"
-                           onCheckedChange={(checked) => {
-                             if (checked) {
-                               field.onChange([...field.value, role]);
-                             } else {
-                               field.onChange(field.value.filter((r) => r !== role));
-                             }
-                           }}
-                         />
-                         <Label htmlFor={role} className="text-sm font-medium cursor-pointer flex-1">
-                           {role}
-                         </Label>
-                       </div>
-                     ))}
-                   </div>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    {roles.map((role: (typeof roles)[number]) => (
+                      <div
+                        key={role}
+                        className="flex items-center space-x-3 p-3 sm:p-0 rounded-lg sm:rounded-none bg-muted/30 sm:bg-transparent"
+                      >
+                        <Checkbox
+                          id={role}
+                          checked={field.value.includes(role)}
+                          className="h-5 w-5"
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              field.onChange([...field.value, role]);
+                            } else {
+                              field.onChange(field.value.filter((r) => r !== role));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={role} className="text-sm font-medium cursor-pointer flex-1">
+                          {role}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
