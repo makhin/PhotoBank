@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, UserPlus, UserMinus, Users } from 'lucide-react';
-import type {
-  PersonDto,
-  PersonGroupDto,
-} from '@photobank/shared';
+import type { PersonDto, PersonGroupDto } from '@photobank/shared';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  getPersonGroupsGetAllQueryKey,
+  usePersonGroupsAddPerson,
+  usePersonGroupsGetAll,
+  usePersonGroupsRemovePerson,
+} from '@photobank/shared/api/photobank/person-groups/person-groups';
+import { usePersonsGetAll } from '@photobank/shared/api/photobank';
 
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -12,61 +17,186 @@ import { Badge } from '@/shared/ui/badge';
 import { Input } from '@/shared/ui/input';
 
 import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
-import { mockPersonGroupsWithMembers, mockPersons } from '@/data/mockData';
 import { useToast } from '@/hooks/use-toast';
 
 export default function EditPersonGroupPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const [group, setGroup] = useState<PersonGroupDto | null>(null);
+  const queryClient = useQueryClient();
+  const groupId = id ? Number(id) : NaN;
+  const isValidGroupId = Number.isFinite(groupId);
+  const personGroupsQueryKey = useMemo(() => getPersonGroupsGetAllQueryKey(), []);
+  const {
+    data: group,
+    isLoading: isGroupLoading,
+    isError: isGroupError,
+    isFetching: isGroupFetching,
+    refetch: refetchGroups,
+  } = usePersonGroupsGetAll<PersonGroupDto | undefined>({
+    query: {
+      enabled: isValidGroupId,
+      select: (response) => response.data.find((g) => g.id === groupId),
+    },
+  });
+  const {
+    data: personsResponse,
+    isLoading: isPersonsLoading,
+    isError: isPersonsError,
+    isFetching: isPersonsFetching,
+    refetch: refetchPersons,
+  } = usePersonsGetAll();
   const [searchTerm, setSearchTerm] = useState('');
-  const [availablePersons, setAvailablePersons] = useState<PersonDto[]>([]);
-  const [groupMembers, setGroupMembers] = useState<PersonDto[]>([]);
 
-  useEffect(() => {
-    const foundGroup = mockPersonGroupsWithMembers.find(g => g.id === Number(id));
-    if (foundGroup) {
-      setGroup(foundGroup);
-      setGroupMembers(foundGroup.members);
-      setAvailablePersons(mockPersons.filter(person => 
-        !foundGroup.members.some(member => member.id === person.id)
-      ));
-    }
-  }, [id]);
-
-  const filteredAvailablePersons = availablePersons.filter(person =>
-    person.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const persons = useMemo<PersonDto[]>(() => personsResponse?.data ?? [], [personsResponse]);
+  const groupMembers = useMemo<PersonDto[]>(() => (group?.persons ?? []) as PersonDto[], [group]);
+  const memberIds = useMemo(() => new Set(groupMembers.map((person) => person.id)), [groupMembers]);
+  const availablePersons = useMemo(
+    () => persons.filter((person) => !memberIds.has(person.id)),
+    [persons, memberIds]
   );
 
-  const filteredGroupMembers = groupMembers.filter(person =>
-    person.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredAvailablePersons = useMemo(
+    () =>
+      normalizedSearch
+        ? availablePersons.filter((person) =>
+            person.name.toLowerCase().includes(normalizedSearch)
+          )
+        : availablePersons,
+    [availablePersons, normalizedSearch]
+  );
+  const filteredGroupMembers = useMemo(
+    () =>
+      normalizedSearch
+        ? groupMembers.filter((person) =>
+            person.name.toLowerCase().includes(normalizedSearch)
+          )
+        : groupMembers,
+    [groupMembers, normalizedSearch]
   );
 
-  const addPersonToGroup = (person: PersonDto) => {
-    setAvailablePersons(availablePersons.filter(p => p.id !== person.id));
-    setGroupMembers([...groupMembers, person]);
-    toast({
-      title: "Person added",
-      description: `${person.name} has been added to the group.`,
-    });
+  const addPersonMutation = usePersonGroupsAddPerson({
+    mutation: {
+      onSuccess: async (_, variables) => {
+        await queryClient.invalidateQueries({ queryKey: personGroupsQueryKey });
+
+        const personName = persons.find((person) => person.id === variables.personId)?.name;
+
+        toast({
+          title: 'Person added',
+          description: personName
+            ? `${personName} has been added to the group.`
+            : 'Person has been added to the group.',
+        });
+      },
+      onError: () => {
+        toast({
+          title: 'Failed to add person',
+          description: 'Something went wrong while adding the person to the group. Please try again.',
+          variant: 'destructive',
+        });
+      },
+    },
+  });
+
+  const removePersonMutation = usePersonGroupsRemovePerson({
+    mutation: {
+      onSuccess: async (_, variables) => {
+        await queryClient.invalidateQueries({ queryKey: personGroupsQueryKey });
+
+        const personName = persons.find((person) => person.id === variables.personId)?.name;
+
+        toast({
+          title: 'Person removed',
+          description: personName
+            ? `${personName} has been removed from the group.`
+            : 'Person has been removed from the group.',
+        });
+      },
+      onError: () => {
+        toast({
+          title: 'Failed to remove person',
+          description: 'Something went wrong while removing the person from the group. Please try again.',
+          variant: 'destructive',
+        });
+      },
+    },
+  });
+
+  const handleAddPerson = (person: PersonDto) => {
+    if (!isValidGroupId) return;
+
+    addPersonMutation.mutate({ groupId, personId: person.id });
   };
 
-  const removePersonFromGroup = (person: PersonDto) => {
-    setGroupMembers(groupMembers.filter(p => p.id !== person.id));
-    setAvailablePersons([...availablePersons, person]);
-    toast({
-      title: "Person removed",
-      description: `${person.name} has been removed from the group.`,
-    });
+  const handleRemovePerson = (person: PersonDto) => {
+    if (!isValidGroupId) return;
+
+    removePersonMutation.mutate({ groupId, personId: person.id });
   };
+
+  const isLoading = isGroupLoading || isPersonsLoading;
+  const hasError = isGroupError || isPersonsError;
+  const isRefreshing = isGroupFetching || isPersonsFetching;
+
+  if (!isValidGroupId) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <h2 className="text-lg font-medium">Group not found</h2>
+          <Button onClick={() => navigate('/admin/person-groups')}>
+            <ArrowLeft className="h-4 w-4" />
+            Back to Groups
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-2">
+          <p className="text-sm text-muted-foreground">Loading person group…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <h2 className="text-lg font-medium">Unable to load person group</h2>
+          <p className="text-sm text-muted-foreground">
+            We couldn&apos;t load the person group details. Please try again.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <Button
+              variant="outline"
+              onClick={() => {
+                refetchGroups();
+                refetchPersons();
+              }}
+            >
+              Try again
+            </Button>
+            <Button onClick={() => navigate('/admin/person-groups')}>
+              <ArrowLeft className="h-4 w-4" />
+              Back to Groups
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!group) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <h2 className="text-lg font-medium mb-2">Group not found</h2>
+        <div className="text-center space-y-4">
+          <h2 className="text-lg font-medium">Group not found</h2>
           <Button onClick={() => navigate('/admin/person-groups')}>
             <ArrowLeft className="h-4 w-4" />
             Back to Groups
@@ -90,7 +220,10 @@ export default function EditPersonGroupPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">{group.name}</h1>
-            <p className="text-muted-foreground">Manage group members</p>
+            <p className="text-muted-foreground">
+              Manage group members
+              {isRefreshing && <span className="ml-2 text-xs">(Refreshing…)</span>}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -157,8 +290,9 @@ export default function EditPersonGroupPage() {
                   </div>
                   <Button
                     size="sm"
-                    onClick={() => addPersonToGroup(person)}
+                    onClick={() => handleAddPerson(person)}
                     className="shrink-0 ml-2"
+                    disabled={addPersonMutation.isPending}
                   >
                     <UserPlus className="h-4 w-4" />
                     <span className="hidden sm:inline ml-1">Add</span>
@@ -201,8 +335,9 @@ export default function EditPersonGroupPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => removePersonFromGroup(person)}
+                    onClick={() => handleRemovePerson(person)}
                     className="shrink-0 ml-2 text-destructive hover:text-destructive"
+                    disabled={removePersonMutation.isPending}
                   >
                     <UserMinus className="h-4 w-4" />
                     <span className="hidden sm:inline ml-1">Remove</span>

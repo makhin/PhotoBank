@@ -1,16 +1,20 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import type { PersonGroupDto } from '@photobank/shared';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  getPersonGroupsGetAllQueryKey,
+  usePersonGroupsCreate,
+} from '@photobank/shared/api/photobank/person-groups/person-groups';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Textarea } from '@/shared/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/ui/form';
-
-import { mockPersonGroupsWithMembers } from '@/data/mockData';
+import { useToast } from '@/hooks/use-toast';
 
 const createGroupSchema = z.object({
   name: z.string().min(1, 'Group name is required').max(50, 'Group name must be less than 50 characters'),
@@ -22,15 +26,19 @@ type CreateGroupForm = z.infer<typeof createGroupSchema>;
 interface CreatePersonGroupDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateGroup: (group: PersonGroupDto) => void;
+  onSuccess?: (group: PersonGroupDto) => void;
+  onError?: (error: unknown) => void;
 }
 
 export function CreatePersonGroupDialog({
   open,
   onOpenChange,
-  onCreateGroup,
+  onSuccess,
+  onError,
 }: CreatePersonGroupDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const personGroupsQueryKey = useMemo(() => getPersonGroupsGetAllQueryKey(), []);
 
   const form = useForm<CreateGroupForm>({
     resolver: zodResolver(createGroupSchema),
@@ -40,30 +48,53 @@ export function CreatePersonGroupDialog({
     },
   });
 
-  const onSubmit = async (data: CreateGroupForm) => {
-    setIsLoading(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const newGroup: PersonGroupDto = {
-      id: Math.max(...mockPersonGroupsWithMembers.map(g => g.id), 0) + 1,
-      name: data.name,
-      persons: []
-    };
+  const createPersonGroupMutation = usePersonGroupsCreate({
+    mutation: {
+      onSuccess: async (response) => {
+        await queryClient.invalidateQueries({ queryKey: personGroupsQueryKey });
+        form.reset();
+        onOpenChange(false);
+        onSuccess?.(response.data);
+      },
+      onError: (error) => {
+        if (onError) {
+          onError(error);
+        } else {
+          toast({
+            title: 'Failed to create group',
+            description: 'Something went wrong while creating the group. Please try again.',
+            variant: 'destructive',
+          });
+        }
+      },
+    },
+  });
 
-    onCreateGroup(newGroup);
-    form.reset();
-    setIsLoading(false);
+  const onSubmit = async (data: CreateGroupForm) => {
+    try {
+      await createPersonGroupMutation.mutateAsync({
+        data: {
+          id: 0,
+          name: data.name,
+          persons: [],
+        },
+      });
+    } catch {
+      // Error handling is managed by the mutation callbacks.
+    }
   };
 
-  const handleClose = () => {
-    form.reset();
-    onOpenChange(false);
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      form.reset();
+      createPersonGroupMutation.reset();
+    }
+
+    onOpenChange(nextOpen);
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-full max-w-md mx-auto">
         <DialogHeader>
           <DialogTitle>Create New Group</DialogTitle>
@@ -112,18 +143,18 @@ export function CreatePersonGroupDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleClose}
-                disabled={isLoading}
+                onClick={() => handleOpenChange(false)}
+                disabled={createPersonGroupMutation.isPending}
                 className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading}
+                disabled={createPersonGroupMutation.isPending}
                 className="w-full sm:w-auto"
               >
-                {isLoading ? 'Creating...' : 'Create Group'}
+                {createPersonGroupMutation.isPending ? 'Creating...' : 'Create Group'}
               </Button>
             </div>
           </form>
