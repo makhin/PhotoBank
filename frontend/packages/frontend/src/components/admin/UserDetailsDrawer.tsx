@@ -1,7 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { User as UserIcon, Key, UserX, Plus, Trash2 } from 'lucide-react';
-import type { UserDto } from '@photobank/shared';
+import { User as UserIcon, Key, UserX, Plus, Trash2, Loader2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import type { AccessProfile, UserDto } from '@photobank/shared';
+import {
+  getAdminAccessProfilesListQueryKey,
+  useAdminAccessProfilesAssignUser,
+  useAdminAccessProfilesList,
+  useAdminAccessProfilesUnassignUser,
+} from '@photobank/shared/api/photobank/admin-access-profiles/admin-access-profiles';
 
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -29,8 +36,161 @@ interface UserDetailsDrawerProps {
 
 export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawerProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [newClaimKey, setNewClaimKey] = useState('');
   const [newClaimValue, setNewClaimValue] = useState('');
+
+  const accessProfilesQueryKey = useMemo(
+    () => getAdminAccessProfilesListQueryKey(),
+    []
+  );
+
+  const {
+    data: accessProfilesData,
+    isLoading: isAccessProfilesLoading,
+    isError: isAccessProfilesError,
+    isFetching: isAccessProfilesFetching,
+    refetch: refetchAccessProfiles,
+  } = useAdminAccessProfilesList();
+
+  const accessProfiles = useMemo<AccessProfile[]>(
+    () => accessProfilesData?.data ?? [],
+    [accessProfilesData]
+  );
+
+  const derivedAssignedProfileIds = useMemo(() => {
+    const rawProfiles = (user as {
+      accessProfiles?: Array<{ profileId?: number | null; id?: number | null }>;
+    }).accessProfiles;
+
+    if (!rawProfiles) {
+      return [] as number[];
+    }
+
+    return rawProfiles
+      .map((profile) => profile?.profileId ?? profile?.id)
+      .filter((profileId): profileId is number => typeof profileId === 'number');
+  }, [user]);
+
+  const [assignedProfileIds, setAssignedProfileIds] = useState<Set<number>>(
+    () => new Set(derivedAssignedProfileIds)
+  );
+  const [activeProfileId, setActiveProfileId] = useState<number | null>(null);
+
+  useEffect(() => {
+    setAssignedProfileIds(new Set(derivedAssignedProfileIds));
+  }, [derivedAssignedProfileIds]);
+
+  const assignProfileMutation = useAdminAccessProfilesAssignUser();
+  const unassignProfileMutation = useAdminAccessProfilesUnassignUser();
+
+  const userId = user.id ?? undefined;
+  const userEmail = user.email ?? 'the user';
+  const canManageAccessProfiles = typeof userId === 'string' && userId.length > 0;
+
+  const showAccessProfilesLoading = isAccessProfilesLoading && accessProfiles.length === 0;
+  const showAccessProfilesError = isAccessProfilesError && accessProfiles.length === 0;
+
+  const handleAssignProfile = async (profile: AccessProfile) => {
+    const profileId = profile.id;
+
+    if (typeof profileId !== 'number') {
+      toast({
+        title: 'Unable to assign profile',
+        description: 'This profile is missing an identifier.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!canManageAccessProfiles || !userId) {
+      toast({
+        title: 'Unable to assign profile',
+        description: 'This user is missing an identifier. Please refresh and try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setActiveProfileId(profileId);
+
+    try {
+      await assignProfileMutation.mutateAsync({ id: profileId, userId });
+
+      setAssignedProfileIds((prev) => {
+        const next = new Set(prev);
+        next.add(profileId);
+        return next;
+      });
+
+      toast({
+        title: 'Profile assigned',
+        description: `${profile.name ?? `Profile #${profileId}`} assigned to ${userEmail}.`,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: accessProfilesQueryKey });
+    } catch (error) {
+      toast({
+        title: 'Failed to assign profile',
+        description: 'Something went wrong while assigning the profile. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setActiveProfileId(null);
+    }
+  };
+
+  const handleUnassignProfile = async (profile: AccessProfile) => {
+    const profileId = profile.id;
+
+    if (typeof profileId !== 'number') {
+      toast({
+        title: 'Unable to unassign profile',
+        description: 'This profile is missing an identifier.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!canManageAccessProfiles || !userId) {
+      toast({
+        title: 'Unable to unassign profile',
+        description: 'This user is missing an identifier. Please refresh and try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setActiveProfileId(profileId);
+
+    try {
+      await unassignProfileMutation.mutateAsync({ id: profileId, userId });
+
+      setAssignedProfileIds((prev) => {
+        const next = new Set(prev);
+        next.delete(profileId);
+        return next;
+      });
+
+      toast({
+        title: 'Profile unassigned',
+        description: `${profile.name ?? `Profile #${profileId}`} removed from ${userEmail}.`,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: accessProfilesQueryKey });
+    } catch (error) {
+      toast({
+        title: 'Failed to unassign profile',
+        description: 'Something went wrong while unassigning the profile. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setActiveProfileId(null);
+    }
+  };
+
+  const isAnyMutationRunning =
+    assignProfileMutation.isPending || unassignProfileMutation.isPending;
 
   const handleResetPassword = () => {
     toast({
@@ -64,12 +224,6 @@ export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawe
       description: `Removed claim: ${key}`,
     });
   };
-
-  const mockAccessProfiles = [
-    { id: 1, name: 'Editors – Summer', assigned: true },
-    { id: 2, name: 'Admin Full Access', assigned: false },
-    { id: 3, name: 'Family Photos Only', assigned: true },
-  ];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -225,28 +379,77 @@ export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawe
                 <CardTitle className="text-lg">Access Profiles</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {mockAccessProfiles.map((profile) => (
-                  <div key={profile.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-muted/50 rounded-lg">
-                    <div className="flex items-center gap-3 flex-1">
-                      <Badge variant={profile.assigned ? 'default' : 'outline'}>
-                        {profile.assigned ? 'Assigned' : 'Available'}
-                      </Badge>
-                      <span className="font-medium">{profile.name}</span>
-                    </div>
-                    <Button
-                      variant={profile.assigned ? 'outline' : 'default'}
-                      className="w-full sm:w-auto h-11"
-                      onClick={() => {
-                        toast({
-                          title: profile.assigned ? 'Profile Unassigned' : 'Profile Assigned',
-                          description: `${profile.name} ${profile.assigned ? 'removed from' : 'assigned to'} ${user.email}`,
-                        });
-                      }}
-                    >
-                      {profile.assigned ? 'Unassign' : 'Assign'}
+                {showAccessProfilesError ? (
+                  <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
+                    <p className="text-sm text-destructive">We couldn&apos;t load access profiles.</p>
+                    <Button variant="outline" onClick={() => refetchAccessProfiles()} disabled={isAnyMutationRunning}>
+                      Try again
                     </Button>
                   </div>
-                ))}
+                ) : showAccessProfilesLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="h-12 rounded-lg bg-muted/60 animate-pulse" />
+                    ))}
+                  </div>
+                ) : accessProfiles.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No access profiles are currently available.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {accessProfiles.map((profile) => {
+                      const profileId = profile.id;
+                      const isAssigned =
+                        typeof profileId === 'number' && assignedProfileIds.has(profileId);
+                      const isCurrentProfileMutating =
+                        isAnyMutationRunning && activeProfileId === profileId;
+                      const actionLabel = isAssigned ? 'Unassign' : 'Assign';
+                      const disableButton =
+                        !canManageAccessProfiles ||
+                        typeof profileId !== 'number' ||
+                        isCurrentProfileMutating ||
+                        isAnyMutationRunning;
+
+                      return (
+                        <div
+                          key={profileId ?? profile.name ?? `profile-${actionLabel}`}
+                          className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-muted/50 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <Badge variant={isAssigned ? 'default' : 'outline'}>
+                              {isAssigned ? 'Assigned' : 'Available'}
+                            </Badge>
+                            <span className="font-medium">{profile.name ?? 'Untitled profile'}</span>
+                          </div>
+                          <Button
+                            variant={isAssigned ? 'outline' : 'default'}
+                            className="w-full sm:w-auto h-11"
+                            disabled={disableButton}
+                            onClick={() =>
+                              isAssigned
+                                ? handleUnassignProfile(profile)
+                                : handleAssignProfile(profile)
+                            }
+                          >
+                            {isCurrentProfileMutating ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : null}
+                            {actionLabel}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                {isAccessProfilesFetching && accessProfiles.length > 0 ? (
+                  <p className="text-xs text-muted-foreground text-center">Refreshing…</p>
+                ) : null}
+                {!canManageAccessProfiles ? (
+                  <p className="text-xs text-muted-foreground text-center">
+                    Assignments are unavailable because this user does not have an identifier.
+                  </p>
+                ) : null}
               </CardContent>
             </Card>
           </TabsContent>
