@@ -52,6 +52,7 @@
   "navbarPersonsLabel": "Персоны",
   "navbarFacesLabel": "Лица",
   "navbarOpenAiLabel": "OpenAI",
+  "navbarAdminLabel": "Админ",
   "faceDetailsTitle": "Детали лица",
   "ageLabel": "Возраст",
   "genderLabel": "Пол",
