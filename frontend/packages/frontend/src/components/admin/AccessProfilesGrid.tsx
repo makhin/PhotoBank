@@ -1,5 +1,19 @@
-import { Shield, Calendar, Database, Users, Edit, Trash2, MoreHorizontal } from 'lucide-react';
-import type { AccessProfile } from '@photobank/shared';
+import {
+  Shield,
+  Calendar,
+  Database,
+  Users,
+  Edit,
+  Trash2,
+  MoreHorizontal,
+} from 'lucide-react';
+import type {
+  AccessProfile,
+  AccessProfileDateRangeAllow,
+  AccessProfilePersonGroupAllow,
+  AccessProfileStorageAllow,
+} from '@photobank/shared';
+import { format } from 'date-fns';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
@@ -44,6 +58,41 @@ export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGr
     );
   }
 
+  const getStorageLabel = (storage: AccessProfileStorageAllow, index: number) => {
+    if (storage.profileId !== undefined) {
+      return `#${storage.storageId ?? storage.profileId}`;
+    }
+
+    if (storage.storageId !== undefined) {
+      return `#${storage.storageId}`;
+    }
+
+    return `Storage ${index + 1}`;
+  };
+
+  const getPersonGroupLabel = (group: AccessProfilePersonGroupAllow, index: number) => {
+    if (group.personGroupId !== undefined) {
+      return `Group #${group.personGroupId}`;
+    }
+
+    if (group.profileId !== undefined) {
+      return `Group ${group.profileId}`;
+    }
+
+    return `Group ${index + 1}`;
+  };
+
+  const getDateRangeLabel = (range: AccessProfileDateRangeAllow | undefined) => {
+    if (!range) {
+      return 'No range';
+    }
+
+    const from = range.fromDate ? format(new Date(range.fromDate), 'yyyy-MM-dd') : '—';
+    const to = range.toDate ? format(new Date(range.toDate), 'yyyy-MM-dd') : '—';
+
+    return `${from} - ${to}`;
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
       {profiles.map((profile) => (
@@ -84,17 +133,23 @@ export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGr
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
                 <div className="flex items-center gap-2">
                   <Database className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-medium">{profile.storages.length} Storages</span>
+                  <span className="font-medium">{profile.storages?.length ?? 0} Storages</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {profile.storages.slice(0, 2).map((storage) => (
-                    <Badge key={storage} variant="outline" className="text-xs">
-                      {storage}
-                    </Badge>
-                  ))}
-                  {profile.storages.length > 2 && (
+                  {(profile.storages ?? [])
+                    .slice(0, 2)
+                    .map((storage, index) => (
+                      <Badge
+                        key={`${profile.id}-storage-${storage.storageId ?? index}`}
+                        variant="outline"
+                        className="text-xs"
+                      >
+                        {getStorageLabel(storage, index)}
+                      </Badge>
+                    ))}
+                  {(profile.storages?.length ?? 0) > 2 && (
                     <Badge variant="outline" className="text-xs">
-                      +{profile.storages.length - 2}
+                      +{(profile.storages?.length ?? 0) - 2}
                     </Badge>
                   )}
                 </div>
@@ -103,17 +158,23 @@ export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGr
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-medium">{profile.personGroups.length} Person Groups</span>
+                  <span className="font-medium">{profile.personGroups?.length ?? 0} Person Groups</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {profile.personGroups.slice(0, 2).map((group) => (
-                    <Badge key={group} variant="outline" className="text-xs">
-                      {group}
-                    </Badge>
-                  ))}
-                  {profile.personGroups.length > 2 && (
+                  {(profile.personGroups ?? [])
+                    .slice(0, 2)
+                    .map((group, index) => (
+                      <Badge
+                        key={`${profile.id}-group-${group.personGroupId ?? index}`}
+                        variant="outline"
+                        className="text-xs"
+                      >
+                        {getPersonGroupLabel(group, index)}
+                      </Badge>
+                    ))}
+                  {(profile.personGroups?.length ?? 0) > 2 && (
                     <Badge variant="outline" className="text-xs">
-                      +{profile.personGroups.length - 2}
+                      +{(profile.personGroups?.length ?? 0) - 2}
                     </Badge>
                   )}
                 </div>
@@ -122,11 +183,11 @@ export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGr
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-medium">{profile.dateRanges.length} Date Ranges</span>
+                  <span className="font-medium">{profile.dateRanges?.length ?? 0} Date Ranges</span>
                 </div>
-                {profile.dateRanges.length > 0 && (
+                {(profile.dateRanges?.length ?? 0) > 0 && (
                   <Badge variant="outline" className="text-xs">
-                    {profile.dateRanges[0].from} - {profile.dateRanges[0].to}
+                    {getDateRangeLabel(profile.dateRanges?.[0])}
                   </Badge>
                 )}
               </div>
@@ -137,13 +198,20 @@ export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGr
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm">
                 <span className="text-muted-foreground">Assigned to:</span>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <span className="font-medium">{profile.assignedUsersCount} users</span>
+                  <span className="font-medium">
+                    {typeof (profile as { assignedUsersCount?: number }).assignedUsersCount === 'number'
+                      ? (profile as { assignedUsersCount?: number }).assignedUsersCount
+                      : 0}{' '}
+                    users
+                  </span>
                   <div className="flex flex-wrap gap-1">
-                    {profile.assignedRoles.map((role) => (
-                      <Badge key={role} variant="secondary" className="text-xs">
-                        {role}
-                      </Badge>
-                    ))}
+                    {((profile as { assignedRoles?: string[] }).assignedRoles ?? []).map(
+                      (role) => (
+                        <Badge key={role} variant="secondary" className="text-xs">
+                          {role}
+                        </Badge>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
