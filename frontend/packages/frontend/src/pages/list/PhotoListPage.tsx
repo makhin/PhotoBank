@@ -166,7 +166,7 @@ const PhotoListPage = () => {
       >
         <div className="p-6">
           {/* Desktop/Tablet View */}
-          <div className="h-screen w-screen overflow-hidden">
+          <div className="hidden h-screen w-full overflow-hidden lg:block">
             <PhotoTable
               photos={photos}
               isFetchingNextPage={isFetchingNextPage}
@@ -177,7 +177,7 @@ const PhotoListPage = () => {
           </div>
 
           {/* Mobile View */}
-          <div className="lg:hidden">
+          <div className="block lg:hidden">
             <div className="grid gap-4 sm:grid-cols-2">
               {loading
                 ? skeletonPhotos.slice(0, 6).map((p: PhotoItemDto) => (
