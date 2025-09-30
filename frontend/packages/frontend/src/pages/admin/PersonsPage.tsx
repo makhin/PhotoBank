@@ -549,7 +549,7 @@ export default function PersonsPage() {
           <DialogHeader>
             <DialogTitle>Edit Person</DialogTitle>
             <DialogDescription>
-              Update the person's information.
+              Update the person&apos;s information.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

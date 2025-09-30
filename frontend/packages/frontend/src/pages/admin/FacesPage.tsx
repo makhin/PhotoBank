@@ -9,7 +9,6 @@ import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
 import { EditFaceDialog } from '@/components/admin/EditFaceDialog';
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import {
   Pagination,
@@ -196,7 +195,7 @@ export default function FacesPage() {
           {showError ? (
             <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
               <p className="text-sm text-muted-foreground">
-                We couldn't load the faces list. Please try again.
+                We couldn&apos;t load the faces list. Please try again.
               </p>
               <Button variant="outline" onClick={() => refetch()}>
                 Retry loading faces

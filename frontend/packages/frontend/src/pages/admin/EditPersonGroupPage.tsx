@@ -15,7 +15,6 @@ import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import { Input } from '@/shared/ui/input';
-
 import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,6 +36,7 @@ export default function EditPersonGroupPage() {
     query: {
       enabled: isValidGroupId,
       select: (response) => response.data.find((g) => g.id === groupId),
+      queryKey: [],
     },
   });
   const {
@@ -49,7 +49,7 @@ export default function EditPersonGroupPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const persons = useMemo<PersonDto[]>(() => personsResponse?.data ?? [], [personsResponse]);
-  const groupMembers = useMemo<PersonDto[]>(() => (group?.persons ?? []) as PersonDto[], [group]);
+  const groupMembers = useMemo<PersonDto[]>(() => (group?.persons ?? []), [group]);
   const memberIds = useMemo(() => new Set(groupMembers.map((person) => person.id)), [groupMembers]);
   const availablePersons = useMemo(
     () => persons.filter((person) => !memberIds.has(person.id)),
