@@ -14,6 +14,13 @@ export default function NavBar() {
   const { t } = useTranslation();
 
   const linkClass = 'text-sm';
+  const adminLinks = [
+    { to: '/admin/users', label: t('navbarUsersLabel') },
+    { to: '/admin/access-profiles', label: t('navbarAccessProfilesLabel') },
+    { to: '/admin/person-groups', label: t('navbarPersonGroupsLabel') },
+    { to: '/admin/persons', label: t('navbarPersonsLabel') },
+    { to: '/admin/faces', label: t('navbarFacesLabel') },
+  ];
 
   return (
     <nav className="border-b bg-card p-4">
@@ -38,13 +45,14 @@ export default function NavBar() {
             <NavLink to="/openai">{t('navbarOpenAiLabel')}</NavLink>
           </Button>
         </li>
-        {isAdmin && (
-          <li>
-            <Button variant="link" className={linkClass} asChild>
-              <NavLink to="/admin/users">{t('navbarUsersLabel')}</NavLink>
-            </Button>
-          </li>
-        )}
+        {isAdmin &&
+          adminLinks.map(({ to, label }) => (
+            <li key={to}>
+              <Button variant="link" className={linkClass} asChild>
+                <NavLink to={to}>{label}</NavLink>
+              </Button>
+            </li>
+          ))}
         {loggedIn ? (
           <li className="ml-auto">
             <Button variant="link" className={linkClass} asChild>

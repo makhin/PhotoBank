@@ -13,6 +13,13 @@ const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
 const LogoutPage = lazy(() => import('@/pages/auth/LogoutPage'));
 const MyProfilePage = lazy(() => import('@/pages/profile/MyProfilePage'));
 const UsersPage = lazy(() => import('@/pages/admin/UsersPage'));
+const AccessProfilesPage = lazy(() => import('@/pages/admin/AccessProfilesPage'));
+const PersonGroupsPage = lazy(() => import('@/pages/admin/PersonGroupsPage'));
+const EditPersonGroupPage = lazy(
+  () => import('@/pages/admin/EditPersonGroupPage'),
+);
+const PersonsPage = lazy(() => import('@/pages/admin/PersonsPage'));
+const FacesPage = lazy(() => import('@/pages/admin/FacesPage'));
 const ServiceInfoPage = lazy(() => import('@/pages/service/ServiceInfoPage'));
 const OpenAIPage = lazy(() => import('@/pages/openai/OpenAIPage'));
 
@@ -41,6 +48,11 @@ export const AppRoutes = () => (
           <Route path="/photos/:id" element={<PhotoDetailsPage />} />
           <Route element={<RequireAdmin />}>
             <Route path="/admin/users" element={<UsersPage />} />
+            <Route path="/admin/access-profiles" element={<AccessProfilesPage />} />
+            <Route path="/admin/person-groups" element={<PersonGroupsPage />} />
+            <Route path="/admin/person-groups/:id" element={<EditPersonGroupPage />} />
+            <Route path="/admin/persons" element={<PersonsPage />} />
+            <Route path="/admin/faces" element={<FacesPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/login" replace />} />
