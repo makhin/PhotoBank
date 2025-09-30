@@ -1,17 +1,20 @@
 import * as React from "react";
 
-import type { ToasterProps } from "@/shared/ui/sonner";
+import type { ExternalToast } from "sonner";
 
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
 
 type ToasterActionElement = React.ReactNode;
 
-type ToasterToast = ToasterProps & {
+type ToasterToast = Omit<ExternalToast, "id" | "title" | "description" | "action"> & {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToasterActionElement;
+  variant?: "default" | "destructive";
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 type Action =
@@ -21,7 +24,7 @@ type Action =
 }
   | {
   type: "UPDATE_TOAST";
-  toast: Partial<ToasterToast>;
+  toast: Partial<ToasterToast> & Pick<ToasterToast, "id">;
 }
   | {
   type: "DISMISS_TOAST";
@@ -120,10 +123,12 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">;
 
+type ToastUpdate = Partial<Omit<ToasterToast, "id">>;
+
 function toast({ ...props }: Toast) {
   const id = genId();
 
-  const update = (props: ToasterToast) =>
+  const update = (props: ToastUpdate) =>
     dispatch({
       type: "UPDATE_TOAST",
       toast: { ...props, id },
@@ -136,7 +141,7 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      onOpenChange: (open: never) => {
+      onOpenChange: (open: boolean) => {
         if (!open) dismiss();
       },
     },
