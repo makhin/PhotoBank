@@ -3,7 +3,7 @@ clone:
     image: woodpeckerci/plugin-git
     settings:
       partial: false   # отключаем partial clone
-      depth: 200         # полный клон
+      depth: 0         # полный клон
       tags: true       # нужны теги для NBGV
 
 steps:
