@@ -169,6 +169,7 @@ export interface PersonGroupDto {
   id: number;
   /** @minLength 1 */
   name: string;
+  persons: PersonDto[];
 }
 
 export interface PersonItemDto {

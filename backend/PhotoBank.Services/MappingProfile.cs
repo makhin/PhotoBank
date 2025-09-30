@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System;
+using AutoMapper;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Models;
 using PhotoBank.ViewModel.Dto;
@@ -56,6 +57,8 @@ namespace PhotoBank.Services
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<PersonGroup, PersonGroupDto>()
+                .ForMember(dest => dest.Persons,
+                    opt => opt.MapFrom(src => src.Persons ?? Array.Empty<Person>()))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<PersonFace, PersonFaceDto>()
