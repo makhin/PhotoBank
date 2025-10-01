@@ -5,6 +5,7 @@ import type { PersonDto, PersonGroupDto } from '@photobank/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getPersonGroupsGetAllQueryKey,
+  type PersonGroupsGetAllQueryResult,
   usePersonGroupsAddPerson,
   usePersonGroupsGetAll,
   usePersonGroupsRemovePerson,
@@ -23,6 +24,7 @@ export default function EditPersonGroupPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const personGroupsQueryKey = useMemo(() => getPersonGroupsGetAllQueryKey(), []);
   const groupId = id ? Number(id) : NaN;
   const isValidGroupId = Number.isFinite(groupId);
   const {
@@ -77,9 +79,46 @@ export default function EditPersonGroupPage() {
   const addPersonMutation = usePersonGroupsAddPerson({
     mutation: {
       onSuccess: async (_, variables) => {
-        await queryClient.invalidateQueries({ queryKey: getPersonGroupsGetAllQueryKey() });
+        const personToAdd = persons.find((person) => person.id === variables.personId);
 
-        const personName = persons.find((person) => person.id === variables.personId)?.name;
+        queryClient.setQueryData<PersonGroupsGetAllQueryResult | undefined>(
+          personGroupsQueryKey,
+          (cachedGroups) => {
+            if (!cachedGroups) {
+              return cachedGroups;
+            }
+
+            return {
+              ...cachedGroups,
+              data: cachedGroups.data.map((currentGroup) => {
+                if (currentGroup.id !== variables.groupId) {
+                  return currentGroup;
+                }
+
+                const normalizedPersons = Array.isArray(currentGroup.persons)
+                  ? currentGroup.persons
+                  : [];
+                const personsList = [...normalizedPersons];
+
+                if (
+                  personToAdd &&
+                  !personsList.some((member) => member.id === personToAdd.id)
+                ) {
+                  personsList.push(personToAdd);
+                }
+
+                return {
+                  ...currentGroup,
+                  persons: personsList,
+                };
+              }),
+            };
+          }
+        );
+
+        await queryClient.invalidateQueries({ queryKey: personGroupsQueryKey });
+
+        const personName = personToAdd?.name;
 
         toast({
           title: 'Person added',
@@ -101,7 +140,36 @@ export default function EditPersonGroupPage() {
   const removePersonMutation = usePersonGroupsRemovePerson({
     mutation: {
       onSuccess: async (_, variables) => {
-        await queryClient.invalidateQueries({ queryKey: getPersonGroupsGetAllQueryKey() });
+        queryClient.setQueryData<PersonGroupsGetAllQueryResult | undefined>(
+          personGroupsQueryKey,
+          (cachedGroups) => {
+            if (!cachedGroups) {
+              return cachedGroups;
+            }
+
+            return {
+              ...cachedGroups,
+              data: cachedGroups.data.map((currentGroup) => {
+                if (currentGroup.id !== variables.groupId) {
+                  return currentGroup;
+                }
+
+                const normalizedPersons = Array.isArray(currentGroup.persons)
+                  ? currentGroup.persons
+                  : [];
+
+                return {
+                  ...currentGroup,
+                  persons: normalizedPersons.filter(
+                    (member) => member.id !== variables.personId
+                  ),
+                };
+              }),
+            };
+          }
+        );
+
+        await queryClient.invalidateQueries({ queryKey: personGroupsQueryKey });
 
         const personName = persons.find((person) => person.id === variables.personId)?.name;
 
