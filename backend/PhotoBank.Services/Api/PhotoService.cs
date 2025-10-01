@@ -141,11 +141,20 @@ public class PhotoService : IPhotoService
 
         _personGroups = new Lazy<Task<IReadOnlyList<PersonGroupDto>>>(() =>
             _cache.GetOrCreateAsync(CacheKeys.PersonGroups, async () =>
-                (IReadOnlyList<PersonGroupDto>)await personGroupRepository.GetAll()
+            {
+                var groups = await personGroupRepository.GetAll()
                     .AsNoTracking()
                     .OrderBy(pg => pg.Name).ThenBy(pg => pg.Id)
                     .ProjectTo<PersonGroupDto>(_mapper.ConfigurationProvider)
-                    .ToListAsync()));
+                    .ToListAsync();
+
+                foreach (var group in groups)
+                {
+                    group.Persons ??= Array.Empty<PersonDto>();
+                }
+
+                return (IReadOnlyList<PersonGroupDto>)groups;
+            }));
 
         _storages = new Lazy<Task<IReadOnlyList<StorageDto>>>(() =>
             _cache.GetOrCreateAsync(CacheKeys.Storages(_currentUser), async () =>
