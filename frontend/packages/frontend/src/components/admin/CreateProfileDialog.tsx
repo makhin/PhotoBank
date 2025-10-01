@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import * as z from 'zod';
 import { format } from 'date-fns';
 import { Save, X, Plus, Trash2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -40,6 +39,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Separator } from '@/shared/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import {
+  accessProfileFormSchema,
+  type AccessProfileFormValues,
+} from './accessProfileFormSchema';
 
 type AccessProfileDraft = Partial<
   Omit<AccessProfileDto, 'storages' | 'personGroups' | 'dateRanges'>
@@ -48,25 +51,6 @@ type AccessProfileDraft = Partial<
   personGroups?: Array<Partial<AccessProfilePersonGroupAllowDto>>;
   dateRanges?: Array<Partial<AccessProfileDateRangeAllowDto>>;
 };
-
-const formSchema = z.object({
-  name: z.string().min(1, 'Profile name is required').max(128, 'Name must be 128 characters or less'),
-  description: z
-    .string()
-    .max(512, 'Description must be 512 characters or less')
-    .optional(),
-  flags_CanSeeNsfw: z.boolean(),
-  storages: z.array(z.number()).optional(),
-  personGroups: z.array(z.number()).optional(),
-  dateRanges: z
-    .array(
-      z.object({
-        fromDate: z.string().optional(),
-        toDate: z.string().optional(),
-      })
-    )
-    .optional(),
-});
 
 interface CreateProfileDialogProps {
   open: boolean;
@@ -90,8 +74,8 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
     [personGroupsQuery.data]
   );
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<AccessProfileFormValues>({
+    resolver: zodResolver(accessProfileFormSchema),
     defaultValues: {
       name: '',
       description: '',
@@ -127,26 +111,30 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
     },
   });
 
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (values: AccessProfileFormValues) => {
+    const normalizedDateRanges =
+      values.dateRanges
+        ?.filter(
+          (
+            range
+          ): range is { fromDate: string; toDate: string } =>
+            Boolean(range.fromDate) && Boolean(range.toDate)
+        )
+        .map(
+          (range) =>
+            ({
+              fromDate: new Date(range.fromDate),
+              toDate: new Date(range.toDate),
+            }) satisfies Partial<AccessProfileDateRangeAllowDto>
+        ) ?? [];
+
     const payload: AccessProfileDraft = {
       name: values.name,
       description: values.description || undefined,
       flags_CanSeeNsfw: values.flags_CanSeeNsfw,
       storages: values.storages?.map((storageId) => ({ storageId })) ?? [],
       personGroups: values.personGroups?.map((personGroupId) => ({ personGroupId })) ?? [],
-      dateRanges:
-        values.dateRanges
-          ?.map((range) => {
-            if (!range.fromDate || !range.toDate) {
-              return null;
-            }
-
-            return {
-              fromDate: new Date(range.fromDate),
-              toDate: new Date(range.toDate),
-            } satisfies Partial<AccessProfileDateRangeAllowDto>;
-          })
-          .filter((range): range is Partial<AccessProfileDateRangeAllowDto> => range !== null) ?? [],
+      dateRanges: normalizedDateRanges,
     };
 
     try {
