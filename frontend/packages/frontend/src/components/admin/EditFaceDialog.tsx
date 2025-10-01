@@ -5,6 +5,8 @@ import type { FaceIdentityDto, PersonDto } from '@photobank/shared/api/photobank
 import {
   getFacesGetQueryKey,
   type FacesUpdateMutationBody,
+  IdentityStatus,
+  type IdentityStatus as IdentityStatusType,
   useFacesUpdate,
   usePersonsGetAll,
 } from '@photobank/shared/api/photobank';
@@ -82,23 +84,18 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
   });
 
   const identityStatusOptions = useMemo(() => {
-    const baseStatuses = [
-      'Undefined',
-      'Pending',
-      'Verified',
-      'Rejected',
-      'Identified',
-      'NotIdentified',
-      'NotDetected',
-      'ForReprocessing',
-      'StopProcessing',
+    const baseStatuses: Array<IdentityStatusType | string> = [
+      ...Object.values(IdentityStatus),
     ];
 
-    if (face?.identityStatus && !baseStatuses.includes(face.identityStatus)) {
+    if (
+      face?.identityStatus &&
+      !baseStatuses.includes(face.identityStatus as IdentityStatusType)
+    ) {
       baseStatuses.push(face.identityStatus);
     }
 
-    return Array.from(new Set(baseStatuses));
+    return baseStatuses;
   }, [face?.identityStatus]);
 
   if (!face) return null;

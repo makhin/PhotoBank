@@ -183,19 +183,17 @@ export default function FacesPage() {
     }
   };
 
-  const getStatusColor = (status?: string | null) => {
+  const getStatusColor = (status?: IdentityStatusType | null) => {
     switch (status) {
-      case 'Verified':
-      case 'Identified':
+      case IdentityStatusEnum.Identified:
         return 'bg-success text-success-foreground';
-      case 'Pending':
-      case 'NotDetected':
-      case 'NotIdentified':
-      case 'ForReprocessing':
+      case IdentityStatusEnum.ForReprocessing:
+      case IdentityStatusEnum.NotDetected:
+      case IdentityStatusEnum.NotIdentified:
         return 'bg-warning text-warning-foreground';
-      case 'Rejected':
-      case 'StopProcessing':
+      case IdentityStatusEnum.StopProcessing:
         return 'bg-destructive text-destructive-foreground';
+      case IdentityStatusEnum.Undefined:
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -312,7 +310,9 @@ export default function FacesPage() {
                         face.personName ??
                         (face.person ? face.person.name ?? null : null) ??
                         (personId != null ? `Person #${personId}` : null);
-                      const status = statusLabel(face.normalizedIdentityStatus);
+                      const rawStatus = face.identityStatus ?? face.normalizedIdentityStatus;
+                      const canonicalStatus = normalizeIdentityStatus(rawStatus);
+                      const status = statusLabel(rawStatus);
                       const faceIdentifier = face.id ?? face.faceId;
 
                       return (
@@ -337,7 +337,7 @@ export default function FacesPage() {
                             )}
                           </TableCell>
                           <TableCell>
-                            <Badge className={getStatusColor(status)}>{status}</Badge>
+                            <Badge className={getStatusColor(canonicalStatus)}>{status}</Badge>
                           </TableCell>
                           <TableCell>
                             {createdAt ? (
