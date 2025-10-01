@@ -58,7 +58,7 @@ namespace PhotoBank.Services
 
             CreateMap<PersonGroup, PersonGroupDto>()
                 .ForMember(dest => dest.Persons,
-                    opt => opt.MapFrom(src => src.Persons ?? Array.Empty<Person>()))
+                    opt => opt.MapFrom(src => src.Persons!))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<PersonFace, PersonFaceDto>()
