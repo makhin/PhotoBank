@@ -4,13 +4,19 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-export interface AccessProfile {
-  id?: number;
+export interface AccessProfileDateRangeAllowDto {
+  profileId: number;
+  fromDate: Date;
+  toDate: Date;
+}
+
+export interface AccessProfileDto {
+  id: number;
   /**
+   * @minLength 1
    * @maxLength 128
-   * @nullable
    */
-  name?: string | null;
+  name: string;
   /**
    * @maxLength 512
    * @nullable
@@ -18,30 +24,21 @@ export interface AccessProfile {
   description?: string | null;
   flags_CanSeeNsfw?: boolean;
   /** @nullable */
-  storages?: AccessProfileStorageAllow[] | null;
+  storages?: AccessProfileStorageAllowDto[] | null;
   /** @nullable */
-  personGroups?: AccessProfilePersonGroupAllow[] | null;
+  personGroups?: AccessProfilePersonGroupAllowDto[] | null;
   /** @nullable */
-  dateRanges?: AccessProfileDateRangeAllow[] | null;
+  dateRanges?: AccessProfileDateRangeAllowDto[] | null;
 }
 
-export interface AccessProfileDateRangeAllow {
-  profileId?: number;
-  fromDate?: Date;
-  toDate?: Date;
-  profile?: AccessProfile;
+export interface AccessProfilePersonGroupAllowDto {
+  profileId: number;
+  personGroupId: number;
 }
 
-export interface AccessProfilePersonGroupAllow {
-  profileId?: number;
-  personGroupId?: number;
-  profile?: AccessProfile;
-}
-
-export interface AccessProfileStorageAllow {
-  profileId?: number;
-  storageId?: number;
-  profile?: AccessProfile;
+export interface AccessProfileStorageAllowDto {
+  profileId: number;
+  storageId: number;
 }
 
 export interface CreateUserDto {

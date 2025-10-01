@@ -15,14 +15,14 @@ import type {
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type { AccessProfile } from '../photoBankApi.schemas';
+import type { AccessProfileDto, ProblemDetails } from '../photoBankApi.schemas';
 
 import { customFetcher } from '.././fetcher';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 export type adminAccessProfilesListResponse200 = {
-  data: AccessProfile[];
+  data: AccessProfileDto[];
   status: 200;
 };
 
@@ -108,13 +108,13 @@ export function useAdminAccessProfilesList<
   return query;
 }
 
-export type adminAccessProfilesCreateResponse200 = {
-  data: null;
-  status: 200;
+export type adminAccessProfilesCreateResponse201 = {
+  data: AccessProfileDto;
+  status: 201;
 };
 
 export type adminAccessProfilesCreateResponseComposite =
-  adminAccessProfilesCreateResponse200;
+  adminAccessProfilesCreateResponse201;
 
 export type adminAccessProfilesCreateResponse =
   adminAccessProfilesCreateResponseComposite & {
@@ -126,7 +126,7 @@ export const getAdminAccessProfilesCreateUrl = () => {
 };
 
 export const adminAccessProfilesCreate = async (
-  accessProfile: AccessProfile,
+  accessProfileDto: AccessProfileDto,
   options?: RequestInit
 ): Promise<adminAccessProfilesCreateResponse> => {
   return customFetcher<adminAccessProfilesCreateResponse>(
@@ -135,7 +135,7 @@ export const adminAccessProfilesCreate = async (
       ...options,
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...options?.headers },
-      body: JSON.stringify(accessProfile),
+      body: JSON.stringify(accessProfileDto),
     }
   );
 };
@@ -147,14 +147,14 @@ export const getAdminAccessProfilesCreateMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof adminAccessProfilesCreate>>,
     TError,
-    { data: AccessProfile },
+    { data: AccessProfileDto },
     TContext
   >;
   request?: SecondParameter<typeof customFetcher>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof adminAccessProfilesCreate>>,
   TError,
-  { data: AccessProfile },
+  { data: AccessProfileDto },
   TContext
 > => {
   const mutationKey = ['adminAccessProfilesCreate'];
@@ -168,7 +168,7 @@ export const getAdminAccessProfilesCreateMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof adminAccessProfilesCreate>>,
-    { data: AccessProfile }
+    { data: AccessProfileDto }
   > = (props) => {
     const { data } = props ?? {};
 
@@ -181,7 +181,7 @@ export const getAdminAccessProfilesCreateMutationOptions = <
 export type AdminAccessProfilesCreateMutationResult = NonNullable<
   Awaited<ReturnType<typeof adminAccessProfilesCreate>>
 >;
-export type AdminAccessProfilesCreateMutationBody = AccessProfile;
+export type AdminAccessProfilesCreateMutationBody = AccessProfileDto;
 export type AdminAccessProfilesCreateMutationError = unknown;
 
 export const useAdminAccessProfilesCreate = <
@@ -191,14 +191,14 @@ export const useAdminAccessProfilesCreate = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof adminAccessProfilesCreate>>,
     TError,
-    { data: AccessProfile },
+    { data: AccessProfileDto },
     TContext
   >;
   request?: SecondParameter<typeof customFetcher>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof adminAccessProfilesCreate>>,
   TError,
-  { data: AccessProfile },
+  { data: AccessProfileDto },
   TContext
 > => {
   const mutationOptions = getAdminAccessProfilesCreateMutationOptions(options);
@@ -206,12 +206,18 @@ export const useAdminAccessProfilesCreate = <
   return useMutation(mutationOptions);
 };
 export type adminAccessProfilesGetResponse200 = {
-  data: AccessProfile;
+  data: AccessProfileDto;
   status: 200;
 };
 
+export type adminAccessProfilesGetResponse404 = {
+  data: ProblemDetails;
+  status: 404;
+};
+
 export type adminAccessProfilesGetResponseComposite =
-  adminAccessProfilesGetResponse200;
+  | adminAccessProfilesGetResponse200
+  | adminAccessProfilesGetResponse404;
 
 export type adminAccessProfilesGetResponse =
   adminAccessProfilesGetResponseComposite & {
@@ -241,7 +247,7 @@ export const getAdminAccessProfilesGetQueryKey = (id?: number) => {
 
 export const getAdminAccessProfilesGetQueryOptions = <
   TData = Awaited<ReturnType<typeof adminAccessProfilesGet>>,
-  TError = unknown,
+  TError = ProblemDetails,
 >(
   id: number,
   options?: {
@@ -277,11 +283,11 @@ export const getAdminAccessProfilesGetQueryOptions = <
 export type AdminAccessProfilesGetQueryResult = NonNullable<
   Awaited<ReturnType<typeof adminAccessProfilesGet>>
 >;
-export type AdminAccessProfilesGetQueryError = unknown;
+export type AdminAccessProfilesGetQueryError = ProblemDetails;
 
 export function useAdminAccessProfilesGet<
   TData = Awaited<ReturnType<typeof adminAccessProfilesGet>>,
-  TError = unknown,
+  TError = ProblemDetails,
 >(
   id: number,
   options?: {
@@ -304,13 +310,25 @@ export function useAdminAccessProfilesGet<
   return query;
 }
 
-export type adminAccessProfilesUpdateResponse200 = {
+export type adminAccessProfilesUpdateResponse204 = {
   data: null;
-  status: 200;
+  status: 204;
+};
+
+export type adminAccessProfilesUpdateResponse400 = {
+  data: ProblemDetails;
+  status: 400;
+};
+
+export type adminAccessProfilesUpdateResponse404 = {
+  data: ProblemDetails;
+  status: 404;
 };
 
 export type adminAccessProfilesUpdateResponseComposite =
-  adminAccessProfilesUpdateResponse200;
+  | adminAccessProfilesUpdateResponse204
+  | adminAccessProfilesUpdateResponse400
+  | adminAccessProfilesUpdateResponse404;
 
 export type adminAccessProfilesUpdateResponse =
   adminAccessProfilesUpdateResponseComposite & {
@@ -323,7 +341,7 @@ export const getAdminAccessProfilesUpdateUrl = (id: number) => {
 
 export const adminAccessProfilesUpdate = async (
   id: number,
-  accessProfile: AccessProfile,
+  accessProfileDto: AccessProfileDto,
   options?: RequestInit
 ): Promise<adminAccessProfilesUpdateResponse> => {
   return customFetcher<adminAccessProfilesUpdateResponse>(
@@ -332,26 +350,26 @@ export const adminAccessProfilesUpdate = async (
       ...options,
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', ...options?.headers },
-      body: JSON.stringify(accessProfile),
+      body: JSON.stringify(accessProfileDto),
     }
   );
 };
 
 export const getAdminAccessProfilesUpdateMutationOptions = <
-  TError = unknown,
+  TError = ProblemDetails | ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof adminAccessProfilesUpdate>>,
     TError,
-    { id: number; data: AccessProfile },
+    { id: number; data: AccessProfileDto },
     TContext
   >;
   request?: SecondParameter<typeof customFetcher>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof adminAccessProfilesUpdate>>,
   TError,
-  { id: number; data: AccessProfile },
+  { id: number; data: AccessProfileDto },
   TContext
 > => {
   const mutationKey = ['adminAccessProfilesUpdate'];
@@ -365,7 +383,7 @@ export const getAdminAccessProfilesUpdateMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof adminAccessProfilesUpdate>>,
-    { id: number; data: AccessProfile }
+    { id: number; data: AccessProfileDto }
   > = (props) => {
     const { id, data } = props ?? {};
 
@@ -378,24 +396,26 @@ export const getAdminAccessProfilesUpdateMutationOptions = <
 export type AdminAccessProfilesUpdateMutationResult = NonNullable<
   Awaited<ReturnType<typeof adminAccessProfilesUpdate>>
 >;
-export type AdminAccessProfilesUpdateMutationBody = AccessProfile;
-export type AdminAccessProfilesUpdateMutationError = unknown;
+export type AdminAccessProfilesUpdateMutationBody = AccessProfileDto;
+export type AdminAccessProfilesUpdateMutationError =
+  | ProblemDetails
+  | ProblemDetails;
 
 export const useAdminAccessProfilesUpdate = <
-  TError = unknown,
+  TError = ProblemDetails | ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof adminAccessProfilesUpdate>>,
     TError,
-    { id: number; data: AccessProfile },
+    { id: number; data: AccessProfileDto },
     TContext
   >;
   request?: SecondParameter<typeof customFetcher>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof adminAccessProfilesUpdate>>,
   TError,
-  { id: number; data: AccessProfile },
+  { id: number; data: AccessProfileDto },
   TContext
 > => {
   const mutationOptions = getAdminAccessProfilesUpdateMutationOptions(options);

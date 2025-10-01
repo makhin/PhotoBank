@@ -4,7 +4,7 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import type { AccessProfile } from '../photoBankApi.schemas';
+import type { AccessProfileDto } from '../photoBankApi.schemas';
 
 import { photobankAxios } from '../../axios-instance';
 
@@ -14,21 +14,21 @@ export const getAdminAccessProfiles = () => {
   const adminAccessProfilesList = (
     options?: SecondParameter<typeof photobankAxios>
   ) => {
-    return photobankAxios<AccessProfile[]>(
+    return photobankAxios<AccessProfileDto[]>(
       { url: `/admin/access-profiles`, method: 'GET' },
       options
     );
   };
   const adminAccessProfilesCreate = (
-    accessProfile: AccessProfile,
+    accessProfileDto: AccessProfileDto,
     options?: SecondParameter<typeof photobankAxios>
   ) => {
-    return photobankAxios<null>(
+    return photobankAxios<AccessProfileDto>(
       {
         url: `/admin/access-profiles`,
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        data: accessProfile,
+        data: accessProfileDto,
       },
       options
     );
@@ -37,14 +37,14 @@ export const getAdminAccessProfiles = () => {
     id: number,
     options?: SecondParameter<typeof photobankAxios>
   ) => {
-    return photobankAxios<AccessProfile>(
+    return photobankAxios<AccessProfileDto>(
       { url: `/admin/access-profiles/${id}`, method: 'GET' },
       options
     );
   };
   const adminAccessProfilesUpdate = (
     id: number,
-    accessProfile: AccessProfile,
+    accessProfileDto: AccessProfileDto,
     options?: SecondParameter<typeof photobankAxios>
   ) => {
     return photobankAxios<null>(
@@ -52,7 +52,7 @@ export const getAdminAccessProfiles = () => {
         url: `/admin/access-profiles/${id}`,
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        data: accessProfile,
+        data: accessProfileDto,
       },
       options
     );

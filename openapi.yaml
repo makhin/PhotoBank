@@ -18,12 +18,12 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AccessProfile'
+                  $ref: '#/components/schemas/AccessProfileDto'
             text/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AccessProfile'
+                  $ref: '#/components/schemas/AccessProfileDto'
     post:
       tags:
         - AdminAccessProfiles
@@ -32,16 +32,23 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccessProfile'
+              $ref: '#/components/schemas/AccessProfileDto'
           text/json:
             schema:
-              $ref: '#/components/schemas/AccessProfile'
+              $ref: '#/components/schemas/AccessProfileDto'
           application/*+json:
             schema:
-              $ref: '#/components/schemas/AccessProfile'
+              $ref: '#/components/schemas/AccessProfileDto'
       responses:
-        '200':
-          description: OK
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessProfileDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/AccessProfileDto'
   '/admin/access-profiles/{id}':
     get:
       tags:
@@ -60,10 +67,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccessProfile'
+                $ref: '#/components/schemas/AccessProfileDto'
             text/json:
               schema:
-                $ref: '#/components/schemas/AccessProfile'
+                $ref: '#/components/schemas/AccessProfileDto'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
     put:
       tags:
         - AdminAccessProfiles
@@ -79,16 +95,34 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccessProfile'
+              $ref: '#/components/schemas/AccessProfileDto'
           text/json:
             schema:
-              $ref: '#/components/schemas/AccessProfile'
+              $ref: '#/components/schemas/AccessProfileDto'
           application/*+json:
             schema:
-              $ref: '#/components/schemas/AccessProfile'
+              $ref: '#/components/schemas/AccessProfileDto'
       responses:
-        '200':
-          description: OK
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
     delete:
       tags:
         - AdminAccessProfiles
@@ -1197,39 +1231,11 @@ paths:
                 type: string
 components:
   schemas:
-    AccessProfile:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        name:
-          maxLength: 128
-          type: string
-          nullable: true
-        description:
-          maxLength: 512
-          type: string
-          nullable: true
-        flags_CanSeeNsfw:
-          type: boolean
-        storages:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccessProfileStorageAllow'
-          nullable: true
-        personGroups:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccessProfilePersonGroupAllow'
-          nullable: true
-        dateRanges:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccessProfileDateRangeAllow'
-          nullable: true
-      additionalProperties: false
-    AccessProfileDateRangeAllow:
+    AccessProfileDateRangeAllowDto:
+      required:
+        - fromDate
+        - profileId
+        - toDate
       type: object
       properties:
         profileId:
@@ -1241,10 +1247,46 @@ components:
         toDate:
           type: string
           format: date
-        profile:
-          $ref: '#/components/schemas/AccessProfile'
       additionalProperties: false
-    AccessProfilePersonGroupAllow:
+    AccessProfileDto:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          maxLength: 128
+          minLength: 1
+          type: string
+        description:
+          maxLength: 512
+          type: string
+          nullable: true
+        flags_CanSeeNsfw:
+          type: boolean
+        storages:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessProfileStorageAllowDto'
+          nullable: true
+        personGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessProfilePersonGroupAllowDto'
+          nullable: true
+        dateRanges:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessProfileDateRangeAllowDto'
+          nullable: true
+      additionalProperties: false
+    AccessProfilePersonGroupAllowDto:
+      required:
+        - personGroupId
+        - profileId
       type: object
       properties:
         profileId:
@@ -1253,10 +1295,11 @@ components:
         personGroupId:
           type: integer
           format: int32
-        profile:
-          $ref: '#/components/schemas/AccessProfile'
       additionalProperties: false
-    AccessProfileStorageAllow:
+    AccessProfileStorageAllowDto:
+      required:
+        - profileId
+        - storageId
       type: object
       properties:
         profileId:
@@ -1265,8 +1308,6 @@ components:
         storageId:
           type: integer
           format: int32
-        profile:
-          $ref: '#/components/schemas/AccessProfile'
       additionalProperties: false
     CreateUserDto:
       required:
