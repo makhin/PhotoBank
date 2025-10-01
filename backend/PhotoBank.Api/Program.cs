@@ -2,13 +2,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using PhotoBank.Api.MinimalApi;
-using PhotoBank.Api.Swagger;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DependencyInjection;
 using PhotoBank.ViewModel.Dto;
 using HealthChecks.UI.Client;
 using Serilog;
 using System.Reflection;
+using PhotoBank.DependencyInjection.Swagger;
 
 namespace PhotoBank.Api
 {
@@ -38,10 +38,8 @@ namespace PhotoBank.Api
                 .AddPhotobankApi(builder.Configuration)
                 .AddPhotobankMvc(builder.Configuration)
                 .AddPhotobankCors()
-                .AddPhotobankSwagger(c =>
-                {
-                    c.DocumentFilter<ServersDocumentFilter>();
-                });
+                .AddPhotobankSwagger();
+
             var app = builder.Build();
 
             app.UsePathBase("/api");

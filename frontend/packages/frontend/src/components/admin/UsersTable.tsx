@@ -44,7 +44,7 @@ export function UsersTable({ users, onUserSelect }: UsersTableProps) {
   };
 
   const getRoleBadgeVariant = (role: string) => {
-    return role === 'Administrator' ? 'default' : 'secondary';
+    return role === 'Admin' ? 'default' : 'secondary';
   };
 
   if (users.length === 0) {

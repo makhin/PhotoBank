@@ -1,8 +1,7 @@
-using System.Collections.Generic;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace PhotoBank.Api.Swagger;
+namespace PhotoBank.DependencyInjection.Swagger;
 
 public class ServersDocumentFilter : IDocumentFilter
 {

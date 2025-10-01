@@ -31,7 +31,7 @@ import {
 } from '@/shared/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
-const roles = ['Administrator', 'User'] as const;
+const roles = ['Admin', 'User'] as const;
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -76,6 +76,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       
       form.reset();
       onOpenChange(false);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast({
         title: 'Error',
@@ -100,6 +101,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
         </DialogHeader>
 
         <Form {...form}>
+          {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}

@@ -217,7 +217,7 @@ export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawe
                 <SheetTitle className="text-xl">{user.email}</SheetTitle>
                 <div className="flex gap-1 mt-1">
                   {user.roles?.map((role) => (
-                    <Badge key={role} variant={role === 'Administrator' ? 'default' : 'secondary'}>
+                    <Badge key={role} variant={role === 'Admin' ? 'default' : 'secondary'}>
                       {role}
                     </Badge>
                   ))}
@@ -230,7 +230,6 @@ export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawe
         <Tabs defaultValue="profile" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3 h-12">
             <TabsTrigger value="profile" className="text-xs sm:text-sm">Profile</TabsTrigger>
-            <TabsTrigger value="claims" className="text-xs sm:text-sm">Claims</TabsTrigger>
             <TabsTrigger value="access" className="text-xs sm:text-sm">Access</TabsTrigger>
           </TabsList>
 

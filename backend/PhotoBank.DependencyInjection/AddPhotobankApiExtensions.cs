@@ -162,6 +162,7 @@ public static partial class ServiceCollectionExtensions
             });
 
             options.SchemaFilter<StringEnumSchemaFilter>();
+            options.DocumentFilter<ServersDocumentFilter>();
 
             options.CustomOperationIds(apiDesc =>
             {
@@ -173,6 +174,31 @@ public static partial class ServiceCollectionExtensions
                 }
 
                 return null;
+            });
+
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "¬ведите токен JWT так: Bearer {токен}"
+            });
+
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
             });
 
             configure?.Invoke(options);

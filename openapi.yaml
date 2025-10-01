@@ -1287,6 +1287,7 @@ components:
           type: array
           items:
             type: string
+          nullable: true
       additionalProperties: false
     FaceBoxDto:
       required:
@@ -1703,6 +1704,7 @@ components:
           type: array
           items:
             type: string
+          nullable: true
       additionalProperties: false
     StorageDto:
       required:
@@ -1840,4 +1842,13 @@ components:
           type: array
           items:
             type: string
+          nullable: true
       additionalProperties: false
+  securitySchemes:
+    Bearer:
+      type: http
+      description: 'Введите токен JWT так: Bearer {токен}'
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - Bearer: [ ]

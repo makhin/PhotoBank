@@ -3,11 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { hasAdminRole } from './useIsAdmin';
 
 describe('hasAdminRole', () => {
-  it('returns true when Administrator role is present', () => {
-    expect(hasAdminRole(['User', 'Administrator'])).toBe(true);
+  it('returns true when Admin role is present', () => {
+    expect(hasAdminRole(['User', 'Admin'])).toBe(true);
   });
 
-  it('returns false when Administrator role is missing', () => {
+  it('returns false when Admin role is missing', () => {
     expect(hasAdminRole(['User'])).toBe(false);
   });
 

@@ -1,7 +1,7 @@
 import { useAuthGetUser } from '../api/photobank';
 import type { Claim, UserWithClaims } from '../types/claims';
 
-const ADMIN_ROLE = 'Administrator';
+const ADMIN_ROLE = 'Admin';
 const ROLE_CLAIM_TYPES = [
   'role',
   'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',

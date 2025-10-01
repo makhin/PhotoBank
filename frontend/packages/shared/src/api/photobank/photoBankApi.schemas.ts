@@ -51,7 +51,8 @@ export interface CreateUserDto {
   password: string | null;
   /** @nullable */
   phoneNumber?: string | null;
-  roles?: string[];
+  /** @nullable */
+  roles?: string[] | null;
 }
 
 export interface FaceBoxDto {
@@ -258,7 +259,8 @@ export interface ResetPasswordDto {
 }
 
 export interface SetRolesDto {
-  roles?: string[];
+  /** @nullable */
+  roles?: string[] | null;
 }
 
 export interface StorageDto {
@@ -326,7 +328,8 @@ export interface UserDto {
   telegramUserId?: number | null;
   /** @nullable */
   telegramSendTimeUtc?: string | null;
-  roles?: string[];
+  /** @nullable */
+  roles?: string[] | null;
 }
 
 export type FacesGetParams = {
