@@ -71,13 +71,16 @@ public class AuthController(
         if (user == null)
             return NotFound();
 
+        var roles = await userManager.GetRolesAsync(user);
+
         return Ok(new UserDto
         {
             Id = user.Id,
             Email = user.Email ?? string.Empty,
             PhoneNumber = user.PhoneNumber,
             TelegramUserId = user.TelegramUserId,
-            TelegramSendTimeUtc = user.TelegramSendTimeUtc
+            TelegramSendTimeUtc = user.TelegramSendTimeUtc,
+            Roles = roles.ToArray()
         });
     }
 
