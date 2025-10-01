@@ -99,5 +99,32 @@ public class PersonGroupServiceTests
         var groups = await _service.GetAllPersonGroupsAsync();
         groups.Should().ContainSingle(g => g.Name == "Family");
     }
+
+    [Test]
+    public async Task AddPersonToGroupAsync_InvalidatesPersonGroupsCache()
+    {
+        var cache = _provider.GetRequiredService<IMemoryCache>();
+
+        await _service.GetAllPersonGroupsAsync();
+        cache.TryGetValue(CacheKeys.PersonGroups, out _).Should().BeTrue();
+
+        await _service.AddPersonToGroupAsync(1, 1);
+
+        cache.TryGetValue(CacheKeys.PersonGroups, out _).Should().BeFalse();
+    }
+
+    [Test]
+    public async Task RemovePersonFromGroupAsync_InvalidatesPersonGroupsCache()
+    {
+        var cache = _provider.GetRequiredService<IMemoryCache>();
+
+        await _service.AddPersonToGroupAsync(1, 1);
+        await _service.GetAllPersonGroupsAsync();
+        cache.TryGetValue(CacheKeys.PersonGroups, out _).Should().BeTrue();
+
+        await _service.RemovePersonFromGroupAsync(1, 1);
+
+        cache.TryGetValue(CacheKeys.PersonGroups, out _).Should().BeFalse();
+    }
 }
 

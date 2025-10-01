@@ -354,6 +354,7 @@ public class PhotoService : IPhotoService
         {
             person.PersonGroups.Add(group);
             await _db.SaveChangesAsync();
+            _cache.Remove(CacheKeys.PersonGroups);
         }
     }
 
@@ -366,6 +367,7 @@ public class PhotoService : IPhotoService
         {
             person.PersonGroups.Remove(group);
             await _db.SaveChangesAsync();
+            _cache.Remove(CacheKeys.PersonGroups);
         }
     }
 
