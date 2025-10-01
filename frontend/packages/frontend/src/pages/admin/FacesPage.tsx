@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search, User, Calendar, Eye, Loader2 } from 'lucide-react';
-import type { PersonFacesGetAllQueryResult } from '@photobank/shared/api/photobank';
-import { usePersonFacesGetAll } from '@photobank/shared/api/photobank';
+import type { FaceIdentityDto } from '@photobank/shared/api/photobank';
+import { useFacesGet } from '@photobank/shared/api/photobank';
 
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
-import { EditFaceDialog } from '@/components/admin/EditFaceDialog';
+import { EditFaceDialog, type EditFaceDialogFace } from '@/components/admin/EditFaceDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import {
   Pagination,
@@ -21,31 +21,39 @@ import {
 
 const ITEMS_PER_PAGE = 20;
 
-type PersonFaceListItem =
-  PersonFacesGetAllQueryResult['data'][number] &
-    Partial<{
-      identityStatus: string | null;
-      personName: string | null;
-      imageUrl: string | null;
-      createdAt: string | null;
-      updatedAt: string | null;
-    }>;
+type FaceListItem = EditFaceDialogFace &
+  Partial<{
+    createdAt: string | Date | null;
+    updatedAt: string | Date | null;
+  }>;
 
 export default function FacesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedFace, setSelectedFace] = useState<PersonFaceListItem | null>(null);
+  const [selectedFace, setSelectedFace] = useState<FaceListItem | null>(null);
 
-  const { data, isLoading, isError, isFetching, refetch } = usePersonFacesGetAll();
+  const { data, isLoading, isError, isFetching, refetch } = useFacesGet();
 
-  const faces = useMemo<PersonFaceListItem[]>(() => {
-    const rawFaces = data?.data ?? [];
+  const faces = useMemo<FaceListItem[]>(() => {
+    const rawFaces = (data?.data ?? []) as FaceIdentityDto[];
 
-    return rawFaces.map((face) => ({
-      ...face,
-      id: face.id ?? face.faceId,
-    }));
+    return rawFaces.map((face) => {
+      const extendedFace = face as FaceListItem;
+      const normalizedPersonId =
+        extendedFace.personId ?? (extendedFace.person ? extendedFace.person.id ?? null : null);
+      const normalizedPersonName =
+        extendedFace.personName ?? (extendedFace.person ? extendedFace.person.name ?? null : null);
+      const normalizedFaceId = extendedFace.faceId ?? extendedFace.id ?? null;
+
+      return {
+        ...extendedFace,
+        faceId: normalizedFaceId,
+        id: extendedFace.id ?? normalizedFaceId ?? undefined,
+        personId: normalizedPersonId,
+        personName: normalizedPersonName,
+      };
+    });
   }, [data]);
 
   const hasFacesLoaded = faces.length > 0;
@@ -60,10 +68,13 @@ export default function FacesPage() {
     }
 
     return faces.filter((face) => {
-      const id = (face.id ?? face.faceId).toString();
+      const id = (face.id ?? face.faceId)?.toString() ?? '';
       const faceId = face.faceId?.toString() ?? '';
-      const personId = face.personId?.toString() ?? '';
-      const personName = face.personName?.toLowerCase() ?? '';
+      const rawPersonId =
+        face.personId ?? (face.person ? face.person.id ?? null : null);
+      const personId = rawPersonId != null ? rawPersonId.toString() : '';
+      const rawPersonName = face.personName ?? (face.person ? face.person.name ?? null : null);
+      const personName = rawPersonName?.toLowerCase() ?? '';
       const identityStatus = face.identityStatus?.toLowerCase() ?? '';
       const provider = face.provider?.toLowerCase() ?? '';
       const externalId = face.externalId?.toLowerCase() ?? '';
@@ -96,7 +107,7 @@ export default function FacesPage() {
     }
   }, [currentPage, effectiveCurrentPage]);
 
-  const handleEditFace = (face: PersonFaceListItem) => {
+  const handleEditFace = (face: FaceListItem) => {
     setSelectedFace(face);
     setEditDialogOpen(true);
   };
@@ -225,13 +236,18 @@ export default function FacesPage() {
                     {currentFaces.map((face) => {
                       const createdAt = formatDate(face.createdAt);
                       const updatedAt = formatDate(face.updatedAt);
-                      const displayName = face.personName ??
-                        (face.personId != null ? `Person #${face.personId}` : null);
+                      const personId =
+                        face.personId ?? (face.person ? face.person.id ?? null : null);
+                      const displayName =
+                        face.personName ??
+                        (face.person ? face.person.name ?? null : null) ??
+                        (personId != null ? `Person #${personId}` : null);
                       const status = statusLabel(face.identityStatus);
+                      const faceIdentifier = face.id ?? face.faceId;
 
                       return (
-                        <TableRow key={face.id ?? face.faceId} className="hover:bg-muted/30">
-                          <TableCell className="font-medium">#{face.id ?? face.faceId}</TableCell>
+                        <TableRow key={faceIdentifier ?? face.faceId} className="hover:bg-muted/30">
+                          <TableCell className="font-medium">#{faceIdentifier ?? face.faceId}</TableCell>
                           <TableCell>
                             <Avatar className="w-10 h-10">
                               <AvatarImage src={face.imageUrl ?? undefined} />
