@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import * as z from 'zod';
 import { format } from 'date-fns';
 import { Save, X, Plus, Trash2 } from 'lucide-react';
 import type {
@@ -41,18 +40,10 @@ import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Separator } from '@/shared/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-
-const formSchema = z.object({
-  name: z.string().min(1, 'Profile name is required').max(128, 'Name must be 128 characters or less'),
-  description: z.string().min(1, 'Description is required').max(512, 'Description must be 512 characters or less'),
-  flags_CanSeeNsfw: z.boolean(),
-  storages: z.array(z.number()).min(1, 'At least one storage is required'),
-  personGroups: z.array(z.number()).min(1, 'At least one person group is required'),
-  dateRanges: z.array(z.object({
-    fromDate: z.string(),
-    toDate: z.string(),
-  })).min(1, 'At least one date range is required'),
-});
+import {
+  accessProfileFormSchema,
+  type AccessProfileFormValues,
+} from './accessProfileFormSchema';
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -77,8 +68,8 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
     [personGroupsQuery.data]
   );
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<AccessProfileFormValues>({
+    resolver: zodResolver(accessProfileFormSchema),
     defaultValues: {
       name: '',
       description: '',
@@ -144,7 +135,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
     },
   });
 
-  const handleSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (values: AccessProfileFormValues) => {
     if (!profile?.id) {
       toast({
         title: 'Unable to update profile',
@@ -154,24 +145,39 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
       return;
     }
 
+    const normalizedDateRanges =
+      values.dateRanges
+        ?.filter(
+          (
+            range
+          ): range is { fromDate: string; toDate: string } =>
+            Boolean(range.fromDate) && Boolean(range.toDate)
+        )
+        .map(
+          (range) =>
+            ({
+              profileId: profile.id,
+              fromDate: new Date(range.fromDate),
+              toDate: new Date(range.toDate),
+            }) satisfies AccessProfileDateRangeAllowDto
+        ) ?? [];
+
     const payload = {
       id: profile.id,
       name: values.name,
-      description: values.description,
+      description: values.description || undefined,
       flags_CanSeeNsfw: values.flags_CanSeeNsfw,
-      storages: values.storages.map((storageId) => ({
-        profileId: profile.id,
-        storageId,
-      })),
-      personGroups: values.personGroups.map((personGroupId) => ({
-        profileId: profile.id,
-        personGroupId,
-      })),
-      dateRanges: values.dateRanges.map((range) => ({
-        profileId: profile.id,
-        fromDate: new Date(range.fromDate),
-        toDate: new Date(range.toDate),
-      })),
+      storages:
+        values.storages?.map((storageId: number) => ({
+          profileId: profile.id,
+          storageId,
+        })) ?? [],
+      personGroups:
+        values.personGroups?.map((personGroupId: number) => ({
+          profileId: profile.id,
+          personGroupId,
+        })) ?? [],
+      dateRanges: normalizedDateRanges,
     } satisfies AccessProfileDto & {
       storages: AccessProfileStorageAllowDto[];
       personGroups: AccessProfilePersonGroupAllowDto[];
@@ -195,13 +201,13 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
       toDate: format(oneYearLater, 'yyyy-MM-dd'),
     };
 
-    const currentRanges = form.getValues('dateRanges');
+    const currentRanges = form.getValues('dateRanges') ?? [];
     const updatedRanges = [...currentRanges, newRange];
     form.setValue('dateRanges', updatedRanges, { shouldValidate: true });
   };
 
   const removeDateRange = (index: number) => {
-    const currentRanges = form.getValues('dateRanges');
+    const currentRanges = form.getValues('dateRanges') ?? [];
     const updatedRanges = currentRanges.filter((_, i) => i !== index);
     form.setValue('dateRanges', updatedRanges, { shouldValidate: true });
   };
@@ -254,7 +260,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description *</FormLabel>
+                      <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Textarea 
                           placeholder="Describe the purpose and scope of this access profile..."
@@ -301,7 +307,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                   name="storages"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Storages *</FormLabel>
+                      <FormLabel>Storages</FormLabel>
                       <div className="grid grid-cols-2 gap-2">
                         {storages.length === 0 ? (
                           <p className="col-span-2 text-sm text-muted-foreground">
@@ -312,22 +318,23 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                         ) : (
                           storages.map((storage) => (
                             <div key={storage.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`storage-${storage.id}`}
-                              checked={field.value.includes(storage.id)}
-                              disabled={storagesQuery.isLoading || updateProfileMutation.isPending}
-                              onCheckedChange={(checked) => {
-                                if (checked === true) {
-                                  field.onChange([...field.value, storage.id]);
-                                } else {
-                                  field.onChange(field.value.filter((s) => s !== storage.id));
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`storage-${storage.id}`} className="text-sm">
-                              {storage.name}
-                            </Label>
-                          </div>
+                              <Checkbox
+                                id={`storage-${storage.id}`}
+                                checked={(field.value ?? []).includes(storage.id)}
+                                disabled={storagesQuery.isLoading || updateProfileMutation.isPending}
+                                onCheckedChange={(checked) => {
+                                  const currentValue = field.value ?? [];
+                                  if (checked === true) {
+                                    field.onChange([...currentValue, storage.id]);
+                                  } else {
+                                    field.onChange(currentValue.filter((s) => s !== storage.id));
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`storage-${storage.id}`} className="text-sm">
+                                {storage.name}
+                              </Label>
+                            </div>
                           ))
                         )}
                       </div>
@@ -344,7 +351,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                   name="personGroups"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Person Groups *</FormLabel>
+                      <FormLabel>Person Groups</FormLabel>
                       <div className="grid grid-cols-2 gap-2">
                         {personGroups.length === 0 ? (
                           <p className="col-span-2 text-sm text-muted-foreground">
@@ -357,13 +364,14 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                             <div key={group.id} className="flex items-center space-x-2">
                               <Checkbox
                                 id={`group-${group.id}`}
-                                checked={field.value.includes(group.id)}
+                                checked={(field.value ?? []).includes(group.id)}
                                 disabled={personGroupsQuery.isLoading || updateProfileMutation.isPending}
                                 onCheckedChange={(checked) => {
+                                  const currentValue = field.value ?? [];
                                   if (checked === true) {
-                                    field.onChange([...field.value, group.id]);
+                                    field.onChange([...currentValue, group.id]);
                                   } else {
-                                    field.onChange(field.value.filter((g) => g !== group.id));
+                                    field.onChange(currentValue.filter((g) => g !== group.id));
                                   }
                                 }}
                               />
@@ -384,7 +392,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                 {/* Date Ranges */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <Label>Date Ranges *</Label>
+                    <Label>Date Ranges</Label>
                     <Button
                       type="button"
                       variant="outline"
