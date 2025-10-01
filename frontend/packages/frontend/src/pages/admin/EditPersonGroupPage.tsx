@@ -35,6 +35,7 @@ export default function EditPersonGroupPage() {
     refetch: refetchGroups,
   } = usePersonGroupsGetAll<PersonGroupDto | undefined>({
     query: {
+      queryKey: getPersonGroupsGetAllQueryKey(),
       enabled: isValidGroupId,
       select: (response) => response.data.find((g) => g.id === groupId),
     },
