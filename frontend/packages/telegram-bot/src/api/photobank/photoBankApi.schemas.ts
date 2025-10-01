@@ -23,6 +23,8 @@ export interface AccessProfileDto {
    */
   description?: string | null;
   flags_CanSeeNsfw?: boolean;
+  /** @minimum 0 */
+  assignedUsersCount: number;
   /** @nullable */
   storages?: AccessProfileStorageAllowDto[] | null;
   /** @nullable */

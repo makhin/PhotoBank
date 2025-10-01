@@ -19,6 +19,7 @@ public class AccessProfile
     public ICollection<AccessProfileStorageAllow> Storages { get; set; } = [];
     public ICollection<AccessProfilePersonGroupAllow> PersonGroups { get; set; } = [];
     public ICollection<AccessProfileDateRangeAllow> DateRanges { get; set; } = [];
+    public ICollection<UserAccessProfile> UserAssignments { get; set; } = [];
 }
 
 public class AccessProfileStorageAllow
@@ -53,4 +54,5 @@ public class UserAccessProfile
 {
     public string UserId { get; set; } = default!;
     public int ProfileId { get; set; }
+    public AccessProfile Profile { get; set; } = default!;
 }

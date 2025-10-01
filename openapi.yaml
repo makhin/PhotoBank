@@ -1252,6 +1252,7 @@ components:
       required:
         - id
         - name
+        - assignedUsersCount
       type: object
       properties:
         id:
@@ -1267,6 +1268,10 @@ components:
           nullable: true
         flags_CanSeeNsfw:
           type: boolean
+        assignedUsersCount:
+          type: integer
+          format: int32
+          minimum: 0
         storages:
           type: array
           items:

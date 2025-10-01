@@ -39,6 +39,8 @@ public class AccessControlDbContext : Microsoft.EntityFrameworkCore.DbContext
             .HasOne(x => x.Profile).WithMany(p => p.PersonGroups).HasForeignKey(x => x.ProfileId);
         b.Entity<AccessProfileDateRangeAllow>()
             .HasOne(x => x.Profile).WithMany(p => p.DateRanges).HasForeignKey(x => x.ProfileId);
+        b.Entity<UserAccessProfile>()
+            .HasOne(x => x.Profile).WithMany(p => p.UserAssignments).HasForeignKey(x => x.ProfileId);
 
         // DateOnly -> date
         var dConv = new ValueConverter<DateOnly, DateTime>(
