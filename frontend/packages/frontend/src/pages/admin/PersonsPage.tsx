@@ -13,8 +13,6 @@ import {
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
-import { Badge } from '@/shared/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { Label } from '@/shared/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -24,34 +22,19 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@
 
 const ITEMS_PER_PAGE = 20;
 
-type IdentityStatus = 'Verified' | 'Pending' | 'Rejected';
-type PersonWithIdentityStatus = PersonDto & { identityStatus?: IdentityStatus };
-
 export default function PersonsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const personsQueryKey = useMemo(() => getPersonsGetAllQueryKey(), []);
   const { data, isLoading, isError, isFetching, refetch } = usePersonsGetAll();
-  const persons = useMemo<PersonWithIdentityStatus[]>(() => {
-    const personsData = data?.data ?? [];
-
-    return personsData.map((person) => {
-      const maybeWithStatus = person as PersonWithIdentityStatus;
-
-      return {
-        ...person,
-        identityStatus: maybeWithStatus.identityStatus ?? 'Pending',
-      };
-    });
-  }, [data]);
+  const persons = useMemo<PersonDto[]>(() => data?.data ?? [], [data]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedPerson, setSelectedPerson] = useState<PersonWithIdentityStatus | null>(null);
+  const [selectedPerson, setSelectedPerson] = useState<PersonDto | null>(null);
   const [newPersonName, setNewPersonName] = useState('');
-  const [newPersonIdentityStatus, setNewPersonIdentityStatus] = useState<IdentityStatus>('Pending');
 
   const hasPersonsLoaded = persons.length > 0;
   const showLoading = isLoading && !hasPersonsLoaded;
@@ -111,7 +94,6 @@ export default function PersonsPage() {
       onSettled: () => {
         setShowCreateDialog(false);
         setNewPersonName('');
-        setNewPersonIdentityStatus('Pending');
       },
     },
   });
@@ -137,7 +119,6 @@ export default function PersonsPage() {
         setShowEditDialog(false);
         setSelectedPerson(null);
         setNewPersonName('');
-        setNewPersonIdentityStatus('Pending');
       },
     },
   });
@@ -173,19 +154,6 @@ export default function PersonsPage() {
     },
   });
 
-  const getStatusColor = (status: IdentityStatus) => {
-    switch (status) {
-      case 'Verified':
-        return 'bg-green-500/10 text-green-700 border-green-200 dark:text-green-400 dark:border-green-800';
-      case 'Pending':
-        return 'bg-yellow-500/10 text-yellow-700 border-yellow-200 dark:text-yellow-400 dark:border-yellow-800';
-      case 'Rejected':
-        return 'bg-red-500/10 text-red-700 border-red-200 dark:text-red-400 dark:border-red-800';
-      default:
-        return 'bg-gray-500/10 text-gray-700 border-gray-200 dark:text-gray-400 dark:border-gray-800';
-    }
-  };
-
   const handleCreatePerson = async () => {
     const trimmedName = newPersonName.trim();
     if (!trimmedName) return;
@@ -202,10 +170,9 @@ export default function PersonsPage() {
     }
   };
 
-  const handleEditPerson = (person: PersonWithIdentityStatus) => {
+  const handleEditPerson = (person: PersonDto) => {
     setSelectedPerson(person);
     setNewPersonName(person.name);
-    setNewPersonIdentityStatus(person.identityStatus ?? 'Pending');
     setShowEditDialog(true);
   };
 
@@ -228,7 +195,7 @@ export default function PersonsPage() {
     }
   };
 
-  const handleDeletePerson = (person: PersonWithIdentityStatus) => {
+  const handleDeletePerson = (person: PersonDto) => {
     setSelectedPerson(person);
     setShowDeleteDialog(true);
   };
@@ -248,9 +215,7 @@ export default function PersonsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Persons</h1>
-          <p className="text-muted-foreground">
-            Manage individual persons in the system
-          </p>
+          <p className="text-muted-foreground">Create, update, and delete people in your library.</p>
         </div>
         <div className="flex items-center gap-3">
           {isRefreshing ? (
@@ -296,8 +261,6 @@ export default function PersonsPage() {
               {/* Mobile Card Layout */}
               <div className="grid gap-4 md:hidden">
                 {currentPersons.map((person) => {
-                  const status = person.identityStatus ?? 'Pending';
-
                   return (
                     <Card key={person.id} className="p-4">
                       <div className="flex items-center justify-between">
@@ -308,9 +271,6 @@ export default function PersonsPage() {
                           <div>
                             <h3 className="font-medium">{person.name}</h3>
                             <p className="text-sm text-muted-foreground">ID: {person.id}</p>
-                            <Badge variant="outline" className={getStatusColor(status)}>
-                              {status}
-                            </Badge>
                           </div>
                         </div>
                         <DropdownMenu>
@@ -348,8 +308,6 @@ export default function PersonsPage() {
                   <CardContent>
                     <div className="space-y-4">
                       {currentPersons.map((person) => {
-                        const status = person.identityStatus ?? 'Pending';
-
                         return (
                           <div key={person.id} className="flex items-center justify-between p-4 border rounded-lg">
                             <div className="flex items-center gap-3">
@@ -362,11 +320,7 @@ export default function PersonsPage() {
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                              <Badge variant="outline" className={getStatusColor(status)}>
-                                {status}
-                              </Badge>
-                              <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -503,19 +457,6 @@ export default function PersonsPage() {
                 onChange={(e) => setNewPersonName(e.target.value)}
               />
             </div>
-            <div>
-              <Label htmlFor="identity-status">Identity Status</Label>
-              <Select value={newPersonIdentityStatus} onValueChange={(value: IdentityStatus) => setNewPersonIdentityStatus(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select identity status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Verified">Verified</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
           <DialogFooter>
             <Button
@@ -561,19 +502,6 @@ export default function PersonsPage() {
                 value={newPersonName}
                 onChange={(e) => setNewPersonName(e.target.value)}
               />
-            </div>
-            <div>
-              <Label htmlFor="edit-identity-status">Identity Status</Label>
-              <Select value={newPersonIdentityStatus} onValueChange={(value: IdentityStatus) => setNewPersonIdentityStatus(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select identity status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Verified">Verified</SelectItem>
-                  <SelectItem value="Rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
           <DialogFooter>
