@@ -57,25 +57,21 @@ public class UsersController(UserManager<ApplicationUser> userManager, RoleManag
             .Take(query.Limit)
             .ToListAsync();
 
-        var usersWithRoles = await Task.WhenAll(users.Select(async user =>
+        var result = new List<UserDto>(users.Count);
+        foreach (var user in users)
         {
             var roles = await userManager.GetRolesAsync(user);
-            return new
+            result.Add(new UserDto
             {
-                User = user,
-                Roles = (IReadOnlyCollection<string>)roles.ToArray()
-            };
-        }));
+                Id = user.Id,
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber,
+                TelegramUserId = user.TelegramUserId,
+                TelegramSendTimeUtc = user.TelegramSendTimeUtc,
+                Roles = roles.ToArray()
+            });
+        }
 
-        var result = usersWithRoles.Select(userWithRoles => new UserDto
-        {
-            Id = userWithRoles.User.Id,
-            Email = userWithRoles.User.Email ?? string.Empty,
-            PhoneNumber = userWithRoles.User.PhoneNumber,
-            TelegramUserId = userWithRoles.User.TelegramUserId,
-            TelegramSendTimeUtc = userWithRoles.User.TelegramSendTimeUtc,
-            Roles = userWithRoles.Roles
-        });
         return Ok(result);
     }
 
