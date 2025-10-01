@@ -32,21 +32,27 @@ import {
   FormLabel,
   FormMessage,
 } from '@/shared/ui/form';
-import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Separator } from '@/shared/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Profile name is required').max(128, 'Name must be 128 characters or less'),
-  description: z.string().min(1, 'Description is required').max(512, 'Description must be 512 characters or less'),
+  description: z
+    .string()
+    .max(512, 'Description must be 512 characters or less')
+    .optional(),
   flags_CanSeeNsfw: z.boolean(),
-  storages: z.array(z.number()).min(1, 'At least one storage is required'),
-  personGroups: z.array(z.number()).min(1, 'At least one person group is required'),
-  dateRanges: z.array(z.object({
-    fromDate: z.string(),
-    toDate: z.string(),
-  })).min(1, 'At least one date range is required'),
+  storages: z.array(z.number()).optional(),
+  personGroups: z.array(z.number()).optional(),
+  dateRanges: z
+    .array(
+      z.object({
+        fromDate: z.string().optional(),
+        toDate: z.string().optional(),
+      })
+    )
+    .optional(),
 });
 
 interface CreateProfileDialogProps {
@@ -111,11 +117,11 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     const payload: AccessProfile = {
       name: values.name,
-      description: values.description,
+      description: values.description || undefined,
       flags_CanSeeNsfw: values.flags_CanSeeNsfw,
-      storages: values.storages.map((storageId) => ({ storageId })),
-      personGroups: values.personGroups.map((personGroupId) => ({ personGroupId })),
-      dateRanges: values.dateRanges.map((range) => ({
+      storages: values.storages?.map((storageId) => ({ storageId })),
+      personGroups: values.personGroups?.map((personGroupId) => ({ personGroupId })),
+      dateRanges: values.dateRanges?.map((range) => ({
         fromDate: range.fromDate ? new Date(range.fromDate) : undefined,
         toDate: range.toDate ? new Date(range.toDate) : undefined,
       })),
@@ -138,15 +144,28 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
       toDate: format(oneYearLater, 'yyyy-MM-dd'),
     };
 
-    const currentRanges = form.getValues('dateRanges');
+    const currentRanges = form.getValues('dateRanges') ?? [];
     const updatedRanges = [...currentRanges, newRange];
     form.setValue('dateRanges', updatedRanges, { shouldValidate: true });
   };
 
   const removeDateRange = (index: number) => {
-    const currentRanges = form.getValues('dateRanges');
+    const currentRanges = form.getValues('dateRanges') ?? [];
     const updatedRanges = currentRanges.filter((_, i) => i !== index);
     form.setValue('dateRanges', updatedRanges, { shouldValidate: true });
+  };
+
+  const updateDateRange = (
+    index: number,
+    key: 'fromDate' | 'toDate',
+    value: string
+  ) => {
+    const currentRanges = form.getValues('dateRanges') ?? [];
+    const updatedRanges = currentRanges.map((range, i) =>
+      i === index ? { ...range, [key]: value } : range
+    );
+
+    form.setValue('dateRanges', updatedRanges, { shouldValidate: true, shouldDirty: true });
   };
 
   const dateRanges = form.watch('dateRanges') ?? [];
@@ -193,11 +212,11 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description *</FormLabel>
+                      <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <Textarea
                           placeholder="Describe the purpose and scope of this access profile..."
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -240,7 +259,7 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                   name="storages"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Storages *</FormLabel>
+                      <FormLabel>Storages</FormLabel>
                       <div className="grid grid-cols-2 gap-2">
                         {storages.length === 0 ? (
                           <p className="col-span-2 text-sm text-muted-foreground">
@@ -251,22 +270,23 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                         ) : (
                           storages.map((storage) => (
                             <div key={storage.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`storage-${storage.id}`}
-                              checked={field.value.includes(storage.id)}
-                              disabled={storagesQuery.isLoading}
-                              onCheckedChange={(checked) => {
-                                if (checked === true) {
-                                  field.onChange([...field.value, storage.id]);
-                                } else {
-                                  field.onChange(field.value.filter((s) => s !== storage.id));
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`storage-${storage.id}`} className="text-sm">
-                              {storage.name}
-                            </Label>
-                          </div>
+                              <Checkbox
+                                id={`storage-${storage.id}`}
+                                checked={(field.value ?? []).includes(storage.id)}
+                                disabled={storagesQuery.isLoading}
+                                onCheckedChange={(checked) => {
+                                  const currentValue = field.value ?? [];
+                                  if (checked === true) {
+                                    field.onChange([...currentValue, storage.id]);
+                                  } else {
+                                    field.onChange(currentValue.filter((s) => s !== storage.id));
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`storage-${storage.id}`} className="text-sm">
+                                {storage.name}
+                              </Label>
+                            </div>
                           ))
                         )}
                       </div>
@@ -283,7 +303,7 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                   name="personGroups"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Person Groups *</FormLabel>
+                      <FormLabel>Person Groups</FormLabel>
                       <div className="grid grid-cols-2 gap-2">
                         {personGroups.length === 0 ? (
                           <p className="col-span-2 text-sm text-muted-foreground">
@@ -296,13 +316,14 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                             <div key={group.id} className="flex items-center space-x-2">
                               <Checkbox
                                 id={`group-${group.id}`}
-                                checked={field.value.includes(group.id)}
+                                checked={(field.value ?? []).includes(group.id)}
                                 disabled={personGroupsQuery.isLoading}
                                 onCheckedChange={(checked) => {
+                                  const currentValue = field.value ?? [];
                                   if (checked === true) {
-                                    field.onChange([...field.value, group.id]);
+                                    field.onChange([...currentValue, group.id]);
                                   } else {
-                                    field.onChange(field.value.filter((g) => g !== group.id));
+                                    field.onChange(currentValue.filter((g) => g !== group.id));
                                   }
                                 }}
                               />
@@ -323,7 +344,7 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                 {/* Date Ranges */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <Label>Date Ranges *</Label>
+                    <Label>Date Ranges</Label>
                     <Button
                       type="button"
                       variant="outline"
@@ -342,11 +363,33 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                   ) : (
                     <div className="space-y-2">
                       {dateRanges.map((range, index) => (
-                        <div key={index} className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                          <span className="text-sm font-medium">From:</span>
-                          <Badge variant="outline">{range.fromDate}</Badge>
-                          <span className="text-sm font-medium">To:</span>
-                          <Badge variant="outline">{range.toDate}</Badge>
+                        <div key={index} className="flex flex-col gap-2 p-3 bg-muted/50 rounded-lg md:flex-row md:items-center">
+                          <div className="flex flex-1 flex-col gap-1">
+                            <Label htmlFor={`date-range-from-${index}`} className="text-xs uppercase tracking-wide text-muted-foreground">
+                              From
+                            </Label>
+                            <Input
+                              id={`date-range-from-${index}`}
+                              type="date"
+                              value={range.fromDate ?? ''}
+                              onChange={(event) =>
+                                updateDateRange(index, 'fromDate', event.target.value)
+                              }
+                            />
+                          </div>
+                          <div className="flex flex-1 flex-col gap-1">
+                            <Label htmlFor={`date-range-to-${index}`} className="text-xs uppercase tracking-wide text-muted-foreground">
+                              To
+                            </Label>
+                            <Input
+                              id={`date-range-to-${index}`}
+                              type="date"
+                              value={range.toDate ?? ''}
+                              onChange={(event) =>
+                                updateDateRange(index, 'toDate', event.target.value)
+                              }
+                            />
+                          </div>
                           <Button
                             type="button"
                             variant="ghost"
