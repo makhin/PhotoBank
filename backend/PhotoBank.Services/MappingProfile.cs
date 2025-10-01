@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using AutoMapper;
+using PhotoBank.AccessControl;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Models;
 using PhotoBank.ViewModel.Dto;
@@ -84,6 +85,42 @@ namespace PhotoBank.Services
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonFace.PersonId))
                 .ForMember(dest => dest.PersonDateOfBirth, opt => opt.MapFrom(src => src.Person.DateOfBirth))
                 .ForMember(dest => dest.PhotoTakenDate, opt => opt.MapFrom(src => src.Photo.TakenDate))
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<AccessProfileStorageAllow, AccessProfileStorageAllowDto>()
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<AccessProfileStorageAllowDto, AccessProfileStorageAllow>()
+                .ForMember(dest => dest.Profile, opt => opt.Ignore())
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<AccessProfilePersonGroupAllow, AccessProfilePersonGroupAllowDto>()
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<AccessProfilePersonGroupAllowDto, AccessProfilePersonGroupAllow>()
+                .ForMember(dest => dest.Profile, opt => opt.Ignore())
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<AccessProfileDateRangeAllow, AccessProfileDateRangeAllowDto>()
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<AccessProfileDateRangeAllowDto, AccessProfileDateRangeAllow>()
+                .ForMember(dest => dest.Profile, opt => opt.Ignore())
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<AccessProfile, AccessProfileDto>()
+                .ForMember(dest => dest.Storages, opt => opt.MapFrom(src => src.Storages))
+                .ForMember(dest => dest.PersonGroups, opt => opt.MapFrom(src => src.PersonGroups))
+                .ForMember(dest => dest.DateRanges, opt => opt.MapFrom(src => src.DateRanges))
+                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+
+            CreateMap<AccessProfileDto, AccessProfile>()
+                .ForMember(dest => dest.Storages,
+                    opt => opt.MapFrom(src => src.Storages ?? Array.Empty<AccessProfileStorageAllowDto>()))
+                .ForMember(dest => dest.PersonGroups,
+                    opt => opt.MapFrom(src => src.PersonGroups ?? Array.Empty<AccessProfilePersonGroupAllowDto>()))
+                .ForMember(dest => dest.DateRanges,
+                    opt => opt.MapFrom(src => src.DateRanges ?? Array.Empty<AccessProfileDateRangeAllowDto>()))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
         }
     }
