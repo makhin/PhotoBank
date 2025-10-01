@@ -4,7 +4,6 @@ import { ArrowLeft, Search, UserPlus, UserMinus, Users } from 'lucide-react';
 import type { PersonDto, PersonGroupDto } from '@photobank/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  getPersonGroupsGetAllQueryKey,
   usePersonGroupsAddPerson,
   usePersonGroupsGetAll,
   usePersonGroupsRemovePerson,
@@ -25,18 +24,17 @@ export default function EditPersonGroupPage() {
   const queryClient = useQueryClient();
   const groupId = id ? Number(id) : NaN;
   const isValidGroupId = Number.isFinite(groupId);
-  const personGroupsQueryKey = useMemo(() => getPersonGroupsGetAllQueryKey(), []);
   const {
     data: group,
     isLoading: isGroupLoading,
     isError: isGroupError,
     isFetching: isGroupFetching,
     refetch: refetchGroups,
+    queryKey: personGroupsQueryKey,
   } = usePersonGroupsGetAll<PersonGroupDto | undefined>({
     query: {
       enabled: isValidGroupId,
       select: (response) => response.data.find((g) => g.id === groupId),
-      queryKey: [],
     },
   });
   const {
