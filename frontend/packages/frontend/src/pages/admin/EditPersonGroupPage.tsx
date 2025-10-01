@@ -4,6 +4,7 @@ import { ArrowLeft, Search, UserPlus, UserMinus, Users } from 'lucide-react';
 import type { PersonDto, PersonGroupDto } from '@photobank/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  getPersonGroupsGetAllQueryKey,
   usePersonGroupsAddPerson,
   usePersonGroupsGetAll,
   usePersonGroupsRemovePerson,
@@ -30,7 +31,6 @@ export default function EditPersonGroupPage() {
     isError: isGroupError,
     isFetching: isGroupFetching,
     refetch: refetchGroups,
-    queryKey: personGroupsQueryKey,
   } = usePersonGroupsGetAll<PersonGroupDto | undefined>({
     query: {
       enabled: isValidGroupId,
@@ -77,7 +77,7 @@ export default function EditPersonGroupPage() {
   const addPersonMutation = usePersonGroupsAddPerson({
     mutation: {
       onSuccess: async (_, variables) => {
-        await queryClient.invalidateQueries({ queryKey: personGroupsQueryKey });
+        await queryClient.invalidateQueries({ queryKey: getPersonGroupsGetAllQueryKey() });
 
         const personName = persons.find((person) => person.id === variables.personId)?.name;
 
@@ -101,7 +101,7 @@ export default function EditPersonGroupPage() {
   const removePersonMutation = usePersonGroupsRemovePerson({
     mutation: {
       onSuccess: async (_, variables) => {
-        await queryClient.invalidateQueries({ queryKey: personGroupsQueryKey });
+        await queryClient.invalidateQueries({ queryKey: getPersonGroupsGetAllQueryKey() });
 
         const personName = persons.find((person) => person.id === variables.personId)?.name;
 
