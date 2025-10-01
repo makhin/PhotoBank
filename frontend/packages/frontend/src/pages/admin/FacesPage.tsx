@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search, User, Calendar, Eye, Loader2 } from 'lucide-react';
-import type { FaceIdentityDto } from '@photobank/shared/api/photobank';
-import { useFacesGet } from '@photobank/shared/api/photobank';
+import {
+  IdentityStatus as IdentityStatusEnum,
+  useFacesGet,
+  type FaceIdentityDto,
+  type IdentityStatus as IdentityStatusType,
+} from '@photobank/shared/api/photobank';
 
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -21,11 +25,60 @@ import {
 
 const ITEMS_PER_PAGE = 20;
 
+const IDENTITY_STATUS_INDEX_MAP: Record<number, IdentityStatusType> = {
+  0: IdentityStatusEnum.Undefined,
+  1: IdentityStatusEnum.NotDetected,
+  2: IdentityStatusEnum.NotIdentified,
+  3: IdentityStatusEnum.Identified,
+  4: IdentityStatusEnum.ForReprocessing,
+  5: IdentityStatusEnum.StopProcessing,
+};
+
+const IDENTITY_STATUS_STRING_MAP = new Map<string, IdentityStatusType>(
+  Object.values(IdentityStatusEnum).map((status) => [status.toLowerCase(), status])
+);
+
+const normalizeIdentityStatus = (
+  status: unknown
+): IdentityStatusType | undefined => {
+  if (status == null) {
+    return undefined;
+  }
+
+  if (typeof status === 'number' && Number.isInteger(status)) {
+    return IDENTITY_STATUS_INDEX_MAP[status] ?? undefined;
+  }
+
+  if (typeof status === 'string') {
+    const trimmed = status.trim();
+
+    if (!trimmed) {
+      return undefined;
+    }
+
+    const parsedNumber = Number(trimmed);
+
+    if (!Number.isNaN(parsedNumber)) {
+      const fromNumber = IDENTITY_STATUS_INDEX_MAP[parsedNumber];
+
+      if (fromNumber) {
+        return fromNumber;
+      }
+    }
+
+    return IDENTITY_STATUS_STRING_MAP.get(trimmed.toLowerCase());
+  }
+
+  return undefined;
+};
+
 type FaceListItem = EditFaceDialogFace &
   Partial<{
     createdAt: string | Date | null;
     updatedAt: string | Date | null;
-  }>;
+  }> & {
+    normalizedIdentityStatus: string;
+  };
 
 export default function FacesPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,6 +98,11 @@ export default function FacesPage() {
       const normalizedPersonName =
         extendedFace.personName ?? (extendedFace.person ? extendedFace.person.name ?? null : null);
       const normalizedFaceId = extendedFace.faceId ?? extendedFace.id ?? null;
+      const normalizedIdentityStatus = normalizeIdentityStatus(extendedFace.identityStatus);
+      const normalizedIdentityStatusLabel =
+        normalizedIdentityStatus ??
+        (typeof extendedFace.identityStatus === 'string' && extendedFace.identityStatus.trim()) ??
+        'Unknown';
 
       return {
         ...extendedFace,
@@ -52,6 +110,12 @@ export default function FacesPage() {
         id: extendedFace.id ?? normalizedFaceId ?? undefined,
         personId: normalizedPersonId,
         personName: normalizedPersonName,
+        identityStatus:
+          normalizedIdentityStatus ??
+          (typeof extendedFace.identityStatus === 'string'
+            ? (extendedFace.identityStatus.trim() as FaceListItem['identityStatus'])
+            : undefined),
+        normalizedIdentityStatus: normalizedIdentityStatusLabel,
       };
     });
   }, [data]);
@@ -75,7 +139,7 @@ export default function FacesPage() {
       const personId = rawPersonId != null ? rawPersonId.toString() : '';
       const rawPersonName = face.personName ?? (face.person ? face.person.name ?? null : null);
       const personName = rawPersonName?.toLowerCase() ?? '';
-      const identityStatus = face.identityStatus?.toLowerCase() ?? '';
+      const identityStatus = face.normalizedIdentityStatus.toLowerCase();
       const provider = face.provider?.toLowerCase() ?? '';
       const externalId = face.externalId?.toLowerCase() ?? '';
 
@@ -157,12 +221,18 @@ export default function FacesPage() {
     });
   };
 
-  const statusLabel = (status?: string | null) => {
-    if (!status) {
-      return 'Unknown';
+  const statusLabel = (status: unknown) => {
+    const normalizedStatus = normalizeIdentityStatus(status);
+
+    if (normalizedStatus) {
+      return normalizedStatus;
     }
 
-    return status;
+    if (typeof status === 'string' && status.trim()) {
+      return status.trim();
+    }
+
+    return 'Unknown';
   };
 
   const displayedFacesCount = showLoading ? '—' : filteredFaces.length;
@@ -242,7 +312,7 @@ export default function FacesPage() {
                         face.personName ??
                         (face.person ? face.person.name ?? null : null) ??
                         (personId != null ? `Person #${personId}` : null);
-                      const status = statusLabel(face.identityStatus);
+                      const status = statusLabel(face.normalizedIdentityStatus);
                       const faceIdentifier = face.id ?? face.faceId;
 
                       return (
@@ -267,7 +337,7 @@ export default function FacesPage() {
                             )}
                           </TableCell>
                           <TableCell>
-                            <Badge className={getStatusColor(face.identityStatus)}>{status}</Badge>
+                            <Badge className={getStatusColor(status)}>{status}</Badge>
                           </TableCell>
                           <TableCell>
                             {createdAt ? (
