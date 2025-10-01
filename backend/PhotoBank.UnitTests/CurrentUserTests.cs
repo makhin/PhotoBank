@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading;
 using FluentAssertions;
@@ -65,7 +66,35 @@ public class CurrentUserTests
     }
 
     [Test]
-    public void Constructor_ShouldThrow_WhenAuthenticatedWithoutNameIdentifier()
+    public void Constructor_ShouldFallbackToSubClaim_WhenNameIdentifierMissing()
+    {
+        var identity = new ClaimsIdentity(
+            new[] { new Claim(JwtRegisteredClaimNames.Sub, "jwt-sub") },
+            authenticationType: "auth");
+        var principal = new ClaimsPrincipal(identity);
+        var httpContext = new DefaultHttpContext { User = principal };
+        var http = new Mock<IHttpContextAccessor>();
+        http.Setup(x => x.HttpContext).Returns(httpContext);
+
+        var access = new EffectiveAccess(
+            new HashSet<int>(),
+            new HashSet<int>(),
+            Array.Empty<(DateOnly, DateOnly)>(),
+            false,
+            false);
+
+        var provider = new Mock<IEffectiveAccessProvider>();
+        provider.Setup(p => p.GetAsync("jwt-sub", principal, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(access);
+
+        var current = new CurrentUser(http.Object, provider.Object);
+
+        current.UserId.Should().Be("jwt-sub");
+        provider.Verify(p => p.GetAsync("jwt-sub", principal, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public void Constructor_ShouldThrowUnauthorized_WhenAuthenticatedWithoutIdentifier()
     {
         var identity = new ClaimsIdentity(authenticationType: "auth");
         var principal = new ClaimsPrincipal(identity);
@@ -77,8 +106,8 @@ public class CurrentUserTests
 
         var act = () => new CurrentUser(http.Object, provider.Object);
 
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("Authenticated user missing NameIdentifier claim");
+        act.Should().Throw<UnauthorizedAccessException>()
+            .WithMessage("Authenticated user missing identifier claim");
     }
 }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 
@@ -29,8 +30,17 @@ public sealed class CurrentUser : ICurrentUser
             return;
         }
 
-        UserId = principal.FindFirstValue(ClaimTypes.NameIdentifier)
-                   ?? throw new InvalidOperationException("Authenticated user missing NameIdentifier claim");
+        var identifier = principal.FindFirstValue(ClaimTypes.NameIdentifier)
+                         ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                         ?? principal.FindFirstValue(ClaimTypes.Name)
+                         ?? principal.Identity?.Name;
+
+        if (string.IsNullOrWhiteSpace(identifier))
+        {
+            throw new UnauthorizedAccessException("Authenticated user missing identifier claim");
+        }
+
+        UserId = identifier;
 
         var eff = provider.GetAsync(UserId, principal).GetAwaiter().GetResult();
 
