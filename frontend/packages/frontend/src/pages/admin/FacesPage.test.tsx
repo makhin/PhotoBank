@@ -86,6 +86,41 @@ describe('FacesPage', () => {
     expect(screen.getByText('#123')).toBeInTheDocument();
   });
 
+  test('normalises numeric identity statuses before rendering', async () => {
+    const face = {
+      id: 7,
+      faceId: 7,
+      identityStatus: 3,
+    };
+
+    mockUseFacesGet.mockReturnValue({
+      data: { data: [face] },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    mockUsePersonsGetAll.mockReturnValue({
+      data: { data: [] },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+
+    mockUseFacesUpdate.mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: false,
+    });
+
+    const { Wrapper } = createWrapper();
+
+    render(<FacesPage />, { wrapper: Wrapper });
+
+    expect(await screen.findByText('Identified')).toBeInTheDocument();
+    expect(screen.getByText('#7')).toBeInTheDocument();
+  });
+
   test('allows editing and unassigning a face without a person', async () => {
     const mutateAsync = vi.fn().mockResolvedValue({});
     const face = {
