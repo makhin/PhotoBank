@@ -36,7 +36,6 @@ export default function EditPersonGroupPage() {
     query: {
       enabled: isValidGroupId,
       select: (response) => response.data.find((g) => g.id === groupId),
-      queryKey: [],
     },
   });
   const {
