@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
-import type { AccessProfile } from '@photobank/shared';
+import type { AccessProfileDto } from '@photobank/shared';
 import { useAdminAccessProfilesList } from '@photobank/shared/api/photobank/admin-access-profiles/admin-access-profiles';
 
 import { Button } from '@/shared/ui/button';
@@ -16,7 +16,7 @@ export default function AccessProfilesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedProfile, setSelectedProfile] = useState<AccessProfile | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<AccessProfileDto | null>(null);
 
   const {
     data,
@@ -26,7 +26,7 @@ export default function AccessProfilesPage() {
     refetch,
   } = useAdminAccessProfilesList();
 
-  const profiles = useMemo<AccessProfile[]>(() => data?.data ?? [], [data]);
+  const profiles = useMemo<AccessProfileDto[]>(() => data?.data ?? [], [data]);
 
   const filteredProfiles = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -47,7 +47,7 @@ export default function AccessProfilesPage() {
   const showError = isError && profiles.length === 0;
   const isRefreshing = isFetching && profiles.length > 0;
 
-  const handleEditProfile = (profile: AccessProfile) => {
+  const handleEditProfile = (profile: AccessProfileDto) => {
     if (!profile.id) {
       toast({
         title: 'Unable to edit profile',

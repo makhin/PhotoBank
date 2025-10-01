@@ -4,7 +4,12 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { Save, X, Plus, Trash2 } from 'lucide-react';
-import type { AccessProfile } from '@photobank/shared';
+import type {
+  AccessProfileDateRangeAllowDto,
+  AccessProfileDto,
+  AccessProfilePersonGroupAllowDto,
+  AccessProfileStorageAllowDto,
+} from '@photobank/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getAdminAccessProfilesListQueryKey,
@@ -52,7 +57,7 @@ const formSchema = z.object({
 interface EditProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  profile: AccessProfile | null;
+  profile: AccessProfileDto | null;
 }
 
 export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDialogProps) {
@@ -149,7 +154,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
       return;
     }
 
-    const payload: AccessProfile = {
+    const payload = {
       id: profile.id,
       name: values.name,
       description: values.description,
@@ -164,9 +169,13 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
       })),
       dateRanges: values.dateRanges.map((range) => ({
         profileId: profile.id,
-        fromDate: range.fromDate ? new Date(range.fromDate) : undefined,
-        toDate: range.toDate ? new Date(range.toDate) : undefined,
+        fromDate: new Date(range.fromDate),
+        toDate: new Date(range.toDate),
       })),
+    } satisfies AccessProfileDto & {
+      storages: AccessProfileStorageAllowDto[];
+      personGroups: AccessProfilePersonGroupAllowDto[];
+      dateRanges: AccessProfileDateRangeAllowDto[];
     };
 
     try {

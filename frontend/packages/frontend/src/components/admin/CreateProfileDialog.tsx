@@ -5,7 +5,12 @@ import * as z from 'zod';
 import { format } from 'date-fns';
 import { Save, X, Plus, Trash2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { AccessProfile } from '@photobank/shared';
+import type {
+  AccessProfileDateRangeAllowDto,
+  AccessProfileDto,
+  AccessProfilePersonGroupAllowDto,
+  AccessProfileStorageAllowDto,
+} from '@photobank/shared';
 import {
   getAdminAccessProfilesListQueryKey,
   useAdminAccessProfilesCreate,
@@ -35,6 +40,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Separator } from '@/shared/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+
+type AccessProfileDraft = Partial<
+  Omit<AccessProfileDto, 'storages' | 'personGroups' | 'dateRanges'>
+> & {
+  storages?: Array<Partial<AccessProfileStorageAllowDto>>;
+  personGroups?: Array<Partial<AccessProfilePersonGroupAllowDto>>;
+  dateRanges?: Array<Partial<AccessProfileDateRangeAllowDto>>;
+};
 
 const formSchema = z.object({
   name: z.string().min(1, 'Profile name is required').max(128, 'Name must be 128 characters or less'),
@@ -115,20 +128,29 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
   });
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
-    const payload: AccessProfile = {
+    const payload: AccessProfileDraft = {
       name: values.name,
       description: values.description || undefined,
       flags_CanSeeNsfw: values.flags_CanSeeNsfw,
-      storages: values.storages?.map((storageId) => ({ storageId })),
-      personGroups: values.personGroups?.map((personGroupId) => ({ personGroupId })),
-      dateRanges: values.dateRanges?.map((range) => ({
-        fromDate: range.fromDate ? new Date(range.fromDate) : undefined,
-        toDate: range.toDate ? new Date(range.toDate) : undefined,
-      })),
+      storages: values.storages?.map((storageId) => ({ storageId })) ?? [],
+      personGroups: values.personGroups?.map((personGroupId) => ({ personGroupId })) ?? [],
+      dateRanges:
+        values.dateRanges
+          ?.map((range) => {
+            if (!range.fromDate || !range.toDate) {
+              return null;
+            }
+
+            return {
+              fromDate: new Date(range.fromDate),
+              toDate: new Date(range.toDate),
+            } satisfies Partial<AccessProfileDateRangeAllowDto>;
+          })
+          .filter((range): range is Partial<AccessProfileDateRangeAllowDto> => range !== null) ?? [],
     };
 
     try {
-      await createProfileMutation.mutateAsync({ data: payload });
+      await createProfileMutation.mutateAsync({ data: payload as AccessProfileDto });
     } catch {
       // Errors are handled in the mutation callbacks.
     }
