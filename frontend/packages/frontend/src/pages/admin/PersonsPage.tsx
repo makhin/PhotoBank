@@ -210,6 +210,73 @@ export default function PersonsPage() {
     }
   };
 
+  const mobilePersonCards = currentPersons.map((person) => {
+    return (
+      <Card key={person.id} className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+              <User className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div>
+              <h3 className="font-medium">{person.name}</h3>
+              <p className="text-sm text-muted-foreground">ID: {person.id}</p>
+            </div>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleEditPerson(person)}>
+                <Edit className="h-4 w-4" />
+                Edit Person
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDeletePerson(person)} className="text-destructive">
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </Card>
+    );
+  });
+
+  const desktopPersonRows = currentPersons.map((person) => {
+    return (
+      <div key={person.id} className="flex items-center justify-between p-4 border rounded-lg">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+            <User className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div>
+            <h3 className="font-medium">{person.name}</h3>
+            <p className="text-sm text-muted-foreground">ID: {person.id}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => handleEditPerson(person)}>
+            <Edit className="h-4 w-4" />
+            Edit
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDeletePerson(person)}
+            className="text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </Button>
+        </div>
+      </div>
+    );
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -259,45 +326,7 @@ export default function PersonsPage() {
           {filteredPersons.length > 0 && (
             <>
               {/* Mobile Card Layout */}
-              <div className="grid gap-4 md:hidden">
-                {currentPersons.map((person) => {
-                  return (
-                    <Card key={person.id} className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                            <User className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium">{person.name}</h3>
-                            <p className="text-sm text-muted-foreground">ID: {person.id}</p>
-                          </div>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditPerson(person)}>
-                              <Edit className="h-4 w-4" />
-                              Edit Person
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDeletePerson(person)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
+              <div className="grid gap-4 md:hidden">{mobilePersonCards}</div>
 
               {/* Desktop Table Layout */}
               <div className="hidden md:block">
@@ -306,44 +335,7 @@ export default function PersonsPage() {
                     <CardTitle>All Persons</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {currentPersons.map((person) => {
-                        return (
-                          <div key={person.id} className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                                <User className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                              <div>
-                                <h3 className="font-medium">{person.name}</h3>
-                                <p className="text-sm text-muted-foreground">ID: {person.id}</p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEditPerson(person)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                  Edit
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDeletePerson(person)}
-                                  className="text-destructive hover:text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                  Delete
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <div className="space-y-4">{desktopPersonRows}</div>
                   </CardContent>
                 </Card>
               </div>

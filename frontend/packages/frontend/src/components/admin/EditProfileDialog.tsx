@@ -167,6 +167,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
       name: values.name,
       description: values.description || undefined,
       flags_CanSeeNsfw: values.flags_CanSeeNsfw,
+      assignedUsersCount: profile.assignedUsersCount,
       storages:
         values.storages?.map((storageId: number) => ({
           profileId: profile.id,
