@@ -112,6 +112,7 @@ namespace PhotoBank.Services
                 .ForMember(dest => dest.Storages, opt => opt.MapFrom(src => src.Storages))
                 .ForMember(dest => dest.PersonGroups, opt => opt.MapFrom(src => src.PersonGroups))
                 .ForMember(dest => dest.DateRanges, opt => opt.MapFrom(src => src.DateRanges))
+                .ForMember(dest => dest.AssignedUsersCount, opt => opt.MapFrom(src => src.UserAssignments.Count))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<AccessProfileDto, AccessProfile>()

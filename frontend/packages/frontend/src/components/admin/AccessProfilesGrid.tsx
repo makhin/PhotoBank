@@ -199,10 +199,7 @@ export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGr
                 <span className="text-muted-foreground">Assigned to:</span>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <span className="font-medium">
-                    {typeof (profile as { assignedUsersCount?: number }).assignedUsersCount === 'number'
-                      ? (profile as { assignedUsersCount?: number }).assignedUsersCount
-                      : 0}{' '}
-                    users
+                    {(profile.assignedUsersCount ?? 0).toLocaleString()} users
                   </span>
                   <div className="flex flex-wrap gap-1">
                     {((profile as { assignedRoles?: string[] }).assignedRoles ?? []).map(

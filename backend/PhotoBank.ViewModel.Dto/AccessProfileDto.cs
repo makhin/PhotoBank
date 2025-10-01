@@ -17,6 +17,9 @@ namespace PhotoBank.ViewModel.Dto
 
         public bool Flags_CanSeeNsfw { get; set; }
 
+        [Range(0, int.MaxValue)]
+        public int AssignedUsersCount { get; set; }
+
         public ICollection<AccessProfileStorageAllowDto> Storages { get; set; } = new List<AccessProfileStorageAllowDto>();
 
         public ICollection<AccessProfilePersonGroupAllowDto> PersonGroups { get; set; } = new List<AccessProfilePersonGroupAllowDto>();
