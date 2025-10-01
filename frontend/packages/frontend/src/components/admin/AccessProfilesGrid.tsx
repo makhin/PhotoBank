@@ -8,10 +8,10 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 import type {
-  AccessProfile,
-  AccessProfileDateRangeAllow,
-  AccessProfilePersonGroupAllow,
-  AccessProfileStorageAllow,
+  AccessProfileDto,
+  AccessProfileDateRangeAllowDto,
+  AccessProfilePersonGroupAllowDto,
+  AccessProfileStorageAllowDto,
 } from '@photobank/shared';
 import { format } from 'date-fns';
 
@@ -27,18 +27,18 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 interface AccessProfilesGridProps {
-  profiles: AccessProfile[];
-  onEditProfile: (profile: AccessProfile) => void;
+  profiles: AccessProfileDto[];
+  onEditProfile: (profile: AccessProfileDto) => void;
 }
 
 export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGridProps) {
   const { toast } = useToast();
 
-  const handleEdit = (profile: AccessProfile) => {
+  const handleEdit = (profile: AccessProfileDto) => {
     onEditProfile(profile);
   };
 
-  const handleDelete = (profile: AccessProfile) => {
+  const handleDelete = (profile: AccessProfileDto) => {
     toast({
       title: 'Profile Deleted',
       description: `${profile.name} has been removed`,
@@ -58,7 +58,7 @@ export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGr
     );
   }
 
-  const getStorageLabel = (storage: AccessProfileStorageAllow, index: number) => {
+  const getStorageLabel = (storage: AccessProfileStorageAllowDto, index: number) => {
     if (storage.profileId !== undefined) {
       return `#${storage.storageId ?? storage.profileId}`;
     }
@@ -70,7 +70,7 @@ export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGr
     return `Storage ${index + 1}`;
   };
 
-  const getPersonGroupLabel = (group: AccessProfilePersonGroupAllow, index: number) => {
+  const getPersonGroupLabel = (group: AccessProfilePersonGroupAllowDto, index: number) => {
     if (group.personGroupId !== undefined) {
       return `Group #${group.personGroupId}`;
     }
@@ -82,7 +82,7 @@ export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGr
     return `Group ${index + 1}`;
   };
 
-  const getDateRangeLabel = (range: AccessProfileDateRangeAllow | undefined) => {
+  const getDateRangeLabel = (range: AccessProfileDateRangeAllowDto | undefined) => {
     if (!range) {
       return 'No range';
     }

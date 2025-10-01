@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { User as UserIcon, Key, UserX, Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { AccessProfile, UserDto } from '@photobank/shared';
+import type { AccessProfileDto, UserDto } from '@photobank/shared';
 import {
   getAdminAccessProfilesListQueryKey,
   useAdminAccessProfilesAssignUser,
@@ -48,7 +48,7 @@ export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawe
     refetch: refetchAccessProfiles,
   } = useAdminAccessProfilesList();
 
-  const accessProfiles = useMemo<AccessProfile[]>(
+  const accessProfiles = useMemo<AccessProfileDto[]>(
     () => accessProfilesData?.data ?? [],
     [accessProfilesData]
   );
@@ -86,7 +86,7 @@ export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawe
   const showAccessProfilesLoading = isAccessProfilesLoading && accessProfiles.length === 0;
   const showAccessProfilesError = isAccessProfilesError && accessProfiles.length === 0;
 
-  const handleAssignProfile = async (profile: AccessProfile) => {
+  const handleAssignProfile = async (profile: AccessProfileDto) => {
     const profileId = profile.id;
 
     if (typeof profileId !== 'number') {
@@ -135,7 +135,7 @@ export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawe
     }
   };
 
-  const handleUnassignProfile = async (profile: AccessProfile) => {
+  const handleUnassignProfile = async (profile: AccessProfileDto) => {
     const profileId = profile.id;
 
     if (typeof profileId !== 'number') {
