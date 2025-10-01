@@ -1,9 +1,26 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
+import { IdentityStatus } from '@photobank/shared/api/photobank';
+
 import FacesPage from './FacesPage';
+
+beforeAll(() => {
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false;
+  }
+  if (!Element.prototype.setPointerCapture) {
+    Element.prototype.setPointerCapture = () => {};
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {};
+  }
+  if (!Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {};
+  }
+});
 
 const { mockUseFacesGet, mockUsePersonsGetAll, mockUseFacesUpdate, mockToast } = vi.hoisted(() => ({
   mockUseFacesGet: vi.fn(),
@@ -174,5 +191,104 @@ describe('FacesPage', () => {
     expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Face unassigned' })
     );
+  });
+
+  test('shows backend identity statuses in the edit dialog', async () => {
+    const mutateAsync = vi.fn().mockResolvedValue({});
+    const face = {
+      id: 99,
+      faceId: 99,
+      identityStatus: IdentityStatus.Identified,
+    };
+
+    mockUseFacesGet.mockReturnValue({
+      data: { data: [face] },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    mockUsePersonsGetAll.mockReturnValue({
+      data: { data: [] },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+
+    mockUseFacesUpdate.mockReturnValue({
+      mutateAsync,
+      isPending: false,
+    });
+
+    const { Wrapper } = createWrapper();
+    const user = userEvent.setup();
+
+    render(<FacesPage />, { wrapper: Wrapper });
+
+    await user.click(await screen.findByRole('button', { name: /edit/i }));
+
+    const statusField = screen.getByText('Identity Status').closest('div');
+    expect(statusField).not.toBeNull();
+
+    const statusTrigger = statusField && within(statusField).getByRole('combobox');
+    expect(statusTrigger).toBeTruthy();
+
+    await user.click(statusTrigger!);
+
+    const backendStatuses = Object.values(IdentityStatus);
+
+    const listbox = await screen.findByRole('listbox');
+
+    for (const status of backendStatuses) {
+      expect(await within(listbox).findByText(status)).toBeInTheDocument();
+    }
+  });
+
+  test('renders identity status badges with backend colour mapping', async () => {
+    const statuses = Object.values(IdentityStatus);
+    const faces = statuses.map((status, index) => ({
+      id: index + 1,
+      faceId: index + 1,
+      identityStatus: status,
+    }));
+
+    mockUseFacesGet.mockReturnValue({
+      data: { data: faces },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    mockUsePersonsGetAll.mockReturnValue({
+      data: { data: [] },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+
+    mockUseFacesUpdate.mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: false,
+    });
+
+    const { Wrapper } = createWrapper();
+
+    render(<FacesPage />, { wrapper: Wrapper });
+
+    const expectedClasses: Record<string, string> = {
+      [IdentityStatus.Identified]: 'bg-success text-success-foreground',
+      [IdentityStatus.ForReprocessing]: 'bg-warning text-warning-foreground',
+      [IdentityStatus.NotDetected]: 'bg-warning text-warning-foreground',
+      [IdentityStatus.NotIdentified]: 'bg-warning text-warning-foreground',
+      [IdentityStatus.StopProcessing]: 'bg-destructive text-destructive-foreground',
+      [IdentityStatus.Undefined]: 'bg-muted text-muted-foreground',
+    };
+
+    for (const status of statuses) {
+      const badge = await screen.findByText(status);
+      expect(badge).toHaveClass(expectedClasses[status]);
+    }
   });
 });
