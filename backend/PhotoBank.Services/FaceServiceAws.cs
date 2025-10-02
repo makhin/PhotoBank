@@ -26,7 +26,6 @@ namespace PhotoBank.Services
         private readonly AmazonRekognitionClient _faceClient;
         private readonly IRepository<Face> _faceRepository;
         private readonly IRepository<Person> _personRepository;
-        private readonly IRepository<PersonFace> _personFaceRepository;
         private readonly ILogger<FaceService> _logger;
         private readonly IFaceStorageService _storage;
 
@@ -35,14 +34,12 @@ namespace PhotoBank.Services
         public FaceServiceAws(AmazonRekognitionClient faceClient,
             IRepository<Face> faceRepository,
             IRepository<Person> personRepository,
-            IRepository<PersonFace> personFaceRepository,
             IFaceStorageService storage,
             ILogger<FaceService> logger)
         {
             _faceClient = faceClient;
             _faceRepository = faceRepository;
             _personRepository = personRepository;
-            _personFaceRepository = personFaceRepository;
             _storage = storage;
             _logger = logger;
         }
@@ -101,27 +98,59 @@ namespace PhotoBank.Services
 
         public async Task SyncFacesToPersonAsync()
         {
-            var dbPersonFaces = await _personFaceRepository.GetAll().Include(p => p.Person).AsNoTracking().ToListAsync();
+            var faces = await _faceRepository.GetAll()
+                .AsNoTracking()
+                .Where(f => f.PersonId != null)
+                .Select(f => new FaceSyncProjection
+                {
+                    FaceId = f.Id,
+                    PersonId = f.PersonId!.Value,
+                    Provider = f.Provider,
+                    ExternalId = f.ExternalId,
+                    ExternalGuid = f.ExternalGuid,
+                    FaceKey = f.S3Key_Image
+                })
+                .ToListAsync();
 
-            var groupBy = dbPersonFaces.GroupBy(x => new { x.PersonId }, p => new { p.FaceId, p.ExternalGuid },
-                (key, g) => new { Key = key, Faces = g.ToList() });
+            var groupBy = faces
+                .GroupBy(x => x.PersonId)
+                .Select(g => new { PersonId = g.Key, Faces = g.ToList() });
 
             foreach (var dbPerson in groupBy)
             {
                 var listFaces = await _faceClient.ListFacesAsync(new ListFacesRequest
                 {
                     CollectionId = PersonGroupId,
-                    UserId = dbPerson.Key.PersonId.ToString()
+                    UserId = dbPerson.PersonId.ToString()
                 });
 
-                foreach (var personFace in dbPerson.Faces)
+                var knownProviderIds = listFaces.Faces
+                    .Select(f => f.FaceId)
+                    .Where(id => !string.IsNullOrEmpty(id))
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                foreach (var faceInfo in dbPerson.Faces)
                 {
-                    if (listFaces.Faces.Select(f=> f.FaceId).Contains(personFace.ExternalGuid.ToString()))
+                    if (!string.IsNullOrEmpty(faceInfo.Provider) && !string.Equals(faceInfo.Provider, "Aws", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
 
-                    var dbFace = await _faceRepository.GetAsync(personFace.FaceId);
+                    if (!string.IsNullOrEmpty(faceInfo.ExternalId) && knownProviderIds.Contains(faceInfo.ExternalId))
+                    {
+                        continue;
+                    }
+
+                    if (string.IsNullOrEmpty(faceInfo.FaceKey))
+                    {
+                        continue;
+                    }
+
+                    var dbFace = new Face
+                    {
+                        Id = faceInfo.FaceId,
+                        S3Key_Image = faceInfo.FaceKey
+                    };
 
                     await using var stream = await _storage.OpenReadStreamAsync(dbFace);
                     try
@@ -142,7 +171,7 @@ namespace PhotoBank.Services
                             var associateFaces  = await _faceClient.AssociateFacesAsync(new AssociateFacesRequest
                             {
                                 CollectionId = PersonGroupId,
-                                UserId = dbPerson.Key.PersonId.ToString(),
+                                UserId = dbPerson.PersonId.ToString(),
                                 FaceIds = new List<string> { faceRecord.Face.FaceId }
                             });
 
@@ -151,9 +180,24 @@ namespace PhotoBank.Services
                             {
                                 continue;
                             }
-                            var link = dbPersonFaces.Single(g => g.PersonId == dbPerson.Key.PersonId && g.FaceId == personFace.FaceId);
-                            link.ExternalGuid = Guid.Parse(associatedFace.FaceId);
-                            await _personFaceRepository.UpdateAsync(link, pgf => pgf.ExternalGuid);
+                            var providerId = associatedFace.FaceId;
+                            faceInfo.ExternalId = providerId;
+                            faceInfo.Provider = "Aws";
+
+                            if (Guid.TryParse(providerId, out var parsed))
+                            {
+                                faceInfo.ExternalGuid = parsed;
+                            }
+
+                            knownProviderIds.Add(providerId);
+
+                            await _faceRepository.UpdateAsync(new Face
+                            {
+                                Id = faceInfo.FaceId,
+                                Provider = faceInfo.Provider,
+                                ExternalId = faceInfo.ExternalId,
+                                ExternalGuid = faceInfo.ExternalGuid
+                            }, f => f.Provider, f => f.ExternalId, f => f.ExternalGuid);
                         }
                     }
                     catch (Exception e)
@@ -162,6 +206,16 @@ namespace PhotoBank.Services
                     }
                 }
             }
+        }
+
+        private sealed class FaceSyncProjection
+        {
+            public int FaceId { get; init; }
+            public int PersonId { get; init; }
+            public string? Provider { get; set; }
+            public string? ExternalId { get; set; }
+            public Guid ExternalGuid { get; set; }
+            public string? FaceKey { get; init; }
         }
 
         public async Task<List<FaceDetail>> DetectFacesAsync(byte[] image)

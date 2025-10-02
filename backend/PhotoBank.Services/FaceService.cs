@@ -35,7 +35,6 @@ namespace PhotoBank.Services
         private readonly IFaceClient _faceClient;
         private readonly IRepository<Face> _faceRepository;
         private readonly IRepository<DbContext.Models.Person> _personRepository;
-        private readonly IRepository<PersonFace> _personFaceRepository;
         private readonly IRepository<Photo> _photoRepository;
         private readonly IMinioClient _minioClient;
         private readonly IMapper _mapper;
@@ -63,7 +62,6 @@ namespace PhotoBank.Services
         public FaceService(IFaceClient faceClient,
             IRepository<Face> faceRepository,
             IRepository<DbContext.Models.Person> personRepository,
-            IRepository<PersonFace> personFaceRepository,
             IRepository<Photo> photoRepository,
             IMinioClient minioClient,
             IMapper mapper,
@@ -72,7 +70,6 @@ namespace PhotoBank.Services
             this._faceClient = faceClient;
             _faceRepository = faceRepository;
             _personRepository = personRepository;
-            _personFaceRepository = personFaceRepository;
             _photoRepository = photoRepository;
             _minioClient = minioClient;
             _mapper = mapper;
@@ -135,23 +132,23 @@ namespace PhotoBank.Services
 
         public async Task SyncFacesToPersonAsync()
         {
-            var dbPersonFaces = await _personFaceRepository
+            var dbFaces = await _faceRepository
                 .GetAll()
-                .Include(pf => pf.Person)
-                .Include(pf => pf.Face)
                 .AsNoTracking()
-                .Select(pf => new PersonFaceSyncProjection
+                .Where(f => f.PersonId != null)
+                .Select(f => new FaceSyncProjection
                 {
-                    PersonFaceId = pf.Id,
-                    PersonId = pf.PersonId,
-                    PersonExternalGuid = pf.Person.ExternalGuid,
-                    FaceId = pf.FaceId,
-                    ExternalGuid = pf.ExternalGuid,
-                    FaceKey = pf.Face != null ? pf.Face.S3Key_Image : null
+                    FaceId = f.Id,
+                    PersonId = f.PersonId!.Value,
+                    PersonExternalGuid = f.Person != null ? f.Person.ExternalGuid : Guid.Empty,
+                    Provider = f.Provider,
+                    ExternalId = f.ExternalId,
+                    ExternalGuid = f.ExternalGuid,
+                    FaceKey = f.S3Key_Image
                 })
                 .ToListAsync();
 
-            var groupBy = dbPersonFaces
+            var groupBy = dbFaces
                 .GroupBy(x => new { x.PersonId, x.PersonExternalGuid }, p => p,
                     (key, g) => new { Key = key, Faces = g.ToList() });
 
@@ -164,23 +161,28 @@ namespace PhotoBank.Services
 
                 var person = await _faceClient.PersonGroupPerson.GetAsync(PersonGroupId, dbPerson.Key.PersonExternalGuid);
                 var existingExternalGuids = dbPerson.Faces
-                    .Where(f => f.ExternalGuid != Guid.Empty)
+                    .Where(f => f.ExternalGuid != Guid.Empty && (string.IsNullOrEmpty(f.Provider) || string.Equals(f.Provider, "Azure", StringComparison.OrdinalIgnoreCase)))
                     .Select(f => f.ExternalGuid)
                     .ToHashSet();
 
-                foreach (var personFace in dbPerson.Faces)
+                foreach (var faceInfo in dbPerson.Faces)
                 {
-                    if (personFace.ExternalGuid != Guid.Empty && person.PersistedFaceIds.Contains(personFace.ExternalGuid))
+                    if (!string.IsNullOrEmpty(faceInfo.Provider) && !string.Equals(faceInfo.Provider, "Azure", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
 
-                    if (string.IsNullOrEmpty(personFace.FaceKey))
+                    if (faceInfo.ExternalGuid != Guid.Empty && person.PersistedFaceIds.Contains(faceInfo.ExternalGuid))
                     {
                         continue;
                     }
 
-                    var data = await GetObjectAsync(personFace.FaceKey);
+                    if (string.IsNullOrEmpty(faceInfo.FaceKey))
+                    {
+                        continue;
+                    }
+
+                    var data = await GetObjectAsync(faceInfo.FaceKey);
                     await using (var stream = new MemoryStream(data))
                     {
                         try
@@ -189,18 +191,25 @@ namespace PhotoBank.Services
                                 PersonGroupId,
                                 person.PersonId,
                                 stream,
-                                personFace.FaceId.ToString());
+                                faceInfo.FaceId.ToString());
 
-                            var link = new PersonFace
+                            if (face?.PersistedFaceId == null)
                             {
-                                Id = personFace.PersonFaceId,
-                                ExternalGuid = face.PersistedFaceId
-                            };
+                                continue;
+                            }
 
-                            personFace.ExternalGuid = face.PersistedFaceId;
-                            existingExternalGuids.Add(face.PersistedFaceId);
+                            faceInfo.ExternalGuid = face.PersistedFaceId.Value;
+                            faceInfo.Provider = "Azure";
+                            faceInfo.ExternalId = face.PersistedFaceId.Value.ToString();
+                            existingExternalGuids.Add(face.PersistedFaceId.Value);
 
-                            await _personFaceRepository.UpdateAsync(link, pgf => pgf.ExternalGuid);
+                            await _faceRepository.UpdateAsync(new Face
+                            {
+                                Id = faceInfo.FaceId,
+                                Provider = faceInfo.Provider,
+                                ExternalId = faceInfo.ExternalId,
+                                ExternalGuid = faceInfo.ExternalGuid
+                            }, f => f.Provider, f => f.ExternalId, f => f.ExternalGuid);
                         }
                         catch (Exception e)
                         {
@@ -229,12 +238,13 @@ namespace PhotoBank.Services
             IsPersonGroupTrained = await GetTrainingStatusAsync();
         }
 
-        private sealed class PersonFaceSyncProjection
+        private sealed class FaceSyncProjection
         {
-            public int PersonFaceId { get; init; }
             public int PersonId { get; init; }
             public Guid PersonExternalGuid { get; init; }
             public int FaceId { get; init; }
+            public string? Provider { get; set; }
+            public string? ExternalId { get; set; }
             public Guid ExternalGuid { get; set; }
             public string? FaceKey { get; init; }
         }
@@ -242,9 +252,8 @@ namespace PhotoBank.Services
         public async Task AddFacesToLargeFaceListAsync()
         {
             var dbFaces = await _faceRepository.GetAll()
-                .Include(f => f.PersonFace)
                 .AsNoTracking()
-                .Where(f => f.PersonFace == null)
+                .Where(f => f.PersonId == null)
                 .Take(1000).ToListAsync();
 
             LargeFaceList list = null;

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,7 +17,6 @@ public sealed class UnifiedFaceService
     private readonly IFaceProvider _provider;
     private readonly IRepository<Person> _persons;
     private readonly IRepository<Face> _faces;
-    private readonly IRepository<PersonFace> _links;
     private readonly ILogger<UnifiedFaceService> _log;
     private readonly IFaceStorageService _storage;
 
@@ -24,14 +24,12 @@ public sealed class UnifiedFaceService
         IFaceProvider provider,
         IRepository<Person> persons,
         IRepository<Face> faces,
-        IRepository<PersonFace> links,
         IFaceStorageService storage,
         ILogger<UnifiedFaceService> log)
     {
         _provider = provider;
         _persons = persons;
         _faces = faces;
-        _links = links;
         _storage = storage;
         _log = log;
     }
@@ -64,17 +62,33 @@ public sealed class UnifiedFaceService
 
     public async Task SyncFacesToPersonsAsync(CancellationToken ct = default)
     {
-        var links = await _links.GetAll()
+        var faces = await _faces.GetAll()
             .AsNoTracking()
-            .Select(l => new { l.Id, l.PersonId, l.FaceId, l.ExternalId, l.Provider })
+            .Where(f => f.PersonId != null)
+            .Select(f => new
+            {
+                f.Id,
+                f.PersonId,
+                f.Provider,
+                f.ExternalId,
+                f.ExternalGuid,
+                f.S3Key_Image
+            })
             .ToListAsync(ct);
 
-        foreach (var group in links.GroupBy(l => l.PersonId))
+        foreach (var group in faces
+                     .Where(f => f.PersonId != null)
+                     .GroupBy(f => f.PersonId!.Value))
         {
-            var missing = group.Where(g => string.IsNullOrEmpty(g.ExternalId)).ToList();
+            var missing = group
+                .Where(g =>
+                    (string.IsNullOrEmpty(g.Provider) || g.Provider == _provider.Kind.ToString()) &&
+                    string.IsNullOrEmpty(g.ExternalId) &&
+                    g.ExternalGuid == Guid.Empty)
+                .ToList();
             if (missing.Count == 0) continue;
 
-            var faceIds = missing.Select(m => m.FaceId).ToArray();
+            var faceIds = missing.Select(m => m.Id).ToArray();
 
             var faces = await _faces.GetAll()
                 .Where(f => faceIds.Contains(f.Id))
@@ -84,6 +98,11 @@ public sealed class UnifiedFaceService
             var toLink = new List<FaceToLink>();
             foreach (var face in faces)
             {
+                if (string.IsNullOrEmpty(face.S3Key_Image))
+                {
+                    continue;
+                }
+
                 await using var stream = await _storage.OpenReadStreamAsync(face, ct);
                 var ms = new MemoryStream();
                 await stream.CopyToAsync(ms, ct);
@@ -94,19 +113,28 @@ public sealed class UnifiedFaceService
                     ExternalId: null));
             }
 
+            if (toLink.Count == 0)
+            {
+                continue;
+            }
+
             var map = await _provider.LinkFacesToPersonAsync(group.Key, toLink, ct);
             foreach (var (faceId, external) in map)
             {
-                var linkId = missing.Single(m => m.FaceId == faceId).Id;
-
-                await _links.UpdateAsync(new PersonFace
+                var guid = Guid.Empty;
+                if (Guid.TryParse(external, out var parsed))
                 {
-                    Id = linkId,
+                    guid = parsed;
+                }
+
+                await _faces.UpdateAsync(new Face
+                {
+                    Id = faceId,
                     PersonId = group.Key,
-                    FaceId = faceId,
+                    Provider = _provider.Kind.ToString(),
                     ExternalId = external,
-                    Provider = _provider.Kind.ToString()
-                }, x => x.ExternalId, x => x.Provider);
+                    ExternalGuid = guid
+                }, x => x.Provider, x => x.ExternalId, x => x.ExternalGuid);
             }
         }
     }

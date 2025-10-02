@@ -19,7 +19,6 @@ using PhotoBank.Services;
 using PhotoBank.UnitTests.Infrastructure.FaceRecognition.Aws;
 using DbFace = PhotoBank.DbContext.Models.Face;
 using DbPerson = PhotoBank.DbContext.Models.Person;
-using DbPersonFace = PhotoBank.DbContext.Models.PersonFace;
 
 namespace PhotoBank.UnitTests;
 
@@ -31,7 +30,6 @@ public class FaceServiceAwsTests
     private Mock<AmazonRekognitionClient> _rekognitionClient = null!;
     private Mock<IRepository<DbFace>> _faceRepository = null!;
     private Mock<IRepository<DbPerson>> _personRepository = null!;
-    private Mock<IRepository<DbPersonFace>> _personFaceRepository = null!;
     private Mock<IFaceStorageService> _storage = null!;
     private Mock<ILogger<FaceService>> _logger = null!;
     private FaceServiceAws _service = null!;
@@ -43,7 +41,6 @@ public class FaceServiceAwsTests
 
         _faceRepository = new Mock<IRepository<DbFace>>();
         _personRepository = new Mock<IRepository<DbPerson>>();
-        _personFaceRepository = new Mock<IRepository<DbPersonFace>>();
         _storage = new Mock<IFaceStorageService>();
         _logger = new Mock<ILogger<FaceService>>();
 
@@ -51,7 +48,6 @@ public class FaceServiceAwsTests
             _rekognitionClient.Object,
             _faceRepository.Object,
             _personRepository.Object,
-            _personFaceRepository.Object,
             _storage.Object,
             _logger.Object);
     }
@@ -114,22 +110,19 @@ public class FaceServiceAwsTests
     [Test]
     public async Task SyncFacesToPersonAsync_ShouldIndexAndAssociateNewFaces()
     {
-        var personFace = new DbPersonFace
+        var face = new DbFace
         {
+            Id = 5,
             PersonId = 10,
-            FaceId = 5,
-            ExternalGuid = Guid.Empty
+            S3Key_Image = "key",
+            ExternalGuid = Guid.Empty,
+            Provider = null,
+            ExternalId = null
         };
 
-        var dbPersonFaces = new List<DbPersonFace> { personFace };
-
-        _personFaceRepository
-            .Setup(r => r.GetAll())
-            .Returns(new TestAsyncEnumerable<DbPersonFace>(dbPersonFaces));
-
         _faceRepository
-            .Setup(r => r.GetAsync(personFace.FaceId))
-            .ReturnsAsync(new DbFace { Id = personFace.FaceId, S3Key_Image = "key" });
+            .Setup(r => r.GetAll())
+            .Returns(new TestAsyncEnumerable<DbFace>(new[] { face }));
 
         _storage
             .Setup(s => s.OpenReadStreamAsync(It.IsAny<DbFace>(), It.IsAny<CancellationToken>()))
@@ -137,7 +130,7 @@ public class FaceServiceAwsTests
 
         _rekognitionClient
             .Setup(c => c.ListFacesAsync(
-                It.Is<ListFacesRequest>(r => r.CollectionId == PersonGroupId && r.UserId == personFace.PersonId.ToString()),
+                It.Is<ListFacesRequest>(r => r.CollectionId == PersonGroupId && r.UserId == face.PersonId.ToString()),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(RekognitionResponseBuilder.Faces());
 
@@ -156,15 +149,19 @@ public class FaceServiceAwsTests
             .Setup(c => c.AssociateFacesAsync(
                 It.Is<AssociateFacesRequest>(r =>
                     r.CollectionId == PersonGroupId &&
-                    r.UserId == personFace.PersonId.ToString() &&
+                    r.UserId == face.PersonId.ToString() &&
                     r.FaceIds.Single() == indexedFaceId),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(RekognitionResponseBuilder.AssociatedFaces(indexedFaceId));
 
-        _personFaceRepository
+        _faceRepository
             .Setup(r => r.UpdateAsync(
-                It.Is<DbPersonFace>(pf => pf.ExternalGuid == Guid.Parse(indexedFaceId)),
-                It.IsAny<Expression<Func<DbPersonFace, object>>[]>()))
+                It.Is<DbFace>(f =>
+                    f.Id == face.Id &&
+                    f.Provider == "Aws" &&
+                    f.ExternalId == indexedFaceId &&
+                    f.ExternalGuid == Guid.Parse(indexedFaceId)),
+                It.IsAny<Expression<Func<DbFace, object>>[]>()))
             .ReturnsAsync(1)
             .Verifiable();
 
@@ -178,28 +175,30 @@ public class FaceServiceAwsTests
             It.IsAny<AssociateFacesRequest>(),
             It.IsAny<CancellationToken>()), Times.Once);
 
-        _personFaceRepository.Verify();
-        dbPersonFaces.Single().ExternalGuid.Should().Be(Guid.Parse(indexedFaceId));
+        _faceRepository.Verify();
     }
 
     [Test]
     public async Task SyncFacesToPersonAsync_WhenFaceAlreadyIndexed_ShouldSkipIndexing()
     {
         var existingGuid = Guid.NewGuid();
-        var personFace = new DbPersonFace
+        var face = new DbFace
         {
+            Id = 7,
             PersonId = 42,
-            FaceId = 7,
-            ExternalGuid = existingGuid
+            ExternalGuid = existingGuid,
+            ExternalId = existingGuid.ToString(),
+            Provider = "Aws",
+            S3Key_Image = "key"
         };
 
-        _personFaceRepository
+        _faceRepository
             .Setup(r => r.GetAll())
-            .Returns(new TestAsyncEnumerable<DbPersonFace>(new[] { personFace }));
+            .Returns(new TestAsyncEnumerable<DbFace>(new[] { face }));
 
         _rekognitionClient
             .Setup(c => c.ListFacesAsync(
-                It.Is<ListFacesRequest>(r => r.CollectionId == PersonGroupId && r.UserId == personFace.PersonId.ToString()),
+                It.Is<ListFacesRequest>(r => r.CollectionId == PersonGroupId && r.UserId == face.PersonId.ToString()),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(RekognitionResponseBuilder.Faces(existingGuid.ToString()));
 
@@ -208,10 +207,6 @@ public class FaceServiceAwsTests
         _rekognitionClient.Verify(c => c.IndexFacesAsync(
             It.IsAny<IndexFacesRequest>(),
             It.IsAny<CancellationToken>()), Times.Never);
-
-        _personFaceRepository.Verify(r => r.UpdateAsync(
-            It.IsAny<DbPersonFace>(),
-            It.IsAny<Expression<Func<DbPersonFace, object>>[]>()), Times.Never);
     }
 
     [Test]
