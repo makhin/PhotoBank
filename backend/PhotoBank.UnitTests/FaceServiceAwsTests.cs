@@ -2,22 +2,29 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Rekognition;
 using Amazon.Rekognition.Model;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.UnitTests.Infrastructure.FaceRecognition.Aws;
 using DbFace = PhotoBank.DbContext.Models.Face;
+using DbPhoto = PhotoBank.DbContext.Models.Photo;
+using DbStorage = PhotoBank.DbContext.Models.Storage;
+using DbCaption = PhotoBank.DbContext.Models.Caption;
+using DbPhotoTag = PhotoBank.DbContext.Models.PhotoTag;
+using DbPhotoCategory = PhotoBank.DbContext.Models.PhotoCategory;
+using DbObjectProperty = PhotoBank.DbContext.Models.ObjectProperty;
+using DbFile = PhotoBank.DbContext.Models.File;
 using DbPerson = PhotoBank.DbContext.Models.Person;
 
 namespace PhotoBank.UnitTests;
@@ -28,8 +35,10 @@ public class FaceServiceAwsTests
     private const string PersonGroupId = "my-cicrle-person-group";
 
     private Mock<AmazonRekognitionClient> _rekognitionClient = null!;
-    private Mock<IRepository<DbFace>> _faceRepository = null!;
-    private Mock<IRepository<DbPerson>> _personRepository = null!;
+    private PhotoBankDbContext _dbContext = null!;
+    private ServiceProvider _serviceProvider = null!;
+    private Repository<DbFace> _faceRepository = null!;
+    private Repository<DbPerson> _personRepository = null!;
     private Mock<IFaceStorageService> _storage = null!;
     private Mock<ILogger<FaceService>> _logger = null!;
     private FaceServiceAws _service = null!;
@@ -39,31 +48,38 @@ public class FaceServiceAwsTests
     {
         _rekognitionClient = RekognitionClientMockFactory.Create();
 
-        _faceRepository = new Mock<IRepository<DbFace>>();
-        _personRepository = new Mock<IRepository<DbPerson>>();
+        _dbContext = TestDbFactory.CreateInMemory();
+        var services = new ServiceCollection();
+        services.AddSingleton(_dbContext);
+        _serviceProvider = services.BuildServiceProvider();
+
+        _faceRepository = new Repository<DbFace>(_serviceProvider);
+        _personRepository = new Repository<DbPerson>(_serviceProvider);
         _storage = new Mock<IFaceStorageService>();
         _logger = new Mock<ILogger<FaceService>>();
 
         _service = new FaceServiceAws(
             _rekognitionClient.Object,
-            _faceRepository.Object,
-            _personRepository.Object,
+            _faceRepository,
+            _personRepository,
             _storage.Object,
             _logger.Object);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        _dbContext.Dispose();
+        _serviceProvider.Dispose();
     }
 
     [Test]
     public async Task SyncPersonsAsync_ShouldCreateMissingCollectionAndSyncUsers()
     {
-        var dbPersons = new List<DbPerson>
-        {
-            new() { Id = 1 },
-            new() { Id = 2 }
-        };
-
-        _personRepository
-            .Setup(r => r.GetAll())
-            .Returns(new TestAsyncEnumerable<DbPerson>(dbPersons));
+        _dbContext.Persons.AddRange(
+            new DbPerson { Id = 1, Name = "Alice" },
+            new DbPerson { Id = 2, Name = "Bob" });
+        await _dbContext.SaveChangesAsync();
 
         _rekognitionClient
             .Setup(c => c.ListCollectionsAsync(
@@ -110,22 +126,24 @@ public class FaceServiceAwsTests
     [Test]
     public async Task SyncFacesToPersonAsync_ShouldIndexAndAssociateNewFaces()
     {
-        var face = new DbFace
-        {
-            Id = 5,
-            PersonId = 10,
-            S3Key_Image = "key",
-            ExternalGuid = Guid.Empty,
-            Provider = null,
-            ExternalId = null
-        };
+        var face = CreateFace(
+            faceId: 5,
+            personId: 10,
+            key: "key",
+            etag: "etag",
+            sha: "sha",
+            externalGuid: Guid.Empty,
+            externalId: null,
+            provider: null);
 
-        _faceRepository
-            .Setup(r => r.GetAll())
-            .Returns(new TestAsyncEnumerable<DbFace>(new[] { face }));
+        _dbContext.Add(face);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
 
         _storage
-            .Setup(s => s.OpenReadStreamAsync(It.IsAny<DbFace>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.OpenReadStreamAsync(
+                It.Is<DbFace>(f => f.Id == face.Id && f.S3Key_Image == face.S3Key_Image),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => new MemoryStream(new byte[] { 1, 2, 3 }));
 
         _rekognitionClient
@@ -154,17 +172,6 @@ public class FaceServiceAwsTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(RekognitionResponseBuilder.AssociatedFaces(indexedFaceId));
 
-        _faceRepository
-            .Setup(r => r.UpdateAsync(
-                It.Is<DbFace>(f =>
-                    f.Id == face.Id &&
-                    f.Provider == "Aws" &&
-                    f.ExternalId == indexedFaceId &&
-                    f.ExternalGuid == Guid.Parse(indexedFaceId)),
-                It.IsAny<Expression<Func<DbFace, object>>[]>()))
-            .ReturnsAsync(1)
-            .Verifiable();
-
         await _service.SyncFacesToPersonAsync();
 
         _rekognitionClient.Verify(c => c.IndexFacesAsync(
@@ -175,26 +182,29 @@ public class FaceServiceAwsTests
             It.IsAny<AssociateFacesRequest>(),
             It.IsAny<CancellationToken>()), Times.Once);
 
-        _faceRepository.Verify();
+        var updatedFace = await _dbContext.Faces.AsNoTracking().SingleAsync(f => f.Id == face.Id);
+        updatedFace.Provider.Should().Be("Aws");
+        updatedFace.ExternalId.Should().Be(indexedFaceId);
+        updatedFace.ExternalGuid.Should().Be(Guid.Parse(indexedFaceId));
     }
 
     [Test]
     public async Task SyncFacesToPersonAsync_WhenFaceAlreadyIndexed_ShouldSkipIndexing()
     {
         var existingGuid = Guid.NewGuid();
-        var face = new DbFace
-        {
-            Id = 7,
-            PersonId = 42,
-            ExternalGuid = existingGuid,
-            ExternalId = existingGuid.ToString(),
-            Provider = "Aws",
-            S3Key_Image = "key"
-        };
+        var face = CreateFace(
+            faceId: 7,
+            personId: 42,
+            key: "key",
+            etag: "etag",
+            sha: "sha",
+            externalGuid: existingGuid,
+            externalId: existingGuid.ToString(),
+            provider: "Aws");
 
-        _faceRepository
-            .Setup(r => r.GetAll())
-            .Returns(new TestAsyncEnumerable<DbFace>(new[] { face }));
+        _dbContext.Add(face);
+        await _dbContext.SaveChangesAsync();
+        _dbContext.ChangeTracker.Clear();
 
         _rekognitionClient
             .Setup(c => c.ListFacesAsync(
@@ -283,70 +293,70 @@ public class FaceServiceAwsTests
         result.Should().NotBeNull().And.BeEmpty();
     }
 
-    private sealed class TestAsyncEnumerable<T> : EnumerableQuery<T>, IAsyncEnumerable<T>, IQueryable<T>
+    private static DbFace CreateFace(
+        int faceId,
+        int personId,
+        string key,
+        string etag,
+        string sha,
+        Guid externalGuid,
+        string? externalId,
+        string? provider)
     {
-        public TestAsyncEnumerable(IEnumerable<T> enumerable)
-            : base(enumerable)
+        var storage = new DbStorage
         {
-        }
+            Id = 1000 + faceId,
+            Name = $"storage-{faceId}",
+            Folder = "folder",
+            Photos = new List<DbPhoto>()
+        };
 
-        public TestAsyncEnumerable(Expression expression)
-            : base(expression)
+        var photo = new DbPhoto
         {
-        }
+            Id = 2000 + faceId,
+            StorageId = storage.Id,
+            Storage = storage,
+            Name = $"photo-{faceId}",
+            AccentColor = "ffffff",
+            DominantColorBackground = "bg",
+            DominantColorForeground = "fg",
+            DominantColors = "colors",
+            S3Key_Preview = $"preview-{faceId}",
+            S3ETag_Preview = $"etagp-{faceId}",
+            Sha256_Preview = $"shap-{faceId}",
+            S3Key_Thumbnail = $"thumb-{faceId}",
+            S3ETag_Thumbnail = $"etagt-{faceId}",
+            Sha256_Thumbnail = $"shat-{faceId}",
+            Captions = new List<DbCaption>(),
+            PhotoTags = new List<DbPhotoTag>(),
+            PhotoCategories = new List<DbPhotoCategory>(),
+            ObjectProperties = new List<DbObjectProperty>(),
+            Faces = new List<DbFace>(),
+            Files = new List<DbFile>(),
+            ImageHash = $"hash-{faceId}",
+            RelativePath = $"path-{faceId}"
+        };
 
-        IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
-            => new TestAsyncEnumerator<T>(this.AsEnumerable().GetEnumerator());
+        storage.Photos = new List<DbPhoto> { photo };
 
-        IQueryProvider IQueryable.Provider => new TestAsyncQueryProvider<T>(this);
-    }
-
-    private sealed class TestAsyncEnumerator<T> : IAsyncEnumerator<T>
-    {
-        private readonly IEnumerator<T> _inner;
-
-        public TestAsyncEnumerator(IEnumerator<T> inner)
+        var face = new DbFace
         {
-            _inner = inner;
-        }
+            Id = faceId,
+            PersonId = personId,
+            PhotoId = photo.Id,
+            Photo = photo,
+            S3Key_Image = key,
+            S3ETag_Image = etag,
+            Sha256_Image = sha,
+            FaceAttributes = "{}",
+            Rectangle = new NetTopologySuite.Geometries.Point(0, 0),
+            ExternalGuid = externalGuid,
+            ExternalId = externalId,
+            Provider = provider
+        };
 
-        public T Current => _inner.Current;
+        photo.Faces.Add(face);
 
-        public ValueTask DisposeAsync()
-        {
-            _inner.Dispose();
-            return ValueTask.CompletedTask;
-        }
-
-        public ValueTask<bool> MoveNextAsync()
-            => new(_inner.MoveNext());
-    }
-
-    private sealed class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
-    {
-        private readonly IQueryProvider _inner;
-
-        public TestAsyncQueryProvider(IQueryProvider inner)
-        {
-            _inner = inner;
-        }
-
-        public IQueryable CreateQuery(Expression expression)
-            => new TestAsyncEnumerable<TEntity>(expression);
-
-        public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
-            => new TestAsyncEnumerable<TElement>(expression);
-
-        public object Execute(Expression expression)
-            => _inner.Execute(expression);
-
-        public TResult Execute<TResult>(Expression expression)
-            => _inner.Execute<TResult>(expression);
-
-        public IAsyncEnumerable<TResult> ExecuteAsync<TResult>(Expression expression)
-            => new TestAsyncEnumerable<TResult>(expression);
-
-        public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
-            => Execute<TResult>(expression);
+        return face;
     }
 }
