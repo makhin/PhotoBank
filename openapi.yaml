@@ -498,8 +498,8 @@ paths:
   /personfaces:
     get:
       tags:
-        - PersonFaces
-      operationId: PersonFaces_GetAll
+        - Faces
+      operationId: Faces_GetMetadata
       responses:
         '200':
           description: OK
@@ -508,42 +508,42 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PersonFaceDto'
+                  $ref: '#/components/schemas/FaceDto'
             text/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/PersonFaceDto'
+                  $ref: '#/components/schemas/FaceDto'
     post:
       tags:
-        - PersonFaces
-      operationId: PersonFaces_Create
+        - Faces
+      operationId: Faces_CreateMetadata
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PersonFaceDto'
+              $ref: '#/components/schemas/FaceDto'
           text/json:
             schema:
-              $ref: '#/components/schemas/PersonFaceDto'
+              $ref: '#/components/schemas/FaceDto'
           application/*+json:
             schema:
-              $ref: '#/components/schemas/PersonFaceDto'
+              $ref: '#/components/schemas/FaceDto'
       responses:
         '201':
           description: Created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PersonFaceDto'
+                $ref: '#/components/schemas/FaceDto'
             text/json:
               schema:
-                $ref: '#/components/schemas/PersonFaceDto'
+                $ref: '#/components/schemas/FaceDto'
   '/personfaces/{id}':
     put:
       tags:
-        - PersonFaces
-      operationId: PersonFaces_Update
+        - Faces
+      operationId: Faces_UpdateMetadata
       parameters:
         - name: id
           in: path
@@ -555,27 +555,27 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PersonFaceDto'
+              $ref: '#/components/schemas/FaceDto'
           text/json:
             schema:
-              $ref: '#/components/schemas/PersonFaceDto'
+              $ref: '#/components/schemas/FaceDto'
           application/*+json:
             schema:
-              $ref: '#/components/schemas/PersonFaceDto'
+              $ref: '#/components/schemas/FaceDto'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PersonFaceDto'
+                $ref: '#/components/schemas/FaceDto'
             text/json:
               schema:
-                $ref: '#/components/schemas/PersonFaceDto'
+                $ref: '#/components/schemas/FaceDto'
     delete:
       tags:
-        - PersonFaces
-      operationId: PersonFaces_Delete
+        - Faces
+      operationId: Faces_DeleteMetadata
       parameters:
         - name: id
           in: path
@@ -1357,9 +1357,6 @@ components:
           format: int32
       additionalProperties: false
     FaceDto:
-      required:
-        - faceBox
-        - friendlyFaceAttributes
       type: object
       properties:
         id:
@@ -1381,9 +1378,27 @@ components:
           nullable: true
         faceBox:
           $ref: '#/components/schemas/FaceBoxDto'
+          nullable: true
         friendlyFaceAttributes:
-          minLength: 1
           type: string
+          nullable: true
+        provider:
+          type: string
+          nullable: true
+        externalId:
+          type: string
+          nullable: true
+        externalGuid:
+          type: string
+          format: uuid
+        photoId:
+          type: integer
+          format: int32
+        identifiedWithConfidence:
+          type: number
+          format: double
+        identityStatus:
+          $ref: '#/components/schemas/IdentityStatus'
       additionalProperties: false
     FaceIdentityDto:
       type: object
@@ -1525,31 +1540,6 @@ components:
         name:
           minLength: 1
           type: string
-      additionalProperties: false
-    PersonFaceDto:
-      required:
-        - faceId
-        - personId
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        personId:
-          type: integer
-          format: int32
-        faceId:
-          type: integer
-          format: int32
-        provider:
-          type: string
-          nullable: true
-        externalId:
-          type: string
-          nullable: true
-        externalGuid:
-          type: string
-          format: uuid
       additionalProperties: false
     PersonGroupDto:
       required:

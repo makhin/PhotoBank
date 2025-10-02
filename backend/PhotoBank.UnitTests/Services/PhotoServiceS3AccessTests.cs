@@ -206,8 +206,7 @@ public class PhotoServiceS3AccessTests
             S3Key_Image = "face-key",
             S3ETag_Image = "face-etag",
             Sha256_Image = "face-sha",
-            FaceAttributes = "{}",
-            PersonFace = null!
+            FaceAttributes = "{}"
         };
         photo.Faces.Add(face);
         context.Faces.Add(face);

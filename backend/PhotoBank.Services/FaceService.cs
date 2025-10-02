@@ -193,15 +193,15 @@ namespace PhotoBank.Services
                                 stream,
                                 faceInfo.FaceId.ToString());
 
-                            if (face?.PersistedFaceId == null)
+                            if (face?.PersistedFaceId is not Guid persistedFaceId || persistedFaceId == Guid.Empty)
                             {
                                 continue;
                             }
 
-                            faceInfo.ExternalGuid = face.PersistedFaceId.Value;
+                            faceInfo.ExternalGuid = persistedFaceId;
                             faceInfo.Provider = "Azure";
-                            faceInfo.ExternalId = face.PersistedFaceId.Value.ToString();
-                            existingExternalGuids.Add(face.PersistedFaceId.Value);
+                            faceInfo.ExternalId = persistedFaceId.ToString();
+                            existingExternalGuids.Add(persistedFaceId);
 
                             await _faceRepository.UpdateAsync(new Face
                             {
@@ -218,19 +218,19 @@ namespace PhotoBank.Services
                     }
                 }
 
-                foreach (var persistedFaceId in person.PersistedFaceIds.Where(f => f != null))
+                foreach (var persistedFaceId in person.PersistedFaceIds)
                 {
-                    if (persistedFaceId == null)
+                    if (persistedFaceId is not Guid faceId || faceId == Guid.Empty)
                     {
                         continue;
                     }
 
-                    if (existingExternalGuids.Contains(persistedFaceId.Value))
+                    if (existingExternalGuids.Contains(faceId))
                     {
                         continue;
                     }
 
-                    await _faceClient.PersonGroupPerson.DeleteFaceAsync(PersonGroupId, person.PersonId, persistedFaceId.Value);
+                    await _faceClient.PersonGroupPerson.DeleteFaceAsync(PersonGroupId, person.PersonId, faceId);
                 }
             }
 

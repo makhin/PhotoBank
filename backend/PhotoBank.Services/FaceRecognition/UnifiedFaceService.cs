@@ -90,13 +90,13 @@ public sealed class UnifiedFaceService
 
             var faceIds = missing.Select(m => m.Id).ToArray();
 
-            var faces = await _faces.GetAll()
+            var facesToLink = await _faces.GetAll()
                 .Where(f => faceIds.Contains(f.Id))
                 .Select(f => new Face { Id = f.Id, S3Key_Image = f.S3Key_Image })
                 .ToListAsync(ct);
 
             var toLink = new List<FaceToLink>();
-            foreach (var face in faces)
+            foreach (var face in facesToLink)
             {
                 if (string.IsNullOrEmpty(face.S3Key_Image))
                 {

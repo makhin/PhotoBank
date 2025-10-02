@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace PhotoBank.UnitTests;
 
 [TestFixture]
-public class PersonFaceMappingTests
+public class FaceDtoMappingTests
 {
     private IMapper _mapper = null!;
 
@@ -25,24 +25,30 @@ public class PersonFaceMappingTests
     }
 
     [Test]
-    public void MapsIds()
+    public void MapsMetadata()
     {
+        var externalGuid = Guid.NewGuid();
         var entity = new Face
         {
             Id = 3,
             PersonId = 2,
             Provider = "azure",
             ExternalId = "ext",
-            ExternalGuid = Guid.NewGuid()
+            ExternalGuid = externalGuid,
+            PhotoId = 8,
+            IdentifiedWithConfidence = 0.8,
+            IdentityStatus = IdentityStatus.Identified
         };
 
-        var dto = _mapper.Map<PersonFaceDto>(entity);
+        var dto = _mapper.Map<FaceDto>(entity);
 
         dto.Id.Should().Be(entity.Id);
-        dto.FaceId.Should().Be(entity.Id);
-        dto.PersonId.Should().Be(entity.PersonId!.Value);
+        dto.PersonId.Should().Be(entity.PersonId);
         dto.Provider.Should().Be(entity.Provider);
         dto.ExternalId.Should().Be(entity.ExternalId);
         dto.ExternalGuid.Should().Be(entity.ExternalGuid);
+        dto.PhotoId.Should().Be(entity.PhotoId);
+        dto.IdentifiedWithConfidence.Should().Be(entity.IdentifiedWithConfidence);
+        dto.IdentityStatus.Should().Be(entity.IdentityStatus);
     }
 }

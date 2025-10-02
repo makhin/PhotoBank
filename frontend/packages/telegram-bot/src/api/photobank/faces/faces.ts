@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type {
+  FaceDto,
   FaceIdentityDto,
   FacesGetParams,
   UpdateFaceIdentityDto,
@@ -47,7 +48,61 @@ export const getFaces = () => {
       options
     );
   };
-  return { facesGet, facesUpdate, facesGetImage };
+  const facesGetMetadata = (
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<FaceDto[]>(
+      { url: `/personfaces`, method: 'GET' },
+      options
+    );
+  };
+  const facesCreateMetadata = (
+    faceDto: FaceDto,
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<FaceDto>(
+      {
+        url: `/personfaces`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        data: faceDto,
+      },
+      options
+    );
+  };
+  const facesUpdateMetadata = (
+    id: number,
+    faceDto: FaceDto,
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<FaceDto>(
+      {
+        url: `/personfaces/${id}`,
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        data: faceDto,
+      },
+      options
+    );
+  };
+  const facesDeleteMetadata = (
+    id: number,
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<null>(
+      { url: `/personfaces/${id}`, method: 'DELETE' },
+      options
+    );
+  };
+  return {
+    facesGet,
+    facesUpdate,
+    facesGetImage,
+    facesGetMetadata,
+    facesCreateMetadata,
+    facesUpdateMetadata,
+    facesDeleteMetadata,
+  };
 };
 export type FacesGetResult = NonNullable<
   Awaited<ReturnType<ReturnType<typeof getFaces>['facesGet']>>
@@ -57,4 +112,16 @@ export type FacesUpdateResult = NonNullable<
 >;
 export type FacesGetImageResult = NonNullable<
   Awaited<ReturnType<ReturnType<typeof getFaces>['facesGetImage']>>
+>;
+export type FacesGetMetadataResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getFaces>['facesGetMetadata']>>
+>;
+export type FacesCreateMetadataResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getFaces>['facesCreateMetadata']>>
+>;
+export type FacesUpdateMetadataResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getFaces>['facesUpdateMetadata']>>
+>;
+export type FacesDeleteMetadataResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getFaces>['facesDeleteMetadata']>>
 >;
