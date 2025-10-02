@@ -135,7 +135,17 @@ public class FaceImageEndpointTests
         db.Storages.Add(storage);
         var photo = new Photo { Name = "p", Storage = storage };
         db.Photos.Add(photo);
-        db.Faces.Add(new Face { Photo = photo, S3Key_Image = s3Key, S3ETag_Image = eTag });
+        db.Faces.Add(new Face
+        {
+            Photo = photo,
+            S3Key_Image = s3Key,
+            S3ETag_Image = eTag,
+            Sha256_Image = string.Empty,
+            FaceAttributes = string.Empty,
+            ExternalGuid = Guid.Empty,
+            Provider = null,
+            ExternalId = null
+        });
         db.SaveChanges();
     }
 
