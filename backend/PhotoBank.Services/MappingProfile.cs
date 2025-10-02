@@ -62,12 +62,10 @@ namespace PhotoBank.Services
                     opt => opt.MapFrom(src => src.Persons!))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
-            CreateMap<PersonFace, PersonFaceDto>()
-                .IgnoreAllPropertiesWithAnInaccessibleSetter();
-
-            CreateMap<PersonFaceDto, PersonFace>()
-                .ForMember(dest => dest.Person, opt => opt.Ignore())
-                .ForMember(dest => dest.Face, opt => opt.Ignore())
+            CreateMap<Face, PersonFaceDto>()
+                .ForMember(dest => dest.FaceId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonId!.Value))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Face, FaceIdentityDto>()
@@ -82,7 +80,7 @@ namespace PhotoBank.Services
 
             CreateMap<Face, Models.FaceDto>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonFace.PersonId))
+                .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonId))
                 .ForMember(dest => dest.PersonDateOfBirth, opt => opt.MapFrom(src => src.Person.DateOfBirth))
                 .ForMember(dest => dest.PhotoTakenDate, opt => opt.MapFrom(src => src.Photo.TakenDate))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();

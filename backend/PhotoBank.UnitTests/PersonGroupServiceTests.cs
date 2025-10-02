@@ -58,7 +58,6 @@ public class PersonGroupServiceTests
             _provider.GetRequiredService<IRepository<Face>>(),
             _provider.GetRequiredService<IRepository<Storage>>(),
             _provider.GetRequiredService<IRepository<PersonGroup>>(),
-            _provider.GetRequiredService<IRepository<PersonFace>>(),
             _provider.GetRequiredService<IMapper>(),
             _provider.GetRequiredService<IMemoryCache>(),
             _provider.GetRequiredService<ICurrentUser>(),

@@ -261,7 +261,6 @@ public class PhotoServiceS3AccessTests
             new Repository<Face>(provider),
             new Repository<Storage>(provider),
             new Repository<PersonGroup>(provider),
-            new Repository<PersonFace>(provider),
             _mapper,
             new MemoryCache(new MemoryCacheOptions()),
             currentUser,

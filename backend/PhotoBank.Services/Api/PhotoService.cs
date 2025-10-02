@@ -66,7 +66,6 @@ public class PhotoService : IPhotoService
     private readonly IRepository<Storage> _storageRepository;
     private readonly IRepository<PersonGroup> _personGroupRepository;
     private readonly IRepository<Person> _personRepository;
-    private readonly IRepository<PersonFace> _personFaceRepository;
     private readonly IMapper _mapper;
     private readonly IMemoryCache _cache;
     private readonly Lazy<Task<IReadOnlyList<PathDto>>> _paths;
@@ -87,7 +86,6 @@ public class PhotoService : IPhotoService
         IRepository<Face> faceRepository,
         IRepository<Storage> storageRepository,
         IRepository<PersonGroup> personGroupRepository,
-        IRepository<PersonFace> personFaceRepository,
         IMapper mapper,
         IMemoryCache cache,
         ICurrentUser currentUser,
@@ -103,7 +101,6 @@ public class PhotoService : IPhotoService
         _faceRepository = faceRepository;
         _storageRepository = storageRepository;
         _personGroupRepository = personGroupRepository;
-        _personFaceRepository = personFaceRepository;
         _personRepository = personRepository;
         _mapper = mapper;
         _cache = cache;
@@ -373,29 +370,55 @@ public class PhotoService : IPhotoService
 
     public async Task<IEnumerable<PersonFaceDto>> GetAllPersonFacesAsync()
     {
-        return await _personFaceRepository.GetAll()
+        return await _faceRepository.GetAll()
             .AsNoTracking()
+            .Where(face => face.PersonId != null)
             .ProjectTo<PersonFaceDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
     }
 
     public async Task<PersonFaceDto> CreatePersonFaceAsync(PersonFaceDto dto)
     {
-        var entity = _mapper.Map<PersonFace>(dto);
-        var created = await _personFaceRepository.InsertAsync(entity);
-        return _mapper.Map<PersonFaceDto>(created);
+        var face = await UpsertPersonFaceAsync(dto);
+        return _mapper.Map<PersonFaceDto>(face);
     }
 
     public async Task<PersonFaceDto> UpdatePersonFaceAsync(int id, PersonFaceDto dto)
     {
-        var entity = _mapper.Map<PersonFace>(dto);
-        await _personFaceRepository.UpdateAsync(entity);
-        return _mapper.Map<PersonFaceDto>(entity);
+        if (dto.Id != id)
+        {
+            throw new ArgumentException($"Face id {dto.FaceId} does not match the requested id {id}", nameof(id));
+        }
+
+        var face = await UpsertPersonFaceAsync(dto);
+        return _mapper.Map<PersonFaceDto>(face);
     }
 
     public async Task DeletePersonFaceAsync(int id)
     {
-        await _personFaceRepository.DeleteAsync(id);
+        var face = await _faceRepository.GetAsync(id) ?? throw new ArgumentException($"Face {id} not found", nameof(id));
+
+        face.PersonId = null;
+        face.Provider = null;
+        face.ExternalId = null;
+        face.ExternalGuid = Guid.Empty;
+
+        await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.Provider, f => f.ExternalId, f => f.ExternalGuid);
+    }
+
+    private async Task<Face> UpsertPersonFaceAsync(PersonFaceDto dto)
+    {
+        var face = await _faceRepository.GetAsync(dto.FaceId) ??
+            throw new ArgumentException($"Face {dto.FaceId} not found", nameof(dto.FaceId));
+
+        face.PersonId = dto.PersonId;
+        face.Provider = dto.Provider;
+        face.ExternalId = dto.ExternalId;
+        face.ExternalGuid = dto.ExternalGuid;
+
+        await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.Provider, f => f.ExternalId, f => f.ExternalGuid);
+
+        return face;
     }
 
     public async Task UpdateFaceAsync(int faceId, int personId)
