@@ -148,19 +148,6 @@ namespace PhotoBank.DbContext.DbContext
                 .WithMany(t => t.PhotoCategories)
                 .HasForeignKey(pt => pt.CategoryId);
 
-            modelBuilder.Entity<PersonFace>().HasIndex(q => q.FaceId);
-            modelBuilder.Entity<PersonFace>().HasIndex(q => q.PersonId);
-
-            // Relationships
-            modelBuilder.Entity<PersonFace>()
-                .HasOne(t => t.Person)
-                .WithMany(t => t.PersonFaces)
-                .HasForeignKey(t => t.PersonId);
-
-            modelBuilder.Entity<PersonFace>()
-                .HasOne(t => t.Face)
-                .WithOne(t => t.PersonFace);
-
             modelBuilder.Entity<File>(e =>
             {
                 e.HasQueryFilter(f => !f.IsDeleted);
@@ -181,6 +168,12 @@ namespace PhotoBank.DbContext.DbContext
 
             modelBuilder.Entity<Face>()
                 .HasIndex(p => new { p.PhotoId, p.Id, p.PersonId });
+
+            modelBuilder.Entity<Face>()
+                .HasIndex(p => new { p.Provider, p.ExternalId });
+
+            modelBuilder.Entity<Face>()
+                .HasIndex(p => p.ExternalGuid);
 
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => p.StorageId)
