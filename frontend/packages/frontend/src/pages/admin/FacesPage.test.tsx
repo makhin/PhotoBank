@@ -288,7 +288,13 @@ describe('FacesPage', () => {
 
     for (const status of statuses) {
       const badge = await screen.findByText(status);
-      expect(badge).toHaveClass(expectedClasses[status]);
+      const expectedClass = expectedClasses[status];
+
+      if (!expectedClass) {
+        throw new Error(`Missing expected class for status: ${status}`);
+      }
+
+      expect(badge).toHaveClass(expectedClass);
     }
   });
 });

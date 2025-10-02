@@ -99,10 +99,12 @@ export default function FacesPage() {
         extendedFace.personName ?? (extendedFace.person ? extendedFace.person.name ?? null : null);
       const normalizedFaceId = extendedFace.faceId ?? extendedFace.id ?? null;
       const normalizedIdentityStatus = normalizeIdentityStatus(extendedFace.identityStatus);
+      const identityStatusString =
+        typeof extendedFace.identityStatus === 'string'
+          ? extendedFace.identityStatus.trim() || undefined
+          : undefined;
       const normalizedIdentityStatusLabel =
-        normalizedIdentityStatus ??
-        (typeof extendedFace.identityStatus === 'string' && extendedFace.identityStatus.trim()) ??
-        'Unknown';
+        normalizedIdentityStatus ?? identityStatusString ?? 'Unknown';
 
       return {
         ...extendedFace,
@@ -112,9 +114,7 @@ export default function FacesPage() {
         personName: normalizedPersonName,
         identityStatus:
           normalizedIdentityStatus ??
-          (typeof extendedFace.identityStatus === 'string'
-            ? (extendedFace.identityStatus.trim() as FaceListItem['identityStatus'])
-            : undefined),
+          (identityStatusString as FaceListItem['identityStatus'] | undefined),
         normalizedIdentityStatus: normalizedIdentityStatusLabel,
       };
     });
