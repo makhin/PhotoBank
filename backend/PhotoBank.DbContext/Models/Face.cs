@@ -21,7 +21,11 @@ namespace PhotoBank.DbContext.Models
         public string Sha256_Image { get; set; }
         public long? BlobSize_Image { get; set; }
         public DateTime? MigratedAt_Image { get; set; }
-        public PersonFace PersonFace { get; set; }
+        [MaxLength(64)]
+        public string? Provider { get; set; }
+        [MaxLength(256)]
+        public string? ExternalId { get; set; }
+        public Guid ExternalGuid { get; set; }
         public int? PersonId { get; set; }
         public Person Person { get; set; }
         public int PhotoId { get; set; }
