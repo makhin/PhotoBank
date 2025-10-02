@@ -7,10 +7,13 @@ import {
   type FacesUpdateMutationBody,
   IdentityStatus,
   type IdentityStatus as IdentityStatusType,
+  getFacesGetImageUrl,
+  useFacesGetImage,
   useFacesUpdate,
   usePersonsGetAll,
 } from '@photobank/shared/api/photobank';
 
+import { API_BASE_URL } from '@/config';
 import { AspectRatio } from '@/shared/ui/aspect-ratio';
 import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
@@ -22,6 +25,18 @@ import { useToast } from '@/hooks/use-toast';
 const UNASSIGNED_SELECT_VALUE = '__unassigned__';
 
 const DEFAULT_PREVIEW_INITIALS = '??';
+
+const ensureAbsoluteUrl = (url: string | null | undefined) => {
+  if (!url) {
+    return null;
+  }
+
+  try {
+    return new URL(url, API_BASE_URL).toString();
+  } catch {
+    return url;
+  }
+};
 
 const getInitials = (value: string | null | undefined) => {
   if (!value) {
@@ -70,6 +85,50 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const facesQueryKey = useMemo(() => getFacesGetQueryKey(), []);
+  const faceImageId = face?.faceId ?? face?.id ?? null;
+
+  const { data: faceImageResponse } = useFacesGetImage(faceImageId ?? 0, {
+    query: {
+      enabled: faceImageId != null,
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+    request: {
+      redirect: 'manual',
+      headers: {
+        Accept: 'image/*',
+      },
+    },
+  });
+
+  const faceImageApiUrl = useMemo(() => {
+    if (faceImageId == null) {
+      return null;
+    }
+
+    const imagePath = getFacesGetImageUrl(faceImageId);
+    return ensureAbsoluteUrl(imagePath);
+  }, [faceImageId]);
+
+  const faceImageLocationUrl = useMemo(() => {
+    if (!faceImageResponse) {
+      return null;
+    }
+
+    const locationHeader =
+      faceImageResponse.headers.get('Location') ??
+      faceImageResponse.headers.get('location');
+
+    if (locationHeader) {
+      return ensureAbsoluteUrl(locationHeader);
+    }
+
+    if (faceImageResponse.status === 200) {
+      return faceImageApiUrl;
+    }
+
+    return null;
+  }, [faceImageApiUrl, faceImageResponse]);
 
   const {
     data: personsResponse,
@@ -122,7 +181,11 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
 
   if (!face) return null;
 
-  const imageSrc = face.imageUrl ?? face.image?.url ?? null;
+  const imageSrc =
+    faceImageLocationUrl ??
+    ensureAbsoluteUrl(face.imageUrl) ??
+    ensureAbsoluteUrl(face.image?.url) ??
+    faceImageApiUrl;
   const personDisplayName = face.personName ?? face.person?.name ?? null;
   const fallbackLabel = personDisplayName ?? 'Unassigned face';
   const previewAltText = personDisplayName
