@@ -1,30 +1,41 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
-import { vi, describe, it, beforeEach } from 'vitest';
+import { vi, describe, it, beforeEach, expect } from 'vitest';
 
 import type { EditFaceDialogFace } from './EditFaceDialog';
 import { EditFaceDialog } from './EditFaceDialog';
 
-const mutateAsyncMock = vi.fn();
+const mutateAsyncMock = vi.hoisted(() => vi.fn());
+const useFacesGetImageMock = vi.hoisted(() => vi.fn());
 
-vi.mock('@photobank/shared/api/photobank', () => ({
-  IdentityStatus: { Identified: 'Identified' },
-  getFacesGetQueryKey: () => ['faces-get'],
-  useFacesUpdate: () => ({
-    mutateAsync: mutateAsyncMock,
-    isPending: false,
-  }),
-  usePersonsGetAll: () => ({
-    data: { data: [] },
-    isLoading: false,
-    isError: false,
-    refetch: vi.fn(),
-  }),
-}));
+vi.mock('@photobank/shared/api/photobank', async () => {
+  const actual = await vi.importActual<
+    typeof import('@photobank/shared/api/photobank')
+  >('@photobank/shared/api/photobank');
+
+  return {
+    ...actual,
+    IdentityStatus: { Identified: 'Identified' },
+    getFacesGetQueryKey: () => ['faces-get'],
+    useFacesUpdate: () => ({
+      mutateAsync: mutateAsyncMock,
+      isPending: false,
+    }),
+    usePersonsGetAll: () => ({
+      data: { data: [] },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    }),
+    useFacesGetImage: useFacesGetImageMock,
+  };
+});
 
 describe('EditFaceDialog', () => {
   beforeEach(() => {
     mutateAsyncMock.mockReset();
+    useFacesGetImageMock.mockReset();
+    useFacesGetImageMock.mockReturnValue({ data: null });
   });
 
   const renderComponent = (face: EditFaceDialogFace) => {
@@ -55,5 +66,32 @@ describe('EditFaceDialog', () => {
     renderComponent(face);
 
     expect(screen.getByAltText('Face preview for Jane Doe')).toBeInTheDocument();
+  });
+
+  it('uses the face image URL from the API when provided', () => {
+    const apiImageUrl = 'https://example.com/from-api.jpg';
+
+    useFacesGetImageMock.mockReturnValue({
+      data: {
+        data: null,
+        status: 301,
+        headers: new Headers({ Location: apiImageUrl }),
+      },
+    });
+
+    const face: EditFaceDialogFace = {
+      id: 15,
+      faceId: 15,
+      personId: 30,
+      personName: 'John Smith',
+      identityStatus: 'Identified',
+    };
+
+    renderComponent(face);
+
+    expect(screen.getByAltText('Face preview for John Smith')).toHaveAttribute(
+      'src',
+      apiImageUrl
+    );
   });
 });
