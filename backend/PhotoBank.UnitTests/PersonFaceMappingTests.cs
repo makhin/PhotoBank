@@ -1,3 +1,4 @@
+using System;
 using AutoMapper;
 using FluentAssertions;
 using NUnit.Framework;
@@ -26,16 +27,22 @@ public class PersonFaceMappingTests
     [Test]
     public void MapsIds()
     {
-        var entity = new PersonFace
+        var entity = new Face
         {
-            Id = 1,
+            Id = 3,
             PersonId = 2,
-            FaceId = 3
+            Provider = "azure",
+            ExternalId = "ext",
+            ExternalGuid = Guid.NewGuid()
         };
 
         var dto = _mapper.Map<PersonFaceDto>(entity);
 
-        dto.PersonId.Should().Be(2);
-        dto.FaceId.Should().Be(3);
+        dto.Id.Should().Be(entity.Id);
+        dto.FaceId.Should().Be(entity.Id);
+        dto.PersonId.Should().Be(entity.PersonId!.Value);
+        dto.Provider.Should().Be(entity.Provider);
+        dto.ExternalId.Should().Be(entity.ExternalId);
+        dto.ExternalGuid.Should().Be(entity.ExternalGuid);
     }
 }
