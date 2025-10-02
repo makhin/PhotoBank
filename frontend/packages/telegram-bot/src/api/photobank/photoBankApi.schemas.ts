@@ -71,9 +71,18 @@ export interface FaceDto {
   gender?: boolean | null;
   /** @nullable */
   faceAttributes?: string | null;
-  faceBox: FaceBoxDto;
-  /** @minLength 1 */
-  friendlyFaceAttributes: string;
+  /** @nullable */
+  faceBox?: FaceBoxDto;
+  /** @nullable */
+  friendlyFaceAttributes?: string | null;
+  /** @nullable */
+  provider?: string | null;
+  /** @nullable */
+  externalId?: string | null;
+  externalGuid?: string;
+  photoId?: number;
+  identifiedWithConfidence?: number;
+  identityStatus?: IdentityStatus;
 }
 
 export interface FaceIdentityDto {
@@ -151,17 +160,6 @@ export interface PersonDto {
   id: number;
   /** @minLength 1 */
   name: string;
-}
-
-export interface PersonFaceDto {
-  id?: number;
-  personId: number;
-  faceId: number;
-  /** @nullable */
-  provider?: string | null;
-  /** @nullable */
-  externalId?: string | null;
-  externalGuid?: string;
 }
 
 export interface PersonGroupDto {

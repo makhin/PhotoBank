@@ -167,10 +167,10 @@ public class FacesControllerUploadIntegrationTests
         public Task DeletePersonGroupAsync(int groupId) => throw new NotImplementedException();
         public Task AddPersonToGroupAsync(int groupId, int personId) => throw new NotImplementedException();
         public Task RemovePersonFromGroupAsync(int groupId, int personId) => throw new NotImplementedException();
-        public Task<IEnumerable<PersonFaceDto>> GetAllPersonFacesAsync() => throw new NotImplementedException();
-        public Task<PersonFaceDto> CreatePersonFaceAsync(PersonFaceDto dto) => throw new NotImplementedException();
-        public Task<PersonFaceDto> UpdatePersonFaceAsync(int id, PersonFaceDto dto) => throw new NotImplementedException();
-        public Task DeletePersonFaceAsync(int id) => throw new NotImplementedException();
+        public Task<IEnumerable<FaceDto>> GetFacesMetadataAsync() => throw new NotImplementedException();
+        public Task<FaceDto> CreateFaceMetadataAsync(FaceDto dto) => throw new NotImplementedException();
+        public Task<FaceDto> UpdateFaceMetadataAsync(int id, FaceDto dto) => throw new NotImplementedException();
+        public Task DeleteFaceMetadataAsync(int id) => throw new NotImplementedException();
         public Task UpdateFaceAsync(int faceId, int personId) => throw new NotImplementedException();
         public Task<IEnumerable<FaceIdentityDto>> GetFacesAsync(IdentityStatus? status, int? personId) => throw new NotImplementedException();
         public Task UpdateFaceIdentityAsync(int faceId, IdentityStatus identityStatus, int? personId) => throw new NotImplementedException();

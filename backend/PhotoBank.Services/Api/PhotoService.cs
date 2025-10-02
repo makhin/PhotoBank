@@ -41,10 +41,10 @@ public interface IPhotoService
     Task DeletePersonGroupAsync(int groupId);
     Task AddPersonToGroupAsync(int groupId, int personId);
     Task RemovePersonFromGroupAsync(int groupId, int personId);
-    Task<IEnumerable<PersonFaceDto>> GetAllPersonFacesAsync();
-    Task<PersonFaceDto> CreatePersonFaceAsync(PersonFaceDto dto);
-    Task<PersonFaceDto> UpdatePersonFaceAsync(int id, PersonFaceDto dto);
-    Task DeletePersonFaceAsync(int id);
+    Task<IEnumerable<FaceDto>> GetFacesMetadataAsync();
+    Task<FaceDto> CreateFaceMetadataAsync(FaceDto dto);
+    Task<FaceDto> UpdateFaceMetadataAsync(int id, FaceDto dto);
+    Task DeleteFaceMetadataAsync(int id);
     Task UpdateFaceAsync(int faceId, int personId);
     Task<IEnumerable<FaceIdentityDto>> GetFacesAsync(IdentityStatus? status, int? personId);
     Task UpdateFaceIdentityAsync(int faceId, IdentityStatus identityStatus, int? personId);
@@ -368,33 +368,33 @@ public class PhotoService : IPhotoService
         }
     }
 
-    public async Task<IEnumerable<PersonFaceDto>> GetAllPersonFacesAsync()
+    public async Task<IEnumerable<FaceDto>> GetFacesMetadataAsync()
     {
         return await _faceRepository.GetAll()
             .AsNoTracking()
             .Where(face => face.PersonId != null)
-            .ProjectTo<PersonFaceDto>(_mapper.ConfigurationProvider)
+            .ProjectTo<FaceDto>(_mapper.ConfigurationProvider)
             .ToListAsync();
     }
 
-    public async Task<PersonFaceDto> CreatePersonFaceAsync(PersonFaceDto dto)
+    public async Task<FaceDto> CreateFaceMetadataAsync(FaceDto dto)
     {
-        var face = await UpsertPersonFaceAsync(dto);
-        return _mapper.Map<PersonFaceDto>(face);
+        var face = await UpsertFaceMetadataAsync(dto);
+        return _mapper.Map<FaceDto>(face);
     }
 
-    public async Task<PersonFaceDto> UpdatePersonFaceAsync(int id, PersonFaceDto dto)
+    public async Task<FaceDto> UpdateFaceMetadataAsync(int id, FaceDto dto)
     {
         if (dto.Id != id)
         {
-            throw new ArgumentException($"Face id {dto.FaceId} does not match the requested id {id}", nameof(id));
+            throw new ArgumentException($"Face id {dto.Id} does not match the requested id {id}", nameof(id));
         }
 
-        var face = await UpsertPersonFaceAsync(dto);
-        return _mapper.Map<PersonFaceDto>(face);
+        var face = await UpsertFaceMetadataAsync(dto);
+        return _mapper.Map<FaceDto>(face);
     }
 
-    public async Task DeletePersonFaceAsync(int id)
+    public async Task DeleteFaceMetadataAsync(int id)
     {
         var face = await _faceRepository.GetAsync(id) ?? throw new ArgumentException($"Face {id} not found", nameof(id));
 
@@ -406,10 +406,10 @@ public class PhotoService : IPhotoService
         await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.Provider, f => f.ExternalId, f => f.ExternalGuid);
     }
 
-    private async Task<Face> UpsertPersonFaceAsync(PersonFaceDto dto)
+    private async Task<Face> UpsertFaceMetadataAsync(FaceDto dto)
     {
-        var face = await _faceRepository.GetAsync(dto.FaceId) ??
-            throw new ArgumentException($"Face {dto.FaceId} not found", nameof(dto.FaceId));
+        var face = await _faceRepository.GetAsync(dto.Id) ??
+            throw new ArgumentException($"Face {dto.Id} not found", nameof(dto.Id));
 
         face.PersonId = dto.PersonId;
         face.Provider = dto.Provider;

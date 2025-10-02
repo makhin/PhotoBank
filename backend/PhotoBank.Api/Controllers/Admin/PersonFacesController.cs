@@ -5,42 +5,43 @@ using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.Api.Controllers.Admin;
 
-[Route("[controller]")]
+[Route("personfaces")]
 [ApiController]
 [Authorize(Roles = "Admin")]
 public class PersonFacesController(IPhotoService photoService) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<PersonFaceDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<PersonFaceDto>>> GetAllAsync()
+    [ProducesResponseType(typeof(IEnumerable<FaceDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IEnumerable<FaceDto>>> GetAllAsync()
     {
-        var links = await photoService.GetAllPersonFacesAsync();
-        return Ok(links);
+        var faces = await photoService.GetFacesMetadataAsync();
+        return Ok(faces);
     }
 
     [HttpPost]
-    [ProducesResponseType(typeof(PersonFaceDto), StatusCodes.Status201Created)]
-    public async Task<ActionResult<PersonFaceDto>> CreateAsync(PersonFaceDto dto)
+    [ProducesResponseType(typeof(FaceDto), StatusCodes.Status201Created)]
+    public async Task<ActionResult<FaceDto>> CreateAsync([FromBody] FaceDto dto)
     {
-        var link = await photoService.CreatePersonFaceAsync(dto);
-        return CreatedAtAction(nameof(GetAllAsync), new { }, link);
+        var face = await photoService.CreateFaceMetadataAsync(dto);
+        return CreatedAtAction(nameof(GetAllAsync), new { id = face.Id }, face);
     }
 
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(PersonFaceDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PersonFaceDto>> UpdateAsync(int id, PersonFaceDto dto)
+    [ProducesResponseType(typeof(FaceDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<FaceDto>> UpdateAsync(int id, [FromBody] FaceDto dto)
     {
         if (dto.Id != id)
             return BadRequest();
-        var link = await photoService.UpdatePersonFaceAsync(id, dto);
-        return Ok(link);
+
+        var face = await photoService.UpdateFaceMetadataAsync(id, dto);
+        return Ok(face);
     }
 
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteAsync(int id)
     {
-        await photoService.DeletePersonFaceAsync(id);
+        await photoService.DeleteFaceMetadataAsync(id);
         return NoContent();
     }
 }
