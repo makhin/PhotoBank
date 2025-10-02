@@ -11,6 +11,8 @@ import {
   usePersonsGetAll,
 } from '@photobank/shared/api/photobank';
 
+import { AspectRatio } from '@/shared/ui/aspect-ratio';
+import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { Button } from '@/shared/ui/button';
 import { Label } from '@/shared/ui/label';
@@ -19,12 +21,32 @@ import { useToast } from '@/hooks/use-toast';
 
 const UNASSIGNED_SELECT_VALUE = '__unassigned__';
 
+const DEFAULT_PREVIEW_INITIALS = '??';
+
+const getInitials = (value: string | null | undefined) => {
+  if (!value) {
+    return DEFAULT_PREVIEW_INITIALS;
+  }
+
+  const initials = value
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase())
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('');
+
+  return initials || DEFAULT_PREVIEW_INITIALS;
+};
+
 export type EditFaceDialogFace = FaceIdentityDto &
   Partial<{
     faceId: number | null;
     personId: number | null;
     personName: string | null;
     imageUrl: string | null;
+    image: { url?: string | null } | null;
     createdAt: string | Date | null;
     updatedAt: string | Date | null;
     provider: string | null;
@@ -100,6 +122,14 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
 
   if (!face) return null;
 
+  const imageSrc = face.imageUrl ?? face.image?.url ?? null;
+  const personDisplayName = face.personName ?? face.person?.name ?? null;
+  const fallbackLabel = personDisplayName ?? 'Unassigned face';
+  const previewAltText = personDisplayName
+    ? `Face preview for ${personDisplayName}`
+    : `Face preview for face #${face.id ?? face.faceId ?? 'unassigned'}`;
+  const fallbackInitials = getInitials(fallbackLabel);
+
   const currentIdentityStatus =
     formData.identityStatus ?? face.identityStatus ?? identityStatusOptions[0] ?? 'Undefined';
 
@@ -170,6 +200,30 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
           <DialogTitle>Edit Face #{face.id ?? face.faceId}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">Face preview</p>
+            <AspectRatio ratio={1} className="overflow-hidden rounded-lg border bg-muted/40">
+              {imageSrc ? (
+                <img
+                  src={imageSrc}
+                  alt={previewAltText}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-background/60">
+                  <Avatar className="h-20 w-20">
+                    <AvatarFallback className="bg-primary/10 text-lg font-semibold text-primary">
+                      {fallbackInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              )}
+            </AspectRatio>
+            <p className="text-xs text-muted-foreground">
+              {personDisplayName ?? 'Currently unassigned'}
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="person">Assign to Person</Label>
             <Select
