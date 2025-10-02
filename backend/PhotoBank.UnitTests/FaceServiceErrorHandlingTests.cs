@@ -20,7 +20,6 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using DbFace = PhotoBank.DbContext.Models.Face;
 using DbPerson = PhotoBank.DbContext.Models.Person;
-using DbPersonFace = PhotoBank.DbContext.Models.PersonFace;
 using DbPhoto = PhotoBank.DbContext.Models.Photo;
 
 namespace PhotoBank.UnitTests;
@@ -30,7 +29,6 @@ public class FaceServiceErrorHandlingTests
 {
     private Mock<IRepository<DbFace>> _faceRepository = null!;
     private Mock<IRepository<DbPerson>> _personRepository = null!;
-    private Mock<IRepository<DbPersonFace>> _personFaceRepository = null!;
     private Mock<IRepository<DbPhoto>> _photoRepository = null!;
     private Mock<IMinioClient> _minioClient = null!;
     private Mock<IFaceClient> _faceClient = null!;
@@ -44,7 +42,6 @@ public class FaceServiceErrorHandlingTests
     {
         _faceRepository = new Mock<IRepository<DbFace>>();
         _personRepository = new Mock<IRepository<DbPerson>>();
-        _personFaceRepository = new Mock<IRepository<DbPersonFace>>();
         _photoRepository = new Mock<IRepository<DbPhoto>>();
         _minioClient = new Mock<IMinioClient>();
         _faceOperations = new Mock<IFaceOperations>();
@@ -57,7 +54,6 @@ public class FaceServiceErrorHandlingTests
             _faceClient.Object,
             _faceRepository.Object,
             _personRepository.Object,
-            _personFaceRepository.Object,
             _photoRepository.Object,
             _minioClient.Object,
             _mapper.Object,

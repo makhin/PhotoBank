@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,7 +25,6 @@ public class UnifiedFaceServiceTests
     private Mock<IFaceProvider> _provider = null!;
     private Mock<IRepository<Person>> _persons = null!;
     private Mock<IRepository<Face>> _faces = null!;
-    private Mock<IRepository<PersonFace>> _links = null!;
     private Mock<IFaceStorageService> _storage = null!;
     private UnifiedFaceService _service = null!;
 
@@ -36,11 +36,10 @@ public class UnifiedFaceServiceTests
 
         _persons = new Mock<IRepository<Person>>();
         _faces = new Mock<IRepository<Face>>();
-        _links = new Mock<IRepository<PersonFace>>();
         _storage = new Mock<IFaceStorageService>();
         var logger = Mock.Of<ILogger<UnifiedFaceService>>();
 
-        _service = new UnifiedFaceService(_provider.Object, _persons.Object, _faces.Object, _links.Object, _storage.Object, logger);
+        _service = new UnifiedFaceService(_provider.Object, _persons.Object, _faces.Object, _storage.Object, logger);
     }
 
     [Test]
@@ -54,7 +53,6 @@ public class UnifiedFaceServiceTests
 
         var personsRepo = new Repository<Person>(sp);
         var facesRepo = new Repository<Face>(sp);
-        var linksRepo = new Repository<PersonFace>(sp);
 
         var provider = new Mock<IFaceProvider>(MockBehavior.Strict);
         provider.SetupGet(p => p.Kind).Returns(FaceProviderKind.Local);
@@ -62,7 +60,7 @@ public class UnifiedFaceServiceTests
             .Setup(p => p.UpsertPersonsAsync(It.IsAny<IReadOnlyCollection<PersonSyncItem>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<int, string> { { 1, "ext1" } });
 
-        var service = new UnifiedFaceService(provider.Object, personsRepo, facesRepo, linksRepo, Mock.Of<IFaceStorageService>(), Mock.Of<ILogger<UnifiedFaceService>>());
+        var service = new UnifiedFaceService(provider.Object, personsRepo, facesRepo, Mock.Of<IFaceStorageService>(), Mock.Of<ILogger<UnifiedFaceService>>());
 
         ctx.Persons.AddRange(
             new Person { Id = 1, Name = "Alice", ExternalId = null, Provider = null },
@@ -94,7 +92,6 @@ public class UnifiedFaceServiceTests
 
         var personsRepo = new Repository<Person>(sp);
         var facesRepo = new Repository<Face>(sp);
-        var linksRepo = new Repository<PersonFace>(sp);
 
         var provider = new Mock<IFaceProvider>(MockBehavior.Strict);
         provider.SetupGet(p => p.Kind).Returns(FaceProviderKind.Local);
@@ -102,21 +99,43 @@ public class UnifiedFaceServiceTests
             .ReturnsAsync(new Dictionary<int, string> { { 101, "extA" } });
 
         var storage = new Mock<IFaceStorageService>();
-        storage.Setup(s => s.OpenReadStreamAsync(It.Is<Face>(f => f.Id == 101), It.IsAny<CancellationToken>()))
+        storage.Setup(s => s.OpenReadStreamAsync(It.Is<Face>(f => f.Id == 101 && f.S3Key_Image == "face101"), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream(new byte[] {1}));
 
-        var service = new UnifiedFaceService(provider.Object, personsRepo, facesRepo, linksRepo, storage.Object, Mock.Of<ILogger<UnifiedFaceService>>());
+        var service = new UnifiedFaceService(provider.Object, personsRepo, facesRepo, storage.Object, Mock.Of<ILogger<UnifiedFaceService>>());
 
         ctx.Persons.Add(new Person { Id = 1, Name = "Alice" });
 
         ctx.Faces.AddRange(
-            new Face { Id = 101, PhotoId = 0, S3Key_Image = "face101", Rectangle = new Point(0, 0), S3ETag_Image = string.Empty, Sha256_Image = string.Empty, FaceAttributes = string.Empty },
-            new Face { Id = 102, PhotoId = 0, S3Key_Image = string.Empty, Rectangle = new Point(0, 0), S3ETag_Image = string.Empty, Sha256_Image = string.Empty, FaceAttributes = string.Empty }
+            new Face
+            {
+                Id = 101,
+                PhotoId = 0,
+                PersonId = 1,
+                S3Key_Image = "face101",
+                Rectangle = new Point(0, 0),
+                S3ETag_Image = string.Empty,
+                Sha256_Image = string.Empty,
+                FaceAttributes = string.Empty,
+                ExternalGuid = Guid.Empty,
+                ExternalId = null,
+                Provider = null
+            },
+            new Face
+            {
+                Id = 102,
+                PhotoId = 0,
+                PersonId = 1,
+                S3Key_Image = "face102",
+                Rectangle = new Point(0, 0),
+                S3ETag_Image = string.Empty,
+                Sha256_Image = string.Empty,
+                FaceAttributes = string.Empty,
+                ExternalGuid = Guid.NewGuid(),
+                ExternalId = "have",
+                Provider = "Local"
+            }
         );
-
-        var linkMissing = new PersonFace { Id = -1, PersonId = 1, FaceId = 101, ExternalId = null, Provider = null };
-        var linkExists  = new PersonFace { Id = -2, PersonId = 1, FaceId = 102, ExternalId = "have", Provider = "Local" };
-        ctx.Set<PersonFace>().AddRange(linkMissing, linkExists);
 
         await ctx.SaveChangesAsync();
         ctx.ChangeTracker.Clear();
@@ -124,12 +143,12 @@ public class UnifiedFaceServiceTests
         await service.SyncFacesToPersonsAsync();
 
         provider.Verify(p => p.LinkFacesToPersonAsync(1, It.Is<IReadOnlyCollection<FaceToLink>>(l => l.Single().FaceId == 101), It.IsAny<CancellationToken>()), Times.Once);
-        storage.Verify(s => s.OpenReadStreamAsync(It.Is<Face>(f => f.Id == 101), It.IsAny<CancellationToken>()), Times.Once);
+        storage.Verify(s => s.OpenReadStreamAsync(It.Is<Face>(f => f.Id == 101 && f.S3Key_Image == "face101"), It.IsAny<CancellationToken>()), Times.Once);
 
-        var link101 = await ctx.Set<PersonFace>().AsNoTracking().SingleAsync(l => l.PersonId == 1 && l.FaceId == 101);
+        var face101 = await ctx.Faces.AsNoTracking().SingleAsync(f => f.Id == 101);
 
-        Assert.That(link101.ExternalId, Is.EqualTo("extA"));
-        Assert.That(link101.Provider, Is.EqualTo(provider.Object.Kind.ToString()));
+        Assert.That(face101.ExternalId, Is.EqualTo("extA"));
+        Assert.That(face101.Provider, Is.EqualTo(provider.Object.Kind.ToString()));
     }
 
     [Test]

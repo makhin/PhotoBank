@@ -21,7 +21,6 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using DbFace = PhotoBank.DbContext.Models.Face;
 using DbPerson = PhotoBank.DbContext.Models.Person;
-using DbPersonFace = PhotoBank.DbContext.Models.PersonFace;
 using DbPhoto = PhotoBank.DbContext.Models.Photo;
 using DbStorage = PhotoBank.DbContext.Models.Storage;
 using IdentityStatus = PhotoBank.DbContext.Models.IdentityStatus;
@@ -36,7 +35,6 @@ public class FaceServiceIdentifyTests
     private ServiceProvider _provider = null!;
     private Repository<DbFace> _faceRepository = null!;
     private Repository<DbPerson> _personRepository = null!;
-    private Mock<IRepository<DbPersonFace>> _personFaceRepository = null!;
     private Mock<IRepository<DbPhoto>> _photoRepository = null!;
     private Mock<IMinioClient> _minioClient = null!;
     private Mock<IFaceOperations> _faceOperations = null!;
@@ -54,7 +52,6 @@ public class FaceServiceIdentifyTests
 
         _faceRepository = new Repository<DbFace>(_provider);
         _personRepository = new Repository<DbPerson>(_provider);
-        _personFaceRepository = new Mock<IRepository<DbPersonFace>>();
         _photoRepository = new Mock<IRepository<DbPhoto>>();
         _minioClient = new Mock<IMinioClient>();
         _faceOperations = new Mock<IFaceOperations>();
@@ -153,7 +150,6 @@ public class FaceServiceIdentifyTests
             _faceClient.Object,
             _faceRepository,
             _personRepository,
-            _personFaceRepository.Object,
             _photoRepository.Object,
             _minioClient.Object,
             _mapper.Object,
