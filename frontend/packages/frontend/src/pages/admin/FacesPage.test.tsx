@@ -277,7 +277,7 @@ describe('FacesPage', () => {
 
     render(<FacesPage />, { wrapper: Wrapper });
 
-    const expectedClasses: Record<string, string> = {
+    const expectedClasses: Record<IdentityStatus, string> = {
       [IdentityStatus.Identified]: 'bg-success text-success-foreground',
       [IdentityStatus.ForReprocessing]: 'bg-warning text-warning-foreground',
       [IdentityStatus.NotDetected]: 'bg-warning text-warning-foreground',
