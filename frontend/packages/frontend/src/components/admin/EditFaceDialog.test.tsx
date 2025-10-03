@@ -58,21 +58,20 @@ describe('EditFaceDialog', () => {
     );
   };
 
-  it('renders the face preview image when an image URL is available', () => {
+  it('renders the face preview image when an image URL is available', async () => {
     const face: FaceDto = {
       id: 12,
       personId: 42,
-      personName: 'Jane Doe',
       imageUrl: 'https://example.com/face.jpg',
       identityStatus: 'Identified',
     };
 
     renderComponent(face);
 
-    expect(screen.getByAltText('Face preview for Jane Doe')).toBeInTheDocument();
+    expect(await screen.findByAltText('Face preview for Jane Doe')).toBeInTheDocument();
   });
 
-  it('uses the face image URL from the API when provided', () => {
+  it('uses the face image URL from the API when provided', async () => {
     const apiImageUrl = 'https://example.com/from-api.jpg';
 
     useFacesGetImageMock.mockReturnValue({
@@ -86,13 +85,15 @@ describe('EditFaceDialog', () => {
     const face: FaceDto = {
       id: 15,
       personId: 30,
-      personName: 'John Smith',
+      imageUrl: apiImageUrl,
       identityStatus: 'Identified',
     };
 
     renderComponent(face);
 
-    expect(screen.getByAltText('Face preview for John Smith')).toHaveAttribute(
+    const facePreview = await screen.findByAltText('Face preview for John Smith');
+
+    expect(facePreview).toHaveAttribute(
       'src',
       apiImageUrl
     );
