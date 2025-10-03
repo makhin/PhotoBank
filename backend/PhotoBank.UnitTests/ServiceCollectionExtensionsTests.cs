@@ -71,7 +71,6 @@ public class ServiceCollectionExtensionsTests
 
         AssertSingletonRegistration<ITokenService, TokenService>(services);
         AssertSingletonRegistration<IImageService, ImageService>(services);
-        AssertSingletonRegistration<IS3ResourceService, S3ResourceService>(services);
         AssertScopedRegistration<IEffectiveAccessProvider, EffectiveAccessProvider>(services);
 
         var currentUserDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ICurrentUser));
@@ -83,7 +82,6 @@ public class ServiceCollectionExtensionsTests
         AssertNoDuplicateRegistrations(services,
             typeof(ITokenService),
             typeof(IImageService),
-            typeof(IS3ResourceService),
             typeof(IEffectiveAccessProvider),
             typeof(ICurrentUser));
     }

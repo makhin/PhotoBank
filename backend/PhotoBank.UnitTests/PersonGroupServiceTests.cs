@@ -63,8 +63,6 @@ public class PersonGroupServiceTests
             _provider.GetRequiredService<ICurrentUser>(),
             _provider.GetRequiredService<ISearchReferenceDataService>(),
             normalizer.Object,
-            new Mock<IS3ResourceService>().Object,
-            new MinioObjectService(new Mock<IMinioClient>().Object),
             new Mock<IMinioClient>().Object,
             new Mock<IOptions<S3Options>>().Object
         );

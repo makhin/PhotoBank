@@ -38,7 +38,6 @@ public static partial class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
         services.AddSingleton<ITokenService, TokenService>();
         services.AddSingleton<IImageService, ImageService>();
-        services.AddSingleton<IS3ResourceService, S3ResourceService>();
         services.AddScoped<IEffectiveAccessProvider, EffectiveAccessProvider>();
         services.TryAddScoped<ICurrentUser, CurrentUser>();
         services.AddDefaultIdentity<ApplicationUser>()

@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using PhotoBank.Services.Models;
 
 namespace PhotoBank.Services.Api;
 
@@ -41,22 +42,11 @@ public interface IPhotoService
     Task DeletePersonGroupAsync(int groupId);
     Task AddPersonToGroupAsync(int groupId, int personId);
     Task RemovePersonFromGroupAsync(int groupId, int personId);
-    Task<IEnumerable<FaceDto>> GetFacesMetadataAsync();
-    Task<FaceDto> CreateFaceMetadataAsync(FaceDto dto);
-    Task<FaceDto> UpdateFaceMetadataAsync(int id, FaceDto dto);
-    Task DeleteFaceMetadataAsync(int id);
-    Task UpdateFaceAsync(int faceId, int personId);
-    Task<IEnumerable<FaceIdentityDto>> GetFacesAsync(IdentityStatus? status, int? personId);
-    Task UpdateFaceIdentityAsync(int faceId, IdentityStatus identityStatus, int? personId);
+    Task<IEnumerable<FaceDto>> GetAllFacesAsync();
+    Task UpdateFaceAsync(int faceId, int? personId);
     Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold);
     Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path);
-    Task<byte[]> GetObjectAsync(string key);
-    Task<PhotoPreviewResult?> GetPhotoPreviewAsync(int id);
-    Task<PhotoPreviewResult?> GetPhotoThumbnailAsync(int id);
-    Task<PhotoPreviewResult?> GetFaceImageAsync(int id);
-}
-
-public record PhotoPreviewResult(string ETag, string? PreSignedUrl, byte[]? Data);
+ }
 
 public class PhotoService : IPhotoService
 {
@@ -74,8 +64,6 @@ public class PhotoService : IPhotoService
     private readonly ICurrentUser _currentUser;
     private readonly ISearchReferenceDataService _searchReferenceDataService;
     private readonly ISearchFilterNormalizer _searchFilterNormalizer;
-    private readonly IS3ResourceService _s3ResourceService;
-    private readonly MinioObjectService _minioObjectService;
     private readonly IMinioClient _minioClient;
     private readonly S3Options _s3;
 
@@ -91,8 +79,6 @@ public class PhotoService : IPhotoService
         ICurrentUser currentUser,
         ISearchReferenceDataService searchReferenceDataService,
         ISearchFilterNormalizer searchFilterNormalizer,
-        IS3ResourceService s3ResourceService,
-        MinioObjectService minioObjectService,
         IMinioClient minioClient,
         IOptions<S3Options> s3Options)
     {
@@ -107,8 +93,6 @@ public class PhotoService : IPhotoService
         _currentUser = currentUser;
         _searchReferenceDataService = searchReferenceDataService;
         _searchFilterNormalizer = searchFilterNormalizer;
-        _s3ResourceService = s3ResourceService;
-        _minioObjectService = minioObjectService;
         _minioClient = minioClient;
         _s3 = s3Options?.Value ?? new S3Options();
 
@@ -147,7 +131,7 @@ public class PhotoService : IPhotoService
 
                 foreach (var group in groups)
                 {
-                    group.Persons ??= Array.Empty<PersonDto>();
+                    group.Persons ??= [];
                 }
 
                 return (IReadOnlyList<PersonGroupDto>)groups;
@@ -199,7 +183,6 @@ public class PhotoService : IPhotoService
         if (!string.IsNullOrEmpty(filter.Caption))
             query = query.Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption!)));
 
-        // Îïòèìèçèðîâàííûå ôèëüòðû (îäèí Any + Contains)
         if (filter.Persons?.Any() == true)
         {
             var personIds = filter.Persons.Distinct().ToArray();
@@ -292,6 +275,28 @@ public class PhotoService : IPhotoService
 
         return dto!;
     }
+    public async Task<IEnumerable<FaceDto>> GetAllFacesAsync()
+    {
+        var dto = _faceRepository.GetAll()
+            .OrderBy(f => f.Id)
+            .ProjectTo<FaceDto>(_mapper.ConfigurationProvider);
+
+        await FillUrlsAsync(dto);
+
+        return dto;
+    }
+
+    public async Task UpdateFaceAsync(int faceId, int? personId)
+    {
+        var face = new Face
+        {
+            Id = faceId,
+            IdentifiedWithConfidence = personId == -1 ? 0 : 1,
+            IdentityStatus = personId == -1 ? IdentityStatus.StopProcessing : IdentityStatus.Identified,
+            PersonId = personId == -1 ? null : personId
+        };
+        await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentifiedWithConfidence, f => f.IdentityStatus);
+    }
 
     public async Task<IEnumerable<PersonDto>> GetAllPersonsAsync() => await _searchReferenceDataService.GetPersonsAsync();
     public async Task<IEnumerable<PathDto>> GetAllPathsAsync() => await _paths.Value;
@@ -347,7 +352,7 @@ public class PhotoService : IPhotoService
             .SingleOrDefaultAsync(p => p.Id == personId) ?? throw new ArgumentException($"Person {personId} not found", nameof(personId));
         var group = await _db.PersonGroups.FindAsync(groupId) ?? throw new ArgumentException($"Group {groupId} not found", nameof(groupId));
 
-        if (!person.PersonGroups.Any(pg => pg.Id == groupId))
+        if (person.PersonGroups.All(pg => pg.Id != groupId))
         {
             person.PersonGroups.Add(group);
             await _db.SaveChangesAsync();
@@ -366,98 +371,6 @@ public class PhotoService : IPhotoService
             await _db.SaveChangesAsync();
             _cache.Remove(CacheKeys.PersonGroups);
         }
-    }
-
-    public async Task<IEnumerable<FaceDto>> GetFacesMetadataAsync()
-    {
-        return await _faceRepository.GetAll()
-            .AsNoTracking()
-            .Where(face => face.PersonId != null)
-            .ProjectTo<FaceDto>(_mapper.ConfigurationProvider)
-            .ToListAsync();
-    }
-
-    public async Task<FaceDto> CreateFaceMetadataAsync(FaceDto dto)
-    {
-        var face = await UpsertFaceMetadataAsync(dto);
-        return _mapper.Map<FaceDto>(face);
-    }
-
-    public async Task<FaceDto> UpdateFaceMetadataAsync(int id, FaceDto dto)
-    {
-        if (dto.Id != id)
-        {
-            throw new ArgumentException($"Face id {dto.Id} does not match the requested id {id}", nameof(id));
-        }
-
-        var face = await UpsertFaceMetadataAsync(dto);
-        return _mapper.Map<FaceDto>(face);
-    }
-
-    public async Task DeleteFaceMetadataAsync(int id)
-    {
-        var face = await _faceRepository.GetAsync(id) ?? throw new ArgumentException($"Face {id} not found", nameof(id));
-
-        face.PersonId = null;
-        face.Provider = null;
-        face.ExternalId = null;
-        face.ExternalGuid = Guid.Empty;
-
-        await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.Provider, f => f.ExternalId, f => f.ExternalGuid);
-    }
-
-    private async Task<Face> UpsertFaceMetadataAsync(FaceDto dto)
-    {
-        var face = await _faceRepository.GetAsync(dto.Id) ??
-            throw new ArgumentException($"Face {dto.Id} not found", nameof(dto.Id));
-
-        face.PersonId = dto.PersonId;
-        face.Provider = dto.Provider;
-        face.ExternalId = dto.ExternalId;
-        face.ExternalGuid = dto.ExternalGuid;
-
-        await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.Provider, f => f.ExternalId, f => f.ExternalGuid);
-
-        return face;
-    }
-
-    public async Task UpdateFaceAsync(int faceId, int personId)
-    {
-        var face = new Face
-        {
-            Id = faceId,
-            IdentifiedWithConfidence = personId == -1 ? 0 : 1,
-            IdentityStatus = personId == -1 ? IdentityStatus.StopProcessing : IdentityStatus.Identified,
-            PersonId = personId == -1 ? null : personId
-        };
-        await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentifiedWithConfidence, f => f.IdentityStatus);
-    }
-
-    public async Task<IEnumerable<FaceIdentityDto>> GetFacesAsync(IdentityStatus? status, int? personId)
-    {
-        var query = _faceRepository.GetAll();
-        if (status.HasValue)
-            query = query.Where(f => f.IdentityStatus == status.Value);
-        if (personId.HasValue)
-            query = query.Where(f => f.PersonId == personId.Value);
-
-        return await query
-            .OrderBy(f => f.Id)
-            .ProjectTo<FaceIdentityDto>(_mapper.ConfigurationProvider)
-            .ToListAsync();
-    }
-
-    public async Task UpdateFaceIdentityAsync(int faceId, IdentityStatus identityStatus, int? personId)
-    {
-        var face = new Face
-        {
-            Id = faceId,
-            IdentityStatus = identityStatus,
-            PersonId = personId,
-            IdentifiedWithConfidence = identityStatus == IdentityStatus.Identified && personId.HasValue ? 1 : 0
-        };
-
-        await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentityStatus, f => f.IdentifiedWithConfidence);
     }
 
     public async Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path)
@@ -489,10 +402,9 @@ public class PhotoService : IPhotoService
                 var name = Path.GetFileNameWithoutExtension(file.FileName);
                 var extension = Path.GetExtension(file.FileName);
                 var index = 1;
-                string newFileName;
                 do
                 {
-                    newFileName = $"{name}_{index}{extension}";
+                    var newFileName = $"{name}_{index}{extension}";
                     destination = Path.Combine(targetPath, newFileName);
                     index++;
                 } while (System.IO.File.Exists(destination));
@@ -515,7 +427,7 @@ public class PhotoService : IPhotoService
 
         if (string.IsNullOrEmpty(hash))
         {
-            return Enumerable.Empty<PhotoItemDto>();
+            return [];
         }
 
         var referenceHash = new PerceptualHash(hash);
@@ -523,7 +435,7 @@ public class PhotoService : IPhotoService
         var candidateIds = new List<int>();
 
         await foreach (var photo in _photoRepository.GetAll().AsNoTracking()
-                           .Where(p => p.ImageHash != null && (!id.HasValue || p.Id != id.Value))
+                           .Where(p => (!id.HasValue || p.Id != id.Value))
                            .Select(p => new { p.Id, p.ImageHash, p.S3Key_Thumbnail })
                            .AsAsyncEnumerable())
         {
@@ -537,51 +449,17 @@ public class PhotoService : IPhotoService
 
         if (matchedIds.Length == 0)
         {
-            return Enumerable.Empty<PhotoItemDto>();
+            return [];
         }
 
         var result = await _photoRepository.GetAll().AsNoTracking()
             .Where(p => matchedIds.Contains(p.Id))
             .ToListAsync();
 
-        var dtos = _mapper.Map<List<PhotoItemDto>>(result);
-        await FillUrlsAsync(dtos);
-        return dtos;
-    }
+        var items = _mapper.Map<List<PhotoItemDto>>(result);
+        await FillUrlsAsync(items);
 
-    public async Task<PhotoPreviewResult?> GetPhotoPreviewAsync(int id)
-    {
-        return await _s3ResourceService.GetAsync(
-            _photoRepository,
-            id,
-            p => p.S3Key_Preview,
-            p => p.S3ETag_Preview,
-            q => q.MaybeApplyAcl(_currentUser));
-    }
-
-    public async Task<PhotoPreviewResult?> GetPhotoThumbnailAsync(int id)
-    {
-        return await _s3ResourceService.GetAsync(
-            _photoRepository,
-            id,
-            p => p.S3Key_Thumbnail,
-            p => p.S3ETag_Thumbnail,
-            q => q.MaybeApplyAcl(_currentUser));
-    }
-
-    public async Task<PhotoPreviewResult?> GetFaceImageAsync(int id)
-    {
-        return await _s3ResourceService.GetAsync(
-            _faceRepository,
-            id,
-            f => f.S3Key_Image,
-            f => f.S3ETag_Image,
-            faces => faces.Where(face => _photoRepository
-                .GetAll()
-                .AsNoTracking()
-                .MaybeApplyAcl(_currentUser)
-                .Select(p => p.Id)
-                .Contains(face.PhotoId)));
+        return items;
     }
 
     private async Task FillUrlsAsync(PhotoDto dto)
@@ -589,13 +467,20 @@ public class PhotoService : IPhotoService
         dto.PreviewUrl = await GetPresignedUrlAsync(dto.S3Key_Preview);
     }
 
-    private async Task FillUrlsAsync(IEnumerable<PhotoItemDto> dtos)
+    private async Task FillUrlsAsync(IEnumerable<PhotoItemDto> items)
     {
-        // ïàðàëëåëüíàÿ ãåíåðàöèÿ presigned URL
-        var list = dtos.ToList();
-        var tasks = list.Select(async dto =>
+        var tasks = items.Select(async dto =>
         {
             dto.ThumbnailUrl = await GetPresignedUrlAsync(dto.S3Key_Thumbnail);
+        });
+        await Task.WhenAll(tasks);
+    }
+
+    private async Task FillUrlsAsync(IEnumerable<FaceDto> faces)
+    {
+        var tasks = faces.Select(async dto =>
+        {
+            dto.ImageUrl = await GetPresignedUrlAsync(dto.S3Key_Image);
         });
         await Task.WhenAll(tasks);
     }
@@ -617,9 +502,6 @@ public class PhotoService : IPhotoService
             return null;
         }
     }
-
-    public Task<byte[]> GetObjectAsync(string key)
-        => _minioObjectService.GetObjectAsync(key);
 
     private void InvalidatePersonsCache()
     {

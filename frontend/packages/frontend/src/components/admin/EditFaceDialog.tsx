@@ -92,6 +92,7 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
       enabled: faceImageId != null,
       staleTime: 5 * 60 * 1000,
       refetchOnWindowFocus: false,
+      queryKey: [],
     },
     request: {
       redirect: 'manual',
@@ -171,7 +172,7 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
 
     if (
       face?.identityStatus &&
-      !baseStatuses.includes(face.identityStatus as IdentityStatusType)
+      !baseStatuses.includes(face.identityStatus)
     ) {
       baseStatuses.push(face.identityStatus);
     }

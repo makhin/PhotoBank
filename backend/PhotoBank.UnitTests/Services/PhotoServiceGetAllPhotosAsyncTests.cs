@@ -97,8 +97,6 @@ namespace PhotoBank.UnitTests.Services
                 new DummyCurrentUser(),
                 referenceDataService.Object,
                 normalizerMock.Object,
-                new Mock<IS3ResourceService>().Object,
-                new MinioObjectService(new Mock<IMinioClient>().Object),
                 new Mock<IMinioClient>().Object,
                 new Mock<IOptions<S3Options>>().Object);
         }

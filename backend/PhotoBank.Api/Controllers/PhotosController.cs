@@ -46,30 +46,6 @@ namespace PhotoBank.Api.Controllers
             return Ok(photo);
         }
 
-        [HttpGet("{id}/preview")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status301MovedPermanently)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetPreview(int id)
-        {
-            logger.LogInformation("Fetching preview for photo {Id}", id);
-            var result = await photoService.GetPhotoPreviewAsync(id);
-            if (result is null)
-            {
-                logger.LogWarning("Preview for photo {Id} not found", id);
-                return NotFound();
-            }
-
-            return CachedImageResponseBuilder.Build(
-                this,
-                result,
-                logger,
-                new CachedImageResponseCallbacks(
-                    OnNotModified: () => logger.LogInformation("Preview for photo {Id} not modified", id),
-                    OnRedirect: () => logger.LogInformation("Redirecting to pre-signed URL for photo {Id}", id),
-                    OnStream: () => logger.LogInformation("Streaming preview for photo {Id}", id)));
-        }
-
         [HttpPost("upload")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> Upload([FromForm] List<IFormFile> files, [FromForm] int storageId, [FromForm] string path)

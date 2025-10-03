@@ -6,6 +6,7 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.Services;
 using PhotoBank.ViewModel.Dto;
 using Microsoft.Extensions.DependencyInjection;
+using PhotoBank.Services.Models;
 
 namespace PhotoBank.UnitTests;
 
@@ -45,10 +46,8 @@ public class FaceDtoMappingTests
         dto.Id.Should().Be(entity.Id);
         dto.PersonId.Should().Be(entity.PersonId);
         dto.Provider.Should().Be(entity.Provider);
-        dto.ExternalId.Should().Be(entity.ExternalId);
-        dto.ExternalGuid.Should().Be(entity.ExternalGuid);
         dto.PhotoId.Should().Be(entity.PhotoId);
         dto.IdentifiedWithConfidence.Should().Be(entity.IdentifiedWithConfidence);
-        dto.IdentityStatus.Should().Be(entity.IdentityStatus);
+        dto.IdentityStatus.Should().Be(IdentityStatusDto.Identified);
     }
 }

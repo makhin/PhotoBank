@@ -32,14 +32,6 @@ namespace PhotoBank.Services
             CreateMap<Storage, StorageDto>().IgnoreAllPropertiesWithAnInaccessibleSetter();
             CreateMap<Tag, TagDto>().IgnoreAllPropertiesWithAnInaccessibleSetter();
 
-            CreateMap<PhotoTag, TagItemDto>()
-                .ForMember(dest => dest.TagId, opt => opt.MapFrom(src => src.TagId))
-                .IgnoreAllPropertiesWithAnInaccessibleSetter();
-
-            CreateMap<Face, PersonItemDto>()
-                .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonId))
-                .IgnoreAllPropertiesWithAnInaccessibleSetter();
-
             CreateMap<Photo, PhotoItemDto>()
                 .ForMember(dest => dest.ThumbnailUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.S3Key_Thumbnail, opt => opt.MapFrom(s => s.S3Key_Thumbnail))
@@ -62,21 +54,14 @@ namespace PhotoBank.Services
                     opt => opt.MapFrom(src => src.Persons!))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
-            CreateMap<Face, FaceIdentityDto>()
-                .ForMember(dest => dest.Person, opt => opt.MapFrom(src => src.Person))
-                .IgnoreAllPropertiesWithAnInaccessibleSetter();
+            CreateMap<PhotoTag, int>().ConvertUsing(t => t.TagId);
+            CreateMap<Face, int>().ConvertUsing(t => t.PersonId ?? 0);
 
-            CreateMap<Face, ViewModel.Dto.FaceDto>()
+            CreateMap<Face, FaceDto>()
                 .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonId))
+                .ForMember(dest => dest.ImageUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.FaceBox, opt => opt.MapFrom(src => FaceHelper.GetFaceBox(src.Rectangle, src.Photo)))
                 .ForMember(dest => dest.FriendlyFaceAttributes, opt => opt.MapFrom(src => FaceHelper.GetFriendlyFaceAttributes(src.FaceAttributes)))
-                .IgnoreAllPropertiesWithAnInaccessibleSetter();
-
-            CreateMap<Face, Models.FaceDto>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.PersonId, opt => opt.MapFrom(src => src.PersonId))
-                .ForMember(dest => dest.PersonDateOfBirth, opt => opt.MapFrom(src => src.Person.DateOfBirth))
-                .ForMember(dest => dest.PhotoTakenDate, opt => opt.MapFrom(src => src.Photo.TakenDate))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<AccessProfileStorageAllow, AccessProfileStorageAllowDto>()
@@ -109,11 +94,12 @@ namespace PhotoBank.Services
 
             CreateMap<AccessProfileDto, AccessProfile>()
                 .ForMember(dest => dest.Storages,
-                    opt => opt.MapFrom(src => src.Storages ?? Array.Empty<AccessProfileStorageAllowDto>()))
+                    opt => opt.MapFrom(src => src.Storages))
                 .ForMember(dest => dest.PersonGroups,
-                    opt => opt.MapFrom(src => src.PersonGroups ?? Array.Empty<AccessProfilePersonGroupAllowDto>()))
+                    opt => opt.MapFrom(src => src.PersonGroups))
                 .ForMember(dest => dest.DateRanges,
-                    opt => opt.MapFrom(src => src.DateRanges ?? Array.Empty<AccessProfileDateRangeAllowDto>()))
+                    opt => opt.MapFrom(src => src.DateRanges))
+                .ForMember(dest => dest.UserAssignments, opt => opt.Ignore())
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
         }
     }
