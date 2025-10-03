@@ -22,8 +22,8 @@ beforeAll(() => {
   }
 });
 
-const { mockUseFacesGet, mockUsePersonsGetAll, mockUseFacesUpdate, mockToast } = vi.hoisted(() => ({
-  mockUseFacesGet: vi.fn(),
+const { mockUseFacesGetAll, mockUsePersonsGetAll, mockUseFacesUpdate, mockToast } = vi.hoisted(() => ({
+  mockUseFacesGetAll: vi.fn(),
   mockUsePersonsGetAll: vi.fn(),
   mockUseFacesUpdate: vi.fn(),
   mockToast: vi.fn(),
@@ -37,7 +37,7 @@ vi.mock('@photobank/shared/api/photobank', async () => {
   return {
     ...actual,
     IdentityStatus: (actual as { IdentityStatus?: unknown; IdentityStatusDto?: unknown }).IdentityStatus ?? (actual as { IdentityStatusDto?: unknown }).IdentityStatusDto,
-    useFacesGet: mockUseFacesGet,
+    useFacesGetAll: mockUseFacesGetAll,
     usePersonsGetAll: mockUsePersonsGetAll,
     useFacesUpdate: mockUseFacesUpdate,
   };
@@ -76,7 +76,7 @@ describe('FacesPage', () => {
       imageUrl: null,
     };
 
-    mockUseFacesGet.mockReturnValue({
+    mockUseFacesGetAll.mockReturnValue({
       data: { data: [face] },
       isLoading: false,
       isError: false,
@@ -111,7 +111,7 @@ describe('FacesPage', () => {
       identityStatus: 3,
     };
 
-    mockUseFacesGet.mockReturnValue({
+    mockUseFacesGetAll.mockReturnValue({
       data: { data: [face] },
       isLoading: false,
       isError: false,
@@ -147,7 +147,7 @@ describe('FacesPage', () => {
       identityStatus: 'NotIdentified',
     };
 
-    mockUseFacesGet.mockReturnValue({
+    mockUseFacesGetAll.mockReturnValue({
       data: { data: [face] },
       isLoading: false,
       isError: false,
@@ -202,7 +202,7 @@ describe('FacesPage', () => {
       identityStatus: IdentityStatus.Identified,
     };
 
-    mockUseFacesGet.mockReturnValue({
+    mockUseFacesGetAll.mockReturnValue({
       data: { data: [face] },
       isLoading: false,
       isError: false,
@@ -257,7 +257,7 @@ describe('FacesPage', () => {
       identityStatus: status,
     }));
 
-    mockUseFacesGet.mockReturnValue({
+    mockUseFacesGetAll.mockReturnValue({
       data: { data: faces },
       isLoading: false,
       isError: false,

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Search, User, Eye, Loader2 } from 'lucide-react';
 import {
   IdentityStatusDto as IdentityStatusEnum,
-  useFacesGet,
+  useFacesGetAll,
   usePersonsGetAll,
   type FaceDto,
   type IdentityStatusDto as IdentityStatusType,
@@ -90,7 +90,7 @@ export default function FacesPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedFace, setSelectedFace] = useState<FaceDto | null>(null);
 
-  const { data, isLoading, isError, isFetching, refetch } = useFacesGet();
+  const { data, isLoading, isError, isFetching, refetch } = useFacesGetAll();
   const { data: personsResponse } = usePersonsGetAll();
 
   const personLookup = useMemo(
@@ -200,7 +200,14 @@ export default function FacesPage() {
           {showError ? (
             <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
               <p className="text-sm text-muted-foreground">We couldn't load the faces list. Please try again.</p>
-              <Button variant="outline" onClick={refetch}>Retry loading faces</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  void refetch();
+                }}
+              >
+                Retry loading faces
+              </Button>
             </div>
           ) : showLoading ? (
             <div className="flex items-center justify-center py-12" role="status">

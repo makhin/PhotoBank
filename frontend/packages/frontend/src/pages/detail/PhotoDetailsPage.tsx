@@ -257,7 +257,11 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                               key={face.id}
                                               face={face}
                                               index={index}
-                                              style={calculateFacePosition(face.faceBox)}
+                                              style={
+                                                  face.faceBox
+                                                      ? calculateFacePosition(face.faceBox)
+                                                      : undefined
+                                              }
                                           />
                                     ))}
                             </div>
