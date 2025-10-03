@@ -99,7 +99,7 @@ export default function FacesPage() {
   );
 
   const faceRows = useMemo<FaceRow[]>(() => {
-    const rawFaces = data?.data ?? [];
+    const rawFaces: FaceDto[] = Array.isArray(data?.data) ? data.data : [];
 
     return rawFaces.map((face) => {
       const id = face.id ?? 0;
