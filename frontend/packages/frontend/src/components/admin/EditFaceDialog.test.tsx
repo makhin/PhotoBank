@@ -22,7 +22,12 @@ vi.mock('@photobank/shared/api/photobank', async () => {
       isPending: false,
     }),
     usePersonsGetAll: () => ({
-      data: { data: [] },
+      data: {
+        data: [
+          { id: 42, name: 'Jane Doe' },
+          { id: 30, name: 'John Smith' },
+        ],
+      },
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
@@ -56,7 +61,6 @@ describe('EditFaceDialog', () => {
   it('renders the face preview image when an image URL is available', () => {
     const face: FaceDto = {
       id: 12,
-      faceId: 12,
       personId: 42,
       personName: 'Jane Doe',
       imageUrl: 'https://example.com/face.jpg',
@@ -81,7 +85,6 @@ describe('EditFaceDialog', () => {
 
     const face: FaceDto = {
       id: 15,
-      faceId: 15,
       personId: 30,
       personName: 'John Smith',
       identityStatus: 'Identified',
