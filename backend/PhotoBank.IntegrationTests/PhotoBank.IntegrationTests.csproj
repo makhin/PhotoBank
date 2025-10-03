@@ -13,12 +13,12 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="15.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
-    <PackageReference Include="FluentAssertions" Version="8.6.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.9" />
+    <PackageReference Include="FluentAssertions" Version="8.7.1" />
     <PackageReference Include="nunit" Version="4.4.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="5.1.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
     <PackageReference Include="Testcontainers" Version="4.7.0" />
     <PackageReference Include="Testcontainers.MsSql" Version="4.7.0" />
     <PackageReference Include="Respawn" Version="6.2.1" />
@@ -37,5 +37,8 @@
     <ProjectReference Include="..\PhotoBank.Services\PhotoBank.Services.csproj" />
     <ProjectReference Include="..\PhotoBank.DependencyInjection\PhotoBank.DependencyInjection.csproj" />
     <ProjectReference Include="..\PhotoBank.Api\PhotoBank.Api.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="Nerdbank.GitVersioning" Version="3.8.118" />
   </ItemGroup>
 </Project>

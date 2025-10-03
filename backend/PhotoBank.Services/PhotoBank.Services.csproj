@@ -7,22 +7,22 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="15.0.1" />
-    <PackageReference Include="AWSSDK.Rekognition" Version="4.0.2.1" />
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.8.1" />
+    <PackageReference Include="AWSSDK.Rekognition" Version="4.0.2.6" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.8.2" />
     <PackageReference Include="MetadataExtractor" Version="2.8.1" />
     <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.ComputerVision" Version="7.0.1" />
     <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.Face" Version="2.6.0-preview.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.8" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.8" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
-    <PackageReference Include="System.Drawing.Common" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.9" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.9" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.9" />
     <PackageReference Include="Minio" Version="6.0.5" />
     <PackageReference Include="MediatR" Version="13.0.0" />
   </ItemGroup>
@@ -40,6 +40,10 @@
     <ProjectReference Include="..\PhotoBank.InsightFace.Client\PhotoBank.InsightFaceApiClient.csproj" />
     <ProjectReference Include="..\PhotoBank.Repositories\PhotoBank.Repositories.csproj" />
     <ProjectReference Include="..\PhotoBank.ViewModel.Dto\PhotoBank.ViewModel.Dto.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Update="Nerdbank.GitVersioning" Version="3.8.118" />
   </ItemGroup>
 
 </Project>
