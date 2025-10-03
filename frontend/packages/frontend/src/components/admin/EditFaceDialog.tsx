@@ -77,8 +77,8 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
     [personsResponse]
   );
 
-  const identityStatuses = useMemo(() => {
-    const base = [...Object.values(IdentityStatus)];
+  const identityStatuses = useMemo<string[]>(() => {
+    const base: string[] = [...Object.values(IdentityStatus)];
 
     if (face?.identityStatus) {
       const alreadyPresent = base.some(
