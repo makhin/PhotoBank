@@ -433,16 +433,16 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                                         persons={persons}
                                                         disabled={!showFaceBoxes || !isAdmin}
                                                       onChange={(personId) => {
-                                                              void updateFace({
-                                                                  data: {
-                                                                      faceId: face.id!,
-                                                                      personId: personId ?? null,
-                                                                      identityStatus:
-                                                                          personId == null
-                                                                              ? IdentityStatus.StopProcessing
-                                                                              : IdentityStatus.Identified,
-                                                                  },
-                                                              });
+                                                          void updateFace({
+                                                              data: {
+                                                                  id: face.id!,
+                                                                  personId: personId ?? null,
+                                                                  identityStatus:
+                                                                      personId == null
+                                                                          ? IdentityStatus.StopProcessing
+                                                                          : IdentityStatus.Identified,
+                                                              },
+                                                          });
                                                           }}
                                                       />
                                                   );
