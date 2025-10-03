@@ -4,7 +4,7 @@ import { formatDate, getOrientation, getPlaceByGeoPoint, useIsAdmin } from '@pho
 import { logger } from '@photobank/shared/utils/logger';
 import type { FaceBoxDto, FaceDto } from '@photobank/shared/api/photobank';
 import * as PhotosApi from '@photobank/shared/api/photobank';
-import { IdentityStatus, useFacesUpdate } from '@photobank/shared/api/photobank';
+import { IdentityStatusDto as IdentityStatus, useFacesUpdate } from '@photobank/shared/api/photobank';
 import { Maximize2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 

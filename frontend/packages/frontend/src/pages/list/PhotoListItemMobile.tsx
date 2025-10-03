@@ -70,7 +70,7 @@ const PhotoListItemMobile = ({
 
       <MetadataBadgeList
         icon={User}
-        items={photo.persons?.map((p) => p.personId) ?? []}
+        items={photo.persons?.map((p) => p) ?? []}
         map={personsMap}
         maxVisible={MAX_VISIBLE_PERSONS_SM}
         variant="outline"
@@ -78,7 +78,7 @@ const PhotoListItemMobile = ({
 
       <MetadataBadgeList
         icon={Tag}
-        items={photo.tags?.map((t) => t.tagId) ?? []}
+        items={photo.tags?.map((t) => t) ?? []}
         map={tagsMap}
         maxVisible={MAX_VISIBLE_TAGS_SM}
         variant="secondary"

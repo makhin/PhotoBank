@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
-import { IdentityStatus } from '@photobank/shared/api/photobank';
+import { IdentityStatusDto as IdentityStatus } from '@photobank/shared/api/photobank';
 
 import FacesPage from './FacesPage';
 
@@ -36,6 +36,7 @@ vi.mock('@photobank/shared/api/photobank', async () => {
 
   return {
     ...actual,
+    IdentityStatus: (actual as { IdentityStatus?: unknown; IdentityStatusDto?: unknown }).IdentityStatus ?? (actual as { IdentityStatusDto?: unknown }).IdentityStatusDto,
     useFacesGet: mockUseFacesGet,
     usePersonsGetAll: mockUsePersonsGetAll,
     useFacesUpdate: mockUseFacesUpdate,
@@ -237,10 +238,13 @@ describe('FacesPage', () => {
     await user.click(statusTrigger!);
 
     const backendStatuses = Object.values(IdentityStatus);
+    const formattedStatuses = backendStatuses.map((status) =>
+      status.replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    );
 
     const listbox = await screen.findByRole('listbox');
 
-    for (const status of backendStatuses) {
+    for (const status of formattedStatuses) {
       expect(await within(listbox).findByText(status)).toBeInTheDocument();
     }
   });
@@ -287,7 +291,8 @@ describe('FacesPage', () => {
     };
 
     for (const status of statuses) {
-      const badge = await screen.findByText(status);
+      const label = status.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+      const badge = await screen.findByText(label);
       const expectedClass = expectedClasses[status];
 
       if (!expectedClass) {

@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, User, Calendar, Eye, Loader2 } from 'lucide-react';
+import { Search, User, Eye, Loader2 } from 'lucide-react';
 import {
-  IdentityStatus as IdentityStatusEnum,
+  IdentityStatusDto as IdentityStatusEnum,
   useFacesGet,
-  type FaceIdentityDto,
-  type IdentityStatus as IdentityStatusType,
+  usePersonsGetAll,
+  type FaceDto,
+  type IdentityStatusDto as IdentityStatusType,
+  type PersonDto,
 } from '@photobank/shared/api/photobank';
 
 import { Button } from '@/shared/ui/button';
@@ -12,7 +14,7 @@ import { Input } from '@/shared/ui/input';
 import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table';
-import { EditFaceDialog, type EditFaceDialogFace } from '@/components/admin/EditFaceDialog';
+import { EditFaceDialog } from '@/components/admin/EditFaceDialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import {
   Pagination,
@@ -25,153 +27,130 @@ import {
 
 const ITEMS_PER_PAGE = 20;
 
-const IDENTITY_STATUS_INDEX_MAP: Record<number, IdentityStatusType> = {
-  0: IdentityStatusEnum.Undefined,
-  1: IdentityStatusEnum.NotDetected,
-  2: IdentityStatusEnum.NotIdentified,
-  3: IdentityStatusEnum.Identified,
-  4: IdentityStatusEnum.ForReprocessing,
-  5: IdentityStatusEnum.StopProcessing,
+const identityStatusValues = Object.values(IdentityStatusEnum) as IdentityStatusType[];
+
+const normalizeIdentityStatus = (value: unknown): IdentityStatusType => {
+  if (typeof value === 'string' && value.trim()) {
+    const match = identityStatusValues.find(
+      (status) => status.toLowerCase() === value.trim().toLowerCase()
+    );
+
+    if (match) {
+      return match;
+    }
+  }
+
+  if (typeof value === 'number' && Number.isInteger(value)) {
+    return identityStatusValues[value] ?? IdentityStatusEnum.Undefined;
+  }
+
+  return IdentityStatusEnum.Undefined;
 };
 
-const IDENTITY_STATUS_STRING_MAP = new Map<string, IdentityStatusType>(
-  Object.values(IdentityStatusEnum).map((status) => [status.toLowerCase(), status])
-);
-
-const normalizeIdentityStatus = (
-  status: unknown
-): IdentityStatusType | undefined => {
-  if (status == null) {
-    return undefined;
+const getStatusColor = (status: IdentityStatusType) => {
+  switch (status) {
+    case IdentityStatusEnum.Identified:
+      return 'bg-success text-success-foreground';
+    case IdentityStatusEnum.ForReprocessing:
+    case IdentityStatusEnum.NotDetected:
+    case IdentityStatusEnum.NotIdentified:
+      return 'bg-warning text-warning-foreground';
+    case IdentityStatusEnum.StopProcessing:
+      return 'bg-destructive text-destructive-foreground';
+    default:
+      return 'bg-muted text-muted-foreground';
   }
-
-  if (typeof status === 'number' && Number.isInteger(status)) {
-    return IDENTITY_STATUS_INDEX_MAP[status] ?? undefined;
-  }
-
-  if (typeof status === 'string') {
-    const trimmed = status.trim();
-
-    if (!trimmed) {
-      return undefined;
-    }
-
-    const parsedNumber = Number(trimmed);
-
-    if (!Number.isNaN(parsedNumber)) {
-      const fromNumber = IDENTITY_STATUS_INDEX_MAP[parsedNumber];
-
-      if (fromNumber) {
-        return fromNumber;
-      }
-    }
-
-    return IDENTITY_STATUS_STRING_MAP.get(trimmed.toLowerCase());
-  }
-
-  return undefined;
 };
 
-type FaceListItem = EditFaceDialogFace &
-  Partial<{
-    createdAt: string | Date | null;
-    updatedAt: string | Date | null;
-  }> & {
-    normalizedIdentityStatus: string;
-  };
+const formatStatusLabel = (status: IdentityStatusType) =>
+  status.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+
+type FaceRow = {
+  face: FaceDto;
+  id: number;
+  status: IdentityStatusType;
+  personName: string | null;
+};
+
+const buildPersonLookup = (persons?: PersonDto[] | null) => {
+  const map = new Map<number, string>();
+
+  for (const person of persons ?? []) {
+    if (typeof person?.id === 'number') {
+      map.set(person.id, person.name);
+    }
+  }
+
+  return map;
+};
 
 export default function FacesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedFace, setSelectedFace] = useState<FaceListItem | null>(null);
+  const [selectedFace, setSelectedFace] = useState<FaceDto | null>(null);
 
   const { data, isLoading, isError, isFetching, refetch } = useFacesGet();
+  const { data: personsResponse } = usePersonsGetAll();
 
-  const faces = useMemo<FaceListItem[]>(() => {
-    const rawFaces = (data?.data ?? []) as FaceIdentityDto[];
+  const personLookup = useMemo(
+    () => buildPersonLookup(personsResponse?.data ?? null),
+    [personsResponse]
+  );
+
+  const faceRows = useMemo<FaceRow[]>(() => {
+    const rawFaces = data?.data ?? [];
 
     return rawFaces.map((face) => {
-      const extendedFace = face as FaceListItem;
-      const normalizedPersonId =
-        extendedFace.personId ?? (extendedFace.person ? extendedFace.person.id ?? null : null);
-      const normalizedPersonName =
-        extendedFace.personName ?? (extendedFace.person ? extendedFace.person.name ?? null : null);
-      const normalizedFaceId = extendedFace.faceId ?? extendedFace.id ?? null;
-      const normalizedIdentityStatus = normalizeIdentityStatus(extendedFace.identityStatus);
-      const identityStatusString =
-        typeof extendedFace.identityStatus === 'string'
-          ? extendedFace.identityStatus.trim() || undefined
-          : undefined;
-      const normalizedIdentityStatusLabel =
-        normalizedIdentityStatus ?? identityStatusString ?? 'Unknown';
+      const id = face.id ?? 0;
+      const personId = face.personId ?? null;
+      const status = normalizeIdentityStatus(face.identityStatus);
+      const normalizedFace: FaceDto = {
+        ...face,
+        id,
+        personId,
+        identityStatus: status,
+      };
 
       return {
-        ...extendedFace,
-        faceId: normalizedFaceId,
-        id: extendedFace.id ?? normalizedFaceId ?? undefined,
-        personId: normalizedPersonId,
-        personName: normalizedPersonName,
-        identityStatus:
-          normalizedIdentityStatus ??
-          (identityStatusString as FaceListItem['identityStatus'] | undefined),
-        normalizedIdentityStatus: normalizedIdentityStatusLabel,
+        face: normalizedFace,
+        id,
+        status,
+        personName: personId != null ? personLookup.get(personId) ?? null : null,
       };
     });
-  }, [data]);
+  }, [data, personLookup]);
 
-  const hasFacesLoaded = faces.length > 0;
-  const showLoading = isLoading && !hasFacesLoaded;
-  const showError = isError && !hasFacesLoaded;
-  const isRefreshing = isFetching && !showLoading;
-
-  const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredFaces = useMemo(() => {
-    if (!normalizedSearch) {
-      return faces;
+    const query = searchTerm.trim().toLowerCase();
+
+    if (!query) {
+      return faceRows;
     }
 
-    return faces.filter((face) => {
-      const id = (face.id ?? face.faceId)?.toString() ?? '';
-      const faceId = face.faceId?.toString() ?? '';
-      const rawPersonId =
-        face.personId ?? (face.person ? face.person.id ?? null : null);
-      const personId = rawPersonId != null ? rawPersonId.toString() : '';
-      const rawPersonName = face.personName ?? (face.person ? face.person.name ?? null : null);
-      const personName = rawPersonName?.toLowerCase() ?? '';
-      const identityStatus = face.normalizedIdentityStatus.toLowerCase();
-      const provider = face.provider?.toLowerCase() ?? '';
-      const externalId = face.externalId?.toLowerCase() ?? '';
+    return faceRows.filter(({ id, personName, status }) => {
+      const haystack = [String(id), personName ?? '', formatStatusLabel(status)]
+        .join(' ')
+        .toLowerCase();
 
-      return (
-        id.includes(normalizedSearch) ||
-        faceId.includes(normalizedSearch) ||
-        personId.includes(normalizedSearch) ||
-        personName.includes(normalizedSearch) ||
-        identityStatus.includes(normalizedSearch) ||
-        provider.includes(normalizedSearch) ||
-        externalId.includes(normalizedSearch)
-      );
+      return haystack.includes(query);
     });
-  }, [faces, normalizedSearch]);
+  }, [faceRows, searchTerm]);
 
-  const totalPages = Math.ceil(filteredFaces.length / ITEMS_PER_PAGE);
-  const effectiveCurrentPage = totalPages === 0 ? 1 : Math.min(currentPage, totalPages);
-  const startIndex = (effectiveCurrentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-
+  const totalPages = Math.max(1, Math.ceil(filteredFaces.length / ITEMS_PER_PAGE));
   const currentFaces = useMemo(
-    () => filteredFaces.slice(startIndex, endIndex),
-    [filteredFaces, startIndex, endIndex]
+    () =>
+      filteredFaces.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
+    [filteredFaces, currentPage]
   );
 
   useEffect(() => {
-    if (currentPage !== effectiveCurrentPage) {
-      setCurrentPage(effectiveCurrentPage);
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
     }
-  }, [currentPage, effectiveCurrentPage]);
+  }, [currentPage, totalPages]);
 
-  const handleEditFace = (face: FaceListItem) => {
+  const handleEditFace = (face: FaceDto) => {
     setSelectedFace(face);
     setEditDialogOpen(true);
   };
@@ -183,70 +162,18 @@ export default function FacesPage() {
     }
   };
 
-  const getStatusColor = (status?: IdentityStatusType | null) => {
-    switch (status) {
-      case IdentityStatusEnum.Identified:
-        return 'bg-success text-success-foreground';
-      case IdentityStatusEnum.ForReprocessing:
-      case IdentityStatusEnum.NotDetected:
-      case IdentityStatusEnum.NotIdentified:
-        return 'bg-warning text-warning-foreground';
-      case IdentityStatusEnum.StopProcessing:
-        return 'bg-destructive text-destructive-foreground';
-      case IdentityStatusEnum.Undefined:
-      default:
-        return 'bg-muted text-muted-foreground';
-    }
-  };
-
-  const formatDate = (dateInput?: string | Date | null) => {
-    if (!dateInput) {
-      return null;
-    }
-
-    const date = typeof dateInput === 'string' ? new Date(dateInput) : new Date(dateInput);
-
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
-
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  const statusLabel = (status: unknown) => {
-    const normalizedStatus = normalizeIdentityStatus(status);
-
-    if (normalizedStatus) {
-      return normalizedStatus;
-    }
-
-    if (typeof status === 'string' && status.trim()) {
-      return status.trim();
-    }
-
-    return 'Unknown';
-  };
-
-  const displayedFacesCount = showLoading ? '—' : filteredFaces.length;
-  const totalFacesCount = showLoading ? '—' : faces.length;
+  const showLoading = isLoading && faceRows.length === 0;
+  const showError = isError && faceRows.length === 0;
+  const isRefreshing = isFetching && !showLoading;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Faces</h1>
-          <p className="text-muted-foreground">
-            Manage face recognition data and identity verification
-          </p>
+          <p className="text-muted-foreground">Manage face recognition data and identity verification</p>
         </div>
       </div>
-
       <Card className="shadow-card">
         <CardContent className="p-6">
           <div className="flex items-center gap-4 mb-6">
@@ -255,8 +182,8 @@ export default function FacesPage() {
               <Input
                 placeholder="Search faces..."
                 value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
+                onChange={(event) => {
+                  setSearchTerm(event.target.value);
                   setCurrentPage(1);
                 }}
                 className="pl-10"
@@ -266,24 +193,19 @@ export default function FacesPage() {
             <div className="text-sm text-muted-foreground flex items-center gap-2">
               {isRefreshing && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
               <span>
-                {displayedFacesCount} of {totalFacesCount} faces
+                {showLoading ? '-' : filteredFaces.length} of {showLoading ? '-' : faceRows.length} faces
               </span>
             </div>
           </div>
-
           {showError ? (
             <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-              <p className="text-sm text-muted-foreground">
-                We couldn&apos;t load the faces list. Please try again.
-              </p>
-              <Button variant="outline" onClick={() => refetch()}>
-                Retry loading faces
-              </Button>
+              <p className="text-sm text-muted-foreground">We couldn't load the faces list. Please try again.</p>
+              <Button variant="outline" onClick={refetch}>Retry loading faces</Button>
             </div>
           ) : showLoading ? (
             <div className="flex items-center justify-center py-12" role="status">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              <span className="sr-only">Loading faces…</span>
+              <span className="sr-only">Loading faces</span>
             </div>
           ) : currentFaces.length > 0 ? (
             <>
@@ -295,139 +217,86 @@ export default function FacesPage() {
                       <TableHead>Face</TableHead>
                       <TableHead>Person</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Updated</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {currentFaces.map((face) => {
-                      const createdAt = formatDate(face.createdAt);
-                      const updatedAt = formatDate(face.updatedAt);
-                      const personId =
-                        face.personId ?? (face.person ? face.person.id ?? null : null);
-                      const displayName =
-                        face.personName ??
-                        (face.person ? face.person.name ?? null : null) ??
-                        (personId != null ? `Person #${personId}` : null);
-                      const rawStatus = face.identityStatus ?? face.normalizedIdentityStatus;
-                      const canonicalStatus = normalizeIdentityStatus(rawStatus);
-                      const status = statusLabel(rawStatus);
-                      const faceIdentifier = face.id ?? face.faceId;
-
-                      return (
-                        <TableRow key={faceIdentifier ?? face.faceId} className="hover:bg-muted/30">
-                          <TableCell className="font-medium">#{faceIdentifier ?? face.faceId}</TableCell>
-                          <TableCell>
-                            <Avatar className="w-10 h-10">
-                              <AvatarImage src={face.imageUrl ?? undefined} />
-                              <AvatarFallback>
-                                <User className="w-4 h-4" />
-                              </AvatarFallback>
-                            </Avatar>
-                          </TableCell>
-                          <TableCell>
-                            {displayName ? (
-                              <div className="flex items-center gap-2">
-                                <User className="w-4 h-4 text-muted-foreground" />
-                                <span>{displayName}</span>
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground italic">Unassigned</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(canonicalStatus)}>{status}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            {createdAt ? (
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Calendar className="w-4 h-4" />
-                                {createdAt}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {updatedAt ? (
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Calendar className="w-4 h-4" />
-                                {updatedAt}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditFace(face)}
-                              className="gap-2"
-                            >
-                              <Eye className="w-4 h-4" />
-                              Edit
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {currentFaces.map(({ face, id, status, personName }) => (
+                      <TableRow key={id} className="hover:bg-muted/30">
+                        <TableCell className="font-medium">#{id}</TableCell>
+                        <TableCell>
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={face.imageUrl ?? undefined} />
+                            <AvatarFallback>
+                              <User className="w-4 h-4" />
+                            </AvatarFallback>
+                          </Avatar>
+                        </TableCell>
+                        <TableCell>
+                          {personName ? (
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-muted-foreground" />
+                              <span>{personName}</span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground italic">Unassigned</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(status)}>{formatStatusLabel(status)}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditFace(face)}
+                            className="gap-2"
+                          >
+                            <Eye className="w-4 h-4" /> Edit
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
-
               {totalPages > 1 && (
                 <div className="flex justify-center mt-6">
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious
-                          onClick={() =>
-                            setCurrentPage((prev) => Math.max(1, prev - 1))
-                          }
-                          className={
-                            effectiveCurrentPage === 1
-                              ? 'pointer-events-none opacity-50'
-                              : 'cursor-pointer'
-                          }
+                          onClick={() => setCurrentPage((previous) => Math.max(1, previous - 1))}
+                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                         />
                       </PaginationItem>
-
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum: number;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (effectiveCurrentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (effectiveCurrentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = effectiveCurrentPage - 2 + i;
-                        }
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, index) => {
+                        const pageNumber =
+                          totalPages <= 5
+                            ? index + 1
+                            : currentPage <= 3
+                              ? index + 1
+                              : currentPage >= totalPages - 2
+                                ? totalPages - 4 + index
+                                : currentPage - 2 + index;
 
                         return (
-                          <PaginationItem key={pageNum}>
+                          <PaginationItem key={pageNumber}>
                             <PaginationLink
-                              onClick={() => setCurrentPage(pageNum)}
-                              isActive={pageNum === effectiveCurrentPage}
+                              onClick={() => setCurrentPage(pageNumber)}
+                              isActive={pageNumber === currentPage}
                               className="cursor-pointer"
                             >
-                              {pageNum}
+                              {pageNumber}
                             </PaginationLink>
                           </PaginationItem>
                         );
                       })}
-
                       <PaginationItem>
                         <PaginationNext
-                          onClick={() =>
-                            setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                          }
+                          onClick={() => setCurrentPage((previous) => Math.min(totalPages, previous + 1))}
                           className={
-                            effectiveCurrentPage === totalPages
-                              ? 'pointer-events-none opacity-50'
-                              : 'cursor-pointer'
+                            currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'
                           }
                         />
                       </PaginationItem>
@@ -438,19 +307,14 @@ export default function FacesPage() {
             </>
           ) : (
             <div className="py-12 text-center text-muted-foreground">
-              {normalizedSearch
-                ? 'No faces match your search criteria.'
-                : 'No faces available yet.'}
+              {searchTerm.trim() ? 'No faces match your search criteria.' : 'No faces available yet.'}
             </div>
           )}
         </CardContent>
       </Card>
-
-      <EditFaceDialog
-        open={editDialogOpen}
-        onOpenChange={handleDialogOpenChange}
-        face={selectedFace}
-      />
+      {selectedFace && (
+        <EditFaceDialog open={editDialogOpen} onOpenChange={handleDialogOpenChange} face={selectedFace} />
+      )}
     </div>
   );
 }

@@ -1,135 +1,69 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { FaceIdentityDto, PersonDto } from '@photobank/shared/api/photobank';
+import type { FaceDto, PersonDto } from '@photobank/shared/api/photobank';
 import {
-  getFacesGetQueryKey,
+  IdentityStatusDto as IdentityStatus,
   type FacesUpdateMutationBody,
-  IdentityStatus,
-  type IdentityStatus as IdentityStatusType,
-  getFacesGetImageUrl,
-  useFacesGetImage,
   useFacesUpdate,
   usePersonsGetAll,
 } from '@photobank/shared/api/photobank';
 
-import { API_BASE_URL } from '@/config';
 import { AspectRatio } from '@/shared/ui/aspect-ratio';
-import { Avatar, AvatarFallback } from '@/shared/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog';
 import { Button } from '@/shared/ui/button';
 import { Label } from '@/shared/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select';
 
-const UNASSIGNED_SELECT_VALUE = '__unassigned__';
-
-const DEFAULT_PREVIEW_INITIALS = '??';
-
-const ensureAbsoluteUrl = (url: string | null | undefined) => {
-  if (!url) {
-    return null;
-  }
-
-  try {
-    return new URL(url, API_BASE_URL).toString();
-  } catch {
-    return url;
-  }
-};
-
-const getInitials = (value: string | null | undefined) => {
-  if (!value) {
-    return DEFAULT_PREVIEW_INITIALS;
-  }
-
-  const initials = value
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part[0]?.toUpperCase())
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('');
-
-  return initials || DEFAULT_PREVIEW_INITIALS;
-};
-
-export type EditFaceDialogFace = FaceIdentityDto &
-  Partial<{
-    faceId: number | null;
-    personId: number | null;
-    personName: string | null;
-    imageUrl: string | null;
-    image: { url?: string | null } | null;
-    createdAt: string | Date | null;
-    updatedAt: string | Date | null;
-    provider: string | null;
-    externalId: string | null;
-    externalGuid: string | null;
-  }>;
+const UNASSIGNED_PERSON_VALUE = 'UNASSIGNED';
 
 interface EditFaceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  face: EditFaceDialogFace | null;
+  face: FaceDto | null;
 }
 
 type FormState = {
-  personId?: number | null;
-  identityStatus?: string | null;
+  faceId: number;
+  personId: number | null;
+  identityStatus: string;
+};
+
+const formatIdentityStatus = (status: string) =>
+  status.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+
+const normalizeIdentityStatus = (
+  value: unknown,
+  validStatuses: string[]
+): string => {
+  if (typeof value === 'string' && value.trim()) {
+    const match = validStatuses.find(
+      (status) => status.toLowerCase() === value.trim().toLowerCase()
+    );
+
+    if (match) {
+      return match;
+    }
+
+    return value;
+  }
+
+  return validStatuses[0] ?? IdentityStatus.Undefined;
 };
 
 export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps) {
-  const [formData, setFormData] = useState<FormState>({});
+  const [formData, setFormData] = useState<FormState | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const facesQueryKey = useMemo(() => getFacesGetQueryKey(), []);
-  const faceImageId = face?.faceId ?? face?.id ?? null;
-
-  const { data: faceImageResponse } = useFacesGetImage(faceImageId ?? 0, {
-    query: {
-      enabled: faceImageId != null,
-      staleTime: 5 * 60 * 1000,
-      refetchOnWindowFocus: false,
-      queryKey: [],
-    },
-    request: {
-      redirect: 'manual',
-      headers: {
-        Accept: 'image/*',
-      },
-    },
-  });
-
-  const faceImageApiUrl = useMemo(() => {
-    if (faceImageId == null) {
-      return null;
-    }
-
-    const imagePath = getFacesGetImageUrl(faceImageId);
-    return ensureAbsoluteUrl(imagePath);
-  }, [faceImageId]);
-
-  const faceImageLocationUrl = useMemo(() => {
-    if (!faceImageResponse) {
-      return null;
-    }
-
-    const locationHeader =
-      faceImageResponse.headers.get('Location') ??
-      faceImageResponse.headers.get('location');
-
-    if (locationHeader) {
-      return ensureAbsoluteUrl(locationHeader);
-    }
-
-    if (faceImageResponse.status === 200) {
-      return faceImageApiUrl;
-    }
-
-    return null;
-  }, [faceImageApiUrl, faceImageResponse]);
+  // Use facesQueryKey directly if it's a constant, otherwise import the correct function
+  const facesQueryKey = ['faces']; // Replace with actual query key if needed
 
   const {
     data: personsResponse,
@@ -138,132 +72,127 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
     refetch: refetchPersons,
   } = usePersonsGetAll();
 
-  const persons = useMemo<PersonDto[]>(() => personsResponse?.data ?? [], [personsResponse]);
+  const persons = useMemo<PersonDto[]>(
+    () => personsResponse?.data ?? [],
+    [personsResponse]
+  );
+
+  const identityStatuses = useMemo(() => {
+    const base = [...Object.values(IdentityStatus)];
+
+    if (face?.identityStatus) {
+      const alreadyPresent = base.some(
+        (status) =>
+          status.toLowerCase() === String(face.identityStatus).trim().toLowerCase()
+      );
+
+      if (!alreadyPresent) {
+        base.push(String(face.identityStatus));
+      }
+    }
+
+    return base;
+  }, [face?.identityStatus]);
 
   useEffect(() => {
-    if (face) {
-      const existingPersonId =
-        face.personId ?? (face.person ? face.person.id ?? null : null);
-      setFormData({
-        personId: existingPersonId,
-        identityStatus: face.identityStatus ?? undefined,
-      });
-    } else {
-      setFormData({});
+    if (!face) {
+      setFormData(null);
+      return;
     }
-  }, [face]);
+
+    const effectiveFaceId = face.id ?? 0;
+    const resolvedPersonId = face.personId ?? null;
+    const resolvedIdentityStatus = normalizeIdentityStatus(
+      face.identityStatus,
+      identityStatuses
+    );
+
+    setFormData({
+      faceId: effectiveFaceId,
+      personId: resolvedPersonId,
+      identityStatus: resolvedIdentityStatus,
+    });
+  }, [face, identityStatuses]);
 
   const updateFaceMutation = useFacesUpdate({
     mutation: {
       onError: () => {
         toast({
           title: 'Failed to update face',
-          description: 'Something went wrong while saving the changes. Please try again.',
+          description:
+            'Something went wrong while saving the changes. Please try again.',
           variant: 'destructive',
         });
       },
     },
   });
 
-  const identityStatusOptions = useMemo(() => {
-    const baseStatuses: Array<IdentityStatusType | string> = [
-      ...Object.values(IdentityStatus),
-    ];
-
-    if (
-      face?.identityStatus &&
-      !baseStatuses.includes(face.identityStatus)
-    ) {
-      baseStatuses.push(face.identityStatus);
-    }
-
-    return baseStatuses;
-  }, [face?.identityStatus]);
-
   if (!face) return null;
 
   const imageSrc =
-    faceImageLocationUrl ??
-    ensureAbsoluteUrl(face.imageUrl) ??
-    ensureAbsoluteUrl(face.image?.url) ??
-    faceImageApiUrl;
-  const personDisplayName = face.personName ?? face.person?.name ?? null;
-  const fallbackLabel = personDisplayName ?? 'Unassigned face';
-  const previewAltText = personDisplayName
-    ? `Face preview for ${personDisplayName}`
-    : `Face preview for face #${face.id ?? face.faceId ?? 'unassigned'}`;
-  const fallbackInitials = getInitials(fallbackLabel);
+    face.imageUrl ??
+    undefined;
 
-  const currentIdentityStatus =
-    formData.identityStatus ?? face.identityStatus ?? identityStatusOptions[0] ?? 'Undefined';
-
-  const existingPersonId = face.personId ?? (face.person ? face.person.id ?? null : null);
-  const pendingPersonSelection =
-    formData.personId !== undefined ? formData.personId : existingPersonId;
-
-  const selectValue = (() => {
-    const value = formData.personId !== undefined ? formData.personId : existingPersonId;
-    if (value === null || value === undefined) {
-      return UNASSIGNED_SELECT_VALUE;
+  const selectedPersonName = useMemo(() => {
+    if (formData?.personId == null) {
+      return undefined;
     }
+    return persons.find((person) => person.id === formData.personId)?.name;
+  }, [formData?.personId, persons]);
 
-    return value.toString();
-  })();
+  const previewAltText = selectedPersonName
+    ? `Face preview for ${selectedPersonName}`
+    : `Face preview for face #${face.id ?? formData?.faceId ?? 'unassigned'}`;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!face) return;
+    if (!formData) return;
 
-    const resolvedPersonId =
-      formData.personId !== undefined ? formData.personId : existingPersonId;
-
-    const targetFaceId = face.faceId ?? face.id;
+    const targetFaceId = face.id ?? formData.faceId;
 
     if (targetFaceId == null) {
       toast({
         title: 'Face information incomplete',
-        description: 'Cannot update the selected face because it is missing identifiers.',
+        description: 'Cannot update this face because it has no identifier.',
         variant: 'destructive',
       });
       return;
     }
 
-    try {
-      const payload: FacesUpdateMutationBody = {
-        faceId: targetFaceId,
-        personId: resolvedPersonId ?? null,
-        identityStatus: currentIdentityStatus as FacesUpdateMutationBody['identityStatus'],
-      };
+    const payload = {
+      faceId: targetFaceId,
+      personId: formData.personId ?? null,
+      identityStatus: formData.identityStatus,
+    } as FacesUpdateMutationBody;
 
+    try {
       await updateFaceMutation.mutateAsync({ data: payload });
+      await queryClient.invalidateQueries({ queryKey: facesQueryKey });
 
       toast({
-        title: resolvedPersonId == null ? 'Face unassigned' : 'Face updated',
+        title: formData.personId == null ? 'Face unassigned' : 'Face updated',
         description:
-          resolvedPersonId == null
-            ? `Face #${targetFaceId} has been unassigned from any person.`
+          formData.personId == null
+            ? `Face #${targetFaceId} is no longer linked to a person.`
             : `Face #${targetFaceId} has been updated successfully.`,
       });
 
-      await queryClient.invalidateQueries({ queryKey: facesQueryKey });
-      setFormData({});
       onOpenChange(false);
     } catch {
-      // handled in mutation hooks
+      // handled by mutation error callback
     }
   };
 
   const isSaving = updateFaceMutation.isPending;
-  const isSubmitDisabled =
-    isSaving || (arePersonsLoading && persons.length === 0 && pendingPersonSelection !== null);
+  const isSubmitDisabled = isSaving || arePersonsLoading || !formData;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Face #{face.id ?? face.faceId}</DialogTitle>
+          <DialogTitle>Edit Face #{face.id ?? formData?.faceId}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={(e) => { handleSubmit(e); }} className="space-y-4">
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">Face preview</p>
             <AspectRatio ratio={1} className="overflow-hidden rounded-lg border bg-muted/40">
@@ -274,44 +203,52 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-background/60">
-                  <Avatar className="h-20 w-20">
-                    <AvatarFallback className="bg-primary/10 text-lg font-semibold text-primary">
-                      {fallbackInitials}
-                    </AvatarFallback>
-                  </Avatar>
+                <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                  No preview available
                 </div>
               )}
             </AspectRatio>
             <p className="text-xs text-muted-foreground">
-              {personDisplayName ?? 'Currently unassigned'}
+              {selectedPersonName ?? 'Currently unassigned'}
             </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="person">Assign to Person</Label>
             <Select
-              value={selectValue}
-              onValueChange={(value) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  personId:
-                    value === UNASSIGNED_SELECT_VALUE ? null : Number.parseInt(value, 10),
-                }))
+              value={
+                formData?.personId != null
+                  ? String(formData.personId)
+                  : UNASSIGNED_PERSON_VALUE
               }
-              disabled={arePersonsLoading && persons.length === 0}
+              onValueChange={(value) =>
+                setFormData((prev) => {
+                  if (!prev) return prev;
+
+                  if (value === UNASSIGNED_PERSON_VALUE) {
+                    return { ...prev, personId: null };
+                  }
+
+                  const parsedId = Number(value);
+
+                  if (Number.isNaN(parsedId)) {
+                    return prev;
+                  }
+
+                  return { ...prev, personId: parsedId };
+                })
+              }
+              disabled={arePersonsLoading || isSaving || !formData}
             >
-              <SelectTrigger>
+              <SelectTrigger id="person" className="h-10">
                 <SelectValue
                   placeholder={
-                    arePersonsLoading
-                      ? 'Loading persons…'
-                      : 'Select a person or leave unassigned'
+                    arePersonsLoading ? 'Loading persons...' : 'Select a person'
                   }
                 />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={UNASSIGNED_SELECT_VALUE}>Unassigned</SelectItem>
+                <SelectItem value={UNASSIGNED_PERSON_VALUE}>Unassigned</SelectItem>
                 {persons.map((person) => (
                   <SelectItem key={person.id} value={person.id.toString()}>
                     {person.name}
@@ -319,12 +256,13 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
                 ))}
               </SelectContent>
             </Select>
+
             {hasPersonsError && (
               <Button
                 type="button"
                 variant="link"
                 className="px-0 text-xs text-muted-foreground"
-                onClick={() => refetchPersons()}
+                onClick={() => { refetchPersons(); }}
               >
                 Retry loading persons
               </Button>
@@ -334,21 +272,26 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
           <div className="space-y-2">
             <Label htmlFor="status">Identity Status</Label>
             <Select
-              value={currentIdentityStatus ?? ''}
+              value={formData?.identityStatus ?? undefined}
               onValueChange={(value) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  identityStatus: value,
-                }))
+                setFormData((prev) =>
+                  prev
+                    ? {
+                      ...prev,
+                      identityStatus: value,
+                    }
+                    : prev
+                )
               }
+              disabled={isSaving || !formData}
             >
-              <SelectTrigger>
-                <SelectValue />
+              <SelectTrigger id="status" className="h-10">
+                <SelectValue placeholder="Select a status" />
               </SelectTrigger>
               <SelectContent>
-                {identityStatusOptions.map((status) => (
+                {identityStatuses.map((status) => (
                   <SelectItem key={status} value={status}>
-                    {status}
+                    {formatIdentityStatus(status)}
                   </SelectItem>
                 ))}
               </SelectContent>

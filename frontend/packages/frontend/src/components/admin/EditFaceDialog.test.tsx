@@ -2,8 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { vi, describe, it, beforeEach, expect } from 'vitest';
 
-import type { EditFaceDialogFace } from './EditFaceDialog';
 import { EditFaceDialog } from './EditFaceDialog';
+import type { FaceDto } from '@photobank/shared';
 
 const mutateAsyncMock = vi.hoisted(() => vi.fn());
 const useFacesGetImageMock = vi.hoisted(() => vi.fn());
@@ -38,7 +38,7 @@ describe('EditFaceDialog', () => {
     useFacesGetImageMock.mockReturnValue({ data: null });
   });
 
-  const renderComponent = (face: EditFaceDialogFace) => {
+  const renderComponent = (face: FaceDto) => {
     const queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
@@ -54,7 +54,7 @@ describe('EditFaceDialog', () => {
   };
 
   it('renders the face preview image when an image URL is available', () => {
-    const face: EditFaceDialogFace = {
+    const face: FaceDto = {
       id: 12,
       faceId: 12,
       personId: 42,
@@ -79,7 +79,7 @@ describe('EditFaceDialog', () => {
       },
     });
 
-    const face: EditFaceDialogFace = {
+    const face: FaceDto = {
       id: 15,
       faceId: 15,
       personId: 30,
