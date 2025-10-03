@@ -102,7 +102,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
         cell: ({ row }) => (
           <MetadataBadgeList
             items={
-              metaLoaded ? (row.original.tags?.map((t) => t.tagId) ?? []) : []
+              metaLoaded ? (row.original.tags ?? []) : []
             }
             map={tagsMap}
             maxVisible={8}
@@ -119,9 +119,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
         cell: ({ row }) => (
           <MetadataBadgeList
             items={
-              metaLoaded
-                ? (row.original.persons?.map((p) => p.personId) ?? [])
-                : []
+              metaLoaded ? (row.original.persons ?? []) : []
             }
             map={personsMap}
             maxVisible={6}
