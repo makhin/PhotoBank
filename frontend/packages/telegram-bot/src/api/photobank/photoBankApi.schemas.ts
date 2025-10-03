@@ -23,8 +23,11 @@ export interface AccessProfileDto {
    */
   description?: string | null;
   flags_CanSeeNsfw?: boolean;
-  /** @minimum 0 */
-  assignedUsersCount: number;
+  /**
+   * @minimum 0
+   * @maximum 2147483647
+   */
+  assignedUsersCount?: number;
   /** @nullable */
   storages?: AccessProfileStorageAllowDto[] | null;
   /** @nullable */
@@ -70,25 +73,19 @@ export interface FaceDto {
   /** @nullable */
   gender?: boolean | null;
   /** @nullable */
-  faceAttributes?: string | null;
+  smile?: number | null;
   /** @nullable */
+  faceAttributes?: string | null;
   faceBox?: FaceBoxDto;
   /** @nullable */
   friendlyFaceAttributes?: string | null;
   /** @nullable */
   provider?: string | null;
-  /** @nullable */
-  externalId?: string | null;
-  externalGuid?: string;
   photoId?: number;
   identifiedWithConfidence?: number;
-  identityStatus?: IdentityStatus;
-}
-
-export interface FaceIdentityDto {
-  id?: number;
-  identityStatus?: IdentityStatus;
-  person?: PersonDto;
+  identityStatus?: IdentityStatusDto;
+  /** @nullable */
+  imageUrl?: string | null;
 }
 
 export interface FilterDto {
@@ -124,11 +121,11 @@ export interface GeoPointDto {
   longitude: number;
 }
 
-export type IdentityStatus =
-  (typeof IdentityStatus)[keyof typeof IdentityStatus];
+export type IdentityStatusDto =
+  (typeof IdentityStatusDto)[keyof typeof IdentityStatusDto];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const IdentityStatus = {
+export const IdentityStatusDto = {
   Undefined: 'Undefined',
   NotDetected: 'NotDetected',
   NotIdentified: 'NotIdentified',
@@ -168,10 +165,6 @@ export interface PersonGroupDto {
   name: string;
   /** @nullable */
   persons?: PersonDto[] | null;
-}
-
-export interface PersonItemDto {
-  personId: number;
 }
 
 export interface PhotoDto {
@@ -216,9 +209,9 @@ export interface PhotoItemDto {
   /** @minLength 1 */
   relativePath: string;
   /** @nullable */
-  tags?: TagItemDto[] | null;
+  tags?: number[] | null;
   /** @nullable */
-  persons?: PersonItemDto[] | null;
+  persons?: number[] | null;
   /** @nullable */
   captions?: string[] | null;
 }
@@ -272,10 +265,6 @@ export interface TagDto {
   name: string;
 }
 
-export interface TagItemDto {
-  tagId: number;
-}
-
 export interface TelegramExchangeRequest {
   telegramUserId?: number;
   /** @nullable */
@@ -296,13 +285,6 @@ export interface TelegramSubscriptionDto {
 export interface ThisDayDto {
   day?: number;
   month?: number;
-}
-
-export interface UpdateFaceIdentityDto {
-  faceId: number;
-  /** @nullable */
-  personId?: number | null;
-  identityStatus: IdentityStatus;
 }
 
 export interface UpdateUserDto {
@@ -328,11 +310,6 @@ export interface UserDto {
   /** @nullable */
   roles?: string[] | null;
 }
-
-export type FacesGetParams = {
-  status?: IdentityStatus;
-  personId?: number;
-};
 
 export type PhotosUploadBody = {
   files?: Blob[];

@@ -15,107 +15,82 @@ import type {
   UseQueryResult,
 } from '@tanstack/react-query';
 
-import type {
-  FaceDto,
-  FaceIdentityDto,
-  FacesGetParams,
-  ProblemDetails,
-  UpdateFaceIdentityDto,
-} from '../photoBankApi.schemas';
+import type { FaceDto } from '../photoBankApi.schemas';
 
-import { customFetcher } from '.././fetcher';
+import { customFetcher } from '../fetcher';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type facesGetResponse200 = {
-  data: FaceIdentityDto[];
+export type facesGetAllResponse200 = {
+  data: FaceDto[];
   status: 200;
 };
 
-export type facesGetResponseComposite = facesGetResponse200;
+export type facesGetAllResponseComposite = facesGetAllResponse200;
 
-export type facesGetResponse = facesGetResponseComposite & {
+export type facesGetAllResponse = facesGetAllResponseComposite & {
   headers: Headers;
 };
 
-export const getFacesGetUrl = (params?: FacesGetParams) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : value.toString());
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0
-    ? `/faces?${stringifiedParams}`
-    : `/faces`;
+export const getFacesGetAllUrl = () => {
+  return `/faces`;
 };
 
-export const facesGet = async (
-  params?: FacesGetParams,
+export const facesGetAll = async (
   options?: RequestInit
-): Promise<facesGetResponse> => {
-  return customFetcher<facesGetResponse>(getFacesGetUrl(params), {
+): Promise<facesGetAllResponse> => {
+  return customFetcher<facesGetAllResponse>(getFacesGetAllUrl(), {
     ...options,
     method: 'GET',
   });
 };
 
-export const getFacesGetQueryKey = (params?: FacesGetParams) => {
-  return [`/faces`, ...(params ? [params] : [])] as const;
+export const getFacesGetAllQueryKey = () => {
+  return [`/faces`] as const;
 };
 
-export const getFacesGetQueryOptions = <
-  TData = Awaited<ReturnType<typeof facesGet>>,
+export const getFacesGetAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof facesGetAll>>,
   TError = unknown,
->(
-  params?: FacesGetParams,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof facesGet>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof customFetcher>;
-  }
-) => {
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof facesGetAll>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getFacesGetQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getFacesGetAllQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGet>>> = () =>
-    facesGet(params, requestOptions);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGetAll>>> = () =>
+    facesGetAll(requestOptions);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof facesGet>>,
+    Awaited<ReturnType<typeof facesGetAll>>,
     TError,
     TData
   > & { queryKey: QueryKey };
 };
 
-export type FacesGetQueryResult = NonNullable<
-  Awaited<ReturnType<typeof facesGet>>
+export type FacesGetAllQueryResult = NonNullable<
+  Awaited<ReturnType<typeof facesGetAll>>
 >;
-export type FacesGetQueryError = unknown;
+export type FacesGetAllQueryError = unknown;
 
-export function useFacesGet<
-  TData = Awaited<ReturnType<typeof facesGet>>,
+export function useFacesGetAll<
+  TData = Awaited<ReturnType<typeof facesGetAll>>,
   TError = unknown,
->(
-  params?: FacesGetParams,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof facesGet>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof customFetcher>;
-  }
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getFacesGetQueryOptions(params, options);
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof facesGetAll>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetcher>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getFacesGetAllQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -142,14 +117,14 @@ export const getFacesUpdateUrl = () => {
 };
 
 export const facesUpdate = async (
-  updateFaceIdentityDto: UpdateFaceIdentityDto,
+  faceDto: FaceDto,
   options?: RequestInit
 ): Promise<facesUpdateResponse> => {
   return customFetcher<facesUpdateResponse>(getFacesUpdateUrl(), {
     ...options,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(updateFaceIdentityDto),
+    body: JSON.stringify(faceDto),
   });
 };
 
@@ -160,14 +135,14 @@ export const getFacesUpdateMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof facesUpdate>>,
     TError,
-    { data: UpdateFaceIdentityDto },
+    { data: FaceDto },
     TContext
   >;
   request?: SecondParameter<typeof customFetcher>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof facesUpdate>>,
   TError,
-  { data: UpdateFaceIdentityDto },
+  { data: FaceDto },
   TContext
 > => {
   const mutationKey = ['facesUpdate'];
@@ -181,7 +156,7 @@ export const getFacesUpdateMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof facesUpdate>>,
-    { data: UpdateFaceIdentityDto }
+    { data: FaceDto }
   > = (props) => {
     const { data } = props ?? {};
 
@@ -194,501 +169,24 @@ export const getFacesUpdateMutationOptions = <
 export type FacesUpdateMutationResult = NonNullable<
   Awaited<ReturnType<typeof facesUpdate>>
 >;
-export type FacesUpdateMutationBody = UpdateFaceIdentityDto;
+export type FacesUpdateMutationBody = FaceDto;
 export type FacesUpdateMutationError = unknown;
 
 export const useFacesUpdate = <TError = unknown, TContext = unknown>(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof facesUpdate>>,
     TError,
-    { data: UpdateFaceIdentityDto },
+    { data: FaceDto },
     TContext
   >;
   request?: SecondParameter<typeof customFetcher>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof facesUpdate>>,
   TError,
-  { data: UpdateFaceIdentityDto },
+  { data: FaceDto },
   TContext
 > => {
   const mutationOptions = getFacesUpdateMutationOptions(options);
-
-  return useMutation(mutationOptions);
-};
-export type facesGetImageResponse200 = {
-  data: null;
-  status: 200;
-};
-
-export type facesGetImageResponse301 = {
-  data: null;
-  status: 301;
-};
-
-export type facesGetImageResponse404 = {
-  data: ProblemDetails;
-  status: 404;
-};
-
-export type facesGetImageResponseComposite =
-  | facesGetImageResponse200
-  | facesGetImageResponse301
-  | facesGetImageResponse404;
-
-export type facesGetImageResponse = facesGetImageResponseComposite & {
-  headers: Headers;
-};
-
-export const getFacesGetImageUrl = (id: number) => {
-  return `/faces/${id}/image`;
-};
-
-export const facesGetImage = async (
-  id: number,
-  options?: RequestInit
-): Promise<facesGetImageResponse> => {
-  return customFetcher<facesGetImageResponse>(getFacesGetImageUrl(id), {
-    ...options,
-    method: 'GET',
-  });
-};
-
-export const getFacesGetImageQueryKey = (id?: number) => {
-  return [`/faces/${id}/image`] as const;
-};
-
-export const getFacesGetImageQueryOptions = <
-  TData = Awaited<ReturnType<typeof facesGetImage>>,
-  TError = null | ProblemDetails,
->(
-  id: number,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof facesGetImage>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof customFetcher>;
-  }
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getFacesGetImageQueryKey(id);
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof facesGetImage>>
-  > = () => facesGetImage(id, requestOptions);
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!id,
-    ...queryOptions,
-  } as UseQueryOptions<
-    Awaited<ReturnType<typeof facesGetImage>>,
-    TError,
-    TData
-  > & { queryKey: QueryKey };
-};
-
-export type FacesGetImageQueryResult = NonNullable<
-  Awaited<ReturnType<typeof facesGetImage>>
->;
-export type FacesGetImageQueryError = null | ProblemDetails;
-
-export function useFacesGetImage<
-  TData = Awaited<ReturnType<typeof facesGetImage>>,
-  TError = null | ProblemDetails,
->(
-  id: number,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof facesGetImage>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof customFetcher>;
-  }
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getFacesGetImageQueryOptions(id, options);
-
-  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
-    queryKey: QueryKey;
-  };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
-
-export type facesGetMetadataResponse200 = {
-  data: FaceDto[];
-  status: 200;
-};
-
-export type facesGetMetadataResponseComposite = facesGetMetadataResponse200;
-
-export type facesGetMetadataResponse = facesGetMetadataResponseComposite & {
-  headers: Headers;
-};
-
-export const getFacesGetMetadataUrl = () => {
-  return `/personfaces`;
-};
-
-export const facesGetMetadata = async (
-  options?: RequestInit
-): Promise<facesGetMetadataResponse> => {
-  return customFetcher<facesGetMetadataResponse>(getFacesGetMetadataUrl(), {
-    ...options,
-    method: 'GET',
-  });
-};
-
-export const getFacesGetMetadataQueryKey = () => {
-  return [`/personfaces`] as const;
-};
-
-export const getFacesGetMetadataQueryOptions = <
-  TData = Awaited<ReturnType<typeof facesGetMetadata>>,
-  TError = unknown,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof facesGetMetadata>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetcher>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getFacesGetMetadataQueryKey();
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof facesGetMetadata>>
-  > = () => facesGetMetadata(requestOptions);
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof facesGetMetadata>>,
-    TError,
-    TData
-  > & { queryKey: QueryKey };
-};
-
-export type FacesGetMetadataQueryResult = NonNullable<
-  Awaited<ReturnType<typeof facesGetMetadata>>
->;
-export type FacesGetMetadataQueryError = unknown;
-
-export function useFacesGetMetadata<
-  TData = Awaited<ReturnType<typeof facesGetMetadata>>,
-  TError = unknown,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof facesGetMetadata>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetcher>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getFacesGetMetadataQueryOptions(options);
-
-  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
-    queryKey: QueryKey;
-  };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
-
-export type facesCreateMetadataResponse201 = {
-  data: FaceDto;
-  status: 201;
-};
-
-export type facesCreateMetadataResponseComposite =
-  facesCreateMetadataResponse201;
-
-export type facesCreateMetadataResponse =
-  facesCreateMetadataResponseComposite & {
-    headers: Headers;
-  };
-
-export const getFacesCreateMetadataUrl = () => {
-  return `/personfaces`;
-};
-
-export const facesCreateMetadata = async (
-  faceDto: FaceDto,
-  options?: RequestInit
-): Promise<facesCreateMetadataResponse> => {
-  return customFetcher<facesCreateMetadataResponse>(
-    getFacesCreateMetadataUrl(),
-    {
-      ...options,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
-      body: JSON.stringify(faceDto),
-    }
-  );
-};
-
-export const getFacesCreateMetadataMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof facesCreateMetadata>>,
-    TError,
-    { data: FaceDto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetcher>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof facesCreateMetadata>>,
-  TError,
-  { data: FaceDto },
-  TContext
-> => {
-  const mutationKey = ['facesCreateMetadata'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof facesCreateMetadata>>,
-    { data: FaceDto }
-  > = (props) => {
-    const { data } = props ?? {};
-
-    return facesCreateMetadata(data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type FacesCreateMetadataMutationResult = NonNullable<
-  Awaited<ReturnType<typeof facesCreateMetadata>>
->;
-export type FacesCreateMetadataMutationBody = FaceDto;
-export type FacesCreateMetadataMutationError = unknown;
-
-export const useFacesCreateMetadata = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof facesCreateMetadata>>,
-    TError,
-    { data: FaceDto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetcher>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof facesCreateMetadata>>,
-  TError,
-  { data: FaceDto },
-  TContext
-> => {
-  const mutationOptions = getFacesCreateMetadataMutationOptions(options);
-
-  return useMutation(mutationOptions);
-};
-export type facesUpdateMetadataResponse200 = {
-  data: FaceDto;
-  status: 200;
-};
-
-export type facesUpdateMetadataResponseComposite =
-  facesUpdateMetadataResponse200;
-
-export type facesUpdateMetadataResponse =
-  facesUpdateMetadataResponseComposite & {
-    headers: Headers;
-  };
-
-export const getFacesUpdateMetadataUrl = (id: number) => {
-  return `/personfaces/${id}`;
-};
-
-export const facesUpdateMetadata = async (
-  id: number,
-  faceDto: FaceDto,
-  options?: RequestInit
-): Promise<facesUpdateMetadataResponse> => {
-  return customFetcher<facesUpdateMetadataResponse>(
-    getFacesUpdateMetadataUrl(id),
-    {
-      ...options,
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...options?.headers },
-      body: JSON.stringify(faceDto),
-    }
-  );
-};
-
-export const getFacesUpdateMetadataMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof facesUpdateMetadata>>,
-    TError,
-    { id: number; data: FaceDto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetcher>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof facesUpdateMetadata>>,
-  TError,
-  { id: number; data: FaceDto },
-  TContext
-> => {
-  const mutationKey = ['facesUpdateMetadata'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof facesUpdateMetadata>>,
-    { id: number; data: FaceDto }
-  > = (props) => {
-    const { id, data } = props ?? {};
-
-    return facesUpdateMetadata(id, data, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type FacesUpdateMetadataMutationResult = NonNullable<
-  Awaited<ReturnType<typeof facesUpdateMetadata>>
->;
-export type FacesUpdateMetadataMutationBody = FaceDto;
-export type FacesUpdateMetadataMutationError = unknown;
-
-export const useFacesUpdateMetadata = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof facesUpdateMetadata>>,
-    TError,
-    { id: number; data: FaceDto },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetcher>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof facesUpdateMetadata>>,
-  TError,
-  { id: number; data: FaceDto },
-  TContext
-> => {
-  const mutationOptions = getFacesUpdateMetadataMutationOptions(options);
-
-  return useMutation(mutationOptions);
-};
-export type facesDeleteMetadataResponse204 = {
-  data: null;
-  status: 204;
-};
-
-export type facesDeleteMetadataResponseComposite =
-  facesDeleteMetadataResponse204;
-
-export type facesDeleteMetadataResponse =
-  facesDeleteMetadataResponseComposite & {
-    headers: Headers;
-  };
-
-export const getFacesDeleteMetadataUrl = (id: number) => {
-  return `/personfaces/${id}`;
-};
-
-export const facesDeleteMetadata = async (
-  id: number,
-  options?: RequestInit
-): Promise<facesDeleteMetadataResponse> => {
-  return customFetcher<facesDeleteMetadataResponse>(
-    getFacesDeleteMetadataUrl(id),
-    {
-      ...options,
-      method: 'DELETE',
-    }
-  );
-};
-
-export const getFacesDeleteMetadataMutationOptions = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof facesDeleteMetadata>>,
-    TError,
-    { id: number },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetcher>;
-}): UseMutationOptions<
-  Awaited<ReturnType<typeof facesDeleteMetadata>>,
-  TError,
-  { id: number },
-  TContext
-> => {
-  const mutationKey = ['facesDeleteMetadata'];
-  const { mutation: mutationOptions, request: requestOptions } = options
-    ? options.mutation &&
-      'mutationKey' in options.mutation &&
-      options.mutation.mutationKey
-      ? options
-      : { ...options, mutation: { ...options.mutation, mutationKey } }
-    : { mutation: { mutationKey }, request: undefined };
-
-  const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof facesDeleteMetadata>>,
-    { id: number }
-  > = (props) => {
-    const { id } = props ?? {};
-
-    return facesDeleteMetadata(id, requestOptions);
-  };
-
-  return { mutationFn, ...mutationOptions };
-};
-
-export type FacesDeleteMetadataMutationResult = NonNullable<
-  Awaited<ReturnType<typeof facesDeleteMetadata>>
->;
-
-export type FacesDeleteMetadataMutationError = unknown;
-
-export const useFacesDeleteMetadata = <
-  TError = unknown,
-  TContext = unknown,
->(options?: {
-  mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof facesDeleteMetadata>>,
-    TError,
-    { id: number },
-    TContext
-  >;
-  request?: SecondParameter<typeof customFetcher>;
-}): UseMutationResult<
-  Awaited<ReturnType<typeof facesDeleteMetadata>>,
-  TError,
-  { id: number },
-  TContext
-> => {
-  const mutationOptions = getFacesDeleteMetadataMutationOptions(options);
 
   return useMutation(mutationOptions);
 };

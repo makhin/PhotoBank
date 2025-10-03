@@ -413,17 +413,7 @@ paths:
     get:
       tags:
         - Faces
-      operationId: Faces_Get
-      parameters:
-        - name: status
-          in: query
-          schema:
-            $ref: '#/components/schemas/IdentityStatus'
-        - name: personId
-          in: query
-          schema:
-            type: integer
-            format: int32
+      operationId: Faces_GetAll
       responses:
         '200':
           description: OK
@@ -432,12 +422,12 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/FaceIdentityDto'
+                  $ref: '#/components/schemas/FaceDto'
             text/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/FaceIdentityDto'
+                  $ref: '#/components/schemas/FaceDto'
     put:
       tags:
         - Faces
@@ -446,42 +436,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateFaceIdentityDto'
+              $ref: '#/components/schemas/FaceDto'
           text/json:
             schema:
-              $ref: '#/components/schemas/UpdateFaceIdentityDto'
+              $ref: '#/components/schemas/FaceDto'
           application/*+json:
             schema:
-              $ref: '#/components/schemas/UpdateFaceIdentityDto'
+              $ref: '#/components/schemas/FaceDto'
       responses:
         '200':
           description: OK
-  '/faces/{id}/image':
-    get:
-      tags:
-        - Faces
-      operationId: Faces_GetImage
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: OK
-        '301':
-          description: Moved Permanently
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
   /Paths:
     get:
       tags:
@@ -495,97 +459,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/PathDto'
-  /personfaces:
-    get:
-      tags:
-        - Faces
-      operationId: Faces_GetMetadata
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FaceDto'
-            text/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FaceDto'
-    post:
-      tags:
-        - Faces
-      operationId: Faces_CreateMetadata
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FaceDto'
-          text/json:
-            schema:
-              $ref: '#/components/schemas/FaceDto'
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/FaceDto'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FaceDto'
-            text/json:
-              schema:
-                $ref: '#/components/schemas/FaceDto'
-  '/personfaces/{id}':
-    put:
-      tags:
-        - Faces
-      operationId: Faces_UpdateMetadata
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FaceDto'
-          text/json:
-            schema:
-              $ref: '#/components/schemas/FaceDto'
-          application/*+json:
-            schema:
-              $ref: '#/components/schemas/FaceDto'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/FaceDto'
-            text/json:
-              schema:
-                $ref: '#/components/schemas/FaceDto'
-    delete:
-      tags:
-        - Faces
-      operationId: Faces_DeleteMetadata
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '204':
-          description: No Content
   /persongroups:
     get:
       tags:
@@ -866,32 +739,6 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/PhotoDto'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-            text/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
-  '/photos/{id}/preview':
-    get:
-      tags:
-        - Photos
-      operationId: Photos_GetPreview
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: OK
-        '301':
-          description: Moved Permanently
         '404':
           description: Not Found
           content:
@@ -1252,7 +1099,6 @@ components:
       required:
         - id
         - name
-        - assignedUsersCount
       type: object
       properties:
         id:
@@ -1269,9 +1115,10 @@ components:
         flags_CanSeeNsfw:
           type: boolean
         assignedUsersCount:
+          maximum: 2147483647
+          minimum: 0
           type: integer
           format: int32
-          minimum: 0
         storages:
           type: array
           items:
@@ -1373,24 +1220,21 @@ components:
         gender:
           type: boolean
           nullable: true
+        smile:
+          type: number
+          format: double
+          nullable: true
         faceAttributes:
           type: string
           nullable: true
         faceBox:
           $ref: '#/components/schemas/FaceBoxDto'
-          nullable: true
         friendlyFaceAttributes:
           type: string
           nullable: true
         provider:
           type: string
           nullable: true
-        externalId:
-          type: string
-          nullable: true
-        externalGuid:
-          type: string
-          format: uuid
         photoId:
           type: integer
           format: int32
@@ -1398,18 +1242,10 @@ components:
           type: number
           format: double
         identityStatus:
-          $ref: '#/components/schemas/IdentityStatus'
-      additionalProperties: false
-    FaceIdentityDto:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int32
-        identityStatus:
-          $ref: '#/components/schemas/IdentityStatus'
-        person:
-          $ref: '#/components/schemas/PersonDto'
+          $ref: '#/components/schemas/IdentityStatusDto'
+        imageUrl:
+          type: string
+          nullable: true
       additionalProperties: false
     FilterDto:
       type: object
@@ -1481,7 +1317,7 @@ components:
           type: number
           format: double
       additionalProperties: false
-    IdentityStatus:
+    IdentityStatusDto:
       enum:
         - Undefined
         - NotDetected
@@ -1558,15 +1394,6 @@ components:
           items:
             $ref: '#/components/schemas/PersonDto'
           nullable: true
-      additionalProperties: false
-    PersonItemDto:
-      required:
-        - personId
-      type: object
-      properties:
-        personId:
-          type: integer
-          format: int32
       additionalProperties: false
     PhotoDto:
       required:
@@ -1666,12 +1493,14 @@ components:
         tags:
           type: array
           items:
-            $ref: '#/components/schemas/TagItemDto'
+            type: integer
+            format: int32
           nullable: true
         persons:
           type: array
           items:
-            $ref: '#/components/schemas/PersonItemDto'
+            type: integer
+            format: int32
           nullable: true
         captions:
           type: array
@@ -1768,15 +1597,6 @@ components:
           minLength: 1
           type: string
       additionalProperties: false
-    TagItemDto:
-      required:
-        - tagId
-      type: object
-      properties:
-        tagId:
-          type: integer
-          format: int32
-      additionalProperties: false
     TelegramExchangeRequest:
       type: object
       properties:
@@ -1819,22 +1639,6 @@ components:
         month:
           type: integer
           format: int32
-      additionalProperties: false
-    UpdateFaceIdentityDto:
-      required:
-        - faceId
-        - identityStatus
-      type: object
-      properties:
-        faceId:
-          type: integer
-          format: int32
-        personId:
-          type: integer
-          format: int32
-          nullable: true
-        identityStatus:
-          $ref: '#/components/schemas/IdentityStatus'
       additionalProperties: false
     UpdateUserDto:
       type: object

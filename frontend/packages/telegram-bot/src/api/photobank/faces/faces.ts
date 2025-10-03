@@ -4,29 +4,18 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import type {
-  FaceDto,
-  FaceIdentityDto,
-  FacesGetParams,
-  UpdateFaceIdentityDto,
-} from '../photoBankApi.schemas';
+import type { FaceDto } from '../photoBankApi.schemas';
 
 import { photobankAxios } from '../../axios-instance';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 export const getFaces = () => {
-  const facesGet = (
-    params?: FacesGetParams,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<FaceIdentityDto[]>(
-      { url: `/faces`, method: 'GET', params },
-      options
-    );
+  const facesGetAll = (options?: SecondParameter<typeof photobankAxios>) => {
+    return photobankAxios<FaceDto[]>({ url: `/faces`, method: 'GET' }, options);
   };
   const facesUpdate = (
-    updateFaceIdentityDto: UpdateFaceIdentityDto,
+    faceDto: FaceDto,
     options?: SecondParameter<typeof photobankAxios>
   ) => {
     return photobankAxios<null>(
@@ -34,94 +23,16 @@ export const getFaces = () => {
         url: `/faces`,
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        data: updateFaceIdentityDto,
-      },
-      options
-    );
-  };
-  const facesGetImage = (
-    id: number,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      { url: `/faces/${id}/image`, method: 'GET' },
-      options
-    );
-  };
-  const facesGetMetadata = (
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<FaceDto[]>(
-      { url: `/personfaces`, method: 'GET' },
-      options
-    );
-  };
-  const facesCreateMetadata = (
-    faceDto: FaceDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<FaceDto>(
-      {
-        url: `/personfaces`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         data: faceDto,
       },
       options
     );
   };
-  const facesUpdateMetadata = (
-    id: number,
-    faceDto: FaceDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<FaceDto>(
-      {
-        url: `/personfaces/${id}`,
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        data: faceDto,
-      },
-      options
-    );
-  };
-  const facesDeleteMetadata = (
-    id: number,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      { url: `/personfaces/${id}`, method: 'DELETE' },
-      options
-    );
-  };
-  return {
-    facesGet,
-    facesUpdate,
-    facesGetImage,
-    facesGetMetadata,
-    facesCreateMetadata,
-    facesUpdateMetadata,
-    facesDeleteMetadata,
-  };
+  return { facesGetAll, facesUpdate };
 };
-export type FacesGetResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getFaces>['facesGet']>>
+export type FacesGetAllResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getFaces>['facesGetAll']>>
 >;
 export type FacesUpdateResult = NonNullable<
   Awaited<ReturnType<ReturnType<typeof getFaces>['facesUpdate']>>
->;
-export type FacesGetImageResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getFaces>['facesGetImage']>>
->;
-export type FacesGetMetadataResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getFaces>['facesGetMetadata']>>
->;
-export type FacesCreateMetadataResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getFaces>['facesCreateMetadata']>>
->;
-export type FacesUpdateMetadataResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getFaces>['facesUpdateMetadata']>>
->;
-export type FacesDeleteMetadataResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getFaces>['facesDeleteMetadata']>>
 >;

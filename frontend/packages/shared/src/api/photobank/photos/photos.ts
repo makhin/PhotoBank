@@ -25,7 +25,7 @@ import type {
   ProblemDetails,
 } from '../photoBankApi.schemas';
 
-import { customFetcher } from '.././fetcher';
+import { customFetcher } from '../fetcher';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -218,112 +218,6 @@ export function usePhotosGetPhoto<
   }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getPhotosGetPhotoQueryOptions(id, options);
-
-  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
-    queryKey: QueryKey;
-  };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
-
-export type photosGetPreviewResponse200 = {
-  data: null;
-  status: 200;
-};
-
-export type photosGetPreviewResponse301 = {
-  data: null;
-  status: 301;
-};
-
-export type photosGetPreviewResponse404 = {
-  data: ProblemDetails;
-  status: 404;
-};
-
-export type photosGetPreviewResponseComposite =
-  | photosGetPreviewResponse200
-  | photosGetPreviewResponse301
-  | photosGetPreviewResponse404;
-
-export type photosGetPreviewResponse = photosGetPreviewResponseComposite & {
-  headers: Headers;
-};
-
-export const getPhotosGetPreviewUrl = (id: number) => {
-  return `/photos/${id}/preview`;
-};
-
-export const photosGetPreview = async (
-  id: number,
-  options?: RequestInit
-): Promise<photosGetPreviewResponse> => {
-  return customFetcher<photosGetPreviewResponse>(getPhotosGetPreviewUrl(id), {
-    ...options,
-    method: 'GET',
-  });
-};
-
-export const getPhotosGetPreviewQueryKey = (id?: number) => {
-  return [`/photos/${id}/preview`] as const;
-};
-
-export const getPhotosGetPreviewQueryOptions = <
-  TData = Awaited<ReturnType<typeof photosGetPreview>>,
-  TError = null | ProblemDetails,
->(
-  id: number,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof photosGetPreview>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof customFetcher>;
-  }
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getPhotosGetPreviewQueryKey(id);
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof photosGetPreview>>
-  > = () => photosGetPreview(id, requestOptions);
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!id,
-    ...queryOptions,
-  } as UseQueryOptions<
-    Awaited<ReturnType<typeof photosGetPreview>>,
-    TError,
-    TData
-  > & { queryKey: QueryKey };
-};
-
-export type PhotosGetPreviewQueryResult = NonNullable<
-  Awaited<ReturnType<typeof photosGetPreview>>
->;
-export type PhotosGetPreviewQueryError = null | ProblemDetails;
-
-export function usePhotosGetPreview<
-  TData = Awaited<ReturnType<typeof photosGetPreview>>,
-  TError = null | ProblemDetails,
->(
-  id: number,
-  options?: {
-    query?: UseQueryOptions<
-      Awaited<ReturnType<typeof photosGetPreview>>,
-      TError,
-      TData
-    >;
-    request?: SecondParameter<typeof customFetcher>;
-  }
-): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getPhotosGetPreviewQueryOptions(id, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
