@@ -251,19 +251,23 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                                     alt={photoData.name ?? ''}
                                     className="max-h-full max-w-full object-contain"
                                 />
-                                  {showFaceBoxes &&
-                                      photoData.faces?.map((face, index) => (
-                                          <FaceOverlay
-                                              key={face.id}
-                                              face={face}
-                                              index={index}
-                                              style={
-                                                  face.faceBox
-                                                      ? calculateFacePosition(face.faceBox)
-                                                      : undefined
-                                              }
-                                          />
-                                    ))}
+                                {showFaceBoxes &&
+                                    photoData.faces?.map((face, index) => {
+                                        if (!face.faceBox) {
+                                            return null;
+                                        }
+
+                                        const facePosition = calculateFacePosition(face.faceBox);
+
+                                        return (
+                                            <FaceOverlay
+                                                key={face.id}
+                                                face={face}
+                                                index={index}
+                                                style={facePosition}
+                                            />
+                                        );
+                                    })}
                             </div>
                         </CardContent>
                     </Card>
