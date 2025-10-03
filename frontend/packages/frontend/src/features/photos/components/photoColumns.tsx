@@ -72,7 +72,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
       },
       {
         accessorKey: 'takenDate',
-        id: 'takenDate',
+        id: 'date',
         header: 'Date',
         accessorFn: (p) => {
           const date = toDate(p.takenDate);
