@@ -12,6 +12,7 @@ import { ProblemDetailsError } from '@photobank/shared/types/problem';
 import {Button} from '@/shared/ui/button';
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from '@/shared/ui/form';
 import {Input} from '@/shared/ui/input';
+import { toast } from '@/shared/ui/sonner';
 
 const formSchema = z.object({
   phoneNumber: z.string().optional(),
@@ -53,8 +54,20 @@ export default function MyProfilePage() {
       });
       navigate('/filter');
     } catch (e: unknown) {
-      if (e instanceof ProblemDetailsError) logger.error(e.problem);
-      else logger.error(e);
+      const fallbackMessage = t('profileSaveFailed');
+
+      if (e instanceof ProblemDetailsError) {
+        const { title, detail } = e.problem;
+        const message = title ?? detail ?? fallbackMessage;
+        const description =
+          detail && detail !== message ? detail : undefined;
+
+        toast.error(message, description ? { description } : undefined);
+        logger.error(e.problem);
+      } else {
+        toast.error(fallbackMessage);
+        logger.error(e);
+      }
     }
   };
 
