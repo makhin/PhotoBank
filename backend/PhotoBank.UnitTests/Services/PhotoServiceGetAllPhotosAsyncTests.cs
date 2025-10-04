@@ -404,5 +404,101 @@ namespace PhotoBank.UnitTests.Services
             result.Items.Should().NotContain(p => p.Name == "p1");
             result.Items.Should().NotContain(p => p.Name == "p2");
         }
+
+        [Test]
+        public async Task GetAllPhotosAsync_TakenDateFromOnly_IgnoresMissingUpperBound()
+        {
+            var dbName = Guid.NewGuid().ToString();
+            var services = new ServiceCollection();
+            services.AddDbContext<PhotoBankDbContext>(o => o.UseInMemoryDatabase(dbName));
+            var provider = services.BuildServiceProvider();
+            var context = provider.GetRequiredService<PhotoBankDbContext>();
+
+            var storage = Builder<Storage>.CreateNew().With(s => s.Name = "s1").Build();
+            context.Storages.Add(storage);
+            await context.SaveChangesAsync();
+
+            var beforeDate = Builder<Photo>.CreateNew()
+                .With(p => p.Id = 10)
+                .With(p => p.TakenDate = new DateTime(2020, 1, 1))
+                .With(p => p.Location = new Point(0, 0))
+                .With(p => p.S3Key_Thumbnail = "thumb")
+                .With(p => p.Storage = storage)
+                .With(p => p.StorageId = storage.Id)
+                .With(p => p.Name = "before")
+                .Build();
+
+            var afterDate = Builder<Photo>.CreateNew()
+                .With(p => p.Id = 11)
+                .With(p => p.TakenDate = new DateTime(2020, 3, 1))
+                .With(p => p.Location = new Point(0, 0))
+                .With(p => p.S3Key_Thumbnail = "thumb")
+                .With(p => p.Storage = storage)
+                .With(p => p.StorageId = storage.Id)
+                .With(p => p.Name = "after")
+                .Build();
+
+            context.Photos.AddRange(beforeDate, afterDate);
+            await context.SaveChangesAsync();
+
+            var service = CreateService(dbName);
+            var filter = new FilterDto
+            {
+                TakenDateFrom = new DateTime(2020, 2, 1)
+            };
+
+            var result = await service.GetAllPhotosAsync(filter);
+
+            result.TotalCount.Should().Be(1);
+            result.Items.Should().ContainSingle(p => p.Name == "after");
+        }
+
+        [Test]
+        public async Task GetAllPhotosAsync_TakenDateToOnly_IgnoresMissingLowerBound()
+        {
+            var dbName = Guid.NewGuid().ToString();
+            var services = new ServiceCollection();
+            services.AddDbContext<PhotoBankDbContext>(o => o.UseInMemoryDatabase(dbName));
+            var provider = services.BuildServiceProvider();
+            var context = provider.GetRequiredService<PhotoBankDbContext>();
+
+            var storage = Builder<Storage>.CreateNew().With(s => s.Name = "s1").Build();
+            context.Storages.Add(storage);
+            await context.SaveChangesAsync();
+
+            var beforeDate = Builder<Photo>.CreateNew()
+                .With(p => p.Id = 20)
+                .With(p => p.TakenDate = new DateTime(2020, 1, 1))
+                .With(p => p.Location = new Point(0, 0))
+                .With(p => p.S3Key_Thumbnail = "thumb")
+                .With(p => p.Storage = storage)
+                .With(p => p.StorageId = storage.Id)
+                .With(p => p.Name = "before")
+                .Build();
+
+            var afterDate = Builder<Photo>.CreateNew()
+                .With(p => p.Id = 21)
+                .With(p => p.TakenDate = new DateTime(2020, 3, 1))
+                .With(p => p.Location = new Point(0, 0))
+                .With(p => p.S3Key_Thumbnail = "thumb")
+                .With(p => p.Storage = storage)
+                .With(p => p.StorageId = storage.Id)
+                .With(p => p.Name = "after")
+                .Build();
+
+            context.Photos.AddRange(beforeDate, afterDate);
+            await context.SaveChangesAsync();
+
+            var service = CreateService(dbName);
+            var filter = new FilterDto
+            {
+                TakenDateTo = new DateTime(2020, 2, 1)
+            };
+
+            var result = await service.GetAllPhotosAsync(filter);
+
+            result.TotalCount.Should().Be(1);
+            result.Items.Should().ContainSingle(p => p.Name == "before");
+        }
     }
 }

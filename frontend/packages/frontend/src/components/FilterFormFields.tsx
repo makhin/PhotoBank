@@ -53,7 +53,7 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
             value: s.path,
         }));
 
-    function formatDate(date?: Date) {
+    function formatDate(date?: Date | null) {
         return date ? format(date, 'dd.MM.yyyy') : '';
     }
 
@@ -100,13 +100,28 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                         <PopoverContent className="w-auto overflow-hidden p-0" align="start">
                                             <Calendar
                                                 mode="single"
-                                                selected={field.value}
+                                                selected={field.value ?? undefined}
                                                 captionLayout="dropdown"
                                                 onSelect={(d) => {
-                                                    field.onChange(d);
+                                                    field.onChange(d ?? null);
                                                     setOpenFrom(false);
                                                 }}
                                             />
+                                            {field.value ? (
+                                                <div className="border-t border-border p-2">
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        className="w-full"
+                                                        onClick={() => {
+                                                            field.onChange(null);
+                                                            setOpenFrom(false);
+                                                        }}
+                                                    >
+                                                        {t('clearDateButton')}
+                                                    </Button>
+                                                </div>
+                                            ) : null}
                                         </PopoverContent>
                                     </Popover>
                                 </FormControl>
@@ -140,13 +155,28 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                                         <PopoverContent className="w-auto overflow-hidden p-0" align="start">
                                             <Calendar
                                                 mode="single"
-                                                selected={field.value}
+                                                selected={field.value ?? undefined}
                                                 captionLayout="dropdown"
                                                 onSelect={(d) => {
-                                                    field.onChange(d);
+                                                    field.onChange(d ?? null);
                                                     setOpenTo(false);
                                                 }}
                                             />
+                                            {field.value ? (
+                                                <div className="border-t border-border p-2">
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        className="w-full"
+                                                        onClick={() => {
+                                                            field.onChange(null);
+                                                            setOpenTo(false);
+                                                        }}
+                                                    >
+                                                        {t('clearDateButton')}
+                                                    </Button>
+                                                </div>
+                                            ) : null}
                                         </PopoverContent>
                                     </Popover>
                                 </FormControl>

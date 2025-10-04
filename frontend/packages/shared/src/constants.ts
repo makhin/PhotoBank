@@ -37,8 +37,8 @@ export const DEFAULT_FORM_VALUES = {
   isAdultContent: undefined,
   isRacyContent: undefined,
   thisDay: undefined,
-  dateFrom: undefined as Date | undefined,
-  dateTo: undefined as Date | undefined,
+  dateFrom: undefined as Date | null | undefined,
+  dateTo: undefined as Date | null | undefined,
 } as const;
 
 // NavBar labels

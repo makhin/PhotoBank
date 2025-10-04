@@ -81,6 +81,7 @@
   "captionPlaceholder": "Введите подпись...",
   "dateFromLabel": "Дата с",
   "selectDatePlaceholder": "Выберите дату",
+  "clearDateButton": "Очистить дату",
   "dateToLabel": "Дата по",
   "storagesLabel": "Хранилища",
   "selectStoragesPlaceholder": "Выберите хранилища",

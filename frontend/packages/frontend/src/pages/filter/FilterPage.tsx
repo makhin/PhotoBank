@@ -39,7 +39,8 @@ function FilterPage() {
 
   const useCurrentFilter = (location.state as { useCurrentFilter?: boolean } | null)?.useCurrentFilter;
 
-  const ensureDate = (value: unknown): Date | undefined => {
+  const ensureDate = (value: unknown): Date | null | undefined => {
+    if (value === null) return null;
     if (!value) return undefined;
     if (value instanceof Date) return value;
     if (typeof value === 'string') {
@@ -84,8 +85,8 @@ function FilterPage() {
           isAdultContent: parsed.isAdultContent,
           isRacyContent: parsed.isRacyContent,
           thisDay: parsed.thisDay ? { day: new Date().getDate(), month: new Date().getMonth() + 1 } : undefined,
-          takenDateFrom: parsed.dateFrom ?? undefined,
-          takenDateTo: parsed.dateTo ?? undefined,
+          takenDateFrom: parsed.dateFrom ?? null,
+          takenDateTo: parsed.dateTo ?? null,
           page: 1,
           pageSize: 10,
         };
@@ -106,8 +107,8 @@ function FilterPage() {
       isAdultContent: data.isAdultContent,
       isRacyContent: data.isRacyContent,
       thisDay: data.thisDay ? { day: now.getDate(), month: now.getMonth() + 1 } : undefined,
-      takenDateFrom: data.dateFrom ?? undefined,
-      takenDateTo: data.dateTo ?? undefined,
+      takenDateFrom: data.dateFrom ?? null,
+      takenDateTo: data.dateTo ?? null,
       page: 1,
       pageSize: 10,
     };
