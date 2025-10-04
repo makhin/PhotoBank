@@ -22,8 +22,8 @@ beforeAll(() => {
   }
 });
 
-const { mockUseFacesGetAll, mockUsePersonsGetAll, mockUseFacesUpdate, mockToast } = vi.hoisted(() => ({
-  mockUseFacesGetAll: vi.fn(),
+const { mockUseFacesGetFacesPage, mockUsePersonsGetAll, mockUseFacesUpdate, mockToast } = vi.hoisted(() => ({
+  mockUseFacesGetFacesPage: vi.fn(),
   mockUsePersonsGetAll: vi.fn(),
   mockUseFacesUpdate: vi.fn(),
   mockToast: vi.fn(),
@@ -37,7 +37,7 @@ vi.mock('@photobank/shared/api/photobank', async () => {
   return {
     ...actual,
     IdentityStatus: (actual as { IdentityStatus?: unknown; IdentityStatusDto?: unknown }).IdentityStatus ?? (actual as { IdentityStatusDto?: unknown }).IdentityStatusDto,
-    useFacesGetAll: mockUseFacesGetAll,
+    useFacesGetFacesPage: mockUseFacesGetFacesPage,
     usePersonsGetAll: mockUsePersonsGetAll,
     useFacesUpdate: mockUseFacesUpdate,
   };
@@ -76,8 +76,8 @@ describe('FacesPage', () => {
       imageUrl: null,
     };
 
-    mockUseFacesGetAll.mockReturnValue({
-      data: { data: [face] },
+    mockUseFacesGetFacesPage.mockReturnValue({
+      data: { data: { items: [face], totalCount: 1 } },
       isLoading: false,
       isError: false,
       isFetching: false,
@@ -111,8 +111,8 @@ describe('FacesPage', () => {
       identityStatus: 3,
     };
 
-    mockUseFacesGetAll.mockReturnValue({
-      data: { data: [face] },
+    mockUseFacesGetFacesPage.mockReturnValue({
+      data: { data: { items: [face], totalCount: 1 } },
       isLoading: false,
       isError: false,
       isFetching: false,
@@ -147,8 +147,8 @@ describe('FacesPage', () => {
       identityStatus: 'NotIdentified',
     };
 
-    mockUseFacesGetAll.mockReturnValue({
-      data: { data: [face] },
+    mockUseFacesGetFacesPage.mockReturnValue({
+      data: { data: { items: [face], totalCount: 1 } },
       isLoading: false,
       isError: false,
       isFetching: false,
@@ -202,8 +202,8 @@ describe('FacesPage', () => {
       identityStatus: IdentityStatus.Identified,
     };
 
-    mockUseFacesGetAll.mockReturnValue({
-      data: { data: [face] },
+    mockUseFacesGetFacesPage.mockReturnValue({
+      data: { data: { items: [face], totalCount: 1 } },
       isLoading: false,
       isError: false,
       isFetching: false,
@@ -257,8 +257,8 @@ describe('FacesPage', () => {
       identityStatus: status,
     }));
 
-    mockUseFacesGetAll.mockReturnValue({
-      data: { data: faces },
+    mockUseFacesGetFacesPage.mockReturnValue({
+      data: { data: { items: faces, totalCount: faces.length } },
       isLoading: false,
       isError: false,
       isFetching: false,

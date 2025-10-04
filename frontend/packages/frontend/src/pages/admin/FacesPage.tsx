@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Search, User, Eye, Loader2 } from 'lucide-react';
 import {
   IdentityStatusDto as IdentityStatusEnum,
-  useFacesGetAll,
+  useFacesGetFacesPage,
   usePersonsGetAll,
   type FaceDto,
   type IdentityStatusDto as IdentityStatusType,
@@ -90,7 +90,15 @@ export default function FacesPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedFace, setSelectedFace] = useState<FaceDto | null>(null);
 
-  const { data, isLoading, isError, isFetching, refetch } = useFacesGetAll();
+  const paginationParams = useMemo(
+    () => ({
+      page: currentPage,
+      pageSize: ITEMS_PER_PAGE,
+    }),
+    [currentPage]
+  );
+
+  const { data, isLoading, isError, isFetching, refetch } = useFacesGetFacesPage(paginationParams);
   const { data: personsResponse } = usePersonsGetAll();
 
   const personLookup = useMemo(
@@ -98,9 +106,15 @@ export default function FacesPage() {
     [personsResponse]
   );
 
-  const faceRows = useMemo<FaceRow[]>(() => {
-    const rawFaces: FaceDto[] = Array.isArray(data?.data) ? data.data : [];
+  const facesResponse = data?.data;
+  const facesItems = facesResponse?.items;
+  const rawFaces = useMemo<FaceDto[]>(
+    () => (Array.isArray(facesItems) ? (facesItems as FaceDto[]) : []),
+    [facesItems]
+  );
+  const totalFacesCount = facesResponse?.totalCount ?? 0;
 
+  const faceRows = useMemo<FaceRow[]>(() => {
     return rawFaces.map((face) => {
       const id = face.id ?? 0;
       const personId = face.personId ?? null;
@@ -119,7 +133,7 @@ export default function FacesPage() {
         personName: personId != null ? personLookup.get(personId) ?? null : null,
       };
     });
-  }, [data, personLookup]);
+  }, [personLookup, rawFaces]);
 
   const filteredFaces = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -137,18 +151,13 @@ export default function FacesPage() {
     });
   }, [faceRows, searchTerm]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredFaces.length / ITEMS_PER_PAGE));
-  const currentFaces = useMemo(
-    () =>
-      filteredFaces.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
-    [filteredFaces, currentPage]
-  );
+  const totalPages = Math.max(1, Math.ceil(totalFacesCount / ITEMS_PER_PAGE));
 
   useEffect(() => {
-    if (currentPage > totalPages) {
+    if (!isLoading && currentPage > totalPages) {
       setCurrentPage(totalPages);
     }
-  }, [currentPage, totalPages]);
+  }, [currentPage, totalPages, isLoading]);
 
   const handleEditFace = (face: FaceDto) => {
     setSelectedFace(face);
@@ -162,8 +171,8 @@ export default function FacesPage() {
     }
   };
 
-  const showLoading = isLoading && faceRows.length === 0;
-  const showError = isError && faceRows.length === 0;
+  const showLoading = isLoading && rawFaces.length === 0;
+  const showError = isError && rawFaces.length === 0;
   const isRefreshing = isFetching && !showLoading;
 
   return (
@@ -193,7 +202,7 @@ export default function FacesPage() {
             <div className="text-sm text-muted-foreground flex items-center gap-2">
               {isRefreshing && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
               <span>
-                {showLoading ? '-' : filteredFaces.length} of {showLoading ? '-' : faceRows.length} faces
+                {showLoading ? '-' : filteredFaces.length} of {showLoading ? '-' : totalFacesCount} faces
               </span>
             </div>
           </div>
@@ -214,7 +223,7 @@ export default function FacesPage() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               <span className="sr-only">Loading faces</span>
             </div>
-          ) : currentFaces.length > 0 ? (
+          ) : filteredFaces.length > 0 ? (
             <>
               <div className="rounded-lg border border-border overflow-hidden">
                 <Table>
@@ -228,7 +237,7 @@ export default function FacesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {currentFaces.map(({ face, id, status, personName }) => (
+                    {filteredFaces.map(({ face, id, status, personName }) => (
                       <TableRow key={id} className="hover:bg-muted/30">
                         <TableCell className="font-medium">#{id}</TableCell>
                         <TableCell>

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
 using Moq;
+using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using NUnit.Framework;
 using PhotoBank.AccessControl;
@@ -27,7 +28,7 @@ using System.Threading.Tasks;
 namespace PhotoBank.UnitTests.Services;
 
 [TestFixture]
-public class PhotoServiceGetAllFacesAsyncTests
+public class PhotoServiceGetFacesPageAsyncTests
 {
     private IMapper _mapper = null!;
 
@@ -43,7 +44,7 @@ public class PhotoServiceGetAllFacesAsyncTests
     }
 
     [Test]
-    public async Task GetAllFacesAsync_FillsImageUrls()
+    public async Task GetFacesPageAsync_FillsImageUrls()
     {
         // Arrange
         var dbName = Guid.NewGuid().ToString();
@@ -65,19 +66,41 @@ public class PhotoServiceGetAllFacesAsyncTests
             Name = "photo.jpg",
             Storage = storage,
             StorageId = storage.Id,
+            AccentColor = "000000",
+            DominantColorBackground = "000000",
+            DominantColorForeground = "000000",
+            DominantColors = "000000",
             S3Key_Preview = "preview",
+            S3ETag_Preview = "etag-preview",
+            Sha256_Preview = "sha-preview",
             S3Key_Thumbnail = "thumbnail",
+            S3ETag_Thumbnail = "etag-thumbnail",
+            Sha256_Thumbnail = "sha-thumbnail",
             ImageHash = "hash",
+            RelativePath = "faces",
+            Captions = new List<Caption>(),
+            PhotoTags = new List<PhotoTag>(),
+            PhotoCategories = new List<PhotoCategory>(),
+            ObjectProperties = new List<ObjectProperty>(),
             Faces = new List<Face>()
         };
         context.Photos.Add(photo);
         await context.SaveChangesAsync();
 
+        var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory();
         var face = new Face
         {
             Photo = photo,
             PhotoId = photo.Id,
-            Rectangle = new Point(0, 0),
+            Rectangle = geometryFactory.CreatePolygon(
+                new[]
+                {
+                    new Coordinate(0, 0),
+                    new Coordinate(10, 0),
+                    new Coordinate(10, 10),
+                    new Coordinate(0, 10),
+                    new Coordinate(0, 0),
+                }),
             S3Key_Image = "face-key",
             S3ETag_Image = "etag",
             Sha256_Image = "sha",
@@ -89,6 +112,9 @@ public class PhotoServiceGetAllFacesAsyncTests
         context.Faces.Add(face);
         await context.SaveChangesAsync();
 
+        var savedFace = await context.Faces.AsNoTracking().FirstAsync();
+        savedFace.Rectangle.Coordinates.Length.Should().BeGreaterThan(3);
+
         var minioClient = new Mock<IMinioClient>();
         minioClient
             .Setup(m => m.PresignedGetObjectAsync(It.IsAny<PresignedGetObjectArgs>()))
@@ -97,12 +123,12 @@ public class PhotoServiceGetAllFacesAsyncTests
         var service = CreateService(dbName, minioClient.Object);
 
         // Act
-        var result = await service.GetAllFacesAsync();
+        var result = await service.GetFacesPageAsync(1, 10);
 
         // Assert
-        result.Should().BeAssignableTo<IReadOnlyCollection<FaceDto>>();
-        result.Should().ContainSingle();
-        result.Should().AllSatisfy(dto => dto.ImageUrl.Should().Be("https://example.com/face.jpg"));
+        result.TotalCount.Should().Be(1);
+        result.Items.Should().ContainSingle();
+        result.Items.Should().AllSatisfy(dto => dto.ImageUrl.Should().Be("https://example.com/face.jpg"));
     }
 
     private PhotoService CreateService(string dbName, IMinioClient minioClient)

@@ -25,7 +25,7 @@ import type {
   ProblemDetails,
 } from '../photoBankApi.schemas';
 
-import { customFetcher } from '../fetcher';
+import { customFetcher } from '.././fetcher';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 

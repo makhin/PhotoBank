@@ -42,6 +42,7 @@ public interface IPhotoService
     Task DeletePersonGroupAsync(int groupId);
     Task AddPersonToGroupAsync(int groupId, int personId);
     Task RemovePersonFromGroupAsync(int groupId, int personId);
+    Task<PageResponse<FaceDto>> GetFacesPageAsync(int page, int pageSize);
     Task<IEnumerable<FaceDto>> GetAllFacesAsync();
     Task UpdateFaceAsync(int faceId, int? personId);
     Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold);
@@ -275,6 +276,7 @@ public class PhotoService : IPhotoService
 
         return dto!;
     }
+
     public async Task<IEnumerable<FaceDto>> GetAllFacesAsync()
     {
         var faces = await _faceRepository.GetAll()
@@ -285,6 +287,32 @@ public class PhotoService : IPhotoService
         await FillUrlsAsync(faces);
 
         return faces;
+    }
+
+    public async Task<PageResponse<FaceDto>> GetFacesPageAsync(int page, int pageSize)
+    {
+        var boundedPage = Math.Max(1, page);
+        var boundedPageSize = Math.Max(1, pageSize);
+
+        var query = _faceRepository.GetAll()
+            .AsNoTracking();
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(f => f.Id)
+            .Skip((boundedPage - 1) * boundedPageSize)
+            .Take(boundedPageSize)
+            .ProjectTo<FaceDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
+
+        await FillUrlsAsync(items);
+
+        return new PageResponse<FaceDto>
+        {
+            TotalCount = totalCount,
+            Items = items,
+        };
     }
 
     public async Task UpdateFaceAsync(int faceId, int? personId)

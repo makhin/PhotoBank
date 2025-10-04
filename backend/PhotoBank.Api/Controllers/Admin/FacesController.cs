@@ -11,10 +11,10 @@ namespace PhotoBank.Api.Controllers.Admin;
 public class FacesController(IPhotoService photoService) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<FaceDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<FaceDto>>> GetAllAsync()
+    [ProducesResponseType(typeof(PageResponse<FaceDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PageResponse<FaceDto>>> GetAllAsync([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var faces = await photoService.GetAllFacesAsync();
+        var faces = await photoService.GetFacesPageAsync(page, pageSize);
         return Ok(faces);
     }
 
