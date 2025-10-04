@@ -1,5 +1,5 @@
 import type { Context } from 'grammy';
-import { uploadPhotosAdapter, type UploadFile } from '@photobank/shared';
+import { type UploadFile } from '@photobank/shared';
 import type { FilterDto } from '@photobank/shared/api/photobank';
 
 import {
@@ -9,7 +9,26 @@ import {
 } from '../api/photobank/photos/photos';
 import { callWithContext } from './call-with-context';
 
-const { photosSearchPhotos, photosGetPhoto } = getPhotos();
+const { photosSearchPhotos, photosGetPhoto, photosUpload } = getPhotos();
+
+function normalizeToBlobPart(data: UploadFile['data']): BlobPart {
+  if (ArrayBuffer.isView(data)) {
+    const { buffer, byteOffset, byteLength } = data;
+    if (buffer instanceof ArrayBuffer) {
+      return buffer.slice(byteOffset, byteOffset + byteLength);
+    }
+
+    const copy = new Uint8Array(byteLength);
+    copy.set(new Uint8Array(buffer, byteOffset, byteLength));
+    return copy.buffer;
+  }
+
+  if (data instanceof ArrayBuffer) {
+    return data;
+  }
+
+  return data;
+}
 
 export async function searchPhotos(ctx: Context, filter: FilterDto): Promise<PhotosSearchPhotosResult> {
   return callWithContext(ctx, photosSearchPhotos, filter);
@@ -27,5 +46,10 @@ export async function uploadPhotos(
   options: { files: UploadFile[]; storageId: number; path: string },
 ) {
   const { files, storageId, path } = options;
-  return callWithContext(ctx, uploadPhotosAdapter, { files, storageId, path });
+  const normalizedFiles = files.map(({ data, name }) => {
+    const blob = normalizeToBlobPart(data);
+    return new File([blob], name);
+  });
+
+  return callWithContext(ctx, photosUpload, { files: normalizedFiles, storageId, path });
 }
