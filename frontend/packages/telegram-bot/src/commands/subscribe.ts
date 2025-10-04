@@ -12,6 +12,7 @@ type SubscriptionInfo = {
   time: string;
   locale: string;
   from: NonNullable<MyContext['from']>;
+  chat: NonNullable<MyContext['chat']>;
 };
 
 export const subscriptions = new Map<string, SubscriptionInfo>();
@@ -33,34 +34,40 @@ function normalizeSubscriptionTime(value: string | null | undefined): string | n
 async function buildFromSnapshot(
   bot: Bot<MyContext>,
   chatId: string,
-): Promise<NonNullable<MyContext['from']>> {
-  const base: NonNullable<MyContext['from']> = {
-    id: chatId as unknown as number,
+): Promise<{ from: NonNullable<MyContext['from']>; chat: NonNullable<MyContext['chat']> }> {
+  const baseFrom: NonNullable<MyContext['from']> = {
+    id: Number(chatId),
     is_bot: false,
     first_name: 'Telegram user',
   } as NonNullable<MyContext['from']>;
 
+  let chatSnapshot: NonNullable<MyContext['chat']> = {
+    id: Number(chatId),
+    type: 'private',
+  } as NonNullable<MyContext['chat']>;
+
   const getChat = bot.api?.getChat?.bind(bot.api);
-  if (typeof getChat !== 'function') return base;
+  if (typeof getChat !== 'function') return { from: baseFrom, chat: chatSnapshot };
 
   try {
     const chat = await getChat(chatId);
     if (chat && typeof chat === 'object') {
+      chatSnapshot = chat as NonNullable<MyContext['chat']>;
       if ('first_name' in chat && chat.first_name) {
-        base.first_name = chat.first_name;
+        baseFrom.first_name = chat.first_name;
       }
       if ('last_name' in chat && chat.last_name) {
-        base.last_name = chat.last_name;
+        baseFrom.last_name = chat.last_name;
       }
       if ('username' in chat && chat.username) {
-        base.username = chat.username;
+        baseFrom.username = chat.username;
       }
     }
   } catch (error) {
     logger.warn('Failed to enrich restored subscription with chat info', chatId, error);
   }
 
-  return base;
+  return { from: baseFrom, chat: chatSnapshot };
 }
 
 function isValidSubscription(entry: TelegramSubscriptionDto | undefined): entry is TelegramSubscriptionDto {
@@ -98,7 +105,8 @@ export async function subscribeCommand(ctx: MyContext) {
   await updateUser(ctx, dto);
   const locale = await ctx.i18n.getLocale();
   const fromSnapshot: NonNullable<MyContext['from']> = { ...ctx.from };
-  subscriptions.set(ctx.chat.id.toString(), { time, locale, from: fromSnapshot });
+  const chatSnapshot: NonNullable<MyContext['chat']> = { ...ctx.chat };
+  subscriptions.set(ctx.chat.id.toString(), { time, locale, from: fromSnapshot, chat: chatSnapshot });
   await ctx.reply(ctx.t('subscription-confirmed', { time }));
 }
 
@@ -125,13 +133,14 @@ export async function restoreSubscriptions(bot: Bot<MyContext>): Promise<void> {
       continue;
     }
 
-    const from = await buildFromSnapshot(bot, entry.telegramUserId);
+    const { from, chat } = await buildFromSnapshot(bot, entry.telegramUserId);
     const locale = DEFAULT_LOCALE;
 
     subscriptions.set(entry.telegramUserId, {
       time: normalizedTime,
       locale,
       from,
+      chat,
     });
   }
 }
@@ -144,11 +153,12 @@ export function initSubscriptionScheduler(bot: Bot<MyContext>) {
       for (const [chatId, info] of subscriptions.entries()) {
         if (info.time === current) {
           const from = { ...info.from } as NonNullable<MyContext['from']>;
+          const chat = { ...info.chat } as NonNullable<MyContext['chat']>;
           const translate = ((key: Parameters<MyContext['t']>[0], params?: Parameters<MyContext['t']>[1]) =>
             i18n.t(info.locale, key, params)) as MyContext['t'];
           const ctxLike = {
             message: { text: '/thisday' },
-            chat: { id: chatId } as MyContext['chat'],
+            chat,
             from,
             reply: (text: string, opts?: Record<string, unknown>) =>
               bot.api.sendMessage(chatId, text, opts),
