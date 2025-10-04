@@ -15,8 +15,8 @@ export const accessProfileFormSchema = z.object({
   dateRanges: z
     .array(
       z.object({
-        fromDate: z.string().optional(),
-        toDate: z.string().optional(),
+        fromDate: z.date({ required_error: 'From date is required' }),
+        toDate: z.date({ required_error: 'To date is required' }),
       })
     )
     .optional(),

@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
-import { Save, X, Plus, Trash2 } from 'lucide-react';
+import { Save, X, Plus, Trash2, ChevronDownIcon } from 'lucide-react';
 import type {
   AccessProfileDateRangeAllowDto,
   AccessProfileDto,
@@ -36,10 +36,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/shared/ui/form';
-import { Badge } from '@/shared/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Separator } from '@/shared/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
+import { Calendar } from '@/shared/ui/calendar';
 import {
   accessProfileFormSchema,
   type AccessProfileFormValues,
@@ -50,6 +51,8 @@ interface EditProfileDialogProps {
   onOpenChange: (open: boolean) => void;
   profile: AccessProfileDto | null;
 }
+
+type DateRangeFormValue = NonNullable<AccessProfileFormValues['dateRanges']>[number];
 
 export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDialogProps) {
   const { toast } = useToast();
@@ -91,12 +94,27 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
         typeof group.personGroupId === 'number' ? [group.personGroupId] : []
       ) ?? [];
 
-      const ranges = profile.dateRanges?.map((range) => ({
-        fromDate: range.fromDate
-          ? format(new Date(range.fromDate), 'yyyy-MM-dd')
-          : '',
-        toDate: range.toDate ? format(new Date(range.toDate), 'yyyy-MM-dd') : '',
-      })) ?? [];
+      const ranges =
+        profile.dateRanges?.flatMap((range) => {
+          const fromDateValue = range.fromDate ? new Date(range.fromDate) : null;
+          const toDateValue = range.toDate ? new Date(range.toDate) : null;
+
+          if (
+            !fromDateValue ||
+            Number.isNaN(fromDateValue.getTime()) ||
+            !toDateValue ||
+            Number.isNaN(toDateValue.getTime())
+          ) {
+            return [];
+          }
+
+          return [
+            {
+              fromDate: fromDateValue,
+              toDate: toDateValue,
+            },
+          ];
+        }) ?? [];
 
       form.reset({
         name: profile.name ?? '',
@@ -148,17 +166,18 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
     const normalizedDateRanges =
       values.dateRanges
         ?.filter(
-          (
-            range
-          ): range is { fromDate: string; toDate: string } =>
-            Boolean(range.fromDate) && Boolean(range.toDate)
+          (range): range is DateRangeFormValue =>
+            range.fromDate instanceof Date &&
+            !Number.isNaN(range.fromDate.getTime()) &&
+            range.toDate instanceof Date &&
+            !Number.isNaN(range.toDate.getTime())
         )
         .map(
           (range) =>
             ({
               profileId: profile.id,
-              fromDate: new Date(range.fromDate),
-              toDate: new Date(range.toDate),
+              fromDate: format(range.fromDate, 'yyyy-MM-dd') as unknown as Date,
+              toDate: format(range.toDate, 'yyyy-MM-dd') as unknown as Date,
             }) satisfies AccessProfileDateRangeAllowDto
         ) ?? [];
 
@@ -194,23 +213,30 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
 
   const addDateRange = () => {
     const today = new Date();
-    const oneYearLater = new Date();
+    const oneYearLater = new Date(today);
     oneYearLater.setFullYear(today.getFullYear() + 1);
 
-    const newRange = {
-      fromDate: format(today, 'yyyy-MM-dd'),
-      toDate: format(oneYearLater, 'yyyy-MM-dd'),
+    const newRange: DateRangeFormValue = {
+      fromDate: today,
+      toDate: oneYearLater,
     };
 
     const currentRanges = form.getValues('dateRanges') ?? [];
     const updatedRanges = [...currentRanges, newRange];
-    form.setValue('dateRanges', updatedRanges, { shouldValidate: true });
+    form.setValue('dateRanges', updatedRanges, { shouldValidate: true, shouldDirty: true });
   };
 
   const removeDateRange = (index: number) => {
     const currentRanges = form.getValues('dateRanges') ?? [];
     const updatedRanges = currentRanges.filter((_, i) => i !== index);
-    form.setValue('dateRanges', updatedRanges, { shouldValidate: true });
+    form.setValue('dateRanges', updatedRanges, { shouldValidate: true, shouldDirty: true });
+  };
+
+  const updateDateRange = (index: number, updatedRange: DateRangeFormValue) => {
+    const currentRanges = form.getValues('dateRanges') ?? [];
+    const nextRanges = [...currentRanges];
+    nextRanges[index] = updatedRange;
+    form.setValue('dateRanges', nextRanges, { shouldValidate: true, shouldDirty: true });
   };
 
   const dateRanges = form.watch('dateRanges') ?? [];
@@ -412,21 +438,14 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
                   ) : (
                     <div className="space-y-2">
                       {dateRanges.map((range, index) => (
-                        <div key={index} className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                          <span className="text-sm font-medium">From:</span>
-                          <Badge variant="outline">{range.fromDate}</Badge>
-                          <span className="text-sm font-medium">To:</span>
-                          <Badge variant="outline">{range.toDate}</Badge>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeDateRange(index)}
-                            className="ml-auto text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        <DateRangeRow
+                          key={`date-range-${index}`}
+                          index={index}
+                          range={range}
+                          onChange={(nextRange) => updateDateRange(index, nextRange)}
+                          onRemove={() => removeDateRange(index)}
+                          disabled={updateProfileMutation.isPending}
+                        />
                       ))}
                     </div>
                   )}
@@ -453,5 +472,105 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
         </Form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+interface DateRangeRowProps {
+  index: number;
+  range: DateRangeFormValue;
+  onChange: (range: DateRangeFormValue) => void;
+  onRemove: () => void;
+  disabled: boolean;
+}
+
+function DateRangeRow({ index, range, onChange, onRemove, disabled }: DateRangeRowProps) {
+  const [openFrom, setOpenFrom] = useState(false);
+  const [openTo, setOpenTo] = useState(false);
+
+  const formattedFrom = range.fromDate ? format(range.fromDate, 'yyyy-MM-dd') : 'Select date';
+  const formattedTo = range.toDate ? format(range.toDate, 'yyyy-MM-dd') : 'Select date';
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-lg bg-muted/50 p-3">
+      <div className="flex flex-col gap-1">
+        <span className="text-xs font-medium uppercase text-muted-foreground">From</span>
+        <Popover open={openFrom} onOpenChange={setOpenFrom}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-[170px] justify-between font-normal"
+              onClick={() => setOpenFrom(true)}
+              disabled={disabled}
+              aria-label={`Select from date for range ${index + 1}`}
+            >
+              {formattedFrom}
+              <ChevronDownIcon className="ml-2 h-4 w-4 opacity-70" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={range.fromDate}
+              captionLayout="dropdown"
+              onSelect={(date) => {
+                if (!date) {
+                  return;
+                }
+
+                onChange({ ...range, fromDate: date });
+                setOpenFrom(false);
+              }}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <span className="text-xs font-medium uppercase text-muted-foreground">To</span>
+        <Popover open={openTo} onOpenChange={setOpenTo}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-[170px] justify-between font-normal"
+              onClick={() => setOpenTo(true)}
+              disabled={disabled}
+              aria-label={`Select to date for range ${index + 1}`}
+            >
+              {formattedTo}
+              <ChevronDownIcon className="ml-2 h-4 w-4 opacity-70" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={range.toDate}
+              captionLayout="dropdown"
+              onSelect={(date) => {
+                if (!date) {
+                  return;
+                }
+
+                onChange({ ...range, toDate: date });
+                setOpenTo(false);
+              }}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onRemove}
+        className="ml-auto text-destructive hover:text-destructive"
+        disabled={disabled}
+        aria-label={`Remove date range ${index + 1}`}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
   );
 }
