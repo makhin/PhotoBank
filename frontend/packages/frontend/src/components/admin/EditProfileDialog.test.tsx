@@ -8,9 +8,14 @@ import type { AccessProfileDto } from '@photobank/shared';
 import { EditProfileDialog } from './EditProfileDialog';
 
 const mutateAsyncMock = vi.hoisted(() => vi.fn());
+const createMutateAsyncMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@photobank/shared/api/photobank/admin-access-profiles/admin-access-profiles', () => ({
   getAdminAccessProfilesListQueryKey: () => ['admin-access-profiles'],
+  useAdminAccessProfilesCreate: () => ({
+    mutateAsync: createMutateAsyncMock,
+    isPending: false,
+  }),
   useAdminAccessProfilesUpdate: () => ({
     mutateAsync: mutateAsyncMock,
     isPending: false,
@@ -40,6 +45,7 @@ vi.mock('@/hooks/use-toast', () => ({
 describe('EditProfileDialog', () => {
   beforeEach(() => {
     mutateAsyncMock.mockReset();
+    createMutateAsyncMock.mockReset();
   });
 
   const renderComponent = (profile: AccessProfileDto) => {
