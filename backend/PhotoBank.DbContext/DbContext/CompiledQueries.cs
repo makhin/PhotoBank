@@ -29,6 +29,17 @@ public static class CompiledQueries
                 .Include(p => p.Captions)
                 .AsSplitQuery()
                 .Where(p => p.Id == photoId)
-                .Where(AclPredicates.PhotoWhere(new Acl(storageIds, from, to, groups, canSeeNsfw)))
+                .Where(p =>
+                    // Keep predicate logic in sync with AclPredicates.PhotoWhere.
+                    storageIds.Length > 0 && storageIds.Contains(p.StorageId) &&
+                    (from == null || (p.TakenDate != null && p.TakenDate >= from)) &&
+                    (to == null || (p.TakenDate != null && p.TakenDate <= to)) &&
+                    (canSeeNsfw || (!p.IsAdultContent && !p.IsRacyContent)) &&
+                    (
+                        groups.Length == 0
+                            ? !p.Faces.Any()
+                            : (!p.Faces.Any() || p.Faces.Any(f => f.PersonId != null &&
+                                                                f.Person.PersonGroups.Any(pg => groups.Contains(pg.Id))))
+                    ))
                 .FirstOrDefault());
 }
