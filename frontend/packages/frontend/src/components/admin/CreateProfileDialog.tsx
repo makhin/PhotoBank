@@ -41,6 +41,7 @@ import { Separator } from '@/shared/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import {
   accessProfileFormSchema,
+  type AccessProfileFormInput,
   type AccessProfileFormValues,
 } from './accessProfileFormSchema';
 
@@ -52,8 +53,20 @@ type AccessProfileDraft = Partial<
   dateRanges?: Array<Partial<AccessProfileDateRangeAllowDto>>;
 };
 
+type DateRangeInputValue = NonNullable<AccessProfileFormInput['dateRanges']>[number];
 type DateRangeFormValue = NonNullable<AccessProfileFormValues['dateRanges']>[number];
-type DateRangeDraft = Partial<DateRangeFormValue>;
+type DateRangeDraft = Partial<DateRangeInputValue>;
+type CompleteDateRange = DateRangeFormValue & {
+  fromDate: Date;
+  toDate: Date;
+};
+
+const isValidDate = (value: Date | null | undefined): value is Date =>
+  value instanceof Date && !Number.isNaN(value.getTime());
+
+const isCompleteDateRange = (
+  range: DateRangeFormValue
+): range is CompleteDateRange => isValidDate(range.fromDate) && isValidDate(range.toDate);
 
 interface CreateProfileDialogProps {
   open: boolean;
@@ -77,7 +90,7 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
     [personGroupsQuery.data]
   );
 
-  const form = useForm<AccessProfileFormValues>({
+  const form = useForm<AccessProfileFormInput, undefined, AccessProfileFormValues>({
     resolver: zodResolver(accessProfileFormSchema),
     defaultValues: {
       name: '',
@@ -86,7 +99,7 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
       storages: [],
       personGroups: [],
       dateRanges: [],
-    },
+    } satisfies AccessProfileFormInput,
   });
 
   const createProfileMutation = useAdminAccessProfilesCreate({
@@ -117,13 +130,7 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
   const handleSubmit = async (values: AccessProfileFormValues) => {
     const normalizedDateRanges =
       values.dateRanges
-        ?.filter(
-          (range): range is DateRangeFormValue =>
-            range.fromDate instanceof Date &&
-            !Number.isNaN(range.fromDate.getTime()) &&
-            range.toDate instanceof Date &&
-            !Number.isNaN(range.toDate.getTime())
-        )
+        ?.filter(isCompleteDateRange)
         .map(
           (range) =>
             ({
@@ -153,14 +160,14 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
     const oneYearLater = new Date();
     oneYearLater.setFullYear(today.getFullYear() + 1);
 
-    const newRange: DateRangeFormValue = {
+    const newRange: DateRangeInputValue = {
       fromDate: today,
       toDate: oneYearLater,
     };
 
     const currentRanges = (form.getValues('dateRanges') ?? []) as DateRangeDraft[];
     const updatedRanges: DateRangeDraft[] = [...currentRanges, newRange];
-    form.setValue('dateRanges', updatedRanges as AccessProfileFormValues['dateRanges'], {
+    form.setValue('dateRanges', updatedRanges as AccessProfileFormInput['dateRanges'], {
       shouldValidate: true,
     });
   };
@@ -168,7 +175,7 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
   const removeDateRange = (index: number) => {
     const currentRanges = (form.getValues('dateRanges') ?? []) as DateRangeDraft[];
     const updatedRanges = currentRanges.filter((_, i) => i !== index);
-    form.setValue('dateRanges', updatedRanges as AccessProfileFormValues['dateRanges'], {
+    form.setValue('dateRanges', updatedRanges as AccessProfileFormInput['dateRanges'], {
       shouldValidate: true,
     });
   };
@@ -197,13 +204,14 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
       return { ...range, [key]: parsedValue };
     });
 
-    form.setValue('dateRanges', updatedRanges as AccessProfileFormValues['dateRanges'], {
+    form.setValue('dateRanges', updatedRanges as AccessProfileFormInput['dateRanges'], {
       shouldValidate: true,
       shouldDirty: true,
     });
   };
 
-  const dateRanges = form.watch('dateRanges') ?? [];
+  const watchedDateRanges = form.watch('dateRanges');
+  const dateRanges = (watchedDateRanges ?? []) as DateRangeFormValue[];
 
   const handleDialogChange = (nextOpen: boolean) => {
     if (!nextOpen) {
