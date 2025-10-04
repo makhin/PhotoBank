@@ -18,19 +18,12 @@ const formSchema = z.object({
   phoneNumber: z.string().optional(),
   telegramUserId: z
     .string()
-    .optional()
-    .transform((value) => {
-      if (value === undefined) {
-        return value;
-      }
-
-      const trimmed = value.trim();
-      return trimmed.length === 0 ? '' : trimmed;
+    .trim()
+    .transform((value) => (value.length === 0 ? '' : value))
+    .refine((value) => value === '' || /^\d+$/.test(value), {
+      message: 'Telegram ID must contain only digits',
     })
-    .refine(
-      (value) => value === undefined || value === '' || /^\d+$/.test(value),
-      { message: 'Telegram ID must contain only digits' }
-    ),
+    .optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
