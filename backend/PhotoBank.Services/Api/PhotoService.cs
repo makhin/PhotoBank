@@ -4,6 +4,7 @@ using ImageMagick;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
@@ -59,6 +60,7 @@ public class PhotoService : IPhotoService
     private readonly IRepository<Person> _personRepository;
     private readonly IMapper _mapper;
     private readonly IMemoryCache _cache;
+    private readonly ILogger<PhotoService> _logger;
     private readonly Lazy<Task<IReadOnlyList<PathDto>>> _paths;
     private readonly Lazy<Task<IReadOnlyList<PersonGroupDto>>> _personGroups;
     private readonly Lazy<Task<IReadOnlyList<StorageDto>>> _storages;
@@ -77,6 +79,7 @@ public class PhotoService : IPhotoService
         IRepository<PersonGroup> personGroupRepository,
         IMapper mapper,
         IMemoryCache cache,
+        ILogger<PhotoService> logger,
         ICurrentUser currentUser,
         ISearchReferenceDataService searchReferenceDataService,
         ISearchFilterNormalizer searchFilterNormalizer,
@@ -91,6 +94,7 @@ public class PhotoService : IPhotoService
         _personRepository = personRepository;
         _mapper = mapper;
         _cache = cache;
+        _logger = logger;
         _currentUser = currentUser;
         _searchReferenceDataService = searchReferenceDataService;
         _searchFilterNormalizer = searchFilterNormalizer;
@@ -493,14 +497,14 @@ public class PhotoService : IPhotoService
 
     private async Task FillUrlsAsync(PhotoDto dto)
     {
-        dto.PreviewUrl = await GetPresignedUrlAsync(dto.S3Key_Preview);
+        dto.PreviewUrl = await GetPresignedUrlAsync(dto.S3Key_Preview, dto.Id);
     }
 
     private async Task FillUrlsAsync(IEnumerable<PhotoItemDto> items)
     {
         var tasks = items.Select(async dto =>
         {
-            dto.ThumbnailUrl = await GetPresignedUrlAsync(dto.S3Key_Thumbnail);
+            dto.ThumbnailUrl = await GetPresignedUrlAsync(dto.S3Key_Thumbnail, dto.Id);
         });
         await Task.WhenAll(tasks);
     }
@@ -509,12 +513,12 @@ public class PhotoService : IPhotoService
     {
         var tasks = faces.Select(async dto =>
         {
-            dto.ImageUrl = await GetPresignedUrlAsync(dto.S3Key_Image);
+            dto.ImageUrl = await GetPresignedUrlAsync(dto.S3Key_Image, dto.PhotoId);
         });
         await Task.WhenAll(tasks);
     }
 
-    private async Task<string?> GetPresignedUrlAsync(string? key)
+    private async Task<string?> GetPresignedUrlAsync(string? key, int? photoId)
     {
         if (string.IsNullOrEmpty(key))
             return null;
@@ -526,8 +530,9 @@ public class PhotoService : IPhotoService
                 .WithObject(key)
                 .WithExpiry(_s3.UrlExpirySeconds));
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Failed to generate presigned URL for photo {PhotoId} with key {S3Key}.", photoId, key);
             return null;
         }
     }

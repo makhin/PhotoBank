@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging.Abstractions;
 using Minio;
 using Moq;
 using NUnit.Framework;
@@ -60,6 +61,7 @@ public class PersonGroupServiceTests
             _provider.GetRequiredService<IRepository<PersonGroup>>(),
             _provider.GetRequiredService<IMapper>(),
             _provider.GetRequiredService<IMemoryCache>(),
+            NullLogger<PhotoService>.Instance,
             _provider.GetRequiredService<ICurrentUser>(),
             _provider.GetRequiredService<ISearchReferenceDataService>(),
             normalizer.Object,
