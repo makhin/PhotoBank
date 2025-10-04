@@ -8,6 +8,7 @@ import MetadataBadgeList from '@/components/MetadataBadgeList';
 import { Badge } from '@/shared/ui/badge';
 import { buildThumbnailUrl } from '@/shared/utils/buildThumbnailUrl';
 import { useAppSelector } from '@/app/hook';
+import { useTranslation } from 'react-i18next';
 import {
   selectMetadataLoaded,
   selectPersonsMap,
@@ -15,6 +16,7 @@ import {
 } from '@/features/metadata/selectors';
 
 export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
+  const { t } = useTranslation();
   const personsMap = useAppSelector(selectPersonsMap);
   const tagsMap = useAppSelector(selectTagsMap);
   const metaLoaded = useAppSelector(selectMetadataLoaded);
@@ -24,7 +26,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
       {
         accessorKey: 'thumbnail',
         id: 'thumbnail',
-        header: 'Thumb',
+        header: t('colPreviewLabel'),
         cell: ({ row }) => (
           <div className="flex items-center justify-center">
             <img
@@ -149,6 +151,6 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
         enableResizing: true,
       },
     ],
-    [metaLoaded, personsMap, tagsMap]
+    [metaLoaded, personsMap, tagsMap, t]
   );
 }
