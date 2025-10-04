@@ -98,10 +98,16 @@ describe('EditProfileDialog', () => {
         throw new Error('No calendar day buttons available');
       }
 
-      targetButton =
+      const nextTarget =
         dayButtons.find((button) => button.dataset.day?.includes('/15/')) ??
         dayButtons[0];
-      targetDateValue = targetButton.dataset.day ?? '';
+
+      if (!nextTarget) {
+        throw new Error('Calendar day button not found');
+      }
+
+      targetButton = nextTarget;
+      targetDateValue = nextTarget.dataset.day ?? '';
 
       if (!targetDateValue) {
         throw new Error('Calendar day value not found');
