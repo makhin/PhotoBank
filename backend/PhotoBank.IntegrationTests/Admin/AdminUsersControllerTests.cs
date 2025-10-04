@@ -196,9 +196,53 @@ public class AdminUsersControllerTests
         var users = JsonSerializer.Deserialize<List<UserDto>>(payload, _jsonOptions);
 
         users.Should().NotBeNull();
-        users!.Select(u => u.TelegramUserId).Should().Equal(44, 11);
+        users!.Select(u => u.TelegramUserId).Should().Equal("44", "11");
         users[0].Roles.Should().BeEquivalentTo(new[] { "Moderator" });
         users[1].Roles.Should().BeEquivalentTo(new[] { "Contributor", "Uploader" });
+    }
+
+    [Test]
+    public async Task Update_WithHugeTelegramId_RoundTripsValue()
+    {
+        var user = new ApplicationUser
+        {
+            UserName = "roundtrip@example.com",
+            Email = "roundtrip@example.com",
+            PhoneNumber = "111"
+        };
+
+        await SeedUsersAsync((user, Array.Empty<string>()));
+
+        var bigTelegramId = "9007199254740995";
+
+        using (var updateRequest = new HttpRequestMessage(HttpMethod.Put, $"/api/admin/users/{user.Id}"))
+        {
+            AddAdminHeaders(updateRequest);
+            var dto = new UpdateUserDto
+            {
+                PhoneNumber = user.PhoneNumber,
+                TelegramUserId = bigTelegramId,
+                TelegramSendTimeUtc = TimeSpan.FromHours(6)
+            };
+
+            updateRequest.Content = JsonContent.Create(dto);
+
+            var updateResponse = await _client.SendAsync(updateRequest);
+            updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        }
+
+        using var listRequest = new HttpRequestMessage(HttpMethod.Get, "/api/admin/users?limit=10");
+        AddAdminHeaders(listRequest);
+
+        var listResponse = await _client.SendAsync(listRequest);
+        listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var payload = await listResponse.Content.ReadAsStringAsync();
+        var users = JsonSerializer.Deserialize<List<UserDto>>(payload, _jsonOptions);
+
+        users.Should().NotBeNull();
+        var updatedUser = users!.Single(u => u.Id == user.Id);
+        updatedUser.TelegramUserId.Should().Be(bigTelegramId);
     }
 
     [Test]

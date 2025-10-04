@@ -1,4 +1,5 @@
 using FluentValidation;
+using PhotoBank.Api.Validation;
 using PhotoBank.ViewModel.Dto;
 using System;
 
@@ -11,7 +12,18 @@ public class UpdateUserDtoValidator : AbstractValidator<UpdateUserDto>
         RuleFor(x => x.PhoneNumber)
             .Matches(@"^[0-9+()\- ]*$").When(x => x.PhoneNumber is not null);
         RuleFor(x => x.TelegramUserId)
-            .GreaterThan(0).When(x => x.TelegramUserId.HasValue);
+            .Custom((value, context) =>
+            {
+                if (TelegramUserIdParser.TryParse(value, out _, out var error))
+                {
+                    return;
+                }
+
+                if (!string.IsNullOrEmpty(error))
+                {
+                    context.AddFailure(error);
+                }
+            });
         RuleFor(x => x.TelegramSendTimeUtc)
             .GreaterThanOrEqualTo(TimeSpan.Zero)
             .LessThan(TimeSpan.FromDays(1))

@@ -1624,8 +1624,7 @@ components:
       type: object
       properties:
         telegramUserId:
-          type: integer
-          format: int64
+          type: string
         username:
           type: string
           nullable: true
@@ -1647,8 +1646,7 @@ components:
       type: object
       properties:
         telegramUserId:
-          type: integer
-          format: int64
+          type: string
         telegramSendTimeUtc:
           type: string
           format: date-span
@@ -1670,8 +1668,7 @@ components:
           type: string
           nullable: true
         telegramUserId:
-          type: integer
-          format: int64
+          type: string
           nullable: true
         telegramSendTimeUtc:
           type: string
@@ -1694,8 +1691,7 @@ components:
           type: string
           nullable: true
         telegramUserId:
-          type: integer
-          format: int64
+          type: string
           nullable: true
         telegramSendTimeUtc:
           type: string

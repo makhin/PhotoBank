@@ -16,7 +16,21 @@ import { toast } from '@/shared/ui/sonner';
 
 const formSchema = z.object({
   phoneNumber: z.string().optional(),
-  telegramUserId: z.string().optional(),
+  telegramUserId: z
+    .string()
+    .optional()
+    .transform((value) => {
+      if (value === undefined) {
+        return value;
+      }
+
+      const trimmed = value.trim();
+      return trimmed.length === 0 ? '' : trimmed;
+    })
+    .refine(
+      (value) => value === undefined || value === '' || /^\d+$/.test(value),
+      { message: 'Telegram ID must contain only digits' }
+    ),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -37,19 +51,19 @@ export default function MyProfilePage() {
     if (user) {
       form.reset({
         phoneNumber: user.phoneNumber ?? '',
-        telegramUserId: user.telegramUserId ? String(user.telegramUserId) : '',
+        telegramUserId: user.telegramUserId ?? '',
       });
     }
   }, [user, form]);
 
   const onSubmit = async (data: FormData) => {
     try {
+      const telegramUserId = data.telegramUserId ?? '';
+
       await updateUser({
         data: {
           phoneNumber: data.phoneNumber,
-          telegramUserId: data.telegramUserId
-            ? Number(data.telegramUserId)
-            : undefined,
+          telegramUserId: telegramUserId.length > 0 ? telegramUserId : undefined,
         },
       });
       navigate('/filter');
@@ -107,7 +121,7 @@ export default function MyProfilePage() {
                   <FormItem>
                     <FormLabel>{t('telegramLabel')}</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input inputMode="numeric" pattern="[0-9]*" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

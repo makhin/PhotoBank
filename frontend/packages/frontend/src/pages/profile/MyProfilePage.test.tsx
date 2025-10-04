@@ -75,4 +75,38 @@ describe('MyProfilePage', () => {
     expect(loggerErrorSpy).toHaveBeenCalledWith(problem.problem);
     loggerErrorSpy.mockRestore();
   });
+
+  it('submits telegram ID as string without coercion', async () => {
+    useAuthGetUserMock.mockReturnValue({
+      data: {
+        data: {
+          email: 'user@example.com',
+          phoneNumber: '',
+          telegramUserId: null,
+        },
+      },
+    });
+
+    const mutateAsync = vi.fn().mockResolvedValue(undefined);
+    useAuthUpdateUserMock.mockReturnValue({ mutateAsync });
+
+    renderPage();
+
+    const user = userEvent.setup();
+    const telegramInput = await screen.findByLabelText(/telegram/i);
+    await user.clear(telegramInput);
+    await user.type(telegramInput, '9007199254740995');
+
+    const saveButton = await screen.findByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    await waitFor(() =>
+      expect(mutateAsync).toHaveBeenCalledWith({
+        data: {
+          phoneNumber: '',
+          telegramUserId: '9007199254740995',
+        },
+      })
+    );
+  });
 });

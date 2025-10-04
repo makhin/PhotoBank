@@ -272,7 +272,7 @@ export interface TagDto {
 }
 
 export interface TelegramExchangeRequest {
-  telegramUserId?: number;
+  telegramUserId?: string;
   /** @nullable */
   username?: string | null;
 }
@@ -284,7 +284,7 @@ export interface TelegramExchangeResponse {
 }
 
 export interface TelegramSubscriptionDto {
-  telegramUserId: number;
+  telegramUserId: string;
   telegramSendTimeUtc: string;
 }
 
@@ -297,7 +297,7 @@ export interface UpdateUserDto {
   /** @nullable */
   phoneNumber?: string | null;
   /** @nullable */
-  telegramUserId?: number | null;
+  telegramUserId?: string | null;
   /** @nullable */
   telegramSendTimeUtc?: string | null;
 }
@@ -310,7 +310,7 @@ export interface UserDto {
   /** @nullable */
   phoneNumber?: string | null;
   /** @nullable */
-  telegramUserId?: number | null;
+  telegramUserId?: string | null;
   /** @nullable */
   telegramSendTimeUtc?: string | null;
   /** @nullable */

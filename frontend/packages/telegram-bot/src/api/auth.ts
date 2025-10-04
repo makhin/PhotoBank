@@ -8,9 +8,9 @@ configureApi(process.env.API_BASE_URL ?? '');
 
 const serviceKey = BOT_SERVICE_KEY ?? '';
 
-type ExchangeBody = { telegramUserId: number; username: string | null };
+type ExchangeBody = { telegramUserId: string; username: string | null };
 
-export async function exchangeTelegramUserToken(telegramUserId: number, username?: string) {
+export async function exchangeTelegramUserToken(telegramUserId: string, username?: string) {
   const body: ExchangeBody = { telegramUserId, username: username ?? null };
   const res = await customFetcher<{ data: { accessToken: string; expiresIn: number } }>(
     '/auth/telegram/exchange',

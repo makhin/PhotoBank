@@ -2,12 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PhotoBank.Api.Validation;
 using PhotoBank.DbContext.Models;
 using PhotoBank.ViewModel.Dto;
 using System;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace PhotoBank.Api.Controllers.Admin;
@@ -66,7 +68,7 @@ public class UsersController(UserManager<ApplicationUser> userManager, RoleManag
                 Id = user.Id,
                 Email = user.Email ?? string.Empty,
                 PhoneNumber = user.PhoneNumber,
-                TelegramUserId = user.TelegramUserId,
+                TelegramUserId = user.TelegramUserId?.ToString(CultureInfo.InvariantCulture),
                 TelegramSendTimeUtc = user.TelegramSendTimeUtc,
                 Roles = roles.ToArray()
             });
@@ -107,7 +109,7 @@ public class UsersController(UserManager<ApplicationUser> userManager, RoleManag
             Id = user.Id,
             Email = user.Email!,
             PhoneNumber = user.PhoneNumber,
-            TelegramUserId = user.TelegramUserId,
+            TelegramUserId = user.TelegramUserId?.ToString(CultureInfo.InvariantCulture),
             TelegramSendTimeUtc = user.TelegramSendTimeUtc,
             Roles = createdRoles.ToArray()
         };
@@ -125,9 +127,19 @@ public class UsersController(UserManager<ApplicationUser> userManager, RoleManag
             return NotFound();
 
         user.PhoneNumber = dto.PhoneNumber;
-        if (dto.TelegramUserId.HasValue)
+        if (dto.TelegramUserId is not null)
         {
-            user.TelegramUserId = dto.TelegramUserId;
+            if (!TelegramUserIdParser.TryParse(dto.TelegramUserId, out var parsedTelegramUserId, out var error))
+            {
+                if (!string.IsNullOrEmpty(error))
+                {
+                    ModelState.AddModelError(nameof(dto.TelegramUserId), error);
+                }
+
+                return ValidationProblem(ModelState);
+            }
+
+            user.TelegramUserId = parsedTelegramUserId;
         }
         user.TelegramSendTimeUtc = dto.TelegramSendTimeUtc;
         var result = await userManager.UpdateAsync(user);

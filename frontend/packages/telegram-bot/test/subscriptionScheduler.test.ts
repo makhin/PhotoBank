@@ -8,7 +8,7 @@ const sendThisDayPage = vi.hoisted(() =>
 );
 
 const fetchTelegramSubscriptions = vi.hoisted(() =>
-  vi.fn<[], Promise<Array<{ telegramUserId: number; telegramSendTimeUtc: string }>>>(
+  vi.fn<[], Promise<Array<{ telegramUserId: string; telegramSendTimeUtc: string }>>>(
     () => Promise.resolve([]),
   ),
 );
@@ -49,7 +49,7 @@ describe('initSubscriptionScheduler', () => {
       };
 
       vi.setSystemTime(new Date('2024-01-01T05:10:00Z'));
-      subscriptions.set(123, {
+      subscriptions.set('123', {
         time: '05:10',
         locale: 'en',
         from,
@@ -78,7 +78,7 @@ describe('initSubscriptionScheduler', () => {
     sendThisDayPage.mockClear();
     fetchTelegramSubscriptions.mockClear();
     fetchTelegramSubscriptions.mockResolvedValueOnce([
-      { telegramUserId: 123, telegramSendTimeUtc: '05:10:00' },
+      { telegramUserId: '123', telegramSendTimeUtc: '05:10:00' },
     ]);
 
     const getChat = vi.fn(() =>
@@ -99,12 +99,12 @@ describe('initSubscriptionScheduler', () => {
     await restoreSubscriptions(bot);
 
     expect(fetchTelegramSubscriptions).toHaveBeenCalledTimes(1);
-    expect(getChat).toHaveBeenCalledWith(123);
-    expect(subscriptions.get(123)).toMatchObject({
+    expect(getChat).toHaveBeenCalledWith('123');
+    expect(subscriptions.get('123')).toMatchObject({
       time: '05:10',
       locale: 'en',
       from: expect.objectContaining({
-        id: 123,
+        id: expect.anything(),
         first_name: 'Restored',
         username: 'restored_user',
       }),
@@ -124,8 +124,8 @@ describe('initSubscriptionScheduler', () => {
 
       expect(sendThisDayPage).toHaveBeenCalledWith(
         expect.objectContaining({
-          chat: expect.objectContaining({ id: 123 }),
-          from: expect.objectContaining({ id: 123 }),
+          chat: expect.objectContaining({ id: '123' }),
+          from: expect.objectContaining({ id: expect.anything() }),
         }),
         1,
       );

@@ -3,11 +3,14 @@ import type { Context } from 'grammy';
 import { exchangeTelegramUserToken } from './api/auth';
 
 type CacheEntry = { token: string; exp: number }; // seconds since epoch
-const tokenCache = new Map<number, CacheEntry>();
+const tokenCache = new Map<string, CacheEntry>();
 
 export async function ensureUserAccessToken(ctx: Context, force = false): Promise<string> {
-  const tgId = ctx.from?.id;
-  if (!tgId) throw new Error('No Telegram user');
+  const tgIdRaw = ctx.from?.id;
+  if (tgIdRaw === undefined || tgIdRaw === null) {
+    throw new Error('No Telegram user');
+  }
+  const tgId = tgIdRaw.toString();
   const now = Math.floor(Date.now() / 1000);
   const cached = force ? undefined : tokenCache.get(tgId);
   if (cached && cached.exp - now > 60) return cached.token;
@@ -18,6 +21,9 @@ export async function ensureUserAccessToken(ctx: Context, force = false): Promis
 }
 
 export function invalidateUserToken(ctx: Context | { from?: { id?: number } }) {
-  const tgId = ctx.from?.id;
-  if (tgId) tokenCache.delete(tgId);
+  const tgIdRaw = ctx.from?.id;
+  if (tgIdRaw === undefined || tgIdRaw === null) {
+    return;
+  }
+  tokenCache.delete(tgIdRaw.toString());
 }
