@@ -5,6 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Minio;
+using Minio.DataModel.Args;
 using Moq;
 using NetTopologySuite.Geometries;
 using NUnit.Framework;
@@ -90,7 +91,7 @@ public class PhotoServiceGetAllFacesAsyncTests
 
         var minioClient = new Mock<IMinioClient>();
         minioClient
-            .Setup(m => m.PresignedGetObjectAsync(It.IsAny<PresignedGetObjectArgs>(), It.IsAny<CancellationToken>()))
+            .Setup(m => m.PresignedGetObjectAsync(It.IsAny<PresignedGetObjectArgs>()))
             .ReturnsAsync("https://example.com/face.jpg");
 
         var service = CreateService(dbName, minioClient.Object);
