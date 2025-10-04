@@ -33,6 +33,7 @@
   "phoneNumberLabel": "Phone number",
   "telegramLabel": "Telegram",
   "saveButtonText": "Save",
+  "profileSaveFailed": "Failed to save profile. Please try again.",
   "rolesTitle": "Roles",
   "logoutButtonText": "Logout",
   "unassignedLabel": "Unassigned",
