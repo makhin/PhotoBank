@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { vi, type Mock } from 'vitest';
+import { vi, type Mock, beforeAll, afterAll } from 'vitest';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import { DEFAULT_PHOTO_FILTER, METADATA_CACHE_VERSION } from '@photobank/shared/constants';
 
@@ -13,11 +13,33 @@ import viewerReducer from '@/features/viewer/viewerSlice';
 import PhotoListPage from './PhotoListPage';
 import { useInfinitePhotos } from '@/features/photo/useInfinitePhotos';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { I18nProvider } from '@/app/providers/I18nProvider';
 
 vi.mock('@/features/photo/useInfinitePhotos');
 vi.mock('@tanstack/react-virtual', () => ({
   useVirtualizer: vi.fn(),
 }));
+
+class IntersectionObserverMock {
+  constructor(private readonly callback: IntersectionObserverCallback) {}
+  observe() {
+    const entry = [{ isIntersecting: true } as IntersectionObserverEntry];
+    this.callback(entry, this as unknown as IntersectionObserver);
+  }
+  unobserve() {}
+  disconnect() {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+}
+
+beforeAll(() => {
+  vi.stubGlobal('IntersectionObserver', IntersectionObserverMock);
+});
+
+afterAll(() => {
+  vi.unstubAllGlobals();
+});
 
 const createPhotos = (count: number): PhotoItemDto[] =>
   Array.from({ length: count }, (_, i) => ({
@@ -64,7 +86,8 @@ test('renders PhotoTable and fetches next page when scrolled', async () => {
     getVirtualItems: vi
       .fn()
       .mockReturnValueOnce(initialVirtual)
-      .mockReturnValueOnce(withLoader),
+      .mockReturnValueOnce(withLoader)
+      .mockReturnValue(withLoader),
     getTotalSize: () => 1000,
     measureElement: vi.fn(),
   });
@@ -96,7 +119,9 @@ test('renders PhotoTable and fetches next page when scrolled', async () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
-        <MemoryRouter>{children}</MemoryRouter>
+        <I18nProvider>
+          <MemoryRouter>{children}</MemoryRouter>
+        </I18nProvider>
       </Provider>
     </QueryClientProvider>
   );
