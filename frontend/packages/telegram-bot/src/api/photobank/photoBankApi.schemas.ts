@@ -222,6 +222,12 @@ export interface PhotoItemDtoPageResponse {
   items?: PhotoItemDto[] | null;
 }
 
+export interface FaceDtoPageResponse {
+  totalCount?: number;
+  /** @nullable */
+  items?: FaceDto[] | null;
+}
+
 export interface ProblemDetails {
   /** @nullable */
   type?: string | null;
@@ -310,6 +316,19 @@ export interface UserDto {
   /** @nullable */
   roles?: string[] | null;
 }
+
+export type FacesGetFacesPageParams = {
+  /**
+   * Page number (1-based)
+   * @minimum 1
+   */
+  page?: number;
+  /**
+   * Page size
+   * @minimum 1
+   */
+  pageSize?: number;
+};
 
 export type PhotosUploadBody = {
   files?: Blob[];

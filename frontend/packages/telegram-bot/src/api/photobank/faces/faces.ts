@@ -4,15 +4,25 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import type { FaceDto } from '../photoBankApi.schemas';
+import type {
+  FaceDto,
+  FaceDtoPageResponse,
+  FacesGetFacesPageParams,
+} from '../photoBankApi.schemas';
 
 import { photobankAxios } from '../../axios-instance';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 export const getFaces = () => {
-  const facesGetAll = (options?: SecondParameter<typeof photobankAxios>) => {
-    return photobankAxios<FaceDto[]>({ url: `/faces`, method: 'GET' }, options);
+  const facesGetFacesPage = (
+    params?: FacesGetFacesPageParams,
+    options?: SecondParameter<typeof photobankAxios>
+  ) => {
+    return photobankAxios<FaceDtoPageResponse>(
+      { url: `/faces`, method: 'GET', params },
+      options
+    );
   };
   const facesUpdate = (
     faceDto: FaceDto,
@@ -28,10 +38,10 @@ export const getFaces = () => {
       options
     );
   };
-  return { facesGetAll, facesUpdate };
+  return { facesGetFacesPage, facesUpdate };
 };
-export type FacesGetAllResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getFaces>['facesGetAll']>>
+export type FacesGetFacesPageResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getFaces>['facesGetFacesPage']>>
 >;
 export type FacesUpdateResult = NonNullable<
   Awaited<ReturnType<ReturnType<typeof getFaces>['facesUpdate']>>

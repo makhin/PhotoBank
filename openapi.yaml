@@ -413,21 +413,32 @@ paths:
     get:
       tags:
         - Faces
-      operationId: Faces_GetAll
+      operationId: Faces_GetFacesPage
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+          description: Page number (1-based)
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+          description: Page size
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FaceDto'
+                $ref: '#/components/schemas/FaceDtoPageResponse'
             text/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FaceDto'
+                $ref: '#/components/schemas/FaceDtoPageResponse'
     put:
       tags:
         - Faces
@@ -1518,6 +1529,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PhotoItemDto'
+          nullable: true
+      additionalProperties: false
+    FaceDtoPageResponse:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+          format: int32
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FaceDto'
           nullable: true
       additionalProperties: false
     ProblemDetails:
