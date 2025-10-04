@@ -270,8 +270,15 @@ public class PhotoService : IPhotoService
         else
         {
             var acl = Acl.FromUser(_currentUser);
-            var entity = await CompiledQueries.PhotoByIdWithAcl(
-                _db, id, acl.StorageIds, acl.FromDate, acl.ToDate, acl.AllowedPersonGroupIds, acl.CanSeeNsfw);
+            var nonAdminQuery = _db.Photos
+                .Include(p => p.PhotoTags).ThenInclude(pt => pt.Tag)
+                .Include(p => p.Faces).ThenInclude(f => f.Person).ThenInclude(pg => pg.PersonGroups)
+                .Include(p => p.Captions)
+                .AsSplitQuery()
+                .Where(p => p.Id == id)
+                .Where(AclPredicates.PhotoWhere(acl));
+
+            var entity = await nonAdminQuery.FirstOrDefaultAsync();
             dto = entity is null ? null : _mapper.Map<Photo, PhotoDto>(entity);
         }
 
