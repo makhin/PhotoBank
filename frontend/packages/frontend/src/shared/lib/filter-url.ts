@@ -22,7 +22,8 @@ const fromBase64 = (encoded: string) => {
   return decodeURIComponent(escape(window.atob(encoded)));
 };
 
-const ensureDate = (value: unknown): Date | undefined => {
+const ensureDate = (value: unknown): Date | null | undefined => {
+  if (value === null) return null;
   if (!value) return undefined;
   if (value instanceof Date) return value;
   if (typeof value === 'string') {
@@ -35,8 +36,18 @@ const ensureDate = (value: unknown): Date | undefined => {
 export const serializeFilter = (data: FormData): string => {
   const json = JSON.stringify({
     ...data,
-    dateFrom: data.dateFrom ? formatISO(data.dateFrom) : undefined,
-    dateTo: data.dateTo ? formatISO(data.dateTo) : undefined,
+    dateFrom:
+      data.dateFrom instanceof Date
+        ? formatISO(data.dateFrom)
+        : data.dateFrom === null
+          ? null
+          : undefined,
+    dateTo:
+      data.dateTo instanceof Date
+        ? formatISO(data.dateTo)
+        : data.dateTo === null
+          ? null
+          : undefined,
   });
   return toBase64(json);
 };

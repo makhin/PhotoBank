@@ -81,6 +81,7 @@
   "captionPlaceholder": "Enter caption...",
   "dateFromLabel": "Date From",
   "selectDatePlaceholder": "Select date",
+  "clearDateButton": "Clear date",
   "dateToLabel": "Date To",
   "storagesLabel": "Storages",
   "selectStoragesPlaceholder": "Select storages",
