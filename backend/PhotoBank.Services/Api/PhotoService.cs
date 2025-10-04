@@ -277,13 +277,14 @@ public class PhotoService : IPhotoService
     }
     public async Task<IEnumerable<FaceDto>> GetAllFacesAsync()
     {
-        var dto = _faceRepository.GetAll()
+        var faces = await _faceRepository.GetAll()
             .OrderBy(f => f.Id)
-            .ProjectTo<FaceDto>(_mapper.ConfigurationProvider);
+            .ProjectTo<FaceDto>(_mapper.ConfigurationProvider)
+            .ToListAsync();
 
-        await FillUrlsAsync(dto);
+        await FillUrlsAsync(faces);
 
-        return dto;
+        return faces;
     }
 
     public async Task UpdateFaceAsync(int faceId, int? personId)
