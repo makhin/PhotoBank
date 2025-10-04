@@ -1,5 +1,7 @@
 import * as z from 'zod';
 
+const nullableDate = z.coerce.date({ error: 'Date must be a valid date' }).nullish();
+
 export const accessProfileFormSchema = z.object({
   name: z
     .string()
@@ -15,11 +17,12 @@ export const accessProfileFormSchema = z.object({
   dateRanges: z
     .array(
       z.object({
-        fromDate: z.date({ required_error: 'From date is required' }),
-        toDate: z.date({ required_error: 'To date is required' }),
+        fromDate: nullableDate,
+        toDate: nullableDate,
       })
     )
     .optional(),
 });
 
 export type AccessProfileFormValues = z.infer<typeof accessProfileFormSchema>;
+export type AccessProfileFormInput = z.input<typeof accessProfileFormSchema>;

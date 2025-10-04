@@ -43,6 +43,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 import { Calendar } from '@/shared/ui/calendar';
 import {
   accessProfileFormSchema,
+  type AccessProfileFormInput,
   type AccessProfileFormValues,
 } from './accessProfileFormSchema';
 
@@ -52,7 +53,19 @@ interface EditProfileDialogProps {
   profile: AccessProfileDto | null;
 }
 
+type DateRangeInputValue = NonNullable<AccessProfileFormInput['dateRanges']>[number];
 type DateRangeFormValue = NonNullable<AccessProfileFormValues['dateRanges']>[number];
+type CompleteDateRange = DateRangeFormValue & {
+  fromDate: Date;
+  toDate: Date;
+};
+
+const isValidDate = (value: Date | null | undefined): value is Date =>
+  value instanceof Date && !Number.isNaN(value.getTime());
+
+const isCompleteDateRange = (
+  range: DateRangeFormValue
+): range is CompleteDateRange => isValidDate(range.fromDate) && isValidDate(range.toDate);
 
 export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDialogProps) {
   const { toast } = useToast();
@@ -71,7 +84,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
     [personGroupsQuery.data]
   );
 
-  const form = useForm<AccessProfileFormValues>({
+  const form = useForm<AccessProfileFormInput, undefined, AccessProfileFormValues>({
     resolver: zodResolver(accessProfileFormSchema),
     defaultValues: {
       name: '',
@@ -80,7 +93,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
       storages: [],
       personGroups: [],
       dateRanges: [],
-    },
+    } satisfies AccessProfileFormInput,
   });
 
   // Populate form when profile changes
@@ -165,13 +178,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
 
     const normalizedDateRanges =
       values.dateRanges
-        ?.filter(
-          (range): range is DateRangeFormValue =>
-            range.fromDate instanceof Date &&
-            !Number.isNaN(range.fromDate.getTime()) &&
-            range.toDate instanceof Date &&
-            !Number.isNaN(range.toDate.getTime())
-        )
+        ?.filter(isCompleteDateRange)
         .map(
           (range) =>
             ({
@@ -216,30 +223,40 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
     const oneYearLater = new Date(today);
     oneYearLater.setFullYear(today.getFullYear() + 1);
 
-    const newRange: DateRangeFormValue = {
+    const newRange: DateRangeInputValue = {
       fromDate: today,
       toDate: oneYearLater,
     };
 
-    const currentRanges = form.getValues('dateRanges') ?? [];
+    const currentRanges = (form.getValues('dateRanges') ?? []) as DateRangeInputValue[];
     const updatedRanges = [...currentRanges, newRange];
-    form.setValue('dateRanges', updatedRanges, { shouldValidate: true, shouldDirty: true });
+    form.setValue('dateRanges', updatedRanges as AccessProfileFormInput['dateRanges'], {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const removeDateRange = (index: number) => {
-    const currentRanges = form.getValues('dateRanges') ?? [];
+    const currentRanges = (form.getValues('dateRanges') ?? []) as DateRangeInputValue[];
     const updatedRanges = currentRanges.filter((_, i) => i !== index);
-    form.setValue('dateRanges', updatedRanges, { shouldValidate: true, shouldDirty: true });
+    form.setValue('dateRanges', updatedRanges as AccessProfileFormInput['dateRanges'], {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const updateDateRange = (index: number, updatedRange: DateRangeFormValue) => {
-    const currentRanges = form.getValues('dateRanges') ?? [];
+    const currentRanges = (form.getValues('dateRanges') ?? []) as DateRangeInputValue[];
     const nextRanges = [...currentRanges];
     nextRanges[index] = updatedRange;
-    form.setValue('dateRanges', nextRanges, { shouldValidate: true, shouldDirty: true });
+    form.setValue('dateRanges', nextRanges as AccessProfileFormInput['dateRanges'], {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
-  const dateRanges = form.watch('dateRanges') ?? [];
+  const watchedDateRanges = form.watch('dateRanges');
+  const dateRanges = (watchedDateRanges ?? []) as DateRangeFormValue[];
 
   const handleDialogChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -511,7 +528,7 @@ function DateRangeRow({ index, range, onChange, onRemove, disabled }: DateRangeR
           <PopoverContent className="w-auto overflow-hidden p-0" align="start">
             <Calendar
               mode="single"
-              selected={range.fromDate}
+              selected={range.fromDate ?? undefined}
               captionLayout="dropdown"
               onSelect={(date) => {
                 if (!date) {
@@ -545,7 +562,7 @@ function DateRangeRow({ index, range, onChange, onRemove, disabled }: DateRangeR
           <PopoverContent className="w-auto overflow-hidden p-0" align="start">
             <Calendar
               mode="single"
-              selected={range.toDate}
+              selected={range.toDate ?? undefined}
               captionLayout="dropdown"
               onSelect={(date) => {
                 if (!date) {
