@@ -8,6 +8,8 @@ import { searchPhotos } from '../services/photo';
 import { getTagName } from '../dictionaries';
 import { logger } from '../logger';
 import type { MyContext } from '../i18n';
+import type { PhotoItemDto } from '../types';
+import type { PhotoItemDtoPageResponse } from '../api/photobank/photoBankApi.schemas';
 
 const PAGE_SIZE = 20;
 
@@ -40,15 +42,9 @@ bot.on('inline_query', async (ctx: MyContext) => {
       pageSize: PAGE_SIZE,
     });
 
-    type Photo = {
-      id: number;
-      name?: string | null;
-      thumbnailUrl?: string | null;
-      takenDate?: string | null;
-      tags?: { tagId: number }[];
-    };
-    const data = resp as { photos?: Photo[]; items?: Photo[] };
-    const items = data.photos ?? data.items ?? [];
+    const pageItems = resp.items ?? undefined;
+    const legacyItems = hasLegacyPhotos(resp) ? resp.photos ?? [] : undefined;
+    const items: PhotoItemDto[] = pageItems ?? legacyItems ?? [];
 
     const results: InlineQueryResult[] = items.map(
       (p): InlineQueryResultPhoto => ({
@@ -59,7 +55,11 @@ bot.on('inline_query', async (ctx: MyContext) => {
         title: p.name ?? `#${p.id}`,
         description: [
           formatDate(p.takenDate),
-          (p.tags ?? []).slice(0, 3).map(t => getTagName(t.tagId)).join(', '),
+          (p.tags ?? [])
+            .slice(0, 3)
+            .map((tagId) => getTagName(tagId))
+            .filter(Boolean)
+            .join(', '),
         ]
           .filter(Boolean)
           .join(' • '),
@@ -110,3 +110,9 @@ bot.on('inline_query', async (ctx: MyContext) => {
     );
   }
 });
+
+function hasLegacyPhotos(
+  response: PhotoItemDtoPageResponse,
+): response is PhotoItemDtoPageResponse & { photos?: PhotoItemDto[] | null } {
+  return 'photos' in response;
+}
