@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ public class AuthControllerTests
         await using var db = TestDbFactory.CreateInMemory();
         var controller = CreateController(db, serviceKey: "expected-key", presentedKey: "wrong-key");
 
-        var result = await controller.TelegramExchange(new AuthController.TelegramExchangeRequest(123, "user"));
+        var result = await controller.TelegramExchange(new AuthController.TelegramExchangeRequest("123", "user"));
 
         var problemResult = result.Should().BeOfType<ObjectResult>().Which;
         problemResult.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
@@ -50,7 +51,7 @@ public class AuthControllerTests
         await using var db = TestDbFactory.CreateInMemory();
         var controller = CreateController(db, serviceKey: "expected-key", presentedKey: "expected-key");
 
-        var result = await controller.TelegramExchange(new AuthController.TelegramExchangeRequest(456, "user"));
+        var result = await controller.TelegramExchange(new AuthController.TelegramExchangeRequest("456", "user"));
 
         var problemResult = result.Should().BeOfType<ObjectResult>().Which;
         problemResult.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
@@ -122,7 +123,10 @@ public class AuthControllerTests
 
         controller.ControllerContext.HttpContext!.Request.Headers["X-Service-Key"] = "expected-key";
 
-        var result = await controller.TelegramExchange(new AuthController.TelegramExchangeRequest(user.TelegramUserId!.Value, user.UserName));
+        var result = await controller.TelegramExchange(
+            new AuthController.TelegramExchangeRequest(
+                user.TelegramUserId!.Value.ToString(CultureInfo.InvariantCulture),
+                user.UserName));
 
         result.Should().BeOfType<OkObjectResult>();
 

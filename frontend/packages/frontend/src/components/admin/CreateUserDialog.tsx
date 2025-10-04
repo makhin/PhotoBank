@@ -38,7 +38,21 @@ const formSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   phoneNumber: z.string().optional(),
   roles: z.array(z.enum(roles)).min(1, 'At least one role is required'),
-  telegramUserId: z.number().optional(),
+  telegramUserId: z
+    .string()
+    .optional()
+    .transform((value) => {
+      if (value === undefined) {
+        return value;
+      }
+
+      const trimmed = value.trim();
+      return trimmed.length === 0 ? '' : trimmed;
+    })
+    .refine(
+      (value) => value === undefined || value === '' || /^\d+$/.test(value),
+      { message: 'Telegram ID must contain only digits' }
+    ),
   telegramSendTimeUtc: z.string().optional(),
 });
 
@@ -58,7 +72,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       password: '',
       phoneNumber: '',
       roles: ['User'],
-      telegramUserId: undefined,
+      telegramUserId: '',
       telegramSendTimeUtc: '08:00:00',
     },
   });
@@ -200,12 +214,13 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
                 <FormItem>
                   <FormLabel className="text-sm font-medium">Telegram User ID</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="number"
-                      placeholder="123456789" 
+                    <Input
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="123456789"
                       className="h-11 text-base"
-                      value={field.value || ''}
-                      onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                      value={field.value ?? ''}
+                      onChange={(event) => field.onChange(event.target.value)}
                     />
                   </FormControl>
                   <FormMessage />

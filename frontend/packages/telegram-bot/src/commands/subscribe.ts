@@ -14,7 +14,7 @@ type SubscriptionInfo = {
   from: NonNullable<MyContext['from']>;
 };
 
-export const subscriptions = new Map<number, SubscriptionInfo>();
+export const subscriptions = new Map<string, SubscriptionInfo>();
 
 const DEFAULT_LOCALE = 'en';
 
@@ -32,10 +32,10 @@ function normalizeSubscriptionTime(value: string | null | undefined): string | n
 
 async function buildFromSnapshot(
   bot: Bot<MyContext>,
-  chatId: number,
+  chatId: string,
 ): Promise<NonNullable<MyContext['from']>> {
   const base: NonNullable<MyContext['from']> = {
-    id: chatId,
+    id: chatId as unknown as number,
     is_bot: false,
     first_name: 'Telegram user',
   } as NonNullable<MyContext['from']>;
@@ -64,7 +64,7 @@ async function buildFromSnapshot(
 }
 
 function isValidSubscription(entry: TelegramSubscriptionDto | undefined): entry is TelegramSubscriptionDto {
-  return !!entry && typeof entry.telegramUserId === 'number' && Number.isFinite(entry.telegramUserId);
+  return !!entry && typeof entry.telegramUserId === 'string' && /^\d+$/.test(entry.telegramUserId);
 }
 
 export function parseSubscribeTime(text?: string): string | null {
@@ -98,7 +98,7 @@ export async function subscribeCommand(ctx: MyContext) {
   await updateUser(ctx, dto);
   const locale = await ctx.i18n.getLocale();
   const fromSnapshot: NonNullable<MyContext['from']> = { ...ctx.from };
-  subscriptions.set(ctx.chat.id, { time, locale, from: fromSnapshot });
+  subscriptions.set(ctx.chat.id.toString(), { time, locale, from: fromSnapshot });
   await ctx.reply(ctx.t('subscription-confirmed', { time }));
 }
 

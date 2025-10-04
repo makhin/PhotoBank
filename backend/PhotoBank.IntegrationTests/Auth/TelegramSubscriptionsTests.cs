@@ -149,12 +149,12 @@ public class TelegramSubscriptionsTests
         {
             new TelegramSubscriptionDto
             {
-                TelegramUserId = 123456789,
+                TelegramUserId = "9007199254740993",
                 TelegramSendTimeUtc = TimeSpan.FromHours(8)
             },
             new TelegramSubscriptionDto
             {
-                TelegramUserId = 987654321,
+                TelegramUserId = "987654321",
                 TelegramSendTimeUtc = TimeSpan.FromHours(9)
             }
         }, options => options.WithStrictOrdering());
@@ -169,7 +169,7 @@ public class TelegramSubscriptionsTests
         {
             UserName = "alice@example.com",
             Email = "alice@example.com",
-            TelegramUserId = 123456789,
+            TelegramUserId = 9_007_199_254_740_993,
             TelegramSendTimeUtc = TimeSpan.FromHours(8)
         };
 

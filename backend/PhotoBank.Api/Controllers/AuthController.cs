@@ -1,14 +1,16 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Http;
+using PhotoBank.AccessControl;
+using PhotoBank.Api.Validation;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Api;
-using PhotoBank.AccessControl;
 using PhotoBank.ViewModel.Dto;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
 
@@ -78,7 +80,7 @@ public class AuthController(
             Id = user.Id,
             Email = user.Email ?? string.Empty,
             PhoneNumber = user.PhoneNumber,
-            TelegramUserId = user.TelegramUserId,
+            TelegramUserId = user.TelegramUserId?.ToString(CultureInfo.InvariantCulture),
             TelegramSendTimeUtc = user.TelegramSendTimeUtc,
             Roles = roles.ToArray()
         });
@@ -95,9 +97,19 @@ public class AuthController(
             return NotFound();
 
         user.PhoneNumber = dto.PhoneNumber ?? user.PhoneNumber;
-        if (dto.TelegramUserId.HasValue)
+        if (dto.TelegramUserId is not null)
         {
-            user.TelegramUserId = dto.TelegramUserId;
+            if (!TelegramUserIdParser.TryParse(dto.TelegramUserId, out var parsedTelegramUserId, out var error))
+            {
+                if (!string.IsNullOrEmpty(error))
+                {
+                    ModelState.AddModelError(nameof(dto.TelegramUserId), error);
+                }
+
+                return ValidationProblem(ModelState);
+            }
+
+            user.TelegramUserId = parsedTelegramUserId;
         }
         user.TelegramSendTimeUtc = dto.TelegramSendTimeUtc ?? user.TelegramSendTimeUtc;
         var result = await userManager.UpdateAsync(user);
@@ -107,7 +119,7 @@ public class AuthController(
         return Ok();
     }
 
-    public record TelegramExchangeRequest(long TelegramUserId, string? Username);
+    public record TelegramExchangeRequest(string TelegramUserId, string? Username);
     public record TelegramExchangeResponse(string AccessToken, int ExpiresIn);
 
     [HttpGet("telegram/subscriptions")]
@@ -128,7 +140,7 @@ public class AuthController(
             .OrderBy(u => u.TelegramSendTimeUtc)
             .Select(u => new TelegramSubscriptionDto
             {
-                TelegramUserId = u.TelegramUserId!.Value,
+                TelegramUserId = u.TelegramUserId!.Value.ToString(CultureInfo.InvariantCulture),
                 TelegramSendTimeUtc = u.TelegramSendTimeUtc!.Value
             })
             .ToListAsync();
@@ -149,7 +161,17 @@ public class AuthController(
             return unauthorized;
         }
 
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.TelegramUserId == req.TelegramUserId);
+        if (!TelegramUserIdParser.TryParse(req.TelegramUserId, out var parsedTelegramUserId, out var error) ||
+            parsedTelegramUserId is null)
+        {
+            ModelState.AddModelError(
+                nameof(req.TelegramUserId),
+                string.IsNullOrEmpty(error) ? "Telegram user ID is required." : error);
+
+            return ValidationProblem(ModelState);
+        }
+
+        var user = await userManager.Users.FirstOrDefaultAsync(u => u.TelegramUserId == parsedTelegramUserId.Value);
         if (user is null)
         {
             var forbidden = Problem(
