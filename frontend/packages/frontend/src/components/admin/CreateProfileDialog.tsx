@@ -52,6 +52,9 @@ type AccessProfileDraft = Partial<
   dateRanges?: Array<Partial<AccessProfileDateRangeAllowDto>>;
 };
 
+type DateRangeFormValue = NonNullable<AccessProfileFormValues['dateRanges']>[number];
+type DateRangeDraft = Partial<DateRangeFormValue>;
+
 interface CreateProfileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -115,16 +118,17 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
     const normalizedDateRanges =
       values.dateRanges
         ?.filter(
-          (
-            range
-          ): range is { fromDate: string; toDate: string } =>
-            Boolean(range.fromDate) && Boolean(range.toDate)
+          (range): range is DateRangeFormValue =>
+            range.fromDate instanceof Date &&
+            !Number.isNaN(range.fromDate.getTime()) &&
+            range.toDate instanceof Date &&
+            !Number.isNaN(range.toDate.getTime())
         )
         .map(
           (range) =>
             ({
-              fromDate: new Date(range.fromDate),
-              toDate: new Date(range.toDate),
+              fromDate: format(range.fromDate, 'yyyy-MM-dd') as unknown as Date,
+              toDate: format(range.toDate, 'yyyy-MM-dd') as unknown as Date,
             }) satisfies Partial<AccessProfileDateRangeAllowDto>
         ) ?? [];
 
@@ -149,20 +153,24 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
     const oneYearLater = new Date();
     oneYearLater.setFullYear(today.getFullYear() + 1);
 
-    const newRange = {
-      fromDate: format(today, 'yyyy-MM-dd'),
-      toDate: format(oneYearLater, 'yyyy-MM-dd'),
+    const newRange: DateRangeFormValue = {
+      fromDate: today,
+      toDate: oneYearLater,
     };
 
-    const currentRanges = form.getValues('dateRanges') ?? [];
-    const updatedRanges = [...currentRanges, newRange];
-    form.setValue('dateRanges', updatedRanges, { shouldValidate: true });
+    const currentRanges = (form.getValues('dateRanges') ?? []) as DateRangeDraft[];
+    const updatedRanges: DateRangeDraft[] = [...currentRanges, newRange];
+    form.setValue('dateRanges', updatedRanges as AccessProfileFormValues['dateRanges'], {
+      shouldValidate: true,
+    });
   };
 
   const removeDateRange = (index: number) => {
-    const currentRanges = form.getValues('dateRanges') ?? [];
+    const currentRanges = (form.getValues('dateRanges') ?? []) as DateRangeDraft[];
     const updatedRanges = currentRanges.filter((_, i) => i !== index);
-    form.setValue('dateRanges', updatedRanges, { shouldValidate: true });
+    form.setValue('dateRanges', updatedRanges as AccessProfileFormValues['dateRanges'], {
+      shouldValidate: true,
+    });
   };
 
   const updateDateRange = (
@@ -170,12 +178,29 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
     key: 'fromDate' | 'toDate',
     value: string
   ) => {
-    const currentRanges = form.getValues('dateRanges') ?? [];
-    const updatedRanges = currentRanges.map((range, i) =>
-      i === index ? { ...range, [key]: value } : range
-    );
+    const currentRanges = (form.getValues('dateRanges') ?? []) as DateRangeDraft[];
+    const updatedRanges: DateRangeDraft[] = currentRanges.map((range, i) => {
+      if (i !== index) {
+        return range;
+      }
 
-    form.setValue('dateRanges', updatedRanges, { shouldValidate: true, shouldDirty: true });
+      if (!value) {
+        return { ...range, [key]: undefined };
+      }
+
+      const parsedValue = new Date(value);
+
+      if (Number.isNaN(parsedValue.getTime())) {
+        return range;
+      }
+
+      return { ...range, [key]: parsedValue };
+    });
+
+    form.setValue('dateRanges', updatedRanges as AccessProfileFormValues['dateRanges'], {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const dateRanges = form.watch('dateRanges') ?? [];
@@ -381,7 +406,11 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                             <Input
                               id={`date-range-from-${index}`}
                               type="date"
-                              value={range.fromDate ?? ''}
+                              value={
+                                range.fromDate instanceof Date
+                                  ? format(range.fromDate, 'yyyy-MM-dd')
+                                  : ''
+                              }
                               onChange={(event) =>
                                 updateDateRange(index, 'fromDate', event.target.value)
                               }
@@ -394,7 +423,11 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                             <Input
                               id={`date-range-to-${index}`}
                               type="date"
-                              value={range.toDate ?? ''}
+                              value={
+                                range.toDate instanceof Date
+                                  ? format(range.toDate, 'yyyy-MM-dd')
+                                  : ''
+                              }
                               onChange={(event) =>
                                 updateDateRange(index, 'toDate', event.target.value)
                               }
