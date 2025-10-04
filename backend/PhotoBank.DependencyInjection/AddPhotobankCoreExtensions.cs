@@ -17,6 +17,7 @@ public static partial class ServiceCollectionExtensions
 {
     public static IServiceCollection AddPhotobankCore(this IServiceCollection services, IConfiguration? configuration = null)
     {
+        services.AddLogging();
         services.AddMemoryCache();
         services.AddSingleton<IMinioClient>(sp =>
         {

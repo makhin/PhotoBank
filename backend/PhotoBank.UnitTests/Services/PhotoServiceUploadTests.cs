@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging.Abstractions;
 using Minio;
 using Moq;
 using NUnit.Framework;
@@ -63,6 +64,7 @@ namespace PhotoBank.UnitTests.Services
                 new Repository<PersonGroup>(provider),
                 _mapper,
                 new MemoryCache(new MemoryCacheOptions()),
+                NullLogger<PhotoService>.Instance,
                 new DummyCurrentUser(),
                 referenceDataService.Object,
                 normalizer.Object,

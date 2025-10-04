@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging.Abstractions;
 using Minio;
 using Minio.DataModel.Args;
 using Moq;
@@ -160,6 +161,7 @@ public class PhotoServiceGetFacesPageAsyncTests
             new Repository<PersonGroup>(provider),
             _mapper,
             new MemoryCache(new MemoryCacheOptions()),
+            NullLogger<PhotoService>.Instance,
             new DummyCurrentUser(),
             referenceDataService.Object,
             normalizer.Object,
