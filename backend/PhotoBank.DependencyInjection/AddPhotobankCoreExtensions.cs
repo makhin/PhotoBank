@@ -6,6 +6,7 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Internal;
+using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Photos;
 using PhotoBank.Services.Photos.Admin;
 using PhotoBank.Services.Photos.Faces;
@@ -52,6 +53,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IPhotoAdminService, PhotoAdminService>();
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<ISearchReferenceDataService, SearchReferenceDataService>();
+        services.AddSingleton<IActiveEnricherProvider, ActiveEnricherProvider>();
         services.AddPhotoEvents();
         if (configuration != null)
         {
