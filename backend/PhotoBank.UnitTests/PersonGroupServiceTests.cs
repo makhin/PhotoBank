@@ -41,7 +41,7 @@ public class PersonGroupServiceTests
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddMemoryCache();
         services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
-        services.AddScoped<ICurrentUser, DummyCurrentUser>();
+        services.AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new DummyCurrentUser()));
         services.AddScoped<ISearchReferenceDataService, SearchReferenceDataService>();
         _provider = services.BuildServiceProvider();
 
@@ -56,7 +56,7 @@ public class PersonGroupServiceTests
             .ReturnsAsync((FilterDto f, CancellationToken _) => f);
 
         var mapper = _provider.GetRequiredService<IMapper>();
-        var currentUser = _provider.GetRequiredService<ICurrentUser>();
+        var currentUserAccessor = _provider.GetRequiredService<ICurrentUserAccessor>();
         var referenceDataService = _provider.GetRequiredService<ISearchReferenceDataService>();
         var photoRepository = _provider.GetRequiredService<IRepository<Photo>>();
         var personRepository = _provider.GetRequiredService<IRepository<Person>>();
@@ -79,7 +79,7 @@ public class PersonGroupServiceTests
             db,
             photoRepository,
             mapper,
-            currentUser,
+            currentUserAccessor,
             referenceDataService,
             normalizer.Object,
             photoFilterSpecification,
@@ -175,6 +175,21 @@ public class PersonGroupServiceTests
         await _service.RemovePersonFromGroupAsync(1, 1);
 
         cache.TryGetValue(CacheKeys.PersonGroups, out _).Should().BeFalse();
+    }
+
+    private sealed class TestCurrentUserAccessor : ICurrentUserAccessor
+    {
+        private readonly ICurrentUser _user;
+
+        public TestCurrentUserAccessor(ICurrentUser user)
+        {
+            _user = user;
+        }
+
+        public ValueTask<ICurrentUser> GetCurrentUserAsync(CancellationToken ct = default)
+            => ValueTask.FromResult(_user);
+
+        public ICurrentUser CurrentUser => _user;
     }
 }
 

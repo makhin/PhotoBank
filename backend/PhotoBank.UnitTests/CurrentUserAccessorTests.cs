@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Moq;
@@ -12,10 +13,10 @@ using PhotoBank.AccessControl;
 namespace PhotoBank.UnitTests;
 
 [TestFixture]
-public class CurrentUserTests
+public class CurrentUserAccessorTests
 {
     [Test]
-    public void Constructor_ShouldPopulateProperties_WhenAuthenticated()
+    public async Task GetCurrentUserAsync_ShouldPopulateProperties_WhenAuthenticated()
     {
         var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "auth");
         var principal = new ClaimsPrincipal(identity);
@@ -32,9 +33,11 @@ public class CurrentUserTests
 
         var provider = new Mock<IEffectiveAccessProvider>();
         provider.Setup(p => p.GetAsync("user1", principal, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(access);
+            .ReturnsAsync(access);
 
-        var current = new CurrentUser(http.Object, provider.Object);
+        var accessor = new HttpContextCurrentUserAccessor(http.Object, provider.Object);
+
+        var current = await accessor.GetCurrentUserAsync();
 
         current.UserId.Should().Be("user1");
         current.IsAdmin.Should().BeTrue();
@@ -45,7 +48,7 @@ public class CurrentUserTests
     }
 
     [Test]
-    public void Constructor_ShouldReturnAnonymousUser_WhenUnauthenticated()
+    public async Task GetCurrentUserAsync_ShouldReturnAnonymousUser_WhenUnauthenticated()
     {
         var principal = new ClaimsPrincipal(new ClaimsIdentity());
         var httpContext = new DefaultHttpContext { User = principal };
@@ -54,7 +57,9 @@ public class CurrentUserTests
 
         var provider = new Mock<IEffectiveAccessProvider>(MockBehavior.Strict);
 
-        var current = new CurrentUser(http.Object, provider.Object);
+        var accessor = new HttpContextCurrentUserAccessor(http.Object, provider.Object);
+
+        var current = await accessor.GetCurrentUserAsync();
 
         current.UserId.Should().BeEmpty();
         current.IsAdmin.Should().BeFalse();
@@ -66,7 +71,7 @@ public class CurrentUserTests
     }
 
     [Test]
-    public void Constructor_ShouldFallbackToSubClaim_WhenNameIdentifierMissing()
+    public async Task GetCurrentUserAsync_ShouldFallbackToSubClaim_WhenNameIdentifierMissing()
     {
         var identity = new ClaimsIdentity(
             new[] { new Claim(JwtRegisteredClaimNames.Sub, "jwt-sub") },
@@ -85,16 +90,18 @@ public class CurrentUserTests
 
         var provider = new Mock<IEffectiveAccessProvider>();
         provider.Setup(p => p.GetAsync("jwt-sub", principal, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(access);
+            .ReturnsAsync(access);
 
-        var current = new CurrentUser(http.Object, provider.Object);
+        var accessor = new HttpContextCurrentUserAccessor(http.Object, provider.Object);
+
+        var current = await accessor.GetCurrentUserAsync();
 
         current.UserId.Should().Be("jwt-sub");
         provider.Verify(p => p.GetAsync("jwt-sub", principal, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
-    public void Constructor_ShouldThrowUnauthorized_WhenAuthenticatedWithoutIdentifier()
+    public void GetCurrentUserAsync_ShouldThrowUnauthorized_WhenAuthenticatedWithoutIdentifier()
     {
         var identity = new ClaimsIdentity(authenticationType: "auth");
         var principal = new ClaimsPrincipal(identity);
@@ -103,11 +110,71 @@ public class CurrentUserTests
         http.Setup(x => x.HttpContext).Returns(httpContext);
 
         var provider = new Mock<IEffectiveAccessProvider>(MockBehavior.Strict);
+        var accessor = new HttpContextCurrentUserAccessor(http.Object, provider.Object);
 
-        var act = () => new CurrentUser(http.Object, provider.Object);
+        Func<Task> act = () => accessor.GetCurrentUserAsync().AsTask();
 
-        act.Should().Throw<UnauthorizedAccessException>()
+        act.Should().ThrowAsync<UnauthorizedAccessException>()
             .WithMessage("Authenticated user missing identifier claim");
     }
-}
 
+    [Test]
+    public async Task GetCurrentUserAsync_ShouldCacheResultInHttpContextItems()
+    {
+        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "cached-user") }, "auth");
+        var principal = new ClaimsPrincipal(identity);
+        var httpContext = new DefaultHttpContext { User = principal };
+        var http = new Mock<IHttpContextAccessor>();
+        http.Setup(x => x.HttpContext).Returns(httpContext);
+
+        var access = new EffectiveAccess(
+            new HashSet<int>(),
+            new HashSet<int>(),
+            Array.Empty<(DateOnly, DateOnly)>(),
+            false,
+            false);
+
+        var provider = new Mock<IEffectiveAccessProvider>();
+        provider.Setup(p => p.GetAsync("cached-user", principal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(access);
+
+        var accessor = new HttpContextCurrentUserAccessor(http.Object, provider.Object);
+
+        var first = await accessor.GetCurrentUserAsync();
+        var second = accessor.CurrentUser;
+
+        first.Should().BeSameAs(second);
+        provider.Verify(p => p.GetAsync("cached-user", principal, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task GetCurrentUserAsync_ShouldNotCompleteSynchronously_WhenEffectiveAccessProviderDelays()
+    {
+        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "async-user") }, "auth");
+        var principal = new ClaimsPrincipal(identity);
+        var httpContext = new DefaultHttpContext { User = principal };
+        var http = new Mock<IHttpContextAccessor>();
+        http.Setup(x => x.HttpContext).Returns(httpContext);
+
+        var tcs = new TaskCompletionSource<EffectiveAccess>();
+
+        var provider = new Mock<IEffectiveAccessProvider>();
+        provider.Setup(p => p.GetAsync("async-user", principal, It.IsAny<CancellationToken>()))
+            .Returns(tcs.Task);
+
+        var accessor = new HttpContextCurrentUserAccessor(http.Object, provider.Object);
+
+        var task = accessor.GetCurrentUserAsync().AsTask();
+        task.IsCompleted.Should().BeFalse();
+
+        tcs.SetResult(new EffectiveAccess(
+            new HashSet<int>(),
+            new HashSet<int>(),
+            Array.Empty<(DateOnly, DateOnly)>(),
+            false,
+            false));
+
+        var result = await task;
+        result.UserId.Should().Be("async-user");
+    }
+}

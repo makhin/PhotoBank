@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using FluentAssertions;
@@ -225,13 +226,14 @@ public class SearchReferenceDataServiceTests
                 isAdmin,
                 allowedStorages,
                 allowedPersonGroupIds ?? Array.Empty<int>());
+            var accessor = new TestCurrentUserAccessor(User);
             Service = new SearchReferenceDataService(
                 personRepository,
                 tagRepository,
                 photoRepository,
                 storageRepository,
                 personGroupRepository,
-                User,
+                accessor,
                 Cache,
                 mapper);
         }
@@ -275,5 +277,20 @@ public class SearchReferenceDataServiceTests
         public void AllowStorage(int storageId) => _allowedStorageIds.Add(storageId);
 
         public void AllowPersonGroup(int groupId) => _allowedPersonGroupIds.Add(groupId);
+    }
+
+    private sealed class TestCurrentUserAccessor : ICurrentUserAccessor
+    {
+        private readonly ICurrentUser _user;
+
+        public TestCurrentUserAccessor(ICurrentUser user)
+        {
+            _user = user;
+        }
+
+        public ValueTask<ICurrentUser> GetCurrentUserAsync(CancellationToken ct = default)
+            => ValueTask.FromResult(_user);
+
+        public ICurrentUser CurrentUser => _user;
     }
 }

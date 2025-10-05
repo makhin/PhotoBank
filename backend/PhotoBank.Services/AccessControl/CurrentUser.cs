@@ -1,13 +1,27 @@
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
+using System.Linq;
 
 namespace PhotoBank.AccessControl;
 
 public sealed class CurrentUser : ICurrentUser
 {
+    private CurrentUser(
+        string userId,
+        bool isAdmin,
+        IReadOnlySet<int> allowedStorageIds,
+        IReadOnlySet<int> allowedPersonGroupIds,
+        IReadOnlyList<(DateOnly From, DateOnly To)> allowedDateRanges,
+        bool canSeeNsfw)
+    {
+        UserId = userId;
+        IsAdmin = isAdmin;
+        AllowedStorageIds = allowedStorageIds;
+        AllowedPersonGroupIds = allowedPersonGroupIds;
+        AllowedDateRanges = allowedDateRanges;
+        CanSeeNsfw = canSeeNsfw;
+    }
+
     public string UserId { get; }
     public bool IsAdmin { get; }
     public IReadOnlySet<int> AllowedStorageIds { get; }
@@ -15,39 +29,38 @@ public sealed class CurrentUser : ICurrentUser
     public IReadOnlyList<(DateOnly From, DateOnly To)> AllowedDateRanges { get; }
     public bool CanSeeNsfw { get; }
 
-    public CurrentUser(IHttpContextAccessor http, IEffectiveAccessProvider provider)
+    public static CurrentUser CreateAnonymous()
+        => new(
+            string.Empty,
+            isAdmin: false,
+            Array.Empty<int>().ToHashSet(),
+            Array.Empty<int>().ToHashSet(),
+            Array.Empty<(DateOnly From, DateOnly To)>(),
+            canSeeNsfw: false);
+
+    public static CurrentUser FromEffectiveAccess(string userId, EffectiveAccess access)
     {
-        var principal = http.HttpContext?.User ?? throw new InvalidOperationException("No HttpContext.User");
-
-        if (principal.Identity?.IsAuthenticated != true)
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            UserId = principal.Identity?.Name ?? string.Empty;
-            IsAdmin = false;
-            AllowedStorageIds = new HashSet<int>();
-            AllowedPersonGroupIds = new HashSet<int>();
-            AllowedDateRanges = Array.Empty<(DateOnly From, DateOnly To)>();
-            CanSeeNsfw = false;
-            return;
+            throw new ArgumentException("User identifier cannot be null or whitespace", nameof(userId));
         }
 
-        var identifier = principal.FindFirstValue(ClaimTypes.NameIdentifier)
-                         ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
-                         ?? principal.FindFirstValue(ClaimTypes.Name)
-                         ?? principal.Identity?.Name;
-
-        if (string.IsNullOrWhiteSpace(identifier))
+        if (access is null)
         {
-            throw new UnauthorizedAccessException("Authenticated user missing identifier claim");
+            throw new ArgumentNullException(nameof(access));
         }
 
-        UserId = identifier;
-
-        var eff = provider.GetAsync(UserId, principal).GetAwaiter().GetResult();
-
-        IsAdmin = eff.IsAdmin;
-        AllowedStorageIds = eff.StorageIds;
-        AllowedPersonGroupIds = eff.PersonGroupIds;
-        AllowedDateRanges = eff.DateRanges;
-        CanSeeNsfw = eff.CanSeeNsfw;
+        return new CurrentUser(
+            userId,
+            access.IsAdmin,
+            CloneSet(access.StorageIds),
+            CloneSet(access.PersonGroupIds),
+            access.DateRanges?.ToList() ?? new List<(DateOnly From, DateOnly To)>(),
+            access.CanSeeNsfw);
     }
+
+    private static IReadOnlySet<int> CloneSet(IReadOnlySet<int> source)
+        => source is HashSet<int> hashSet
+            ? new HashSet<int>(hashSet)
+            : source?.ToHashSet() ?? new HashSet<int>();
 }

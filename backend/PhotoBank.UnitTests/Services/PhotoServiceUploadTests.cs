@@ -88,12 +88,13 @@ namespace PhotoBank.UnitTests.Services
             var personGroupRepository = new Repository<PersonGroup>(provider);
 
             var photoFilterSpecification = new PhotoFilterSpecification(context);
+            var currentUserAccessor = new TestCurrentUserAccessor(new DummyCurrentUser());
 
             var photoQueryService = new PhotoQueryService(
                 context,
                 photoRepository,
                 _mapper,
-                new DummyCurrentUser(),
+                currentUserAccessor,
                 referenceDataService.Object,
                 normalizer.Object,
                 photoFilterSpecification,
@@ -232,6 +233,21 @@ namespace PhotoBank.UnitTests.Services
             new FileInfo(renamedPath).Length.Should().Be(bytes2.Length);
 
             Directory.Delete(tempFolder, true);
+        }
+
+        private sealed class TestCurrentUserAccessor : ICurrentUserAccessor
+        {
+            private readonly ICurrentUser _user;
+
+            public TestCurrentUserAccessor(ICurrentUser user)
+            {
+                _user = user;
+            }
+
+            public ValueTask<ICurrentUser> GetCurrentUserAsync(CancellationToken ct = default)
+                => ValueTask.FromResult(_user);
+
+            public ICurrentUser CurrentUser => _user;
         }
     }
 }

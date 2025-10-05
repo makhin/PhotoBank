@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using DotNet.Testcontainers.Builders;
 using FluentAssertions;
@@ -65,7 +66,7 @@ public class GetPersonsIntegrationTests
             }));
         services
             .AddPhotobankCore(_config)
-            .AddScoped<ICurrentUser, DummyCurrentUser>()
+            .AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new DummyCurrentUser()))
             .AddPhotobankApi(_config)
             .AddPhotobankCors();
         services.AddLogging();
@@ -165,7 +166,7 @@ public class GetPersonsIntegrationTests
 
         services
             .AddPhotobankCore(_config)
-            .AddScoped<ICurrentUser>(_ => new NonAdminTestUser("user", allowedPersonGroupIds))
+            .AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new NonAdminTestUser("user", allowedPersonGroupIds)))
             .AddPhotobankApi(_config)
             .AddPhotobankCors();
 
@@ -176,6 +177,21 @@ public class GetPersonsIntegrationTests
     }
 
     private sealed record PersonSeedResult(int AllowedGroupId, int AllowedPersonId, int BlockedPersonId, int UngroupedPersonId);
+
+    private sealed class TestCurrentUserAccessor : ICurrentUserAccessor
+    {
+        private readonly ICurrentUser _user;
+
+        public TestCurrentUserAccessor(ICurrentUser user)
+        {
+            _user = user;
+        }
+
+        public ValueTask<ICurrentUser> GetCurrentUserAsync(CancellationToken ct = default)
+            => ValueTask.FromResult(_user);
+
+        public ICurrentUser CurrentUser => _user;
+    }
 
     private sealed class NonAdminTestUser : ICurrentUser
     {
