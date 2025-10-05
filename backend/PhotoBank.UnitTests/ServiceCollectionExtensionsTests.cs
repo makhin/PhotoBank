@@ -192,6 +192,7 @@ public class ServiceCollectionExtensionsTests
         AssertScopedRegistration<IFaceStorageService, FaceStorageService>(services);
         AssertScopedRegistration<MinioObjectService, MinioObjectService>(services);
         AssertScopedRegistration<ISearchFilterNormalizer, SearchFilterNormalizer>(services);
+        AssertScopedRegistration<PhotoFilterSpecification, PhotoFilterSpecification>(services);
         AssertScopedRegistration<IPhotoService, PhotoService>(services);
         AssertScopedRegistration<ISearchReferenceDataService, SearchReferenceDataService>(services);
         AssertHttpClientRegistration<ITranslatorService, TranslatorService>(services);
@@ -205,6 +206,7 @@ public class ServiceCollectionExtensionsTests
             typeof(IFaceStorageService),
             typeof(MinioObjectService),
             typeof(ISearchFilterNormalizer),
+            typeof(PhotoFilterSpecification),
             typeof(IPhotoService),
             typeof(ISearchReferenceDataService));
 

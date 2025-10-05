@@ -34,6 +34,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IFaceStorageService, FaceStorageService>();
         services.AddScoped<MinioObjectService>();
         services.AddScoped<ISearchFilterNormalizer, SearchFilterNormalizer>();
+        services.AddScoped<PhotoFilterSpecification>();
         services.AddScoped<IPhotoQueryService, PhotoQueryService>();
         services.AddScoped<IPersonDirectoryService, PersonDirectoryService>();
         services.AddScoped<IPersonGroupService, PersonGroupService>();

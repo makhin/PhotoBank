@@ -163,6 +163,8 @@ public class PhotoServiceGetFacesPageAsyncTests
         var personGroupRepository = new Repository<PersonGroup>(provider);
         var s3Options = Options.Create(new S3Options { Bucket = "bucket", UrlExpirySeconds = 60 });
 
+        var photoFilterSpecification = new PhotoFilterSpecification(context);
+
         var photoQueryService = new PhotoQueryService(
             context,
             photoRepository,
@@ -173,6 +175,7 @@ public class PhotoServiceGetFacesPageAsyncTests
             new DummyCurrentUser(),
             referenceDataService.Object,
             normalizer.Object,
+            photoFilterSpecification,
             minioClient,
             s3Options);
 

@@ -44,6 +44,7 @@ public class PhotoQueryService : IPhotoQueryService
     private readonly ICurrentUser _currentUser;
     private readonly ISearchReferenceDataService _searchReferenceDataService;
     private readonly ISearchFilterNormalizer _searchFilterNormalizer;
+    private readonly PhotoFilterSpecification _photoFilterSpecification;
     private readonly IMinioClient _minioClient;
     private readonly S3Options _s3;
 
@@ -57,6 +58,7 @@ public class PhotoQueryService : IPhotoQueryService
         ICurrentUser currentUser,
         ISearchReferenceDataService searchReferenceDataService,
         ISearchFilterNormalizer searchFilterNormalizer,
+        PhotoFilterSpecification photoFilterSpecification,
         IMinioClient minioClient,
         IOptions<S3Options> s3Options)
     {
@@ -69,6 +71,7 @@ public class PhotoQueryService : IPhotoQueryService
         _currentUser = currentUser;
         _searchReferenceDataService = searchReferenceDataService;
         _searchFilterNormalizer = searchFilterNormalizer;
+        _photoFilterSpecification = photoFilterSpecification;
         _minioClient = minioClient;
         _s3 = s3Options?.Value ?? new S3Options();
     }
@@ -77,8 +80,7 @@ public class PhotoQueryService : IPhotoQueryService
     {
         filter = await _searchFilterNormalizer.NormalizeAsync(filter, ct);
 
-        var query = ApplyFilter(_photoRepository.GetAll().AsNoTracking(), filter)
-            .MaybeApplyAcl(_currentUser);
+        var query = _photoFilterSpecification.Build(filter, _currentUser);
 
         var count = await query.CountAsync(ct);
 
@@ -234,81 +236,6 @@ public class PhotoQueryService : IPhotoQueryService
         await FillUrlsAsync(items);
 
         return items;
-    }
-
-    private IQueryable<Photo> ApplyFilter(IQueryable<Photo> query, FilterDto filter)
-    {
-        if (filter.IsBW is true) query = query.Where(p => p.IsBW);
-        if (filter.IsAdultContent is true) query = query.Where(p => p.IsAdultContent);
-        if (filter.IsRacyContent is true) query = query.Where(p => p.IsRacyContent);
-        if (filter.TakenDateFrom.HasValue)
-        {
-            var from = filter.TakenDateFrom.Value.Date;
-            query = query.Where(p => p.TakenDate.HasValue && p.TakenDate >= from);
-        }
-
-        if (filter.TakenDateTo.HasValue)
-        {
-            var toExclusive = filter.TakenDateTo.Value.Date.AddDays(1);
-            query = query.Where(p => p.TakenDate.HasValue && p.TakenDate < toExclusive);
-        }
-
-        if (filter.ThisDay != null)
-        {
-            query = query.Where(p => p.TakenDate.HasValue &&
-                                     p.TakenDate.Value.Day == filter.ThisDay.Day &&
-                                     p.TakenDate.Value.Month == filter.ThisDay.Month);
-        }
-
-        if (filter.Storages?.Any() == true)
-        {
-            var storages = filter.Storages.ToList();
-            query = query.Where(p => storages.Contains(p.StorageId));
-
-            if (!string.IsNullOrEmpty(filter.RelativePath))
-            {
-                query = query.Where(p => p.RelativePath == filter.RelativePath);
-            }
-        }
-
-        if (!string.IsNullOrEmpty(filter.Caption))
-        {
-            query = query.Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption!)));
-        }
-
-        if (filter.Persons?.Any() == true)
-        {
-            var personIds = filter.Persons.Distinct().ToArray();
-            var requiredPersons = personIds.Length;
-
-            if (requiredPersons > 0)
-            {
-                query = query.Where(p =>
-                    _db.Faces
-                        .Where(f => f.PhotoId == p.Id && f.PersonId != null && personIds.Contains(f.PersonId.Value))
-                        .Select(f => f.PersonId!.Value)
-                        .Distinct()
-                        .Count() == requiredPersons);
-            }
-        }
-
-        if (filter.Tags?.Any() == true)
-        {
-            var tagIds = filter.Tags.Distinct().ToArray();
-            var requiredTags = tagIds.Length;
-
-            if (requiredTags > 0)
-            {
-                query = query.Where(p =>
-                    _db.PhotoTags
-                        .Where(pt => pt.PhotoId == p.Id && tagIds.Contains(pt.TagId))
-                        .Select(pt => pt.TagId)
-                        .Distinct()
-                        .Count() == requiredTags);
-            }
-        }
-
-        return query;
     }
 
     private async Task FillUrlsAsync(PhotoDto dto)
