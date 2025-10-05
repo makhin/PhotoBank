@@ -72,6 +72,73 @@ public class SearchReferenceDataServiceTests
     }
 
     [Test]
+    public async Task GetPersonsAsync_ShouldRespectAclAndCacheUntilInvalidated()
+    {
+        using var fixture = new ReferenceServiceFixture(
+            isAdmin: false,
+            allowedStorages: new[] { 1 },
+            allowedPersonGroupIds: new[] { 1 });
+        var context = fixture.Context;
+        var service = fixture.Service;
+        var user = fixture.User;
+
+        var groupOne = new PersonGroup { Id = 1, Name = "Group One" };
+        var groupTwo = new PersonGroup { Id = 2, Name = "Group Two" };
+        context.PersonGroups.AddRange(groupOne, groupTwo);
+
+        context.Persons.AddRange(
+            new Person
+            {
+                Id = 1,
+                Name = "Alice",
+                ExternalGuid = Guid.NewGuid(),
+                Faces = new List<Face>(),
+                PersonGroups = new List<PersonGroup> { groupOne }
+            },
+            new Person
+            {
+                Id = 2,
+                Name = "Charlie",
+                ExternalGuid = Guid.NewGuid(),
+                Faces = new List<Face>(),
+                PersonGroups = new List<PersonGroup> { groupTwo }
+            });
+        await context.SaveChangesAsync();
+
+        var initial = await service.GetPersonsAsync();
+        initial.Select(p => p.Name).Should().Equal("Alice");
+
+        context.Persons.AddRange(
+            new Person
+            {
+                Id = 3,
+                Name = "Aaron",
+                ExternalGuid = Guid.NewGuid(),
+                Faces = new List<Face>(),
+                PersonGroups = new List<PersonGroup> { groupOne }
+            },
+            new Person
+            {
+                Id = 4,
+                Name = "Bob",
+                ExternalGuid = Guid.NewGuid(),
+                Faces = new List<Face>(),
+                PersonGroups = new List<PersonGroup> { groupTwo }
+            });
+        await context.SaveChangesAsync();
+
+        user.AllowPersonGroup(2);
+
+        var cached = await service.GetPersonsAsync();
+        cached.Select(p => p.Name).Should().Equal("Alice");
+
+        service.InvalidatePersons();
+
+        var refreshed = await service.GetPersonsAsync();
+        refreshed.Select(p => p.Name).Should().Equal("Aaron", "Alice", "Bob", "Charlie");
+    }
+
+    [Test]
     public async Task GetPersonGroupsAsync_ShouldReturnSortedAndRefreshOnInvalidation()
     {
         using var fixture = new ReferenceServiceFixture(isAdmin: true, allowedStorages: Array.Empty<int>());
@@ -129,7 +196,10 @@ public class SearchReferenceDataServiceTests
         private readonly ServiceProvider _provider;
         private readonly IServiceScope _scope;
 
-        public ReferenceServiceFixture(bool isAdmin, IEnumerable<int> allowedStorages)
+        public ReferenceServiceFixture(
+            bool isAdmin,
+            IEnumerable<int> allowedStorages,
+            IEnumerable<int>? allowedPersonGroupIds = null)
         {
             var services = new ServiceCollection();
             services.AddLogging();
@@ -150,7 +220,11 @@ public class SearchReferenceDataServiceTests
             var storageRepository = _scope.ServiceProvider.GetRequiredService<IRepository<Storage>>();
             var personGroupRepository = _scope.ServiceProvider.GetRequiredService<IRepository<PersonGroup>>();
 
-            User = new TestCurrentUser(isAdmin ? "admin" : "user", isAdmin, allowedStorages);
+            User = new TestCurrentUser(
+                isAdmin ? "admin" : "user",
+                isAdmin,
+                allowedStorages,
+                allowedPersonGroupIds ?? Array.Empty<int>());
             Service = new SearchReferenceDataService(
                 personRepository,
                 tagRepository,
@@ -177,13 +251,18 @@ public class SearchReferenceDataServiceTests
     private sealed class TestCurrentUser : ICurrentUser
     {
         private readonly HashSet<int> _allowedStorageIds;
-        private readonly HashSet<int> _allowedPersonGroupIds = [];
+        private readonly HashSet<int> _allowedPersonGroupIds;
 
-        public TestCurrentUser(string userId, bool isAdmin, IEnumerable<int> allowedStorages)
+        public TestCurrentUser(
+            string userId,
+            bool isAdmin,
+            IEnumerable<int> allowedStorages,
+            IEnumerable<int> allowedPersonGroupIds)
         {
             UserId = userId;
             IsAdmin = isAdmin;
             _allowedStorageIds = new HashSet<int>(allowedStorages);
+            _allowedPersonGroupIds = new HashSet<int>(allowedPersonGroupIds);
         }
 
         public string UserId { get; }
@@ -194,5 +273,7 @@ public class SearchReferenceDataServiceTests
         public bool CanSeeNsfw => true;
 
         public void AllowStorage(int storageId) => _allowedStorageIds.Add(storageId);
+
+        public void AllowPersonGroup(int groupId) => _allowedPersonGroupIds.Add(groupId);
     }
 }
