@@ -44,6 +44,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IUserProfileService, UserProfileService>();
         services.AddScoped<IAdminUserService, AdminUserService>();
         services.AddScoped<IEffectiveAccessProvider, EffectiveAccessProvider>();
+        services.AddScoped<IAccessProfileService, AccessProfileService>();
         services.TryAddScoped<ICurrentUser, CurrentUser>();
         services.AddDefaultIdentity<ApplicationUser>()
             .AddRoles<IdentityRole>()

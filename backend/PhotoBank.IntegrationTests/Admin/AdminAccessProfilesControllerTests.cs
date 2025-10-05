@@ -34,6 +34,7 @@ public class AdminAccessProfilesControllerTests
     private ApiWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
     private JsonSerializerOptions _jsonOptions = null!;
+    private Mock<IEffectiveAccessProvider> _effMock = null!;
 
     [OneTimeSetUp]
     public async Task OneTimeSetup()
@@ -121,7 +122,8 @@ public class AdminAccessProfilesControllerTests
             {
                 services.AddTestAuthentication();
                 services.RemoveAll<IEffectiveAccessProvider>();
-                services.AddSingleton(Mock.Of<IEffectiveAccessProvider>());
+                _effMock = new Mock<IEffectiveAccessProvider>();
+                services.AddSingleton(_effMock.Object);
             });
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
         {
@@ -384,6 +386,123 @@ public class AdminAccessProfilesControllerTests
         var response = await _client.SendAsync(request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Test]
+    public async Task AssignUser_WhenNewAssignment_InvalidatesEffectiveAccess()
+    {
+        var seeded = await SeedProfileAsync(new AccessProfile
+        {
+            Name = "Theta",
+            Description = "Assign",
+            Flags_CanSeeNsfw = false
+        });
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/admin/access-profiles/{seeded.Id}/assign-user/user-assign");
+        AddAdminHeaders(request);
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        _effMock.Verify(x => x.Invalidate("user-assign"), Times.Once);
+    }
+
+    [Test]
+    public async Task UnassignUser_WhenAssignmentExists_InvalidatesEffectiveAccess()
+    {
+        var seeded = await SeedProfileAsync(new AccessProfile
+        {
+            Name = "Iota",
+            Description = "Unassign",
+            Flags_CanSeeNsfw = false
+        });
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AccessControlDbContext>();
+            db.UserAccessProfiles.Add(new UserAccessProfile { ProfileId = seeded.Id, UserId = "user-unassign" });
+            await db.SaveChangesAsync();
+        }
+
+        _effMock.Invocations.Clear();
+
+        using var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/admin/access-profiles/{seeded.Id}/assign-user/user-unassign");
+        AddAdminHeaders(request);
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        _effMock.Verify(x => x.Invalidate("user-unassign"), Times.Once);
+    }
+
+    [Test]
+    public async Task Update_WhenProfileUpdated_InvalidatesAssignedUsers()
+    {
+        var seeded = await SeedProfileAsync(new AccessProfile
+        {
+            Name = "Kappa",
+            Description = "Invalidate",
+            Flags_CanSeeNsfw = false
+        });
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AccessControlDbContext>();
+            db.UserAccessProfiles.Add(new UserAccessProfile { ProfileId = seeded.Id, UserId = "user-update" });
+            await db.SaveChangesAsync();
+        }
+
+        _effMock.Invocations.Clear();
+
+        var payload = new AccessProfile
+        {
+            Id = seeded.Id,
+            Name = "Kappa Updated",
+            Description = "Invalidate",
+            Flags_CanSeeNsfw = true,
+            Storages = new List<AccessProfileStorageAllow>(),
+            PersonGroups = new List<AccessProfilePersonGroupAllow>(),
+            DateRanges = new List<AccessProfileDateRangeAllow>()
+        };
+
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"/api/admin/access-profiles/{seeded.Id}")
+        {
+            Content = JsonContent.Create(payload, options: new JsonSerializerOptions { PropertyNamingPolicy = null })
+        };
+        AddAdminHeaders(request);
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        _effMock.Verify(x => x.Invalidate("user-update"), Times.Once);
+    }
+
+    [Test]
+    public async Task Delete_WhenProfileDeleted_InvalidatesAssignedUsers()
+    {
+        var seeded = await SeedProfileAsync(new AccessProfile
+        {
+            Name = "Lambda",
+            Description = "Delete Invalidate",
+            Flags_CanSeeNsfw = false
+        });
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AccessControlDbContext>();
+            db.UserAccessProfiles.Add(new UserAccessProfile { ProfileId = seeded.Id, UserId = "user-delete" });
+            await db.SaveChangesAsync();
+        }
+
+        _effMock.Invocations.Clear();
+
+        using var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/admin/access-profiles/{seeded.Id}");
+        AddAdminHeaders(request);
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        _effMock.Verify(x => x.Invalidate("user-delete"), Times.Once);
     }
 
     [Test]

@@ -75,6 +75,7 @@ public class ServiceCollectionExtensionsTests
         AssertSingletonRegistration<ITokenService, TokenService>(services);
         AssertSingletonRegistration<IImageService, ImageService>(services);
         AssertScopedRegistration<IEffectiveAccessProvider, EffectiveAccessProvider>(services);
+        AssertScopedRegistration<IAccessProfileService, AccessProfileService>(services);
 
         var currentUserDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ICurrentUser));
         currentUserDescriptor.Should().NotBeNull("CurrentUser must be registered");
@@ -86,6 +87,7 @@ public class ServiceCollectionExtensionsTests
             typeof(ITokenService),
             typeof(IImageService),
             typeof(IEffectiveAccessProvider),
+            typeof(IAccessProfileService),
             typeof(ICurrentUser));
     }
 
