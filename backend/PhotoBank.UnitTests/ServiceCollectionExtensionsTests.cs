@@ -276,7 +276,8 @@ public class ServiceCollectionExtensionsTests
         AssertScopedRegistration<UnifiedFaceService, UnifiedFaceService>(services);
         AssertScopedRegistration<IFaceService, FaceService>(services);
         AssertSingletonRegistration<IInsightFaceApiClient, InsightFaceClient>(services);
-        AssertFactoryRegistration<IEnrichmentPipeline>(services, "Singleton");
+        AssertSingletonRegistration<IEnrichmentPipeline, EnrichmentPipeline>(services);
+        AssertFactoryRegistration<EnricherTypeCatalog>(services, "Singleton");
         AssertFactoryRegistration<EnricherResolver>(services, "Singleton");
         AssertSingletonRegistration<IActiveEnricherProvider, ActiveEnricherProvider>(services);
 
