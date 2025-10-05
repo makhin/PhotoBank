@@ -2,7 +2,6 @@ using AutoMapper;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -54,13 +53,21 @@ namespace PhotoBank.UnitTests.Services
             referenceDataService
                 .Setup(s => s.GetTagsAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<TagDto>());
+            referenceDataService
+                .Setup(s => s.GetStoragesAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<StorageDto>());
+            referenceDataService
+                .Setup(s => s.GetPathsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<PathDto>());
+            referenceDataService
+                .Setup(s => s.GetPersonGroupsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<PersonGroupDto>());
 
             var normalizer = new Mock<ISearchFilterNormalizer>();
             normalizer
                 .Setup(n => n.NormalizeAsync(It.IsAny<FilterDto>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((FilterDto f, CancellationToken _) => f);
 
-            var memoryCache = new MemoryCache(new MemoryCacheOptions());
             var minioClient = new Mock<IMinioClient>();
             var s3Options = new Mock<IOptions<S3Options>>();
             s3Options.Setup(o => o.Value).Returns(new S3Options());
@@ -76,9 +83,7 @@ namespace PhotoBank.UnitTests.Services
             var photoQueryService = new PhotoQueryService(
                 context,
                 photoRepository,
-                storageRepository,
                 _mapper,
-                memoryCache,
                 NullLogger<PhotoQueryService>.Instance,
                 new DummyCurrentUser(),
                 referenceDataService.Object,
@@ -97,7 +102,7 @@ namespace PhotoBank.UnitTests.Services
                 context,
                 personGroupRepository,
                 _mapper,
-                memoryCache,
+                referenceDataService.Object,
                 NullLogger<PersonGroupService>.Instance);
 
             var faceCatalogService = new FaceCatalogService(

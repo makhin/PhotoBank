@@ -1,7 +1,6 @@
 using AutoMapper;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -103,6 +102,15 @@ namespace PhotoBank.UnitTests.Services
             referenceDataService
                 .Setup(s => s.GetTagsAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<TagDto>());
+            referenceDataService
+                .Setup(s => s.GetStoragesAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<StorageDto>());
+            referenceDataService
+                .Setup(s => s.GetPathsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<PathDto>());
+            referenceDataService
+                .Setup(s => s.GetPersonGroupsAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<PersonGroupDto>());
 
             var minioClient = new Mock<IMinioClient>();
             minioClient
@@ -111,11 +119,9 @@ namespace PhotoBank.UnitTests.Services
 
             var filterNormalizer = new Mock<ISearchFilterNormalizer>();
 
-            var memoryCache = new MemoryCache(new MemoryCacheOptions());
             var photoRepository = new Repository<Photo>(provider);
             var personRepository = new Repository<Person>(provider);
             var faceRepository = new Repository<Face>(provider);
-            var storageRepository = new Repository<Storage>(provider);
             var personGroupRepository = new Repository<PersonGroup>(provider);
             var s3Options = Options.Create(new S3Options());
 
@@ -124,9 +130,7 @@ namespace PhotoBank.UnitTests.Services
             var photoQueryService = new PhotoQueryService(
                 context,
                 photoRepository,
-                storageRepository,
                 _mapper,
-                memoryCache,
                 NullLogger<PhotoQueryService>.Instance,
                 currentUser,
                 referenceDataService.Object,
@@ -145,7 +149,7 @@ namespace PhotoBank.UnitTests.Services
                 context,
                 personGroupRepository,
                 _mapper,
-                memoryCache,
+                referenceDataService.Object,
                 NullLogger<PersonGroupService>.Instance);
 
             var faceCatalogService = new FaceCatalogService(

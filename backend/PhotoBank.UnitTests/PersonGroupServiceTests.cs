@@ -56,14 +56,12 @@ public class PersonGroupServiceTests
             .Setup(n => n.NormalizeAsync(It.IsAny<FilterDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((FilterDto f, CancellationToken _) => f);
 
-        var memoryCache = _provider.GetRequiredService<IMemoryCache>();
         var mapper = _provider.GetRequiredService<IMapper>();
         var currentUser = _provider.GetRequiredService<ICurrentUser>();
         var referenceDataService = _provider.GetRequiredService<ISearchReferenceDataService>();
         var photoRepository = _provider.GetRequiredService<IRepository<Photo>>();
         var personRepository = _provider.GetRequiredService<IRepository<Person>>();
         var faceRepository = _provider.GetRequiredService<IRepository<Face>>();
-        var storageRepository = _provider.GetRequiredService<IRepository<Storage>>();
         var personGroupRepository = _provider.GetRequiredService<IRepository<PersonGroup>>();
         var minioClient = new Mock<IMinioClient>();
         var s3Options = Options.Create(new S3Options());
@@ -73,9 +71,7 @@ public class PersonGroupServiceTests
         var photoQueryService = new PhotoQueryService(
             db,
             photoRepository,
-            storageRepository,
             mapper,
-            memoryCache,
             NullLogger<PhotoQueryService>.Instance,
             currentUser,
             referenceDataService,
@@ -94,7 +90,7 @@ public class PersonGroupServiceTests
             db,
             personGroupRepository,
             mapper,
-            memoryCache,
+            referenceDataService,
             NullLogger<PersonGroupService>.Instance);
 
         var faceCatalogService = new FaceCatalogService(
