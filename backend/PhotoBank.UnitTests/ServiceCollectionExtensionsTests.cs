@@ -36,6 +36,7 @@ using PhotoBank.InsightFaceApiClient;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
+using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.Events;
@@ -276,6 +277,7 @@ public class ServiceCollectionExtensionsTests
         AssertScopedRegistration<UnifiedFaceService, UnifiedFaceService>(services);
         AssertScopedRegistration<IFaceService, FaceService>(services);
         AssertSingletonRegistration<IInsightFaceApiClient, InsightFaceClient>(services);
+        AssertSingletonRegistration<IEnrichmentPipeline, EnrichmentPipeline>(services);
         AssertFactoryRegistration<EnricherResolver>(services, "Singleton");
         AssertSingletonRegistration<IActiveEnricherProvider, ActiveEnricherProvider>(services);
 
@@ -294,6 +296,7 @@ public class ServiceCollectionExtensionsTests
             typeof(IImageMetadataReaderWrapper),
             typeof(IRecognitionService),
             typeof(IInsightFaceApiClient),
+            typeof(IEnrichmentPipeline),
             typeof(UnifiedFaceService));
 
         var activeEnrichers = new[]
@@ -307,6 +310,8 @@ public class ServiceCollectionExtensionsTests
         {
             services.AddTransient(descriptor.ImplementationType!);
         }
+
+        services.TryAddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
 
         using var provider = services.BuildServiceProvider();
         var resolver = provider.GetRequiredService<EnricherResolver>();

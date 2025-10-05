@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
-using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Events;
 using PhotoBank.Services.Models;
 using File = PhotoBank.DbContext.Models.File;
@@ -29,8 +30,9 @@ namespace PhotoBank.Services
         private readonly IRepository<Photo> _photoRepository;
         private readonly IRepository<File> _fileRepository;
         private readonly IRepository<Face> _faceRepository;
-        private readonly IDependencyExecutor _dependencyExecutor;
-        private readonly IEnumerable<IEnricher> _enrichers;
+        private readonly IRepository<Enricher> _enricherRepository;
+        private readonly IEnrichmentPipeline _enrichmentPipeline;
+        private readonly IActiveEnricherProvider _activeEnricherProvider;
         private readonly IMediator _mediator;
 
         private class PhotoFilePath
@@ -45,16 +47,17 @@ namespace PhotoBank.Services
             IRepository<File> fileRepository,
             IRepository<Face> faceRepository,
             IRepository<Enricher> enricherRepository,
-            IDependencyExecutor dependencyExecutor,
-            EnricherResolver enricherResolver,
+            IEnrichmentPipeline enrichmentPipeline,
+            IActiveEnricherProvider activeEnricherProvider,
             IMediator mediator
             )
         {
             _photoRepository = photoRepository;
             _fileRepository = fileRepository;
             _faceRepository = faceRepository;
-            _dependencyExecutor = dependencyExecutor;
-            _enrichers = enricherResolver(enricherRepository);
+            _enricherRepository = enricherRepository;
+            _enrichmentPipeline = enrichmentPipeline;
+            _activeEnricherProvider = activeEnricherProvider;
             _mediator = mediator;
         }
 
@@ -80,7 +83,8 @@ namespace PhotoBank.Services
             var sourceData = new SourceDataDto { AbsolutePath = path };
             var photo = new Photo { Storage = storage };
 
-            await _dependencyExecutor.ExecuteAsync(_enrichers, photo, sourceData);
+            var activeEnrichers = _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
+            await _enrichmentPipeline.RunAsync(photo, sourceData, activeEnrichers);
 
             if (sourceData.PreviewImage != null)
             {
@@ -181,6 +185,8 @@ namespace PhotoBank.Services
 
         private async Task UpdateInfoAsync(Storage storage, IEnumerable<PhotoFilePath> files, Func<PhotoFilePath, bool> skipCondition, Func<Photo, Task> updateAction)
         {
+            var activeEnrichers = _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
+
             foreach (var photoFile in files)
             {
                 if (skipCondition(photoFile))
@@ -205,14 +211,7 @@ namespace PhotoBank.Services
                     Storage = storage
                 };
 
-                foreach (var enricher in _enrichers)
-                {
-                    if (!photo.EnrichedWithEnricherType.HasFlag(enricher.EnricherType))
-                    {
-                        await enricher.EnrichAsync(photo, sourceData);
-                    }
-                    photo.EnrichedWithEnricherType |= enricher.EnricherType;
-                }
+                await _enrichmentPipeline.RunAsync(photo, sourceData, activeEnrichers, CancellationToken.None);
 
                 try
                 {
