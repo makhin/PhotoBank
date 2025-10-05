@@ -1,17 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using PhotoBank.AccessControl;
-using PhotoBank.Api.Validation;
-using PhotoBank.DbContext.Models;
-using PhotoBank.Services.Api;
+using PhotoBank.Services.Identity;
 using PhotoBank.ViewModel.Dto;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Security.Claims;
 
 namespace PhotoBank.Api.Controllers;
@@ -19,10 +12,9 @@ namespace PhotoBank.Api.Controllers;
 [Route("[controller]")]
 [ApiController]
 public class AuthController(
-    UserManager<ApplicationUser> userManager,
-    SignInManager<ApplicationUser> signInManager,
-    ITokenService tokenService,
-    IConfiguration configuration) : ControllerBase
+    IAuthService authService,
+    IUserProfileService userProfileService)
+    : ControllerBase
 {
     [HttpPost("login")]
     [AllowAnonymous]
@@ -31,23 +23,13 @@ public class AuthController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
     {
-        // 1) Находим пользователя
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-        if (user is null)
+        var result = await authService.LoginAsync(request);
+        if (!result.Succeeded || result.Response is null)
+        {
             return Unauthorized();
+        }
 
-        // 2) Проверяем пароль, НО НЕ ВЫЗЫВАЕМ PasswordSignInAsync (он пытается ставить cookie)
-        var pwd = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
-        if (!pwd.Succeeded)
-            return Unauthorized();
-
-        var roles = await userManager.GetRolesAsync(user);
-        var roleClaims = roles.Select(r => new Claim(ClaimTypes.Role, r));
-        var claims = await userManager.GetClaimsAsync(user);
-        claims = claims.Concat(roleClaims).ToList();
-
-        var token = tokenService.CreateToken(user, request.RememberMe, claims);
-        return Ok(new LoginResponseDto { Token = token });
+        return Ok(result.Response);
     }
 
     [HttpPost("register")]
@@ -56,8 +38,7 @@ public class AuthController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
-        var user = new ApplicationUser { UserName = request.Email, Email = request.Email };
-        var result = await userManager.CreateAsync(user, request.Password);
+        var result = await authService.RegisterAsync(request);
         if (!result.Succeeded)
             return BadRequest(result.Errors);
 
@@ -69,21 +50,11 @@ public class AuthController(
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetUser()
     {
-        var user = await userManager.GetUserAsync(User);
-        if (user == null)
+        var user = await userProfileService.GetCurrentUserAsync(User);
+        if (user is null)
             return NotFound();
 
-        var roles = await userManager.GetRolesAsync(user);
-
-        return Ok(new UserDto
-        {
-            Id = user.Id,
-            Email = user.Email ?? string.Empty,
-            PhoneNumber = user.PhoneNumber,
-            TelegramUserId = user.TelegramUserId?.ToString(CultureInfo.InvariantCulture),
-            TelegramSendTimeUtc = user.TelegramSendTimeUtc,
-            Roles = roles.ToArray()
-        });
+        return Ok(user);
     }
 
     [HttpPut("user")]
@@ -92,35 +63,23 @@ public class AuthController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto dto)
     {
-        var user = await userManager.GetUserAsync(User);
-        if (user == null)
+        var result = await userProfileService.UpdateCurrentUserAsync(User, dto);
+        if (result.NotFound)
             return NotFound();
 
-        user.PhoneNumber = dto.PhoneNumber ?? user.PhoneNumber;
-        if (dto.TelegramUserId is not null)
+        if (result.ValidationFailure is not null)
         {
-            if (!TelegramUserIdParser.TryParse(dto.TelegramUserId, out var parsedTelegramUserId, out var error))
-            {
-                if (!string.IsNullOrEmpty(error))
-                {
-                    ModelState.AddModelError(nameof(dto.TelegramUserId), error);
-                }
-
-                return ValidationProblem(ModelState);
-            }
-
-            user.TelegramUserId = parsedTelegramUserId;
+            ModelState.AddModelError(result.ValidationFailure.FieldName, result.ValidationFailure.ErrorMessage);
+            return ValidationProblem(ModelState);
         }
-        user.TelegramSendTimeUtc = dto.TelegramSendTimeUtc ?? user.TelegramSendTimeUtc;
-        var result = await userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-            return BadRequest(result.Errors);
+
+        if (!result.Succeeded && result.IdentityResult is not null)
+            return BadRequest(result.IdentityResult.Errors);
 
         return Ok();
     }
 
     public record TelegramExchangeRequest(string TelegramUserId, string? Username);
-    public record TelegramExchangeResponse(string AccessToken, int ExpiresIn);
 
     [HttpGet("telegram/subscriptions")]
     [AllowAnonymous]
@@ -128,96 +87,39 @@ public class AuthController(
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetTelegramSubscriptions()
     {
-        var unauthorized = ValidateServiceKey();
-        if (unauthorized is not null)
+        var result = await authService.GetTelegramSubscriptionsAsync(Request.Headers["X-Service-Key"].ToString());
+        if (!result.Succeeded)
         {
-            return unauthorized;
+            return Problem(result.Problem!.Detail, statusCode: result.Problem.StatusCode, title: result.Problem.Title);
         }
 
-        var subscriptions = await userManager.Users
-            .AsNoTracking()
-            .Where(u => u.TelegramUserId != null && u.TelegramSendTimeUtc != null)
-            .OrderBy(u => u.TelegramSendTimeUtc)
-            .Select(u => new TelegramSubscriptionDto
-            {
-                TelegramUserId = u.TelegramUserId!.Value.ToString(CultureInfo.InvariantCulture),
-                TelegramSendTimeUtc = u.TelegramSendTimeUtc!.Value
-            })
-            .ToListAsync();
-
-        return Ok(subscriptions);
+        return Ok(result.Subscriptions);
     }
 
     [HttpPost("telegram/exchange")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(TelegramExchangeResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TelegramExchangeResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> TelegramExchange([FromBody] TelegramExchangeRequest req)
     {
-        var unauthorized = ValidateServiceKey();
-        if (unauthorized is not null)
+        var result = await authService.ExchangeTelegramAsync(
+            req.TelegramUserId,
+            req.Username,
+            Request.Headers["X-Service-Key"].ToString());
+
+        if (result.Problem is not null)
         {
-            return unauthorized;
+            return Problem(result.Problem.Detail, statusCode: result.Problem.StatusCode, title: result.Problem.Title);
         }
 
-        if (!TelegramUserIdParser.TryParse(req.TelegramUserId, out var parsedTelegramUserId, out var error) ||
-            parsedTelegramUserId is null)
+        if (result.ValidationFailure is not null)
         {
-            ModelState.AddModelError(
-                nameof(req.TelegramUserId),
-                string.IsNullOrEmpty(error) ? "Telegram user ID is required." : error);
-
+            ModelState.AddModelError(result.ValidationFailure.FieldName, result.ValidationFailure.ErrorMessage);
             return ValidationProblem(ModelState);
         }
 
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.TelegramUserId == parsedTelegramUserId.Value);
-        if (user is null)
-        {
-            var forbidden = Problem(
-                title: "Telegram not linked",
-                statusCode: StatusCodes.Status403Forbidden,
-                detail: "Ask admin to link your Telegram");
-
-            if (forbidden is ObjectResult forbiddenObject)
-            {
-                forbiddenObject.ContentTypes.Add("application/problem+json");
-            }
-
-            return forbidden;
-        }
-
-        var roles = await userManager.GetRolesAsync(user);
-        var roleClaims = roles.Select(role => new Claim(ClaimTypes.Role, role));
-        var existingClaims = await userManager.GetClaimsAsync(user);
-        var allClaims = existingClaims.Concat(roleClaims).ToList();
-
-        var token = tokenService.CreateToken(user, rememberMe: false, allClaims);
-        var expiresIn = 3600;
-
-        return Ok(new TelegramExchangeResponse(token, expiresIn));
-    }
-
-    private ActionResult? ValidateServiceKey()
-    {
-        var configuredKey = configuration["Auth:Telegram:ServiceKey"];
-        var presentedKey = Request.Headers["X-Service-Key"].ToString();
-        if (string.IsNullOrWhiteSpace(configuredKey) || presentedKey != configuredKey)
-        {
-            var unauthorized = Problem(
-                title: "Unauthorized",
-                statusCode: StatusCodes.Status401Unauthorized,
-                detail: "Invalid service key");
-
-            if (unauthorized is ObjectResult unauthorizedObject)
-            {
-                unauthorizedObject.ContentTypes.Add("application/problem+json");
-            }
-
-            return unauthorized;
-        }
-
-        return null;
+        return Ok(result.Response);
     }
 
     [HttpGet("debug/effective-access")]

@@ -23,6 +23,7 @@ using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
+using PhotoBank.Services.Identity;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.OpenApi.Models;
 using PhotoBank.DependencyInjection.Swagger;
@@ -38,6 +39,10 @@ public static partial class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
         services.AddSingleton<ITokenService, TokenService>();
         services.AddSingleton<IImageService, ImageService>();
+        services.AddScoped<ITelegramServiceKeyValidator, TelegramServiceKeyValidator>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUserProfileService, UserProfileService>();
+        services.AddScoped<IAdminUserService, AdminUserService>();
         services.AddScoped<IEffectiveAccessProvider, EffectiveAccessProvider>();
         services.TryAddScoped<ICurrentUser, CurrentUser>();
         services.AddDefaultIdentity<ApplicationUser>()
@@ -182,7 +187,7 @@ public static partial class ServiceCollectionExtensions
                 Scheme = "bearer",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Description = "Введите токен JWT так: Bearer {токен}"
+                Description = "Г‚ГўГҐГ¤ГЁГІГҐ ГІГ®ГЄГҐГ­ JWT ГІГ ГЄ: Bearer {ГІГ®ГЄГҐГ­}"
             });
 
             options.AddSecurityRequirement(new OpenApiSecurityRequirement

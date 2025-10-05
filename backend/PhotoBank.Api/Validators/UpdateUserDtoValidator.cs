@@ -1,5 +1,5 @@
 using FluentValidation;
-using PhotoBank.Api.Validation;
+using PhotoBank.Services.Identity;
 using PhotoBank.ViewModel.Dto;
 using System;
 
