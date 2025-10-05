@@ -31,12 +31,15 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
         _log = log;
     }
 
-    public async Task RunAsync(Photo photo, SourceDataDto source, CancellationToken ct = default)
+    public Task RunAsync(Photo photo, SourceDataDto source, CancellationToken ct = default) =>
+        RunAsync(photo, source, _enricherTypes, ct);
+
+    public async Task RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, CancellationToken ct = default)
     {
         using var scope = _root.CreateScope();
         var provider = scope.ServiceProvider;
 
-        var ordered = TopoSort(_enricherTypes, provider);
+        var ordered = TopoSort(enrichers.ToArray(), provider);
         foreach (var t in ordered)
         {
             ct.ThrowIfCancellationRequested();
@@ -47,6 +50,7 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
             try
             {
                 await enricher.EnrichAsync(photo, source, ct);
+                photo.EnrichedWithEnricherType |= enricher.EnricherType;
             }
             catch (Exception ex)
             {
