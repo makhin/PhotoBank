@@ -26,11 +26,11 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
     private readonly IMemoryCache _cache;
     private readonly IMapper _mapper;
 
-    private Lazy<Task<IReadOnlyList<PersonDto>>> _persons;
-    private readonly Lazy<Task<IReadOnlyList<TagDto>>> _tags;
-    private Lazy<Task<IReadOnlyList<PathDto>>> _paths;
-    private Lazy<Task<IReadOnlyList<StorageDto>>> _storages;
-    private Lazy<Task<IReadOnlyList<PersonGroupDto>>> _personGroups;
+    private readonly CachedAsyncValue<IReadOnlyList<PersonDto>> _persons;
+    private readonly CachedAsyncValue<IReadOnlyList<TagDto>> _tags;
+    private readonly CachedAsyncValue<IReadOnlyList<PathDto>> _paths;
+    private readonly CachedAsyncValue<IReadOnlyList<StorageDto>> _storages;
+    private readonly CachedAsyncValue<IReadOnlyList<PersonGroupDto>> _personGroups;
 
     public SearchReferenceDataService(
         IRepository<Person> personRepository,
@@ -51,11 +51,11 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
         _cache = cache;
         _mapper = mapper;
 
-        _persons = CreatePersonsLazy();
-        _tags = CreateTagsLazy();
-        _paths = CreatePathsLazy();
-        _storages = CreateStoragesLazy();
-        _personGroups = CreatePersonGroupsLazy();
+        _persons = CreatePersonsCache();
+        _tags = CreateTagsCache();
+        _paths = CreatePathsCache();
+        _storages = CreateStoragesCache();
+        _personGroups = CreatePersonGroupsCache();
     }
 
     public Task<IReadOnlyList<PersonDto>> GetPersonsAsync(CancellationToken cancellationToken = default)
@@ -65,7 +65,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             return Task.FromCanceled<IReadOnlyList<PersonDto>>(cancellationToken);
         }
 
-        return _persons.Value;
+        return _persons.GetValueAsync();
     }
 
     public Task<IReadOnlyList<TagDto>> GetTagsAsync(CancellationToken cancellationToken = default)
@@ -75,7 +75,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             return Task.FromCanceled<IReadOnlyList<TagDto>>(cancellationToken);
         }
 
-        return _tags.Value;
+        return _tags.GetValueAsync();
     }
 
     public Task<IReadOnlyList<PathDto>> GetPathsAsync(CancellationToken cancellationToken = default)
@@ -85,7 +85,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             return Task.FromCanceled<IReadOnlyList<PathDto>>(cancellationToken);
         }
 
-        return _paths.Value;
+        return _paths.GetValueAsync();
     }
 
     public Task<IReadOnlyList<StorageDto>> GetStoragesAsync(CancellationToken cancellationToken = default)
@@ -95,7 +95,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             return Task.FromCanceled<IReadOnlyList<StorageDto>>(cancellationToken);
         }
 
-        return _storages.Value;
+        return _storages.GetValueAsync();
     }
 
     public Task<IReadOnlyList<PersonGroupDto>> GetPersonGroupsAsync(CancellationToken cancellationToken = default)
@@ -105,116 +105,142 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             return Task.FromCanceled<IReadOnlyList<PersonGroupDto>>(cancellationToken);
         }
 
-        return _personGroups.Value;
+        return _personGroups.GetValueAsync();
     }
 
     public void InvalidatePersons()
     {
-        _cache.Remove(CacheKeys.PersonsAll);
-        _cache.Remove(CacheKeys.PersonsOf(_currentUser.UserId));
-        _persons = CreatePersonsLazy();
+        _persons.Reset();
     }
 
     public void InvalidatePersonGroups()
     {
-        _cache.Remove(CacheKeys.PersonGroups);
-        _personGroups = CreatePersonGroupsLazy();
+        _personGroups.Reset();
     }
 
     public void InvalidateStorages()
     {
-        _cache.Remove(CacheKeys.StoragesAll);
-        _cache.Remove(CacheKeys.StoragesOf(_currentUser.UserId));
-        _cache.Remove(CacheKeys.PathsAll);
-        _cache.Remove(CacheKeys.PathsOf(_currentUser.UserId));
-        _storages = CreateStoragesLazy();
-        _paths = CreatePathsLazy();
+        _storages.Reset();
+        _paths.Reset();
     }
 
-    private Lazy<Task<IReadOnlyList<PersonDto>>> CreatePersonsLazy() => new(() =>
-        _cache.GetOrCreateAsync(CacheKeys.Persons(_currentUser), async _ =>
-        {
-            var query = _personRepository.GetAll()
-                .AsNoTracking()
-                .MaybeApplyAcl(_currentUser);
+    private CachedAsyncValue<T> CreateCachedValue<T>(
+        Func<object> keyFactory,
+        Func<ICacheEntry, Task<T>> valueFactory,
+        Func<IEnumerable<object>>? invalidationKeysFactory = null)
+        => new(_cache, keyFactory, valueFactory, invalidationKeysFactory);
 
-            var items = await query
-                .OrderBy(p => p.Name)
-                .ThenBy(p => p.Id)
-                .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
-
-            return (IReadOnlyList<PersonDto>)items;
-        })!);
-
-    private Lazy<Task<IReadOnlyList<TagDto>>> CreateTagsLazy() => new(() =>
-        _cache.GetOrCreateAsync(CacheKeys.Tags, async _ =>
-        {
-            var items = await _tagRepository.GetAll()
-                .AsNoTracking()
-                .OrderBy(t => t.Name)
-                .ThenBy(t => t.Id)
-                .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
-
-            return (IReadOnlyList<TagDto>)items;
-        })!);
-
-    private Lazy<Task<IReadOnlyList<PathDto>>> CreatePathsLazy() => new(() =>
-        _cache.GetOrCreateAsync(CacheKeys.Paths(_currentUser), async _ =>
-        {
-            var query = _photoRepository.GetAll()
-                .AsNoTracking()
-                .MaybeApplyAcl(_currentUser)
-                .Where(p => p.RelativePath != null);
-
-            var paths = await query
-                .Select(p => new { p.StorageId, p.RelativePath })
-                .Distinct()
-                .OrderBy(p => p.StorageId)
-                .ThenBy(p => p.RelativePath)
-                .ToListAsync();
-
-            return (IReadOnlyList<PathDto>)paths
-                .Select(p => new PathDto
-                {
-                    StorageId = p.StorageId,
-                    Path = p.RelativePath!
-                })
-                .ToList();
-        })!);
-
-    private Lazy<Task<IReadOnlyList<StorageDto>>> CreateStoragesLazy() => new(() =>
-        _cache.GetOrCreateAsync(CacheKeys.Storages(_currentUser), async _ =>
-        {
-            var query = _storageRepository.GetAll()
-                .AsNoTracking()
-                .MaybeApplyAcl(_currentUser);
-
-            var items = await query
-                .OrderBy(p => p.Name)
-                .ThenBy(p => p.Id)
-                .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
-
-            return (IReadOnlyList<StorageDto>)items;
-        })!);
-
-    private Lazy<Task<IReadOnlyList<PersonGroupDto>>> CreatePersonGroupsLazy() => new(() =>
-        _cache.GetOrCreateAsync(CacheKeys.PersonGroups, async _ =>
-        {
-            var items = await _personGroupRepository.GetAll()
-                .AsNoTracking()
-                .OrderBy(pg => pg.Name)
-                .ThenBy(pg => pg.Id)
-                .ProjectTo<PersonGroupDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
-
-            foreach (var group in items)
+    private CachedAsyncValue<IReadOnlyList<PersonDto>> CreatePersonsCache()
+        => CreateCachedValue(
+            () => CacheKeys.Persons(_currentUser),
+            async _ =>
             {
-                group.Persons ??= [];
-            }
+                var query = _personRepository.GetAll()
+                    .AsNoTracking()
+                    .MaybeApplyAcl(_currentUser);
 
-            return (IReadOnlyList<PersonGroupDto>)items;
-        })!);
+                var items = await query
+                    .OrderBy(p => p.Name)
+                    .ThenBy(p => p.Id)
+                    .ProjectTo<PersonDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+
+                return (IReadOnlyList<PersonDto>)items;
+            },
+            () => new object[]
+            {
+                CacheKeys.PersonsAll,
+                CacheKeys.PersonsOf(_currentUser.UserId)
+            });
+
+    private CachedAsyncValue<IReadOnlyList<TagDto>> CreateTagsCache()
+        => CreateCachedValue(
+            () => CacheKeys.Tags,
+            async _ =>
+            {
+                var items = await _tagRepository.GetAll()
+                    .AsNoTracking()
+                    .OrderBy(t => t.Name)
+                    .ThenBy(t => t.Id)
+                    .ProjectTo<TagDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+
+                return (IReadOnlyList<TagDto>)items;
+            },
+            () => new object[] { CacheKeys.Tags });
+
+    private CachedAsyncValue<IReadOnlyList<PathDto>> CreatePathsCache()
+        => CreateCachedValue(
+            () => CacheKeys.Paths(_currentUser),
+            async _ =>
+            {
+                var query = _photoRepository.GetAll()
+                    .AsNoTracking()
+                    .MaybeApplyAcl(_currentUser)
+                    .Where(p => p.RelativePath != null);
+
+                var paths = await query
+                    .Select(p => new { p.StorageId, p.RelativePath })
+                    .Distinct()
+                    .OrderBy(p => p.StorageId)
+                    .ThenBy(p => p.RelativePath)
+                    .ToListAsync();
+
+                return (IReadOnlyList<PathDto>)paths
+                    .Select(p => new PathDto
+                    {
+                        StorageId = p.StorageId,
+                        Path = p.RelativePath!,
+                    })
+                    .ToList();
+            },
+            () => new object[]
+            {
+                CacheKeys.PathsAll,
+                CacheKeys.PathsOf(_currentUser.UserId)
+            });
+
+    private CachedAsyncValue<IReadOnlyList<StorageDto>> CreateStoragesCache()
+        => CreateCachedValue(
+            () => CacheKeys.Storages(_currentUser),
+            async _ =>
+            {
+                var query = _storageRepository.GetAll()
+                    .AsNoTracking()
+                    .MaybeApplyAcl(_currentUser);
+
+                var items = await query
+                    .OrderBy(p => p.Name)
+                    .ThenBy(p => p.Id)
+                    .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+
+                return (IReadOnlyList<StorageDto>)items;
+            },
+            () => new object[]
+            {
+                CacheKeys.StoragesAll,
+                CacheKeys.StoragesOf(_currentUser.UserId)
+            });
+
+    private CachedAsyncValue<IReadOnlyList<PersonGroupDto>> CreatePersonGroupsCache()
+        => CreateCachedValue(
+            () => CacheKeys.PersonGroups,
+            async _ =>
+            {
+                var items = await _personGroupRepository.GetAll()
+                    .AsNoTracking()
+                    .OrderBy(pg => pg.Name)
+                    .ThenBy(pg => pg.Id)
+                    .ProjectTo<PersonGroupDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+
+                foreach (var group in items)
+                {
+                    group.Persons ??= [];
+                }
+
+                return (IReadOnlyList<PersonGroupDto>)items;
+            },
+            () => new object[] { CacheKeys.PersonGroups });
 }
