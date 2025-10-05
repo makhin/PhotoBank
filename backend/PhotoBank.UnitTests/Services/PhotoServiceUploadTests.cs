@@ -3,8 +3,8 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Minio;
 using Moq;
 using NUnit.Framework;
@@ -19,6 +19,7 @@ using PhotoBank.Services.Photos;
 using PhotoBank.Services.Photos.Admin;
 using PhotoBank.Services.Photos.Faces;
 using PhotoBank.Services.Photos.Queries;
+using PhotoBank.Services.Photos.Upload;
 using PhotoBank.Services.Search;
 using System;
 using System.IO;
@@ -127,11 +128,19 @@ namespace PhotoBank.UnitTests.Services
 
             var fileSystem = new FileSystem();
 
-            var photoIngestionService = new PhotoIngestionService(
-                storageRepository,
+            var nameResolver = new UploadNameResolver();
+            var fileSystemStrategy = new FileSystemStorageUploadStrategy(
+                fileSystem,
+                nameResolver,
+                NullLogger<FileSystemStorageUploadStrategy>.Instance);
+            var objectStorageStrategy = new ObjectStorageUploadStrategy(
                 minioClient.Object,
                 s3Options.Object,
-                fileSystem,
+                nameResolver,
+                NullLogger<ObjectStorageUploadStrategy>.Instance);
+            var photoIngestionService = new PhotoIngestionService(
+                storageRepository,
+                new IStorageUploadStrategy[] { objectStorageStrategy, fileSystemStrategy },
                 NullLogger<PhotoIngestionService>.Instance);
 
             return new PhotoService(
