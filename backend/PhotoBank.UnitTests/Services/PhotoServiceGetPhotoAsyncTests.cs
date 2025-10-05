@@ -16,6 +16,9 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Internal;
+using PhotoBank.Services.Photos.Admin;
+using PhotoBank.Services.Photos.Faces;
+using PhotoBank.Services.Photos.Queries;
 using PhotoBank.Services.Search;
 using PhotoBank.ViewModel.Dto;
 using System;
@@ -107,21 +110,57 @@ namespace PhotoBank.UnitTests.Services
 
             var filterNormalizer = new Mock<ISearchFilterNormalizer>();
 
-            var service = new PhotoService(
+            var memoryCache = new MemoryCache(new MemoryCacheOptions());
+            var photoRepository = new Repository<Photo>(provider);
+            var personRepository = new Repository<Person>(provider);
+            var faceRepository = new Repository<Face>(provider);
+            var storageRepository = new Repository<Storage>(provider);
+            var personGroupRepository = new Repository<PersonGroup>(provider);
+            var s3Options = Options.Create(new S3Options());
+
+            var photoQueryService = new PhotoQueryService(
                 context,
-                new Repository<Photo>(provider),
-                new Repository<Person>(provider),
-                new Repository<Face>(provider),
-                new Repository<Storage>(provider),
-                new Repository<PersonGroup>(provider),
+                photoRepository,
+                storageRepository,
                 _mapper,
-                new MemoryCache(new MemoryCacheOptions()),
-                NullLogger<PhotoService>.Instance,
+                memoryCache,
+                NullLogger<PhotoQueryService>.Instance,
                 currentUser,
                 referenceDataService.Object,
                 filterNormalizer.Object,
                 minioClient.Object,
-                Options.Create(new S3Options()));
+                s3Options);
+
+            var personDirectoryService = new PersonDirectoryService(
+                personRepository,
+                _mapper,
+                referenceDataService.Object,
+                NullLogger<PersonDirectoryService>.Instance);
+
+            var personGroupService = new PersonGroupService(
+                context,
+                personGroupRepository,
+                _mapper,
+                memoryCache,
+                NullLogger<PersonGroupService>.Instance);
+
+            var faceCatalogService = new FaceCatalogService(
+                faceRepository,
+                _mapper,
+                minioClient.Object,
+                NullLogger<FaceCatalogService>.Instance,
+                s3Options);
+
+            var photoAdminService = new PhotoAdminService(
+                storageRepository,
+                NullLogger<PhotoAdminService>.Instance);
+
+            var service = new PhotoService(
+                photoQueryService,
+                personDirectoryService,
+                personGroupService,
+                faceCatalogService,
+                photoAdminService);
 
             // Act
             var result = await service.GetPhotoAsync(photo.Id);

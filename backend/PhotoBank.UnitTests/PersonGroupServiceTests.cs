@@ -15,6 +15,9 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Internal;
+using PhotoBank.Services.Photos.Admin;
+using PhotoBank.Services.Photos.Faces;
+using PhotoBank.Services.Photos.Queries;
 using PhotoBank.Services.Search;
 using System;
 using System.Threading;
@@ -52,22 +55,61 @@ public class PersonGroupServiceTests
             .Setup(n => n.NormalizeAsync(It.IsAny<FilterDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((FilterDto f, CancellationToken _) => f);
 
-        _service = new PhotoService(
+        var memoryCache = _provider.GetRequiredService<IMemoryCache>();
+        var mapper = _provider.GetRequiredService<IMapper>();
+        var currentUser = _provider.GetRequiredService<ICurrentUser>();
+        var referenceDataService = _provider.GetRequiredService<ISearchReferenceDataService>();
+        var photoRepository = _provider.GetRequiredService<IRepository<Photo>>();
+        var personRepository = _provider.GetRequiredService<IRepository<Person>>();
+        var faceRepository = _provider.GetRequiredService<IRepository<Face>>();
+        var storageRepository = _provider.GetRequiredService<IRepository<Storage>>();
+        var personGroupRepository = _provider.GetRequiredService<IRepository<PersonGroup>>();
+        var minioClient = new Mock<IMinioClient>();
+        var s3Options = Options.Create(new S3Options());
+
+        var photoQueryService = new PhotoQueryService(
             db,
-            _provider.GetRequiredService<IRepository<Photo>>(),
-            _provider.GetRequiredService<IRepository<Person>>(),
-            _provider.GetRequiredService<IRepository<Face>>(),
-            _provider.GetRequiredService<IRepository<Storage>>(),
-            _provider.GetRequiredService<IRepository<PersonGroup>>(),
-            _provider.GetRequiredService<IMapper>(),
-            _provider.GetRequiredService<IMemoryCache>(),
-            NullLogger<PhotoService>.Instance,
-            _provider.GetRequiredService<ICurrentUser>(),
-            _provider.GetRequiredService<ISearchReferenceDataService>(),
+            photoRepository,
+            storageRepository,
+            mapper,
+            memoryCache,
+            NullLogger<PhotoQueryService>.Instance,
+            currentUser,
+            referenceDataService,
             normalizer.Object,
-            new Mock<IMinioClient>().Object,
-            new Mock<IOptions<S3Options>>().Object
-        );
+            minioClient.Object,
+            s3Options);
+
+        var personDirectoryService = new PersonDirectoryService(
+            personRepository,
+            mapper,
+            referenceDataService,
+            NullLogger<PersonDirectoryService>.Instance);
+
+        var personGroupService = new PersonGroupService(
+            db,
+            personGroupRepository,
+            mapper,
+            memoryCache,
+            NullLogger<PersonGroupService>.Instance);
+
+        var faceCatalogService = new FaceCatalogService(
+            faceRepository,
+            mapper,
+            minioClient.Object,
+            NullLogger<FaceCatalogService>.Instance,
+            s3Options);
+
+        var photoAdminService = new PhotoAdminService(
+            storageRepository,
+            NullLogger<PhotoAdminService>.Instance);
+
+        _service = new PhotoService(
+            photoQueryService,
+            personDirectoryService,
+            personGroupService,
+            faceCatalogService,
+            photoAdminService);
     }
 
     [TearDown]
