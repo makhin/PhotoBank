@@ -14,6 +14,7 @@ namespace PhotoBank.Services.Enrichers
             : base(
                 propertyNameRepository,
                 src => src.ImageAnalysis.Objects.Select(o => o.ObjectProperty),
+                model => model.Name,
                 name => new PropertyName { Name = name },
                 (photo, name, propertyName, src) =>
                 {

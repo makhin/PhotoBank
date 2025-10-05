@@ -14,6 +14,7 @@ namespace PhotoBank.Services.Enrichers
             : base(
                 categoryRepository,
                 src => src.ImageAnalysis.Categories.Select(c => c.Name),
+                model => model.Name,
                 name => new Category { Name = name },
                 (photo, name, categoryModel, src) =>
                 {

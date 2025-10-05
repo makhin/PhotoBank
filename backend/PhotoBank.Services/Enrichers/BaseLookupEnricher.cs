@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -15,17 +16,23 @@ namespace PhotoBank.Services.Enrichers
     {
         private readonly IRepository<TModel> _repository;
         private readonly Func<SourceDataDto, IEnumerable<string>> _namesSelector;
+        private readonly Expression<Func<TModel, string>> _nameSelector;
+        private readonly Func<TModel, string> _nameAccessor;
         private readonly Func<string, TModel> _modelFactory;
         private readonly Func<Photo, string, TModel, SourceDataDto, TLink> _linkFactory;
 
         protected BaseLookupEnricher(
             IRepository<TModel> repository,
             Func<SourceDataDto, IEnumerable<string>> namesSelector,
+            Expression<Func<TModel, string>> nameSelector,
             Func<string, TModel> modelFactory,
-            Func<Photo, string, TModel, SourceDataDto, TLink> linkFactory)
+            Func<Photo, string, TModel, SourceDataDto, TLink> linkFactory,
+            Func<TModel, string>? nameAccessor = null)
         {
             _repository = repository;
             _namesSelector = namesSelector;
+            _nameSelector = nameSelector;
+            _nameAccessor = nameAccessor ?? nameSelector.Compile();
             _modelFactory = modelFactory;
             _linkFactory = linkFactory;
         }
@@ -41,6 +48,7 @@ namespace PhotoBank.Services.Enrichers
             var incoming = _namesSelector(sourceData)
                 .Select(n => n?.Trim())
                 .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Select(n => n!)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
@@ -49,7 +57,7 @@ namespace PhotoBank.Services.Enrichers
                 return;
             }
 
-            var query = _repository.GetByCondition(m => incoming.Contains(EF.Property<string>(m, "Name")));
+            var query = _repository.GetByCondition(BuildContainsExpression(incoming));
             List<TModel> existing;
             try
             {
@@ -60,8 +68,7 @@ namespace PhotoBank.Services.Enrichers
                 existing = query.AsNoTracking().ToList();
             }
 
-            var nameProp = typeof(TModel).GetProperty("Name");
-            var map = existing.ToDictionary(e => (string)nameProp.GetValue(e), StringComparer.OrdinalIgnoreCase);
+            var map = existing.ToDictionary(_nameAccessor, StringComparer.OrdinalIgnoreCase);
 
             foreach (var name in incoming)
             {
@@ -81,6 +88,37 @@ namespace PhotoBank.Services.Enrichers
                 var link = _linkFactory(photo, name, model, sourceData);
                 collection.Add(link);
             }
+        }
+
+        private Expression<Func<TModel, bool>> BuildContainsExpression(IEnumerable<string> values)
+        {
+            var parameter = Expression.Parameter(typeof(TModel), "model");
+            var valueExpression = new ParameterReplaceVisitor(_nameSelector.Parameters[0], parameter)
+                .Visit(_nameSelector.Body);
+
+            var containsCall = Expression.Call(
+                typeof(Enumerable),
+                nameof(Enumerable.Contains),
+                new[] { typeof(string) },
+                Expression.Constant(values, typeof(IEnumerable<string>)),
+                valueExpression);
+
+            return Expression.Lambda<Func<TModel, bool>>(containsCall, parameter);
+        }
+
+        private sealed class ParameterReplaceVisitor : ExpressionVisitor
+        {
+            private readonly ParameterExpression _source;
+            private readonly ParameterExpression _target;
+
+            public ParameterReplaceVisitor(ParameterExpression source, ParameterExpression target)
+            {
+                _source = source;
+                _target = target;
+            }
+
+            protected override Expression VisitParameter(ParameterExpression node)
+                => node == _source ? _target : base.VisitParameter(node);
         }
     }
 }

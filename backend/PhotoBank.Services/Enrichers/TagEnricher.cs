@@ -13,6 +13,7 @@ namespace PhotoBank.Services.Enrichers
             : base(
                 repo,
                 src => src.ImageAnalysis.Tags.Select(t => t.Name),
+                model => model.Name,
                 name => new Tag { Name = name },
                 (photo, name, tagModel, src) =>
                 {
