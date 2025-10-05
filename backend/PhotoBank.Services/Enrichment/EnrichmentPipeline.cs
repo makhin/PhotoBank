@@ -68,7 +68,10 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
     public async Task RunBatchAsync(IEnumerable<(Photo photo, SourceDataDto source)> items, CancellationToken ct = default)
     {
         var arr = items.ToArray();
-        var dop = _opts.MaxDegreeOfParallelism.GetValueOrDefault(Environment.ProcessorCount);
+        var configuredDop = _opts.MaxDegreeOfParallelism;
+        var dop = configuredDop.HasValue && configuredDop.Value > 0
+            ? configuredDop.Value
+            : Math.Max(1, Environment.ProcessorCount);
         _log.LogInformation("Batch enrichment: {Count} items, DOP={Dop}", arr.Length, dop);
 
         await Parallel.ForEachAsync(arr, new ParallelOptions { MaxDegreeOfParallelism = dop, CancellationToken = ct },

@@ -183,6 +183,51 @@ public class EnrichmentPipelineTests
         }
     }
 
+    [Test]
+    public async Task RunBatchAsync_MaxParallelismLessOrEqualZero_FallsBackToProcessorCount()
+    {
+        Assume.That(Environment.ProcessorCount, Is.GreaterThanOrEqualTo(2),
+            "Test requires at least two processors to observe parallelism.");
+
+        var state = new BlockingEnricherState(expectedStarts: 2);
+        var services = new ServiceCollection();
+        services.AddSingleton(state);
+        services.AddScoped<BlockingEnricher>();
+
+        var provider = services.BuildServiceProvider();
+        var catalog = new EnricherTypeCatalog(new[] { typeof(BlockingEnricher) });
+        var pipeline = new EnrichmentPipeline(
+            provider,
+            catalog,
+            Options.Create(new EnrichmentPipelineOptions
+            {
+                LogTimings = false,
+                MaxDegreeOfParallelism = 0
+            }),
+            NullLogger<EnrichmentPipeline>.Instance);
+
+        try
+        {
+            var work = new[]
+            {
+                (new Photo(), new SourceDataDto()),
+                (new Photo(), new SourceDataDto())
+            };
+
+            var runTask = pipeline.RunBatchAsync(work, CancellationToken.None);
+            var completed = await Task.WhenAny(state.BothStarted, Task.Delay(1000));
+
+            completed.Should().BeSameAs(state.BothStarted);
+
+            state.ReleaseAll();
+            await runTask;
+        }
+        finally
+        {
+            provider.Dispose();
+        }
+    }
+
     private abstract class TestEnricherBase : IEnricher
     {
         private readonly IList<string> _log;
