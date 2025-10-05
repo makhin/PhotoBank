@@ -7,6 +7,7 @@ using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PhotoBank.AccessControl;
 using PhotoBank.InsightFaceApiClient;
@@ -76,6 +77,20 @@ public static partial class ServiceCollectionExtensions
         services.AddSingleton<IInsightFaceApiClient, InsightFaceApiClient.InsightFaceApiClient>();
         services.AddTransient<IRecognitionService, RecognitionService>();
         services.TryAddSingleton<IActiveEnricherProvider, ActiveEnricherProvider>();
+        services.AddOptions<EnrichmentPipelineOptions>();
+
+        var enricherTypes = services
+            .Where(d => d.ServiceType == typeof(IEnricher) && d.ImplementationType is not null)
+            .Select(d => d.ImplementationType!)
+            .Distinct()
+            .ToArray();
+
+        services.AddSingleton<IEnrichmentPipeline>(provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<EnrichmentPipelineOptions>>();
+            var logger = provider.GetRequiredService<ILogger<EnrichmentPipeline>>();
+            return new EnrichmentPipeline(provider, enricherTypes, options, logger);
+        });
         services.AddSingleton<EnricherResolver>(provider =>
         {
             var activeEnricherProvider = provider.GetRequiredService<IActiveEnricherProvider>();
