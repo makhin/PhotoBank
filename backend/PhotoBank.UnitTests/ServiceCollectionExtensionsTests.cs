@@ -47,7 +47,7 @@ using PhotoBank.Services.FaceRecognition.Local;
 using PhotoBank.Services.FaceRecognition.Abstractions;
 using PhotoBank.Services.Photos;
 using PhotoBank.Services.Internal;
-using PhotoBank.Services.Enrichment;
+using PhotoBank.Services.Models;
 using PhotoBank.Services.Recognition;
 using PhotoBank.Services.Search;
 using PhotoBank.Services.Translator;
@@ -241,7 +241,7 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Test]
-    public void AddPhotobankConsole_RegistersConsoleServicesWithCorrectLifetimes()
+    public async Task AddPhotobankConsole_RegistersConsoleServicesWithCorrectLifetimes()
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
@@ -264,7 +264,6 @@ public class ServiceCollectionExtensionsTests
         AssertFactoryRegistration<IComputerVisionClient>(services, "Singleton");
         AssertFactoryRegistration<IFaceClient>(services, "Singleton");
         AssertSingletonRegistration(services, typeof(AmazonRekognitionClient), typeof(AmazonRekognitionClient));
-        AssertTransientRegistration<IDependencyExecutor, DependencyExecutor>(services);
         AssertTransientRegistration<IFaceService, FaceService>(services);
         AssertTransientRegistration<IFacePreviewService, FacePreviewService>(services);
         AssertTransientRegistration<IFaceServiceAws, FaceServiceAws>(services);
@@ -277,14 +276,13 @@ public class ServiceCollectionExtensionsTests
         AssertScopedRegistration<UnifiedFaceService, UnifiedFaceService>(services);
         AssertScopedRegistration<IFaceService, FaceService>(services);
         AssertSingletonRegistration<IInsightFaceApiClient, InsightFaceClient>(services);
-        AssertSingletonRegistration<IEnrichmentPipeline, EnrichmentPipeline>(services);
+        AssertFactoryRegistration<IEnrichmentPipeline>(services, "Singleton");
         AssertFactoryRegistration<EnricherResolver>(services, "Singleton");
         AssertSingletonRegistration<IActiveEnricherProvider, ActiveEnricherProvider>(services);
 
         AssertEnricherRegistration(services);
 
         AssertNoDuplicateRegistrations(services,
-            typeof(IDependencyExecutor),
             typeof(IFaceService),
             typeof(IFacePreviewService),
             typeof(IFaceServiceAws),
@@ -314,10 +312,22 @@ public class ServiceCollectionExtensionsTests
         services.TryAddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
 
         using var provider = services.BuildServiceProvider();
+        var activeEnricherProvider = provider.GetRequiredService<IActiveEnricherProvider>();
+        activeEnricherProvider.Should().BeOfType<ActiveEnricherProvider>();
+        var enricherRepository = provider.GetRequiredService<IRepository<Enricher>>();
+        var activeTypes = activeEnricherProvider.GetActiveEnricherTypes(enricherRepository);
+        activeTypes.Should().Contain(typeof(MetadataEnricher));
+        activeTypes.Should().NotContain(typeof(TagEnricher));
+
         var resolver = provider.GetRequiredService<EnricherResolver>();
         var resolved = resolver(provider.GetRequiredService<IRepository<Enricher>>()).ToList();
         resolved.Should().ContainSingle(e => e is MetadataEnricher);
         resolved.Should().NotContain(e => e is TagEnricher);
+
+        var pipeline = provider.GetRequiredService<IEnrichmentPipeline>();
+        pipeline.Should().BeOfType<EnrichmentPipeline>();
+        Func<Task> run = async () => await pipeline.RunAsync(new Photo(), new SourceDataDto(), Array.Empty<Type>(), CancellationToken.None);
+        await run.Should().NotThrowAsync();
     }
 
     [Test]
