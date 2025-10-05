@@ -10,6 +10,7 @@ using PhotoBank.Services.Photos;
 using PhotoBank.Services.Photos.Admin;
 using PhotoBank.Services.Photos.Faces;
 using PhotoBank.Services.Photos.Queries;
+using PhotoBank.Services.Photos.Upload;
 using PhotoBank.Services.Search;
 using PhotoBank.Services.Translator;
 using Polly;
@@ -44,6 +45,9 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IPersonGroupService, PersonGroupService>();
         services.AddScoped<IFaceCatalogService, FaceCatalogService>();
         services.AddScoped<IPhotoDuplicateFinder, PhotoDuplicateFinder>();
+        services.AddSingleton<UploadNameResolver>();
+        services.AddScoped<IStorageUploadStrategy, ObjectStorageUploadStrategy>();
+        services.AddScoped<IStorageUploadStrategy, FileSystemStorageUploadStrategy>();
         services.AddScoped<IPhotoIngestionService, PhotoIngestionService>();
         services.AddScoped<IPhotoAdminService, PhotoAdminService>();
         services.AddScoped<IPhotoService, PhotoService>();
