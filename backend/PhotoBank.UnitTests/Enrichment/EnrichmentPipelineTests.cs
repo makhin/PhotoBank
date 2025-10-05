@@ -73,7 +73,7 @@ public class EnrichmentPipelineTests
             await pipeline.RunAsync(
                 photo,
                 new SourceDataDto(),
-                new[] { typeof(AlphaEnricher), typeof(CharlieEnricher) },
+                new[] { typeof(AlphaEnricher), typeof(BravoEnricher), typeof(CharlieEnricher) },
                 CancellationToken.None);
         }
         finally
@@ -81,7 +81,103 @@ public class EnrichmentPipelineTests
             provider.Dispose();
         }
 
-        photo.EnrichedWithEnricherType.Should().Be(EnricherType.Analyze | EnricherType.Tag);
+        photo.EnrichedWithEnricherType.Should().Be(
+            EnricherType.Analyze | EnricherType.Metadata | EnricherType.Tag);
+    }
+
+    [Test]
+    public async Task RunAsync_SubsetMissingDependency_Throws()
+    {
+        var log = new List<string>();
+        var (pipeline, provider) = CreatePipeline(log);
+
+        try
+        {
+            var act = () => pipeline.RunAsync(
+                new Photo(),
+                new SourceDataDto(),
+                new[] { typeof(CharlieEnricher) },
+                CancellationToken.None);
+
+            await act.Should().ThrowAsync<InvalidOperationException>()
+                .WithMessage("*Unknown dependency*");
+        }
+        finally
+        {
+            provider.Dispose();
+        }
+    }
+
+    [Test]
+    public async Task RunAsync_CircularDependency_Throws()
+    {
+        var services = new ServiceCollection();
+        services.AddScoped<CycleAlphaEnricher>();
+        services.AddScoped<CycleBravoEnricher>();
+
+        var provider = services.BuildServiceProvider();
+        var pipeline = new EnrichmentPipeline(
+            provider,
+            new[] { typeof(CycleAlphaEnricher), typeof(CycleBravoEnricher) },
+            Options.Create(new EnrichmentPipelineOptions { LogTimings = false }),
+            NullLogger<EnrichmentPipeline>.Instance);
+
+        try
+        {
+            var act = () => pipeline.RunAsync(
+                new Photo(),
+                new SourceDataDto(),
+                new[] { typeof(CycleAlphaEnricher), typeof(CycleBravoEnricher) },
+                CancellationToken.None);
+
+            await act.Should().ThrowAsync<InvalidOperationException>()
+                .WithMessage("*cycle detected*");
+        }
+        finally
+        {
+            provider.Dispose();
+        }
+    }
+
+    [Test]
+    public async Task RunBatchAsync_ProcessesItemsInParallel()
+    {
+        var state = new BlockingEnricherState(expectedStarts: 2);
+        var services = new ServiceCollection();
+        services.AddSingleton(state);
+        services.AddScoped<BlockingEnricher>();
+
+        var provider = services.BuildServiceProvider();
+        var pipeline = new EnrichmentPipeline(
+            provider,
+            new[] { typeof(BlockingEnricher) },
+            Options.Create(new EnrichmentPipelineOptions
+            {
+                LogTimings = false,
+                MaxDegreeOfParallelism = 2
+            }),
+            NullLogger<EnrichmentPipeline>.Instance);
+
+        try
+        {
+            var work = new[]
+            {
+                (new Photo(), new SourceDataDto()),
+                (new Photo(), new SourceDataDto())
+            };
+
+            var runTask = pipeline.RunBatchAsync(work, CancellationToken.None);
+            var completed = await Task.WhenAny(state.BothStarted, Task.Delay(1000));
+
+            completed.Should().BeSameAs(state.BothStarted);
+
+            state.ReleaseAll();
+            await runTask;
+        }
+        finally
+        {
+            provider.Dispose();
+        }
     }
 
     private abstract class TestEnricherBase : IEnricher
@@ -135,5 +231,70 @@ public class EnrichmentPipelineTests
         public override EnricherType EnricherType => EnricherType.Tag;
 
         public override Type[] Dependencies => new[] { typeof(BravoEnricher) };
+    }
+
+    private sealed class CycleAlphaEnricher : IEnricher
+    {
+        public EnricherType EnricherType => EnricherType.Analyze;
+
+        public Type[] Dependencies => new[] { typeof(CycleBravoEnricher) };
+
+        public Task EnrichAsync(Photo photo, SourceDataDto path, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
+    private sealed class CycleBravoEnricher : IEnricher
+    {
+        public EnricherType EnricherType => EnricherType.Metadata;
+
+        public Type[] Dependencies => new[] { typeof(CycleAlphaEnricher) };
+
+        public Task EnrichAsync(Photo photo, SourceDataDto path, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
+    private sealed class BlockingEnricherState
+    {
+        private readonly int _expectedStarts;
+        private readonly TaskCompletionSource<bool> _bothStarted = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource<bool> _release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private int _started;
+
+        public BlockingEnricherState(int expectedStarts)
+        {
+            _expectedStarts = expectedStarts;
+        }
+
+        public Task BothStarted => _bothStarted.Task;
+
+        public Task Release => _release.Task;
+
+        public void SignalStarted()
+        {
+            if (Interlocked.Increment(ref _started) == _expectedStarts)
+            {
+                _bothStarted.TrySetResult(true);
+            }
+        }
+
+        public void ReleaseAll() => _release.TrySetResult(true);
+    }
+
+    private sealed class BlockingEnricher : IEnricher
+    {
+        private readonly BlockingEnricherState _state;
+
+        public BlockingEnricher(BlockingEnricherState state)
+        {
+            _state = state;
+        }
+
+        public EnricherType EnricherType => EnricherType.Analyze;
+
+        public Type[] Dependencies => Array.Empty<Type>();
+
+        public async Task EnrichAsync(Photo photo, SourceDataDto path, CancellationToken cancellationToken = default)
+        {
+            _state.SignalStarted();
+            await _state.Release;
+        }
     }
 }
