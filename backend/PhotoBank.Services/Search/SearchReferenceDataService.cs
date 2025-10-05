@@ -22,15 +22,16 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
     private readonly IRepository<Photo> _photoRepository;
     private readonly IRepository<Storage> _storageRepository;
     private readonly IRepository<PersonGroup> _personGroupRepository;
-    private readonly ICurrentUser _currentUser;
+    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly IMemoryCache _cache;
     private readonly IMapper _mapper;
 
-    private readonly CachedAsyncValue<IReadOnlyList<PersonDto>> _persons;
-    private readonly CachedAsyncValue<IReadOnlyList<TagDto>> _tags;
-    private readonly CachedAsyncValue<IReadOnlyList<PathDto>> _paths;
-    private readonly CachedAsyncValue<IReadOnlyList<StorageDto>> _storages;
-    private readonly CachedAsyncValue<IReadOnlyList<PersonGroupDto>> _personGroups;
+    private CachedAsyncValue<IReadOnlyList<PersonDto>>? _persons;
+    private CachedAsyncValue<IReadOnlyList<TagDto>>? _tags;
+    private CachedAsyncValue<IReadOnlyList<PathDto>>? _paths;
+    private CachedAsyncValue<IReadOnlyList<StorageDto>>? _storages;
+    private CachedAsyncValue<IReadOnlyList<PersonGroupDto>>? _personGroups;
+    private ICurrentUser? _currentUser;
 
     public SearchReferenceDataService(
         IRepository<Person> personRepository,
@@ -38,7 +39,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
         IRepository<Photo> photoRepository,
         IRepository<Storage> storageRepository,
         IRepository<PersonGroup> personGroupRepository,
-        ICurrentUser currentUser,
+        ICurrentUserAccessor currentUserAccessor,
         IMemoryCache cache,
         IMapper mapper)
     {
@@ -47,15 +48,9 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
         _photoRepository = photoRepository;
         _storageRepository = storageRepository;
         _personGroupRepository = personGroupRepository;
-        _currentUser = currentUser;
+        _currentUserAccessor = currentUserAccessor;
         _cache = cache;
         _mapper = mapper;
-
-        _persons = CreatePersonsCache();
-        _tags = CreateTagsCache();
-        _paths = CreatePathsCache();
-        _storages = CreateStoragesCache();
-        _personGroups = CreatePersonGroupsCache();
     }
 
     public Task<IReadOnlyList<PersonDto>> GetPersonsAsync(CancellationToken cancellationToken = default)
@@ -65,7 +60,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             return Task.FromCanceled<IReadOnlyList<PersonDto>>(cancellationToken);
         }
 
-        return _persons.GetValueAsync();
+        return GetOrCreatePersonsCacheAsync(cancellationToken);
     }
 
     public Task<IReadOnlyList<TagDto>> GetTagsAsync(CancellationToken cancellationToken = default)
@@ -75,7 +70,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             return Task.FromCanceled<IReadOnlyList<TagDto>>(cancellationToken);
         }
 
-        return _tags.GetValueAsync();
+        return GetOrCreateTagsCacheAsync(cancellationToken);
     }
 
     public Task<IReadOnlyList<PathDto>> GetPathsAsync(CancellationToken cancellationToken = default)
@@ -85,7 +80,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             return Task.FromCanceled<IReadOnlyList<PathDto>>(cancellationToken);
         }
 
-        return _paths.GetValueAsync();
+        return GetOrCreatePathsCacheAsync(cancellationToken);
     }
 
     public Task<IReadOnlyList<StorageDto>> GetStoragesAsync(CancellationToken cancellationToken = default)
@@ -95,7 +90,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             return Task.FromCanceled<IReadOnlyList<StorageDto>>(cancellationToken);
         }
 
-        return _storages.GetValueAsync();
+        return GetOrCreateStoragesCacheAsync(cancellationToken);
     }
 
     public Task<IReadOnlyList<PersonGroupDto>> GetPersonGroupsAsync(CancellationToken cancellationToken = default)
@@ -105,23 +100,23 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             return Task.FromCanceled<IReadOnlyList<PersonGroupDto>>(cancellationToken);
         }
 
-        return _personGroups.GetValueAsync();
+        return GetOrCreatePersonGroupsCacheAsync(cancellationToken);
     }
 
     public void InvalidatePersons()
     {
-        _persons.Reset();
+        _persons?.Reset();
     }
 
     public void InvalidatePersonGroups()
     {
-        _personGroups.Reset();
+        _personGroups?.Reset();
     }
 
     public void InvalidateStorages()
     {
-        _storages.Reset();
-        _paths.Reset();
+        _storages?.Reset();
+        _paths?.Reset();
     }
 
     private CachedAsyncValue<T> CreateCachedValue<T>(
@@ -130,14 +125,14 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
         Func<IEnumerable<object>>? invalidationKeysFactory = null)
         => new(_cache, keyFactory, valueFactory, invalidationKeysFactory);
 
-    private CachedAsyncValue<IReadOnlyList<PersonDto>> CreatePersonsCache()
+    private CachedAsyncValue<IReadOnlyList<PersonDto>> CreatePersonsCache(ICurrentUser currentUser)
         => CreateCachedValue(
-            () => CacheKeys.Persons(_currentUser),
+            () => CacheKeys.Persons(currentUser),
             async _ =>
             {
                 var query = _personRepository.GetAll()
                     .AsNoTracking()
-                    .MaybeApplyAcl(_currentUser);
+                    .MaybeApplyAcl(currentUser);
 
                 var items = await query
                     .OrderBy(p => p.Name)
@@ -150,7 +145,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             () => new object[]
             {
                 CacheKeys.PersonsAll,
-                CacheKeys.PersonsOf(_currentUser.UserId)
+                CacheKeys.PersonsOf(currentUser.UserId)
             });
 
     private CachedAsyncValue<IReadOnlyList<TagDto>> CreateTagsCache()
@@ -169,14 +164,14 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             },
             () => new object[] { CacheKeys.Tags });
 
-    private CachedAsyncValue<IReadOnlyList<PathDto>> CreatePathsCache()
+    private CachedAsyncValue<IReadOnlyList<PathDto>> CreatePathsCache(ICurrentUser currentUser)
         => CreateCachedValue(
-            () => CacheKeys.Paths(_currentUser),
+            () => CacheKeys.Paths(currentUser),
             async _ =>
             {
                 var query = _photoRepository.GetAll()
                     .AsNoTracking()
-                    .MaybeApplyAcl(_currentUser)
+                    .MaybeApplyAcl(currentUser)
                     .Where(p => p.RelativePath != null);
 
                 var paths = await query
@@ -197,17 +192,17 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             () => new object[]
             {
                 CacheKeys.PathsAll,
-                CacheKeys.PathsOf(_currentUser.UserId)
+                CacheKeys.PathsOf(currentUser.UserId)
             });
 
-    private CachedAsyncValue<IReadOnlyList<StorageDto>> CreateStoragesCache()
+    private CachedAsyncValue<IReadOnlyList<StorageDto>> CreateStoragesCache(ICurrentUser currentUser)
         => CreateCachedValue(
-            () => CacheKeys.Storages(_currentUser),
+            () => CacheKeys.Storages(currentUser),
             async _ =>
             {
                 var query = _storageRepository.GetAll()
                     .AsNoTracking()
-                    .MaybeApplyAcl(_currentUser);
+                    .MaybeApplyAcl(currentUser);
 
                 var items = await query
                     .OrderBy(p => p.Name)
@@ -220,7 +215,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             () => new object[]
             {
                 CacheKeys.StoragesAll,
-                CacheKeys.StoragesOf(_currentUser.UserId)
+                CacheKeys.StoragesOf(currentUser.UserId)
             });
 
     private CachedAsyncValue<IReadOnlyList<PersonGroupDto>> CreatePersonGroupsCache()
@@ -243,4 +238,51 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
                 return (IReadOnlyList<PersonGroupDto>)items;
             },
             () => new object[] { CacheKeys.PersonGroups });
+
+    private async Task<IReadOnlyList<PersonDto>> GetOrCreatePersonsCacheAsync(CancellationToken cancellationToken)
+    {
+        var user = await EnsureCurrentUserAsync(cancellationToken).ConfigureAwait(false);
+        _persons ??= CreatePersonsCache(user);
+        return await _persons.GetValueAsync().ConfigureAwait(false);
+    }
+
+    private async Task<IReadOnlyList<TagDto>> GetOrCreateTagsCacheAsync(CancellationToken cancellationToken)
+    {
+        await EnsureCurrentUserAsync(cancellationToken).ConfigureAwait(false);
+        _tags ??= CreateTagsCache();
+        return await _tags.GetValueAsync().ConfigureAwait(false);
+    }
+
+    private async Task<IReadOnlyList<PathDto>> GetOrCreatePathsCacheAsync(CancellationToken cancellationToken)
+    {
+        var user = await EnsureCurrentUserAsync(cancellationToken).ConfigureAwait(false);
+        _paths ??= CreatePathsCache(user);
+        return await _paths.GetValueAsync().ConfigureAwait(false);
+    }
+
+    private async Task<IReadOnlyList<StorageDto>> GetOrCreateStoragesCacheAsync(CancellationToken cancellationToken)
+    {
+        var user = await EnsureCurrentUserAsync(cancellationToken).ConfigureAwait(false);
+        _storages ??= CreateStoragesCache(user);
+        return await _storages.GetValueAsync().ConfigureAwait(false);
+    }
+
+    private async Task<IReadOnlyList<PersonGroupDto>> GetOrCreatePersonGroupsCacheAsync(CancellationToken cancellationToken)
+    {
+        await EnsureCurrentUserAsync(cancellationToken).ConfigureAwait(false);
+        _personGroups ??= CreatePersonGroupsCache();
+        return await _personGroups.GetValueAsync().ConfigureAwait(false);
+    }
+
+    private async Task<ICurrentUser> EnsureCurrentUserAsync(CancellationToken cancellationToken)
+    {
+        if (_currentUser is not null)
+        {
+            return _currentUser;
+        }
+
+        var resolved = await _currentUserAccessor.GetCurrentUserAsync(cancellationToken).ConfigureAwait(false);
+        _currentUser = resolved;
+        return resolved;
+    }
 }

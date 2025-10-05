@@ -13,6 +13,7 @@ using PhotoBank.ViewModel.Dto;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PhotoBank.IntegrationTests;
@@ -65,7 +66,7 @@ public class GetPhotoIntegrationTests
                     }));
             services
                 .AddPhotobankCore(_config)
-                .AddScoped<ICurrentUser, DummyCurrentUser>()
+                .AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new DummyCurrentUser()))
                 .AddPhotobankApi(_config)
                 .AddPhotobankCors();
 
@@ -97,5 +98,19 @@ public class GetPhotoIntegrationTests
         // Assert
         result.Should().NotBeNull();
         result.Id.Should().Be(testId);
+    }
+    private sealed class TestCurrentUserAccessor : ICurrentUserAccessor
+    {
+        private readonly ICurrentUser _user;
+
+        public TestCurrentUserAccessor(ICurrentUser user)
+        {
+            _user = user;
+        }
+
+        public ValueTask<ICurrentUser> GetCurrentUserAsync(CancellationToken ct = default)
+            => ValueTask.FromResult(_user);
+
+        public ICurrentUser CurrentUser => _user;
     }
 }

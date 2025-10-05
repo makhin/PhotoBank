@@ -33,18 +33,19 @@ public class PhotoQueryService : IPhotoQueryService
     private readonly PhotoBankDbContext _db;
     private readonly IRepository<Photo> _photoRepository;
     private readonly IMapper _mapper;
-    private readonly ICurrentUser _currentUser;
+    private readonly ICurrentUserAccessor _currentUserAccessor;
     private readonly ISearchReferenceDataService _searchReferenceDataService;
     private readonly ISearchFilterNormalizer _searchFilterNormalizer;
     private readonly PhotoFilterSpecification _photoFilterSpecification;
     private readonly IMediaUrlResolver _mediaUrlResolver;
     private readonly S3Options _s3;
+    private ICurrentUser? _currentUser;
 
     public PhotoQueryService(
         PhotoBankDbContext db,
         IRepository<Photo> photoRepository,
         IMapper mapper,
-        ICurrentUser currentUser,
+        ICurrentUserAccessor currentUserAccessor,
         ISearchReferenceDataService searchReferenceDataService,
         ISearchFilterNormalizer searchFilterNormalizer,
         PhotoFilterSpecification photoFilterSpecification,
@@ -54,7 +55,7 @@ public class PhotoQueryService : IPhotoQueryService
         _db = db;
         _photoRepository = photoRepository;
         _mapper = mapper;
-        _currentUser = currentUser;
+        _currentUserAccessor = currentUserAccessor;
         _searchReferenceDataService = searchReferenceDataService;
         _searchFilterNormalizer = searchFilterNormalizer;
         _photoFilterSpecification = photoFilterSpecification;
@@ -65,8 +66,9 @@ public class PhotoQueryService : IPhotoQueryService
     public async Task<PageResponse<PhotoItemDto>> GetAllPhotosAsync(FilterDto filter, CancellationToken ct = default)
     {
         filter = await _searchFilterNormalizer.NormalizeAsync(filter, ct);
+        var currentUser = await GetCurrentUserAsync(ct).ConfigureAwait(false);
 
-        var query = _photoFilterSpecification.Build(filter, _currentUser);
+        var query = _photoFilterSpecification.Build(filter, currentUser);
 
         var count = await query.CountAsync(ct);
 
@@ -92,8 +94,9 @@ public class PhotoQueryService : IPhotoQueryService
 
     public async Task<PhotoDto> GetPhotoAsync(int id)
     {
+        var currentUser = await GetCurrentUserAsync().ConfigureAwait(false);
         PhotoDto? dto;
-        if (_currentUser.IsAdmin)
+        if (currentUser.IsAdmin)
         {
             var adminQuery = _db.Photos
                 .Include(p => p.PhotoTags).ThenInclude(pt => pt.Tag)
@@ -106,7 +109,7 @@ public class PhotoQueryService : IPhotoQueryService
         }
         else
         {
-            var acl = Acl.FromUser(_currentUser);
+            var acl = Acl.FromUser(currentUser);
             var nonAdminQuery = _db.Photos
                 .Include(p => p.PhotoTags).ThenInclude(pt => pt.Tag)
                 .Include(p => p.Faces).ThenInclude(f => f.Person).ThenInclude(pg => pg.PersonGroups)
@@ -143,6 +146,18 @@ public class PhotoQueryService : IPhotoQueryService
     {
         var tags = await _searchReferenceDataService.GetTagsAsync();
         return tags;
+    }
+
+    private async Task<ICurrentUser> GetCurrentUserAsync(CancellationToken cancellationToken = default)
+    {
+        if (_currentUser is not null)
+        {
+            return _currentUser;
+        }
+
+        var resolved = await _currentUserAccessor.GetCurrentUserAsync(cancellationToken).ConfigureAwait(false);
+        _currentUser = resolved;
+        return resolved;
     }
 
     private async Task FillUrlsAsync(PhotoDto dto)

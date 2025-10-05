@@ -47,7 +47,7 @@ public static partial class ServiceCollectionExtensions
             services.AddScoped<PhotoBankDbContext>(sp =>
             {
                 var context = sp.GetRequiredService<IDbContextFactory<PhotoBankDbContext>>().CreateDbContext();
-                context.ConfigureUser(sp.GetRequiredService<ICurrentUser>());
+                context.ConfigureUser(sp.GetRequiredService<ICurrentUserAccessor>().CurrentUser);
                 return context;
             });
         }
@@ -75,7 +75,7 @@ public static partial class ServiceCollectionExtensions
             {
                 var options = sp.GetRequiredService<DbContextOptions<PhotoBankDbContext>>();
                 var context = new PhotoBankDbContext(options);
-                context.ConfigureUser(sp.GetRequiredService<ICurrentUser>());
+                context.ConfigureUser(sp.GetRequiredService<ICurrentUserAccessor>().CurrentUser);
                 return context;
             });
         }

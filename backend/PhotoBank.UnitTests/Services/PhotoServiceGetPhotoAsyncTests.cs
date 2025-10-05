@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using System.Threading;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.AccessControl;
@@ -92,6 +93,7 @@ namespace PhotoBank.UnitTests.Services
             await context.SaveChangesAsync();
 
             var currentUser = new TestCurrentUser(storage.Id);
+            var currentUserAccessor = new TestCurrentUserAccessor(currentUser);
 
             var referenceDataService = new Mock<ISearchReferenceDataService>();
             referenceDataService
@@ -133,7 +135,7 @@ namespace PhotoBank.UnitTests.Services
                 context,
                 photoRepository,
                 _mapper,
-                currentUser,
+                currentUserAccessor,
                 referenceDataService.Object,
                 filterNormalizer.Object,
                 photoFilterSpecification,
@@ -203,6 +205,21 @@ namespace PhotoBank.UnitTests.Services
             public IReadOnlyList<(DateOnly From, DateOnly To)> AllowedDateRanges { get; }
 
             public bool CanSeeNsfw => true;
+        }
+
+        private sealed class TestCurrentUserAccessor : ICurrentUserAccessor
+        {
+            private readonly ICurrentUser _user;
+
+            public TestCurrentUserAccessor(ICurrentUser user)
+            {
+                _user = user;
+            }
+
+            public ValueTask<ICurrentUser> GetCurrentUserAsync(CancellationToken ct = default)
+                => ValueTask.FromResult(_user);
+
+            public ICurrentUser CurrentUser => _user;
         }
     }
 }

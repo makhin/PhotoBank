@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PhotoBank.IntegrationTests;
@@ -66,7 +67,7 @@ public class GetAllPhotosIntegrationTests
                     }));
             services
                 .AddPhotobankCore(_config)
-                .AddScoped<ICurrentUser, DummyCurrentUser>()
+                .AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new DummyCurrentUser()))
                 .AddPhotobankApi(_config)
                 .AddPhotobankCors();
 
@@ -293,5 +294,19 @@ public class GetAllPhotosIntegrationTests
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
         result.TotalCount.Should().Be(163);
+    }
+    private sealed class TestCurrentUserAccessor : ICurrentUserAccessor
+    {
+        private readonly ICurrentUser _user;
+
+        public TestCurrentUserAccessor(ICurrentUser user)
+        {
+            _user = user;
+        }
+
+        public ValueTask<ICurrentUser> GetCurrentUserAsync(CancellationToken ct = default)
+            => ValueTask.FromResult(_user);
+
+        public ICurrentUser CurrentUser => _user;
     }
 }

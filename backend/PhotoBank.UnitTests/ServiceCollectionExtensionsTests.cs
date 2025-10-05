@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Rekognition;
 using FluentValidation;
@@ -77,9 +78,9 @@ public class ServiceCollectionExtensionsTests
         AssertScopedRegistration<IEffectiveAccessProvider, EffectiveAccessProvider>(services);
         AssertScopedRegistration<IAccessProfileService, AccessProfileService>(services);
 
-        var currentUserDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ICurrentUser));
-        currentUserDescriptor.Should().NotBeNull("CurrentUser must be registered");
-        currentUserDescriptor!.Lifetime.ToString().Should().Be("Scoped");
+        var accessorDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(ICurrentUserAccessor));
+        accessorDescriptor.Should().NotBeNull("ICurrentUserAccessor must be registered");
+        accessorDescriptor!.Lifetime.ToString().Should().Be("Scoped");
 
         services.Should().Contain(d => d.ServiceType == typeof(IHttpContextAccessor) && d.Lifetime.ToString() == "Singleton");
 
@@ -88,7 +89,7 @@ public class ServiceCollectionExtensionsTests
             typeof(IImageService),
             typeof(IEffectiveAccessProvider),
             typeof(IAccessProfileService),
-            typeof(ICurrentUser));
+            typeof(ICurrentUserAccessor));
     }
 
     [Test]
@@ -315,7 +316,7 @@ public class ServiceCollectionExtensionsTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<IHostEnvironment>(new TestHostEnvironment());
-        services.TryAddSingleton<ICurrentUser, DummyCurrentUser>();
+        services.TryAddSingleton<ICurrentUserAccessor>(new StaticCurrentUserAccessor(new DummyCurrentUser()));
         var configuration = BuildDbConfiguration();
 
         services.AddPhotobankDbContext(configuration, usePool: true);
@@ -338,7 +339,7 @@ public class ServiceCollectionExtensionsTests
     {
         var services = new ServiceCollection();
         services.AddSingleton<IHostEnvironment>(new TestHostEnvironment());
-        services.TryAddSingleton<ICurrentUser, DummyCurrentUser>();
+        services.TryAddSingleton<ICurrentUserAccessor>(new StaticCurrentUserAccessor(new DummyCurrentUser()));
         var configuration = BuildDbConfiguration();
 
         services.AddPhotobankDbContext(configuration, usePool: false);
@@ -495,6 +496,21 @@ public class ServiceCollectionExtensionsTests
         }
 
         return "unknown";
+    }
+
+    private sealed class StaticCurrentUserAccessor : ICurrentUserAccessor
+    {
+        private readonly ICurrentUser _user;
+
+        public StaticCurrentUserAccessor(ICurrentUser user)
+        {
+            _user = user;
+        }
+
+        public ValueTask<ICurrentUser> GetCurrentUserAsync(CancellationToken ct = default)
+            => ValueTask.FromResult(_user);
+
+        public ICurrentUser CurrentUser => _user;
     }
 
     private sealed class TestDocumentFilter : IDocumentFilter

@@ -45,7 +45,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IAdminUserService, AdminUserService>();
         services.AddScoped<IEffectiveAccessProvider, EffectiveAccessProvider>();
         services.AddScoped<IAccessProfileService, AccessProfileService>();
-        services.TryAddScoped<ICurrentUser, CurrentUser>();
+        services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
         services.AddDefaultIdentity<ApplicationUser>()
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<PhotoBankDbContext>();

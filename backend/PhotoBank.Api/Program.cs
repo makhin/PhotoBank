@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using PhotoBank.Api.MinimalApi;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DependencyInjection;
+using PhotoBank.DependencyInjection.Middleware;
 using PhotoBank.ViewModel.Dto;
 using HealthChecks.UI.Client;
 using Serilog;
@@ -115,6 +116,7 @@ namespace PhotoBank.Api
             // Disabled HTTPS redirection to ensure CORS headers are applied
             // correctly during local development when running over HTTP.
             app.UseAuthentication();
+            app.UseMiddleware<CurrentUserInitializationMiddleware>();
             // имперсонификация удалена
             app.UseAuthorization();
 
