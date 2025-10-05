@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -42,6 +43,7 @@ using PhotoBank.Services.FaceRecognition.Aws;
 using PhotoBank.Services.FaceRecognition.Azure;
 using PhotoBank.Services.FaceRecognition.Local;
 using PhotoBank.Services.FaceRecognition.Abstractions;
+using PhotoBank.Services.Photos;
 using PhotoBank.Services.Recognition;
 using PhotoBank.Services.Search;
 using PhotoBank.Services.Translator;
@@ -189,10 +191,13 @@ public class ServiceCollectionExtensionsTests
 
         AssertFactoryRegistration<IMinioClient>(services, "Singleton");
         AssertScopedRegistration(typeof(IRepository<>), typeof(Repository<>), services);
+        AssertSingletonRegistration<IFileSystem, FileSystem>(services);
         AssertScopedRegistration<IFaceStorageService, FaceStorageService>(services);
         AssertScopedRegistration<MinioObjectService, MinioObjectService>(services);
         AssertScopedRegistration<ISearchFilterNormalizer, SearchFilterNormalizer>(services);
         AssertScopedRegistration<PhotoFilterSpecification, PhotoFilterSpecification>(services);
+        AssertScopedRegistration<IPhotoDuplicateFinder, PhotoDuplicateFinder>(services);
+        AssertScopedRegistration<IPhotoIngestionService, PhotoIngestionService>(services);
         AssertScopedRegistration<IPhotoService, PhotoService>(services);
         AssertScopedRegistration<ISearchReferenceDataService, SearchReferenceDataService>(services);
         AssertHttpClientRegistration<ITranslatorService, TranslatorService>(services);
@@ -207,11 +212,15 @@ public class ServiceCollectionExtensionsTests
             typeof(MinioObjectService),
             typeof(ISearchFilterNormalizer),
             typeof(PhotoFilterSpecification),
+            typeof(IPhotoDuplicateFinder),
+            typeof(IPhotoIngestionService),
             typeof(IPhotoService),
             typeof(ISearchReferenceDataService));
 
         using var provider = services.BuildServiceProvider();
         provider.GetRequiredService<IMinioClient>().Should().NotBeNull();
+        provider.GetRequiredService<IPhotoDuplicateFinder>().Should().NotBeNull();
+        provider.GetRequiredService<IPhotoIngestionService>().Should().NotBeNull();
         provider.GetRequiredService<IMediator>().Should().NotBeNull();
     }
 

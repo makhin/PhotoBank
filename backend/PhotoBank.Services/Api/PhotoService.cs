@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using PhotoBank.Services.Models;
+using PhotoBank.Services.Photos;
 using PhotoBank.Services.Photos.Admin;
 using PhotoBank.Services.Photos.Faces;
 using PhotoBank.Services.Photos.Queries;
@@ -40,20 +41,23 @@ public class PhotoService : IPhotoService
     private readonly IPersonDirectoryService _personDirectoryService;
     private readonly IPersonGroupService _personGroupService;
     private readonly IFaceCatalogService _faceCatalogService;
-    private readonly IPhotoAdminService _photoAdminService;
+    private readonly IPhotoDuplicateFinder _photoDuplicateFinder;
+    private readonly IPhotoIngestionService _photoIngestionService;
 
     public PhotoService(
         IPhotoQueryService photoQueryService,
         IPersonDirectoryService personDirectoryService,
         IPersonGroupService personGroupService,
         IFaceCatalogService faceCatalogService,
-        IPhotoAdminService photoAdminService)
+        IPhotoDuplicateFinder photoDuplicateFinder,
+        IPhotoIngestionService photoIngestionService)
     {
         _photoQueryService = photoQueryService;
         _personDirectoryService = personDirectoryService;
         _personGroupService = personGroupService;
         _faceCatalogService = faceCatalogService;
-        _photoAdminService = photoAdminService;
+        _photoDuplicateFinder = photoDuplicateFinder;
+        _photoIngestionService = photoIngestionService;
     }
 
     public Task<PageResponse<PhotoItemDto>> GetAllPhotosAsync(FilterDto filter, CancellationToken ct = default) =>
@@ -100,8 +104,8 @@ public class PhotoService : IPhotoService
     public Task UpdateFaceAsync(int faceId, int? personId) => _faceCatalogService.UpdateFaceAsync(faceId, personId);
 
     public Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold) =>
-        _photoQueryService.FindDuplicatesAsync(id, hash, threshold);
+        _photoDuplicateFinder.FindDuplicatesAsync(id, hash, threshold);
 
     public Task UploadPhotosAsync(IEnumerable<IFormFile> files, int storageId, string path) =>
-        _photoAdminService.UploadPhotosAsync(files, storageId, path);
+        _photoIngestionService.UploadAsync(files, storageId, path);
 }

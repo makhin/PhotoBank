@@ -16,6 +16,7 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Internal;
+using PhotoBank.Services.Photos;
 using PhotoBank.Services.Photos.Admin;
 using PhotoBank.Services.Photos.Faces;
 using PhotoBank.Services.Photos.Queries;
@@ -154,16 +155,20 @@ namespace PhotoBank.UnitTests.Services
                 NullLogger<FaceCatalogService>.Instance,
                 s3Options);
 
-            var photoAdminService = new PhotoAdminService(
-                storageRepository,
-                NullLogger<PhotoAdminService>.Instance);
+            var duplicateFinder = new Mock<IPhotoDuplicateFinder>();
+            duplicateFinder
+                .Setup(f => f.FindDuplicatesAsync(It.IsAny<int?>(), It.IsAny<string?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<PhotoItemDto>());
+
+            var ingestionService = new Mock<IPhotoIngestionService>();
 
             var service = new PhotoService(
                 photoQueryService,
                 personDirectoryService,
                 personGroupService,
                 faceCatalogService,
-                photoAdminService);
+                duplicateFinder.Object,
+                ingestionService.Object);
 
             // Act
             var result = await service.GetPhotoAsync(photo.Id);

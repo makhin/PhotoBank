@@ -16,6 +16,7 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Internal;
+using PhotoBank.Services.Photos;
 using PhotoBank.Services.Photos.Admin;
 using PhotoBank.Services.Photos.Faces;
 using PhotoBank.Services.Photos.Queries;
@@ -24,6 +25,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO.Abstractions;
 using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.UnitTests.Services
@@ -105,16 +107,27 @@ namespace PhotoBank.UnitTests.Services
                 NullLogger<FaceCatalogService>.Instance,
                 s3Options.Object);
 
-            var photoAdminService = new PhotoAdminService(
+            var duplicateFinder = new Mock<IPhotoDuplicateFinder>();
+            duplicateFinder
+                .Setup(f => f.FindDuplicatesAsync(It.IsAny<int?>(), It.IsAny<string?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Array.Empty<PhotoItemDto>());
+
+            var fileSystem = new FileSystem();
+
+            var photoIngestionService = new PhotoIngestionService(
                 storageRepository,
-                NullLogger<PhotoAdminService>.Instance);
+                minioClient.Object,
+                s3Options.Object,
+                fileSystem,
+                NullLogger<PhotoIngestionService>.Instance);
 
             return new PhotoService(
                 photoQueryService,
                 personDirectoryService,
                 personGroupService,
                 faceCatalogService,
-                photoAdminService);
+                duplicateFinder.Object,
+                photoIngestionService);
         }
 
         [Test]
