@@ -51,7 +51,6 @@ public static partial class ServiceCollectionExtensions
         });
 
         services.AddSingleton(typeof(AmazonRekognitionClient));
-        services.AddTransient<IDependencyExecutor, DependencyExecutor>();
         services.AddTransient<IFaceService, FaceService>();
         services.AddTransient<IFacePreviewService, FacePreviewService>();
         services.AddTransient<IFaceServiceAws, FaceServiceAws>();
