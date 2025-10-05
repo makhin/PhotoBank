@@ -30,7 +30,6 @@ public interface IPhotoQueryService
     Task<IEnumerable<PathDto>> GetAllPathsAsync();
     Task<IEnumerable<StorageDto>> GetAllStoragesAsync();
     Task<IEnumerable<TagDto>> GetAllTagsAsync();
-    Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold);
 }
 
 public class PhotoQueryService : IPhotoQueryService
@@ -191,51 +190,6 @@ public class PhotoQueryService : IPhotoQueryService
     {
         var tags = await _searchReferenceDataService.GetTagsAsync();
         return tags;
-    }
-
-    public async Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold)
-    {
-        if (id.HasValue)
-        {
-            hash = await _photoRepository.GetByCondition(p => p.Id == id.Value)
-                .AsNoTracking()
-                .Select(p => p.ImageHash)
-                .SingleOrDefaultAsync();
-        }
-
-        if (string.IsNullOrEmpty(hash))
-        {
-            return Array.Empty<PhotoItemDto>();
-        }
-
-        var referenceHash = new PerceptualHash(hash);
-        var candidateIds = new List<int>();
-
-        await foreach (var photo in _photoRepository.GetAll().AsNoTracking()
-                           .Where(p => !id.HasValue || p.Id != id.Value)
-                           .Select(p => new { p.Id, p.ImageHash })
-                           .AsAsyncEnumerable())
-        {
-            if (ImageHashHelper.HammingDistance(referenceHash, photo.ImageHash) <= threshold)
-            {
-                candidateIds.Add(photo.Id);
-            }
-        }
-
-        var matchedIds = candidateIds.Distinct().ToArray();
-        if (matchedIds.Length == 0)
-        {
-            return Array.Empty<PhotoItemDto>();
-        }
-
-        var entities = await _photoRepository.GetAll().AsNoTracking()
-            .Where(p => matchedIds.Contains(p.Id))
-            .ToListAsync();
-
-        var items = _mapper.Map<List<PhotoItemDto>>(entities);
-        await FillUrlsAsync(items);
-
-        return items;
     }
 
     private async Task FillUrlsAsync(PhotoDto dto)

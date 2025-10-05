@@ -25,6 +25,7 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.9" />
     <PackageReference Include="Minio" Version="6.0.5" />
     <PackageReference Include="MediatR" Version="13.0.0" />
+    <PackageReference Include="System.IO.Abstractions" Version="21.0.2" />
   </ItemGroup>
 
   <ItemGroup>

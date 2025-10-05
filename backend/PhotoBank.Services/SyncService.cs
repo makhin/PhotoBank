@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using File = PhotoBank.DbContext.Models.File;
+using System.IO.Abstractions;
 
 namespace PhotoBank.Services
 {
@@ -33,19 +34,21 @@ namespace PhotoBank.Services
             ".pdf"
         };
         private readonly IRepository<File> _fileRepository;
+        private readonly IFileSystem _fileSystem;
 
-        public SyncService(IRepository<File> fileRepository)
+        public SyncService(IRepository<File> fileRepository, IFileSystem fileSystem)
         {
             _fileRepository = fileRepository;
+            _fileSystem = fileSystem;
         }
 
         public async Task<IEnumerable<string>> SyncStorage(Storage storage)
         {
             // Files on disk relative to storage folder
             var folderFiles = new HashSet<string>(
-                Directory.EnumerateFiles(storage.Folder, "*", SearchOption.AllDirectories)
-                    .Where(f => SupportedExtensions.Contains(Path.GetExtension(f)))
-                    .Select(p => Path.GetRelativePath(storage.Folder, p)),
+                _fileSystem.Directory.EnumerateFiles(storage.Folder, "*", SearchOption.AllDirectories)
+                    .Where(f => SupportedExtensions.Contains(_fileSystem.Path.GetExtension(f)))
+                    .Select(p => _fileSystem.Path.GetRelativePath(storage.Folder, p)),
                 StringComparer.OrdinalIgnoreCase);
 
             // Files in DB
@@ -56,7 +59,7 @@ namespace PhotoBank.Services
                 .Select(f => new
                 {
                     f.Id,
-                    Path = Path.Combine(f.Photo.RelativePath ?? string.Empty, f.Name),
+                    Path = _fileSystem.Path.Combine(f.Photo.RelativePath ?? string.Empty, f.Name),
                     f.IsDeleted
                 })
                 .ToListAsync();

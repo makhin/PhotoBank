@@ -6,6 +6,7 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Internal;
+using PhotoBank.Services.Photos;
 using PhotoBank.Services.Photos.Admin;
 using PhotoBank.Services.Photos.Faces;
 using PhotoBank.Services.Photos.Queries;
@@ -13,6 +14,7 @@ using PhotoBank.Services.Search;
 using PhotoBank.Services.Translator;
 using Polly;
 using System;
+using System.IO.Abstractions;
 
 namespace PhotoBank.DependencyInjection;
 
@@ -22,6 +24,7 @@ public static partial class ServiceCollectionExtensions
     {
         services.AddLogging();
         services.AddMemoryCache();
+        services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IMinioClient>(sp =>
         {
             var opts = sp.GetRequiredService<IOptions<MinioOptions>>().Value;
@@ -39,6 +42,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IPersonDirectoryService, PersonDirectoryService>();
         services.AddScoped<IPersonGroupService, PersonGroupService>();
         services.AddScoped<IFaceCatalogService, FaceCatalogService>();
+        services.AddScoped<IPhotoDuplicateFinder, PhotoDuplicateFinder>();
+        services.AddScoped<IPhotoIngestionService, PhotoIngestionService>();
         services.AddScoped<IPhotoAdminService, PhotoAdminService>();
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<ISearchReferenceDataService, SearchReferenceDataService>();
@@ -53,6 +58,7 @@ public static partial class ServiceCollectionExtensions
         {
             services.AddOptions<TranslatorOptions>();
             services.AddOptions<MinioOptions>();
+            services.AddOptions<S3Options>();
         }
         services.AddHttpClient<ITranslatorService, TranslatorService>()
             .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(100 * attempt)));
