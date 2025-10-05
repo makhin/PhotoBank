@@ -21,12 +21,12 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
     private readonly ILogger<EnrichmentPipeline> _log;
 
     public EnrichmentPipeline(IServiceProvider root,
-                              IEnumerable<Type> enricherTypes,
+                              EnricherTypeCatalog enricherCatalog,
                               IOptions<EnrichmentPipelineOptions> opts,
                               ILogger<EnrichmentPipeline> log)
     {
         _root = root;
-        _enricherTypes = enricherTypes.ToArray();
+        _enricherTypes = enricherCatalog.Types.ToArray();
         _opts = opts.Value;
         _log = log;
     }

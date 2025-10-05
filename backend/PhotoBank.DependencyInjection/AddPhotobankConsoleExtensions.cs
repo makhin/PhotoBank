@@ -84,12 +84,8 @@ public static partial class ServiceCollectionExtensions
             .Distinct()
             .ToArray();
 
-        services.AddSingleton<IEnrichmentPipeline>(provider =>
-        {
-            var options = provider.GetRequiredService<IOptions<EnrichmentPipelineOptions>>();
-            var logger = provider.GetRequiredService<ILogger<EnrichmentPipeline>>();
-            return new EnrichmentPipeline(provider, enricherTypes, options, logger);
-        });
+        services.AddSingleton(_ => new EnricherTypeCatalog(enricherTypes));
+        services.AddSingleton<IEnrichmentPipeline, EnrichmentPipeline>();
         services.AddSingleton<EnricherResolver>(provider =>
         {
             var activeEnricherProvider = provider.GetRequiredService<IActiveEnricherProvider>();

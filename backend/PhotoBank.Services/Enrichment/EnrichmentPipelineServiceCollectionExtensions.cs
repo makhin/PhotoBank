@@ -40,12 +40,8 @@ public static class EnrichmentPipelineServiceCollectionExtensions
         else
             services.Configure<EnrichmentPipelineOptions>(_ => { });
 
-        services.AddSingleton<IEnrichmentPipeline>(sp =>
-        {
-            var opts = sp.GetRequiredService<IOptions<EnrichmentPipelineOptions>>();
-            var logger = sp.GetRequiredService<ILogger<EnrichmentPipeline>>();
-            return new EnrichmentPipeline(sp, enricherTypes, opts, logger);
-        });
+        services.AddSingleton(_ => new EnricherTypeCatalog(enricherTypes));
+        services.AddSingleton<IEnrichmentPipeline, EnrichmentPipeline>();
 
         return services;
     }

@@ -26,9 +26,10 @@ public class EnrichmentPipelineTests
         services.AddScoped<CharlieEnricher>();
 
         var provider = services.BuildServiceProvider();
+        var catalog = new EnricherTypeCatalog(new[] { typeof(AlphaEnricher), typeof(BravoEnricher), typeof(CharlieEnricher) });
         var pipeline = new EnrichmentPipeline(
             provider,
-            new[] { typeof(AlphaEnricher), typeof(BravoEnricher), typeof(CharlieEnricher) },
+            catalog,
             Options.Create(new EnrichmentPipelineOptions { LogTimings = false }),
             NullLogger<EnrichmentPipeline>.Instance);
 
@@ -116,9 +117,10 @@ public class EnrichmentPipelineTests
         services.AddScoped<CycleBravoEnricher>();
 
         var provider = services.BuildServiceProvider();
+        var catalog = new EnricherTypeCatalog(new[] { typeof(CycleAlphaEnricher), typeof(CycleBravoEnricher) });
         var pipeline = new EnrichmentPipeline(
             provider,
-            new[] { typeof(CycleAlphaEnricher), typeof(CycleBravoEnricher) },
+            catalog,
             Options.Create(new EnrichmentPipelineOptions { LogTimings = false }),
             NullLogger<EnrichmentPipeline>.Instance);
 
@@ -148,9 +150,10 @@ public class EnrichmentPipelineTests
         services.AddScoped<BlockingEnricher>();
 
         var provider = services.BuildServiceProvider();
+        var catalog = new EnricherTypeCatalog(new[] { typeof(BlockingEnricher) });
         var pipeline = new EnrichmentPipeline(
             provider,
-            new[] { typeof(BlockingEnricher) },
+            catalog,
             Options.Create(new EnrichmentPipelineOptions
             {
                 LogTimings = false,
