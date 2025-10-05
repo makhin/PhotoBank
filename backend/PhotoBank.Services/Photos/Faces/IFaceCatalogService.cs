@@ -5,10 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Minio;
-using Minio.DataModel.Args;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Internal;
@@ -27,21 +24,18 @@ public class FaceCatalogService : IFaceCatalogService
 {
     private readonly IRepository<Face> _faceRepository;
     private readonly IMapper _mapper;
-    private readonly IMinioClient _minioClient;
-    private readonly ILogger<FaceCatalogService> _logger;
+    private readonly IMediaUrlResolver _mediaUrlResolver;
     private readonly S3Options _s3;
 
     public FaceCatalogService(
         IRepository<Face> faceRepository,
         IMapper mapper,
-        IMinioClient minioClient,
-        ILogger<FaceCatalogService> logger,
+        IMediaUrlResolver mediaUrlResolver,
         IOptions<S3Options> s3Options)
     {
         _faceRepository = faceRepository;
         _mapper = mapper;
-        _minioClient = minioClient;
-        _logger = logger;
+        _mediaUrlResolver = mediaUrlResolver;
         _s3 = s3Options?.Value ?? new S3Options();
     }
 
@@ -99,29 +93,11 @@ public class FaceCatalogService : IFaceCatalogService
     {
         var tasks = faces.Select(async dto =>
         {
-            dto.ImageUrl = await GetPresignedUrlAsync(dto.S3Key_Image, dto.PhotoId);
+            dto.ImageUrl = await _mediaUrlResolver.ResolveAsync(
+                dto.S3Key_Image,
+                _s3.UrlExpirySeconds,
+                MediaUrlContext.ForFace(dto.PhotoId, dto.Id));
         });
         await Task.WhenAll(tasks);
-    }
-
-    private async Task<string?> GetPresignedUrlAsync(string? key, int? photoId)
-    {
-        if (string.IsNullOrEmpty(key))
-        {
-            return null;
-        }
-
-        try
-        {
-            return await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
-                .WithBucket(_s3.Bucket)
-                .WithObject(key)
-                .WithExpiry(_s3.UrlExpirySeconds));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to generate presigned URL for face of photo {PhotoId} with key {S3Key}.", photoId, key);
-            return null;
-        }
     }
 }

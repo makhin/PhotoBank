@@ -44,6 +44,7 @@ using PhotoBank.Services.FaceRecognition.Azure;
 using PhotoBank.Services.FaceRecognition.Local;
 using PhotoBank.Services.FaceRecognition.Abstractions;
 using PhotoBank.Services.Photos;
+using PhotoBank.Services.Internal;
 using PhotoBank.Services.Recognition;
 using PhotoBank.Services.Search;
 using PhotoBank.Services.Translator;
@@ -174,6 +175,8 @@ public class ServiceCollectionExtensionsTests
     public void AddPhotobankCore_RegistersExpectedServicesAndOptions()
     {
         var services = new ServiceCollection();
+        services.TryAddSingleton<IDbContextFactory<PhotoBankDbContext>>(new FakeDbContextFactory());
+        services.AddScoped<PhotoBankDbContext>(sp => sp.GetRequiredService<IDbContextFactory<PhotoBankDbContext>>().CreateDbContext());
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
@@ -189,11 +192,13 @@ public class ServiceCollectionExtensionsTests
 
         services.AddPhotobankCore(configuration);
 
+        services.Should().Contain(d => d.ServiceType == typeof(PhotoBankDbContext));
         AssertFactoryRegistration<IMinioClient>(services, "Singleton");
         AssertScopedRegistration(typeof(IRepository<>), typeof(Repository<>), services);
         AssertSingletonRegistration<IFileSystem, FileSystem>(services);
         AssertScopedRegistration<IFaceStorageService, FaceStorageService>(services);
         AssertScopedRegistration<MinioObjectService, MinioObjectService>(services);
+        AssertScopedRegistration<IMediaUrlResolver, MediaUrlResolver>(services);
         AssertScopedRegistration<ISearchFilterNormalizer, SearchFilterNormalizer>(services);
         AssertScopedRegistration<PhotoFilterSpecification, PhotoFilterSpecification>(services);
         AssertScopedRegistration<IPhotoDuplicateFinder, PhotoDuplicateFinder>(services);
@@ -210,6 +215,7 @@ public class ServiceCollectionExtensionsTests
             typeof(IRepository<>),
             typeof(IFaceStorageService),
             typeof(MinioObjectService),
+            typeof(IMediaUrlResolver),
             typeof(ISearchFilterNormalizer),
             typeof(PhotoFilterSpecification),
             typeof(IPhotoDuplicateFinder),
@@ -217,10 +223,14 @@ public class ServiceCollectionExtensionsTests
             typeof(IPhotoService),
             typeof(ISearchReferenceDataService));
 
+        services.RemoveAll(typeof(IRepository<>));
+        services.AddScoped(typeof(IRepository<>), typeof(FakeRepository<>));
+
         using var provider = services.BuildServiceProvider();
         provider.GetRequiredService<IMinioClient>().Should().NotBeNull();
         provider.GetRequiredService<IPhotoDuplicateFinder>().Should().NotBeNull();
         provider.GetRequiredService<IPhotoIngestionService>().Should().NotBeNull();
+        provider.GetRequiredService<IMediaUrlResolver>().Should().NotBeNull();
         provider.GetRequiredService<IMediator>().Should().NotBeNull();
     }
 
@@ -531,5 +541,31 @@ public class ServiceCollectionExtensionsTests
                 .Options;
             return new PhotoBankDbContext(options);
         }
+    }
+
+    private sealed class FakeRepository<T> : IRepository<T>
+        where T : class, IEntityBase, new()
+    {
+        public Task<int> DeleteAsync(int id) => Task.FromResult(0);
+
+        public T Get(int id) => new();
+
+        public T Get(int id, Func<IQueryable<T>, IQueryable<T>> queryable) => new();
+
+        public IQueryable<T> GetAll() => Array.Empty<T>().AsQueryable();
+
+        public IQueryable<T> GetByCondition(Expression<Func<T, bool>> predicate) => GetAll();
+
+        public Task<T> GetAsync(int id) => Task.FromResult(new T());
+
+        public Task<T> GetAsync(int id, Func<IQueryable<T>, IQueryable<T>> queryable) => Task.FromResult(new T());
+
+        public Task<T> InsertAsync(T entity) => Task.FromResult(entity);
+
+        public Task InsertRangeAsync(List<T> entities) => Task.CompletedTask;
+
+        public Task<T> UpdateAsync(T entity) => Task.FromResult(entity);
+
+        public Task<int> UpdateAsync(T entity, params Expression<Func<T, object>>[] properties) => Task.FromResult(0);
     }
 }

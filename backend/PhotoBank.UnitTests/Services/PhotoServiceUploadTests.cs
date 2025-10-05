@@ -69,6 +69,15 @@ namespace PhotoBank.UnitTests.Services
                 .ReturnsAsync((FilterDto f, CancellationToken _) => f);
 
             var minioClient = new Mock<IMinioClient>();
+            var mediaUrlResolver = new Mock<IMediaUrlResolver>();
+            mediaUrlResolver
+                .Setup(r => r.ResolveAsync(
+                    It.IsAny<string?>(),
+                    It.IsAny<int>(),
+                    It.IsAny<MediaUrlContext>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((string? key, int _, MediaUrlContext _, CancellationToken _) =>
+                    string.IsNullOrEmpty(key) ? null : $"resolved-{key}");
             var s3Options = new Mock<IOptions<S3Options>>();
             s3Options.Setup(o => o.Value).Returns(new S3Options());
 
@@ -84,12 +93,11 @@ namespace PhotoBank.UnitTests.Services
                 context,
                 photoRepository,
                 _mapper,
-                NullLogger<PhotoQueryService>.Instance,
                 new DummyCurrentUser(),
                 referenceDataService.Object,
                 normalizer.Object,
                 photoFilterSpecification,
-                minioClient.Object,
+                mediaUrlResolver.Object,
                 s3Options.Object);
 
             var personDirectoryService = new PersonDirectoryService(
@@ -108,8 +116,7 @@ namespace PhotoBank.UnitTests.Services
             var faceCatalogService = new FaceCatalogService(
                 faceRepository,
                 _mapper,
-                minioClient.Object,
-                NullLogger<FaceCatalogService>.Instance,
+                mediaUrlResolver.Object,
                 s3Options.Object);
 
             var duplicateFinder = new Mock<IPhotoDuplicateFinder>();

@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using ImageMagick;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Minio;
-using Minio.DataModel.Args;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services;
 using PhotoBank.Repositories;
@@ -28,22 +25,19 @@ public sealed class PhotoDuplicateFinder : IPhotoDuplicateFinder
 {
     private readonly IRepository<Photo> _photoRepository;
     private readonly IMapper _mapper;
-    private readonly IMinioClient _minioClient;
     private readonly S3Options _s3Options;
-    private readonly ILogger<PhotoDuplicateFinder> _logger;
+    private readonly IMediaUrlResolver _mediaUrlResolver;
 
     public PhotoDuplicateFinder(
         IRepository<Photo> photoRepository,
         IMapper mapper,
-        IMinioClient minioClient,
         IOptions<S3Options> s3Options,
-        ILogger<PhotoDuplicateFinder> logger)
+        IMediaUrlResolver mediaUrlResolver)
     {
         _photoRepository = photoRepository;
         _mapper = mapper;
-        _minioClient = minioClient;
         _s3Options = s3Options?.Value ?? new S3Options();
-        _logger = logger;
+        _mediaUrlResolver = mediaUrlResolver;
     }
 
     public async Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold, CancellationToken cancellationToken = default)
@@ -95,30 +89,13 @@ public sealed class PhotoDuplicateFinder : IPhotoDuplicateFinder
     {
         var tasks = items.Select(async dto =>
         {
-            dto.ThumbnailUrl = await GetPresignedUrlAsync(dto.S3Key_Thumbnail, dto.Id, cancellationToken);
+            dto.ThumbnailUrl = await _mediaUrlResolver.ResolveAsync(
+                dto.S3Key_Thumbnail,
+                _s3Options.UrlExpirySeconds,
+                MediaUrlContext.ForPhoto(dto.Id),
+                cancellationToken);
         });
 
         await Task.WhenAll(tasks);
-    }
-
-    private async Task<string?> GetPresignedUrlAsync(string? key, int? photoId, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrEmpty(key))
-        {
-            return null;
-        }
-
-        try
-        {
-            return await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
-                .WithBucket(_s3Options.Bucket)
-                .WithObject(key)
-                .WithExpiry(_s3Options.UrlExpirySeconds));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to generate presigned URL for photo {PhotoId} with key {S3Key}.", photoId, key);
-            return null;
-        }
     }
 }

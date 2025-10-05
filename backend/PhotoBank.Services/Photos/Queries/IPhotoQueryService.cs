@@ -7,10 +7,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using ImageMagick;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Minio;
-using Minio.DataModel.Args;
 using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
@@ -36,35 +33,32 @@ public class PhotoQueryService : IPhotoQueryService
     private readonly PhotoBankDbContext _db;
     private readonly IRepository<Photo> _photoRepository;
     private readonly IMapper _mapper;
-    private readonly ILogger<PhotoQueryService> _logger;
     private readonly ICurrentUser _currentUser;
     private readonly ISearchReferenceDataService _searchReferenceDataService;
     private readonly ISearchFilterNormalizer _searchFilterNormalizer;
     private readonly PhotoFilterSpecification _photoFilterSpecification;
-    private readonly IMinioClient _minioClient;
+    private readonly IMediaUrlResolver _mediaUrlResolver;
     private readonly S3Options _s3;
 
     public PhotoQueryService(
         PhotoBankDbContext db,
         IRepository<Photo> photoRepository,
         IMapper mapper,
-        ILogger<PhotoQueryService> logger,
         ICurrentUser currentUser,
         ISearchReferenceDataService searchReferenceDataService,
         ISearchFilterNormalizer searchFilterNormalizer,
         PhotoFilterSpecification photoFilterSpecification,
-        IMinioClient minioClient,
+        IMediaUrlResolver mediaUrlResolver,
         IOptions<S3Options> s3Options)
     {
         _db = db;
         _photoRepository = photoRepository;
         _mapper = mapper;
-        _logger = logger;
         _currentUser = currentUser;
         _searchReferenceDataService = searchReferenceDataService;
         _searchFilterNormalizer = searchFilterNormalizer;
         _photoFilterSpecification = photoFilterSpecification;
-        _minioClient = minioClient;
+        _mediaUrlResolver = mediaUrlResolver;
         _s3 = s3Options?.Value ?? new S3Options();
     }
 
@@ -153,36 +147,21 @@ public class PhotoQueryService : IPhotoQueryService
 
     private async Task FillUrlsAsync(PhotoDto dto)
     {
-        dto.PreviewUrl = await GetPresignedUrlAsync(dto.S3Key_Preview, dto.Id);
+        dto.PreviewUrl = await _mediaUrlResolver.ResolveAsync(
+            dto.S3Key_Preview,
+            _s3.UrlExpirySeconds,
+            MediaUrlContext.ForPhoto(dto.Id));
     }
 
     private async Task FillUrlsAsync(IEnumerable<PhotoItemDto> items)
     {
         var tasks = items.Select(async dto =>
         {
-            dto.ThumbnailUrl = await GetPresignedUrlAsync(dto.S3Key_Thumbnail, dto.Id);
+            dto.ThumbnailUrl = await _mediaUrlResolver.ResolveAsync(
+                dto.S3Key_Thumbnail,
+                _s3.UrlExpirySeconds,
+                MediaUrlContext.ForPhoto(dto.Id));
         });
         await Task.WhenAll(tasks);
-    }
-
-    private async Task<string?> GetPresignedUrlAsync(string? key, int? photoId)
-    {
-        if (string.IsNullOrEmpty(key))
-        {
-            return null;
-        }
-
-        try
-        {
-            return await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
-                .WithBucket(_s3.Bucket)
-                .WithObject(key)
-                .WithExpiry(_s3.UrlExpirySeconds));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to generate presigned URL for photo {PhotoId} with key {S3Key}.", photoId, key);
-            return null;
-        }
     }
 }

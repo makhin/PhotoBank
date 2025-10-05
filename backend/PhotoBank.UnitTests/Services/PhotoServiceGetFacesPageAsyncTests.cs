@@ -4,8 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging.Abstractions;
-using Minio;
-using Minio.DataModel.Args;
 using Moq;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
@@ -119,12 +117,16 @@ public class PhotoServiceGetFacesPageAsyncTests
         var savedFace = await context.Faces.AsNoTracking().FirstAsync();
         savedFace.Rectangle.Coordinates.Length.Should().BeGreaterThan(3);
 
-        var minioClient = new Mock<IMinioClient>();
-        minioClient
-            .Setup(m => m.PresignedGetObjectAsync(It.IsAny<PresignedGetObjectArgs>()))
+        var mediaUrlResolver = new Mock<IMediaUrlResolver>();
+        mediaUrlResolver
+            .Setup(r => r.ResolveAsync(
+                It.IsAny<string?>(),
+                It.IsAny<int>(),
+                It.IsAny<MediaUrlContext>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://example.com/face.jpg");
 
-        var service = CreateService(dbName, minioClient.Object);
+        var service = CreateService(dbName, mediaUrlResolver.Object);
 
         // Act
         var result = await service.GetFacesPageAsync(1, 10);
@@ -135,7 +137,7 @@ public class PhotoServiceGetFacesPageAsyncTests
         result.Items.Should().AllSatisfy(dto => dto.ImageUrl.Should().Be("https://example.com/face.jpg"));
     }
 
-    private PhotoService CreateService(string dbName, IMinioClient minioClient)
+    private PhotoService CreateService(string dbName, IMediaUrlResolver mediaUrlResolver)
     {
         var services = new ServiceCollection();
         services.AddDbContext<PhotoBankDbContext>(o => o.UseInMemoryDatabase(dbName));
@@ -176,12 +178,11 @@ public class PhotoServiceGetFacesPageAsyncTests
             context,
             photoRepository,
             _mapper,
-            NullLogger<PhotoQueryService>.Instance,
             new DummyCurrentUser(),
             referenceDataService.Object,
             normalizer.Object,
             photoFilterSpecification,
-            minioClient,
+            mediaUrlResolver,
             s3Options);
 
         var personDirectoryService = new PersonDirectoryService(
@@ -200,8 +201,7 @@ public class PhotoServiceGetFacesPageAsyncTests
         var faceCatalogService = new FaceCatalogService(
             faceRepository,
             _mapper,
-            minioClient,
-            NullLogger<FaceCatalogService>.Instance,
+            mediaUrlResolver,
             s3Options);
 
         var duplicateFinder = new Mock<IPhotoDuplicateFinder>();
