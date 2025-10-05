@@ -7,7 +7,6 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using ImageMagick;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
@@ -36,9 +35,7 @@ public class PhotoQueryService : IPhotoQueryService
 {
     private readonly PhotoBankDbContext _db;
     private readonly IRepository<Photo> _photoRepository;
-    private readonly IRepository<Storage> _storageRepository;
     private readonly IMapper _mapper;
-    private readonly IMemoryCache _cache;
     private readonly ILogger<PhotoQueryService> _logger;
     private readonly ICurrentUser _currentUser;
     private readonly ISearchReferenceDataService _searchReferenceDataService;
@@ -50,9 +47,7 @@ public class PhotoQueryService : IPhotoQueryService
     public PhotoQueryService(
         PhotoBankDbContext db,
         IRepository<Photo> photoRepository,
-        IRepository<Storage> storageRepository,
         IMapper mapper,
-        IMemoryCache cache,
         ILogger<PhotoQueryService> logger,
         ICurrentUser currentUser,
         ISearchReferenceDataService searchReferenceDataService,
@@ -63,9 +58,7 @@ public class PhotoQueryService : IPhotoQueryService
     {
         _db = db;
         _photoRepository = photoRepository;
-        _storageRepository = storageRepository;
         _mapper = mapper;
-        _cache = cache;
         _logger = logger;
         _currentUser = currentUser;
         _searchReferenceDataService = searchReferenceDataService;
@@ -142,48 +135,14 @@ public class PhotoQueryService : IPhotoQueryService
 
     public async Task<IEnumerable<PathDto>> GetAllPathsAsync()
     {
-        var cacheKey = CacheKeys.Paths(_currentUser);
-        return await _cache.GetOrCreateAsync(cacheKey, async entry =>
-        {
-            var query = _photoRepository.GetAll()
-                .AsNoTracking()
-                .MaybeApplyAcl(_currentUser)
-                .Where(p => p.RelativePath != null);
-
-            var paths = await query
-                .Select(p => new { p.StorageId, p.RelativePath })
-                .Distinct()
-                .OrderBy(p => p.StorageId)
-                .ThenBy(p => p.RelativePath)
-                .ToListAsync();
-
-            return (IReadOnlyList<PathDto>)paths
-                .Select(p => new PathDto
-                {
-                    StorageId = p.StorageId,
-                    Path = p.RelativePath!
-                })
-                .ToList();
-        }) ?? Array.Empty<PathDto>();
+        var paths = await _searchReferenceDataService.GetPathsAsync();
+        return paths;
     }
 
     public async Task<IEnumerable<StorageDto>> GetAllStoragesAsync()
     {
-        var cacheKey = CacheKeys.Storages(_currentUser);
-        return await _cache.GetOrCreateAsync(cacheKey, async entry =>
-        {
-            var query = _storageRepository.GetAll()
-                .AsNoTracking()
-                .MaybeApplyAcl(_currentUser);
-
-            var items = await query
-                .OrderBy(p => p.Name)
-                .ThenBy(p => p.Id)
-                .ProjectTo<StorageDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
-
-            return (IReadOnlyList<StorageDto>)items;
-        }) ?? Array.Empty<StorageDto>();
+        var storages = await _searchReferenceDataService.GetStoragesAsync();
+        return storages;
     }
 
     public async Task<IEnumerable<TagDto>> GetAllTagsAsync()

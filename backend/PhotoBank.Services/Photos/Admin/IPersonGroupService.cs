@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Internal;
+using PhotoBank.Services.Search;
 using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.Services.Photos.Admin;
@@ -30,43 +30,27 @@ public class PersonGroupService : IPersonGroupService
     private readonly PhotoBankDbContext _db;
     private readonly IRepository<PersonGroup> _personGroupRepository;
     private readonly IMapper _mapper;
-    private readonly IMemoryCache _cache;
+    private readonly ISearchReferenceDataService _searchReferenceDataService;
     private readonly ILogger<PersonGroupService> _logger;
 
     public PersonGroupService(
         PhotoBankDbContext db,
         IRepository<PersonGroup> personGroupRepository,
         IMapper mapper,
-        IMemoryCache cache,
+        ISearchReferenceDataService searchReferenceDataService,
         ILogger<PersonGroupService> logger)
     {
         _db = db;
         _personGroupRepository = personGroupRepository;
         _mapper = mapper;
-        _cache = cache;
+        _searchReferenceDataService = searchReferenceDataService;
         _logger = logger;
     }
 
     public async Task<IEnumerable<PersonGroupDto>> GetAllPersonGroupsAsync()
     {
-        var groups = await _cache.GetOrCreateAsync(CacheKeys.PersonGroups, async entry =>
-        {
-            var items = await _personGroupRepository.GetAll()
-                .AsNoTracking()
-                .OrderBy(pg => pg.Name)
-                .ThenBy(pg => pg.Id)
-                .ProjectTo<PersonGroupDto>(_mapper.ConfigurationProvider)
-                .ToListAsync();
-
-            foreach (var group in items)
-            {
-                group.Persons ??= [];
-            }
-
-            return (IReadOnlyList<PersonGroupDto>)items;
-        });
-
-        return groups ?? Array.Empty<PersonGroupDto>();
+        var groups = await _searchReferenceDataService.GetPersonGroupsAsync();
+        return groups;
     }
 
     public async Task<PersonGroupDto> CreatePersonGroupAsync(string name)
@@ -120,6 +104,6 @@ public class PersonGroupService : IPersonGroupService
     private void InvalidateCache()
     {
         _logger.LogDebug("Invalidating person group cache");
-        _cache.Remove(CacheKeys.PersonGroups);
+        _searchReferenceDataService.InvalidatePersonGroups();
     }
 }

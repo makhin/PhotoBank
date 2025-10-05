@@ -66,6 +66,6 @@ public class PersonDirectoryService : IPersonDirectoryService
     private void InvalidatePersonsCache()
     {
         _logger.LogDebug("Invalidating persons cache");
-        _searchReferenceDataService.InvalidatePersonsCache();
+        _searchReferenceDataService.InvalidatePersons();
     }
 }
