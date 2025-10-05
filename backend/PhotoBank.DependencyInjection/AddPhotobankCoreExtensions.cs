@@ -36,6 +36,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IFaceStorageService, FaceStorageService>();
         services.AddScoped<MinioObjectService>();
+        services.AddScoped<IMediaUrlResolver, MediaUrlResolver>();
         services.AddScoped<ISearchFilterNormalizer, SearchFilterNormalizer>();
         services.AddScoped<PhotoFilterSpecification>();
         services.AddScoped<IPhotoQueryService, PhotoQueryService>();

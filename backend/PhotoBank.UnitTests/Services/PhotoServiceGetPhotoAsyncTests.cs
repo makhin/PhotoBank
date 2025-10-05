@@ -4,8 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Minio;
-using Minio.DataModel.Args;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.AccessControl;
@@ -112,9 +110,13 @@ namespace PhotoBank.UnitTests.Services
                 .Setup(s => s.GetPersonGroupsAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<PersonGroupDto>());
 
-            var minioClient = new Mock<IMinioClient>();
-            minioClient
-                .Setup(c => c.PresignedGetObjectAsync(It.IsAny<PresignedGetObjectArgs>()))
+            var mediaUrlResolver = new Mock<IMediaUrlResolver>();
+            mediaUrlResolver
+                .Setup(r => r.ResolveAsync(
+                    It.IsAny<string?>(),
+                    It.IsAny<int>(),
+                    It.IsAny<MediaUrlContext>(),
+                    It.IsAny<CancellationToken>()))
                 .ReturnsAsync("https://example.com/object");
 
             var filterNormalizer = new Mock<ISearchFilterNormalizer>();
@@ -131,12 +133,11 @@ namespace PhotoBank.UnitTests.Services
                 context,
                 photoRepository,
                 _mapper,
-                NullLogger<PhotoQueryService>.Instance,
                 currentUser,
                 referenceDataService.Object,
                 filterNormalizer.Object,
                 photoFilterSpecification,
-                minioClient.Object,
+                mediaUrlResolver.Object,
                 s3Options);
 
             var personDirectoryService = new PersonDirectoryService(
@@ -155,8 +156,7 @@ namespace PhotoBank.UnitTests.Services
             var faceCatalogService = new FaceCatalogService(
                 faceRepository,
                 _mapper,
-                minioClient.Object,
-                NullLogger<FaceCatalogService>.Instance,
+                mediaUrlResolver.Object,
                 s3Options);
 
             var duplicateFinder = new Mock<IPhotoDuplicateFinder>();
