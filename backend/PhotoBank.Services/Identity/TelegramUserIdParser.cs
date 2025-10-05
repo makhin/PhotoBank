@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace PhotoBank.Api.Validation;
+namespace PhotoBank.Services.Identity;
 
 public static class TelegramUserIdParser
 {
