@@ -67,6 +67,8 @@ public class PersonGroupServiceTests
         var minioClient = new Mock<IMinioClient>();
         var s3Options = Options.Create(new S3Options());
 
+        var photoFilterSpecification = new PhotoFilterSpecification(db);
+
         var photoQueryService = new PhotoQueryService(
             db,
             photoRepository,
@@ -77,6 +79,7 @@ public class PersonGroupServiceTests
             currentUser,
             referenceDataService,
             normalizer.Object,
+            photoFilterSpecification,
             minioClient.Object,
             s3Options);
 

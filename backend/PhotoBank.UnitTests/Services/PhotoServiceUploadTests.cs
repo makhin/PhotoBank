@@ -69,6 +69,8 @@ namespace PhotoBank.UnitTests.Services
             var storageRepository = new Repository<Storage>(provider);
             var personGroupRepository = new Repository<PersonGroup>(provider);
 
+            var photoFilterSpecification = new PhotoFilterSpecification(context);
+
             var photoQueryService = new PhotoQueryService(
                 context,
                 photoRepository,
@@ -79,6 +81,7 @@ namespace PhotoBank.UnitTests.Services
                 new DummyCurrentUser(),
                 referenceDataService.Object,
                 normalizer.Object,
+                photoFilterSpecification,
                 minioClient.Object,
                 s3Options.Object);
 
