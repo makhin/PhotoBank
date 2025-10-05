@@ -7,9 +7,11 @@ using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using PhotoBank.AccessControl;
 using PhotoBank.InsightFaceApiClient;
 using PhotoBank.Services;
+using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.FaceRecognition;
@@ -73,24 +75,15 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IFaceService, FaceService>();
         services.AddSingleton<IInsightFaceApiClient, InsightFaceApiClient.InsightFaceApiClient>();
         services.AddTransient<IRecognitionService, RecognitionService>();
+        services.TryAddSingleton<IActiveEnricherProvider, ActiveEnricherProvider>();
         services.AddSingleton<EnricherResolver>(provider =>
         {
-            var enricherTypes = typeof(IEnricher).Assembly
-                .GetTypes()
-                .Where(t => !t.IsAbstract && typeof(IEnricher).IsAssignableFrom(t))
-                .ToDictionary(t => t.Name, t => t, StringComparer.OrdinalIgnoreCase);
+            var activeEnricherProvider = provider.GetRequiredService<IActiveEnricherProvider>();
 
             return repository =>
             {
-                return repository.GetAll()
-                    .Where(e => e.IsActive)
-                    .AsEnumerable()
-                    .Select(e =>
-                    {
-                        if (!enricherTypes.TryGetValue(e.Name, out var type))
-                            throw new NotSupportedException($"Enricher '{e.Name}' not found in loaded assemblies.");
-                        return (IEnricher)provider.GetRequiredService(type);
-                    });
+                var activeTypes = activeEnricherProvider.GetActiveEnricherTypes(repository);
+                return activeTypes.Select(type => (IEnricher)provider.GetRequiredService(type));
             };
         });
         return services;

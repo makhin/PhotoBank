@@ -46,6 +46,7 @@ using PhotoBank.Services.FaceRecognition.Local;
 using PhotoBank.Services.FaceRecognition.Abstractions;
 using PhotoBank.Services.Photos;
 using PhotoBank.Services.Internal;
+using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Recognition;
 using PhotoBank.Services.Search;
 using PhotoBank.Services.Translator;
@@ -208,6 +209,7 @@ public class ServiceCollectionExtensionsTests
         AssertScopedRegistration<IPhotoIngestionService, PhotoIngestionService>(services);
         AssertScopedRegistration<IPhotoService, PhotoService>(services);
         AssertScopedRegistration<ISearchReferenceDataService, SearchReferenceDataService>(services);
+        AssertSingletonRegistration<IActiveEnricherProvider, ActiveEnricherProvider>(services);
         AssertHttpClientRegistration<ITranslatorService, TranslatorService>(services);
 
         services.Should().Contain(d =>
@@ -275,6 +277,7 @@ public class ServiceCollectionExtensionsTests
         AssertScopedRegistration<IFaceService, FaceService>(services);
         AssertSingletonRegistration<IInsightFaceApiClient, InsightFaceClient>(services);
         AssertFactoryRegistration<EnricherResolver>(services, "Singleton");
+        AssertSingletonRegistration<IActiveEnricherProvider, ActiveEnricherProvider>(services);
 
         AssertEnricherRegistration(services);
 
@@ -308,7 +311,8 @@ public class ServiceCollectionExtensionsTests
         using var provider = services.BuildServiceProvider();
         var resolver = provider.GetRequiredService<EnricherResolver>();
         var resolved = resolver(provider.GetRequiredService<IRepository<Enricher>>()).ToList();
-        resolved.Should().NotBeEmpty();
+        resolved.Should().ContainSingle(e => e is MetadataEnricher);
+        resolved.Should().NotContain(e => e is TagEnricher);
     }
 
     [Test]
