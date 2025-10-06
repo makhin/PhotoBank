@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { formatDate, getOrientation, getPlaceByGeoPoint, useIsAdmin } from '@photobank/shared';
+import { getOrientation, getPlaceByGeoPoint, useIsAdmin } from '@photobank/shared';
+import { formatDate } from '@photobank/shared/format';
 import { logger } from '@photobank/shared/utils/logger';
 import type { FaceBoxDto, FaceDto } from '@photobank/shared/api/photobank';
 import * as PhotosApi from '@photobank/shared/api/photobank';
