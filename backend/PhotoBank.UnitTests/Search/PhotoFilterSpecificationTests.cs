@@ -237,6 +237,34 @@ public class PhotoFilterSpecificationTests
     }
 
     [Test]
+    public async Task Build_RespectsMultipleAclDateRanges()
+    {
+        var storage = new Storage { Id = 410, Name = "allowed-dates", Folder = "fd" };
+        var januaryPhoto = CreatePhoto(411, storage, "jan-photo", new DateTime(2010, 1, 15));
+        var decemberPhoto = CreatePhoto(412, storage, "dec-photo", new DateTime(2011, 12, 20));
+        var outsidePhoto = CreatePhoto(413, storage, "outside", new DateTime(2011, 6, 1));
+
+        _context.Storages.Add(storage);
+        _context.Photos.AddRange(januaryPhoto, decemberPhoto, outsidePhoto);
+        await _context.SaveChangesAsync();
+
+        var user = new TestCurrentUser(
+            storage.Id,
+            new[]
+            {
+                (new DateOnly(2010, 1, 1), new DateOnly(2010, 1, 31)),
+                (new DateOnly(2011, 12, 1), new DateOnly(2011, 12, 31))
+            });
+
+        var result = await _sut.Build(new FilterDto(), user)
+            .OrderBy(p => p.Id)
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        result.Should().Equal(januaryPhoto.Id, decemberPhoto.Id);
+    }
+
+    [Test]
     public void Build_WithCaption_AddsFreeTextExpression()
     {
         var storage = new Storage { Id = 500, Name = "s500", Folder = "f500" };
@@ -284,11 +312,11 @@ public class PhotoFilterSpecificationTests
 
     private sealed class TestCurrentUser : ICurrentUser
     {
-        public TestCurrentUser(int storageId)
+        public TestCurrentUser(int storageId, IEnumerable<(DateOnly From, DateOnly To)>? ranges = null)
         {
             AllowedStorageIds = new HashSet<int> { storageId };
             AllowedPersonGroupIds = new HashSet<int>();
-            AllowedDateRanges = Array.Empty<(DateOnly From, DateOnly To)>();
+            AllowedDateRanges = ranges?.ToArray() ?? Array.Empty<(DateOnly From, DateOnly To)>();
         }
 
         public string UserId => "user";
@@ -304,3 +332,4 @@ public class PhotoFilterSpecificationTests
         public bool CanSeeNsfw => true;
     }
 }
+

@@ -47,8 +47,8 @@ public class PhotoFilterSpecification
 
         if (filter.TakenDateTo.HasValue)
         {
-            var toExclusive = filter.TakenDateTo.Value.Date.AddDays(1);
-            query = query.Where(p => p.TakenDate.HasValue && p.TakenDate < toExclusive);
+            var to = filter.TakenDateTo.Value;
+            query = query.Where(p => p.TakenDate.HasValue && p.TakenDate <= to);
         }
 
         if (filter.ThisDay != null)
@@ -109,3 +109,4 @@ public class PhotoFilterSpecification
         return query.MaybeApplyAcl(currentUser);
     }
 }
+

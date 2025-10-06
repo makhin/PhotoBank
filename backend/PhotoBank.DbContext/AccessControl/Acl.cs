@@ -1,42 +1,45 @@
-﻿using PhotoBank.DbContext.Models;
 using System;
 using System.Linq;
+using PhotoBank.DbContext.Models;
 
 namespace PhotoBank.AccessControl;
 
+public readonly record struct AclDateRange(DateTime From, DateTime To);
+
 public sealed record Acl(
     int[] StorageIds,
-    DateTime? FromDate,
-    DateTime? ToDate,
+    AclDateRange[] DateRanges,
     int[] AllowedPersonGroupIds,
     bool CanSeeNsfw
 )
 {
     public static Acl FromUser(ICurrentUser u)
     {
-        var storageIds = u.AllowedStorageIds?.ToArray() ?? [];
-        var groups = u.AllowedPersonGroupIds?.ToArray() ?? [];
-        DateTime? from = null, to = null;
-        if (u.AllowedDateRanges?.Count > 0)
-        {
-            from = u.AllowedDateRanges.Min(r => r.From).ToDateTime(TimeOnly.MinValue);
-            to = u.AllowedDateRanges.Max(r => r.To).ToDateTime(TimeOnly.MaxValue);
-        }
-        return new(storageIds, from, to, groups, u.CanSeeNsfw);
+        var storageIds = u.AllowedStorageIds?.ToArray() ?? Array.Empty<int>();
+        var groups = u.AllowedPersonGroupIds?.ToArray() ?? Array.Empty<int>();
+        var ranges = u.AllowedDateRanges?.Count > 0
+            ? u.AllowedDateRanges
+                .Select(r => new AclDateRange(
+                    r.From.ToDateTime(TimeOnly.MinValue),
+                    r.To.ToDateTime(TimeOnly.MaxValue)))
+                .ToArray()
+            : Array.Empty<AclDateRange>();
+
+        return new(storageIds, ranges, groups, u.CanSeeNsfw);
     }
 }
 
 public static class MaybeAclExtensions
 {
-    /// <summary>Применяет ACL для Photo только если пользователь не админ.</summary>
-    public static IQueryable<Photo> MaybeApplyAcl(this IQueryable<Photo> q, ICurrentUser user)
-        => user.IsAdmin ? q : q.Where(AclPredicates.PhotoWhere(Acl.FromUser(user)));
+    /// <summary>Applies ACL for photos when current user is not an admin.</summary>
+    public static IQueryable<Photo> MaybeApplyAcl(this IQueryable<Photo> query, ICurrentUser user)
+        => user.IsAdmin ? query : query.Where(AclPredicates.PhotoWhere(Acl.FromUser(user)));
 
-    /// <summary>Применяет ACL для Person только если пользователь не админ.</summary>
-    public static IQueryable<Person> MaybeApplyAcl(this IQueryable<Person> q, ICurrentUser user)
-        => user.IsAdmin ? q : q.Where(AclPredicates.PersonWhere(Acl.FromUser(user)));
+    /// <summary>Applies ACL for persons when current user is not an admin.</summary>
+    public static IQueryable<Person> MaybeApplyAcl(this IQueryable<Person> query, ICurrentUser user)
+        => user.IsAdmin ? query : query.Where(AclPredicates.PersonWhere(Acl.FromUser(user)));
 
-    /// <summary>Применяет ACL для Storage только если пользователь не админ.</summary>
-    public static IQueryable<Storage> MaybeApplyAcl(this IQueryable<Storage> q, ICurrentUser user)
-        => user.IsAdmin ? q : q.Where(AclPredicates.StorageWhere(Acl.FromUser(user)));
+    /// <summary>Applies ACL for storages when current user is not an admin.</summary>
+    public static IQueryable<Storage> MaybeApplyAcl(this IQueryable<Storage> query, ICurrentUser user)
+        => user.IsAdmin ? query : query.Where(AclPredicates.StorageWhere(Acl.FromUser(user)));
 }
