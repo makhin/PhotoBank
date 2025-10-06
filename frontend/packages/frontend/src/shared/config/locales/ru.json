@@ -23,6 +23,8 @@
   "applyFiltersButton": "Применить фильтры",
   "loadingText": "Загрузка...",
   "metadataErrorText": "Не удалось загрузить метаданные.",
+  "genericErrorMessage": "Произошла ошибка.",
+  "retryButtonLabel": "Повторить",
   "openAiPageTitle": "Чат OpenAI",
   "openAiSendButton": "Отправить",
   "openAiPromptPlaceholder": "Введите запрос...",
@@ -57,6 +59,11 @@
   "faceDetailsTitle": "Детали лица",
   "ageLabel": "Возраст",
   "genderLabel": "Пол",
+  "gender": {
+    "male": "Муж", 
+    "female": "Жен",
+    "unknown": "Неизвестно"
+  },
   "personIdLabel": "ID человека",
   "attributesLabel": "Атрибуты",
   "unknownLabel": "Неизвестно",

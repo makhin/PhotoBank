@@ -23,6 +23,8 @@
   "applyFiltersButton": "Apply Filters",
   "loadingText": "Loading...",
   "metadataErrorText": "Failed to load metadata.",
+  "genericErrorMessage": "Something went wrong.",
+  "retryButtonLabel": "Try again",
   "openAiPageTitle": "OpenAI Chat",
   "openAiSendButton": "Send",
   "openAiPromptPlaceholder": "Enter your request...",
@@ -57,6 +59,11 @@
   "faceDetailsTitle": "Face Details",
   "ageLabel": "Age",
   "genderLabel": "Gender",
+  "gender": {
+    "male": "Male",
+    "female": "Female",
+    "unknown": "Unknown"
+  },
   "personIdLabel": "Person ID",
   "attributesLabel": "Attributes",
   "unknownLabel": "Unknown",

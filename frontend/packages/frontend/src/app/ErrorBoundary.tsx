@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { withTranslation, type WithTranslation } from 'react-i18next';
 
 import { Button } from '@/shared/ui/button';
 
@@ -10,7 +11,7 @@ interface State {
   hasError: boolean;
 }
 
-export default class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundary extends Component<Props & WithTranslation, State> {
   public state: State = { hasError: false };
 
   static getDerivedStateFromError(): State {
@@ -27,10 +28,11 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      const { t } = this.props;
       return (
         <div className="p-6 space-y-4">
-          <p className="text-muted-foreground">Произошла ошибка.</p>
-          <Button onClick={this.handleRetry}>Повторить</Button>
+          <p className="text-muted-foreground">{t('genericErrorMessage')}</p>
+          <Button onClick={this.handleRetry}>{t('retryButtonLabel')}</Button>
         </div>
       );
     }
@@ -38,4 +40,6 @@ export default class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
+export default withTranslation()(ErrorBoundary);
 
