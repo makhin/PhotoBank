@@ -31,6 +31,7 @@ upload-success = ✅ Files uploaded.
 upload-failed = 🚫 Failed to upload files.
 unknown-year = Unknown year
 unknown-person = Unknown
+photo-date-label = 📅 { $date }
 first-page = ⏮ First
 prev-page = ◀ Back
 next-page = Next ▶

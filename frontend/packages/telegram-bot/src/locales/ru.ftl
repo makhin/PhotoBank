@@ -31,6 +31,7 @@ upload-success = ✅ Файлы загружены.
 upload-failed = 🚫 Не удалось загрузить файлы.
 unknown-year = Неизвестный год
 unknown-person = Неизвестный
+photo-date-label = 📅 { $date }
 first-page = ⏮ В начало
 prev-page = ◀ Назад
 next-page = Вперёд ▶

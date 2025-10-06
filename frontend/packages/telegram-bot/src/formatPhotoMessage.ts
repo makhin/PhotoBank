@@ -1,6 +1,7 @@
-import { formatDate, getPlaceByGeoPoint, type PhotoDto } from "@photobank/shared";
+import { formatDate, getPlaceByGeoPoint, type PhotoDto } from '@photobank/shared';
 
-import { getPersonName } from "./dictionaries";
+import { getCurrentLocale, getPersonName } from './dictionaries';
+import { i18n } from './i18n';
 
 export async function formatPhotoMessage(photo: PhotoDto): Promise<{
   caption: string;
@@ -10,8 +11,9 @@ export async function formatPhotoMessage(photo: PhotoDto): Promise<{
   const lines: string[] = [];
 
   lines.push(`📸 <b>${photo.name}</b>`);
-  if (photo.takenDate) {
-    lines.push(`📅 ${formatDate(photo.takenDate)}`);
+  const takenDate = formatDate(photo.takenDate);
+  if (takenDate) {
+    lines.push(i18n.t(getCurrentLocale(), 'photo-date-label', { date: takenDate }));
   }
 
   // lines.push(`📏 ${photo.width}×${photo.height}`);

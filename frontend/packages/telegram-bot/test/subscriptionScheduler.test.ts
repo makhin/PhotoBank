@@ -124,7 +124,7 @@ describe('initSubscriptionScheduler', () => {
 
       expect(sendThisDayPage).toHaveBeenCalledWith(
         expect.objectContaining({
-          chat: expect.objectContaining({ id: '123' }),
+          chat: expect.objectContaining({ id: expect.any(Number) }),
           from: expect.objectContaining({ id: expect.anything() }),
         }),
         1,

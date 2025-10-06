@@ -20,9 +20,20 @@ describe('formatPhotoMessage', () => {
       takenDate: isoString as unknown as Date,
     });
 
-    await expect(formatPhotoMessage(photo)).resolves.toMatchObject({
-      caption: expect.stringContaining('📅 01.02.2023'),
+    const result = await formatPhotoMessage(photo);
+
+    expect(result.caption).toContain('📅');
+    expect(result.caption).toContain('01.02.2023');
+  });
+
+  it('omits date line when takenDate cannot be formatted', async () => {
+    const photo = createPhoto({
+      takenDate: 'not-a-date' as unknown as Date,
     });
+
+    const { caption } = await formatPhotoMessage(photo);
+
+    expect(caption).not.toContain('📅');
   });
 });
 
