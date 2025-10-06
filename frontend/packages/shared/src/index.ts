@@ -1,27 +1,5 @@
 // packages/shared/src/index.ts
 
-import { format } from 'date-fns';
-
-import {
-  DEFAULT_DATE_FORMAT,
-  toDate,
-  type FlexibleDateInput,
-} from './utils/parseDate';
-
-export const formatDate = (dateInput?: FlexibleDateInput) => {
-  if (dateInput === null || dateInput === undefined) return 'не указана дата';
-  if (typeof dateInput === 'string' && dateInput.trim().length === 0) {
-    return 'не указана дата';
-  }
-
-  const parsedDate = toDate(dateInput);
-  if (!parsedDate) {
-    return 'неверный формат даты';
-  }
-
-  return format(parsedDate, DEFAULT_DATE_FORMAT);
-};
-
 export const getGenderText = (gender?: boolean | null) => {
   if (gender === undefined || gender === null) return 'не указан пол';
   return gender ? 'Муж' : 'Жен';
