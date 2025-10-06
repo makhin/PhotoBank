@@ -1,8 +1,24 @@
 // packages/shared/src/index.ts
 
-export const getGenderText = (gender?: boolean | null) => {
-  if (gender === undefined || gender === null) return 'не указан пол';
-  return gender ? 'Муж' : 'Жен';
+export type GenderCategory = 'male' | 'female' | 'unknown';
+
+export const resolveGender = (gender?: boolean | null): GenderCategory => {
+  if (gender === undefined || gender === null) return 'unknown';
+  return gender ? 'male' : 'female';
+};
+
+export interface GenderLabels {
+  male: string;
+  female: string;
+  unknown: string;
+}
+
+export const formatGender = (
+  gender: boolean | null | undefined,
+  labels: GenderLabels,
+): string => {
+  const key = resolveGender(gender);
+  return labels[key];
 };
 
 export { getFilterHash } from './utils/getFilterHash';

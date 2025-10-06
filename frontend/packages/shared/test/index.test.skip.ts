@@ -1,7 +1,7 @@
 import { format, parseISO } from 'date-fns';
 import { describe, expect, it } from 'vitest';
 
-import { formatDate, getGenderText } from '../src';
+import { formatDate, formatGender, resolveGender } from '../src';
 
 // FormatDate tests
 
@@ -13,25 +13,31 @@ describe('formatDate', () => {
     expect(result).toBe(expected);
   });
 
-  it('returns fallback for undefined input', () => {
-    expect(formatDate()).toBe('не указана дата');
+  it('returns empty string for undefined input', () => {
+    expect(formatDate()).toBe('');
   });
 
-  it('returns fallback for invalid input', () => {
-    expect(formatDate('not-a-date')).toBe('неверный формат даты');
+  it('returns empty string for invalid input', () => {
+    expect(formatDate('not-a-date')).toBe('');
   });
 });
 
-describe('getGenderText', () => {
-  it('returns text for male', () => {
-    expect(getGenderText(true)).toBe('Муж');
+describe('gender helpers', () => {
+  const labels = {
+    male: 'Male',
+    female: 'Female',
+    unknown: 'Unknown',
+  } as const;
+
+  it('resolves keys correctly', () => {
+    expect(resolveGender(true)).toBe('male');
+    expect(resolveGender(false)).toBe('female');
+    expect(resolveGender(undefined)).toBe('unknown');
   });
 
-  it('returns text for female', () => {
-    expect(getGenderText(false)).toBe('Жен');
-  });
-
-  it('returns fallback for undefined', () => {
-    expect(getGenderText(undefined)).toBe('не указан пол');
+  it('formats using provided labels', () => {
+    expect(formatGender(true, labels)).toBe('Male');
+    expect(formatGender(false, labels)).toBe('Female');
+    expect(formatGender(undefined, labels)).toBe('Unknown');
   });
 });

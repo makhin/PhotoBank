@@ -156,7 +156,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
 
     useEffect(() => {
         if (error) {
-            logger.error('Ошибка загрузки фото:', error);
+            logger.error('Failed to load photo:', error);
         }
     }, [error]);
 
@@ -198,7 +198,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     };
 
     if (!photoData) {
-        return <div className="p-4">Загрузка...</div>;
+        return <div className="p-4">{t('loadingText')}</div>;
     }
 
     return (

@@ -1,4 +1,4 @@
-import { getGenderText } from '@photobank/shared';
+import { resolveGender } from '@photobank/shared';
 import type { FaceDto } from '@photobank/shared/api/photobank';
 import { useTranslation } from 'react-i18next';
 
@@ -39,7 +39,7 @@ export const FaceOverlay = ({
                     </div>
                     <div>
                         <Label className="text-muted-foreground">{t('genderLabel')}</Label>
-                        <p className="font-medium">{getGenderText(face.gender)}</p>
+                        <p className="font-medium">{t(`gender.${resolveGender(face.gender)}`)}</p>
                     </div>
                     {face.personId && (
                         <div className="col-span-2">
