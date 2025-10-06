@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NUnit.Framework;
 using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
@@ -65,11 +66,14 @@ public class GetAllPhotosIntegrationTests
                         builder.UseNetTopologySuite();
                         builder.CommandTimeout(120);
                     }));
-            services
-                .AddPhotobankCore(_config)
-                .AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new DummyCurrentUser()))
-                .AddPhotobankApi(_config)
-                .AddPhotobankCors();
+            services.AddDbContext<AccessControlDbContext>(options =>
+                options.UseSqlServer(connectionString));
+            services.AddPhotobankCore(_config);
+            services.AddPhotobankApi(_config);
+            services.AddPhotobankCors();
+
+            services.RemoveAll<ICurrentUserAccessor>();
+            services.AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new DummyCurrentUser()));
 
             services.AddLogging();
             services.AddSingleton<IMinioClient>(Mock.Of<IMinioClient>());
@@ -310,3 +314,4 @@ public class GetAllPhotosIntegrationTests
         public ICurrentUser CurrentUser => _user;
     }
 }
+

@@ -1,15 +1,17 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Photos.Upload;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.IO.Abstractions.TestingHelpers;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PhotoBank.UnitTests.Services.Photos.Upload;
 
@@ -45,9 +47,9 @@ public class FileSystemStorageUploadStrategyTests
             NullLogger<FileSystemStorageUploadStrategy>.Instance);
 
         var storage = new Storage { Id = 1, Folder = "/storage" };
-        var file = CreateFormFile(new byte[] { 1, 2, 3 }, "photo.jpg");
+        var file = CreateFormFile([1, 2, 3], "photo.jpg");
 
-        await strategy.UploadAsync(storage, new[] { file }, "sub", CancellationToken.None);
+        await strategy.UploadAsync(storage, [file], "sub", CancellationToken.None);
 
         fileSystem.FileExists("/storage/sub/photo.jpg").Should().BeTrue();
     }
@@ -57,7 +59,7 @@ public class FileSystemStorageUploadStrategyTests
     {
         var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
         {
-            { "/storage/photo.jpg", new MockFileData(new byte[] { 1, 2, 3 }) }
+            { "/storage/photo.jpg", new MockFileData([1, 2, 3]) }
         });
 
         var strategy = new FileSystemStorageUploadStrategy(
@@ -66,11 +68,12 @@ public class FileSystemStorageUploadStrategyTests
             NullLogger<FileSystemStorageUploadStrategy>.Instance);
 
         var storage = new Storage { Id = 2, Folder = "/storage" };
-        var file = CreateFormFile(new byte[] { 1, 2, 3 }, "photo.jpg");
+        var file = CreateFormFile([1, 2, 3], "photo.jpg");
 
-        await strategy.UploadAsync(storage, new[] { file }, null, CancellationToken.None);
+        await strategy.UploadAsync(storage, [file], null, CancellationToken.None);
 
-        fileSystem.AllFiles.Should().ContainSingle().Which.Should().Be("/storage/photo.jpg");
+        fileSystem.AllFiles.Should().ContainSingle().Which.Should().Be(
+            RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\storage\photo.jpg" : "/storage/photo.jpg");
     }
 
     [Test]
@@ -78,7 +81,7 @@ public class FileSystemStorageUploadStrategyTests
     {
         var fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
         {
-            { "/storage/photo.jpg", new MockFileData(new byte[] { 1, 2, 3 }) }
+            { "/storage/photo.jpg", new MockFileData([1, 2, 3]) }
         });
 
         var strategy = new FileSystemStorageUploadStrategy(
@@ -87,9 +90,9 @@ public class FileSystemStorageUploadStrategyTests
             NullLogger<FileSystemStorageUploadStrategy>.Instance);
 
         var storage = new Storage { Id = 3, Folder = "/storage" };
-        var file = CreateFormFile(new byte[] { 4, 5 }, "photo.jpg");
+        var file = CreateFormFile([4, 5], "photo.jpg");
 
-        await strategy.UploadAsync(storage, new[] { file }, null, CancellationToken.None);
+        await strategy.UploadAsync(storage, [file], null, CancellationToken.None);
 
         fileSystem.FileExists("/storage/photo_1.jpg").Should().BeTrue();
         var newFile = fileSystem.GetFile("/storage/photo_1.jpg");

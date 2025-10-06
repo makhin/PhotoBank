@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Minio;
 using Moq;
 using NUnit.Framework;
@@ -64,11 +65,14 @@ public class GetPhotoIntegrationTests
                         builder.UseNetTopologySuite();
                         builder.CommandTimeout(120);
                     }));
-            services
-                .AddPhotobankCore(_config)
-                .AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new DummyCurrentUser()))
-                .AddPhotobankApi(_config)
-                .AddPhotobankCors();
+            services.AddDbContext<AccessControlDbContext>(options =>
+                options.UseInMemoryDatabase("TestDb"));
+            services.AddPhotobankCore(_config);
+            services.AddPhotobankApi(_config);
+            services.AddPhotobankCors();
+
+            services.RemoveAll<ICurrentUserAccessor>();
+            services.AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new DummyCurrentUser()));
 
             services.AddLogging();
             services.AddSingleton<IMinioClient>(Mock.Of<IMinioClient>());
@@ -114,3 +118,4 @@ public class GetPhotoIntegrationTests
         public ICurrentUser CurrentUser => _user;
     }
 }
+

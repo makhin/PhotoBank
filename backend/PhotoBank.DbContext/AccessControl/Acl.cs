@@ -14,8 +14,8 @@ public sealed record Acl(
 {
     public static Acl FromUser(ICurrentUser u)
     {
-        var storageIds = u.AllowedStorageIds?.Select(i => (int)i).ToArray() ?? Array.Empty<int>();
-        var groups = u.AllowedPersonGroupIds?.Select(i => (int)i).ToArray() ?? Array.Empty<int>();
+        var storageIds = u.AllowedStorageIds?.ToArray() ?? [];
+        var groups = u.AllowedPersonGroupIds?.ToArray() ?? [];
         DateTime? from = null, to = null;
         if (u.AllowedDateRanges?.Count > 0)
         {

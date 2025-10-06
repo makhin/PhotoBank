@@ -9,6 +9,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Minio;
 using Moq;
 using NUnit.Framework;
@@ -64,11 +65,14 @@ public class GetPersonsIntegrationTests
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.UseNetTopologySuite();
             }));
-        services
-            .AddPhotobankCore(_config)
-            .AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new DummyCurrentUser()))
-            .AddPhotobankApi(_config)
-            .AddPhotobankCors();
+        services.AddDbContext<AccessControlDbContext>(options =>
+            options.UseSqlServer(_connectionString));
+        services.AddPhotobankCore(_config);
+        services.AddPhotobankApi(_config);
+        services.AddPhotobankCors();
+
+        services.RemoveAll<ICurrentUserAccessor>();
+        services.AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new DummyCurrentUser()));
         services.AddLogging();
         services.AddSingleton<IMinioClient>(Mock.Of<IMinioClient>());
 
@@ -163,12 +167,15 @@ public class GetPersonsIntegrationTests
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.UseNetTopologySuite();
             }));
+        services.AddDbContext<AccessControlDbContext>(options =>
+            options.UseSqlServer(_connectionString));
 
-        services
-            .AddPhotobankCore(_config)
-            .AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new NonAdminTestUser("user", allowedPersonGroupIds)))
-            .AddPhotobankApi(_config)
-            .AddPhotobankCors();
+        services.AddPhotobankCore(_config);
+        services.AddPhotobankApi(_config);
+        services.AddPhotobankCors();
+
+        services.RemoveAll<ICurrentUserAccessor>();
+        services.AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new NonAdminTestUser("user", allowedPersonGroupIds)));
 
         services.AddLogging();
         services.AddSingleton<IMinioClient>(Mock.Of<IMinioClient>());
@@ -209,3 +216,4 @@ public class GetPersonsIntegrationTests
         public bool CanSeeNsfw => false;
     }
 }
+

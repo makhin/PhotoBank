@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,7 +48,7 @@ public static partial class ServiceCollectionExtensions
             services.AddScoped<PhotoBankDbContext>(sp =>
             {
                 var context = sp.GetRequiredService<IDbContextFactory<PhotoBankDbContext>>().CreateDbContext();
-                context.ConfigureUser(sp.GetRequiredService<ICurrentUserAccessor>().CurrentUser);
+                context.ConfigureUser(ResolveCurrentUser(sp));
                 return context;
             });
         }
@@ -75,7 +76,7 @@ public static partial class ServiceCollectionExtensions
             {
                 var options = sp.GetRequiredService<DbContextOptions<PhotoBankDbContext>>();
                 var context = new PhotoBankDbContext(options);
-                context.ConfigureUser(sp.GetRequiredService<ICurrentUserAccessor>().CurrentUser);
+                context.ConfigureUser(ResolveCurrentUser(sp));
                 return context;
             });
         }
@@ -84,4 +85,32 @@ public static partial class ServiceCollectionExtensions
 
         return services;
     }
+
+    private static ICurrentUser ResolveCurrentUser(IServiceProvider sp)
+    {
+        var accessor = sp.GetService<ICurrentUserAccessor>();
+        if (accessor is null)
+        {
+            return CurrentUser.CreateAnonymous();
+        }
+
+        try
+        {
+            return accessor.CurrentUser;
+        }
+        catch (InvalidOperationException)
+        {
+            try
+            {
+                return accessor.GetCurrentUserAsync().AsTask().GetAwaiter().GetResult();
+            }
+            catch (InvalidOperationException)
+            {
+                return CurrentUser.CreateAnonymous();
+            }
+        }
+    }
 }
+
+
+
