@@ -4,7 +4,8 @@ import { formatPhotoMessage } from '../src/formatPhotoMessage';
 import type { PhotoDto } from '@photobank/shared/api/photobank';
 
 vi.mock('../src/dictionaries', () => ({
-  getPersonName: (id: number | null | undefined) => id == null ? 'Неизвестный' : `Person ${id}`,
+  getPersonName: (id: number | null | undefined) => (id == null ? 'Неизвестный' : `Person ${id}`),
+  getCurrentLocale: () => 'ru',
 }));
 
 afterEach(() => {

@@ -33,6 +33,10 @@ export function setDictionariesUser(userId: number | string | null | undefined, 
   if (locale) currentLocale = locale;
 }
 
+export function getCurrentLocale(): string {
+  return currentLocale;
+}
+
 function getDict(): DictData {
   const existing = cache.get(currentUser);
   if (existing) return existing;
