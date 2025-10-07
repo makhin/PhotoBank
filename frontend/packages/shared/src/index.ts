@@ -67,3 +67,16 @@ export {
   getRequestContext,
 } from './api/photobank/fetcher';
 export { configureApi as setBaseUrl } from './api/photobank/fetcher';
+export {
+  applyHttpContext,
+  getDefaultRetryPolicy,
+  getRetryPolicy,
+  resetRetryPolicy,
+  setRetryPolicy,
+  type HttpContextConfig,
+  type HttpRetryPolicy,
+  type MaybeTokenManager,
+  type RetryAttemptContext,
+  type TokenManager,
+  type TokenProvider,
+} from './api/photobank/httpContext';

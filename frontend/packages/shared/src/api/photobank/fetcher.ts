@@ -1,33 +1,24 @@
 import PQueue from 'p-queue';
 
 import { HttpError, ProblemDetailsError, isProblemDetails } from '../../types/problem';
-
-type TokenProvider = (
-  context: unknown | undefined,
-  options?: { forceRefresh?: boolean },
-) => string | undefined | Promise<string | undefined>;
-
-type TokenManager = {
-  getToken: TokenProvider;
-  onAuthError?: (context: unknown | undefined, error: unknown) => void | Promise<void>;
-};
-
-type MaybeTokenManager = TokenManager | TokenProvider | undefined;
+import {
+  getImpersonateUser,
+  getRetryPolicy,
+  getTokenManager,
+  notifyAuthError,
+  resolveAuthToken,
+  setImpersonateUser as updateImpersonateUser,
+  setTokenManager,
+  type MaybeTokenManager,
+} from './httpContext';
 
 type CustomRequestInit = RequestInit & { skipQueue?: boolean };
 
-let tokenManager: TokenManager | undefined;
 let baseUrl = '';
-let impersonateUser: string | null = null;
 let currentContext: unknown | undefined;
 
 export function configureApiAuth(manager?: MaybeTokenManager) {
-  if (!manager) {
-    tokenManager = undefined;
-    return;
-  }
-
-  tokenManager = typeof manager === 'function' ? { getToken: manager } : manager;
+  setTokenManager(manager);
 }
 
 export function configureApi(url: string) {
@@ -35,7 +26,7 @@ export function configureApi(url: string) {
 }
 
 export function setImpersonateUser(username: string | null | undefined) {
-  impersonateUser = username ?? null;
+  updateImpersonateUser(username);
 }
 
 export function runWithRequestContext<T>(context: unknown, fn: () => Promise<T> | T): Promise<T> {
@@ -124,25 +115,26 @@ function asHttpError(error: unknown): HttpError | undefined {
   return error instanceof HttpError ? error : undefined;
 }
 
-async function resolveToken(forceRefresh: boolean) {
-  if (!tokenManager) return undefined;
-  return tokenManager.getToken(currentContext, { forceRefresh });
-}
-
 export async function customFetcher<T>(url: string, init?: CustomRequestInit): Promise<T> {
   const { skipQueue, ...requestInit } = init ?? {};
 
   const execute = async (): Promise<T> => {
-    for (let attempt = 0; attempt < 3; attempt++) {
+    const policy = getRetryPolicy();
+    const totalAttempts = Math.max(1, policy.attempts);
+
+    for (let attempt = 0; attempt < totalAttempts; attempt++) {
       let token: string | undefined;
       try {
-        token = await resolveToken(attempt > 0);
+        token = await resolveAuthToken(currentContext, { forceRefresh: attempt > 0 });
       } catch (error) {
         const http = asHttpError(error);
         const shouldRetry =
-          !!tokenManager && http?.status != null && [401, 403].includes(http.status) && attempt < 2;
+          !!getTokenManager() &&
+          http?.status != null &&
+          [401, 403].includes(http.status) &&
+          attempt < totalAttempts - 1;
         if (shouldRetry) {
-          await tokenManager!.onAuthError?.(currentContext, error);
+          await notifyAuthError(currentContext, error);
           continue;
         }
         throw error;
@@ -155,6 +147,7 @@ export async function customFetcher<T>(url: string, init?: CustomRequestInit): P
         headers.set('Authorization', `Bearer ${token}`);
       }
 
+      const impersonateUser = getImpersonateUser();
       if (impersonateUser) {
         headers.set('X-Impersonate-User', impersonateUser);
       }
@@ -186,14 +179,16 @@ export async function customFetcher<T>(url: string, init?: CustomRequestInit): P
           body: errorData,
         });
 
-        if (tokenManager && [401, 403].includes(response.status) && attempt < 2) {
-          await tokenManager.onAuthError?.(currentContext, httpError);
+        if (getTokenManager() && [401, 403].includes(response.status) && attempt < totalAttempts - 1) {
+          await notifyAuthError(currentContext, httpError);
           continue;
         }
 
-        if (response.status >= 500 && attempt < 2) {
-          const backoff = 2 ** attempt * 100 + Math.random() * 100;
-          await delay(backoff);
+        if (policy.shouldRetry({ attempt, response }) && attempt < totalAttempts - 1) {
+          const backoff = policy.getDelayMs({ attempt, response });
+          if (backoff > 0) {
+            await delay(backoff);
+          }
           continue;
         }
 
@@ -204,12 +199,13 @@ export async function customFetcher<T>(url: string, init?: CustomRequestInit): P
         if (error instanceof ProblemDetailsError) throw error;
 
         const http = asHttpError(error);
-        const shouldRetry =
-          (http?.status != null && http.status >= 500) || error instanceof TypeError;
+        const shouldRetry = policy.shouldRetry({ attempt, error });
 
-        if (shouldRetry && attempt < 2) {
-          const backoff = 2 ** attempt * 100 + Math.random() * 100;
-          await delay(backoff);
+        if (shouldRetry && attempt < totalAttempts - 1) {
+          const backoff = policy.getDelayMs({ attempt, error });
+          if (backoff > 0) {
+            await delay(backoff);
+          }
           continue;
         }
 
