@@ -10,39 +10,71 @@ import type {
   FacesGetFacesPageParams,
 } from '../photoBankApi.schemas';
 
-import { photobankAxios } from '../../axios-instance';
+import { customFetcher } from '../../../../../shared/src/api/photobank/fetcher';
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-export const getFaces = () => {
-  const facesGetFacesPage = (
-    params?: FacesGetFacesPageParams,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<FaceDtoPageResponse>(
-      { url: `/faces`, method: 'GET', params },
-      options
-    );
-  };
-  const facesUpdate = (
-    faceDto: FaceDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      {
-        url: `/faces`,
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        data: faceDto,
-      },
-      options
-    );
-  };
-  return { facesGetFacesPage, facesUpdate };
+export type facesGetFacesPageResponse200 = {
+  data: FaceDtoPageResponse;
+  status: 200;
 };
-export type FacesGetFacesPageResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getFaces>['facesGetFacesPage']>>
->;
-export type FacesUpdateResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getFaces>['facesUpdate']>>
->;
+
+export type facesGetFacesPageResponseComposite = facesGetFacesPageResponse200;
+
+export type facesGetFacesPageResponse = facesGetFacesPageResponseComposite & {
+  headers: Headers;
+};
+
+export const getFacesGetFacesPageUrl = (params?: FacesGetFacesPageParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/faces?${stringifiedParams}`
+    : `/faces`;
+};
+
+export const facesGetFacesPage = async (
+  params?: FacesGetFacesPageParams,
+  options?: RequestInit
+): Promise<facesGetFacesPageResponse> => {
+  return customFetcher<facesGetFacesPageResponse>(
+    getFacesGetFacesPageUrl(params),
+    {
+      ...options,
+      method: 'GET',
+    }
+  );
+};
+
+export type facesUpdateResponse200 = {
+  data: null;
+  status: 200;
+};
+
+export type facesUpdateResponseComposite = facesUpdateResponse200;
+
+export type facesUpdateResponse = facesUpdateResponseComposite & {
+  headers: Headers;
+};
+
+export const getFacesUpdateUrl = () => {
+  return `/faces`;
+};
+
+export const facesUpdate = async (
+  faceDto: FaceDto,
+  options?: RequestInit
+): Promise<facesUpdateResponse> => {
+  return customFetcher<facesUpdateResponse>(getFacesUpdateUrl(), {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(faceDto),
+  });
+};

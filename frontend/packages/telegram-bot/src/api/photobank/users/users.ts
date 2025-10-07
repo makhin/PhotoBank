@@ -6,6 +6,7 @@
  */
 import type {
   CreateUserDto,
+  ProblemDetails,
   ResetPasswordDto,
   SetRolesDto,
   UpdateUserDto,
@@ -13,112 +14,221 @@ import type {
   UsersGetAllParams,
 } from '../photoBankApi.schemas';
 
-import { photobankAxios } from '../../axios-instance';
+import { customFetcher } from '../../../../../shared/src/api/photobank/fetcher';
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-export const getUsers = () => {
-  const usersGetAll = (
-    params?: UsersGetAllParams,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<UserDto[]>(
-      { url: `/admin/users`, method: 'GET', params },
-      options
-    );
-  };
-  const usersCreate = (
-    createUserDto: CreateUserDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<UserDto>(
-      {
-        url: `/admin/users`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        data: createUserDto,
-      },
-      options
-    );
-  };
-  const usersUpdate = (
-    id: string,
-    updateUserDto: UpdateUserDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      {
-        url: `/admin/users/${id}`,
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        data: updateUserDto,
-      },
-      options
-    );
-  };
-  const usersDelete = (
-    id: string,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      { url: `/admin/users/${id}`, method: 'DELETE' },
-      options
-    );
-  };
-  const usersResetPassword = (
-    id: string,
-    resetPasswordDto: ResetPasswordDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      {
-        url: `/admin/users/${id}/reset-password`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        data: resetPasswordDto,
-      },
-      options
-    );
-  };
-  const usersSetRoles = (
-    id: string,
-    setRolesDto: SetRolesDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      {
-        url: `/admin/users/${id}/roles`,
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        data: setRolesDto,
-      },
-      options
-    );
-  };
-  return {
-    usersGetAll,
-    usersCreate,
-    usersUpdate,
-    usersDelete,
-    usersResetPassword,
-    usersSetRoles,
-  };
+export type usersGetAllResponse200 = {
+  data: UserDto[];
+  status: 200;
 };
-export type UsersGetAllResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getUsers>['usersGetAll']>>
->;
-export type UsersCreateResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getUsers>['usersCreate']>>
->;
-export type UsersUpdateResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getUsers>['usersUpdate']>>
->;
-export type UsersDeleteResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getUsers>['usersDelete']>>
->;
-export type UsersResetPasswordResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getUsers>['usersResetPassword']>>
->;
-export type UsersSetRolesResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getUsers>['usersSetRoles']>>
->;
+
+export type usersGetAllResponseComposite = usersGetAllResponse200;
+
+export type usersGetAllResponse = usersGetAllResponseComposite & {
+  headers: Headers;
+};
+
+export const getUsersGetAllUrl = (params?: UsersGetAllParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/admin/users?${stringifiedParams}`
+    : `/admin/users`;
+};
+
+export const usersGetAll = async (
+  params?: UsersGetAllParams,
+  options?: RequestInit
+): Promise<usersGetAllResponse> => {
+  return customFetcher<usersGetAllResponse>(getUsersGetAllUrl(params), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export type usersCreateResponse201 = {
+  data: UserDto;
+  status: 201;
+};
+
+export type usersCreateResponse400 = {
+  data: ProblemDetails;
+  status: 400;
+};
+
+export type usersCreateResponseComposite =
+  | usersCreateResponse201
+  | usersCreateResponse400;
+
+export type usersCreateResponse = usersCreateResponseComposite & {
+  headers: Headers;
+};
+
+export const getUsersCreateUrl = () => {
+  return `/admin/users`;
+};
+
+export const usersCreate = async (
+  createUserDto: CreateUserDto,
+  options?: RequestInit
+): Promise<usersCreateResponse> => {
+  return customFetcher<usersCreateResponse>(getUsersCreateUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(createUserDto),
+  });
+};
+
+export type usersUpdateResponse200 = {
+  data: null;
+  status: 200;
+};
+
+export type usersUpdateResponse400 = {
+  data: ProblemDetails;
+  status: 400;
+};
+
+export type usersUpdateResponse404 = {
+  data: ProblemDetails;
+  status: 404;
+};
+
+export type usersUpdateResponseComposite =
+  | usersUpdateResponse200
+  | usersUpdateResponse400
+  | usersUpdateResponse404;
+
+export type usersUpdateResponse = usersUpdateResponseComposite & {
+  headers: Headers;
+};
+
+export const getUsersUpdateUrl = (id: string) => {
+  return `/admin/users/${id}`;
+};
+
+export const usersUpdate = async (
+  id: string,
+  updateUserDto: UpdateUserDto,
+  options?: RequestInit
+): Promise<usersUpdateResponse> => {
+  return customFetcher<usersUpdateResponse>(getUsersUpdateUrl(id), {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateUserDto),
+  });
+};
+
+export type usersDeleteResponse204 = {
+  data: null;
+  status: 204;
+};
+
+export type usersDeleteResponse404 = {
+  data: ProblemDetails;
+  status: 404;
+};
+
+export type usersDeleteResponseComposite =
+  | usersDeleteResponse204
+  | usersDeleteResponse404;
+
+export type usersDeleteResponse = usersDeleteResponseComposite & {
+  headers: Headers;
+};
+
+export const getUsersDeleteUrl = (id: string) => {
+  return `/admin/users/${id}`;
+};
+
+export const usersDelete = async (
+  id: string,
+  options?: RequestInit
+): Promise<usersDeleteResponse> => {
+  return customFetcher<usersDeleteResponse>(getUsersDeleteUrl(id), {
+    ...options,
+    method: 'DELETE',
+  });
+};
+
+export type usersResetPasswordResponse204 = {
+  data: null;
+  status: 204;
+};
+
+export type usersResetPasswordResponse404 = {
+  data: ProblemDetails;
+  status: 404;
+};
+
+export type usersResetPasswordResponseComposite =
+  | usersResetPasswordResponse204
+  | usersResetPasswordResponse404;
+
+export type usersResetPasswordResponse = usersResetPasswordResponseComposite & {
+  headers: Headers;
+};
+
+export const getUsersResetPasswordUrl = (id: string) => {
+  return `/admin/users/${id}/reset-password`;
+};
+
+export const usersResetPassword = async (
+  id: string,
+  resetPasswordDto: ResetPasswordDto,
+  options?: RequestInit
+): Promise<usersResetPasswordResponse> => {
+  return customFetcher<usersResetPasswordResponse>(
+    getUsersResetPasswordUrl(id),
+    {
+      ...options,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      body: JSON.stringify(resetPasswordDto),
+    }
+  );
+};
+
+export type usersSetRolesResponse204 = {
+  data: null;
+  status: 204;
+};
+
+export type usersSetRolesResponse404 = {
+  data: ProblemDetails;
+  status: 404;
+};
+
+export type usersSetRolesResponseComposite =
+  | usersSetRolesResponse204
+  | usersSetRolesResponse404;
+
+export type usersSetRolesResponse = usersSetRolesResponseComposite & {
+  headers: Headers;
+};
+
+export const getUsersSetRolesUrl = (id: string) => {
+  return `/admin/users/${id}/roles`;
+};
+
+export const usersSetRoles = async (
+  id: string,
+  setRolesDto: SetRolesDto,
+  options?: RequestInit
+): Promise<usersSetRolesResponse> => {
+  return customFetcher<usersSetRolesResponse>(getUsersSetRolesUrl(id), {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(setRolesDto),
+  });
+};

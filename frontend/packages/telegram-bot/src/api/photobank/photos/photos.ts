@@ -11,88 +11,154 @@ import type {
   PhotoItemDtoPageResponse,
   PhotosGetDuplicatesParams,
   PhotosUploadBody,
+  ProblemDetails,
 } from '../photoBankApi.schemas';
 
-import { photobankAxios } from '../../axios-instance';
+import { customFetcher } from '../../../../../shared/src/api/photobank/fetcher';
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-export const getPhotos = () => {
-  const photosSearchPhotos = (
-    filterDto: FilterDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<PhotoItemDtoPageResponse>(
-      {
-        url: `/photos/search`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        data: filterDto,
-      },
-      options
-    );
-  };
-  const photosGetPhoto = (
-    id: number,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<PhotoDto>(
-      { url: `/photos/${id}`, method: 'GET' },
-      options
-    );
-  };
-  const photosUpload = (
-    photosUploadBody: PhotosUploadBody,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    const formData = new FormData();
-    if (photosUploadBody.files !== undefined) {
-      photosUploadBody.files.forEach((value) =>
-        formData.append(`files`, value)
-      );
-    }
-    if (photosUploadBody.storageId !== undefined) {
-      formData.append(`storageId`, photosUploadBody.storageId.toString());
-    }
-    if (photosUploadBody.path !== undefined) {
-      formData.append(`path`, photosUploadBody.path);
-    }
-
-    return photobankAxios<null>(
-      {
-        url: `/photos/upload`,
-        method: 'POST',
-        headers: { 'Content-Type': 'multipart/form-data' },
-        data: formData,
-      },
-      options
-    );
-  };
-  const photosGetDuplicates = (
-    params?: PhotosGetDuplicatesParams,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<PhotoItemDto[]>(
-      { url: `/photos/duplicates`, method: 'GET', params },
-      options
-    );
-  };
-  return {
-    photosSearchPhotos,
-    photosGetPhoto,
-    photosUpload,
-    photosGetDuplicates,
-  };
+export type photosSearchPhotosResponse200 = {
+  data: PhotoItemDtoPageResponse;
+  status: 200;
 };
-export type PhotosSearchPhotosResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPhotos>['photosSearchPhotos']>>
->;
-export type PhotosGetPhotoResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetPhoto']>>
->;
-export type PhotosUploadResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPhotos>['photosUpload']>>
->;
-export type PhotosGetDuplicatesResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPhotos>['photosGetDuplicates']>>
->;
+
+export type photosSearchPhotosResponse400 = {
+  data: ProblemDetails;
+  status: 400;
+};
+
+export type photosSearchPhotosResponseComposite =
+  | photosSearchPhotosResponse200
+  | photosSearchPhotosResponse400;
+
+export type photosSearchPhotosResponse = photosSearchPhotosResponseComposite & {
+  headers: Headers;
+};
+
+export const getPhotosSearchPhotosUrl = () => {
+  return `/photos/search`;
+};
+
+export const photosSearchPhotos = async (
+  filterDto: FilterDto,
+  options?: RequestInit
+): Promise<photosSearchPhotosResponse> => {
+  return customFetcher<photosSearchPhotosResponse>(getPhotosSearchPhotosUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(filterDto),
+  });
+};
+
+export type photosGetPhotoResponse200 = {
+  data: PhotoDto;
+  status: 200;
+};
+
+export type photosGetPhotoResponse404 = {
+  data: ProblemDetails;
+  status: 404;
+};
+
+export type photosGetPhotoResponseComposite =
+  | photosGetPhotoResponse200
+  | photosGetPhotoResponse404;
+
+export type photosGetPhotoResponse = photosGetPhotoResponseComposite & {
+  headers: Headers;
+};
+
+export const getPhotosGetPhotoUrl = (id: number) => {
+  return `/photos/${id}`;
+};
+
+export const photosGetPhoto = async (
+  id: number,
+  options?: RequestInit
+): Promise<photosGetPhotoResponse> => {
+  return customFetcher<photosGetPhotoResponse>(getPhotosGetPhotoUrl(id), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export type photosUploadResponse200 = {
+  data: null;
+  status: 200;
+};
+
+export type photosUploadResponseComposite = photosUploadResponse200;
+
+export type photosUploadResponse = photosUploadResponseComposite & {
+  headers: Headers;
+};
+
+export const getPhotosUploadUrl = () => {
+  return `/photos/upload`;
+};
+
+export const photosUpload = async (
+  photosUploadBody: PhotosUploadBody,
+  options?: RequestInit
+): Promise<photosUploadResponse> => {
+  const formData = new FormData();
+  if (photosUploadBody.files !== undefined) {
+    photosUploadBody.files.forEach((value) => formData.append(`files`, value));
+  }
+  if (photosUploadBody.storageId !== undefined) {
+    formData.append(`storageId`, photosUploadBody.storageId.toString());
+  }
+  if (photosUploadBody.path !== undefined) {
+    formData.append(`path`, photosUploadBody.path);
+  }
+
+  return customFetcher<photosUploadResponse>(getPhotosUploadUrl(), {
+    ...options,
+    method: 'POST',
+    body: formData,
+  });
+};
+
+export type photosGetDuplicatesResponse200 = {
+  data: PhotoItemDto[];
+  status: 200;
+};
+
+export type photosGetDuplicatesResponseComposite =
+  photosGetDuplicatesResponse200;
+
+export type photosGetDuplicatesResponse =
+  photosGetDuplicatesResponseComposite & {
+    headers: Headers;
+  };
+
+export const getPhotosGetDuplicatesUrl = (
+  params?: PhotosGetDuplicatesParams
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/photos/duplicates?${stringifiedParams}`
+    : `/photos/duplicates`;
+};
+
+export const photosGetDuplicates = async (
+  params?: PhotosGetDuplicatesParams,
+  options?: RequestInit
+): Promise<photosGetDuplicatesResponse> => {
+  return customFetcher<photosGetDuplicatesResponse>(
+    getPhotosGetDuplicatesUrl(params),
+    {
+      ...options,
+      method: 'GET',
+    }
+  );
+};

@@ -4,16 +4,28 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import { photobankAxios } from '../../axios-instance';
+import { customFetcher } from '../../../../../shared/src/api/photobank/fetcher';
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-export const getVersion = () => {
-  const versionGet = (options?: SecondParameter<typeof photobankAxios>) => {
-    return photobankAxios<string>({ url: `/version`, method: 'GET' }, options);
-  };
-  return { versionGet };
+export type versionGetResponse200 = {
+  data: string;
+  status: 200;
 };
-export type VersionGetResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getVersion>['versionGet']>>
->;
+
+export type versionGetResponseComposite = versionGetResponse200;
+
+export type versionGetResponse = versionGetResponseComposite & {
+  headers: Headers;
+};
+
+export const getVersionGetUrl = () => {
+  return `/version`;
+};
+
+export const versionGet = async (
+  options?: RequestInit
+): Promise<versionGetResponse> => {
+  return customFetcher<versionGetResponse>(getVersionGetUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};

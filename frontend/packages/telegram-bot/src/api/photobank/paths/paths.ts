@@ -6,16 +6,28 @@
  */
 import type { PathDto } from '../photoBankApi.schemas';
 
-import { photobankAxios } from '../../axios-instance';
+import { customFetcher } from '../../../../../shared/src/api/photobank/fetcher';
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-export const getPaths = () => {
-  const getPaths = (options?: SecondParameter<typeof photobankAxios>) => {
-    return photobankAxios<PathDto[]>({ url: `/Paths`, method: 'GET' }, options);
-  };
-  return { getPaths };
+export type getPathsResponse200 = {
+  data: PathDto[];
+  status: 200;
 };
-export type GetPathsResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPaths>['getPaths']>>
->;
+
+export type getPathsResponseComposite = getPathsResponse200;
+
+export type getPathsResponse = getPathsResponseComposite & {
+  headers: Headers;
+};
+
+export const getGetPathsUrl = () => {
+  return `/Paths`;
+};
+
+export const getPaths = async (
+  options?: RequestInit
+): Promise<getPathsResponse> => {
+  return customFetcher<getPathsResponse>(getGetPathsUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};

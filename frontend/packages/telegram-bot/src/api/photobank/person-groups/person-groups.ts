@@ -6,105 +6,182 @@
  */
 import type { PersonGroupDto } from '../photoBankApi.schemas';
 
-import { photobankAxios } from '../../axios-instance';
+import { customFetcher } from '../../../../../shared/src/api/photobank/fetcher';
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-export const getPersonGroups = () => {
-  const personGroupsGetAll = (
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<PersonGroupDto[]>(
-      { url: `/persongroups`, method: 'GET' },
-      options
-    );
-  };
-  const personGroupsCreate = (
-    personGroupDto: PersonGroupDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<PersonGroupDto>(
-      {
-        url: `/persongroups`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        data: personGroupDto,
-      },
-      options
-    );
-  };
-  const personGroupsUpdate = (
-    groupId: number,
-    personGroupDto: PersonGroupDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<PersonGroupDto>(
-      {
-        url: `/persongroups/${groupId}`,
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        data: personGroupDto,
-      },
-      options
-    );
-  };
-  const personGroupsDelete = (
-    groupId: number,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      { url: `/persongroups/${groupId}`, method: 'DELETE' },
-      options
-    );
-  };
-  const personGroupsAddPerson = (
-    groupId: number,
-    personId: number,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      { url: `/persongroups/${groupId}/persons/${personId}`, method: 'POST' },
-      options
-    );
-  };
-  const personGroupsRemovePerson = (
-    groupId: number,
-    personId: number,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      { url: `/persongroups/${groupId}/persons/${personId}`, method: 'DELETE' },
-      options
-    );
-  };
-  return {
-    personGroupsGetAll,
-    personGroupsCreate,
-    personGroupsUpdate,
-    personGroupsDelete,
-    personGroupsAddPerson,
-    personGroupsRemovePerson,
-  };
+export type personGroupsGetAllResponse200 = {
+  data: PersonGroupDto[];
+  status: 200;
 };
-export type PersonGroupsGetAllResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPersonGroups>['personGroupsGetAll']>>
->;
-export type PersonGroupsCreateResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPersonGroups>['personGroupsCreate']>>
->;
-export type PersonGroupsUpdateResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPersonGroups>['personGroupsUpdate']>>
->;
-export type PersonGroupsDeleteResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPersonGroups>['personGroupsDelete']>>
->;
-export type PersonGroupsAddPersonResult = NonNullable<
-  Awaited<
-    ReturnType<ReturnType<typeof getPersonGroups>['personGroupsAddPerson']>
-  >
->;
-export type PersonGroupsRemovePersonResult = NonNullable<
-  Awaited<
-    ReturnType<ReturnType<typeof getPersonGroups>['personGroupsRemovePerson']>
-  >
->;
+
+export type personGroupsGetAllResponseComposite = personGroupsGetAllResponse200;
+
+export type personGroupsGetAllResponse = personGroupsGetAllResponseComposite & {
+  headers: Headers;
+};
+
+export const getPersonGroupsGetAllUrl = () => {
+  return `/persongroups`;
+};
+
+export const personGroupsGetAll = async (
+  options?: RequestInit
+): Promise<personGroupsGetAllResponse> => {
+  return customFetcher<personGroupsGetAllResponse>(getPersonGroupsGetAllUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export type personGroupsCreateResponse201 = {
+  data: PersonGroupDto;
+  status: 201;
+};
+
+export type personGroupsCreateResponseComposite = personGroupsCreateResponse201;
+
+export type personGroupsCreateResponse = personGroupsCreateResponseComposite & {
+  headers: Headers;
+};
+
+export const getPersonGroupsCreateUrl = () => {
+  return `/persongroups`;
+};
+
+export const personGroupsCreate = async (
+  personGroupDto: PersonGroupDto,
+  options?: RequestInit
+): Promise<personGroupsCreateResponse> => {
+  return customFetcher<personGroupsCreateResponse>(getPersonGroupsCreateUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(personGroupDto),
+  });
+};
+
+export type personGroupsUpdateResponse200 = {
+  data: PersonGroupDto;
+  status: 200;
+};
+
+export type personGroupsUpdateResponseComposite = personGroupsUpdateResponse200;
+
+export type personGroupsUpdateResponse = personGroupsUpdateResponseComposite & {
+  headers: Headers;
+};
+
+export const getPersonGroupsUpdateUrl = (groupId: number) => {
+  return `/persongroups/${groupId}`;
+};
+
+export const personGroupsUpdate = async (
+  groupId: number,
+  personGroupDto: PersonGroupDto,
+  options?: RequestInit
+): Promise<personGroupsUpdateResponse> => {
+  return customFetcher<personGroupsUpdateResponse>(
+    getPersonGroupsUpdateUrl(groupId),
+    {
+      ...options,
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      body: JSON.stringify(personGroupDto),
+    }
+  );
+};
+
+export type personGroupsDeleteResponse204 = {
+  data: null;
+  status: 204;
+};
+
+export type personGroupsDeleteResponseComposite = personGroupsDeleteResponse204;
+
+export type personGroupsDeleteResponse = personGroupsDeleteResponseComposite & {
+  headers: Headers;
+};
+
+export const getPersonGroupsDeleteUrl = (groupId: number) => {
+  return `/persongroups/${groupId}`;
+};
+
+export const personGroupsDelete = async (
+  groupId: number,
+  options?: RequestInit
+): Promise<personGroupsDeleteResponse> => {
+  return customFetcher<personGroupsDeleteResponse>(
+    getPersonGroupsDeleteUrl(groupId),
+    {
+      ...options,
+      method: 'DELETE',
+    }
+  );
+};
+
+export type personGroupsAddPersonResponse204 = {
+  data: null;
+  status: 204;
+};
+
+export type personGroupsAddPersonResponseComposite =
+  personGroupsAddPersonResponse204;
+
+export type personGroupsAddPersonResponse =
+  personGroupsAddPersonResponseComposite & {
+    headers: Headers;
+  };
+
+export const getPersonGroupsAddPersonUrl = (
+  groupId: number,
+  personId: number
+) => {
+  return `/persongroups/${groupId}/persons/${personId}`;
+};
+
+export const personGroupsAddPerson = async (
+  groupId: number,
+  personId: number,
+  options?: RequestInit
+): Promise<personGroupsAddPersonResponse> => {
+  return customFetcher<personGroupsAddPersonResponse>(
+    getPersonGroupsAddPersonUrl(groupId, personId),
+    {
+      ...options,
+      method: 'POST',
+    }
+  );
+};
+
+export type personGroupsRemovePersonResponse204 = {
+  data: null;
+  status: 204;
+};
+
+export type personGroupsRemovePersonResponseComposite =
+  personGroupsRemovePersonResponse204;
+
+export type personGroupsRemovePersonResponse =
+  personGroupsRemovePersonResponseComposite & {
+    headers: Headers;
+  };
+
+export const getPersonGroupsRemovePersonUrl = (
+  groupId: number,
+  personId: number
+) => {
+  return `/persongroups/${groupId}/persons/${personId}`;
+};
+
+export const personGroupsRemovePerson = async (
+  groupId: number,
+  personId: number,
+  options?: RequestInit
+): Promise<personGroupsRemovePersonResponse> => {
+  return customFetcher<personGroupsRemovePersonResponse>(
+    getPersonGroupsRemovePersonUrl(groupId, personId),
+    {
+      ...options,
+      method: 'DELETE',
+    }
+  );
+};

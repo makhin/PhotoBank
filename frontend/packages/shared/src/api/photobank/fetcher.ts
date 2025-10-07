@@ -1,26 +1,75 @@
 import PQueue from 'p-queue';
-import { ProblemDetailsError, HttpError, isProblemDetails } from '../../types/problem';
 
-// ====== конфиг ======
-let tokenProvider: (() => string | undefined | Promise<string | undefined>) | undefined;
+import { HttpError, ProblemDetailsError, isProblemDetails } from '../../types/problem';
+
+type TokenProvider = (
+  context: unknown | undefined,
+  options?: { forceRefresh?: boolean },
+) => string | undefined | Promise<string | undefined>;
+
+type TokenManager = {
+  getToken: TokenProvider;
+  onAuthError?: (context: unknown | undefined, error: unknown) => void | Promise<void>;
+};
+
+type MaybeTokenManager = TokenManager | TokenProvider | undefined;
+
+type CustomRequestInit = RequestInit & { skipQueue?: boolean };
+
+let tokenManager: TokenManager | undefined;
 let baseUrl = '';
 let impersonateUser: string | null = null;
+let currentContext: unknown | undefined;
 
-export function configureApiAuth(provider: () => string | undefined | Promise<string | undefined>) {
-  tokenProvider = provider;
+export function configureApiAuth(manager?: MaybeTokenManager) {
+  if (!manager) {
+    tokenManager = undefined;
+    return;
+  }
+
+  tokenManager = typeof manager === 'function' ? { getToken: manager } : manager;
 }
+
 export function configureApi(url: string) {
   baseUrl = (url ?? '').replace(/\/$/, '');
 }
+
 export function setImpersonateUser(username: string | null | undefined) {
   impersonateUser = username ?? null;
 }
 
-// ====== утилиты ======
+export function runWithRequestContext<T>(context: unknown, fn: () => Promise<T> | T): Promise<T> {
+  const previous = currentContext;
+  currentContext = context;
+
+  let result: Promise<T> | T;
+  try {
+    result = fn();
+  } catch (error) {
+    currentContext = previous;
+    throw error;
+  }
+
+  if (result instanceof Promise) {
+    return result.finally(() => {
+      currentContext = previous;
+    });
+  }
+
+  currentContext = previous;
+  return Promise.resolve(result);
+}
+
+export function getRequestContext<T = unknown>() {
+  return currentContext as T | undefined;
+}
+
 const queue = new PQueue({ interval: 1000, intervalCap: 5 });
 
 function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 function buildUrl(url: string): string {
@@ -57,26 +106,61 @@ async function parseBody<T>(res: Response): Promise<T> {
   if (res.status === 204) return undefined as unknown as T;
   const ct = res.headers.get('content-type') ?? '';
   if (ct.includes('application/json')) return (await res.json()) as T;
+  if (ct.includes('application/octet-stream')) return (await res.arrayBuffer()) as unknown as T;
   const txt = await res.text().catch(() => '');
   return (txt as unknown) as T;
 }
 
-// ====== мутатор для orval ======
-export async function customFetcher<T>(url: string, init?: RequestInit): Promise<T> {
-  return queue.add<T>(async (): Promise<T> => {
-    const normalized = normalizeInit(init);
-    const headers = new Headers(normalized.headers);
+function isAbortError(error: unknown) {
+  const err = error as { name?: string; code?: string; message?: string };
+  return (
+    err?.name === 'AbortError' ||
+    err?.code === 'ABORT_ERR' ||
+    (typeof err?.message === 'string' && /aborted/i.test(err.message))
+  );
+}
 
-    // auth / impersonation
-    if (tokenProvider) {
-      const token = await tokenProvider();
-      if (token && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
-    }
-    if (impersonateUser) headers.set('X-Impersonate-User', impersonateUser);
+function asHttpError(error: unknown): HttpError | undefined {
+  return error instanceof HttpError ? error : undefined;
+}
 
-    const finalInit: RequestInit = { ...normalized, headers };
+async function resolveToken(forceRefresh: boolean) {
+  if (!tokenManager) return undefined;
+  return tokenManager.getToken(currentContext, { forceRefresh });
+}
 
+export async function customFetcher<T>(url: string, init?: CustomRequestInit): Promise<T> {
+  const { skipQueue, ...requestInit } = init ?? {};
+
+  const execute = async (): Promise<T> => {
     for (let attempt = 0; attempt < 3; attempt++) {
+      let token: string | undefined;
+      try {
+        token = await resolveToken(attempt > 0);
+      } catch (error) {
+        const http = asHttpError(error);
+        const shouldRetry =
+          !!tokenManager && http?.status != null && [401, 403].includes(http.status) && attempt < 2;
+        if (shouldRetry) {
+          await tokenManager!.onAuthError?.(currentContext, error);
+          continue;
+        }
+        throw error;
+      }
+
+      const normalized = normalizeInit(requestInit as RequestInit);
+      const headers = new Headers(normalized.headers);
+
+      if (token && !headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+
+      if (impersonateUser) {
+        headers.set('X-Impersonate-User', impersonateUser);
+      }
+
+      const finalInit: RequestInit = { ...normalized, headers };
+
       try {
         const response = await fetch(buildUrl(url), finalInit);
         if (response.ok) {
@@ -84,49 +168,59 @@ export async function customFetcher<T>(url: string, init?: RequestInit): Promise
           return { data, status: response.status, headers: response.headers } as T;
         }
 
-        const errorText = await response.text().catch(() => '');
+        const rawText = await response.text().catch(() => '');
         let errorData: unknown = undefined;
         try {
-          errorData = errorText ? JSON.parse(errorText) : undefined;
+          errorData = rawText ? JSON.parse(rawText) : undefined;
         } catch {
-          errorData = errorText || undefined;
+          errorData = rawText || undefined;
         }
 
-        if (isProblemDetails(errorData)) throw new ProblemDetailsError(errorData);
+        if (isProblemDetails(errorData)) {
+          throw new ProblemDetailsError(errorData);
+        }
 
-        const err = new HttpError(response.status, {
+        const httpError = new HttpError(response.status, {
           url: buildUrl(url),
           method: finalInit.method,
           body: errorData,
         });
+
+        if (tokenManager && [401, 403].includes(response.status) && attempt < 2) {
+          await tokenManager.onAuthError?.(currentContext, httpError);
+          continue;
+        }
 
         if (response.status >= 500 && attempt < 2) {
           const backoff = 2 ** attempt * 100 + Math.random() * 100;
           await delay(backoff);
           continue;
         }
-        throw err;
-      } catch (e: unknown) {
-        const err = e as { name?: string; code?: string; message?: string };
-        const isAbort =
-          err?.name === 'AbortError' ||
-          err?.code === 'ABORT_ERR' ||
-          (typeof err?.message === 'string' && /aborted/i.test(err.message));
-        if (isAbort) throw e;
 
-        const isNetwork = e instanceof TypeError;
-        const is5xx = e instanceof HttpError && e.status >= 500;
-        if ((isNetwork || is5xx) && attempt < 2) {
+        throw httpError;
+      } catch (error) {
+        if (isAbortError(error)) throw error;
+
+        if (error instanceof ProblemDetailsError) throw error;
+
+        const http = asHttpError(error);
+        const shouldRetry =
+          (http?.status != null && http.status >= 500) || error instanceof TypeError;
+
+        if (shouldRetry && attempt < 2) {
           const backoff = 2 ** attempt * 100 + Math.random() * 100;
           await delay(backoff);
           continue;
         }
-        throw e;
+
+        throw error;
       }
     }
 
     throw new Error('Request failed after retries');
-  }) as Promise<T>;
+  };
+
+  return skipQueue ? execute() : (queue.add(execute) as Promise<T>);
 }
 
 export { customFetcher as fetcher };

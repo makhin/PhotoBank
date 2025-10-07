@@ -1,15 +1,9 @@
 import type { Context } from 'grammy';
 import { type UploadFile } from '@photobank/shared';
-import type { FilterDto } from '@photobank/shared/api/photobank';
+import type { FilterDto, PhotoDto, PhotoItemDtoPageResponse } from '@photobank/shared/api/photobank';
 
-import {
-  getPhotos,
-  type PhotosGetPhotoResult,
-  type PhotosSearchPhotosResult,
-} from '../api/photobank/photos/photos';
+import { photosGetPhoto, photosSearchPhotos, photosUpload } from '../api/photobank/photos/photos';
 import { callWithContext } from './call-with-context';
-
-const { photosSearchPhotos, photosGetPhoto, photosUpload } = getPhotos();
 
 function normalizeToBlobPart(data: UploadFile['data']): BlobPart {
   if (ArrayBuffer.isView(data)) {
@@ -30,15 +24,20 @@ function normalizeToBlobPart(data: UploadFile['data']): BlobPart {
   return data;
 }
 
-export async function searchPhotos(ctx: Context, filter: FilterDto): Promise<PhotosSearchPhotosResult> {
-  return callWithContext(ctx, photosSearchPhotos, filter);
+export async function searchPhotos(
+  ctx: Context,
+  filter: FilterDto,
+): Promise<PhotoItemDtoPageResponse> {
+  const response = await callWithContext(ctx, () => photosSearchPhotos(filter));
+  return response.data!;
 }
 
 export async function getPhoto(
   ctx: Context,
   id: number,
-): Promise<PhotosGetPhotoResult> {
-  return callWithContext(ctx, photosGetPhoto, id);
+): Promise<PhotoDto> {
+  const response = await callWithContext(ctx, () => photosGetPhoto(id));
+  return response.data!;
 }
 
 export async function uploadPhotos(
@@ -51,5 +50,5 @@ export async function uploadPhotos(
     return new File([blob], name);
   });
 
-  return callWithContext(ctx, photosUpload, { files: normalizedFiles, storageId, path });
+  await callWithContext(ctx, () => photosUpload({ files: normalizedFiles, storageId, path }));
 }

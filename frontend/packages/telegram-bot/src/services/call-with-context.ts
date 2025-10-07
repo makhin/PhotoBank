@@ -1,6 +1,6 @@
 import type { Context } from 'grammy';
 
-import { setRequestContext } from '../api/axios-instance';
+import { runWithRequestContext } from '../api/client';
 import { handleServiceError } from '../errorHandler';
 
 type Awaitable<T> = T | PromiseLike<T>;
@@ -17,8 +17,7 @@ export async function callWithContext(
   ...args: any[]
 ): Promise<unknown> {
   try {
-    setRequestContext(ctx);
-    return await fn(...args);
+    return await runWithRequestContext(ctx, () => fn(...args));
   } catch (error: unknown) {
     handleServiceError(error);
     throw error;

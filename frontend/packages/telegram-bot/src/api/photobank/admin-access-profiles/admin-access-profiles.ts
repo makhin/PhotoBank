@@ -4,196 +4,314 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-import type { AccessProfileDto } from '../photoBankApi.schemas';
+import type { AccessProfileDto, ProblemDetails } from '../photoBankApi.schemas';
 
-import { photobankAxios } from '../../axios-instance';
+import { customFetcher } from '../../../../../shared/src/api/photobank/fetcher';
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-export const getAdminAccessProfiles = () => {
-  const adminAccessProfilesList = (
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<AccessProfileDto[]>(
-      { url: `/admin/access-profiles`, method: 'GET' },
-      options
-    );
-  };
-  const adminAccessProfilesCreate = (
-    accessProfileDto: AccessProfileDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<AccessProfileDto>(
-      {
-        url: `/admin/access-profiles`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        data: accessProfileDto,
-      },
-      options
-    );
-  };
-  const adminAccessProfilesGet = (
-    id: number,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<AccessProfileDto>(
-      { url: `/admin/access-profiles/${id}`, method: 'GET' },
-      options
-    );
-  };
-  const adminAccessProfilesUpdate = (
-    id: number,
-    accessProfileDto: AccessProfileDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      {
-        url: `/admin/access-profiles/${id}`,
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        data: accessProfileDto,
-      },
-      options
-    );
-  };
-  const adminAccessProfilesDelete = (
-    id: number,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      { url: `/admin/access-profiles/${id}`, method: 'DELETE' },
-      options
-    );
-  };
-  const adminAccessProfilesAssignUser = (
-    id: number,
-    userId: string,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      {
-        url: `/admin/access-profiles/${id}/assign-user/${userId}`,
-        method: 'POST',
-      },
-      options
-    );
-  };
-  const adminAccessProfilesUnassignUser = (
-    id: number,
-    userId: string,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      {
-        url: `/admin/access-profiles/${id}/assign-user/${userId}`,
-        method: 'DELETE',
-      },
-      options
-    );
-  };
-  const adminAccessProfilesAssignRole = (
-    id: number,
-    roleId: string,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      {
-        url: `/admin/access-profiles/${id}/assign-role/${roleId}`,
-        method: 'POST',
-      },
-      options
-    );
-  };
-  const adminAccessProfilesUnassignRole = (
-    id: number,
-    roleId: string,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      {
-        url: `/admin/access-profiles/${id}/assign-role/${roleId}`,
-        method: 'DELETE',
-      },
-      options
-    );
-  };
-  return {
-    adminAccessProfilesList,
-    adminAccessProfilesCreate,
-    adminAccessProfilesGet,
-    adminAccessProfilesUpdate,
-    adminAccessProfilesDelete,
-    adminAccessProfilesAssignUser,
-    adminAccessProfilesUnassignUser,
-    adminAccessProfilesAssignRole,
-    adminAccessProfilesUnassignRole,
-  };
+export type adminAccessProfilesListResponse200 = {
+  data: AccessProfileDto[];
+  status: 200;
 };
-export type AdminAccessProfilesListResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesList']
-    >
-  >
->;
-export type AdminAccessProfilesCreateResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesCreate']
-    >
-  >
->;
-export type AdminAccessProfilesGetResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesGet']
-    >
-  >
->;
-export type AdminAccessProfilesUpdateResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesUpdate']
-    >
-  >
->;
-export type AdminAccessProfilesDeleteResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesDelete']
-    >
-  >
->;
-export type AdminAccessProfilesAssignUserResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesAssignUser']
-    >
-  >
->;
-export type AdminAccessProfilesUnassignUserResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAdminAccessProfiles
-      >['adminAccessProfilesUnassignUser']
-    >
-  >
->;
-export type AdminAccessProfilesAssignRoleResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<typeof getAdminAccessProfiles>['adminAccessProfilesAssignRole']
-    >
-  >
->;
-export type AdminAccessProfilesUnassignRoleResult = NonNullable<
-  Awaited<
-    ReturnType<
-      ReturnType<
-        typeof getAdminAccessProfiles
-      >['adminAccessProfilesUnassignRole']
-    >
-  >
->;
+
+export type adminAccessProfilesListResponseComposite =
+  adminAccessProfilesListResponse200;
+
+export type adminAccessProfilesListResponse =
+  adminAccessProfilesListResponseComposite & {
+    headers: Headers;
+  };
+
+export const getAdminAccessProfilesListUrl = () => {
+  return `/admin/access-profiles`;
+};
+
+export const adminAccessProfilesList = async (
+  options?: RequestInit
+): Promise<adminAccessProfilesListResponse> => {
+  return customFetcher<adminAccessProfilesListResponse>(
+    getAdminAccessProfilesListUrl(),
+    {
+      ...options,
+      method: 'GET',
+    }
+  );
+};
+
+export type adminAccessProfilesCreateResponse201 = {
+  data: AccessProfileDto;
+  status: 201;
+};
+
+export type adminAccessProfilesCreateResponseComposite =
+  adminAccessProfilesCreateResponse201;
+
+export type adminAccessProfilesCreateResponse =
+  adminAccessProfilesCreateResponseComposite & {
+    headers: Headers;
+  };
+
+export const getAdminAccessProfilesCreateUrl = () => {
+  return `/admin/access-profiles`;
+};
+
+export const adminAccessProfilesCreate = async (
+  accessProfileDto: AccessProfileDto,
+  options?: RequestInit
+): Promise<adminAccessProfilesCreateResponse> => {
+  return customFetcher<adminAccessProfilesCreateResponse>(
+    getAdminAccessProfilesCreateUrl(),
+    {
+      ...options,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      body: JSON.stringify(accessProfileDto),
+    }
+  );
+};
+
+export type adminAccessProfilesGetResponse200 = {
+  data: AccessProfileDto;
+  status: 200;
+};
+
+export type adminAccessProfilesGetResponse404 = {
+  data: ProblemDetails;
+  status: 404;
+};
+
+export type adminAccessProfilesGetResponseComposite =
+  | adminAccessProfilesGetResponse200
+  | adminAccessProfilesGetResponse404;
+
+export type adminAccessProfilesGetResponse =
+  adminAccessProfilesGetResponseComposite & {
+    headers: Headers;
+  };
+
+export const getAdminAccessProfilesGetUrl = (id: number) => {
+  return `/admin/access-profiles/${id}`;
+};
+
+export const adminAccessProfilesGet = async (
+  id: number,
+  options?: RequestInit
+): Promise<adminAccessProfilesGetResponse> => {
+  return customFetcher<adminAccessProfilesGetResponse>(
+    getAdminAccessProfilesGetUrl(id),
+    {
+      ...options,
+      method: 'GET',
+    }
+  );
+};
+
+export type adminAccessProfilesUpdateResponse204 = {
+  data: null;
+  status: 204;
+};
+
+export type adminAccessProfilesUpdateResponse400 = {
+  data: ProblemDetails;
+  status: 400;
+};
+
+export type adminAccessProfilesUpdateResponse404 = {
+  data: ProblemDetails;
+  status: 404;
+};
+
+export type adminAccessProfilesUpdateResponseComposite =
+  | adminAccessProfilesUpdateResponse204
+  | adminAccessProfilesUpdateResponse400
+  | adminAccessProfilesUpdateResponse404;
+
+export type adminAccessProfilesUpdateResponse =
+  adminAccessProfilesUpdateResponseComposite & {
+    headers: Headers;
+  };
+
+export const getAdminAccessProfilesUpdateUrl = (id: number) => {
+  return `/admin/access-profiles/${id}`;
+};
+
+export const adminAccessProfilesUpdate = async (
+  id: number,
+  accessProfileDto: AccessProfileDto,
+  options?: RequestInit
+): Promise<adminAccessProfilesUpdateResponse> => {
+  return customFetcher<adminAccessProfilesUpdateResponse>(
+    getAdminAccessProfilesUpdateUrl(id),
+    {
+      ...options,
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      body: JSON.stringify(accessProfileDto),
+    }
+  );
+};
+
+export type adminAccessProfilesDeleteResponse200 = {
+  data: null;
+  status: 200;
+};
+
+export type adminAccessProfilesDeleteResponseComposite =
+  adminAccessProfilesDeleteResponse200;
+
+export type adminAccessProfilesDeleteResponse =
+  adminAccessProfilesDeleteResponseComposite & {
+    headers: Headers;
+  };
+
+export const getAdminAccessProfilesDeleteUrl = (id: number) => {
+  return `/admin/access-profiles/${id}`;
+};
+
+export const adminAccessProfilesDelete = async (
+  id: number,
+  options?: RequestInit
+): Promise<adminAccessProfilesDeleteResponse> => {
+  return customFetcher<adminAccessProfilesDeleteResponse>(
+    getAdminAccessProfilesDeleteUrl(id),
+    {
+      ...options,
+      method: 'DELETE',
+    }
+  );
+};
+
+export type adminAccessProfilesAssignUserResponse200 = {
+  data: null;
+  status: 200;
+};
+
+export type adminAccessProfilesAssignUserResponseComposite =
+  adminAccessProfilesAssignUserResponse200;
+
+export type adminAccessProfilesAssignUserResponse =
+  adminAccessProfilesAssignUserResponseComposite & {
+    headers: Headers;
+  };
+
+export const getAdminAccessProfilesAssignUserUrl = (
+  id: number,
+  userId: string
+) => {
+  return `/admin/access-profiles/${id}/assign-user/${userId}`;
+};
+
+export const adminAccessProfilesAssignUser = async (
+  id: number,
+  userId: string,
+  options?: RequestInit
+): Promise<adminAccessProfilesAssignUserResponse> => {
+  return customFetcher<adminAccessProfilesAssignUserResponse>(
+    getAdminAccessProfilesAssignUserUrl(id, userId),
+    {
+      ...options,
+      method: 'POST',
+    }
+  );
+};
+
+export type adminAccessProfilesUnassignUserResponse200 = {
+  data: null;
+  status: 200;
+};
+
+export type adminAccessProfilesUnassignUserResponseComposite =
+  adminAccessProfilesUnassignUserResponse200;
+
+export type adminAccessProfilesUnassignUserResponse =
+  adminAccessProfilesUnassignUserResponseComposite & {
+    headers: Headers;
+  };
+
+export const getAdminAccessProfilesUnassignUserUrl = (
+  id: number,
+  userId: string
+) => {
+  return `/admin/access-profiles/${id}/assign-user/${userId}`;
+};
+
+export const adminAccessProfilesUnassignUser = async (
+  id: number,
+  userId: string,
+  options?: RequestInit
+): Promise<adminAccessProfilesUnassignUserResponse> => {
+  return customFetcher<adminAccessProfilesUnassignUserResponse>(
+    getAdminAccessProfilesUnassignUserUrl(id, userId),
+    {
+      ...options,
+      method: 'DELETE',
+    }
+  );
+};
+
+export type adminAccessProfilesAssignRoleResponse200 = {
+  data: null;
+  status: 200;
+};
+
+export type adminAccessProfilesAssignRoleResponseComposite =
+  adminAccessProfilesAssignRoleResponse200;
+
+export type adminAccessProfilesAssignRoleResponse =
+  adminAccessProfilesAssignRoleResponseComposite & {
+    headers: Headers;
+  };
+
+export const getAdminAccessProfilesAssignRoleUrl = (
+  id: number,
+  roleId: string
+) => {
+  return `/admin/access-profiles/${id}/assign-role/${roleId}`;
+};
+
+export const adminAccessProfilesAssignRole = async (
+  id: number,
+  roleId: string,
+  options?: RequestInit
+): Promise<adminAccessProfilesAssignRoleResponse> => {
+  return customFetcher<adminAccessProfilesAssignRoleResponse>(
+    getAdminAccessProfilesAssignRoleUrl(id, roleId),
+    {
+      ...options,
+      method: 'POST',
+    }
+  );
+};
+
+export type adminAccessProfilesUnassignRoleResponse200 = {
+  data: null;
+  status: 200;
+};
+
+export type adminAccessProfilesUnassignRoleResponseComposite =
+  adminAccessProfilesUnassignRoleResponse200;
+
+export type adminAccessProfilesUnassignRoleResponse =
+  adminAccessProfilesUnassignRoleResponseComposite & {
+    headers: Headers;
+  };
+
+export const getAdminAccessProfilesUnassignRoleUrl = (
+  id: number,
+  roleId: string
+) => {
+  return `/admin/access-profiles/${id}/assign-role/${roleId}`;
+};
+
+export const adminAccessProfilesUnassignRole = async (
+  id: number,
+  roleId: string,
+  options?: RequestInit
+): Promise<adminAccessProfilesUnassignRoleResponse> => {
+  return customFetcher<adminAccessProfilesUnassignRoleResponse>(
+    getAdminAccessProfilesUnassignRoleUrl(id, roleId),
+    {
+      ...options,
+      method: 'DELETE',
+    }
+  );
+};

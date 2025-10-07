@@ -6,19 +6,28 @@
  */
 import type { StorageDto } from '../photoBankApi.schemas';
 
-import { photobankAxios } from '../../axios-instance';
+import { customFetcher } from '../../../../../shared/src/api/photobank/fetcher';
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-export const getStorages = () => {
-  const getStorages = (options?: SecondParameter<typeof photobankAxios>) => {
-    return photobankAxios<StorageDto[]>(
-      { url: `/Storages`, method: 'GET' },
-      options
-    );
-  };
-  return { getStorages };
+export type getStoragesResponse200 = {
+  data: StorageDto[];
+  status: 200;
 };
-export type GetStoragesResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getStorages>['getStorages']>>
->;
+
+export type getStoragesResponseComposite = getStoragesResponse200;
+
+export type getStoragesResponse = getStoragesResponseComposite & {
+  headers: Headers;
+};
+
+export const getGetStoragesUrl = () => {
+  return `/Storages`;
+};
+
+export const getStorages = async (
+  options?: RequestInit
+): Promise<getStoragesResponse> => {
+  return customFetcher<getStoragesResponse>(getGetStoragesUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};

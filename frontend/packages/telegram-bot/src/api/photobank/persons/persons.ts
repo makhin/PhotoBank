@@ -6,66 +6,108 @@
  */
 import type { PersonDto } from '../photoBankApi.schemas';
 
-import { photobankAxios } from '../../axios-instance';
+import { customFetcher } from '../../../../../shared/src/api/photobank/fetcher';
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-export const getPersons = () => {
-  const personsGetAll = (options?: SecondParameter<typeof photobankAxios>) => {
-    return photobankAxios<PersonDto[]>(
-      { url: `/persons`, method: 'GET' },
-      options
-    );
-  };
-  const personsCreate = (
-    personDto: PersonDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<PersonDto>(
-      {
-        url: `/persons`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        data: personDto,
-      },
-      options
-    );
-  };
-  const personsUpdate = (
-    personId: number,
-    personDto: PersonDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<PersonDto>(
-      {
-        url: `/persons/${personId}`,
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        data: personDto,
-      },
-      options
-    );
-  };
-  const personsDelete = (
-    personId: number,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      { url: `/persons/${personId}`, method: 'DELETE' },
-      options
-    );
-  };
-  return { personsGetAll, personsCreate, personsUpdate, personsDelete };
+export type personsGetAllResponse200 = {
+  data: PersonDto[];
+  status: 200;
 };
-export type PersonsGetAllResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPersons>['personsGetAll']>>
->;
-export type PersonsCreateResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPersons>['personsCreate']>>
->;
-export type PersonsUpdateResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPersons>['personsUpdate']>>
->;
-export type PersonsDeleteResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getPersons>['personsDelete']>>
->;
+
+export type personsGetAllResponseComposite = personsGetAllResponse200;
+
+export type personsGetAllResponse = personsGetAllResponseComposite & {
+  headers: Headers;
+};
+
+export const getPersonsGetAllUrl = () => {
+  return `/persons`;
+};
+
+export const personsGetAll = async (
+  options?: RequestInit
+): Promise<personsGetAllResponse> => {
+  return customFetcher<personsGetAllResponse>(getPersonsGetAllUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export type personsCreateResponse201 = {
+  data: PersonDto;
+  status: 201;
+};
+
+export type personsCreateResponseComposite = personsCreateResponse201;
+
+export type personsCreateResponse = personsCreateResponseComposite & {
+  headers: Headers;
+};
+
+export const getPersonsCreateUrl = () => {
+  return `/persons`;
+};
+
+export const personsCreate = async (
+  personDto: PersonDto,
+  options?: RequestInit
+): Promise<personsCreateResponse> => {
+  return customFetcher<personsCreateResponse>(getPersonsCreateUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(personDto),
+  });
+};
+
+export type personsUpdateResponse200 = {
+  data: PersonDto;
+  status: 200;
+};
+
+export type personsUpdateResponseComposite = personsUpdateResponse200;
+
+export type personsUpdateResponse = personsUpdateResponseComposite & {
+  headers: Headers;
+};
+
+export const getPersonsUpdateUrl = (personId: number) => {
+  return `/persons/${personId}`;
+};
+
+export const personsUpdate = async (
+  personId: number,
+  personDto: PersonDto,
+  options?: RequestInit
+): Promise<personsUpdateResponse> => {
+  return customFetcher<personsUpdateResponse>(getPersonsUpdateUrl(personId), {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(personDto),
+  });
+};
+
+export type personsDeleteResponse204 = {
+  data: null;
+  status: 204;
+};
+
+export type personsDeleteResponseComposite = personsDeleteResponse204;
+
+export type personsDeleteResponse = personsDeleteResponseComposite & {
+  headers: Headers;
+};
+
+export const getPersonsDeleteUrl = (personId: number) => {
+  return `/persons/${personId}`;
+};
+
+export const personsDelete = async (
+  personId: number,
+  options?: RequestInit
+): Promise<personsDeleteResponse> => {
+  return customFetcher<personsDeleteResponse>(getPersonsDeleteUrl(personId), {
+    ...options,
+    method: 'DELETE',
+  });
+};

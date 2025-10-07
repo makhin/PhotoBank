@@ -59,5 +59,11 @@ export * as logger from './utils/logger';
 export * as api from './api/photobank';
 export * from './api/photobank';
 
-export { configureApi, configureApiAuth, setImpersonateUser } from './api/photobank/fetcher';
+export {
+  configureApi,
+  configureApiAuth,
+  setImpersonateUser,
+  runWithRequestContext,
+  getRequestContext,
+} from './api/photobank/fetcher';
 export { configureApi as setBaseUrl } from './api/photobank/fetcher';

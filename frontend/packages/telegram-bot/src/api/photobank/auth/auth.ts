@@ -7,6 +7,7 @@
 import type {
   LoginRequestDto,
   LoginResponseDto,
+  ProblemDetails,
   RegisterRequestDto,
   TelegramExchangeRequest,
   TelegramExchangeResponse,
@@ -15,119 +16,239 @@ import type {
   UserDto,
 } from '../photoBankApi.schemas';
 
-import { photobankAxios } from '../../axios-instance';
+import { customFetcher } from '../../../../../shared/src/api/photobank/fetcher';
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-export const getAuth = () => {
-  const authLogin = (
-    loginRequestDto: LoginRequestDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<LoginResponseDto>(
-      {
-        url: `/auth/login`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        data: loginRequestDto,
-      },
-      options
-    );
-  };
-  const authRegister = (
-    registerRequestDto: RegisterRequestDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      {
-        url: `/auth/register`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        data: registerRequestDto,
-      },
-      options
-    );
-  };
-  const authGetUser = (options?: SecondParameter<typeof photobankAxios>) => {
-    return photobankAxios<UserDto>(
-      { url: `/auth/user`, method: 'GET' },
-      options
-    );
-  };
-  const authUpdateUser = (
-    updateUserDto: UpdateUserDto,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      {
-        url: `/auth/user`,
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        data: updateUserDto,
-      },
-      options
-    );
-  };
-  const authGetTelegramSubscriptions = (
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<TelegramSubscriptionDto[]>(
-      { url: `/auth/telegram/subscriptions`, method: 'GET' },
-      options
-    );
-  };
-  const authTelegramExchange = (
-    telegramExchangeRequest: TelegramExchangeRequest,
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<TelegramExchangeResponse>(
-      {
-        url: `/auth/telegram/exchange`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        data: telegramExchangeRequest,
-      },
-      options
-    );
-  };
-  const authGetEffective = (
-    options?: SecondParameter<typeof photobankAxios>
-  ) => {
-    return photobankAxios<null>(
-      { url: `/auth/debug/effective-access`, method: 'GET' },
-      options
-    );
-  };
-  return {
-    authLogin,
-    authRegister,
-    authGetUser,
-    authUpdateUser,
-    authGetTelegramSubscriptions,
-    authTelegramExchange,
-    authGetEffective,
-  };
+export type authLoginResponse200 = {
+  data: LoginResponseDto;
+  status: 200;
 };
-export type AuthLoginResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getAuth>['authLogin']>>
->;
-export type AuthRegisterResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getAuth>['authRegister']>>
->;
-export type AuthGetUserResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getAuth>['authGetUser']>>
->;
-export type AuthUpdateUserResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getAuth>['authUpdateUser']>>
->;
-export type AuthGetTelegramSubscriptionsResult = NonNullable<
-  Awaited<
-    ReturnType<ReturnType<typeof getAuth>['authGetTelegramSubscriptions']>
-  >
->;
-export type AuthTelegramExchangeResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getAuth>['authTelegramExchange']>>
->;
-export type AuthGetEffectiveResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getAuth>['authGetEffective']>>
->;
+
+export type authLoginResponse400 = {
+  data: ProblemDetails;
+  status: 400;
+};
+
+export type authLoginResponse401 = {
+  data: ProblemDetails;
+  status: 401;
+};
+
+export type authLoginResponseComposite =
+  | authLoginResponse200
+  | authLoginResponse400
+  | authLoginResponse401;
+
+export type authLoginResponse = authLoginResponseComposite & {
+  headers: Headers;
+};
+
+export const getAuthLoginUrl = () => {
+  return `/auth/login`;
+};
+
+export const authLogin = async (
+  loginRequestDto: LoginRequestDto,
+  options?: RequestInit
+): Promise<authLoginResponse> => {
+  return customFetcher<authLoginResponse>(getAuthLoginUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(loginRequestDto),
+  });
+};
+
+export type authRegisterResponse200 = {
+  data: null;
+  status: 200;
+};
+
+export type authRegisterResponse400 = {
+  data: ProblemDetails;
+  status: 400;
+};
+
+export type authRegisterResponseComposite =
+  | authRegisterResponse200
+  | authRegisterResponse400;
+
+export type authRegisterResponse = authRegisterResponseComposite & {
+  headers: Headers;
+};
+
+export const getAuthRegisterUrl = () => {
+  return `/auth/register`;
+};
+
+export const authRegister = async (
+  registerRequestDto: RegisterRequestDto,
+  options?: RequestInit
+): Promise<authRegisterResponse> => {
+  return customFetcher<authRegisterResponse>(getAuthRegisterUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(registerRequestDto),
+  });
+};
+
+export type authGetUserResponse200 = {
+  data: UserDto;
+  status: 200;
+};
+
+export type authGetUserResponseComposite = authGetUserResponse200;
+
+export type authGetUserResponse = authGetUserResponseComposite & {
+  headers: Headers;
+};
+
+export const getAuthGetUserUrl = () => {
+  return `/auth/user`;
+};
+
+export const authGetUser = async (
+  options?: RequestInit
+): Promise<authGetUserResponse> => {
+  return customFetcher<authGetUserResponse>(getAuthGetUserUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};
+
+export type authUpdateUserResponse200 = {
+  data: null;
+  status: 200;
+};
+
+export type authUpdateUserResponse400 = {
+  data: ProblemDetails;
+  status: 400;
+};
+
+export type authUpdateUserResponseComposite =
+  | authUpdateUserResponse200
+  | authUpdateUserResponse400;
+
+export type authUpdateUserResponse = authUpdateUserResponseComposite & {
+  headers: Headers;
+};
+
+export const getAuthUpdateUserUrl = () => {
+  return `/auth/user`;
+};
+
+export const authUpdateUser = async (
+  updateUserDto: UpdateUserDto,
+  options?: RequestInit
+): Promise<authUpdateUserResponse> => {
+  return customFetcher<authUpdateUserResponse>(getAuthUpdateUserUrl(), {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(updateUserDto),
+  });
+};
+
+export type authGetTelegramSubscriptionsResponse200 = {
+  data: TelegramSubscriptionDto[];
+  status: 200;
+};
+
+export type authGetTelegramSubscriptionsResponse401 = {
+  data: ProblemDetails;
+  status: 401;
+};
+
+export type authGetTelegramSubscriptionsResponseComposite =
+  | authGetTelegramSubscriptionsResponse200
+  | authGetTelegramSubscriptionsResponse401;
+
+export type authGetTelegramSubscriptionsResponse =
+  authGetTelegramSubscriptionsResponseComposite & {
+    headers: Headers;
+  };
+
+export const getAuthGetTelegramSubscriptionsUrl = () => {
+  return `/auth/telegram/subscriptions`;
+};
+
+export const authGetTelegramSubscriptions = async (
+  options?: RequestInit
+): Promise<authGetTelegramSubscriptionsResponse> => {
+  return customFetcher<authGetTelegramSubscriptionsResponse>(
+    getAuthGetTelegramSubscriptionsUrl(),
+    {
+      ...options,
+      method: 'GET',
+    }
+  );
+};
+
+export type authTelegramExchangeResponse200 = {
+  data: TelegramExchangeResponse;
+  status: 200;
+};
+
+export type authTelegramExchangeResponse401 = {
+  data: ProblemDetails;
+  status: 401;
+};
+
+export type authTelegramExchangeResponse403 = {
+  data: ProblemDetails;
+  status: 403;
+};
+
+export type authTelegramExchangeResponseComposite =
+  | authTelegramExchangeResponse200
+  | authTelegramExchangeResponse401
+  | authTelegramExchangeResponse403;
+
+export type authTelegramExchangeResponse =
+  authTelegramExchangeResponseComposite & {
+    headers: Headers;
+  };
+
+export const getAuthTelegramExchangeUrl = () => {
+  return `/auth/telegram/exchange`;
+};
+
+export const authTelegramExchange = async (
+  telegramExchangeRequest: TelegramExchangeRequest,
+  options?: RequestInit
+): Promise<authTelegramExchangeResponse> => {
+  return customFetcher<authTelegramExchangeResponse>(
+    getAuthTelegramExchangeUrl(),
+    {
+      ...options,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...options?.headers },
+      body: JSON.stringify(telegramExchangeRequest),
+    }
+  );
+};
+
+export type authGetEffectiveResponse200 = {
+  data: null;
+  status: 200;
+};
+
+export type authGetEffectiveResponseComposite = authGetEffectiveResponse200;
+
+export type authGetEffectiveResponse = authGetEffectiveResponseComposite & {
+  headers: Headers;
+};
+
+export const getAuthGetEffectiveUrl = () => {
+  return `/auth/debug/effective-access`;
+};
+
+export const authGetEffective = async (
+  options?: RequestInit
+): Promise<authGetEffectiveResponse> => {
+  return customFetcher<authGetEffectiveResponse>(getAuthGetEffectiveUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};

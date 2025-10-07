@@ -6,23 +6,22 @@ import { getStorages } from '../api/photobank/storages/storages';
 import { getTags } from '../api/photobank/tags/tags';
 import { callWithContext } from './call-with-context';
 
-const { getPaths: fetchPathsRequest } = getPaths();
-const { personsGetAll: fetchPersonsRequest } = getPersons();
-const { getStorages: fetchStoragesRequest } = getStorages();
-const { getTags: fetchTagsRequest } = getTags();
-
 export async function fetchTags(ctx: Context) {
-  return callWithContext(ctx, fetchTagsRequest);
+  const response = await callWithContext(ctx, () => getTags());
+  return response.data ?? [];
 }
 
 export async function fetchPersons(ctx: Context) {
-  return callWithContext(ctx, fetchPersonsRequest);
+  const response = await callWithContext(ctx, () => getPersons());
+  return response.data ?? [];
 }
 
 export async function fetchStorages(ctx: Context) {
-  return callWithContext(ctx, fetchStoragesRequest);
+  const response = await callWithContext(ctx, () => getStorages());
+  return response.data ?? [];
 }
 
 export async function fetchPaths(ctx: Context) {
-  return callWithContext(ctx, fetchPathsRequest);
+  const response = await callWithContext(ctx, () => getPaths());
+  return response.data ?? [];
 }

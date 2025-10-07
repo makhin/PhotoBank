@@ -6,16 +6,28 @@
  */
 import type { TagDto } from '../photoBankApi.schemas';
 
-import { photobankAxios } from '../../axios-instance';
+import { customFetcher } from '../../../../../shared/src/api/photobank/fetcher';
 
-type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-export const getTags = () => {
-  const getTags = (options?: SecondParameter<typeof photobankAxios>) => {
-    return photobankAxios<TagDto[]>({ url: `/Tags`, method: 'GET' }, options);
-  };
-  return { getTags };
+export type getTagsResponse200 = {
+  data: TagDto[];
+  status: 200;
 };
-export type GetTagsResult = NonNullable<
-  Awaited<ReturnType<ReturnType<typeof getTags>['getTags']>>
->;
+
+export type getTagsResponseComposite = getTagsResponse200;
+
+export type getTagsResponse = getTagsResponseComposite & {
+  headers: Headers;
+};
+
+export const getGetTagsUrl = () => {
+  return `/Tags`;
+};
+
+export const getTags = async (
+  options?: RequestInit
+): Promise<getTagsResponse> => {
+  return customFetcher<getTagsResponse>(getGetTagsUrl(), {
+    ...options,
+    method: 'GET',
+  });
+};
