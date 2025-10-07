@@ -155,7 +155,8 @@ export async function customFetcher<T>(url: string, init?: CustomRequestInit): P
       const finalInit: RequestInit = { ...normalized, headers };
 
       try {
-        const response = await fetch(buildUrl(url), finalInit);
+        const requestUrl = buildUrl(url);
+        const response = await fetch(requestUrl, finalInit);
         if (response.ok) {
           const data = await parseBody<unknown>(response);
           return { data, status: response.status, headers: response.headers } as T;
@@ -169,19 +170,23 @@ export async function customFetcher<T>(url: string, init?: CustomRequestInit): P
           errorData = rawText || undefined;
         }
 
-        if (isProblemDetails(errorData)) {
-          throw new ProblemDetailsError(errorData);
-        }
+        const problemDetailsError = isProblemDetails(errorData)
+          ? new ProblemDetailsError(errorData)
+          : undefined;
 
         const httpError = new HttpError(response.status, {
-          url: buildUrl(url),
+          url: requestUrl,
           method: finalInit.method,
           body: errorData,
         });
 
         if (getTokenManager() && [401, 403].includes(response.status) && attempt < totalAttempts - 1) {
-          await notifyAuthError(currentContext, httpError);
+          await notifyAuthError(currentContext, problemDetailsError ?? httpError);
           continue;
+        }
+
+        if (problemDetailsError) {
+          throw problemDetailsError;
         }
 
         if (policy.shouldRetry({ attempt, response }) && attempt < totalAttempts - 1) {
