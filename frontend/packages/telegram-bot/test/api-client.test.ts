@@ -25,22 +25,18 @@ const mocks = vi.hoisted(() => {
     configureApi: vi.fn((url?: string) => {
       state.baseUrl = url;
     }),
-    applyHttpContext: vi.fn((config) => {
-      if (!config) {
+    configureApiAuth: vi.fn((manager) => {
+      if (!manager) {
         state.authConfig = undefined;
         return;
       }
 
-      if ('auth' in config) {
-        const auth = config.auth;
-        if (!auth) {
-          state.authConfig = undefined;
-        } else if (typeof auth === 'function') {
-          state.authConfig = { getToken: auth };
-        } else {
-          state.authConfig = auth;
-        }
+      if (typeof manager === 'function') {
+        state.authConfig = { getToken: manager };
+        return;
       }
+
+      state.authConfig = manager;
     }),
     getRequestContext: vi.fn(),
     runWithRequestContext: vi.fn(),
@@ -54,12 +50,9 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('@photobank/shared/api/photobank', () => ({
   configureApi: mocks.configureApi,
+  configureApiAuth: mocks.configureApiAuth,
   getRequestContext: mocks.getRequestContext,
   runWithRequestContext: mocks.runWithRequestContext,
-}));
-
-vi.mock('@photobank/shared/api/photobank/httpContext', () => ({
-  applyHttpContext: mocks.applyHttpContext,
 }));
 
 vi.mock('@/auth', () => ({
@@ -72,12 +65,7 @@ beforeAll(async () => {
   await import('../src/api/client');
 });
 
-const {
-  configureApi,
-  getRequestContext,
-  ensureUserAccessToken,
-  invalidateUserToken,
-} = mocks;
+const { configureApi, getRequestContext, ensureUserAccessToken, invalidateUserToken } = mocks;
 
 describe('api/client', () => {
   const ctx = { from: { id: 42 } } as unknown as Context;
@@ -94,7 +82,7 @@ describe('api/client', () => {
 
   it('resolves tokens using current context and supports forced refresh', async () => {
     const authConfig = mocks.authConfig;
-    if (!authConfig) throw new Error('applyHttpContext not called');
+    if (!authConfig) throw new Error('configureApiAuth not called');
 
     ensureUserAccessToken.mockResolvedValue('token');
     const token = await authConfig.getToken?.(ctx, { forceRefresh: true });
@@ -105,7 +93,7 @@ describe('api/client', () => {
 
   it('falls back to stored context when none provided', async () => {
     const authConfig = mocks.authConfig;
-    if (!authConfig) throw new Error('applyHttpContext not called');
+    if (!authConfig) throw new Error('configureApiAuth not called');
 
     getRequestContext.mockReturnValue(ctx);
     ensureUserAccessToken.mockResolvedValue('token2');
@@ -119,7 +107,7 @@ describe('api/client', () => {
 
   it('invalidates tokens on auth failures', async () => {
     const authConfig = mocks.authConfig;
-    if (!authConfig) throw new Error('applyHttpContext not called');
+    if (!authConfig) throw new Error('configureApiAuth not called');
 
     getRequestContext.mockReturnValue(ctx);
 
