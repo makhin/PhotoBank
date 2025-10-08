@@ -1,10 +1,10 @@
 import type { Context } from 'grammy';
+import { type UploadFile } from '@photobank/shared';
 import {
   photosGetPhoto,
   photosSearchPhotos,
   photosUpload,
-  type UploadFile,
-} from '@photobank/shared';
+} from '../api/photobank/photos/photos';
 import { ProblemDetailsError } from '@photobank/shared/types/problem';
 import type {
   FilterDto,
