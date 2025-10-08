@@ -1,4 +1,12 @@
-import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    type RefObject,
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 
 interface Size {
     width: number;
@@ -86,11 +94,11 @@ export const useImageContainerSizing = ({ containerRef, imageNaturalSize }: UseI
         updateSizes();
     }, [imageNaturalSize.height, imageNaturalSize.width, updateSizes]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (containerRef.current !== containerElement) {
             setContainerElement(containerRef.current);
         }
-    }, [containerElement, containerRef]);
+    });
 
     useEffect(() => {
         const container = containerElement;
