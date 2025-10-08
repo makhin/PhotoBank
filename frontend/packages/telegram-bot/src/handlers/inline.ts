@@ -1,6 +1,7 @@
 import type { InlineQueryResult, InlineQueryResultPhoto } from 'grammy/types';
 import { formatDate } from '@photobank/shared/format';
 import { ProblemDetailsError } from '@photobank/shared/types/problem';
+import type { PhotoItemDtoPageResponse } from '@photobank/shared';
 
 import { bot } from '../bot';
 import { ensureUserAccessToken } from '../auth';
@@ -9,7 +10,6 @@ import { getTagName } from '../dictionaries';
 import { logger } from '../logger';
 import type { MyContext } from '../i18n';
 import type { PhotoItemDto } from '../types';
-import type { PhotoItemDtoPageResponse } from '../api/photobank/photoBankApi.schemas';
 
 const PAGE_SIZE = 20;
 

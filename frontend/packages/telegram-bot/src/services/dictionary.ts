@@ -1,9 +1,6 @@
 import type { Context } from 'grammy';
+import { getPaths, getStorages, getTags, personsGetAll } from '@photobank/shared';
 
-import { getPaths } from '../api/photobank/paths/paths';
-import { getPersons } from '../api/photobank/persons/persons';
-import { getStorages } from '../api/photobank/storages/storages';
-import { getTags } from '../api/photobank/tags/tags';
 import { callWithContext } from './call-with-context';
 
 export async function fetchTags(ctx: Context) {
@@ -12,7 +9,7 @@ export async function fetchTags(ctx: Context) {
 }
 
 export async function fetchPersons(ctx: Context) {
-  const response = await callWithContext(ctx, () => getPersons());
+  const response = await callWithContext(ctx, () => personsGetAll());
   return response.data ?? [];
 }
 

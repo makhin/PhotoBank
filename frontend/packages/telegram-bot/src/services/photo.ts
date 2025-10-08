@@ -1,8 +1,18 @@
 import type { Context } from 'grammy';
-import { type UploadFile } from '@photobank/shared';
-import type { FilterDto, PhotoDto, PhotoItemDtoPageResponse } from '@photobank/shared/api/photobank';
+import {
+  photosGetPhoto,
+  photosSearchPhotos,
+  photosUpload,
+  type UploadFile,
+} from '@photobank/shared';
+import { ProblemDetailsError } from '@photobank/shared/types/problem';
+import type {
+  FilterDto,
+  PhotoDto,
+  PhotoItemDtoPageResponse,
+  ProblemDetails as ApiProblemDetails,
+} from '@photobank/shared/api/photobank';
 
-import { photosGetPhoto, photosSearchPhotos, photosUpload } from '../api/photobank/photos/photos';
 import { callWithContext } from './call-with-context';
 
 function normalizeToBlobPart(data: UploadFile['data']): BlobPart {
@@ -24,12 +34,38 @@ function normalizeToBlobPart(data: UploadFile['data']): BlobPart {
   return data;
 }
 
+type ProblemPayload = ConstructorParameters<typeof ProblemDetailsError>[0];
+
+function toProblemDetails(problem: ApiProblemDetails) {
+  const { type, title, status, detail, instance, ...extensions } = problem;
+  const result: ProblemPayload = {
+    ...extensions,
+    title: title ?? 'Unknown error',
+    status: status ?? 500,
+  };
+
+  if (type != null) {
+    result.type = type;
+  }
+  if (detail != null) {
+    result.detail = detail;
+  }
+  if (instance != null) {
+    result.instance = instance;
+  }
+
+  return result;
+}
+
 export async function searchPhotos(
   ctx: Context,
   filter: FilterDto,
 ): Promise<PhotoItemDtoPageResponse> {
   const response = await callWithContext(ctx, () => photosSearchPhotos(filter));
-  return response.data!;
+  if (response.status !== 200) {
+    throw new ProblemDetailsError(toProblemDetails(response.data));
+  }
+  return response.data;
 }
 
 export async function getPhoto(
@@ -37,7 +73,10 @@ export async function getPhoto(
   id: number,
 ): Promise<PhotoDto> {
   const response = await callWithContext(ctx, () => photosGetPhoto(id));
-  return response.data!;
+  if (response.status !== 200) {
+    throw new ProblemDetailsError(toProblemDetails(response.data));
+  }
+  return response.data;
 }
 
 export async function uploadPhotos(
