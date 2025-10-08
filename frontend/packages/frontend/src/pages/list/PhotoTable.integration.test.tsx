@@ -11,11 +11,11 @@ import metaReducer from '@/features/meta/model/metaSlice';
 import photoReducer from '@/features/photo/model/photoSlice';
 import viewerReducer from '@/features/viewer/viewerSlice';
 import PhotoListPage from './PhotoListPage';
-import { useInfinitePhotos } from '@/features/photo/useInfinitePhotos';
+import { usePhotoListAdapter } from '@/features/photo/usePhotoListAdapter';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { I18nProvider } from '@/app/providers/I18nProvider';
 
-vi.mock('@/features/photo/useInfinitePhotos');
+vi.mock('@/features/photo/usePhotoListAdapter');
 vi.mock('@tanstack/react-virtual', () => ({
   useVirtualizer: vi.fn(),
 }));
@@ -54,8 +54,13 @@ test('renders PhotoTable and fetches next page when scrolled', async () => {
   const photos = createPhotos(10);
   const fetchNextPage = vi.fn();
 
-  (useInfinitePhotos as unknown as Mock).mockReturnValue({
-    items: photos,
+  (usePhotoListAdapter as unknown as Mock).mockReturnValue({
+    photos,
+    counters: {
+      total: 20,
+      loaded: photos.length,
+      flags: { bw: 0, adult: 0, racy: 0 },
+    },
     total: 20,
     fetchNextPage,
     hasNextPage: true,

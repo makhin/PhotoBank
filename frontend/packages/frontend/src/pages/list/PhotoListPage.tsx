@@ -4,9 +4,9 @@ import type { FilterDto, PhotoItemDto } from '@photobank/shared/api/photobank';
 import { useTranslation } from 'react-i18next';
 
 import {
-  useInfinitePhotos,
-  type UseInfinitePhotosResult,
-} from '@/features/photo/useInfinitePhotos';
+  usePhotoListAdapter,
+  type UsePhotoListAdapterResult,
+} from '@/features/photo/usePhotoListAdapter';
 import { useAppDispatch, useAppSelector } from '@/app/hook';
 import { setFilter } from '@/features/photo/model/photoSlice';
 import { open } from '@/features/viewer/viewerSlice';
@@ -30,13 +30,19 @@ const PhotoListPage = () => {
   const [searchParams] = useSearchParams();
 
   const {
-    items: photos,
+    photos,
+    counters,
     total,
     fetchNextPage,
     hasNextPage,
     isLoading,
     isFetchingNextPage,
-  }: UseInfinitePhotosResult = useInfinitePhotos(filter);
+  }: UsePhotoListAdapterResult = usePhotoListAdapter(filter);
+
+  const {
+    loaded: loadedCount,
+    flags: { bw: bwCount, adult: adultCount, racy: racyCount },
+  } = counters;
   const navigate = useNavigate();
   const location = useLocation();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -143,8 +149,16 @@ const PhotoListPage = () => {
       <div className="p-6 border-b flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{t('photoGalleryTitle')}</h1>
-          <p className="text-muted-foreground mt-2">
-            {photos.length} of {total} photos
+          <p className="text-muted-foreground mt-2 space-x-2 text-sm">
+            <span>
+              {loadedCount} of {total} photos
+            </span>
+            <span aria-hidden="true">•</span>
+            <span>B/W: {bwCount}</span>
+            <span aria-hidden="true">•</span>
+            <span>NSFW: {adultCount}</span>
+            <span aria-hidden="true">•</span>
+            <span>Racy: {racyCount}</span>
           </p>
         </div>
         <Button variant="outline" onClick={handleFilterOpen}>
