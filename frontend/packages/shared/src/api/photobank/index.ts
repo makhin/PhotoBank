@@ -9,4 +9,10 @@ export * from './tags/tags';
 export * from './version/version';
 export * from './auth/auth';
 export * from './reference-data';
-export { configureApi, configureApiAuth, setImpersonateUser } from './fetcher';
+export {
+  configureApi,
+  configureApiAuth,
+  setImpersonateUser,
+  runWithRequestContext,
+  getRequestContext,
+} from './fetcher';

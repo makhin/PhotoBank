@@ -1,5 +1,6 @@
 import type { Context } from 'grammy';
 
+import { runWithRequestContext } from './api/client';
 import { exchangeTelegramUserToken } from './api/auth';
 
 type CacheEntry = { token: string; exp: number }; // seconds since epoch
@@ -15,7 +16,9 @@ export async function ensureUserAccessToken(ctx: Context, force = false): Promis
   const cached = force ? undefined : tokenCache.get(tgId);
   if (cached && cached.exp - now > 60) return cached.token;
 
-  const { accessToken, expiresIn } = await exchangeTelegramUserToken(tgId, ctx.from?.username);
+  const { accessToken, expiresIn } = await runWithRequestContext(undefined, () =>
+    exchangeTelegramUserToken(tgId, ctx.from?.username),
+  );
   tokenCache.set(tgId, { token: accessToken, exp: now + Math.max(60, Math.min(expiresIn, 3600)) });
   return accessToken;
 }

@@ -6,5 +6,7 @@ import { getAuthToken } from '@photobank/shared/auth';
 
 export function configureApi(baseUrl: string) {
   setBaseUrl(baseUrl);
-  configureApiAuth(() => getAuthToken() ?? undefined);
+  configureApiAuth({
+    getToken: () => getAuthToken() ?? undefined,
+  });
 }

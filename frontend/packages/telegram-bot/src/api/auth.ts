@@ -1,10 +1,9 @@
-import { configureApi } from '@photobank/shared';
 import type { TelegramSubscriptionDto } from '@photobank/shared/api/photobank';
 import { customFetcher } from '@photobank/shared/api/photobank/fetcher';
 
 import { BOT_SERVICE_KEY } from '../config';
 
-configureApi(process.env.API_BASE_URL ?? '');
+import './client';
 
 const serviceKey = BOT_SERVICE_KEY ?? '';
 

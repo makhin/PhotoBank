@@ -1,4 +1,3 @@
-import { fetchReferenceData } from '@photobank/shared/api/photobank';
 import type {
   PersonDto,
   StorageDto,
@@ -53,13 +52,10 @@ function getDict(): DictData {
 
 export async function loadDictionaries(ctx: MyContext) {
   if (cache.has(currentUser)) return;
-  const { tags: tagList, persons: personList, storages: storageList, paths: pathList } =
-    await fetchReferenceData({
-      fetchTags: () => fetchTags(ctx),
-      fetchPersons: () => fetchPersons(ctx),
-      fetchStorages: () => fetchStorages(ctx),
-      fetchPaths: () => fetchPaths(ctx),
-    });
+  const tagList = await fetchTags(ctx);
+  const personList = await fetchPersons(ctx);
+  const storageList = await fetchStorages(ctx);
+  const pathList = await fetchPaths(ctx);
   const tagMap = new Map<number, string>(tagList.map((t) => [t.id, t.name]));
   const personMap = new Map<number, string>(personList.map((p) => [p.id, p.name]));
   const storageMap = new Map<number, string>(storageList.map((s) => [s.id, s.name]));

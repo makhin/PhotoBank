@@ -2,19 +2,19 @@ import type { Context } from 'grammy';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  setRequestContext: vi.fn(),
+  runWithRequestContext: vi.fn(),
   handleServiceError: vi.fn(),
 }));
 
-vi.mock('../src/api/axios-instance', () => ({
-  setRequestContext: mocks.setRequestContext,
+vi.mock('../src/api/client', () => ({
+  runWithRequestContext: mocks.runWithRequestContext,
 }));
 
 vi.mock('../src/errorHandler', () => ({
   handleServiceError: mocks.handleServiceError,
 }));
 
-const { setRequestContext, handleServiceError } = mocks;
+const { runWithRequestContext, handleServiceError } = mocks;
 
 import { callWithContext } from '../src/services/call-with-context';
 
@@ -22,8 +22,11 @@ describe('callWithContext', () => {
   const ctx = { from: { id: 42 } } as unknown as Context;
 
   beforeEach(() => {
-    setRequestContext.mockReset();
+    runWithRequestContext.mockReset();
     handleServiceError.mockReset();
+    runWithRequestContext.mockImplementation(async (_ctx, cb) => {
+      return await (cb as () => Promise<unknown> | unknown)();
+    });
   });
 
   it('sets the context, forwards arguments, and returns the result', async () => {
@@ -31,8 +34,8 @@ describe('callWithContext', () => {
 
     await expect(callWithContext(ctx, fn, 'value', 123)).resolves.toBe('ok');
 
-    expect(setRequestContext).toHaveBeenCalledTimes(1);
-    expect(setRequestContext).toHaveBeenCalledWith(ctx);
+    expect(runWithRequestContext).toHaveBeenCalledTimes(1);
+    expect(runWithRequestContext).toHaveBeenCalledWith(ctx, expect.any(Function));
     expect(fn).toHaveBeenCalledWith('value', 123);
     expect(handleServiceError).not.toHaveBeenCalled();
   });
@@ -43,8 +46,8 @@ describe('callWithContext', () => {
 
     await expect(callWithContext(ctx, fn)).rejects.toBe(error);
 
-    expect(setRequestContext).toHaveBeenCalledTimes(1);
-    expect(setRequestContext).toHaveBeenCalledWith(ctx);
+    expect(runWithRequestContext).toHaveBeenCalledTimes(1);
+    expect(runWithRequestContext).toHaveBeenCalledWith(ctx, expect.any(Function));
     expect(handleServiceError).toHaveBeenCalledTimes(1);
     expect(handleServiceError).toHaveBeenCalledWith(error);
   });

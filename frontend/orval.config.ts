@@ -26,21 +26,4 @@ export default defineConfig({
         },
     },
   },
-
-  bot: {
-    input: OPENAPI,
-    output: {
-      target: path.resolve(__dirname, 'packages/telegram-bot/src/api/photobank'),
-      client: 'axios',
-      mode: 'tags-split',
-      prettier: true,
-      override: {
-        useDates: true,
-        mutator: {
-          path: path.resolve(__dirname, 'packages/telegram-bot/src/api/axios-instance.ts'),
-          name: 'photobankAxios',
-        },
-      },
-    },
-  },
 });

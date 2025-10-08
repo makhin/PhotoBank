@@ -1,15 +1,19 @@
 import type { Context } from 'grammy';
-import { type UploadFile } from '@photobank/shared';
-import type { FilterDto } from '@photobank/shared/api/photobank';
-
 import {
-  getPhotos,
-  type PhotosGetPhotoResult,
-  type PhotosSearchPhotosResult,
-} from '../api/photobank/photos/photos';
-import { callWithContext } from './call-with-context';
+  photosGetPhoto,
+  photosSearchPhotos,
+  photosUpload,
+  type UploadFile,
+} from '@photobank/shared';
+import { ProblemDetailsError } from '@photobank/shared/types/problem';
+import type {
+  FilterDto,
+  PhotoDto,
+  PhotoItemDtoPageResponse,
+  ProblemDetails as ApiProblemDetails,
+} from '@photobank/shared/api/photobank';
 
-const { photosSearchPhotos, photosGetPhoto, photosUpload } = getPhotos();
+import { callWithContext } from './call-with-context';
 
 function normalizeToBlobPart(data: UploadFile['data']): BlobPart {
   if (ArrayBuffer.isView(data)) {
@@ -30,15 +34,49 @@ function normalizeToBlobPart(data: UploadFile['data']): BlobPart {
   return data;
 }
 
-export async function searchPhotos(ctx: Context, filter: FilterDto): Promise<PhotosSearchPhotosResult> {
-  return callWithContext(ctx, photosSearchPhotos, filter);
+type ProblemPayload = ConstructorParameters<typeof ProblemDetailsError>[0];
+
+function toProblemDetails(problem: ApiProblemDetails) {
+  const { type, title, status, detail, instance, ...extensions } = problem;
+  const result: ProblemPayload = {
+    ...extensions,
+    title: title ?? 'Unknown error',
+    status: status ?? 500,
+  };
+
+  if (type != null) {
+    result.type = type;
+  }
+  if (detail != null) {
+    result.detail = detail;
+  }
+  if (instance != null) {
+    result.instance = instance;
+  }
+
+  return result;
+}
+
+export async function searchPhotos(
+  ctx: Context,
+  filter: FilterDto,
+): Promise<PhotoItemDtoPageResponse> {
+  const response = await callWithContext(ctx, () => photosSearchPhotos(filter));
+  if (response.status !== 200) {
+    throw new ProblemDetailsError(toProblemDetails(response.data));
+  }
+  return response.data;
 }
 
 export async function getPhoto(
   ctx: Context,
   id: number,
-): Promise<PhotosGetPhotoResult> {
-  return callWithContext(ctx, photosGetPhoto, id);
+): Promise<PhotoDto> {
+  const response = await callWithContext(ctx, () => photosGetPhoto(id));
+  if (response.status !== 200) {
+    throw new ProblemDetailsError(toProblemDetails(response.data));
+  }
+  return response.data;
 }
 
 export async function uploadPhotos(
@@ -51,5 +89,5 @@ export async function uploadPhotos(
     return new File([blob], name);
   });
 
-  return callWithContext(ctx, photosUpload, { files: normalizedFiles, storageId, path });
+  await callWithContext(ctx, () => photosUpload({ files: normalizedFiles, storageId, path }));
 }
