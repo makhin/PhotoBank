@@ -53,6 +53,7 @@ export * from './format';
 export * from './auth';
 export * from './safeStorage';
 export * from './constants';
+export * from './metadata';
 export * as logger from './utils/logger';
 
 // важно: пробрасываем наружу весь автосгенерённый API под @photobank/shared/api/photobank
