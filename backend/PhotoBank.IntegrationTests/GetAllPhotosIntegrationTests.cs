@@ -25,6 +25,8 @@ public class GetAllPhotosIntegrationTests
 {
     private ServiceProvider _provider = null!;
     private IConfiguration _config = null!;
+    private readonly DateTime _takenDateFrom = new DateTime(2015, 1, 1);
+    private readonly DateTime _takenDateTo = new DateTime(2015, 12, 31);
 
     private async Task<PageResponse<PhotoItemDto>> MeasureGetAllPhotosAsync(FilterDto filter)
     {
@@ -98,8 +100,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             PageSize = 10000 // Should be capped to MaxPageSize
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
@@ -112,8 +114,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             PageSize = 10
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
@@ -126,8 +128,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             PageSize = 10,
             Page = 2
         };
@@ -140,8 +142,8 @@ public class GetAllPhotosIntegrationTests
     {
         var discoveryFilter = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             PageSize = PageRequest.MaxPageSize
         };
 
@@ -174,8 +176,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             IsBW = true
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
@@ -187,8 +189,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             IsAdultContent = true
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
@@ -200,8 +202,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             IsRacyContent = true
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
@@ -213,8 +215,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             Storages = new []{3, 4}
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
@@ -226,8 +228,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             Storages = new[] { 3, 4 },
             RelativePath = "Test"
         };
@@ -240,8 +242,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             Tags = new []{ 3504 }
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
@@ -253,8 +255,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             Persons = new[] { 1 }
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
@@ -266,8 +268,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             Tags = new[] { 3504, 3505 }
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
@@ -279,8 +281,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             Persons = new[] { 1, 2 }
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
@@ -292,8 +294,8 @@ public class GetAllPhotosIntegrationTests
     {
         var filterDto = new FilterDto()
         {
-            TakenDateFrom = new DateTime(2015, 1, 1),
-            TakenDateTo = new DateTime(2016, 1, 1),
+            TakenDateFrom = _takenDateFrom,
+            TakenDateTo = _takenDateTo,
             Caption = "sky and grass"
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);

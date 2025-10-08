@@ -9,7 +9,7 @@ namespace PhotoBank.DbContext.DbContext
         {
             var optionsBuilder = new DbContextOptionsBuilder<PhotoBankDbContext>();
             optionsBuilder.UseSqlServer(
-                "Server=(localdb)\\mssqllocaldb;Database=Photobank;Trusted_Connection=True;Encrypt=False;",
+                "Server=localhost;Database=Photobank;Trusted_Connection=True;MultipleActiveResultSets=true;Encrypt=False;",
                 o => o.UseNetTopologySuite());
             return new PhotoBankDbContext(optionsBuilder.Options);
         }

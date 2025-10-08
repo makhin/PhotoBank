@@ -8,7 +8,7 @@ public class AccessControlDbContextFactory : IDesignTimeDbContextFactory<AccessC
     public AccessControlDbContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<AccessControlDbContext>();
-        optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=Photobank;Trusted_Connection=True;Encrypt=False;");
+        optionsBuilder.UseSqlServer("Server=localhost;Database=Photobank;Trusted_Connection=True;MultipleActiveResultSets=true;Encrypt=False;");
         return new AccessControlDbContext(optionsBuilder.Options);
     }
 }

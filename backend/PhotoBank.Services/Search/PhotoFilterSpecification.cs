@@ -47,7 +47,7 @@ public class PhotoFilterSpecification
 
         if (filter.TakenDateTo.HasValue)
         {
-            var to = filter.TakenDateTo.Value;
+            var to = filter.TakenDateTo.Value.AddDays(1).AddSeconds(-1);
             query = query.Where(p => p.TakenDate.HasValue && p.TakenDate <= to);
         }
 
