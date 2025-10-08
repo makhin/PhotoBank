@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getPlaceByGeoPoint, useIsAdmin } from '@photobank/shared';
+import { useIsAdmin } from '@photobank/shared';
 import { formatDate } from '@photobank/shared/format';
 import { logger } from '@photobank/shared/utils/logger';
 import type { FaceBoxDto, FaceDto } from '@photobank/shared/api/photobank';
@@ -17,6 +17,7 @@ import { PhotoViewer } from '@/pages/detail/components/PhotoViewer';
 import { open } from '@/features/viewer/viewerSlice';
 import { pushPhotoId } from '@/features/viewer/urlSync';
 import { useImageContainerSizing } from '@/hooks/useImageContainerSizing';
+import { usePhotoGeodata } from '@/hooks/usePhotoGeodata';
 
 
 interface PhotoDetailsPageProps {
@@ -25,7 +26,6 @@ interface PhotoDetailsPageProps {
 
 const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const [showFaceBoxes, setShowFaceBoxes] = useState(false);
-    const [placeName, setPlaceName] = useState('');
     const persons = useAppSelector((state) => state.metadata.persons);
     const isAdmin = useIsAdmin();
     const dispatch = useAppDispatch();
@@ -45,20 +45,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     });
 
     const location = photoData?.location;
-
-    const hasValidLocation = useMemo(() => {
-        if (!location) {
-            return false;
-        }
-
-        const { latitude, longitude } = location;
-
-        if (latitude == null || longitude == null) {
-            return false;
-        }
-
-        return !(latitude === 0 && longitude === 0);
-    }, [location]);
+    const { placeName, hasValidLocation } = usePhotoGeodata(location);
 
     const formattedTakenDate = useMemo(
         () => (photoData?.takenDate ? formatDate(photoData.takenDate) : ''),
@@ -81,21 +68,6 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
             logger.error('Failed to load photo:', error);
         }
     }, [error]);
-
-    useEffect(() => {
-        if (!location || !hasValidLocation) {
-            setPlaceName('');
-            return;
-        }
-        const controller = new AbortController();
-        (async () => {
-            const name = await getPlaceByGeoPoint(location);
-            if (!controller.signal.aborted) setPlaceName(name);
-        })();
-        return () => {
-            controller.abort();
-        };
-    }, [hasValidLocation, location]);
 
     const calculateFacePosition = (faceBox: FaceBoxDto) => {
         if (!imageDisplaySize.width || !imageDisplaySize.height) {
