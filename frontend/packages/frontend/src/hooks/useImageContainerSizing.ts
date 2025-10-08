@@ -36,6 +36,7 @@ interface UseImageContainerSizingParams {
 export const useImageContainerSizing = ({ containerRef, imageNaturalSize }: UseImageContainerSizingParams) => {
     const [containerSize, setContainerSize] = useState<Size>(defaultContainerSize);
     const [imageDisplaySize, setImageDisplaySize] = useState<ImageSize>(defaultImageSize);
+    const [containerElement, setContainerElement] = useState<HTMLElement | null>(null);
 
     const containerSizeRef = useRef(containerSize);
     const imageDisplaySizeRef = useRef(imageDisplaySize);
@@ -86,22 +87,31 @@ export const useImageContainerSizing = ({ containerRef, imageNaturalSize }: UseI
     }, [imageNaturalSize.height, imageNaturalSize.width, updateSizes]);
 
     useEffect(() => {
-        const container = containerRef.current;
-        if (!container) {
-            return;
+        if (containerRef.current !== containerElement) {
+            setContainerElement(containerRef.current);
         }
+    }, [containerElement, containerRef]);
 
-        const resizeObserver = new ResizeObserver(updateSizes);
-        resizeObserver.observe(container);
+    useEffect(() => {
+        const container = containerElement;
+        const resizeObserver = container ? new ResizeObserver(updateSizes) : null;
+
+        if (container && resizeObserver) {
+            resizeObserver.observe(container);
+        }
 
         window.addEventListener('resize', updateSizes);
         updateSizes();
 
         return () => {
-            resizeObserver.disconnect();
+            if (resizeObserver && container) {
+                resizeObserver.unobserve(container);
+                resizeObserver.disconnect();
+            }
+
             window.removeEventListener('resize', updateSizes);
         };
-    }, [containerRef, updateSizes]);
+    }, [containerElement, updateSizes]);
 
     return useMemo(
         () => ({
