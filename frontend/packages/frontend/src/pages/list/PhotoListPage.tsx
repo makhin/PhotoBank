@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import { useMemo, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ import PhotoDetailsModal from '@/components/PhotoDetailsModal';
 import { Button } from '@/shared/ui/button';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { selectPersonsMap, selectTagsMap } from '@/features/metadata/selectors';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 
 import PhotoListDesktop from './PhotoListDesktop';
 import PhotoListMobile from './PhotoListMobile';
@@ -77,23 +78,14 @@ const PhotoListPage = () => {
     void fetchNextPage();
   }, [fetchNextPage]);
 
-  useEffect(() => {
-    const element = sentinelRef.current;
-    const root = scrollAreaRef.current ?? undefined;
-    if (!element || !root) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry && entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          handleFetchNextPage();
-        }
-      },
-      { root }
-    );
-    observer.observe(element);
-    return () => {
-      observer.disconnect();
-    };
-  }, [handleFetchNextPage, hasNextPage, isFetchingNextPage]);
+  const shouldObserve = hasNextPage && !isFetchingNextPage;
+
+  useIntersectionObserver({
+    target: sentinelRef,
+    root: scrollAreaRef,
+    onIntersect: handleFetchNextPage,
+    enabled: shouldObserve,
+  });
 
   const handleDetailsOpenChange = useCallback((open: boolean) => {
     if (!open) setDetailsId(null);
