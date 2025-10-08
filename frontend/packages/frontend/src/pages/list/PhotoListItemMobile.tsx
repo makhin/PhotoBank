@@ -2,6 +2,7 @@ import { Calendar, User, Tag } from 'lucide-react';
 import { firstNWords } from '@photobank/shared';
 import { formatDate } from '@photobank/shared/format';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
+import type { PersonMap, TagMap } from '@photobank/shared/metadata';
 import {
   MAX_VISIBLE_PERSONS_SM,
   MAX_VISIBLE_TAGS_SM,
@@ -16,8 +17,8 @@ import PhotoPreview from './PhotoPreview';
 
 export type PhotoListItemMobileProps = {
   photo: PhotoItemDto;
-  personsMap: Record<number, string>;
-  tagsMap: Record<number, string>;
+  personsMap: PersonMap;
+  tagsMap: TagMap;
   onClick: () => void;
 };
 

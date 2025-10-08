@@ -6,8 +6,8 @@ import {
   usePersonsGetAll,
   type FaceDto,
   type IdentityStatusDto as IdentityStatusType,
-  type PersonDto,
 } from '@photobank/shared/api/photobank';
+import { buildPersonMap } from '@photobank/shared/metadata';
 
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
@@ -72,18 +72,6 @@ type FaceRow = {
   personName: string | null;
 };
 
-const buildPersonLookup = (persons?: PersonDto[] | null) => {
-  const map = new Map<number, string>();
-
-  for (const person of persons ?? []) {
-    if (typeof person?.id === 'number') {
-      map.set(person.id, person.name);
-    }
-  }
-
-  return map;
-};
-
 export default function FacesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,10 +88,11 @@ export default function FacesPage() {
 
   const { data, isLoading, isError, isFetching, refetch } = useFacesGetFacesPage(paginationParams);
   const { data: personsResponse } = usePersonsGetAll();
+  const persons = personsResponse?.data;
 
   const personLookup = useMemo(
-    () => buildPersonLookup(personsResponse?.data ?? null),
-    [personsResponse]
+    () => buildPersonMap(persons ?? null),
+    [persons]
   );
 
   const facesResponse = data?.data;
@@ -130,7 +119,8 @@ export default function FacesPage() {
         face: normalizedFace,
         id,
         status,
-        personName: personId != null ? personLookup.get(personId) ?? null : null,
+        personName:
+          personId != null ? personLookup.get(personId)?.name ?? null : null,
       };
     });
   }, [personLookup, rawFaces]);

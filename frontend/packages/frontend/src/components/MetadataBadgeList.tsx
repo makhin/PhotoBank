@@ -3,10 +3,21 @@ import type { ComponentProps } from 'react';
 
 import { Badge } from '@/shared/ui/badge';
 
+type MetadataValue =
+  | string
+  | number
+  | null
+  | undefined
+  | { name?: string | null | undefined };
+
+export type MetadataLookupMap =
+  | ReadonlyMap<number, MetadataValue>
+  | Record<number, MetadataValue>;
+
 export type MetadataBadgeListProps = {
   icon?: LucideIcon;
   items?: Array<number | string>;
-  map?: Record<number, string> | Map<number, string>;
+  map?: MetadataLookupMap;
   maxVisible: number;
   variant?: ComponentProps<typeof Badge>['variant'];
 };
@@ -21,15 +32,38 @@ const MetadataBadgeList = ({
   if (!items || items.length === 0) return null;
 
   const seen = new Set<string>();
+  const getValueFromMap = (key: number): MetadataValue => {
+    if (!map) {
+      return undefined;
+    }
+
+    if (map instanceof Map) {
+      return map.get(key);
+    }
+
+    return (map as Record<number, MetadataValue>)[key];
+  };
+
+  const resolveLabel = (value: MetadataValue, fallback: number | string) => {
+    if (typeof value === 'string' || typeof value === 'number') {
+      return value;
+    }
+
+    if (value && typeof value === 'object' && 'name' in value) {
+      const name = value.name;
+      if (name != null && name !== '') {
+        return name;
+      }
+    }
+
+    return fallback;
+  };
+
   const resolved = items.reduce<Array<string | number>>((acc, item) => {
     const label =
       typeof item === 'string'
         ? item
-        : map instanceof Map
-          ? map.get(item) ?? item
-          : map
-            ? map[item] ?? item
-            : item;
+        : resolveLabel(getValueFromMap(item), item);
 
     if (label == null || label === '') {
       return acc;
