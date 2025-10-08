@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getPlaceByGeoPoint, useIsAdmin } from '@photobank/shared';
 import { formatDate } from '@photobank/shared/format';
@@ -16,34 +16,14 @@ import { PhotoPropertiesPanel } from '@/pages/detail/components/PhotoPropertiesP
 import { PhotoViewer } from '@/pages/detail/components/PhotoViewer';
 import { open } from '@/features/viewer/viewerSlice';
 import { pushPhotoId } from '@/features/viewer/urlSync';
+import { useImageContainerSizing } from '@/hooks/useImageContainerSizing';
 
-
-const calculateImageSize = (naturalWidth: number, naturalHeight: number, containerWidth: number, containerHeight: number) => {
-    if (naturalWidth <= containerWidth && naturalHeight <= containerHeight) {
-        return {width: naturalWidth, height: naturalHeight, scale: 1};
-    }
-
-    const scaleByWidth = containerWidth / naturalWidth;
-    const scaleByHeight = containerHeight / naturalHeight;
-
-    const scale = Math.min(scaleByWidth, scaleByHeight);
-
-    return {
-        width: naturalWidth * scale,
-        height: naturalHeight * scale,
-        scale,
-    };
-};
 
 interface PhotoDetailsPageProps {
     photoId?: number;
 }
 
 const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
-    const [imageDisplaySize, setImageDisplaySize] = useState({width: 0, height: 0, scale: 1});
-    const imageDisplaySizeRef = useRef(imageDisplaySize);
-    const [containerSize, setContainerSize] = useState({width: 0, height: 0});
-    const containerSizeRef = useRef(containerSize);
     const [showFaceBoxes, setShowFaceBoxes] = useState(false);
     const [placeName, setPlaceName] = useState('');
     const persons = useAppSelector((state) => state.metadata.persons);
@@ -91,61 +71,10 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
         }
         return {width: 0, height: 0};
     }, [photoData]);
-    const imageNaturalSizeRef = useRef(imageNaturalSize);
-
-    const updateSizes = useCallback(() => {
-        if (!containerRef.current) return;
-
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const newContainerSize = {
-            width: containerRect.width,
-            height: containerRect.height,
-        };
-
-        if (
-            newContainerSize.width !== containerSizeRef.current.width ||
-            newContainerSize.height !== containerSizeRef.current.height
-        ) {
-            containerSizeRef.current = newContainerSize;
-            setContainerSize(newContainerSize);
-        }
-
-        const { width: naturalWidth, height: naturalHeight } = imageNaturalSizeRef.current;
-        const calculatedSize = calculateImageSize(
-            naturalWidth,
-            naturalHeight,
-            newContainerSize.width,
-            newContainerSize.height,
-        );
-
-        if (
-            calculatedSize.width !== imageDisplaySizeRef.current.width ||
-            calculatedSize.height !== imageDisplaySizeRef.current.height ||
-            calculatedSize.scale !== imageDisplaySizeRef.current.scale
-        ) {
-            imageDisplaySizeRef.current = calculatedSize;
-            setImageDisplaySize(calculatedSize);
-        }
-    }, []);
-
-    useEffect(() => {
-        imageNaturalSizeRef.current = imageNaturalSize;
-        updateSizes();
-    }, [imageNaturalSize, updateSizes]);
-
-    useEffect(() => {
-        const resizeObserver = new ResizeObserver(updateSizes);
-        const container = containerRef.current;
-        if (container) resizeObserver.observe(container);
-
-        window.addEventListener('resize', updateSizes);
-        updateSizes();
-
-        return () => {
-            resizeObserver.disconnect();
-            window.removeEventListener('resize', updateSizes);
-        };
-    }, [updateSizes]);
+    const { containerSize, imageDisplaySize } = useImageContainerSizing({
+        containerRef,
+        imageNaturalSize,
+    });
 
     useEffect(() => {
         if (error) {
