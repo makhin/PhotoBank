@@ -17,6 +17,7 @@ import { Button } from '@/shared/ui/button';
 import { ScrollArea } from '@/shared/ui/scroll-area';
 import { deserializeFilter } from '@/shared/lib/filter-url';
 import { PhotoTable } from '@/features/photos/components/PhotoTable';
+import { selectPersonsMap, selectTagsMap } from '@/features/metadata/selectors';
 
 import PhotoListItemMobile from './PhotoListItemMobile';
 
@@ -24,18 +25,9 @@ const PhotoListPage = () => {
   const dispatch = useAppDispatch();
   const filter = useAppSelector((state) => state.photo.filter);
   const { t } = useTranslation();
-  const persons = useAppSelector((state) => state.metadata.persons);
-  const tags = useAppSelector((state) => state.metadata.tags);
+  const personsMap = useAppSelector(selectPersonsMap);
+  const tagsMap = useAppSelector(selectTagsMap);
   const [searchParams] = useSearchParams();
-
-  const personsMap = useMemo(
-    () => Object.fromEntries(persons.map((p) => [p.id, p.name])),
-    [persons]
-  );
-  const tagsMap = useMemo(
-    () => Object.fromEntries(tags.map((t) => [t.id, t.name])),
-    [tags]
-  );
 
   const {
     items: photos,
