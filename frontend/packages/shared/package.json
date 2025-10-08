@@ -20,6 +20,10 @@
       "types": "./dist/format/index.d.ts",
       "default": "./dist/format/index.js"
     },
+    "./metadata": {
+      "types": "./dist/metadata/index.d.ts",
+      "default": "./dist/metadata/index.js"
+    },
     "./ai/openai": {
       "types": "./dist/ai/openai.d.ts",
       "default": "./dist/ai/openai.js"
@@ -62,6 +66,7 @@
     "date-fns": "^4.1.0",
     "dexie": "^4.2.0",
     "eventemitter3": "^5.0.1",
+    "fuse.js": "^7.1.0",
     "lru-cache": "^11.2.1",
     "object-hash": "^3.0.0",
     "openai": "^5.20.1",
