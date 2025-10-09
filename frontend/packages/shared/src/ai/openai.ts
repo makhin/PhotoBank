@@ -35,57 +35,65 @@ function ensureConfigured(): { client: AzureOpenAI; deployment: string } {
   return { client, deployment };
 }
 
-export async function createChatCompletion(text: string): Promise<string> {
+type ChatCompletionCreateParams = Parameters<
+  AzureOpenAI['chat']['completions']['create']
+>[0];
+
+type ChatCompletionCreateResult = Awaited<
+  ReturnType<AzureOpenAI['chat']['completions']['create']>
+>;
+
+async function runChatCompletion(
+  params: ChatCompletionCreateParams,
+): Promise<ChatCompletionCreateResult> {
   const { client, deployment } = ensureConfigured();
 
   try {
-    const response = await client.chat.completions.create({
-      messages: [{ role: 'user', content: text }],
-      temperature: 1,
-      top_p: 1,
+    return await client.chat.completions.create({
+      ...params,
       model: deployment,
-      response_format: {
-        type: 'text',
-      },
     });
-
-    return response.choices?.[0]?.message?.content ?? '';
   } catch (err) {
     logger.error(err);
     throw new Error('OpenAI request failed');
   }
 }
 
-export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
-  const { client, deployment } = ensureConfigured();
+export async function createChatCompletion(text: string): Promise<string> {
+  const response = await runChatCompletion({
+    messages: [{ role: 'user', content: text }],
+    temperature: 1,
+    top_p: 1,
+    response_format: {
+      type: 'text',
+    },
+  });
 
+  return response.choices?.[0]?.message?.content ?? '';
+}
+
+export async function parseQueryWithOpenAI(text: string): Promise<PhotoFilter> {
   const messages: Array<ChatCompletionMessageParam> = [
     { role: 'system', content: SYSTEM_PROMPT },
     ...FEW_SHOTS,
     { role: 'user', content: text },
   ];
 
-  try {
-    const response = await client.chat.completions.create({
-      messages: messages,
-      temperature: 1,
-      top_p: 1,
-      model: deployment,
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'PhotoFilter',
-          schema: photoFilterSchemaForLLM,
-          strict: true,
-        },
+  const response = await runChatCompletion({
+    messages: messages,
+    temperature: 1,
+    top_p: 1,
+    response_format: {
+      type: 'json_schema',
+      json_schema: {
+        name: 'PhotoFilter',
+        schema: photoFilterSchemaForLLM,
+        strict: true,
       },
-    });
+    },
+  });
 
-    const content = response.choices?.[0]?.message?.content ?? '{}';
+  const content = response.choices?.[0]?.message?.content ?? '{}';
 
-    return PhotoFilterSchema.parse(JSON.parse(content));
-  } catch (err) {
-    logger.error(err);
-    throw new Error('OpenAI request failed');
-  }
+  return PhotoFilterSchema.parse(JSON.parse(content));
 }
