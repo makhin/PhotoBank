@@ -46,7 +46,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
         id: 'path',
         header: 'Path',
         cell: ({ row }) => (
-          <div className="font-mono text-sm text-muted-foreground truncate">
+          <div className="font-mono text-sm text-muted-foreground break-words line-clamp-2">
             {row.original.storageName}
             {row.original.relativePath && '/' + row.original.relativePath}
             {'/' + row.original.name}
@@ -60,7 +60,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
         id: 'caption',
         header: 'Caption',
         cell: ({ row }) => (
-          <div className="text-sm text-foreground whitespace-pre-wrap break-words">
+          <div className="text-sm text-foreground break-words line-clamp-2">
             {row.original.captions ? (
               row.original.captions[0]
             ) : (
@@ -109,6 +109,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
             map={tagsMap}
             maxVisible={8}
             variant="outline"
+            maxRows={2}
           />
         ),
         enableSorting: false,
@@ -126,6 +127,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
             map={personsMap}
             maxVisible={6}
             variant="secondary"
+            maxRows={2}
           />
         ),
         enableSorting: false,

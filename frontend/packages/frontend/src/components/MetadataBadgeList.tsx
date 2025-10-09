@@ -1,7 +1,8 @@
+import type { CSSProperties, ComponentProps } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import type { ComponentProps } from 'react';
 
 import { Badge } from '@/shared/ui/badge';
+import { cn } from '@/shared/lib/utils';
 
 type MetadataValue =
   | string
@@ -20,6 +21,7 @@ export type MetadataBadgeListProps = {
   map?: MetadataLookupMap;
   maxVisible: number;
   variant?: ComponentProps<typeof Badge>['variant'];
+  maxRows?: number;
 };
 
 const MetadataBadgeList = ({
@@ -28,6 +30,7 @@ const MetadataBadgeList = ({
   map,
   maxVisible,
   variant = 'outline',
+  maxRows,
 }: MetadataBadgeListProps) => {
   if (!items || items.length === 0) return null;
 
@@ -86,8 +89,19 @@ const MetadataBadgeList = ({
   const visible = resolved.slice(0, maxVisible);
   const rest = resolved.length - visible.length;
 
+  const containerClassName = cn(
+    'flex items-center gap-1 flex-wrap',
+    maxRows ? 'overflow-hidden' : undefined
+  );
+
+  const containerStyle: CSSProperties | undefined = maxRows
+    ? {
+        maxHeight: maxRows * 28,
+      }
+    : undefined;
+
   return (
-    <div className="flex items-center gap-1 flex-wrap">
+    <div className={containerClassName} style={containerStyle}>
       {Icon ? <Icon className="w-3 h-3 text-muted-foreground" /> : null}
       {visible.map((label, index) => (
         <Badge key={`${String(label)}-${index}`} variant={variant} className="text-xs">
@@ -104,4 +118,3 @@ const MetadataBadgeList = ({
 };
 
 export default MetadataBadgeList;
-
