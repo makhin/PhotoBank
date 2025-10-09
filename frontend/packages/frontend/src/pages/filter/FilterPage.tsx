@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { DEFAULT_FORM_VALUES } from '@photobank/shared/constants';
 import { useTranslation } from 'react-i18next';
 import type { FilterDto } from '@photobank/shared/api/photobank';
+import { createThisDayFilter, withPagination } from '@photobank/shared';
 import { parseISO } from 'date-fns';
 
 import { useAppDispatch, useAppSelector } from '@/app/hook';
@@ -20,6 +21,24 @@ import { serializeFilter, deserializeFilter } from '@/shared/lib/filter-url';
 
 // Infer FormData type from formSchema to ensure compatibility
 type FormData = z.infer<typeof formSchema>;
+
+const mapFormDataToFilter = (data: FormData, now: Date): FilterDto => {
+  const thisDay = data.thisDay ? createThisDayFilter(now).thisDay : undefined;
+
+  return withPagination({
+    caption: data.caption,
+    storages: data.storages?.map(Number),
+    paths: data.paths?.map(Number),
+    personNames: data.personNames,
+    tagNames: data.tagNames,
+    isBW: data.isBW,
+    isAdultContent: data.isAdultContent,
+    isRacyContent: data.isRacyContent,
+    thisDay,
+    takenDateFrom: data.dateFrom ?? null,
+    takenDateTo: data.dateTo ?? null,
+  });
+};
 function FilterPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -75,43 +94,14 @@ function FilterPage() {
       const parsed = deserializeFilter(encoded);
       if (parsed) {
         form.reset(parsed);
-        const filter: FilterDto = {
-          caption: parsed.caption,
-          storages: parsed.storages?.map(Number),
-          paths: parsed.paths?.map(Number),
-          personNames: parsed.personNames,
-          tagNames: parsed.tagNames,
-          isBW: parsed.isBW,
-          isAdultContent: parsed.isAdultContent,
-          isRacyContent: parsed.isRacyContent,
-          thisDay: parsed.thisDay ? { day: new Date().getDate(), month: new Date().getMonth() + 1 } : undefined,
-          takenDateFrom: parsed.dateFrom ?? null,
-          takenDateTo: parsed.dateTo ?? null,
-          page: 1,
-          pageSize: 10,
-        };
+        const filter = mapFormDataToFilter(parsed, new Date());
         dispatch(setFilter(filter));
       }
     }
   }, [searchParams, dispatch, form]);
 
   const onSubmit = (data: FormData) => {
-    const now = new Date();
-    const filter: FilterDto = {
-      caption: data.caption,
-      storages: data.storages?.map(Number),
-      paths: data.paths?.map(Number),
-      personNames: data.personNames,
-      tagNames: data.tagNames,
-      isBW: data.isBW,
-      isAdultContent: data.isAdultContent,
-      isRacyContent: data.isRacyContent,
-      thisDay: data.thisDay ? { day: now.getDate(), month: now.getMonth() + 1 } : undefined,
-      takenDateFrom: data.dateFrom ?? null,
-      takenDateTo: data.dateTo ?? null,
-      page: 1,
-      pageSize: 10,
-    };
+    const filter = mapFormDataToFilter(data, new Date());
 
     const encoded = serializeFilter(data);
 

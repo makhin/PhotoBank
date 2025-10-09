@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import type { FilterDto, PhotoItemDto } from '@photobank/shared/api/photobank';
+import { createThisDayFilter, withPagination } from '@photobank/shared';
 
 import { useAppDispatch, useAppSelector } from '@/app/hook';
 import { setFilter } from '@/features/photo/model/photoSlice';
@@ -31,7 +32,7 @@ export const usePhotoListUrlSync = ({
     const parsed = deserializeFilter(encoded);
     if (!parsed) return;
 
-    const urlFilter: FilterDto = {
+    const urlFilter: FilterDto = withPagination({
       caption: parsed.caption,
       storages: parsed.storages?.map(Number),
       paths: parsed.paths?.map(Number),
@@ -41,13 +42,11 @@ export const usePhotoListUrlSync = ({
       isAdultContent: parsed.isAdultContent,
       isRacyContent: parsed.isRacyContent,
       thisDay: parsed.thisDay
-        ? { day: new Date().getDate(), month: new Date().getMonth() + 1 }
+        ? createThisDayFilter(new Date()).thisDay
         : undefined,
       takenDateFrom: parsed.dateFrom ?? null,
       takenDateTo: parsed.dateTo ?? null,
-      page: 1,
-      pageSize: 10,
-    };
+    });
 
     dispatch(setFilter(urlFilter));
   }, [dispatch, searchParams]);

@@ -18,7 +18,9 @@ vi.mock('../photo', async () => {
   };
 });
 
-import { sendPhotosPage, PHOTOS_PAGE_SIZE } from './photosPage';
+import { DEFAULT_PHOTO_FILTER } from '@photobank/shared';
+
+import { sendPhotosPage } from './photosPage';
 import type { MyContext } from '../i18n';
 import { captionCache, currentPagePhotos, deletePhotoMessage, photoMessages } from '../photo';
 import { searchPhotos } from '../services/photo';
@@ -86,7 +88,7 @@ describe('sendPhotosPage', () => {
 
     expect(searchPhotosMock).toHaveBeenCalledWith(
       ctx,
-      expect.objectContaining({ page: 1, pageSize: PHOTOS_PAGE_SIZE })
+      expect.objectContaining({ page: 1, pageSize: DEFAULT_PHOTO_FILTER.pageSize })
     );
     expect(ctx.reply).toHaveBeenCalledWith(
       expect.stringContaining('<b>2023</b>'),

@@ -1,3 +1,5 @@
+import { createThisDayFilter } from '@photobank/shared';
+
 import type { MyContext } from '../i18n';
 import { sendPhotosPage } from './photosPage';
 
@@ -9,19 +11,19 @@ function parsePage(text?: string): number {
 }
 
 export async function handleThisDay(ctx: MyContext) {
-    const page = parsePage(ctx.message?.text);
-    await sendThisDayPage(ctx, page);
+  const page = parsePage(ctx.message?.text);
+  await sendThisDayPage(ctx, page);
 }
 
 export const thisDayCommand = handleThisDay;
 export async function sendThisDayPage(ctx: MyContext, page: number, edit = false) {
-    const now = new Date();
-    await sendPhotosPage({
-        ctx,
-        filter: { thisDay: { day: now.getDate(), month: now.getMonth() + 1 } },
-        page,
-        edit,
-        fallbackMessage: ctx.t('todays-photos-empty'),
-        buildCallbackData: (p) => `thisday:${p}`,
-    });
+  const now = new Date();
+  await sendPhotosPage({
+    ctx,
+    filter: createThisDayFilter(now),
+    page,
+    edit,
+    fallbackMessage: ctx.t('todays-photos-empty'),
+    buildCallbackData: (p) => `thisday:${p}`,
+  });
 }
