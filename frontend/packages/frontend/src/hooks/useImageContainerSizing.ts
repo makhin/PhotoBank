@@ -36,8 +36,12 @@ const calculateImageSize = (naturalWidth: number, naturalHeight: number, contain
     };
 };
 
+type HTMLElementRef =
+    | RefObject<HTMLElement | null>
+    | { current: HTMLElement | null };
+
 interface UseImageContainerSizingParams {
-    containerRef: RefObject<HTMLElement>;
+    containerRef: HTMLElementRef;
     imageNaturalSize: Size;
 }
 

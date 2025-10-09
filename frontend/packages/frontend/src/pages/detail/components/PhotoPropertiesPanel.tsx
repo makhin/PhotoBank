@@ -24,50 +24,52 @@ export const PhotoPropertiesPanel = ({ photo, formattedTakenDate }: PhotoPropert
                 <CardHeader className="pb-3">
                     <CardTitle className="text-lg">{t('photoPropertiesTitle')}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                    <div>
-                        <Label className="text-muted-foreground text-xs">{t('nameLabel')}</Label>
-                        <Input value={photo.name ?? ''} readOnly className="mt-1 bg-muted" />
-                    </div>
-
-                    {photo.id != null && (
-                        <div>
-                            <Label className="text-muted-foreground text-xs">{t('idLabel')}</Label>
-                            <Input value={photo.id.toString()} readOnly className="mt-1 bg-muted" />
+                <CardContent>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="sm:col-span-2">
+                            <Label className="text-muted-foreground text-xs">{t('nameLabel')}</Label>
+                            <Input value={photo.name ?? ''} readOnly className="mt-1 bg-muted" />
                         </div>
-                    )}
 
-                    <div>
-                        <Label className="text-muted-foreground text-xs">{t('takenDateLabel')}</Label>
-                        <Input value={formattedTakenDate} readOnly className="mt-1 bg-muted" />
-                    </div>
+                        {photo.id != null && (
+                            <div>
+                                <Label className="text-muted-foreground text-xs">{t('idLabel')}</Label>
+                                <Input value={photo.id.toString()} readOnly className="mt-1 bg-muted" />
+                            </div>
+                        )}
 
-                    {photo.width != null && photo.height != null && (
-                        <div className="grid grid-cols-2 gap-2">
+                        <div>
+                            <Label className="text-muted-foreground text-xs">{t('takenDateLabel')}</Label>
+                            <Input value={formattedTakenDate} readOnly className="mt-1 bg-muted" />
+                        </div>
+
+                        {photo.width != null && (
                             <div>
                                 <Label className="text-muted-foreground text-xs">{t('widthLabel')}</Label>
                                 <Input value={`${photo.width.toString()}px`} readOnly className="mt-1 bg-muted" />
                             </div>
+                        )}
+                        {photo.height != null && (
                             <div>
                                 <Label className="text-muted-foreground text-xs">{t('heightLabel')}</Label>
                                 <Input value={`${photo.height.toString()}px`} readOnly className="mt-1 bg-muted" />
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {photo.scale != null && (
-                        <div>
-                            <Label className="text-muted-foreground text-xs">{t('scaleLabel')}</Label>
-                            <Input value={photo.scale.toString()} readOnly className="mt-1 bg-muted" />
-                        </div>
-                    )}
+                        {photo.scale != null && (
+                            <div>
+                                <Label className="text-muted-foreground text-xs">{t('scaleLabel')}</Label>
+                                <Input value={photo.scale.toString()} readOnly className="mt-1 bg-muted" />
+                            </div>
+                        )}
 
-                    {photo.orientation != null && (
-                        <div>
-                            <Label className="text-muted-foreground text-xs">{t('orientationLabel')}</Label>
-                            <Input value={getOrientation(photo.orientation)} readOnly className="mt-1 bg-muted" />
-                        </div>
-                    )}
+                        {photo.orientation != null && (
+                            <div>
+                                <Label className="text-muted-foreground text-xs">{t('orientationLabel')}</Label>
+                                <Input value={getOrientation(photo.orientation)} readOnly className="mt-1 bg-muted" />
+                            </div>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
 

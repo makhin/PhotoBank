@@ -46,10 +46,10 @@ describe('usePhotoGeodata', () => {
         mockedGetPlaceByGeoPoint.mockResolvedValue('Initial Place');
 
         const { result, rerender } = renderHook(
-            ({ latitude, longitude }: { latitude: number | null; longitude: number | null }) =>
-                usePhotoGeodata({ latitude, longitude }),
+            ({ location }: { location: { latitude: number; longitude: number } | null }) =>
+                usePhotoGeodata(location),
             {
-                initialProps: { latitude: 1, longitude: 2 },
+                initialProps: { location: { latitude: 1, longitude: 2 } },
             },
         );
 
@@ -58,7 +58,7 @@ describe('usePhotoGeodata', () => {
         });
 
         mockedGetPlaceByGeoPoint.mockClear();
-        rerender({ latitude: null, longitude: null });
+        rerender({ location: null });
 
         await waitFor(() => {
             expect(result.current.placeName).toBe('');

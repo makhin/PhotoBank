@@ -5,7 +5,7 @@ import ImageCanvas from './ImageCanvas';
 
 const extractScale = (transform: string) => {
   const match = /scale\(([-\d.]+)\)/.exec(transform);
-  return match ? Number.parseFloat(match[1]) : Number.NaN;
+  return match?.[1] ? Number.parseFloat(match[1]) : Number.NaN;
 };
 
 describe('ImageCanvas', () => {

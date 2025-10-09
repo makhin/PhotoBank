@@ -27,12 +27,12 @@ interface PhotoDetailsPageProps {
 const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     const [showFaceBoxes, setShowFaceBoxes] = useState(false);
     const persons = useAppSelector((state) => state.metadata.persons);
-    const isAdmin = useIsAdmin();
+    const isAdmin = useIsAdmin() ?? false;
     const dispatch = useAppDispatch();
     const { mutateAsync: updateFace } = useFacesUpdate();
     const { t } = useTranslation();
 
-    const containerRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
 
     const {id} = useParams<{ id: string }>();
     const photoId = propPhotoId ?? (id ? +id : 0);
@@ -134,7 +134,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     };
 
     return (
-        <div className="h-screen w-screen bg-background text-foreground overflow-hidden">
+        <div className="h-full w-full min-h-screen bg-background text-foreground overflow-hidden">
             <div className="h-full w-full grid grid-cols-1 lg:grid-cols-3 gap-0">
                 <PhotoViewer
                     photo={photoData}

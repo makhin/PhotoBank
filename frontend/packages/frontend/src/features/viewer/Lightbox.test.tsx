@@ -61,7 +61,13 @@ describe('Lightbox', () => {
 
     expect(screen.getByText('1 / 2')).toBeInTheDocument();
 
-    const canvasProps = imageCanvasMock.mock.calls[0][0];
+    const firstCall = imageCanvasMock.mock.calls[0];
+    expect(firstCall).toBeDefined();
+
+    const canvasProps = firstCall?.[0];
+    if (!canvasProps) {
+      throw new Error('ImageCanvas was not called with props');
+    }
     expect(canvasProps).toMatchObject({
       thumbSrc: 'first.jpg',
       src: 'first.jpg',

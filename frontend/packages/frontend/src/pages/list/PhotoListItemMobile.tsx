@@ -42,11 +42,11 @@ const PhotoListItemMobile = ({
         />
         <div className="flex-1 min-w-0">
           <div className="font-medium truncate">{photo.name}</div>
-            {photo.captions && photo.captions.length > 0 && (
-              <div className="text-xs text-muted-foreground truncate">
-                {firstNWords(photo.captions[0] ?? '', 5)}
-              </div>
-            )}
+          {photo.captions && photo.captions.length > 0 && (
+            <div className="text-xs text-muted-foreground truncate">
+              {firstNWords(photo.captions[0] ?? '', 5)}
+            </div>
+          )}
           <Badge variant="outline" className="font-mono text-xs mt-1">
             {photo.id}
           </Badge>
@@ -72,7 +72,7 @@ const PhotoListItemMobile = ({
 
       <MetadataBadgeList
         icon={User}
-        items={photo.persons?.map((p) => p) ?? []}
+        items={photo.persons ?? []}
         map={personsMap}
         maxVisible={MAX_VISIBLE_PERSONS_SM}
         variant="outline"
@@ -80,7 +80,7 @@ const PhotoListItemMobile = ({
 
       <MetadataBadgeList
         icon={Tag}
-        items={photo.tags?.map((t) => t) ?? []}
+        items={photo.tags ?? []}
         map={tagsMap}
         maxVisible={MAX_VISIBLE_TAGS_SM}
         variant="secondary"
@@ -90,4 +90,3 @@ const PhotoListItemMobile = ({
 );
 
 export default PhotoListItemMobile;
-

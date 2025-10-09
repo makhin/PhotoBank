@@ -1,4 +1,5 @@
 import Fuse from 'fuse.js';
+import type { IFuseOptions } from 'fuse.js';
 
 import type { PersonDto, StorageDto, TagDto } from '../api/photobank/photoBankApi.schemas';
 
@@ -41,7 +42,7 @@ const createMapBuilder = <TEntity extends EntityWithId>() =>
   );
 
 const createFuzzyIndexBuilder = <TEntity extends EntityWithName>() => {
-  const options: Fuse.IFuseOptions<TEntity> = {
+  const options: IFuseOptions<TEntity> = {
     keys: ['name'],
     threshold: 0.3,
     ignoreLocation: true,

@@ -10,7 +10,7 @@ import type { PhotoDetails } from '../types';
 
 interface PhotoViewerProps {
     photo: PhotoDetails;
-    containerRef: RefObject<HTMLDivElement>;
+    containerRef: RefObject<HTMLDivElement | null>;
     showFaceBoxes: boolean;
     calculateFacePosition: (faceBox: FaceBoxDto) => CSSProperties;
     onOpenViewer: () => void;
