@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -11,13 +11,13 @@ import metaReducer from '@/features/meta/model/metaSlice';
 import photoReducer from '@/features/photo/model/photoSlice';
 import viewerReducer from '@/features/viewer/viewerSlice';
 import PhotoListPage from './PhotoListPage';
-import { usePhotoListAdapter } from '@/features/photo/usePhotoListAdapter';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useInfinitePhotos } from '@/features/photo/useInfinitePhotos';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { I18nProvider } from '@/app/providers/I18nProvider';
 
-vi.mock('@/features/photo/usePhotoListAdapter');
+vi.mock('@/features/photo/useInfinitePhotos');
 vi.mock('@tanstack/react-virtual', () => ({
-  useVirtualizer: vi.fn(),
+  useWindowVirtualizer: vi.fn(),
 }));
 
 class IntersectionObserverMock {
@@ -54,21 +54,17 @@ test('renders PhotoTable and fetches next page when scrolled', async () => {
   const photos = createPhotos(10);
   const fetchNextPage = vi.fn();
 
-  (usePhotoListAdapter as unknown as Mock).mockReturnValue({
-    photos,
-    counters: {
-      total: 20,
-      loaded: photos.length,
-      flags: { bw: 0, adult: 0, racy: 0 },
-    },
+  (useInfinitePhotos as unknown as Mock).mockReturnValue({
+    items: photos,
     total: 20,
     fetchNextPage,
     hasNextPage: true,
     isLoading: false,
     isFetchingNextPage: false,
+    error: null,
   });
 
-  const initialVirtual = photos.map((_, i) => ({
+  const virtualRows = photos.map((_, i) => ({
     key: i,
     index: i,
     start: i * 92,
@@ -76,26 +72,27 @@ test('renders PhotoTable and fetches next page when scrolled', async () => {
     end: (i + 1) * 92,
     lane: 0,
   }));
-  const withLoader = [
-    ...initialVirtual,
+  const virtualItems = [
+    ...virtualRows,
     {
       key: photos.length,
       index: photos.length,
       start: photos.length * 92,
-      size: 92,
-      end: (photos.length + 1) * 92,
+      size: 512,
+      end: photos.length * 92 + 512,
       lane: 0,
     },
   ];
-  (useVirtualizer as unknown as Mock).mockReturnValue({
-    getVirtualItems: vi
-      .fn()
-      .mockReturnValueOnce(initialVirtual)
-      .mockReturnValueOnce(withLoader)
-      .mockReturnValue(withLoader),
+  const getVirtualItems = vi.fn(() => virtualItems);
+  (useWindowVirtualizer as unknown as Mock).mockReturnValue({
+    getVirtualItems,
     getTotalSize: () => 1000,
     measureElement: vi.fn(),
   });
+
+  const innerHeightSpy = vi
+    .spyOn(window, 'innerHeight', 'get')
+    .mockReturnValue(2000);
 
   const store = configureStore({
     reducer: {
@@ -131,11 +128,13 @@ test('renders PhotoTable and fetches next page when scrolled', async () => {
     </QueryClientProvider>
   );
 
-  const { rerender } = render(<PhotoListPage />, { wrapper });
+  try {
+    render(<PhotoListPage />, { wrapper });
 
-  expect(await screen.findByText('Preview')).toBeInTheDocument();
+    expect(await screen.findByText('Preview')).toBeInTheDocument();
 
-  rerender(<PhotoListPage />);
-
-  expect(fetchNextPage).toHaveBeenCalled();
+    await waitFor(() => expect(fetchNextPage).toHaveBeenCalled());
+  } finally {
+    innerHeightSpy.mockRestore();
+  }
 });
