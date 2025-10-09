@@ -1,14 +1,12 @@
 import { InlineKeyboard } from 'grammy';
 import { getYear, isValid, parseISO } from 'date-fns';
-import { firstNWords, type FilterDto } from '@photobank/shared';
+import { firstNWords, type FilterDto, withPagination } from '@photobank/shared';
 
 import type { MyContext } from '../i18n';
 import { searchPhotos } from '../services/photo';
 import { handleCommandError } from '../errorHandler';
 import { captionCache, currentPagePhotos, deletePhotoMessage } from '../photo';
 import { setLastFilter } from '../cache/lastFilterCache';
-
-export const PHOTOS_PAGE_SIZE = 10;
 
 export interface SendPhotosPageOptions {
   ctx: MyContext;
@@ -37,11 +35,7 @@ export async function sendPhotosPage({
     }
   }
 
-  const pagedFilter: FilterDto = {
-    ...filter,
-    page,
-    pageSize: PHOTOS_PAGE_SIZE,
-  };
+  const pagedFilter = withPagination(filter, page);
 
   if (chatId && saveLastFilterSource) {
     setLastFilter(chatId, pagedFilter, saveLastFilterSource);
@@ -66,7 +60,8 @@ export async function sendPhotosPage({
   const items = queryResult.items ?? [];
   const totalCount = queryResult.totalCount ?? 0;
 
-  const totalPages = Math.ceil(totalCount / PHOTOS_PAGE_SIZE);
+  const pageSize = Math.max(pagedFilter.pageSize ?? 1, 1);
+  const totalPages = Math.ceil(totalCount / pageSize);
   const byYear = new Map<number, Map<string, typeof items>>();
 
   for (const photo of queryResult.items) {

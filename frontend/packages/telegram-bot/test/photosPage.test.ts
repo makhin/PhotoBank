@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MyContext } from '../src/i18n';
-import { PHOTOS_PAGE_SIZE, sendPhotosPage } from '../src/commands/photosPage';
+import { DEFAULT_PHOTO_FILTER } from '@photobank/shared';
+
+import { sendPhotosPage } from '../src/commands/photosPage';
 
 const searchPhotos = vi.hoisted(() => vi.fn());
 const handleCommandError = vi.hoisted(() => vi.fn());
@@ -76,7 +78,7 @@ describe('sendPhotosPage', () => {
     const expectedFilter = {
       caption: 'sunset',
       page: 2,
-      pageSize: PHOTOS_PAGE_SIZE,
+      pageSize: DEFAULT_PHOTO_FILTER.pageSize,
     };
 
     expect(setLastFilter).toHaveBeenCalledWith(42, expectedFilter, 'search');

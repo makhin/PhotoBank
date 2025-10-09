@@ -1,12 +1,4 @@
-import type { FilterDto } from './api/photobank';
-
-const today = new Date();
-
-export const DEFAULT_PHOTO_FILTER: FilterDto = {
-  thisDay: { day: today.getDate(), month: today.getMonth() + 1 },
-  page: 1,
-  pageSize: 10,
-} as const;
+export { DEFAULT_PHOTO_FILTER } from './filter/defaults';
 
 export const apiErrorMsg = 'API error:';
 export const botTokenNotDefinedError = 'BOT_TOKEN is not defined';

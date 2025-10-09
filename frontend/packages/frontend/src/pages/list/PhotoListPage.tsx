@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import type { FilterDto, PhotoItemDto } from '@photobank/shared/api/photobank';
 import { useTranslation } from 'react-i18next';
+import { createThisDayFilter, withPagination } from '@photobank/shared';
 
 import {
   useInfinitePhotos,
@@ -74,7 +75,7 @@ const PhotoListPage = () => {
     if (encoded) {
       const parsed = deserializeFilter(encoded);
       if (parsed) {
-        const urlFilter: FilterDto = {
+        const urlFilter = withPagination({
           caption: parsed.caption,
           storages: parsed.storages?.map(Number),
           paths: parsed.paths?.map(Number),
@@ -83,12 +84,10 @@ const PhotoListPage = () => {
           isBW: parsed.isBW,
           isAdultContent: parsed.isAdultContent,
           isRacyContent: parsed.isRacyContent,
-          thisDay: parsed.thisDay ? { day: new Date().getDate(), month: new Date().getMonth() + 1 } : undefined,
+          thisDay: parsed.thisDay ? createThisDayFilter(new Date()).thisDay : undefined,
           takenDateFrom: parsed.dateFrom ?? null,
           takenDateTo: parsed.dateTo ?? null,
-          page: 1,
-          pageSize: 10,
-        };
+        });
         dispatch(setFilter(urlFilter));
       }
     }
