@@ -20,11 +20,11 @@ export const PhotoPropertiesPanel = ({ photo, formattedTakenDate }: PhotoPropert
 
     return (
         <div className="space-y-4">
-            <Card className="bg-card border-border">
-                <CardHeader className="pb-3">
+            <Card className="bg-card border-border py-4">
+                <CardHeader className="pb-2">
                     <CardTitle className="text-lg">{t('photoPropertiesTitle')}</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-6 pt-2">
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div className="sm:col-span-2">
                             <Label className="text-muted-foreground text-xs">{t('nameLabel')}</Label>
@@ -74,11 +74,11 @@ export const PhotoPropertiesPanel = ({ photo, formattedTakenDate }: PhotoPropert
             </Card>
 
             {photo.tags && photo.tags.length > 0 && (
-                <Card className="bg-card border-border">
-                    <CardHeader className="pb-3">
+                <Card className="bg-card border-border py-4">
+                    <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{t('tagsTitle')}</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-6 pt-2">
                         <div className="flex flex-wrap gap-2">
                             {photo.tags.map((tag) => (
                                 <Badge key={tag} variant="secondary" className="bg-secondary text-secondary-foreground">
@@ -91,11 +91,11 @@ export const PhotoPropertiesPanel = ({ photo, formattedTakenDate }: PhotoPropert
             )}
 
             {photo.captions && photo.captions.length > 0 && (
-                <Card className="bg-card border-border">
-                    <CardHeader className="pb-3">
+                <Card className="bg-card border-border py-4">
+                    <CardHeader className="pb-2">
                         <CardTitle className="text-lg">{t('captionsTitle')}</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-6 pt-2">
                         <div className="space-y-2">
                             {photo.captions.map((caption) => (
                                 <Textarea key={caption} value={caption} readOnly className="min-h-[60px] resize-none bg-muted" />
@@ -105,11 +105,11 @@ export const PhotoPropertiesPanel = ({ photo, formattedTakenDate }: PhotoPropert
                 </Card>
             )}
 
-            <Card className="bg-card border-border">
-                <CardHeader className="pb-3">
+            <Card className="bg-card border-border py-4">
+                <CardHeader className="pb-2">
                     <CardTitle className="text-lg">{t('contentAnalysisTitle')}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="px-6 pt-2 space-y-3">
                     <ScoreBar label={t('adultScoreLabel')} score={photo.adultScore ?? 0} colorClass="bg-orange-500" />
                     <ScoreBar label={t('racyScoreLabel')} score={photo.racyScore ?? 0} colorClass="bg-red-500" />
                 </CardContent>

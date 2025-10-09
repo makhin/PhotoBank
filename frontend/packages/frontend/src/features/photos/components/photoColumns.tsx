@@ -3,12 +3,12 @@ import { format } from 'date-fns';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import { toDate } from '@photobank/shared/utils/parseDate';
+import { useTranslation } from 'react-i18next';
 
 import MetadataBadgeList from '@/components/MetadataBadgeList';
 import { Badge } from '@/shared/ui/badge';
 import { buildThumbnailUrl } from '@/shared/utils/buildThumbnailUrl';
 import { useAppSelector } from '@/app/hook';
-import { useTranslation } from 'react-i18next';
 import {
   selectMetadataLoaded,
   selectPersonsMap,
