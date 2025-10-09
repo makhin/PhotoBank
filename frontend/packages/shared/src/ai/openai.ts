@@ -48,16 +48,28 @@ type ChatCompletionCreateResult = Awaited<
   ReturnType<AzureOpenAI['chat']['completions']['create']>
 >;
 
+type NonStreamingChatCompletion = Extract<
+  ChatCompletionCreateResult,
+  { choices: unknown }
+>;
+
 async function runChatCompletion(
   params: ChatCompletionCreateParamsWithoutModel,
-): Promise<ChatCompletionCreateResult> {
+): Promise<NonStreamingChatCompletion> {
   const { client, deployment } = ensureConfigured();
 
   try {
-    return await client.chat.completions.create({
+    const response = await client.chat.completions.create({
       ...params,
+      stream: false,
       model: deployment,
     });
+
+    if ('choices' in response) {
+      return response;
+    }
+
+    throw new Error('Streaming responses are not supported for this call');
   } catch (err) {
     logger.error(err);
     throw new Error('OpenAI request failed');
