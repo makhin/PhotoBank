@@ -70,6 +70,17 @@ describe('formatPhotoMessage', () => {
     expect(getPlaceByGeoPointSpy).toHaveBeenCalledWith({ latitude: 10, longitude: 20 });
   });
 
+  it('falls back to coordinates when place name is empty', async () => {
+    vi.spyOn(shared, 'getPlaceByGeoPoint').mockResolvedValue('');
+
+    const { caption } = await formatPhotoMessage({
+      ...basePhoto,
+      location: { latitude: 10, longitude: -20 },
+    });
+
+    expect(caption).toContain('10.00000, -20.00000');
+  });
+
   it('omits location when coordinates are zero', async () => {
     const getPlaceByGeoPointSpy = vi
       .spyOn(shared, 'getPlaceByGeoPoint')

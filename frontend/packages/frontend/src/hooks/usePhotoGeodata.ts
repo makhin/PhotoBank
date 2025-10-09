@@ -1,25 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getPlaceByGeoPoint } from '@photobank/shared';
+import { getPlaceByGeoPoint, isValidGeoPoint, type GeoPointLike } from '@photobank/shared';
 import type { GeoPointDto } from '@photobank/shared/api/photobank';
 
-type GeoPointLike = Pick<GeoPointDto, 'latitude' | 'longitude'>;
-
-export function usePhotoGeodata(location: GeoPointLike | null | undefined) {
+export function usePhotoGeodata(location: GeoPointLike) {
     const [placeName, setPlaceName] = useState('');
 
     const latitude = location?.latitude ?? null;
     const longitude = location?.longitude ?? null;
 
-    const hasValidLocation = useMemo(() => {
-        if (latitude == null || longitude == null) {
-            return false;
+    const point = useMemo(() => {
+        if (!isValidGeoPoint(location)) {
+            return null;
         }
 
-        return !(latitude === 0 && longitude === 0);
+        return {
+            latitude: location.latitude,
+            longitude: location.longitude,
+        } satisfies GeoPointDto;
     }, [latitude, longitude]);
 
+    const hasValidLocation = point !== null;
+
     useEffect(() => {
-        if (!hasValidLocation || latitude == null || longitude == null) {
+        if (!point) {
             setPlaceName('');
             return;
         }
@@ -27,10 +30,7 @@ export function usePhotoGeodata(location: GeoPointLike | null | undefined) {
         let isCancelled = false;
 
         void (async () => {
-            const name = await getPlaceByGeoPoint({
-                latitude,
-                longitude,
-            });
+            const name = await getPlaceByGeoPoint(point);
 
             if (!isCancelled) {
                 setPlaceName(name);
@@ -40,7 +40,7 @@ export function usePhotoGeodata(location: GeoPointLike | null | undefined) {
         return () => {
             isCancelled = true;
         };
-    }, [hasValidLocation, latitude, longitude]);
+    }, [point]);
 
     return { placeName, hasValidLocation } as const;
 }

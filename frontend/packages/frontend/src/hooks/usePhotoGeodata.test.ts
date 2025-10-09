@@ -5,9 +5,16 @@ import { getPlaceByGeoPoint } from '@photobank/shared';
 
 import { usePhotoGeodata } from './usePhotoGeodata';
 
-vi.mock('@photobank/shared', () => ({
-    getPlaceByGeoPoint: vi.fn(),
-}));
+vi.mock('@photobank/shared', async () => {
+    const actual = await vi.importActual<typeof import('@photobank/shared')>(
+        '@photobank/shared',
+    );
+
+    return {
+        ...actual,
+        getPlaceByGeoPoint: vi.fn(),
+    };
+});
 
 const mockedGetPlaceByGeoPoint = vi.mocked(getPlaceByGeoPoint);
 
