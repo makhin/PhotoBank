@@ -1,4 +1,10 @@
-import { formatDate, getPlaceByGeoPoint, type PhotoDto } from '@photobank/shared';
+import {
+  formatDate,
+  formatGeoLink,
+  getPlaceByGeoPoint,
+  isValidGeoPoint,
+  type PhotoDto,
+} from '@photobank/shared';
 
 import { getCurrentLocale, getPersonName } from './dictionaries';
 import { i18n } from './i18n';
@@ -21,17 +27,11 @@ export async function formatPhotoMessage(photo: PhotoDto): Promise<{
   if (photo.captions?.[0]) lines.push(`📝 ${photo.captions[0]}`);
   if (photo.tags?.length) lines.push(`🏷️ ${photo.tags.join(", ")}`);
 
-  if (photo.location) {
-    const { latitude, longitude } = photo.location;
-    if (Math.abs(latitude) + Math.abs(longitude) !== 0) {
-      const coords = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-      const placeName = await getPlaceByGeoPoint({ latitude, longitude });
-      lines.push(
-        `📍 <a href="https://www.google.com/maps?q=${latitude},${longitude}">${
-          placeName || coords
-        }</a>`
-      );
-    }
+  if (isValidGeoPoint(photo.location)) {
+    const point = { latitude: photo.location.latitude, longitude: photo.location.longitude };
+    const placeName = await getPlaceByGeoPoint(point);
+    const { href, label } = formatGeoLink(point, placeName);
+    lines.push(`📍 <a href="${href}">${label}</a>`);
   }
 
   if (photo.faces?.length) {
