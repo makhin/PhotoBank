@@ -1,9 +1,5 @@
 import { AzureOpenAI } from 'openai';
-import type {
-  ChatCompletion,
-  ChatCompletionCreateParamsNonStreaming,
-  ChatCompletionMessageParam,
-} from 'openai/resources';
+import type { ChatCompletionMessageParam } from 'openai/resources';
 
 import { FEW_SHOTS, SYSTEM_PROMPT } from './constants';
 import type { PhotoFilter } from './filter';
@@ -39,14 +35,18 @@ function ensureConfigured(): { client: AzureOpenAI; deployment: string } {
   return { client, deployment };
 }
 
-type ChatCompletionCreateParams = ChatCompletionCreateParamsNonStreaming;
+type AzureChatCompletionsCreateParams = Parameters<
+  AzureOpenAI['chat']['completions']['create']
+>[0];
 
 type ChatCompletionCreateParamsWithoutModel = Omit<
-  ChatCompletionCreateParams,
+  AzureChatCompletionsCreateParams,
   'model'
 >;
 
-type ChatCompletionCreateResult = ChatCompletion;
+type ChatCompletionCreateResult = Awaited<
+  ReturnType<AzureOpenAI['chat']['completions']['create']>
+>;
 
 async function runChatCompletion(
   params: ChatCompletionCreateParamsWithoutModel,
