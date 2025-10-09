@@ -45,11 +45,14 @@ describe('usePhotoGeodata', () => {
     it('clears place name when location becomes invalid', async () => {
         mockedGetPlaceByGeoPoint.mockResolvedValue('Initial Place');
 
+        type HookProps = { location: { latitude: number; longitude: number } | null };
+
+        const initialProps: HookProps = { location: { latitude: 1, longitude: 2 } };
+
         const { result, rerender } = renderHook(
-            ({ location }: { location: { latitude: number; longitude: number } | null }) =>
-                usePhotoGeodata(location),
+            ({ location }: HookProps) => usePhotoGeodata(location),
             {
-                initialProps: { location: { latitude: 1, longitude: 2 } },
+                initialProps,
             },
         );
 

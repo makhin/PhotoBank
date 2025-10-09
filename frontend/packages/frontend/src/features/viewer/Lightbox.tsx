@@ -56,7 +56,7 @@ const Lightbox = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="max-w-full max-h-full"
+            className="flex max-h-full max-w-full items-center justify-center"
           >
             <ImageCanvas
               thumbSrc={item.preview}

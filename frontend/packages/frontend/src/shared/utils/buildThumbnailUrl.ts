@@ -1,12 +1,13 @@
 import { type PhotoItemDto } from '@photobank/shared/api/photobank';
+import { env } from '@/env';
 
 export function buildThumbnailUrl(photo: PhotoItemDto): string {
   if (photo.thumbnailUrl) return String(photo.thumbnailUrl);
 
   // 2) иначе собираем сами
   const base =
-    import.meta.env.VITE_S3_PUBLIC_BASE_URL ||
-    import.meta.env.VITE_API_BASE_URL ||
+    env.VITE_S3_PUBLIC_BASE_URL ||
+    env.VITE_API_BASE_URL ||
     '';
 
   const storage = (photo.storageName  ?? '').toString();

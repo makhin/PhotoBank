@@ -52,29 +52,32 @@ const ImageCanvas = ({ thumbSrc, src, alt, fetchPriority, onLoaded }: Props) => 
   };
 
   return (
-    <SmartImage
-      ref={imgRef}
-      thumbSrc={thumbSrc}
-      src={src}
-      alt={alt || ''}
-      loading="eager"
-      fetchPriority={fetchPriority}
-      onLoadFull={() => {
-        const img = imgRef.current;
-        if (img) onLoaded?.(img.naturalWidth, img.naturalHeight);
-      }}
-      onWheel={handleWheel}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={endPan}
-      onPointerCancel={endPan}
-      onDoubleClick={handleDoubleClick}
-      className="max-w-none select-none"
-      style={{
-        transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
-        cursor: panning ? 'grabbing' : scale > 1 ? 'grab' : 'zoom-in',
-      }}
-    />
+    <div className="flex items-center justify-center max-h-full max-w-full">
+      <SmartImage
+        ref={imgRef}
+        thumbSrc={thumbSrc}
+        src={src}
+        alt={alt || ''}
+        loading="eager"
+        fetchPriority={fetchPriority}
+        onLoadFull={() => {
+          const img = imgRef.current;
+          if (img) onLoaded?.(img.naturalWidth, img.naturalHeight);
+        }}
+        onWheel={handleWheel}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={endPan}
+        onPointerCancel={endPan}
+        onDoubleClick={handleDoubleClick}
+        fit="contain"
+        className="max-h-[95vh] max-w-[95vw] select-none"
+        style={{
+          transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
+          cursor: panning ? 'grabbing' : scale > 1 ? 'grab' : 'zoom-in',
+        }}
+      />
+    </div>
   );
 };
 

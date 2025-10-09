@@ -11,6 +11,7 @@ export type SmartImageProps = Omit<
   srcSet?: string;
   sizes?: string;
   className?: string;
+  fit?: 'cover' | 'contain';
   onLoadFull?: () => void;
   fetchPriority?: 'high' | 'auto' | 'low';
   decoding?: 'async' | 'auto' | 'sync';
@@ -29,6 +30,7 @@ const SmartImage = React.memo(
         srcSet,
         sizes,
         className,
+        fit = 'cover',
         onLoadFull,
         fetchPriority = 'low',
         decoding = 'async',
@@ -52,6 +54,8 @@ const SmartImage = React.memo(
         setLoaded(false);
       }, [src, srcSet]);
 
+      const fitClass = fit === 'contain' ? 'object-contain' : 'object-cover';
+
       return (
         <div className={clsx('relative overflow-hidden', className)}>
           <img
@@ -60,7 +64,8 @@ const SmartImage = React.memo(
             width={width}
             height={height}
             className={clsx(
-              'absolute inset-0 w-full h-full object-cover transition-all duration-300',
+              'absolute inset-0 w-full h-full transition-all duration-300',
+              fitClass,
               loaded ? 'opacity-0 blur-none scale-100' : 'opacity-100 blur-md scale-105'
             )}
             aria-hidden={loaded}
@@ -78,7 +83,8 @@ const SmartImage = React.memo(
             fetchPriority={fetchPriority}
             onLoad={handleLoad}
             className={clsx(
-              'w-full h-full object-cover transition-opacity duration-300',
+              'w-full h-full transition-opacity duration-300',
+              fitClass,
               loaded ? 'opacity-100' : 'opacity-0'
             )}
             {...imgProps}

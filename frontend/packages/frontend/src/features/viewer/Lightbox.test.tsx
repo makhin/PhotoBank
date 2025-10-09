@@ -1,12 +1,19 @@
+import type { ComponentProps, ReactElement } from 'react';
+
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { close, next, prev } from './viewerSlice';
 import Lightbox from './Lightbox';
+import type ImageCanvas from './ImageCanvas';
 import { useAppDispatch, useAppSelector } from '@/app/hook';
 
+type ImageCanvasProps = ComponentProps<typeof ImageCanvas>;
+
 const { imageCanvasMock } = vi.hoisted(() => ({
-  imageCanvasMock: vi.fn(() => <div data-testid="image-canvas" />),
+  imageCanvasMock: vi.fn<(props: ImageCanvasProps) => ReactElement>(() => (
+    <div data-testid="image-canvas" />
+  )),
 }));
 
 vi.mock('@/app/hook', () => ({
@@ -62,12 +69,10 @@ describe('Lightbox', () => {
     expect(screen.getByText('1 / 2')).toBeInTheDocument();
 
     const firstCall = imageCanvasMock.mock.calls[0];
-    expect(firstCall).toBeDefined();
-
-    const canvasProps = firstCall?.[0];
-    if (!canvasProps) {
+    if (!firstCall || !firstCall[0]) {
       throw new Error('ImageCanvas was not called with props');
     }
+    const canvasProps = firstCall[0];
     expect(canvasProps).toMatchObject({
       thumbSrc: 'first.jpg',
       src: 'first.jpg',
