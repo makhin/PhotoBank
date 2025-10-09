@@ -7,25 +7,110 @@ import { useIsAdmin, useCanSeeNsfw } from '@photobank/shared';
 import { useTranslation } from 'react-i18next';
 
 import { useAppSelector } from '@/app/hook';
-import {Input} from '@/shared/ui/input';
-import {TriStateCheckbox} from '@/shared/ui/tri-state-checkbox';
-import {MultiSelect} from '@/shared/ui/multi-select';
-import {FormControl, FormField, FormItem, FormLabel, FormMessage,} from '@/shared/ui/form';
-import type {FormData} from '@/features/filter/lib/form-schema';
-import {Popover, PopoverContent, PopoverTrigger} from "@/shared/ui/popover";
-import {Button} from '@/shared/ui/button';
-import {Calendar} from '@/shared/ui/calendar';
+import { Input } from '@/shared/ui/input';
+import { TriStateCheckbox } from '@/shared/ui/tri-state-checkbox';
+import { MultiSelect } from '@/shared/ui/multi-select';
+import {
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/shared/ui/form';
+import type { FormData } from '@/features/filter/lib/form-schema';
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
+import { Button } from '@/shared/ui/button';
+import { Calendar } from '@/shared/ui/calendar';
 
 
 interface FilterFormFieldsProps {
     control: Control<FormData>;
 }
 
-export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
-    const [openFrom, setOpenFrom] = React.useState(false)
-    const [openTo, setOpenTo] = React.useState(false)
-    const isAdmin = useIsAdmin()
-    const canSeeNsfw = useCanSeeNsfw()
+function formatDate(date?: Date | null) {
+    return date ? format(date, 'dd.MM.yyyy') : '';
+}
+
+interface DateFieldProps {
+    control: Control<FormData>;
+    name: 'dateFrom' | 'dateTo';
+    label: string;
+    placeholder: string;
+    clearLabel: string;
+}
+
+const DateField = ({
+    control,
+    name,
+    label,
+    placeholder,
+    clearLabel,
+}: DateFieldProps) => {
+    const [open, setOpen] = React.useState(false);
+
+    return (
+        <FormField
+            control={control}
+            name={name}
+            render={({ field }) => (
+                <FormItem className="flex flex-col">
+                    <FormLabel>{label}</FormLabel>
+                    <FormControl>
+                        <Popover open={open} onOpenChange={setOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    id="date"
+                                    className="w-48 justify-between font-normal"
+                                    onClick={() => {
+                                        setOpen(true);
+                                    }}
+                                >
+                                    {field.value ? formatDate(field.value) : placeholder}
+                                    <ChevronDownIcon />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent
+                                className="w-auto overflow-hidden p-0"
+                                align="start"
+                            >
+                                <Calendar
+                                    mode="single"
+                                    selected={field.value ?? undefined}
+                                    captionLayout="dropdown"
+                                    onSelect={(date) => {
+                                        field.onChange(date ?? null);
+                                        setOpen(false);
+                                    }}
+                                />
+                                {field.value ? (
+                                    <div className="border-t border-border p-2">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            className="w-full"
+                                            onClick={() => {
+                                                field.onChange(null);
+                                                setOpen(false);
+                                            }}
+                                        >
+                                            {clearLabel}
+                                        </Button>
+                                    </div>
+                                ) : null}
+                            </PopoverContent>
+                        </Popover>
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+            )}
+        />
+    );
+};
+
+export const FilterFormFields = ({ control }: FilterFormFieldsProps) => {
+    const isAdmin = useIsAdmin();
+    const canSeeNsfw = useCanSeeNsfw();
     const { t } = useTranslation();
 
     const tags = useAppSelector((state) => state.metadata.tags)
@@ -53,10 +138,6 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
             value: s.path,
         }));
 
-    function formatDate(date?: Date | null) {
-        return date ? format(date, 'dd.MM.yyyy') : '';
-    }
-
     return (
         <>
             {/* Search Input */}
@@ -78,111 +159,22 @@ export const FilterFormFields = ({control}: FilterFormFieldsProps) => {
                 </div>
                 {/* Date Range Picker */}
                 <div>
-                    <FormField
+                    <DateField
                         control={control}
                         name="dateFrom"
-                        render={({field}) => (
-                            <FormItem className="flex flex-col">
-                                <FormLabel>{t('dateFromLabel')}</FormLabel>
-                                <FormControl>
-                                    <Popover open={openFrom} onOpenChange={setOpenFrom}>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                id="date"
-                                                className="w-48 justify-between font-normal"
-                                                onClick={() => { setOpenFrom(true); }}
-                                            >
-                                                {field.value ? formatDate(field.value) : t('selectDatePlaceholder')}
-                                                <ChevronDownIcon/>
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={field.value ?? undefined}
-                                                captionLayout="dropdown"
-                                                onSelect={(d) => {
-                                                    field.onChange(d ?? null);
-                                                    setOpenFrom(false);
-                                                }}
-                                            />
-                                            {field.value ? (
-                                                <div className="border-t border-border p-2">
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        className="w-full"
-                                                        onClick={() => {
-                                                            field.onChange(null);
-                                                            setOpenFrom(false);
-                                                        }}
-                                                    >
-                                                        {t('clearDateButton')}
-                                                    </Button>
-                                                </div>
-                                            ) : null}
-                                        </PopoverContent>
-                                    </Popover>
-                                </FormControl>
-                                <FormMessage/>
-                            </FormItem>
-                        )}
+                        label={t('dateFromLabel')}
+                        placeholder={t('selectDatePlaceholder')}
+                        clearLabel={t('clearDateButton')}
                     />
                 </div>
 
-                {/* Date Range Picker */}
                 <div>
-                    <FormField
+                    <DateField
                         control={control}
                         name="dateTo"
-                        render={({field}) => (
-                            <FormItem className="flex flex-col">
-                                <FormLabel>{t('dateToLabel')}</FormLabel>
-                                <FormControl>
-                                    <Popover open={openTo} onOpenChange={setOpenTo}>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                id="date"
-                                                className="w-48 justify-between font-normal"
-                                                onClick={() => { setOpenTo(true); }}
-                                            >
-                                                {field.value ? formatDate(field.value) : t('selectDatePlaceholder')}
-                                                <ChevronDownIcon/>
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                                            <Calendar
-                                                mode="single"
-                                                selected={field.value ?? undefined}
-                                                captionLayout="dropdown"
-                                                onSelect={(d) => {
-                                                    field.onChange(d ?? null);
-                                                    setOpenTo(false);
-                                                }}
-                                            />
-                                            {field.value ? (
-                                                <div className="border-t border-border p-2">
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        className="w-full"
-                                                        onClick={() => {
-                                                            field.onChange(null);
-                                                            setOpenTo(false);
-                                                        }}
-                                                    >
-                                                        {t('clearDateButton')}
-                                                    </Button>
-                                                </div>
-                                            ) : null}
-                                        </PopoverContent>
-                                    </Popover>
-                                </FormControl>
-                                <FormMessage/>
-                            </FormItem>
-                        )}
+                        label={t('dateToLabel')}
+                        placeholder={t('selectDatePlaceholder')}
+                        clearLabel={t('clearDateButton')}
                     />
                 </div>
             </div>
