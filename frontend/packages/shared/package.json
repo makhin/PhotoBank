@@ -6,7 +6,10 @@
   "private": true,
   "exports": {
     "./package.json": "./package.json",
-    "./auth": "./src/auth.ts",
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "default": "./dist/auth/index.js"
+    },
     "./safeStorage": "./src/safeStorage.ts",
     ".": {
       "types": "./dist/index.d.ts",
