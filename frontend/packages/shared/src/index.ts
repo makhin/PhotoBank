@@ -21,7 +21,16 @@ export const formatGender = (
   return labels[key];
 };
 
+export { getFilterHash } from './utils/getFilterHash';
 export { getOrientation } from './utils/getOrientation';
+export {
+  cachePhoto,
+  getCachedPhoto,
+} from './cache/photosCache';
+export {
+  cacheFilterResult,
+  getCachedFilterResult,
+} from './cache/filterResultsCache';
 
 export const firstNWords = (sentence: string, count: number): string => {
   const trimmed = sentence.trim();
@@ -43,6 +52,7 @@ export {
   isValidGeoPoint,
   type GeoPointLike,
 } from './utils/geolocation';
+export { uploadPhotosAdapter, type UploadFile, type UploadFileData } from './adapters/photos-upload.adapter';
 
 export * from './format';
 export * from './auth';

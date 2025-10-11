@@ -1,0 +1,24 @@
+import objectHash from 'object-hash';
+
+import type { FilterDto } from '../api/photobank';
+
+/**
+ * Creates a stable hash for a filter. Works in both Node.js and browser.
+ * Uses the `object-hash` package for consistent results.
+ */
+export function getFilterHash(filter: FilterDto): string {
+  // Normalize and sort filter keys
+  const normalized: Record<string, unknown> = {};
+  for (const key of Object.keys(filter).sort()) {
+    const value = filter[key as keyof FilterDto];
+    if (value === undefined) continue;
+
+    if (key === 'thisDay' && value) {
+      normalized.thisDay = value;
+    } else {
+      normalized[key] = value;
+    }
+  }
+
+  return objectHash(normalized);
+}
