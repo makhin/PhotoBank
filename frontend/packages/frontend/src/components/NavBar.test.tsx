@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, beforeEach, vi, expect } from 'vitest';
@@ -77,5 +77,26 @@ describe('NavBar', () => {
     for (const label of adminLinkLabels) {
       expect(await screen.findByText(label)).toBeInTheDocument();
     }
+  });
+
+  it('opens the mobile menu when the menu button is clicked', async () => {
+    const user = userEvent.setup();
+    vi.mocked(getAuthToken).mockReturnValue('token');
+    vi.mocked(useIsAdmin).mockReturnValue(false);
+
+    renderNavBar();
+
+    const menuButton = screen.getByRole('button', {
+      name: 'navbarMenuLabel',
+    });
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    await user.click(menuButton);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(
+      within(dialog).getByRole('link', { name: 'navbarPhotosLabel' })
+    ).toBeInTheDocument();
   });
 });
