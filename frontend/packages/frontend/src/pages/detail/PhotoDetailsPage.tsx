@@ -22,9 +22,10 @@ import { usePhotoGeodata } from '@/hooks/usePhotoGeodata';
 
 interface PhotoDetailsPageProps {
     photoId?: number;
+    onClose?: () => void;
 }
 
-const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
+const PhotoDetailsPage = ({ photoId: propPhotoId, onClose }: PhotoDetailsPageProps) => {
     const [showFaceBoxes, setShowFaceBoxes] = useState(false);
     const persons = useAppSelector((state) => state.metadata.persons);
     const isAdmin = useIsAdmin() ?? false;
@@ -142,6 +143,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                     showFaceBoxes={showFaceBoxes}
                     calculateFacePosition={calculateFacePosition}
                     onOpenViewer={handleOpenViewer}
+                    onClose={onClose}
                 />
                 <div className="flex h-full min-h-0 flex-col bg-background border-t border-border lg:border-l lg:border-t-0">
                     <ScrollArea className="flex-1">
