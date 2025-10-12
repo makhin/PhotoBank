@@ -27,21 +27,34 @@ const PhotoListItemMobile = ({
   personsMap,
   tagsMap,
   onClick,
-}: PhotoListItemMobileProps) => (
-  <Card
-    key={photo.id}
-    className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-    onClick={onClick}
-  >
-    <div className="space-y-3">
-      <div className="flex items-start gap-3">
-        <PhotoPreview
-          thumbnailUrl={photo.thumbnailUrl ?? ''}
-          alt={photo.name}
-          className="w-20 h-20 flex-shrink-0"
-        />
-        <div className="flex-1 min-w-0">
-          <div className="font-medium truncate">{photo.name}</div>
+}: PhotoListItemMobileProps) => {
+  const fullName = photo.name ?? '';
+  const nameCharacters = Array.from(fullName);
+  const isTruncated = nameCharacters.length > 10;
+  const displayName = isTruncated
+    ? `${nameCharacters.slice(0, 10).join('')}…`
+    : fullName;
+
+  return (
+    <Card
+      key={photo.id}
+      className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+      onClick={onClick}
+    >
+      <div className="space-y-3">
+        <div className="flex items-start gap-3">
+          <PhotoPreview
+            thumbnailUrl={photo.thumbnailUrl ?? ''}
+            alt={photo.name}
+            className="w-20 h-20 flex-shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <div
+              className="font-medium truncate"
+              title={isTruncated ? fullName : undefined}
+            >
+              {displayName}
+            </div>
           {photo.captions && photo.captions.length > 0 && (
             <div className="text-xs text-muted-foreground truncate">
               {firstNWords(photo.captions[0] ?? '', 5)}
@@ -87,6 +100,7 @@ const PhotoListItemMobile = ({
       />
     </div>
   </Card>
-);
+  );
+};
 
 export default PhotoListItemMobile;
