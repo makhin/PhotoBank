@@ -42,4 +42,32 @@ describe('PhotoListItemMobile', () => {
     expect(truncatedName).toBeInTheDocument();
     expect(truncatedName).toHaveAttribute('title', longName);
   });
+
+  it('displays taken date with time down to minutes', () => {
+    const photo: PhotoItemDto = {
+      id: 2,
+      name: 'Sample photo',
+      captions: [],
+      storageName: 'storage',
+      relativePath: '/path/to/photo.jpg',
+      thumbnailUrl: 'https://example.com/thumbnail.jpg',
+      takenDate: '07.06.2024 15:30',
+      isBW: false,
+      isAdultContent: false,
+      isRacyContent: false,
+    };
+
+    const { personsMap, tagsMap } = createMaps();
+
+    render(
+      <PhotoListItemMobile
+        photo={photo}
+        personsMap={personsMap}
+        tagsMap={tagsMap}
+        onClick={() => {}}
+      />
+    );
+
+    expect(screen.getByText('07.06.2024 15:30')).toBeInTheDocument();
+  });
 });
