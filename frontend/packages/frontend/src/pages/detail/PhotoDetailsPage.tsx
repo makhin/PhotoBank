@@ -135,7 +135,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
 
     return (
         <div className="w-full min-h-dvh bg-background text-foreground overflow-hidden">
-            <div className="grid h-dvh w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden lg:grid-cols-3 lg:grid-rows-1">
+            <div className="grid h-dvh w-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden lg:grid-cols-3 lg:grid-rows-1">
                 <PhotoViewer
                     photo={photoData}
                     containerRef={containerRef}

@@ -24,7 +24,7 @@ export const PhotoViewer = ({
     onOpenViewer,
 }: PhotoViewerProps) => {
     return (
-        <div className="lg:col-span-2 flex flex-col min-h-0 lg:h-full">
+        <div className="lg:col-span-2 flex flex-col min-h-0 h-dvh lg:h-full">
             <Card className="flex-1 overflow-hidden border-0 lg:border-r lg:rounded-none bg-background">
                 <CardHeader className="pb-4 border-b border-border flex items-center justify-between">
                     <div>
