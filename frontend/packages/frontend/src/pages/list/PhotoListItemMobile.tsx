@@ -1,6 +1,6 @@
 import { Calendar, User, Tag } from 'lucide-react';
 import { firstNWords } from '@photobank/shared';
-import { formatDate } from '@photobank/shared/format';
+import { formatDateTime } from '@photobank/shared/format';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import type { PersonMap, TagMap } from '@photobank/shared/metadata';
 import {
@@ -73,7 +73,7 @@ const PhotoListItemMobile = ({
       <div className="flex items-center gap-4 text-sm">
         <div className="flex items-center gap-1">
           <Calendar className="w-3 h-3" />
-          {formatDate(photo.takenDate ?? undefined)}
+          {formatDateTime(photo.takenDate ?? undefined)}
         </div>
       </div>
 
