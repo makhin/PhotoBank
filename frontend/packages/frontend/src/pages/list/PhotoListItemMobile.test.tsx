@@ -14,18 +14,18 @@ const createMaps = (): { personsMap: PersonMap; tagsMap: TagMap } => ({
 describe('PhotoListItemMobile', () => {
   it('truncates long photo names to 10 characters with an ellipsis', () => {
     const longName = 'ABCDEFGHIJKLmnopqrstuvwxyz';
-    const photo = {
-      id: 'photo-1',
+    const photo: PhotoItemDto = {
+      id: 1,
       name: longName,
       captions: [],
       storageName: 'storage',
       relativePath: '/path/to/photo.jpg',
       thumbnailUrl: 'https://example.com/thumbnail.jpg',
-      takenDate: '2024-01-01T00:00:00Z',
+      takenDate: new Date('2024-01-01T00:00:00Z'),
       isBW: false,
       isAdultContent: false,
       isRacyContent: false,
-    } as PhotoItemDto;
+    };
 
     const { personsMap, tagsMap } = createMaps();
 
