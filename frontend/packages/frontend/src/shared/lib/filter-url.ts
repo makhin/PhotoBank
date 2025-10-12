@@ -1,4 +1,4 @@
-import { formatISO, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
 
 import { formSchema, type FormData } from '@/features/filter/lib/form-schema';
 
@@ -38,13 +38,13 @@ export const serializeFilter = (data: FormData): string => {
     ...data,
     dateFrom:
       data.dateFrom instanceof Date
-        ? formatISO(data.dateFrom)
+        ? data.dateFrom.toISOString()
         : data.dateFrom === null
           ? null
           : undefined,
     dateTo:
       data.dateTo instanceof Date
-        ? formatISO(data.dateTo)
+        ? data.dateTo.toISOString()
         : data.dateTo === null
           ? null
           : undefined,

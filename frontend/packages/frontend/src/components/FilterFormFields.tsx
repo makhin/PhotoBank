@@ -2,7 +2,7 @@ import type { Control } from 'react-hook-form';
 import { useWatch } from 'react-hook-form';
 import { ChevronDownIcon } from 'lucide-react';
 import * as React from 'react';
-import { format } from 'date-fns';
+import { addMinutes, format, startOfDay, subMinutes } from 'date-fns';
 import { useIsAdmin, useCanSeeNsfw } from '@photobank/shared';
 import { useTranslation } from 'react-i18next';
 
@@ -27,8 +27,26 @@ interface FilterFormFieldsProps {
     control: Control<FormData>;
 }
 
+const toUtcStartOfDay = (date: Date) =>
+    subMinutes(startOfDay(date), date.getTimezoneOffset());
+
+const toLocalFromUtc = (date: Date) => {
+    if (
+        date.getUTCHours() === 0 &&
+        date.getUTCMinutes() === 0 &&
+        date.getUTCSeconds() === 0 &&
+        date.getUTCMilliseconds() === 0
+    ) {
+        return addMinutes(date, date.getTimezoneOffset());
+    }
+
+    return date;
+};
+
 function formatDate(date?: Date | null) {
-    return date ? format(date, 'dd.MM.yyyy') : '';
+    if (!date) return '';
+
+    return format(toLocalFromUtc(date), 'dd.MM.yyyy');
 }
 
 interface DateFieldProps {
@@ -76,10 +94,17 @@ const DateField = ({
                             >
                                 <Calendar
                                     mode="single"
-                                    selected={field.value ?? undefined}
+                                    selected={
+                                        field.value
+                                            ? toLocalFromUtc(field.value)
+                                            : undefined
+                                    }
                                     captionLayout="dropdown"
                                     onSelect={(date) => {
-                                        field.onChange(date ?? null);
+                                        const normalizedDate = date
+                                            ? toUtcStartOfDay(date)
+                                            : null;
+                                        field.onChange(normalizedDate);
                                         setOpen(false);
                                     }}
                                 />
