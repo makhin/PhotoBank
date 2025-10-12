@@ -28,7 +28,7 @@ export const PhotoViewer = ({
 }: PhotoViewerProps) => {
     return (
         <div className="lg:col-span-2 flex flex-col min-h-0 h-full">
-            <Card className="flex-1 overflow-hidden border-0 lg:border-r lg:rounded-none bg-background">
+            <Card className="flex-1 overflow-hidden border-0 lg:border-r lg:rounded-none bg-background py-2">
                 <CardHeader className="pb-4 border-b border-border flex items-center justify-between gap-4">
                     <div>
                         <CardTitle className="text-2xl font-bold">{photo.name ?? ''}</CardTitle>
