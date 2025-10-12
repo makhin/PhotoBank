@@ -581,6 +581,9 @@ importers:
       fetch-blob:
         specifier: ^4.0.0
         version: 4.0.0
+      fuse.js:
+        specifier: ^7.1.0
+        version: 7.1.0
       grammy:
         specifier: ^1.38.2
         version: 1.38.2
