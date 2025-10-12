@@ -146,8 +146,8 @@ const PhotoDetailsPage = ({ photoId: propPhotoId, onClose }: PhotoDetailsPagePro
                     onClose={onClose}
                 />
                 <div className="flex h-full min-h-0 flex-col bg-background border-t border-border lg:border-l lg:border-t-0">
-                    <ScrollArea className="flex-1">
-                        <div className="p-4 space-y-4">
+                    <ScrollArea className="flex-1 min-h-0">
+                        <div className="h-full p-4 space-y-4">
                             <PhotoPropertiesPanel photo={photoData} formattedTakenDate={formattedTakenDate} />
                             <PhotoGeodataPanel
                                 photo={photoData}
