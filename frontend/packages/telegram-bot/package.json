@@ -31,6 +31,7 @@
     "fetch-blob": "^4.0.0",
     "grammy": "^1.38.2",
     "lru-cache": "^11.2.1",
+    "fuse.js": "^7.1.0",
     "object-hash": "^3.0.0",
     "openai": "^5.20.1",
     "p-queue": "^8.1.1",
