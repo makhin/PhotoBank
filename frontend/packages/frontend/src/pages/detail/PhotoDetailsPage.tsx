@@ -134,8 +134,8 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
     };
 
     return (
-        <div className="h-full w-full min-h-screen bg-background text-foreground overflow-hidden">
-            <div className="h-full w-full grid grid-cols-1 lg:grid-cols-3 gap-0">
+        <div className="w-full min-h-dvh bg-background text-foreground overflow-hidden">
+            <div className="grid h-dvh w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden lg:grid-cols-3 lg:grid-rows-1">
                 <PhotoViewer
                     photo={photoData}
                     containerRef={containerRef}
@@ -143,8 +143,8 @@ const PhotoDetailsPage = ({ photoId: propPhotoId }: PhotoDetailsPageProps) => {
                     calculateFacePosition={calculateFacePosition}
                     onOpenViewer={handleOpenViewer}
                 />
-                <div className="h-full overflow-y-auto bg-background border-l border-border">
-                    <ScrollArea className="h-full">
+                <div className="flex h-full min-h-0 flex-col bg-background border-t border-border lg:border-l lg:border-t-0">
+                    <ScrollArea className="flex-1">
                         <div className="p-4 space-y-4">
                             <PhotoPropertiesPanel photo={photoData} formattedTakenDate={formattedTakenDate} />
                             <PhotoGeodataPanel
