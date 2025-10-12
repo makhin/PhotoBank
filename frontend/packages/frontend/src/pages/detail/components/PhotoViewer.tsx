@@ -30,10 +30,10 @@ export const PhotoViewer = ({
         <div className="lg:col-span-2 flex flex-col min-h-0 h-full">
             <Card className="flex-1 overflow-hidden border-0 lg:border-r lg:rounded-none bg-background py-2">
                 <CardHeader className="pb-4 border-b border-border flex items-center justify-between gap-4">
-                    <div>
-                        <CardTitle className="text-2xl font-bold">{photo.name ?? ''}</CardTitle>
+                    <div className="flex-1 min-w-0">
+                        <CardTitle className="text-2xl font-bold truncate max-w-full">{photo.name ?? ''}</CardTitle>
                         {photo.captions && photo.captions.length > 0 && (
-                            <p className="text-muted-foreground italic">{photo.captions[0]}</p>
+                            <p className="text-muted-foreground italic truncate max-w-full">{photo.captions[0]}</p>
                         )}
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2">
