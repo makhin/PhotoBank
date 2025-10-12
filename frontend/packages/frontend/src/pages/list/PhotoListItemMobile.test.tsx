@@ -51,7 +51,7 @@ describe('PhotoListItemMobile', () => {
       storageName: 'storage',
       relativePath: '/path/to/photo.jpg',
       thumbnailUrl: 'https://example.com/thumbnail.jpg',
-      takenDate: '07.06.2024 15:30',
+      takenDate: new Date('2024-06-07T15:30:00Z'),
       isBW: false,
       isAdultContent: false,
       isRacyContent: false,
