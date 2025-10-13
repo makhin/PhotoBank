@@ -43,9 +43,14 @@ type HTMLElementRef =
 interface UseImageContainerSizingParams {
     containerRef: HTMLElementRef;
     imageNaturalSize: Size;
+    imageMeasuredSize?: Size | null;
 }
 
-export const useImageContainerSizing = ({ containerRef, imageNaturalSize }: UseImageContainerSizingParams) => {
+export const useImageContainerSizing = ({
+    containerRef,
+    imageNaturalSize,
+    imageMeasuredSize,
+}: UseImageContainerSizingParams) => {
     const [containerSize, setContainerSize] = useState<Size>(defaultContainerSize);
     const [imageDisplaySize, setImageDisplaySize] = useState<ImageSize>(defaultImageSize);
     const [containerElement, setContainerElement] = useState<HTMLElement | null>(null);
@@ -53,6 +58,7 @@ export const useImageContainerSizing = ({ containerRef, imageNaturalSize }: UseI
     const containerSizeRef = useRef(containerSize);
     const imageDisplaySizeRef = useRef(imageDisplaySize);
     const imageNaturalSizeRef = useRef(imageNaturalSize);
+    const imageMeasuredSizeRef = useRef<Size | null>(imageMeasuredSize ?? null);
 
     const updateSizes = useCallback(() => {
         const container = containerRef.current;
@@ -75,7 +81,13 @@ export const useImageContainerSizing = ({ containerRef, imageNaturalSize }: UseI
             setContainerSize(nextContainerSize);
         }
 
-        const { width: naturalWidth, height: naturalHeight } = imageNaturalSizeRef.current;
+        const measuredSize = imageMeasuredSizeRef.current;
+        const effectiveNaturalSize =
+            measuredSize && measuredSize.width > 0 && measuredSize.height > 0
+                ? measuredSize
+                : imageNaturalSizeRef.current;
+
+        const { width: naturalWidth, height: naturalHeight } = effectiveNaturalSize;
         const calculatedSize = calculateImageSize(
             naturalWidth,
             naturalHeight,
@@ -97,6 +109,11 @@ export const useImageContainerSizing = ({ containerRef, imageNaturalSize }: UseI
         imageNaturalSizeRef.current = imageNaturalSize;
         updateSizes();
     }, [imageNaturalSize.height, imageNaturalSize.width, updateSizes]);
+
+    useEffect(() => {
+        imageMeasuredSizeRef.current = imageMeasuredSize ?? null;
+        updateSizes();
+    }, [imageMeasuredSize?.height, imageMeasuredSize?.width, updateSizes]);
 
     useLayoutEffect(() => {
         if (containerRef.current !== containerElement) {

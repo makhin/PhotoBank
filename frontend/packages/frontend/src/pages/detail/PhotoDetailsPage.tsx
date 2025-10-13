@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useIsAdmin } from '@photobank/shared';
 import { formatDateTime } from '@photobank/shared/format';
@@ -27,6 +27,7 @@ interface PhotoDetailsPageProps {
 
 const PhotoDetailsPage = ({ photoId: propPhotoId, onClose }: PhotoDetailsPageProps) => {
     const [showFaceBoxes, setShowFaceBoxes] = useState(false);
+    const [imageMeasuredSize, setImageMeasuredSize] = useState<{ width: number; height: number } | null>(null);
     const persons = useAppSelector((state) => state.metadata.persons);
     const isAdmin = useIsAdmin() ?? false;
     const dispatch = useAppDispatch();
@@ -62,7 +63,16 @@ const PhotoDetailsPage = ({ photoId: propPhotoId, onClose }: PhotoDetailsPagePro
     const { containerSize, imageDisplaySize } = useImageContainerSizing({
         containerRef,
         imageNaturalSize,
+        imageMeasuredSize,
     });
+
+    const handleImageLoad = useCallback((size: { width: number; height: number }) => {
+        setImageMeasuredSize(size);
+    }, []);
+
+    useEffect(() => {
+        setImageMeasuredSize(null);
+    }, [photoData?.id]);
 
     useEffect(() => {
         if (error) {
@@ -144,6 +154,7 @@ const PhotoDetailsPage = ({ photoId: propPhotoId, onClose }: PhotoDetailsPagePro
                     calculateFacePosition={calculateFacePosition}
                     onOpenViewer={handleOpenViewer}
                     onClose={onClose}
+                    onImageLoad={handleImageLoad}
                 />
                 <div className="flex h-full min-h-0 flex-col bg-background border-t border-border lg:border-l lg:border-t-0">
                     <ScrollArea className="flex-1 min-h-0">
