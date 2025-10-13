@@ -124,8 +124,8 @@ export default function UsersPage() {
         </div>
         <Button
           onClick={() => setIsCreateDialogOpen(true)}
-          className="bg-gradient-primary hover:bg-primary-hover shadow-elevated w-full sm:w-auto"
-          size="lg"
+          className="w-full sm:w-auto"
+          size="default"
         >
           <Plus className="w-4 h-4 mr-2" />
           Create User

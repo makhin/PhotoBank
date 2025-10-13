@@ -71,10 +71,10 @@ export default function AccessProfilesPage() {
             Manage access rules and permissions for different user groups
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => setIsCreateDialogOpen(true)}
-          className="bg-gradient-primary hover:bg-primary-hover shadow-elevated w-full sm:w-auto"
-          size="lg"
+          className="w-full sm:w-auto"
+          size="default"
         >
           <Plus className="w-4 h-4 mr-2" />
           Create Profile
