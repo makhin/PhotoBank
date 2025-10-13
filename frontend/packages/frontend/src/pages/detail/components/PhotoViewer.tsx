@@ -1,4 +1,4 @@
-import type { RefObject, CSSProperties } from 'react';
+import type { RefObject, CSSProperties, SyntheticEvent } from 'react';
 import { Maximize2, XIcon } from 'lucide-react';
 import type { FaceBoxDto } from '@photobank/shared/api/photobank';
 
@@ -16,6 +16,7 @@ interface PhotoViewerProps {
     calculateFacePosition: (faceBox: FaceBoxDto) => CSSProperties;
     onOpenViewer: () => void;
     onClose?: () => void;
+    onImageLoad?: (size: { width: number; height: number }) => void;
 }
 
 export const PhotoViewer = ({
@@ -25,7 +26,16 @@ export const PhotoViewer = ({
     calculateFacePosition,
     onOpenViewer,
     onClose,
+    onImageLoad,
 }: PhotoViewerProps) => {
+    const handleImageLoad = (event: SyntheticEvent<HTMLImageElement>) => {
+        const { naturalWidth, naturalHeight } = event.currentTarget;
+
+        if (naturalWidth > 0 && naturalHeight > 0) {
+            onImageLoad?.({ width: naturalWidth, height: naturalHeight });
+        }
+    };
+
     return (
         <div className="lg:col-span-2 flex flex-col min-h-0 h-full">
             <Card className="flex-1 overflow-hidden border-0 lg:border-r lg:rounded-none bg-background py-2">
@@ -56,6 +66,7 @@ export const PhotoViewer = ({
                             src={photo.previewUrl ?? undefined}
                             alt={photo.name ?? ''}
                             className="max-h-full max-w-full object-contain"
+                            onLoad={handleImageLoad}
                         />
                         {showFaceBoxes &&
                             photo.faces?.map((face, index) => {
