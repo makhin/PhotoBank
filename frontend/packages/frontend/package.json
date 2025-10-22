@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.11"
+  },
   "scripts": {
     "dev": "vite",
     "dev:mocks": "cross-env VITE_USE_MOCKS=1 vite",

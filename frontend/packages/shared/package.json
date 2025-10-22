@@ -4,6 +4,9 @@
   "type": "module",
   "description": "Shared utilities and types for Photobank",
   "private": true,
+  "engines": {
+    "node": ">=20.11"
+  },
   "exports": {
     "./package.json": "./package.json",
     "./auth": {
