@@ -48,29 +48,5 @@
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.43.0",
     "zod": "^4.1.7"
-  },
-  "dependencies": {
-    "@bundled-es-modules/cookie": "^2.0.1",
-    "@bundled-es-modules/statuses": "^1.0.1",
-    "@floating-ui/core": "^1.7.3",
-    "@floating-ui/utils": "^0.2.10",
-    "@mswjs/interceptors": "^0.39.6",
-    "@open-draft/deferred-promise": "^2.2.0",
-    "@open-draft/logger": "^0.3.0",
-    "@open-draft/until": "^2.1.0",
-    "@radix-ui/react-arrow": "^1.1.7",
-    "detect-node-es": "^1.1.0",
-    "get-nonce": "^1.0.1",
-    "graphql": "^16.11.0",
-    "headers-polyfill": "^4.0.3",
-    "is-node-process": "^1.2.0",
-    "outvariant": "^1.4.3",
-    "path-to-regexp": "^8.3.0",
-    "react-style-singleton": "^2.2.3",
-    "scheduler": "^0.26.0",
-    "strict-event-emitter": "^0.5.1",
-    "tldts": "^7.0.13",
-    "tldts-core": "^7.0.13",
-    "tough-cookie": "^6.0.0"
   }
 }

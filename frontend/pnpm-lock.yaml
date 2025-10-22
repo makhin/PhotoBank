@@ -7,73 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      '@bundled-es-modules/cookie':
-        specifier: ^2.0.1
-        version: 2.0.1
-      '@bundled-es-modules/statuses':
-        specifier: ^1.0.1
-        version: 1.0.1
-      '@floating-ui/core':
-        specifier: ^1.7.3
-        version: 1.7.3
-      '@floating-ui/utils':
-        specifier: ^0.2.10
-        version: 0.2.10
-      '@mswjs/interceptors':
-        specifier: ^0.39.6
-        version: 0.39.6
-      '@open-draft/deferred-promise':
-        specifier: ^2.2.0
-        version: 2.2.0
-      '@open-draft/logger':
-        specifier: ^0.3.0
-        version: 0.3.0
-      '@open-draft/until':
-        specifier: ^2.1.0
-        version: 2.1.0
-      '@radix-ui/react-arrow':
-        specifier: ^1.1.7
-        version: 1.1.7(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      detect-node-es:
-        specifier: ^1.1.0
-        version: 1.1.0
-      get-nonce:
-        specifier: ^1.0.1
-        version: 1.0.1
-      graphql:
-        specifier: ^16.11.0
-        version: 16.11.0
-      headers-polyfill:
-        specifier: ^4.0.3
-        version: 4.0.3
-      is-node-process:
-        specifier: ^1.2.0
-        version: 1.2.0
-      outvariant:
-        specifier: ^1.4.3
-        version: 1.4.3
-      path-to-regexp:
-        specifier: ^8.3.0
-        version: 8.3.0
-      react-style-singleton:
-        specifier: ^2.2.3
-        version: 2.2.3(@types/react@19.1.13)(react@19.1.1)
-      scheduler:
-        specifier: ^0.26.0
-        version: 0.26.0
-      strict-event-emitter:
-        specifier: ^0.5.1
-        version: 0.5.1
-      tldts:
-        specifier: ^7.0.13
-        version: 7.0.14
-      tldts-core:
-        specifier: ^7.0.13
-        version: 7.0.14
-      tough-cookie:
-        specifier: ^6.0.0
-        version: 6.0.0
     devDependencies:
       '@eslint/js':
         specifier: ^9.35.0
@@ -4325,9 +4258,6 @@ packages:
 
   path-to-regexp@6.3.0:
     resolution: {integrity: sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==}
-
-  path-to-regexp@8.3.0:
-    resolution: {integrity: sha512-7jdwVIRtsP8MYpdXSwOS0YdD0Du+qOoF/AEPIt88PcCFrZCzx41oxku1jD88hZBwbNUIEfpqvuhjFaMAqMTWnA==}
 
   path-type@4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
@@ -9437,8 +9367,6 @@ snapshots:
       minipass: 7.1.2
 
   path-to-regexp@6.3.0: {}
-
-  path-to-regexp@8.3.0: {}
 
   path-type@4.0.0: {}
 

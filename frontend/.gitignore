@@ -25,3 +25,6 @@ dist-ssr
 
 # Ignore env files in all packages
 **/.env
+
+# TypeScript build info
+*.tsbuildinfo
