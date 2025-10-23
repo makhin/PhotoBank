@@ -44,7 +44,7 @@ afterAll(() => {
 const createPhotos = (count: number): PhotoItemDto[] =>
   Array.from({ length: count }, (_, i) => ({
     id: i + 1,
-    thumbnailUrl: '',
+    thumbnailUrl: `https://example.com/photos/${i + 1}.jpg`,
     name: `Photo ${i + 1}`,
     storageName: 's',
     relativePath: 'p',
