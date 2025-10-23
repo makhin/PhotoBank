@@ -2,15 +2,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const createMock = vi.fn();
 
-vi.mock('openai', () => ({
-  AzureOpenAI: vi.fn().mockImplementation(() => ({
-    chat: {
+vi.mock('openai', () => {
+  class MockAzureOpenAI {
+    chat = {
       completions: {
         create: createMock,
       },
-    },
-  })),
-}));
+    };
+  }
+  return {
+    AzureOpenAI: MockAzureOpenAI,
+  };
+});
 
 import {
   configureAzureOpenAI,

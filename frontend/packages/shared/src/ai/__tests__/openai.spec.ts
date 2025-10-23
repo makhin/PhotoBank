@@ -3,11 +3,18 @@ import { logger } from '../../utils/logger';
 
 const mockCreate = vi.fn();
 
-vi.mock('openai', () => ({
-  AzureOpenAI: vi.fn().mockImplementation(() => ({
-    chat: { completions: { create: mockCreate } },
-  })),
-}));
+vi.mock('openai', () => {
+  class MockAzureOpenAI {
+    chat = {
+      completions: {
+        create: mockCreate,
+      },
+    };
+  }
+  return {
+    AzureOpenAI: MockAzureOpenAI,
+  };
+});
 
 import { configureAzureOpenAI, createChatCompletion, parseQueryWithOpenAI } from '../openai';
 
