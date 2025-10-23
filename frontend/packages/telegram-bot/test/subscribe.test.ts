@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { subscribeCommand, parseSubscribeTime, subscriptions } from '../src/commands/subscribe';
 
 vi.mock('../src/services/auth', () => ({
@@ -17,6 +17,10 @@ describe('parseSubscribeTime', () => {
 });
 
 describe('subscribeCommand', () => {
+  beforeEach(() => {
+    subscriptions.clear();
+  });
+
   it('replies with usage on wrong input', async () => {
     const ctx = {
       reply: vi.fn(),
@@ -34,10 +38,11 @@ describe('subscribeCommand', () => {
       reply: vi.fn(),
       message: { text: '/subscribe 07:15' },
       chat: { id: 42 },
+      from: { id: 42, is_bot: false, first_name: 'Test' },
       t: (k: string, p?: any) => i18n.t('en', k, p),
       i18n: { getLocale: () => 'en' },
     } as any;
     await subscribeCommand(ctx);
-    expect(subscriptions.get(42)?.time).toBe('07:15');
+    expect(subscriptions.get('42')?.time).toBe('07:15');
   });
 });

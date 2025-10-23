@@ -1,7 +1,9 @@
-import { it, expect, vi, beforeEach } from 'vitest';
+import { it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { openPhotoInline, photoMessages, currentPagePhotos } from '../src/photo';
 import * as photoService from '../src/services/photo';
 import { i18n } from '../src/i18n';
+
+const originalFetch = global.fetch;
 
 const basePhoto = {
   id: 1,
@@ -15,9 +17,23 @@ const basePhoto = {
 };
 
 beforeEach(() => {
+  vi.restoreAllMocks();
   photoMessages.clear();
   currentPagePhotos.clear();
+  global.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    arrayBuffer: async () => new ArrayBuffer(0),
+  }) as unknown as typeof fetch;
+});
+
+afterEach(() => {
   vi.restoreAllMocks();
+  if (originalFetch) {
+    global.fetch = originalFetch;
+  } else {
+    // @ts-expect-error allow cleanup when fetch was undefined
+    delete global.fetch;
+  }
 });
 
 it('sends new message and stores id', async () => {
