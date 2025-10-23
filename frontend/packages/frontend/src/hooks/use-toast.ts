@@ -1,5 +1,4 @@
 import * as React from "react";
-
 import type { ExternalToast } from "sonner";
 
 const TOAST_LIMIT = 1;

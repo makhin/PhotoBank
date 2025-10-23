@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { FaceDto, PersonDto } from '@photobank/shared/api/photobank';
-import {
+import type { FaceDto, PersonDto ,
   IdentityStatusDto as IdentityStatus,
   type FacesUpdateMutationBody,
   useFacesUpdate,

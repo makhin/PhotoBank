@@ -41,6 +41,7 @@ import { Separator } from '@/shared/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover';
 import { Calendar } from '@/shared/ui/calendar';
+
 import {
   accessProfileFormSchema,
   type AccessProfileFormInput,
@@ -100,11 +101,11 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
   useEffect(() => {
     if (profile && open) {
       const storageIds = profile.storages?.flatMap((storage) =>
-        typeof storage.storageId === 'number' ? [storage.storageId] : []
+        [storage.storageId]
       ) ?? [];
 
       const personGroupIds = profile.personGroups?.flatMap((group) =>
-        typeof group.personGroupId === 'number' ? [group.personGroupId] : []
+        [group.personGroupId]
       ) ?? [];
 
       const ranges =
@@ -228,7 +229,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
       toDate: oneYearLater,
     };
 
-    const currentRanges = (form.getValues('dateRanges') ?? []) as DateRangeInputValue[];
+    const currentRanges = (form.getValues('dateRanges') ?? []);
     const updatedRanges = [...currentRanges, newRange];
     form.setValue('dateRanges', updatedRanges as AccessProfileFormInput['dateRanges'], {
       shouldValidate: true,
@@ -237,7 +238,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
   };
 
   const removeDateRange = (index: number) => {
-    const currentRanges = (form.getValues('dateRanges') ?? []) as DateRangeInputValue[];
+    const currentRanges = (form.getValues('dateRanges') ?? []);
     const updatedRanges = currentRanges.filter((_, i) => i !== index);
     form.setValue('dateRanges', updatedRanges as AccessProfileFormInput['dateRanges'], {
       shouldValidate: true,
@@ -246,7 +247,7 @@ export function EditProfileDialog({ open, onOpenChange, profile }: EditProfileDi
   };
 
   const updateDateRange = (index: number, updatedRange: DateRangeFormValue) => {
-    const currentRanges = (form.getValues('dateRanges') ?? []) as DateRangeInputValue[];
+    const currentRanges = (form.getValues('dateRanges') ?? []);
     const nextRanges = [...currentRanges];
     nextRanges[index] = updatedRange;
     form.setValue('dateRanges', nextRanges as AccessProfileFormInput['dateRanges'], {

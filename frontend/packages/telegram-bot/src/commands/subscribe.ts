@@ -1,11 +1,12 @@
 import { Bot } from 'grammy';
 import type { TelegramSubscriptionDto, UpdateUserDto } from '@photobank/shared/api/photobank';
 
-import { fetchTelegramSubscriptions } from '../api/auth';
-import { updateUser } from '../services/auth';
-import type { MyContext } from '../i18n';
-import { i18n } from '../i18n';
-import { logger } from '../logger';
+import { updateUser } from '@/services/auth';
+import type { MyContext } from '@/i18n';
+import { i18n } from '@/i18n';
+import { logger } from '@/logger';
+import { fetchTelegramSubscriptions } from '@/api/auth';
+
 import { sendThisDayPage } from './thisday';
 
 type SubscriptionInfo = {
@@ -71,14 +72,14 @@ async function buildFromSnapshot(
 }
 
 function isValidSubscription(entry: TelegramSubscriptionDto | undefined): entry is TelegramSubscriptionDto {
-  return !!entry && typeof entry.telegramUserId === 'string' && /^\d+$/.test(entry.telegramUserId);
+  return !!entry && /^\d+$/.test(entry.telegramUserId);
 }
 
 export function parseSubscribeTime(text?: string): string | null {
   if (!text) return null;
   const match = text.match(/\/subscribe\s+(\d{1,2}:\d{2})/);
   if (!match?.[1]) return null;
-  const [hStr, mStr] = match[1]!.split(":");
+  const [hStr, mStr] = match[1].split(":");
   const hours = Number(hStr);
   const minutes = Number(mStr);
   if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
@@ -163,7 +164,7 @@ export function initSubscriptionScheduler(bot: Bot<MyContext>) {
             reply: (text: string, opts?: Record<string, unknown>) =>
               bot.api.sendMessage(chatId, text, opts),
             t: translate,
-            i18n: { getLocale: async () => info.locale } as unknown as MyContext['i18n'],
+            i18n: { getLocale: () => info.locale } as unknown as MyContext['i18n'],
             api: bot.api,
           } as unknown as MyContext;
           await sendThisDayPage(ctxLike, 1);

@@ -1,5 +1,4 @@
 import { Buffer } from 'node:buffer';
-
 import { InlineKeyboard, InputFile } from 'grammy';
 import type { PhotoDto } from '@photobank/shared/api/photobank';
 
@@ -85,8 +84,7 @@ async function fetchPhoto(
   id: number
 ): Promise<PhotoDto | null> {
   try {
-    const photo = await getPhoto(ctx, id);
-    return photo;
+    return await getPhoto(ctx, id);
   } catch {
     return null;
   }

@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Checkbox } from '@/shared/ui/checkbox';
 import { Label } from '@/shared/ui/label';
 import { FacePersonSelector } from '@/components/FacePersonSelector';
-
 import type { RootState } from '@/app/store';
+
 import type { PhotoDetails } from '../types';
 
 interface PhotoFacesPanelProps {

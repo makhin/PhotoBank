@@ -1,7 +1,9 @@
 import { parseQueryWithOpenAI } from '@photobank/shared/ai/openai';
 import type { FilterDto } from '@photobank/shared/api/photobank';
-import type { MyContext } from '../i18n';
-import { logger } from '../logger';
+
+import type { MyContext } from '@/i18n';
+import { logger } from '@/logger';
+
 import { decodeFilterCallback, sendFilterPage } from './filterPage';
 
 export function parseAiPrompt(text?: string): string | null {

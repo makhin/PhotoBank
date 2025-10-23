@@ -1,6 +1,7 @@
 import type { FilterDto } from '@photobank/shared/api/photobank';
-import type { MyContext } from '../i18n';
-import { getLastFilter } from '../cache/lastFilterCache';
+
+import { getLastFilter } from '@/cache/lastFilterCache';
+import type { MyContext } from '@/i18n';
 
 function serializeFilter(filter: FilterDto): string {
   return JSON.stringify(

@@ -98,7 +98,7 @@ export default function FacesPage() {
   const facesResponse = data?.data;
   const facesItems = facesResponse?.items;
   const rawFaces = useMemo<FaceDto[]>(
-    () => (Array.isArray(facesItems) ? (facesItems as FaceDto[]) : []),
+    () => (Array.isArray(facesItems) ? (facesItems) : []),
     [facesItems]
   );
   const totalFacesCount = facesResponse?.totalCount ?? 0;

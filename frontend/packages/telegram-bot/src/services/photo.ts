@@ -1,10 +1,5 @@
 import type { Context } from 'grammy';
 import { type UploadFile } from '@photobank/shared';
-import {
-  photosGetPhoto,
-  photosSearchPhotos,
-  photosUpload,
-} from '../api/photobank/photos/photos';
 import { ProblemDetailsError } from '@photobank/shared/types/problem';
 import type {
   FilterDto,
@@ -12,6 +7,11 @@ import type {
   PhotoItemDtoPageResponse,
   ProblemDetails as ApiProblemDetails,
 } from '@photobank/shared/api/photobank';
+import {
+  photosGetPhoto,
+  photosSearchPhotos,
+  photosUpload,
+} from '@photobank/shared';
 
 import { callWithContext } from './call-with-context';
 

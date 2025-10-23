@@ -1,5 +1,4 @@
 import type { Context } from 'grammy';
-
 import {
   configureApi,
   configureApiAuth,
@@ -19,7 +18,7 @@ configureApiAuth({
     if (!context) return undefined;
     return ensureUserAccessToken(context, options?.forceRefresh ?? false);
   },
-  onAuthError: async (ctx) => {
+  onAuthError: (ctx) => {
     const context = (ctx ?? getRequestContext<Context>()) as Context | undefined;
     if (context) invalidateUserToken(context);
   },
