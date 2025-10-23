@@ -1,36 +1,40 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { i18n } from '../src/i18n';
 
+const dictionaryMocks = vi.hoisted(() => ({
+  fetchTags: vi.fn(),
+  fetchPersons: vi.fn(),
+  fetchStorages: vi.fn(),
+  fetchPaths: vi.fn(),
+}));
+
+vi.mock('../src/services/dictionary', () => dictionaryMocks);
+
 const mockReferenceData = (data: {
   tags?: Array<{ id: number; name: string }>;
   persons?: Array<{ id: number; name: string }>;
   storages?: Array<{ id: number; name: string }>;
   paths?: Array<{ storageId: number; path: string }>;
 }) => {
-  const fetchReferenceData = vi.fn().mockResolvedValue({
-    tags: data.tags ?? [],
-    persons: data.persons ?? [],
-    storages: data.storages ?? [],
-    paths: data.paths ?? [],
-  });
-  vi.doMock('@photobank/shared/api/photobank', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('@photobank/shared/api/photobank')>();
-    return {
-      ...actual,
-      fetchReferenceData,
-    };
-  });
-  return fetchReferenceData;
+  dictionaryMocks.fetchTags.mockResolvedValue(data.tags ?? []);
+  dictionaryMocks.fetchPersons.mockResolvedValue(data.persons ?? []);
+  dictionaryMocks.fetchStorages.mockResolvedValue(data.storages ?? []);
+  dictionaryMocks.fetchPaths.mockResolvedValue(data.paths ?? []);
 };
 
 describe('dictionaries', () => {
   beforeEach(() => {
     vi.resetModules();
+    dictionaryMocks.fetchTags.mockReset().mockResolvedValue([]);
+    dictionaryMocks.fetchPersons.mockReset().mockResolvedValue([]);
+    dictionaryMocks.fetchStorages.mockReset().mockResolvedValue([]);
+    dictionaryMocks.fetchPaths.mockReset().mockResolvedValue([]);
   });
 
   it('getPersonName returns loaded name', async () => {
     mockReferenceData({ persons: [{ id: 1, name: 'John' }] });
     const dict = await import('../src/dictionaries');
+    dict.setDictionariesUser(1);
     await dict.loadDictionaries({} as any);
     expect(dict.getPersonName(1)).toBe('John');
   });
@@ -63,6 +67,7 @@ describe('dictionaries', () => {
       ],
     });
     const dict = await import('../src/dictionaries');
+    dict.setDictionariesUser(1);
     await dict.loadDictionaries({} as any);
     expect(dict.findBestPersonId('Alic')).toBe(1);
     expect(dict.findBestTagId('ocean')).toBeUndefined();
@@ -77,6 +82,7 @@ describe('dictionaries', () => {
       ],
     });
     const dict = await import('../src/dictionaries');
+    dict.setDictionariesUser(1);
     await dict.loadDictionaries({} as any);
     expect(dict.getAllStoragesWithPaths()).toEqual([
       { id: 1, name: 'S1', paths: ['/a', '/b'] },

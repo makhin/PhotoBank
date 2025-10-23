@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   callWithContext: vi.fn(),
 }));
 
-vi.mock('../src/api/photobank/photos/photos', () => ({
+vi.mock('@photobank/shared', () => ({
   photosUpload: mocks.photosUpload,
   photosGetPhoto: vi.fn(),
   photosSearchPhotos: vi.fn(),

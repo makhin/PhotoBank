@@ -40,19 +40,21 @@ describe('aiCommand', () => {
     });
     const searchSpy = vi
       .spyOn(photoService, 'searchPhotos')
-      .mockResolvedValue({ count: 0, photos: [] } as any);
+      .mockResolvedValue({ totalCount: 0, items: [] } as any);
 
     await aiCommand(ctx);
 
-    expect(searchSpy).toHaveBeenCalledWith(
-      ctx,
-      expect.objectContaining({
-        personNames: ['Alice'],
-        tagNames: ['portrait'],
-        takenDateFrom: '2020-01-01T00:00:00.000Z',
-        top: 10,
-        skip: 0,
-      })
+    expect(searchSpy).toHaveBeenCalledTimes(1);
+    const [, filterArg] = searchSpy.mock.calls[0]!;
+    expect(filterArg).toMatchObject({
+      personNames: ['Alice'],
+      tagNames: ['portrait'],
+      page: 1,
+      pageSize: 10,
+      takenDateFrom: expect.any(Date),
+    });
+    expect(filterArg.takenDateFrom?.toISOString()).toBe(
+      '2020-01-01T00:00:00.000Z'
     );
     expect(ctx.reply).toHaveBeenCalledWith(i18n.t('en', 'search-photos-empty'));
   });
@@ -82,8 +84,8 @@ describe('aiCommand', () => {
         dateTo: null,
       });
     vi.spyOn(photoService, 'searchPhotos').mockResolvedValue({
-      count: 0,
-      photos: [],
+      totalCount: 0,
+      items: [],
     } as any);
 
     await aiCommand(ctx, 'cats');
