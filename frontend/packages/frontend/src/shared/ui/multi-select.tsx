@@ -177,7 +177,7 @@ export const MultiSelect = React.forwardRef<
                                                 {option?.label}
                                                 <XCircle
                                                     className="ml-2 h-4 w-4 cursor-pointer"
-                                                    onClick={(event) => {
+                                                    onClick={(event: React.MouseEvent<SVGSVGElement>) => {
                                                         event.stopPropagation();
                                                         toggleOption(value);
                                                     }}
@@ -197,7 +197,7 @@ export const MultiSelect = React.forwardRef<
                                             {`+ ${selectedValues.length - maxCount} more`}
                                             <XCircle
                                                 className="ml-2 h-4 w-4 cursor-pointer"
-                                                onClick={(event) => {
+                                                onClick={(event: React.MouseEvent<SVGSVGElement>) => {
                                                     event.stopPropagation();
                                                     clearExtraOptions();
                                                 }}
@@ -208,7 +208,7 @@ export const MultiSelect = React.forwardRef<
                                 <div className="flex items-center justify-between">
                                     <XIcon
                                         className="h-4 mx-2 cursor-pointer text-muted-foreground"
-                                        onClick={(event) => {
+                                        onClick={(event: React.MouseEvent<SVGSVGElement>) => {
                                             event.stopPropagation();
                                             handleClear();
                                         }}

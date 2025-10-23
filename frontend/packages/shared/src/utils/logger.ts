@@ -1,6 +1,8 @@
+declare const process: { env?: { NODE_ENV?: string } } | undefined;
+
 const isDev =
   // node / jest / vite build
-  (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') ||
+  (typeof process !== 'undefined' && process?.env?.NODE_ENV !== 'production') ||
   // browser vite
   (typeof import.meta !== 'undefined' &&
     (import.meta as { env?: { DEV?: boolean } }).env?.DEV === true);

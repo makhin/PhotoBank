@@ -97,15 +97,12 @@ export default [
       ],
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       'no-undef': 'off',
-      '@typescript-eslint/no-floating-promises': 'off',
-      // Silence pervasive `any`-based warnings in generated API code.
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-      '@typescript-eslint/no-redundant-type-constituents': 'off',
-      '@typescript-eslint/no-invalid-void-type': 'off',
+      overrides: [{
+        files: ['**/api/photobank/**/*.ts'],
+        rules: {
+          '@typescript-eslint/no-unsafe-*': 'off'
+        }
+      }]
     },
   },
   prettier,
