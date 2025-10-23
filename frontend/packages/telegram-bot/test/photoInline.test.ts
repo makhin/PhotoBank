@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { it, expect, vi, beforeEach } from 'vitest';
 import { openPhotoInline, photoMessages, currentPagePhotos } from '../src/photo';
 import * as photoService from '../src/services/photo';
 import { i18n } from '../src/i18n';

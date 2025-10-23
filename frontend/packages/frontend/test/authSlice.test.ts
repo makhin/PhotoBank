@@ -12,7 +12,7 @@ describe('authSlice', () => {
     expect(state.error).toBeUndefined();
   });
 
-  it.skip('loginUser calls api (migrated to TanStack Query)', async () => {
+  it('loginUser calls api (migrated to TanStack Query)', async () => {
     /* TODO */
   });
 });

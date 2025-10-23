@@ -63,12 +63,12 @@ describe('FilterPage', () => {
     vi.clearAllMocks();
   });
 
-  it.skip('shows loading text when metadata not loaded', async () => {
+  it('shows loading text when metadata not loaded', async () => {
     await renderPage({ loaded: false, loading: true });
     expect(await screen.findByText('Loading...')).toBeTruthy();
   });
 
-  it.skip('renders filter form when metadata loaded', async () => {
+  it('renders filter form when metadata loaded', async () => {
     await renderPage({ loaded: true });
     expect(await screen.findByText('Caption')).toBeTruthy();
   });

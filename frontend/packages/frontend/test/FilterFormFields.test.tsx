@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { useForm } from 'react-hook-form';
@@ -72,7 +72,7 @@ describe('FilterFormFields', () => {
     vi.clearAllMocks();
   });
 
-  it.skip('shows admin checkboxes for administrators', async () => {
+  it('shows admin checkboxes for administrators', async () => {
     await renderWithAdmin(true);
     expect(await screen.findByText('Adult Content')).toBeTruthy();
   });
