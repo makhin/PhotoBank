@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { FaceDto, PersonDto ,
-  IdentityStatusDto as IdentityStatus,
+import {
+  type FaceDto,
+  type PersonDto,
   type FacesUpdateMutationBody,
   useFacesUpdate,
   usePersonsGetAll,
+  IdentityStatusDto,
 } from '@photobank/shared/api/photobank';
 
 import { AspectRatio } from '@/shared/ui/aspect-ratio';
@@ -54,7 +56,7 @@ const normalizeIdentityStatus = (
     return value;
   }
 
-  return validStatuses[0] ?? IdentityStatus.Undefined;
+  return validStatuses[0] ?? IdentityStatusDto.Undefined;
 };
 
 export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps) {
@@ -77,7 +79,7 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
   );
 
   const identityStatuses = useMemo<string[]>(() => {
-    const base: string[] = [...Object.values(IdentityStatus)];
+    const base: string[] = [...Object.values(IdentityStatusDto)];
 
     if (face?.identityStatus) {
       const alreadyPresent = base.some(
