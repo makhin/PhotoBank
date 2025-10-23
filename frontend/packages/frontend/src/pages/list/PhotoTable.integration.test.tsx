@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { vi, type Mock, beforeAll, afterAll } from 'vitest';
+import { vi, type Mock, beforeAll, afterAll, test, expect } from 'vitest';
 import type { PhotoItemDto } from '@photobank/shared/api/photobank';
 import { DEFAULT_PHOTO_FILTER, METADATA_CACHE_VERSION } from '@photobank/shared/constants';
 

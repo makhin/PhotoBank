@@ -11,16 +11,16 @@ export default [
   {
     ignores: [
       '**/node_modules/**',
-      'dist',
-      'build',
-      'coverage',
-      'public',
-      'out',
-      'out-tsc',
-      'lib',
-      'cjs',
-      'esm',
-      'eslint.config.mjs',
+      '**/dist/**',
+      '**/build/**',
+      '**/coverage/**',
+      '**/public/**',
+      '**/out/**',
+      '**/out-tsc/**',
+      '**/lib/**',
+      '**/cjs/**',
+      '**/esm/**',
+      '**/eslint.config.*',
       '**/*.test.ts',
       '**/*.test.tsx',
       '**/*.spec.ts',
@@ -47,7 +47,10 @@ export default [
 
     languageOptions: {
       parserOptions: {
-        project: ['./packages/**/tsconfig*.json'],
+        project: [
+          './packages/**/tsconfig*.json',
+          './packages/telegram-bot/tsconfig.eslint.json'
+        ],
         tsconfigRootDir: import.meta.dirname,
         ecmaFeatures: { jsx: true },
       },
@@ -135,6 +138,7 @@ export default [
   // Для js/mjs/cjs-конфигов без TS-проектов
   {
     files: ['**/*.{js,mjs,cjs}'],
+    ...tseslint.configs.disableTypeChecked,
     languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
   },
 

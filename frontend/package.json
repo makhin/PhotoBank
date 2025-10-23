@@ -16,7 +16,6 @@
     "build": "pnpm run orval && pnpm -r --filter \"@photobank/*\" run build",
     "dev:frontend": "pnpm --filter @photobank/frontend run dev",
     "dev:bot": "pnpm --filter @photobank/telegram-bot run dev",
-    "generate:api": "orval --config orval.config.ts",
     "lint": "eslint packages --ext .ts,.tsx --max-warnings=0"
   },
   "keywords": [],

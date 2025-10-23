@@ -6,6 +6,7 @@ import React from 'react';
 import { IdentityStatusDto as IdentityStatus } from '@photobank/shared/api/photobank';
 
 import FacesPage from './FacesPage';
+import { vi, beforeAll, afterEach, describe, test, expect } from 'vitest';
 
 beforeAll(() => {
   if (!Element.prototype.hasPointerCapture) {

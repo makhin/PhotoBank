@@ -7,7 +7,6 @@ import { StatusCard } from '@/components/StatusCard';
 export default function ServiceInfoPage() {
   const { t } = useTranslation();
   const info = {
-    mode: import.meta.env.MODE,
     apiBaseUrl: API_BASE_URL,
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
   } as const;

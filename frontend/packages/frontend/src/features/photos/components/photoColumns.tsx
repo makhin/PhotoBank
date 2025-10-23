@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 
 import MetadataBadgeList from '@/components/MetadataBadgeList';
 import { Badge } from '@/shared/ui/badge';
-import { buildThumbnailUrl } from '@/shared/utils/buildThumbnailUrl';
 import { useAppSelector } from '@/app/hook';
 import {
   selectMetadataLoaded,
@@ -30,7 +29,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
         cell: ({ row }) => (
           <div className="flex items-center justify-center">
             <img
-              src={buildThumbnailUrl(row.original)}
+              src={String(row.original.thumbnailUrl)}
               alt={row.original.name}
               loading="lazy"
               className="w-[50px] h-[50px] object-cover rounded-md border border-thumbnail-border shadow-sm"
@@ -89,7 +88,9 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
           const timestamp = getValue() as number | null;
           return (
             <div className="text-sm text-muted-foreground font-mono whitespace-nowrap">
-              {timestamp ? format(new Date(timestamp), 'dd.MM.yyyy hh:mm') : null}
+              {timestamp
+                ? format(new Date(timestamp), 'dd.MM.yyyy hh:mm')
+                : null}
             </div>
           );
         },
@@ -103,9 +104,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
         header: 'Tags',
         cell: ({ row }) => (
           <MetadataBadgeList
-            items={
-              metaLoaded ? (row.original.tags ?? []) : []
-            }
+            items={metaLoaded ? (row.original.tags ?? []) : []}
             map={tagsMap}
             maxVisible={8}
             variant="outline"
@@ -121,9 +120,7 @@ export function usePhotoColumns(): ColumnDef<PhotoItemDto>[] {
         header: 'People',
         cell: ({ row }) => (
           <MetadataBadgeList
-            items={
-              metaLoaded ? (row.original.persons ?? []) : []
-            }
+            items={metaLoaded ? (row.original.persons ?? []) : []}
             map={personsMap}
             maxVisible={6}
             variant="secondary"
