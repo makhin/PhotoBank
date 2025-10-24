@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AccessProfileDto } from '@photobank/shared';
@@ -86,37 +86,50 @@ describe('EditProfileDialog', () => {
 
     await user.click(fromButton);
 
-    let targetButton: HTMLButtonElement | null = null;
-    let targetDateValue = '';
-
-    await waitFor(() => {
-      const dayButtons = Array.from(
+    const dayButtons = await waitFor(() => {
+      const buttons = Array.from(
         document.querySelectorAll<HTMLButtonElement>('button[data-day]')
       );
 
-      if (dayButtons.length === 0) {
+      if (buttons.length === 0) {
         throw new Error('No calendar day buttons available');
       }
 
-      const nextTarget =
-        dayButtons.find((button) => button.dataset.day?.includes('/15/')) ??
-        dayButtons[0];
-
-      if (!nextTarget) {
-        throw new Error('Calendar day button not found');
-      }
-
-      targetButton = nextTarget;
-      targetDateValue = nextTarget.dataset.day ?? '';
-
-      if (!targetDateValue) {
-        throw new Error('Calendar day value not found');
-      }
+      return buttons;
     });
 
-    await user.click(targetButton!);
+    const nextTarget =
+      dayButtons.find((button) => {
+        const label = button.getAttribute('aria-label') ?? '';
+        const normalized = label.toLowerCase();
+        return (
+          label &&
+          !normalized.startsWith('today') &&
+          !normalized.startsWith('selected')
+        );
+      }) ?? dayButtons[0];
 
-    const expectedDisplay = format(new Date(targetDateValue), 'yyyy-MM-dd');
+    if (!nextTarget) {
+      throw new Error('Calendar day button not found');
+    }
+
+    const dayLabel = nextTarget
+      .getAttribute('aria-label')
+      ?.replace(/^(Today|Selected),\s*/gi, '');
+
+    if (!dayLabel) {
+      throw new Error('Calendar day label not found');
+    }
+
+    const parsedDate = parse(dayLabel, 'EEEE, MMMM do, yyyy', new Date());
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      throw new Error(`Unable to parse calendar day label: ${dayLabel}`);
+    }
+
+    const expectedDisplay = format(parsedDate, 'yyyy-MM-dd');
+
+    await user.click(nextTarget);
 
     await waitFor(() => {
       expect(fromButton).toHaveTextContent(expectedDisplay);
