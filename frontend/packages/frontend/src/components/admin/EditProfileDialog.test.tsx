@@ -131,6 +131,15 @@ describe('EditProfileDialog', () => {
 
     await user.click(nextTarget);
 
+    // Wait for the popover to close and calendar to disappear
+    await waitFor(() => {
+      const calendarButtons = document.querySelectorAll('button[data-day]');
+      if (calendarButtons.length > 0) {
+        throw new Error('Calendar is still open');
+      }
+    });
+
+    // Wait for the button text to update
     await waitFor(() => {
       expect(fromButton).toHaveTextContent(expectedDisplay);
     });
