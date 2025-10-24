@@ -29,10 +29,17 @@ const translationOverrides: Record<string, string> = {
 };
 
 const renderWithAdmin = async (isAdmin: boolean) => {
-  vi.doMock('@photobank/shared', () => ({
-    useIsAdmin: () => isAdmin,
-    useCanSeeNsfw: () => false,
-  }));
+  vi.doMock('@photobank/shared', async () => {
+    const actual = await vi.importActual<typeof import('@photobank/shared')>(
+      '@photobank/shared',
+    );
+
+    return {
+      ...actual,
+      useIsAdmin: () => isAdmin,
+      useCanSeeNsfw: () => false,
+    };
+  });
 
   vi.doMock('react-i18next', () => ({
     useTranslation: () => ({
@@ -70,8 +77,8 @@ const renderWithAdmin = async (isAdmin: boolean) => {
         caption: '',
         storages: [],
         paths: [],
-        persons: [],
-        tags: [],
+        personNames: [],
+        tagNames: [],
         isBW: undefined,
         isAdultContent: undefined,
         isRacyContent: undefined,
