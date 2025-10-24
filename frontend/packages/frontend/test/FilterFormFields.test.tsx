@@ -5,17 +5,46 @@ import { configureStore } from '@reduxjs/toolkit';
 import { useForm } from 'react-hook-form';
 import metaReducer from '../src/features/meta/model/metaSlice';
 import { Form } from '../src/shared/ui/form';
-import { describe, it, beforeEach, expect, vi } from 'vitest';
+import { describe, it, beforeEach, afterEach, expect, vi } from 'vitest';
+
+const translationOverrides: Record<string, string> = {
+  captionLabel: 'Caption',
+  captionPlaceholder: 'Enter caption...',
+  dateFromLabel: 'Date From',
+  selectDatePlaceholder: 'Select date',
+  clearDateButton: 'Clear date',
+  dateToLabel: 'Date To',
+  storagesLabel: 'Storages',
+  selectStoragesPlaceholder: 'Select storages',
+  pathsLabel: 'Paths',
+  selectPathsPlaceholder: 'Select paths',
+  personsLabel: 'Persons',
+  selectPersonsPlaceholder: 'Select persons',
+  tagsLabel: 'Tags',
+  selectTagsPlaceholder: 'Select tags',
+  blackWhiteLabel: 'Black-White',
+  adultContentLabel: 'Adult Content',
+  racyContentLabel: 'Racy Content',
+  thisDayLabel: 'This Day',
+};
 
 const renderWithAdmin = async (isAdmin: boolean) => {
-  vi.doMock('@photobank/shared', async () => {
-    const actual = await vi.importActual<any>('@photobank/shared');
-    return {
-      ...actual,
-      useIsAdmin: () => isAdmin,
-      useCanSeeNsfw: () => false,
-    };
-  });
+  vi.doMock('@photobank/shared', () => ({
+    useIsAdmin: () => isAdmin,
+    useCanSeeNsfw: () => false,
+  }));
+
+  vi.doMock('react-i18next', () => ({
+    useTranslation: () => ({
+      t: (key: string) => translationOverrides[key] ?? key,
+      i18n: {
+        language: 'en',
+        changeLanguage: vi.fn(),
+        isInitialized: true,
+      },
+      ready: true,
+    }),
+  }));
 
   const { FilterFormFields } = await import('../src/components/FilterFormFields');
 
@@ -68,13 +97,18 @@ const renderWithAdmin = async (isAdmin: boolean) => {
 
 describe('FilterFormFields', () => {
   beforeEach(() => {
-    vi.resetModules();
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.resetModules();
+    vi.unmock('@photobank/shared');
+    vi.unmock('react-i18next');
   });
 
   it('shows admin checkboxes for administrators', async () => {
     await renderWithAdmin(true);
-    expect(await screen.findByText('Adult Content')).toBeTruthy();
+    expect(screen.getByText('Adult Content')).toBeInTheDocument();
   });
 
 });
