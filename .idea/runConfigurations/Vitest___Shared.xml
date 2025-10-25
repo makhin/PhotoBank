@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Vitest - Shared" type="JavaScriptTestRunnerVitest">
+    <config-file value="$PROJECT_DIR$/frontend/packages/shared/vitest.config.ts" />
+    <node-interpreter value="project" />
+    <package-manager value="pnpm" />
+    <vitest-package value="$PROJECT_DIR$/frontend/node_modules/vitest" />
+    <working-dir value="$PROJECT_DIR$/frontend/packages/shared" />
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>
