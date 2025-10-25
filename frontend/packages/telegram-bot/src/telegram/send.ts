@@ -4,7 +4,7 @@ import { formatDate } from '@photobank/shared/format';
 
 import { throttled } from '../utils/limiter';
 import { getFileId, setFileId, delFileId } from '../cache/fileIdCache';
-import { logger } from '../utils/logger';
+import { logger } from '../logger';
 import type { PhotoItemDto } from '../types';
 import { withTelegramRetry } from '../utils/retry';
 
