@@ -26,7 +26,7 @@ public class AuthServiceTests
         await using var db = TestDbFactory.CreateInMemory();
         var service = CreateAuthService(db, serviceKey: "expected");
 
-        var result = await service.ExchangeTelegramAsync("123", "user", "wrong");
+        var result = await service.ExchangeTelegramAsync("123", "user", "en", "wrong");
 
         result.Succeeded.Should().BeFalse();
         result.Problem.Should().NotBeNull();
@@ -35,17 +35,23 @@ public class AuthServiceTests
     }
 
     [Test]
-    public async Task TelegramExchange_UnknownTelegramUser_ReturnsProblem()
+    public async Task TelegramExchange_UnknownTelegramUser_CreatesNewUser()
     {
         await using var db = TestDbFactory.CreateInMemory();
         var service = CreateAuthService(db, serviceKey: "expected");
 
-        var result = await service.ExchangeTelegramAsync("456", "user", "expected");
+        var result = await service.ExchangeTelegramAsync("456", "user", "ru", "expected");
 
-        result.Succeeded.Should().BeFalse();
-        result.Problem.Should().NotBeNull();
-        result.Problem!.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
-        result.Problem.Title.Should().Be("Telegram not linked");
+        result.Succeeded.Should().BeTrue();
+        result.Response.Should().NotBeNull();
+        result.Response!.AccessToken.Should().NotBeNullOrEmpty();
+
+        // Verify user was created in database
+        var createdUser = db.Users.FirstOrDefault(u => u.TelegramUserId == 456);
+        createdUser.Should().NotBeNull();
+        createdUser!.TelegramLanguageCode.Should().Be("ru");
+        createdUser.UserName.Should().Be("telegram_456");
+        createdUser.Email.Should().Be("telegram_456@photobank.local");
     }
 
     [Test]
@@ -102,6 +108,7 @@ public class AuthServiceTests
         var result = await authService.ExchangeTelegramAsync(
             user.TelegramUserId!.Value.ToString(CultureInfo.InvariantCulture),
             user.UserName,
+            "en",
             "expected");
 
         result.Succeeded.Should().BeTrue();

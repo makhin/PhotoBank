@@ -17,7 +17,7 @@ export async function ensureUserAccessToken(ctx: Context, force = false): Promis
   if (cached && cached.exp - now > 60) return cached.token;
 
   const { accessToken, expiresIn } = await runWithRequestContext(undefined, () =>
-    exchangeTelegramUserToken(tgId, ctx.from?.username),
+    exchangeTelegramUserToken(tgId, ctx.from?.username, ctx.from?.language_code),
   );
   tokenCache.set(tgId, { token: accessToken, exp: now + Math.max(60, Math.min(expiresIn, 3600)) });
   return accessToken;

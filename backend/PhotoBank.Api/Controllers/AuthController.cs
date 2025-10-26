@@ -79,7 +79,7 @@ public class AuthController(
         return Ok();
     }
 
-    public record TelegramExchangeRequest(string TelegramUserId, string? Username);
+    public record TelegramExchangeRequest(string TelegramUserId, string? Username, string? LanguageCode);
 
     [HttpGet("telegram/subscriptions")]
     [AllowAnonymous]
@@ -106,6 +106,7 @@ public class AuthController(
         var result = await authService.ExchangeTelegramAsync(
             req.TelegramUserId,
             req.Username,
+            req.LanguageCode,
             Request.Headers["X-Service-Key"].ToString());
 
         if (result.Problem is not null)

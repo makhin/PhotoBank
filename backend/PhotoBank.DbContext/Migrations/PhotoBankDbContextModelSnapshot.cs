@@ -222,6 +222,10 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<long?>("TelegramUserId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("TelegramLanguageCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 

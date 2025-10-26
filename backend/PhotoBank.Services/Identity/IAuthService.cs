@@ -13,5 +13,5 @@ public interface IAuthService
 
     Task<TelegramSubscriptionsResult> GetTelegramSubscriptionsAsync(string? presentedServiceKey, CancellationToken cancellationToken = default);
 
-    Task<TelegramExchangeResult> ExchangeTelegramAsync(string? telegramUserId, string? username, string? presentedServiceKey, CancellationToken cancellationToken = default);
+    Task<TelegramExchangeResult> ExchangeTelegramAsync(string? telegramUserId, string? username, string? languageCode, string? presentedServiceKey, CancellationToken cancellationToken = default);
 }

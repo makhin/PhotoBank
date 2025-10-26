@@ -7,10 +7,10 @@ import './client';
 
 const serviceKey = BOT_SERVICE_KEY ?? '';
 
-type ExchangeBody = { telegramUserId: string; username: string | null };
+type ExchangeBody = { telegramUserId: string; username: string | null; languageCode: string | null };
 
-export async function exchangeTelegramUserToken(telegramUserId: string, username?: string) {
-  const body: ExchangeBody = { telegramUserId, username: username ?? null };
+export async function exchangeTelegramUserToken(telegramUserId: string, username?: string, languageCode?: string) {
+  const body: ExchangeBody = { telegramUserId, username: username ?? null, languageCode: languageCode ?? null };
   const res = await customFetcher<{ data: { accessToken: string; expiresIn: number } }>(
     '/auth/telegram/exchange',
     {

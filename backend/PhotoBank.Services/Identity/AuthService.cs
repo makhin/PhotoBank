@@ -74,6 +74,7 @@ public sealed class AuthService(
     public async Task<TelegramExchangeResult> ExchangeTelegramAsync(
         string? telegramUserId,
         string? username,
+        string? languageCode,
         string? presentedServiceKey,
         CancellationToken cancellationToken = default)
     {
@@ -82,8 +83,6 @@ public sealed class AuthService(
         {
             return TelegramExchangeResult.Failure(validation.Problem!);
         }
-
-        _ = username;
 
         if (!TelegramUserIdParser.TryParse(telegramUserId, out var parsedTelegramUserId, out var error) ||
             parsedTelegramUserId is null)
@@ -99,10 +98,35 @@ public sealed class AuthService(
 
         if (user is null)
         {
-            return TelegramExchangeResult.Failure(new ProblemInfo(
-                StatusCodes.Status403Forbidden,
-                "Telegram not linked",
-                "Ask admin to link your Telegram"));
+            // Create new user with artificial values for required fields
+            var newUser = new ApplicationUser
+            {
+                TelegramUserId = parsedTelegramUserId.Value,
+                UserName = $"telegram_{parsedTelegramUserId.Value}",
+                Email = $"telegram_{parsedTelegramUserId.Value}@photobank.local",
+                EmailConfirmed = false,
+                TelegramLanguageCode = languageCode
+            };
+
+            var createResult = await userManager.CreateAsync(newUser);
+            if (!createResult.Succeeded)
+            {
+                return TelegramExchangeResult.Failure(new ProblemInfo(
+                    StatusCodes.Status500InternalServerError,
+                    "Failed to create user",
+                    string.Join(", ", createResult.Errors.Select(e => e.Description))));
+            }
+
+            user = newUser;
+        }
+        else
+        {
+            // Update language code if it has changed
+            if (user.TelegramLanguageCode != languageCode)
+            {
+                user.TelegramLanguageCode = languageCode;
+                await userManager.UpdateAsync(user);
+            }
         }
 
         var token = await CreateTokenAsync(user, rememberMe: false);
