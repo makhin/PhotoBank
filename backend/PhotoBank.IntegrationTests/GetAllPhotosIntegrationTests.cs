@@ -41,6 +41,9 @@ public class GetAllPhotosIntegrationTests
     [OneTimeSetUp]
     public void OneTimeSetup()
     {
+        // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         _config = new ConfigurationBuilder()
             .SetBasePath(TestContext.CurrentContext.TestDirectory)
             .AddJsonFile("appsettings.json")

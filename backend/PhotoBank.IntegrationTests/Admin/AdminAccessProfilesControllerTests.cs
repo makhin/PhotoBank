@@ -39,6 +39,9 @@ public class AdminAccessProfilesControllerTests
     [OneTimeSetUp]
     public async Task OneTimeSetup()
     {
+        // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         try
         {
             _dbContainer = new PostgreSqlBuilder()
