@@ -58,7 +58,7 @@ public class GetPhotoIntegrationTests
             var services = new ServiceCollection();
             var connectionString = _config.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string not found");
             services.AddDbContext<PhotoBankDbContext>(options =>
-                options.UseSqlServer(connectionString,
+                options.UseNpgsql(connectionString,
                     builder =>
                     {
                         builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
@@ -82,7 +82,7 @@ public class GetPhotoIntegrationTests
         }
         catch (Exception ex)
         {
-            Assert.Ignore("SQL Server not available: " + ex.Message);
+            Assert.Ignore("PostgreSQL not available: " + ex.Message);
         }
     }
 

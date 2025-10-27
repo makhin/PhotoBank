@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DotNet.Testcontainers.Builders;
 using FluentAssertions;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,14 +21,14 @@ using PhotoBank.DependencyInjection;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
 using Respawn;
-using Testcontainers.MsSql;
+using Testcontainers.PostgreSql;
 
 namespace PhotoBank.IntegrationTests;
 
 [TestFixture]
 public class GetPersonsIntegrationTests
 {
-    private MsSqlContainer _dbContainer = null!;
+    private PostgreSqlContainer _dbContainer = null!;
     private Respawner _respawner = null!;
     private IConfiguration _config = null!;
     private string _connectionString = string.Empty;
@@ -38,7 +38,7 @@ public class GetPersonsIntegrationTests
     {
         try
         {
-            _dbContainer = new MsSqlBuilder().WithPassword("yourStrong(!)Password").Build();
+            _dbContainer = new PostgreSqlBuilder().WithPassword("postgres").Build();
             await _dbContainer.StartAsync();
         }
         catch (ArgumentException ex) when (ex.Message.Contains("Docker endpoint"))
@@ -60,13 +60,13 @@ public class GetPersonsIntegrationTests
 
         var services = new ServiceCollection();
         services.AddDbContext<PhotoBankDbContext>(options =>
-            options.UseSqlServer(_connectionString, builder =>
+            options.UseNpgsql(_connectionString, builder =>
             {
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.UseNetTopologySuite();
             }));
         services.AddDbContext<AccessControlDbContext>(options =>
-            options.UseSqlServer(_connectionString));
+            options.UseNpgsql(_connectionString));
         services.AddPhotobankCore(_config);
         services.AddPhotobankApi(_config);
         services.AddPhotobankCors();
@@ -82,11 +82,11 @@ public class GetPersonsIntegrationTests
             await db.Database.MigrateAsync();
         }
 
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
         _respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
         {
-            DbAdapter = DbAdapter.SqlServer
+            DbAdapter = DbAdapter.Postgres
         });
     }
 
@@ -102,7 +102,7 @@ public class GetPersonsIntegrationTests
     [SetUp]
     public async Task Setup()
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
         await _respawner.ResetAsync(conn);
     }
@@ -149,7 +149,7 @@ public class GetPersonsIntegrationTests
     private PhotoBankDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<PhotoBankDbContext>()
-            .UseSqlServer(_connectionString, builder =>
+            .UseNpgsql(_connectionString, builder =>
             {
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.UseNetTopologySuite();
@@ -162,13 +162,13 @@ public class GetPersonsIntegrationTests
     {
         var services = new ServiceCollection();
         services.AddDbContext<PhotoBankDbContext>(options =>
-            options.UseSqlServer(_connectionString, builder =>
+            options.UseNpgsql(_connectionString, builder =>
             {
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.UseNetTopologySuite();
             }));
         services.AddDbContext<AccessControlDbContext>(options =>
-            options.UseSqlServer(_connectionString));
+            options.UseNpgsql(_connectionString));
 
         services.AddPhotobankCore(_config);
         services.AddPhotobankApi(_config);

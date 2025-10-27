@@ -8,8 +8,8 @@ namespace PhotoBank.DbContext.DbContext
         public PhotoBankDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<PhotoBankDbContext>();
-            optionsBuilder.UseSqlServer(
-                "Server=localhost;Database=Photobank;Trusted_Connection=True;MultipleActiveResultSets=true;Encrypt=False;",
+            optionsBuilder.UseNpgsql(
+                "Host=localhost;Database=photobank;Username=postgres;Password=postgres",
                 o => o.UseNetTopologySuite());
             return new PhotoBankDbContext(optionsBuilder.Options);
         }

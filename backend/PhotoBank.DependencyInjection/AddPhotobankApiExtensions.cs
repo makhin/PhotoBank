@@ -109,9 +109,9 @@ public static partial class ServiceCollectionExtensions
         services.AddProblemDetails();
 
         services.AddHealthChecks()
-            .AddSqlServer(
+            .AddNpgSql(
                 connectionString: configuration.GetConnectionString("DefaultConnection")!,
-                name: "sql",
+                name: "postgresql",
                 tags: new[] { "ready" },
                 failureStatus: HealthStatus.Unhealthy);
 

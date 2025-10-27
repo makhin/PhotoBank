@@ -7,11 +7,11 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 using DotNet.Testcontainers.Builders;
-using Testcontainers.MsSql;
+using Testcontainers.PostgreSql;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
@@ -28,7 +28,7 @@ public class AdminUsersControllerTests
 {
     private const string AdminRole = "Admin";
 
-    private MsSqlContainer _dbContainer = null!;
+    private PostgreSqlContainer _dbContainer = null!;
     private Respawner _respawner = null!;
     private string _connectionString = string.Empty;
     private ApiWebApplicationFactory _factory = null!;
@@ -40,8 +40,8 @@ public class AdminUsersControllerTests
     {
         try
         {
-            _dbContainer = new MsSqlBuilder()
-                .WithPassword("yourStrong(!)Password")
+            _dbContainer = new PostgreSqlBuilder()
+                .WithPassword("postgres")
                 .Build();
             await _dbContainer.StartAsync();
         }
@@ -57,7 +57,7 @@ public class AdminUsersControllerTests
         _connectionString = _dbContainer.GetConnectionString();
 
         var photoDbOptions = new DbContextOptionsBuilder<PhotoBankDbContext>()
-            .UseSqlServer(_connectionString, builder =>
+            .UseNpgsql(_connectionString, builder =>
             {
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.UseNetTopologySuite();
@@ -69,11 +69,11 @@ public class AdminUsersControllerTests
             await photoDb.Database.MigrateAsync();
         }
 
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
         _respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
         {
-            DbAdapter = DbAdapter.SqlServer,
+            DbAdapter = DbAdapter.Postgres,
             TablesToIgnore = new[]
             {
                 new Respawn.Graph.Table("__EFMigrationsHistory")
@@ -98,7 +98,7 @@ public class AdminUsersControllerTests
             Assert.Ignore("Database respawner is not available.");
         }
 
-        await using (var conn = new SqlConnection(_connectionString))
+        await using (var conn = new NpgsqlConnection(_connectionString))
         {
             await conn.OpenAsync();
             await _respawner.ResetAsync(conn);
