@@ -8,7 +8,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="15.0.1" />
     <PackageReference Include="AWSSDK.Rekognition" Version="4.0.2.6" />
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.8.2" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.9.0" />
     <PackageReference Include="MetadataExtractor" Version="2.8.1" />
     <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.ComputerVision" Version="7.0.1" />
     <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.Face" Version="2.6.0-preview.1" />
