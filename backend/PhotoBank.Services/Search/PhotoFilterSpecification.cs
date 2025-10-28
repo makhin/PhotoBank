@@ -71,10 +71,10 @@ public class PhotoFilterSpecification
 
         if (!string.IsNullOrEmpty(filter.Caption))
         {
-            // PostgreSQL case-insensitive search using ILIKE
-            // Equivalent to SQL Server's FREETEXT but simpler
-            var searchPattern = $"%{filter.Caption}%";
-            query = query.Where(p => p.Captions.Any(c => EF.Functions.ILike(c.Text, searchPattern)));
+            // Full-text search ñ ts_vector
+            query = query.Where(p => p.Captions.Any(c =>
+                EF.Functions.ToTsVector("english", c.Text)
+                    .Matches(EF.Functions.WebSearchToTsQuery("english", filter.Caption!))));
         }
 
         if (filter.Persons?.Any() == true)

@@ -302,7 +302,7 @@ public class GetAllPhotosIntegrationTests
             Caption = "sky and grass"
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.TotalCount.Should().Be(163);
+        result.TotalCount.Should().Be(4);
     }
     private sealed class TestCurrentUserAccessor : ICurrentUserAccessor
     {
