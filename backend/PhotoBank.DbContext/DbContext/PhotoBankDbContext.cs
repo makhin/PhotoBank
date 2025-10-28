@@ -112,9 +112,9 @@ namespace PhotoBank.DbContext.DbContext
                 .HasIndex(p => new { p.StorageId, p.TakenDate });
 
             modelBuilder.Entity<Photo>().Property<int?>("TakenMonth")
-                .HasComputedColumnSql("CASE WHEN [TakenDate] IS NULL THEN NULL ELSE MONTH([TakenDate]) END PERSISTED");
+                .HasComputedColumnSql("EXTRACT(MONTH FROM \"TakenDate\")::integer", stored: true);
             modelBuilder.Entity<Photo>().Property<int?>("TakenDay")
-                .HasComputedColumnSql("CASE WHEN [TakenDate] IS NULL THEN NULL ELSE DAY([TakenDate]) END PERSISTED");
+                .HasComputedColumnSql("EXTRACT(DAY FROM \"TakenDate\")::integer", stored: true);
 
             modelBuilder.Entity<PhotoTag>()
                 .HasKey(t => new { t.PhotoId, t.TagId });
