@@ -9,6 +9,9 @@ using PhotoBank.BlobMigrator;
 using PhotoBank.DbContext.DbContext;
 using System.Reflection;
 
+// Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = Host.CreateApplicationBuilder(args);
 
 // 1) Явно подключаем application.json (оставьте имя таким или переименуйте в appsettings.json)

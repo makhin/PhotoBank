@@ -14,6 +14,10 @@ public static partial class ServiceCollectionExtensions
 {
     public static IServiceCollection AddPhotobankDbContext(this IServiceCollection services, IConfiguration configuration, bool usePool)
     {
+        // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+        // This is necessary for compatibility when migrating from MS SQL Server
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         var connectionString = configuration.GetConnectionString("DefaultConnection")
                                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
