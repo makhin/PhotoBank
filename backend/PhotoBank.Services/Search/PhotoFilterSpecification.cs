@@ -71,7 +71,7 @@ public class PhotoFilterSpecification
 
         if (!string.IsNullOrEmpty(filter.Caption))
         {
-            query = query.Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption!)));
+            // query = query.Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption!)));
         }
 
         if (filter.Persons?.Any() == true)

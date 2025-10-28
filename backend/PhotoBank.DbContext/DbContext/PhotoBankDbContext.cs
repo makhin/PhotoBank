@@ -182,8 +182,7 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Tag>(e =>
             {
                 e.HasIndex(x => x.Name)
-                    .HasDatabaseName("IX_Tag_Name")
-                    .IsClustered(false);
+                .HasDatabaseName("IX_Tag_Name");
             });
 
             modelBuilder.Entity<Enricher>()
