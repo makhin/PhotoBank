@@ -78,19 +78,19 @@ namespace PhotoBank.DbContext.DbContext
             {
                 b.HasIndex(u => u.TelegramUserId)
                     .IsUnique()
-                    .HasFilter("[TelegramUserId] IS NOT NULL");
+                    .HasFilter("\"TelegramUserId\" IS NOT NULL");
             });
 
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => p.Id)
                 .HasDatabaseName("IX_Photos_NeedsMigration_Preview")
-                .HasFilter("[S3Key_Preview] IS NULL")
+                .HasFilter("\"S3Key_Preview\" IS NULL")
                 .IncludeProperties(p => new { p.S3Key_Preview, p.S3Key_Thumbnail });
 
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => p.Id)
                 .HasDatabaseName("IX_Photos_NeedsMigration_Thumbnail")
-                .HasFilter("[S3Key_Thumbnail] IS NULL")
+                .HasFilter("\"S3Key_Thumbnail\" IS NULL")
                 .IncludeProperties(p => new { p.S3Key_Preview, p.S3Key_Thumbnail });
 
             modelBuilder.Entity<Photo>()
@@ -111,10 +111,11 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => new { p.StorageId, p.TakenDate });
 
-            modelBuilder.Entity<Photo>().Property<int?>("TakenMonth")
-                .HasComputedColumnSql("EXTRACT(MONTH FROM \"TakenDate\")::integer", stored: true);
-            modelBuilder.Entity<Photo>().Property<int?>("TakenDay")
-                .HasComputedColumnSql("EXTRACT(DAY FROM \"TakenDate\")::integer", stored: true);
+            // Note: TakenMonth and TakenDay computed columns were removed for PostgreSQL compatibility.
+            // EXTRACT() is not an immutable function in PostgreSQL, preventing its use in GENERATED columns.
+            // If needed, these values can be computed in application code or LINQ queries using:
+            // - photo.TakenDate.Value.Month
+            // - photo.TakenDate.Value.Day
 
             modelBuilder.Entity<PhotoTag>()
                 .HasKey(t => new { t.PhotoId, t.TagId });
