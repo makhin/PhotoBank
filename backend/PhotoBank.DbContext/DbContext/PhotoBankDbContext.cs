@@ -111,11 +111,10 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => new { p.StorageId, p.TakenDate });
 
-            // Note: TakenMonth and TakenDay computed columns were removed for PostgreSQL compatibility.
-            // EXTRACT() is not an immutable function in PostgreSQL, preventing its use in GENERATED columns.
-            // If needed, these values can be computed in application code or LINQ queries using:
-            // - photo.TakenDate.Value.Month
-            // - photo.TakenDate.Value.Day
+            modelBuilder.Entity<Photo>().Property<int?>("TakenMonth")
+                .HasComputedColumnSql(@"(EXTRACT(MONTH FROM (""TakenDate"" AT TIME ZONE 'UTC')))::int", stored: true);
+            modelBuilder.Entity<Photo>().Property<int?>("TakenDay")
+                .HasComputedColumnSql(@"(EXTRACT(DAY FROM (""TakenDate"" AT TIME ZONE 'UTC')))::int", stored: true);
 
             modelBuilder.Entity<PhotoTag>()
                 .HasKey(t => new { t.PhotoId, t.TagId });

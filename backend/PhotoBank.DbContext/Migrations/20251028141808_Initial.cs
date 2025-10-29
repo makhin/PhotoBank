@@ -323,8 +323,8 @@ namespace PhotoBank.DbContext.Migrations
                     Scale = table.Column<double>(type: "double precision", nullable: false),
                     FaceIdentifyStatus = table.Column<int>(type: "integer", nullable: false),
                     EnrichedWithEnricherType = table.Column<int>(type: "integer", nullable: false),
-                    TakenDay = table.Column<int>(type: "integer", nullable: true, computedColumnSql: "EXTRACT(DAY FROM \"TakenDate\")::integer", stored: true),
-                    TakenMonth = table.Column<int>(type: "integer", nullable: true, computedColumnSql: "EXTRACT(MONTH FROM \"TakenDate\")::integer", stored: true)
+                    TakenDay = table.Column<int>(type: "integer", nullable: true, computedColumnSql: "(EXTRACT(DAY FROM (\"TakenDate\" AT TIME ZONE 'UTC')))::int", stored: true),
+                    TakenMonth = table.Column<int>(type: "integer", nullable: true, computedColumnSql: "(EXTRACT(MONTH FROM (\"TakenDate\" AT TIME ZONE 'UTC')))::int", stored: true)
                 },
                 constraints: table =>
                 {
@@ -531,7 +531,7 @@ namespace PhotoBank.DbContext.Migrations
                 table: "AspNetUsers",
                 column: "TelegramUserId",
                 unique: true,
-                filter: "[TelegramUserId] IS NOT NULL");
+                filter: "\"TelegramUserId\" IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
@@ -642,7 +642,7 @@ namespace PhotoBank.DbContext.Migrations
                 name: "IX_Photos_NeedsMigration_Thumbnail",
                 table: "Photos",
                 column: "Id",
-                filter: "[S3Key_Thumbnail] IS NULL")
+                filter: "\"S3Key_Thumbnail\" IS NULL")
                 .Annotation("Npgsql:IndexInclude", new[] { "S3Key_Preview", "S3Key_Thumbnail" });
 
             migrationBuilder.CreateIndex(

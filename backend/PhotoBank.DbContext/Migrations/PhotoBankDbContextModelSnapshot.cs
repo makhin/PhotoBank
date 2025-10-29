@@ -243,7 +243,7 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.HasIndex("TelegramUserId")
                         .IsUnique()
-                        .HasFilter("[TelegramUserId] IS NOT NULL");
+                        .HasFilter("\"TelegramUserId\" IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -638,12 +638,12 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<int?>("TakenDay")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("integer")
-                        .HasComputedColumnSql("EXTRACT(DAY FROM \"TakenDate\")::integer", stored: true);
+                        .HasComputedColumnSql("(EXTRACT(DAY FROM (\"TakenDate\" AT TIME ZONE 'UTC')))::int", true);
 
                     b.Property<int?>("TakenMonth")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("integer")
-                        .HasComputedColumnSql("EXTRACT(MONTH FROM \"TakenDate\")::integer", stored: true);
+                        .HasComputedColumnSql("(EXTRACT(MONTH FROM (\"TakenDate\" AT TIME ZONE 'UTC')))::int", true);
 
                     b.Property<long?>("Width")
                         .HasColumnType("bigint");
@@ -652,7 +652,7 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.HasIndex("Id")
                         .HasDatabaseName("IX_Photos_NeedsMigration_Thumbnail")
-                        .HasFilter("[S3Key_Thumbnail] IS NULL");
+                        .HasFilter("\"S3Key_Thumbnail\" IS NULL");
 
                     NpgsqlIndexBuilderExtensions.IncludeProperties(b.HasIndex("Id"), new[] { "S3Key_Preview", "S3Key_Thumbnail" });
 
