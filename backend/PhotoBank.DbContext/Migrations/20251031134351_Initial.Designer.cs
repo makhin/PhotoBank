@@ -13,7 +13,7 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    [Migration("20251028141808_Initial")]
+    [Migration("20251031134351_Initial")]
     partial class Initial
     {
         /// <inheritdoc />

@@ -12,7 +12,7 @@ using PhotoBank.AccessControl;
 namespace PhotoBank.DbContext.Migrations.AccessControlDb
 {
     [DbContext(typeof(AccessControlDbContext))]
-    [Migration("20251028141941_Initial")]
+    [Migration("20251031134443_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
