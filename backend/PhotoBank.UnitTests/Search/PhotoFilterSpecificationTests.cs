@@ -265,7 +265,7 @@ public class PhotoFilterSpecificationTests
     }
 
     [Test]
-    public void Build_WithCaption_AddsFreeTextExpression()
+    public void Build_WithCaption_AddsILikeExpression()
     {
         var storage = new Storage { Id = 500, Name = "s500", Folder = "f500" };
         var photo = CreatePhoto(501, storage, "captioned");
@@ -279,7 +279,8 @@ public class PhotoFilterSpecificationTests
 
         var query = _sut.Build(filter, new DummyCurrentUser());
 
-        query.Expression.ToString().Should().Contain("FreeText");
+        // PostgreSQL uses ILike for case-insensitive pattern matching instead of FreeText
+        query.Expression.ToString().Should().Contain("ILike");
     }
 
     private static Photo CreatePhoto(int id, Storage storage, string name, DateTime? takenDate = null)

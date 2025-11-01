@@ -14,6 +14,10 @@ public static partial class ServiceCollectionExtensions
 {
     public static IServiceCollection AddPhotobankDbContext(this IServiceCollection services, IConfiguration configuration, bool usePool)
     {
+        // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+        // This is necessary for compatibility when migrating from MS SQL Server
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         var connectionString = configuration.GetConnectionString("DefaultConnection")
                                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -32,16 +36,16 @@ public static partial class ServiceCollectionExtensions
 
                 options.UseLoggerFactory(LoggerFactory.Create(b => b.AddDebug()));
 
-                options.UseSqlServer(
+                options.UseNpgsql(
                     connectionString,
-                    sql =>
+                    npgsql =>
                     {
-                        sql.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
-                        sql.UseNetTopologySuite();
-                        sql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null);
-                        sql.CommandTimeout(60);
-                        sql.MaxBatchSize(128);
-                        sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        npgsql.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
+                        npgsql.UseNetTopologySuite();
+                        npgsql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null);
+                        npgsql.CommandTimeout(60);
+                        npgsql.MaxBatchSize(128);
+                        npgsql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     });
             });
 
@@ -62,13 +66,13 @@ public static partial class ServiceCollectionExtensions
                     .EnableDetailedErrors(env.IsDevelopment())
                     .EnableSensitiveDataLogging(env.IsDevelopment());
 
-                options.UseSqlServer(
+                options.UseNpgsql(
                     connectionString,
-                    sql =>
+                    npgsql =>
                     {
-                        sql.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
-                        sql.UseNetTopologySuite();
-                        sql.CommandTimeout(120);
+                        npgsql.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
+                        npgsql.UseNetTopologySuite();
+                        npgsql.CommandTimeout(120);
                     });
             });
 
@@ -81,7 +85,7 @@ public static partial class ServiceCollectionExtensions
             });
         }
 
-        services.AddDbContext<AccessControlDbContext>(opt => { opt.UseSqlServer(connectionString); });
+        services.AddDbContext<AccessControlDbContext>(opt => { opt.UseNpgsql(connectionString); });
 
         return services;
     }

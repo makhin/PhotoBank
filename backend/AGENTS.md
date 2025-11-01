@@ -2,15 +2,15 @@
 
 ## Stack
 - .NET 9, Minimal APIs / ASP.NET Core
-- EF Core (SQL Server)
+- EF Core (PostgreSQL)
 - Serilog structured logging
 - ProblemDetails (RFC 7807)
-- HealthChecks (SQL Server)
-- Testcontainers (MSSQL) for integration tests
+- HealthChecks (PostgreSQL)
+- Testcontainers (PostgreSQL) for integration tests
 
 ## Hard Rules
 - **Work ONLY in `/backend`**.
-- Integration tests MUST use MsSql Testcontainers, apply EF migrations, and clean data (Respawn or similar).
+- Integration tests MUST use PostgreSQL Testcontainers, apply EF migrations, and clean data (Respawn or similar).
 - Respect access-control rules: admin sees all; regular user sees storages/people/date ranges per granted permissions.
 - Prefer **keyset pagination** over offset for large datasets.
 

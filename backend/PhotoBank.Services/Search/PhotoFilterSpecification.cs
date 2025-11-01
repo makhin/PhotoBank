@@ -71,7 +71,10 @@ public class PhotoFilterSpecification
 
         if (!string.IsNullOrEmpty(filter.Caption))
         {
-            query = query.Where(p => p.Captions.Any(c => EF.Functions.FreeText(c.Text, filter.Caption!)));
+            // Full-text search ñ ts_vector
+            query = query.Where(p => p.Captions.Any(c =>
+                EF.Functions.ToTsVector("english", c.Text)
+                    .Matches(EF.Functions.WebSearchToTsQuery("english", filter.Caption!))));
         }
 
         if (filter.Persons?.Any() == true)

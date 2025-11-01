@@ -17,6 +17,9 @@ namespace PhotoBank.Api
     {
         public static void Main(string[] args)
         {
+            // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
             var version = Assembly.GetExecutingAssembly()
                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
                 ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString();

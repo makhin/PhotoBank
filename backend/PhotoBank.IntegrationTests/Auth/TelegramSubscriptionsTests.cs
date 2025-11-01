@@ -5,11 +5,11 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using DotNet.Testcontainers.Builders;
-using Testcontainers.MsSql;
+using Testcontainers.PostgreSql;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Data.SqlClient;
+using Npgsql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
@@ -26,7 +26,7 @@ public class TelegramSubscriptionsTests
 {
     private const string ServiceKey = "integration-telegram-key";
 
-    private MsSqlContainer _dbContainer = null!;
+    private PostgreSqlContainer _dbContainer = null!;
     private Respawner _respawner = null!;
     private string _connectionString = string.Empty;
     private ApiWebApplicationFactory _factory = null!;
@@ -35,10 +35,13 @@ public class TelegramSubscriptionsTests
     [OneTimeSetUp]
     public async Task OneTimeSetup()
     {
+        // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         try
         {
-            _dbContainer = new MsSqlBuilder()
-                .WithPassword("yourStrong(!)Password")
+            _dbContainer = new PostgreSqlBuilder()
+                .WithPassword("postgres")
                 .Build();
             await _dbContainer.StartAsync();
         }
@@ -50,7 +53,7 @@ public class TelegramSubscriptionsTests
         _connectionString = _dbContainer.GetConnectionString();
 
         var options = new DbContextOptionsBuilder<PhotoBankDbContext>()
-            .UseSqlServer(_connectionString, builder =>
+            .UseNpgsql(_connectionString, builder =>
             {
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.UseNetTopologySuite();
@@ -62,11 +65,11 @@ public class TelegramSubscriptionsTests
             await db.Database.MigrateAsync();
         }
 
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
         _respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
         {
-            DbAdapter = DbAdapter.SqlServer,
+            DbAdapter = DbAdapter.Postgres,
             TablesToIgnore = new[]
             {
                 new Respawn.Graph.Table("__EFMigrationsHistory")
@@ -91,7 +94,7 @@ public class TelegramSubscriptionsTests
             Assert.Ignore("Database respawner is not available.");
         }
 
-        await using (var conn = new SqlConnection(_connectionString))
+        await using (var conn = new NpgsqlConnection(_connectionString))
         {
             await conn.OpenAsync();
             await _respawner.ResetAsync(conn);

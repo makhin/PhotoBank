@@ -72,7 +72,7 @@ public class ProgramSmokeTests
     {
         var minimalConfiguration = new Dictionary<string, string?>
         {
-            ["ConnectionStrings:DefaultConnection"] = "Server=(localdb)\\mssqllocaldb;Database=PhotoBank;Trusted_Connection=True;Encrypt=False;",
+            ["ConnectionStrings:DefaultConnection"] = "Host=localhost;Database=photobank_test;Username=postgres;Password=postgres",
             ["Jwt:Key"] = "super-secret-key-for-tests",
             ["Jwt:Issuer"] = "PhotoBank.Tests",
             ["Jwt:Audience"] = "PhotoBank.Tests",

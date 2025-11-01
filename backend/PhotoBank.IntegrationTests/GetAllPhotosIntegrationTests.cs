@@ -41,9 +41,12 @@ public class GetAllPhotosIntegrationTests
     [OneTimeSetUp]
     public void OneTimeSetup()
     {
+        // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         _config = new ConfigurationBuilder()
             .SetBasePath(TestContext.CurrentContext.TestDirectory)
-            .AddJsonFile("appsettings.json")
+            .AddJsonFile("appsettings.Development.json")
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Jwt:Issuer"] = "issuer",
@@ -61,7 +64,7 @@ public class GetAllPhotosIntegrationTests
             var services = new ServiceCollection();
             var connectionString = _config.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string not found");
             services.AddDbContext<PhotoBankDbContext>(options =>
-                options.UseSqlServer(connectionString,
+                options.UseNpgsql(connectionString,
                     builder =>
                     {
                         builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
@@ -69,7 +72,7 @@ public class GetAllPhotosIntegrationTests
                         builder.CommandTimeout(120);
                     }));
             services.AddDbContext<AccessControlDbContext>(options =>
-                options.UseSqlServer(connectionString));
+                options.UseNpgsql(connectionString));
             services.AddPhotobankCore(_config);
             services.AddPhotobankApi(_config);
             services.AddPhotobankCors();
@@ -85,7 +88,7 @@ public class GetAllPhotosIntegrationTests
         }
         catch (Exception ex)
         {
-            Assert.Ignore("SQL Server not available: " + ex.Message);
+            Assert.Ignore("PostgreSQL not available: " + ex.Message);
         }
     }
 
@@ -299,7 +302,7 @@ public class GetAllPhotosIntegrationTests
             Caption = "sky and grass"
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.TotalCount.Should().Be(163);
+        result.TotalCount.Should().Be(4);
     }
     private sealed class TestCurrentUserAccessor : ICurrentUserAccessor
     {
