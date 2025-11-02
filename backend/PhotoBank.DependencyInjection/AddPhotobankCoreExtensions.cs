@@ -26,6 +26,7 @@ public static partial class ServiceCollectionExtensions
     {
         services.AddLogging();
         services.AddMemoryCache();
+        services.AddHttpContextAccessor();
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IMinioClient>(sp =>
         {
