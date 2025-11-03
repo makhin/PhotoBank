@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(dotnet tool restore:*)",
+      "Bash(dotnet tool install:*)",
+      "Bash(\"C:\\Users\\Alexandr\\.dotnet\\tools\\dotnet-ef.exe\" migrations add RemoveComputedColumns --context PhotoBankDbContext)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(\"C:\\Users\\Alexandr\\.dotnet\\tools\\dotnet-ef.exe\" migrations add TestDifferences --context PhotoBankDbContext)",
+      "Bash(\"C:\\Users\\Alexandr\\.dotnet\\tools\\dotnet-ef.exe\" migrations add Initial --context PhotoBankDbContext)",
+      "Bash(git restore:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: remove PostgreSQL incompatible computed columns\n\n- Removed TakenMonth and TakenDay computed columns from PhotoBankDbContext\n- EXTRACT() function is not immutable in PostgreSQL and cannot be used in GENERATED columns\n- Regenerated Initial migration without these columns\n- Note: Integration tests still failing with \"pending model changes\" error - investigating\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

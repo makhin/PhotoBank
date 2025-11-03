@@ -13,7 +13,7 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    [Migration("20251031134351_Initial")]
+    [Migration("20251103105143_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -637,16 +637,6 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.Property<DateTime?>("TakenDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("TakenDay")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("integer")
-                        .HasComputedColumnSql("(EXTRACT(DAY FROM (\"TakenDate\" AT TIME ZONE 'UTC')))::int", true);
-
-                    b.Property<int?>("TakenMonth")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("integer")
-                        .HasComputedColumnSql("(EXTRACT(MONTH FROM (\"TakenDate\" AT TIME ZONE 'UTC')))::int", true);
 
                     b.Property<long?>("Width")
                         .HasColumnType("bigint");
