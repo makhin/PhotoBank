@@ -322,7 +322,9 @@ namespace PhotoBank.DbContext.Migrations
                     RelativePath = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     Scale = table.Column<double>(type: "double precision", nullable: false),
                     FaceIdentifyStatus = table.Column<int>(type: "integer", nullable: false),
-                    EnrichedWithEnricherType = table.Column<int>(type: "integer", nullable: false)
+                    EnrichedWithEnricherType = table.Column<int>(type: "integer", nullable: false),
+                    TakenDay = table.Column<int>(type: "integer", nullable: true, computedColumnSql: "(EXTRACT(DAY FROM (\"TakenDate\" AT TIME ZONE 'UTC')))::int", stored: true),
+                    TakenMonth = table.Column<int>(type: "integer", nullable: true, computedColumnSql: "(EXTRACT(MONTH FROM (\"TakenDate\" AT TIME ZONE 'UTC')))::int", stored: true)
                 },
                 constraints: table =>
                 {
