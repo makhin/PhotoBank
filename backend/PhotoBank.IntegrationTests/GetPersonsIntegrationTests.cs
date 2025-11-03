@@ -1,17 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using DotNet.Testcontainers.Builders;
 using FluentAssertions;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Minio;
 using Moq;
+using Npgsql;
 using NUnit.Framework;
 using PhotoBank.AccessControl;
 using PhotoBank.Api.Controllers;
@@ -21,27 +17,43 @@ using PhotoBank.DependencyInjection;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
 using Respawn;
-using Testcontainers.MsSql;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Testcontainers.PostgreSql;
 
 namespace PhotoBank.IntegrationTests;
 
 [TestFixture]
 public class GetPersonsIntegrationTests
 {
-    private MsSqlContainer _dbContainer = null!;
+    private PostgreSqlContainer _dbContainer = null!;
     private Respawner _respawner = null!;
     private IConfiguration _config = null!;
     private string _connectionString = string.Empty;
+    private const string PhotoHistory = "__EFMigrationsHistory_Photo", AccessHistory = "__EFMigrationsHistory_Access";
 
     [OneTimeSetUp]
     public async Task OneTimeSetup()
     {
+        // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         try
         {
-            _dbContainer = new MsSqlBuilder().WithPassword("yourStrong(!)Password").Build();
+            _dbContainer = new PostgreSqlBuilder()
+                .WithImage("postgis/postgis:16-3.4")
+                .WithPassword("postgres")
+                .Build();
             await _dbContainer.StartAsync();
         }
         catch (ArgumentException ex) when (ex.Message.Contains("Docker endpoint"))
+        {
+            Assert.Ignore("Docker not available: " + ex.Message);
+        }
+        catch (DockerUnavailableException ex)
         {
             Assert.Ignore("Docker not available: " + ex.Message);
         }
@@ -58,15 +70,46 @@ public class GetPersonsIntegrationTests
             })
             .Build();
 
+        // Prepare DbContext options like in TelegramSubscriptionsTests
+        var photoDbOptionsBuilder = new DbContextOptionsBuilder<PhotoBankDbContext>();
+        photoDbOptionsBuilder.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning));
+        photoDbOptionsBuilder.UseNpgsql(_connectionString, builder =>
+        {
+            builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
+            builder.MigrationsHistoryTable(PhotoHistory);
+            builder.UseNetTopologySuite();
+        });
+        var photoDbOptions = photoDbOptionsBuilder.Options;
+        await using (var photoDb = new PhotoBankDbContext(photoDbOptions))
+            await photoDb.Database.MigrateAsync();
+
+        var accessDbOptionsBuilder = new DbContextOptionsBuilder<AccessControlDbContext>();
+        accessDbOptionsBuilder.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning));
+        accessDbOptionsBuilder.UseNpgsql(_connectionString, builder =>
+        {
+            builder.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
+            builder.MigrationsHistoryTable(AccessHistory);
+            builder.UseNetTopologySuite();
+        });
+        var accessDbOptions = accessDbOptionsBuilder.Options;
+        await using (var accessDb = new AccessControlDbContext(accessDbOptions))
+            await accessDb.Database.MigrateAsync();
+
         var services = new ServiceCollection();
         services.AddDbContext<PhotoBankDbContext>(options =>
-            options.UseSqlServer(_connectionString, builder =>
+            options.UseNpgsql(_connectionString, builder =>
             {
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
+                builder.MigrationsHistoryTable(PhotoHistory);
                 builder.UseNetTopologySuite();
             }));
         services.AddDbContext<AccessControlDbContext>(options =>
-            options.UseSqlServer(_connectionString));
+            options.UseNpgsql(_connectionString, builder =>
+            {
+                builder.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
+                builder.MigrationsHistoryTable(AccessHistory);
+                builder.UseNetTopologySuite();
+            }));
         services.AddPhotobankCore(_config);
         services.AddPhotobankApi(_config);
         services.AddPhotobankCors();
@@ -76,17 +119,16 @@ public class GetPersonsIntegrationTests
         services.AddLogging();
         services.AddSingleton<IMinioClient>(Mock.Of<IMinioClient>());
 
-        await using (var provider = services.BuildServiceProvider())
-        {
-            var db = provider.GetRequiredService<PhotoBankDbContext>();
-            await db.Database.MigrateAsync();
-        }
-
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
         _respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
         {
-            DbAdapter = DbAdapter.SqlServer
+            DbAdapter = DbAdapter.Postgres,
+            TablesToIgnore = new[]
+            {
+                new Respawn.Graph.Table(PhotoHistory),
+                new Respawn.Graph.Table(AccessHistory)
+            }
         });
     }
 
@@ -102,7 +144,7 @@ public class GetPersonsIntegrationTests
     [SetUp]
     public async Task Setup()
     {
-        await using var conn = new SqlConnection(_connectionString);
+        await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
         await _respawner.ResetAsync(conn);
     }
@@ -149,7 +191,7 @@ public class GetPersonsIntegrationTests
     private PhotoBankDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<PhotoBankDbContext>()
-            .UseSqlServer(_connectionString, builder =>
+            .UseNpgsql(_connectionString, builder =>
             {
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.UseNetTopologySuite();
@@ -162,13 +204,20 @@ public class GetPersonsIntegrationTests
     {
         var services = new ServiceCollection();
         services.AddDbContext<PhotoBankDbContext>(options =>
-            options.UseSqlServer(_connectionString, builder =>
+            options.UseNpgsql(_connectionString, builder =>
             {
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
+                builder.MigrationsHistoryTable(PhotoHistory);
                 builder.UseNetTopologySuite();
             }));
+
         services.AddDbContext<AccessControlDbContext>(options =>
-            options.UseSqlServer(_connectionString));
+            options.UseNpgsql(_connectionString, builder =>
+            {      
+                builder.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
+                builder.MigrationsHistoryTable(AccessHistory);
+                builder.UseNetTopologySuite();
+            }));
 
         services.AddPhotobankCore(_config);
         services.AddPhotobankApi(_config);

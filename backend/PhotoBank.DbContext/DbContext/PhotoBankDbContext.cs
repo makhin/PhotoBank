@@ -78,19 +78,19 @@ namespace PhotoBank.DbContext.DbContext
             {
                 b.HasIndex(u => u.TelegramUserId)
                     .IsUnique()
-                    .HasFilter("[TelegramUserId] IS NOT NULL");
+                    .HasFilter("\"TelegramUserId\" IS NOT NULL");
             });
 
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => p.Id)
                 .HasDatabaseName("IX_Photos_NeedsMigration_Preview")
-                .HasFilter("[S3Key_Preview] IS NULL")
+                .HasFilter("\"S3Key_Preview\" IS NULL")
                 .IncludeProperties(p => new { p.S3Key_Preview, p.S3Key_Thumbnail });
 
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => p.Id)
                 .HasDatabaseName("IX_Photos_NeedsMigration_Thumbnail")
-                .HasFilter("[S3Key_Thumbnail] IS NULL")
+                .HasFilter("\"S3Key_Thumbnail\" IS NULL")
                 .IncludeProperties(p => new { p.S3Key_Preview, p.S3Key_Thumbnail });
 
             modelBuilder.Entity<Photo>()
@@ -111,10 +111,10 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => new { p.StorageId, p.TakenDate });
 
-            modelBuilder.Entity<Photo>().Property<int?>("TakenMonth")
-                .HasComputedColumnSql("CASE WHEN [TakenDate] IS NULL THEN NULL ELSE MONTH([TakenDate]) END PERSISTED");
-            modelBuilder.Entity<Photo>().Property<int?>("TakenDay")
-                .HasComputedColumnSql("CASE WHEN [TakenDate] IS NULL THEN NULL ELSE DAY([TakenDate]) END PERSISTED");
+            modelBuilder.Entity<Photo>().Property(p => p.TakenMonth)
+                .HasComputedColumnSql(@"(EXTRACT(MONTH FROM (""TakenDate"" AT TIME ZONE 'UTC')))::int", stored: true);
+            modelBuilder.Entity<Photo>().Property(p => p.TakenDay)
+                .HasComputedColumnSql(@"(EXTRACT(DAY FROM (""TakenDate"" AT TIME ZONE 'UTC')))::int", stored: true);
 
             modelBuilder.Entity<PhotoTag>()
                 .HasKey(t => new { t.PhotoId, t.TagId });
@@ -182,8 +182,7 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Tag>(e =>
             {
                 e.HasIndex(x => x.Name)
-                    .HasDatabaseName("IX_Tag_Name")
-                    .IsClustered(false);
+                .HasDatabaseName("IX_Tag_Name");
             });
 
             modelBuilder.Entity<Enricher>()

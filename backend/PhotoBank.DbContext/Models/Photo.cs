@@ -65,5 +65,8 @@ namespace PhotoBank.DbContext.Models
         public double Scale { get; set; }
         public FaceIdentifyStatus FaceIdentifyStatus { get; set; }
         public EnricherType EnrichedWithEnricherType { get; set; }
+
+        public int? TakenMonth { get; private set; }
+        public int? TakenDay { get; private set; }
     }
 }

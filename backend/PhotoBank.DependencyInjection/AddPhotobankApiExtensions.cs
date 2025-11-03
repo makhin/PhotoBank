@@ -27,6 +27,7 @@ using PhotoBank.Services.Identity;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.OpenApi.Models;
 using PhotoBank.DependencyInjection.Swagger;
+using HealthChecks.NpgSql;
 
 namespace PhotoBank.DependencyInjection;
 
@@ -109,9 +110,9 @@ public static partial class ServiceCollectionExtensions
         services.AddProblemDetails();
 
         services.AddHealthChecks()
-            .AddSqlServer(
+            .AddNpgSql(
                 connectionString: configuration.GetConnectionString("DefaultConnection")!,
-                name: "sql",
+                name: "postgresql",
                 tags: new[] { "ready" },
                 failureStatus: HealthStatus.Unhealthy);
 

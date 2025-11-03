@@ -1,25 +1,28 @@
+using DotNet.Testcontainers.Builders;
+using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
+using Npgsql;
+using NUnit.Framework;
+using PhotoBank.AccessControl;
+using PhotoBank.DbContext.DbContext;
+using PhotoBank.IntegrationTests.Infra;
+using Respawn;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
-using Testcontainers.MsSql;
-using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Moq;
-using NUnit.Framework;
-using PhotoBank.AccessControl;
-using PhotoBank.DbContext.DbContext;
-using Respawn;
-using PhotoBank.IntegrationTests.Infra;
+using Testcontainers.PostgreSql;
 
 namespace PhotoBank.IntegrationTests.Admin;
 
@@ -28,7 +31,7 @@ public class AdminAccessProfilesControllerTests
 {
     private const string AdminRole = "Admin";
 
-    private MsSqlContainer _dbContainer = null!;
+    private PostgreSqlContainer _dbContainer = null!;
     private Respawner _respawner = null!;
     private string _connectionString = string.Empty;
     private ApiWebApplicationFactory _factory = null!;
@@ -39,10 +42,14 @@ public class AdminAccessProfilesControllerTests
     [OneTimeSetUp]
     public async Task OneTimeSetup()
     {
+        // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         try
         {
-            _dbContainer = new MsSqlBuilder()
-                .WithPassword("yourStrong(!)Password")
+            _dbContainer = new PostgreSqlBuilder()
+                .WithImage("postgis/postgis:16-3.4")
+                .WithPassword("postgres")
                 .Build();
             await _dbContainer.StartAsync();
         }
@@ -57,36 +64,53 @@ public class AdminAccessProfilesControllerTests
 
         _connectionString = _dbContainer.GetConnectionString();
 
-        var photoDbOptions = new DbContextOptionsBuilder<PhotoBankDbContext>()
-            .UseSqlServer(_connectionString, builder =>
-            {
-                builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
-                builder.UseNetTopologySuite();
-            })
-            .Options;
+        var photoDbOptionsBuilder = new DbContextOptionsBuilder<PhotoBankDbContext>();
+
+        photoDbOptionsBuilder.ConfigureWarnings(w =>
+            w.Log(RelationalEventId.PendingModelChangesWarning));
+
+        photoDbOptionsBuilder.UseNpgsql(_connectionString, builder =>
+        {
+            builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
+            builder.MigrationsHistoryTable("__EFMigrationsHistory_Photo");
+            builder.UseNetTopologySuite();
+        });
+
+        var photoDbOptions = photoDbOptionsBuilder.Options;
 
         await using (var photoDb = new PhotoBankDbContext(photoDbOptions))
-        {
             await photoDb.Database.MigrateAsync();
-        }
 
-        var accessDbOptions = new DbContextOptionsBuilder<AccessControlDbContext>()
-            .UseSqlServer(_connectionString)
-            .Options;
+        var asm1 = typeof(PhotoBankDbContext).Assembly.GetName().Name;
+        Console.WriteLine($"[DBG] PhotoBankDbContext runtime MigrationsAssembly = {asm1}");
 
-        await using (var accessDb = new AccessControlDbContext(accessDbOptions))
+        var accessDbOptionsBuilder = new DbContextOptionsBuilder<AccessControlDbContext>();
+        accessDbOptionsBuilder.ConfigureWarnings(w =>
+            w.Log(RelationalEventId.PendingModelChangesWarning));
+
+        accessDbOptionsBuilder.UseNpgsql(_connectionString, builder =>
         {
-            await accessDb.Database.MigrateAsync();
-        }
+            builder.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
+            builder.MigrationsHistoryTable("__EFMigrationsHistory_Access");
+            builder.UseNetTopologySuite();
+        });
 
-        await using var conn = new SqlConnection(_connectionString);
+        var acDbOptions = accessDbOptionsBuilder.Options;
+
+        await using (var accessDb = new AccessControlDbContext(acDbOptions))
+            await accessDb.Database.MigrateAsync();
+        var asm = typeof(AccessControlDbContext).Assembly.GetName().Name;
+        Console.WriteLine($"[DBG] AccessControlDbContext runtime MigrationsAssembly = {asm}");
+
+        await using var conn = new NpgsqlConnection(_connectionString);
         await conn.OpenAsync();
         _respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
         {
-            DbAdapter = DbAdapter.SqlServer,
+            DbAdapter = DbAdapter.Postgres,
             TablesToIgnore = new[]
             {
-                new Respawn.Graph.Table("__EFMigrationsHistory")
+                new Respawn.Graph.Table("__EFMigrationsHistory_Photo"),
+                new Respawn.Graph.Table("__EFMigrationsHistory_Access")
             }
         });
     }
@@ -108,7 +132,7 @@ public class AdminAccessProfilesControllerTests
             Assert.Ignore("Database respawner is not available.");
         }
 
-        await using (var conn = new SqlConnection(_connectionString))
+        await using (var conn = new NpgsqlConnection(_connectionString))
         {
             await conn.OpenAsync();
             await _respawner.ResetAsync(conn);
@@ -123,6 +147,17 @@ public class AdminAccessProfilesControllerTests
                 services.AddTestAuthentication();
                 services.RemoveAll<IEffectiveAccessProvider>();
                 _effMock = new Mock<IEffectiveAccessProvider>();
+
+                // Setup mock to return a valid EffectiveAccess for admin users
+                _effMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(new EffectiveAccess(
+                        new HashSet<int>(),
+                        new HashSet<int>(),
+                        new List<(DateOnly, DateOnly)>(),
+                        false, // CanSeeNsfw
+                        true   // IsAdmin
+                    ));
+
                 services.AddSingleton(_effMock.Object);
             });
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions

@@ -31,14 +31,25 @@ namespace PhotoBank.Services
                 return "Not available";
             }
 
-            if (faceAttributes.StartsWith("{\"age\""))
+            try
             {
-                return GetAzureFaceAttributes(faceAttributes).ToString();
-            }
+                if (faceAttributes.StartsWith("{\"age\""))
+                {
+                    return GetAzureFaceAttributes(faceAttributes).ToString();
+                }
 
-            if (faceAttributes.StartsWith("{\"AgeRange\""))
+                if (faceAttributes.StartsWith("{\"AgeRange\""))
+                {
+                    return GetAwsFaceAttributes(faceAttributes).ToString();
+                }
+            }
+            catch (JsonSerializationException ex)
             {
-                return GetAwsFaceAttributes(faceAttributes).ToString();
+                return $"Error parsing face attributes (data may be truncated): {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                return $"Unexpected error parsing face attributes: {ex.Message}";
             }
 
             return "Not available";

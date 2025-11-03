@@ -9,6 +9,9 @@ using PhotoBank.BlobMigrator;
 using PhotoBank.DbContext.DbContext;
 using System.Reflection;
 
+// Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = Host.CreateApplicationBuilder(args);
 
 // 1) Явно подключаем application.json (оставьте имя таким или переименуйте в appsettings.json)
@@ -27,16 +30,16 @@ builder.Services.AddDbContextPool<PhotoBankDbContext>((sp, options) =>
 {
     options.UseLoggerFactory(LoggerFactory.Create(loggingBuilder => loggingBuilder.AddDebug()));
 
-    options.UseSqlServer(
+    options.UseNpgsql(
         connectionString,
-        sql =>
+        npgsql =>
         {
-            sql.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName().Name);
-            sql.UseNetTopologySuite();
-            sql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null);
-            sql.CommandTimeout(60);
-            sql.MaxBatchSize(128);
-            sql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+            npgsql.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName().Name);
+            npgsql.UseNetTopologySuite();
+            npgsql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null);
+            npgsql.CommandTimeout(60);
+            npgsql.MaxBatchSize(128);
+            npgsql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
         });
 });
 builder.Services.AddDbContextFactory<PhotoBankDbContext>();

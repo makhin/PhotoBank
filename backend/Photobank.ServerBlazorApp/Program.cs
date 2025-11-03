@@ -17,6 +17,8 @@ namespace PhotoBank.ServerBlazorApp
     {
         public static void Main(string[] args)
         {
+            // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
             IConfiguration configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -57,7 +59,7 @@ namespace PhotoBank.ServerBlazorApp
             builder.Services.AddDbContext<PhotoBankDbContext>(options =>
             {
                 options.UseLoggerFactory(LoggerFactory.Create(loggingBuilder => loggingBuilder.AddDebug()));
-                options.UseSqlServer(connectionString,
+                options.UseNpgsql(connectionString,
                     optionsBuilder =>
                     {
                         optionsBuilder.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName()

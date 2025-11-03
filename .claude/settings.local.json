@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfix: add appsettings.Development.json to IntegrationTests project\n\nAdded appsettings.Development.json as Content item in the IntegrationTests \n.csproj file to ensure Visual Studio recognizes and includes it properly.\n\nChanges:\n- Added Content entry for appsettings.Development.json\n- Set CopyToOutputDirectory to PreserveNewest for runtime availability\n- Added DependentUpon to nest it under appsettings.json in Solution Explorer\n\nThis fixes the issue where Visual Studio was ignoring the file.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(git restore:*)",
+      "Bash(git commit:*)",
+      "Bash(dotnet build:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

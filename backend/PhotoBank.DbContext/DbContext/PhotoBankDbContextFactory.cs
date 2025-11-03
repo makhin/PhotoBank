@@ -1,5 +1,7 @@
+using System.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 
 namespace PhotoBank.DbContext.DbContext
 {
@@ -7,10 +9,23 @@ namespace PhotoBank.DbContext.DbContext
     {
         public PhotoBankDbContext CreateDbContext(string[] args)
         {
+            // Build configuration to read from appsettings.json
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "PhotoBank.Api"))
+                .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile("appsettings.Development.json", optional: true)
+                .Build();
+
+            var connectionString = configuration.GetConnectionString("DefaultConnection")
+                ?? "Host=localhost;Database=photobank;Username=postgres;Password=postgres"; // fallback
+
             var optionsBuilder = new DbContextOptionsBuilder<PhotoBankDbContext>();
-            optionsBuilder.UseSqlServer(
-                "Server=localhost;Database=Photobank;Trusted_Connection=True;MultipleActiveResultSets=true;Encrypt=False;",
-                o => o.UseNetTopologySuite());
+            optionsBuilder.UseNpgsql(connectionString, npgsql =>
+            {
+                npgsql.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
+                npgsql.MigrationsHistoryTable("__EFMigrationsHistory_Photo");
+                npgsql.UseNetTopologySuite();
+            });
             return new PhotoBankDbContext(optionsBuilder.Options);
         }
     }

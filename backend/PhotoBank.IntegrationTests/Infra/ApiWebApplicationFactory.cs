@@ -1,14 +1,18 @@
-using System;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Minio;
 using Moq;
+using PhotoBank.AccessControl;
 using PhotoBank.Api;
+using PhotoBank.DbContext.DbContext;
+using System;
+using System.Collections.Generic;
 
 namespace PhotoBank.IntegrationTests.Infra;
 
@@ -32,18 +36,45 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment(_environment);
 
-        if (_configuration.Count > 0)
+        // ��������� �������� ������������ (�����: ���� ��� ������ �����������)
+        // ��������: { "ConnectionStrings:DefaultConnection": "<conn-string>" }
+        builder.ConfigureAppConfiguration((context, config) =>
         {
-            builder.ConfigureAppConfiguration((_, configBuilder) =>
-            {
-                configBuilder.AddInMemoryCollection(_configuration);
-            });
-        }
+            config.AddInMemoryCollection(_configuration);
+        });
 
-        builder.ConfigureTestServices(services =>
+        builder.ConfigureServices((context, services) =>
         {
-            services.RemoveAll<IMinioClient>();
-            services.AddSingleton(Mock.Of<IMinioClient>());
+            // ���� ������ ����������� �� IConfiguration
+            var cs =
+                context.Configuration.GetConnectionString("DefaultConnection")
+                ?? context.Configuration["DefaultConnection"]; // �������� �������
+
+            // ���������������� ����� ����������
+            services.RemoveAll<DbContextOptions<PhotoBankDbContext>>();
+            services.RemoveAll<DbContextOptions<AccessControlDbContext>>();
+
+            services.AddDbContext<PhotoBankDbContext>(opt =>
+            {
+                opt.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning));
+                opt.UseNpgsql(cs, npgsql =>
+                {
+                    npgsql.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
+                    npgsql.MigrationsHistoryTable("__EFMigrationsHistory_Photo");
+                    npgsql.UseNetTopologySuite();
+                });
+            });
+
+            services.AddDbContext<AccessControlDbContext>(opt =>
+            {
+                opt.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning));
+                opt.UseNpgsql(cs, npgsql =>
+                {
+                    npgsql.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
+                    npgsql.MigrationsHistoryTable("__EFMigrationsHistory_Access");
+                    npgsql.UseNetTopologySuite();
+                });
+            });
 
             _configureServices?.Invoke(services);
         });
