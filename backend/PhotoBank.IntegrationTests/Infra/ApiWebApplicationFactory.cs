@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -35,8 +36,8 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment(_environment);
 
-        // Добавляем тестовую конфигурацию (важно: ключ для строки подключения)
-        // Например: { "ConnectionStrings:DefaultConnection": "<conn-string>" }
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: { "ConnectionStrings:DefaultConnection": "<conn-string>" }
         builder.ConfigureAppConfiguration((context, config) =>
         {
             config.AddInMemoryCollection(_configuration);
@@ -44,30 +45,36 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices((context, services) =>
         {
-            // Берём строку подключения из IConfiguration
+            // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ IConfiguration
             var cs =
                 context.Configuration.GetConnectionString("DefaultConnection")
-                ?? context.Configuration["DefaultConnection"]; // запасной вариант
+                ?? context.Configuration["DefaultConnection"]; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
-            // Перерегистрируем опции контекстов
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             services.RemoveAll<DbContextOptions<PhotoBankDbContext>>();
             services.RemoveAll<DbContextOptions<AccessControlDbContext>>();
 
             services.AddDbContext<PhotoBankDbContext>(opt =>
+            {
+                opt.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning));
                 opt.UseNpgsql(cs, npgsql =>
                 {
                     npgsql.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                     npgsql.MigrationsHistoryTable("__EFMigrationsHistory_Photo");
                     npgsql.UseNetTopologySuite();
-                }));
+                });
+            });
 
             services.AddDbContext<AccessControlDbContext>(opt =>
+            {
+                opt.ConfigureWarnings(w => w.Log(RelationalEventId.PendingModelChangesWarning));
                 opt.UseNpgsql(cs, npgsql =>
                 {
                     npgsql.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
                     npgsql.MigrationsHistoryTable("__EFMigrationsHistory_Access");
                     npgsql.UseNetTopologySuite();
-                }));
+                });
+            });
 
             _configureServices?.Invoke(services);
         });

@@ -18,7 +18,9 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Testcontainers.PostgreSql;
 
@@ -145,6 +147,17 @@ public class AdminAccessProfilesControllerTests
                 services.AddTestAuthentication();
                 services.RemoveAll<IEffectiveAccessProvider>();
                 _effMock = new Mock<IEffectiveAccessProvider>();
+
+                // Setup mock to return a valid EffectiveAccess for admin users
+                _effMock.Setup(x => x.GetAsync(It.IsAny<string>(), It.IsAny<ClaimsPrincipal>(), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(new EffectiveAccess(
+                        new HashSet<int>(),
+                        new HashSet<int>(),
+                        new List<(DateOnly, DateOnly)>(),
+                        false, // CanSeeNsfw
+                        true   // IsAdmin
+                    ));
+
                 services.AddSingleton(_effMock.Object);
             });
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
