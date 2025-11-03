@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
@@ -21,7 +22,8 @@ public sealed class MediaUrlResolverTests
     {
         var minioClient = new Mock<IMinioClient>(MockBehavior.Strict);
         var logger = new TestLogger<MediaUrlResolver>();
-        var resolver = new MediaUrlResolver(minioClient.Object, Options.Create(new S3Options { Bucket = "bucket" }), logger);
+        var httpContextAccessor = new Mock<IHttpContextAccessor>();
+        var resolver = new MediaUrlResolver(minioClient.Object, Options.Create(new S3Options { Bucket = "bucket", UseLocalProxy = false }), logger, httpContextAccessor.Object);
 
         var result = await resolver.ResolveAsync(null, 60, MediaUrlContext.ForPhoto(42));
 
@@ -31,7 +33,7 @@ public sealed class MediaUrlResolverTests
     }
 
     [Test]
-    public async Task ResolveAsync_ReturnsUrl_WhenPresignedSuccessfully()
+    public async Task ResolveAsync_ReturnsPresignedUrl_WhenPresignedSuccessfully()
     {
         const string expectedUrl = "https://example.com/object";
         var minioClient = new Mock<IMinioClient>();
@@ -39,7 +41,8 @@ public sealed class MediaUrlResolverTests
             .Setup(c => c.PresignedGetObjectAsync(It.IsAny<PresignedGetObjectArgs>()))
             .ReturnsAsync(expectedUrl);
         var logger = new TestLogger<MediaUrlResolver>();
-        var resolver = new MediaUrlResolver(minioClient.Object, Options.Create(new S3Options { Bucket = "bucket" }), logger);
+        var httpContextAccessor = new Mock<IHttpContextAccessor>();
+        var resolver = new MediaUrlResolver(minioClient.Object, Options.Create(new S3Options { Bucket = "bucket", UseLocalProxy = false }), logger, httpContextAccessor.Object);
 
         var result = await resolver.ResolveAsync("object-key", 120, MediaUrlContext.ForPhoto(10));
 
@@ -56,7 +59,8 @@ public sealed class MediaUrlResolverTests
             .Setup(c => c.PresignedGetObjectAsync(It.IsAny<PresignedGetObjectArgs>()))
             .ThrowsAsync(new InvalidOperationException("boom"));
         var logger = new TestLogger<MediaUrlResolver>();
-        var resolver = new MediaUrlResolver(minioClient.Object, Options.Create(new S3Options { Bucket = "bucket" }), logger);
+        var httpContextAccessor = new Mock<IHttpContextAccessor>();
+        var resolver = new MediaUrlResolver(minioClient.Object, Options.Create(new S3Options { Bucket = "bucket", UseLocalProxy = false }), logger, httpContextAccessor.Object);
 
         var result = await resolver.ResolveAsync("object-key", 120, MediaUrlContext.ForFace(99, 5));
 
@@ -65,5 +69,47 @@ public sealed class MediaUrlResolverTests
         logger.Entries[0].Level.Should().Be(LogLevel.Warning);
         logger.Entries[0].Message.Should().Contain("Failed to generate presigned URL");
         logger.Entries[0].Exception.Should().BeOfType<InvalidOperationException>();
+    }
+
+    [Test]
+    public async Task ResolveAsync_ReturnsLocalProxyUrl_WhenUseLocalProxyIsTrue()
+    {
+        var minioClient = new Mock<IMinioClient>(MockBehavior.Strict);
+        var logger = new TestLogger<MediaUrlResolver>();
+        var httpContextAccessor = new Mock<IHttpContextAccessor>();
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Scheme = "https";
+        httpContext.Request.Host = new HostString("example.com");
+        httpContext.Request.PathBase = "";
+
+        httpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
+
+        var resolver = new MediaUrlResolver(minioClient.Object, Options.Create(new S3Options { Bucket = "bucket", UseLocalProxy = true }), logger, httpContextAccessor.Object);
+
+        var result = await resolver.ResolveAsync("test/image.jpg", 120, MediaUrlContext.ForPhoto(10));
+
+        result.Should().Be("https://example.com/media?key=test%2fimage.jpg");
+        logger.Entries.Should().BeEmpty();
+        minioClient.VerifyNoOtherCalls();
+    }
+
+    [Test]
+    public async Task ResolveAsync_ReturnsRelativeUrl_WhenHttpContextIsNull()
+    {
+        var minioClient = new Mock<IMinioClient>(MockBehavior.Strict);
+        var logger = new TestLogger<MediaUrlResolver>();
+        var httpContextAccessor = new Mock<IHttpContextAccessor>();
+        httpContextAccessor.Setup(x => x.HttpContext).Returns((HttpContext?)null);
+
+        var resolver = new MediaUrlResolver(minioClient.Object, Options.Create(new S3Options { Bucket = "bucket", UseLocalProxy = true }), logger, httpContextAccessor.Object);
+
+        var result = await resolver.ResolveAsync("test/image.jpg", 120, MediaUrlContext.ForPhoto(10));
+
+        result.Should().Be("/media?key=test%2fimage.jpg");
+        logger.Entries.Should().ContainSingle();
+        logger.Entries[0].Level.Should().Be(LogLevel.Warning);
+        logger.Entries[0].Message.Should().Contain("HttpContext is not available");
+        minioClient.VerifyNoOtherCalls();
     }
 }
