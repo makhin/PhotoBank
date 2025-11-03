@@ -20,7 +20,12 @@ namespace PhotoBank.DbContext.DbContext
                 ?? "Host=localhost;Database=photobank;Username=postgres;Password=postgres"; // fallback
 
             var optionsBuilder = new DbContextOptionsBuilder<PhotoBankDbContext>();
-            optionsBuilder.UseNpgsql(connectionString, o => o.UseNetTopologySuite());
+            optionsBuilder.UseNpgsql(connectionString, npgsql =>
+            {
+                npgsql.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
+                npgsql.MigrationsHistoryTable("__EFMigrationsHistory_Photo");
+                npgsql.UseNetTopologySuite();
+            });
             return new PhotoBankDbContext(optionsBuilder.Options);
         }
     }

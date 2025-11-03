@@ -20,7 +20,12 @@ public class AccessControlDbContextFactory : IDesignTimeDbContextFactory<AccessC
             ?? "Host=localhost;Database=photobank;Username=postgres;Password=postgres"; // fallback
 
         var optionsBuilder = new DbContextOptionsBuilder<AccessControlDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseNpgsql(connectionString, npgsql =>
+        {
+            npgsql.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
+            npgsql.MigrationsHistoryTable("__EFMigrationsHistory_Access");
+            npgsql.UseNetTopologySuite();
+        });
         return new AccessControlDbContext(optionsBuilder.Options);
     }
 }

@@ -54,8 +54,8 @@ public class PhotoFilterSpecification
         if (filter.ThisDay != null)
         {
             query = query.Where(p => p.TakenDate.HasValue &&
-                                     p.TakenDate.Value.Day == filter.ThisDay.Day &&
-                                     p.TakenDate.Value.Month == filter.ThisDay.Month);
+                                     (p.TakenDay != null && p.TakenDay.Value == filter.ThisDay.Day) &&
+                                     (p.TakenMonth != null && p.TakenMonth.Value == filter.ThisDay.Month));
         }
 
         if (filter.Storages?.Any() == true)
