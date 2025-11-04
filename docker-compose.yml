@@ -50,7 +50,6 @@ services:
       - Translator__Endpoint=${TRANSLATOR_ENDPOINT}
       - Translator__Region=${TRANSLATOR_REGION}
       - Translator__Key=${TRANSLATOR_KEY}
-      - S3__PublicUrl=https://makhin.ddns.net/s3
     ports:
       - "5066:5066"
     volumes:

@@ -18,6 +18,7 @@ public readonly record struct MediaUrlContext(int? PhotoId, int? FaceId)
 public interface IMediaUrlResolver
 {
     Task<string?> ResolveAsync(string? key, int ttlSeconds, MediaUrlContext context, CancellationToken cancellationToken = default);
+    Task<string?> ResolveAsync(string? key, int ttlSeconds, MediaUrlContext context, string? requestHost, CancellationToken cancellationToken = default);
 }
 
 public sealed class MediaUrlResolver : IMediaUrlResolver
@@ -36,7 +37,10 @@ public sealed class MediaUrlResolver : IMediaUrlResolver
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<string?> ResolveAsync(string? key, int ttlSeconds, MediaUrlContext context, CancellationToken cancellationToken = default)
+    public Task<string?> ResolveAsync(string? key, int ttlSeconds, MediaUrlContext context, CancellationToken cancellationToken = default)
+        => ResolveAsync(key, ttlSeconds, context, requestHost: null, cancellationToken);
+
+    public async Task<string?> ResolveAsync(string? key, int ttlSeconds, MediaUrlContext context, string? requestHost, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -64,10 +68,13 @@ public sealed class MediaUrlResolver : IMediaUrlResolver
                 .WithObject(key)
                 .WithExpiry(ttlSeconds)).ConfigureAwait(false);
 
-            // Если настроен публичный URL, заменяем внутренний адрес MinIO на публичный
-            if (!string.IsNullOrWhiteSpace(s3.PublicUrl) && !string.IsNullOrWhiteSpace(presignedUrl))
+            // Определяем публичный URL: либо из конфигурации, либо динамически из requestHost
+            var publicUrl = DeterminePublicUrl(s3.PublicUrl, requestHost);
+
+            // Если есть публичный URL, заменяем внутренний адрес MinIO на публичный
+            if (!string.IsNullOrWhiteSpace(publicUrl) && !string.IsNullOrWhiteSpace(presignedUrl))
             {
-                presignedUrl = ReplaceWithPublicUrl(presignedUrl, s3.PublicUrl);
+                presignedUrl = ReplaceWithPublicUrl(presignedUrl, publicUrl);
             }
 
             return presignedUrl;
@@ -86,6 +93,27 @@ public sealed class MediaUrlResolver : IMediaUrlResolver
                 key);
             return null;
         }
+    }
+
+    private static string? DeterminePublicUrl(string? configuredPublicUrl, string? requestHost)
+    {
+        // Приоритет 1: Если задан PublicUrl в конфигурации - используем его
+        if (!string.IsNullOrWhiteSpace(configuredPublicUrl))
+        {
+            return configuredPublicUrl;
+        }
+
+        // Приоритет 2: Если передан requestHost из HTTP запроса - формируем URL динамически
+        if (!string.IsNullOrWhiteSpace(requestHost))
+        {
+            // requestHost может быть "makhin.ddns.net", "raspberrypi.local", "raspberrypi.local:443" и т.д.
+            // Формируем: https://{host}/s3
+            var host = requestHost.Split(':')[0]; // Убираем порт если есть
+            return $"https://{host}/s3";
+        }
+
+        // Если ничего не задано - возвращаем null (будет использован оригинальный URL от MinIO)
+        return null;
     }
 
     private static string ReplaceWithPublicUrl(string presignedUrl, string publicUrl)

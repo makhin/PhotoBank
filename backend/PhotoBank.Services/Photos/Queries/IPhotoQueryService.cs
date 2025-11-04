@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using ImageMagick;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PhotoBank.AccessControl;
@@ -38,6 +39,7 @@ public class PhotoQueryService : IPhotoQueryService
     private readonly ISearchFilterNormalizer _searchFilterNormalizer;
     private readonly PhotoFilterSpecification _photoFilterSpecification;
     private readonly IMediaUrlResolver _mediaUrlResolver;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly S3Options _s3;
     private ICurrentUser? _currentUser;
 
@@ -50,6 +52,7 @@ public class PhotoQueryService : IPhotoQueryService
         ISearchFilterNormalizer searchFilterNormalizer,
         PhotoFilterSpecification photoFilterSpecification,
         IMediaUrlResolver mediaUrlResolver,
+        IHttpContextAccessor httpContextAccessor,
         IOptions<S3Options> s3Options)
     {
         _db = db;
@@ -60,6 +63,7 @@ public class PhotoQueryService : IPhotoQueryService
         _searchFilterNormalizer = searchFilterNormalizer;
         _photoFilterSpecification = photoFilterSpecification;
         _mediaUrlResolver = mediaUrlResolver;
+        _httpContextAccessor = httpContextAccessor;
         _s3 = s3Options?.Value ?? new S3Options();
     }
 
@@ -162,21 +166,38 @@ public class PhotoQueryService : IPhotoQueryService
 
     private async Task FillUrlsAsync(PhotoDto dto)
     {
+        var requestHost = GetRequestHost();
         dto.PreviewUrl = await _mediaUrlResolver.ResolveAsync(
             dto.S3Key_Preview,
             _s3.UrlExpirySeconds,
-            MediaUrlContext.ForPhoto(dto.Id));
+            MediaUrlContext.ForPhoto(dto.Id),
+            requestHost);
     }
 
     private async Task FillUrlsAsync(IEnumerable<PhotoItemDto> items)
     {
+        var requestHost = GetRequestHost();
         var tasks = items.Select(async dto =>
         {
             dto.ThumbnailUrl = await _mediaUrlResolver.ResolveAsync(
                 dto.S3Key_Thumbnail,
                 _s3.UrlExpirySeconds,
-                MediaUrlContext.ForPhoto(dto.Id));
+                MediaUrlContext.ForPhoto(dto.Id),
+                requestHost);
         });
         await Task.WhenAll(tasks);
+    }
+
+    private string? GetRequestHost()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext == null)
+        {
+            return null;
+        }
+
+        // Получаем Host из заголовка запроса (например, "makhin.ddns.net" или "raspberrypi.local")
+        var host = httpContext.Request.Host;
+        return host.HasValue ? host.Value : null;
     }
 }
