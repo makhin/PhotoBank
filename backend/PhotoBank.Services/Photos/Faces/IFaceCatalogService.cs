@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PhotoBank.DbContext.Models;
@@ -25,17 +26,20 @@ public class FaceCatalogService : IFaceCatalogService
     private readonly IRepository<Face> _faceRepository;
     private readonly IMapper _mapper;
     private readonly IMediaUrlResolver _mediaUrlResolver;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly S3Options _s3;
 
     public FaceCatalogService(
         IRepository<Face> faceRepository,
         IMapper mapper,
         IMediaUrlResolver mediaUrlResolver,
+        IHttpContextAccessor httpContextAccessor,
         IOptions<S3Options> s3Options)
     {
         _faceRepository = faceRepository;
         _mapper = mapper;
         _mediaUrlResolver = mediaUrlResolver;
+        _httpContextAccessor = httpContextAccessor;
         _s3 = s3Options?.Value ?? new S3Options();
     }
 
@@ -91,13 +95,27 @@ public class FaceCatalogService : IFaceCatalogService
 
     private async Task FillUrlsAsync(IEnumerable<FaceDto> faces)
     {
+        var requestHost = GetRequestHost();
         var tasks = faces.Select(async dto =>
         {
             dto.ImageUrl = await _mediaUrlResolver.ResolveAsync(
                 dto.S3Key_Image,
                 _s3.UrlExpirySeconds,
-                MediaUrlContext.ForFace(dto.PhotoId, dto.Id));
+                MediaUrlContext.ForFace(dto.PhotoId, dto.Id),
+                requestHost);
         });
         await Task.WhenAll(tasks);
+    }
+
+    private string? GetRequestHost()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext == null)
+        {
+            return null;
+        }
+
+        var host = httpContext.Request.Host;
+        return host.HasValue ? host.Value : null;
     }
 }

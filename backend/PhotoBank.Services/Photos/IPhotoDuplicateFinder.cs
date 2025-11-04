@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using ImageMagick;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PhotoBank.DbContext.Models;
@@ -27,17 +28,20 @@ public sealed class PhotoDuplicateFinder : IPhotoDuplicateFinder
     private readonly IMapper _mapper;
     private readonly S3Options _s3Options;
     private readonly IMediaUrlResolver _mediaUrlResolver;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public PhotoDuplicateFinder(
         IRepository<Photo> photoRepository,
         IMapper mapper,
         IOptions<S3Options> s3Options,
-        IMediaUrlResolver mediaUrlResolver)
+        IMediaUrlResolver mediaUrlResolver,
+        IHttpContextAccessor httpContextAccessor)
     {
         _photoRepository = photoRepository;
         _mapper = mapper;
         _s3Options = s3Options?.Value ?? new S3Options();
         _mediaUrlResolver = mediaUrlResolver;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold, CancellationToken cancellationToken = default)
@@ -87,15 +91,29 @@ public sealed class PhotoDuplicateFinder : IPhotoDuplicateFinder
 
     private async Task FillUrlsAsync(IEnumerable<PhotoItemDto> items, CancellationToken cancellationToken)
     {
+        var requestHost = GetRequestHost();
         var tasks = items.Select(async dto =>
         {
             dto.ThumbnailUrl = await _mediaUrlResolver.ResolveAsync(
                 dto.S3Key_Thumbnail,
                 _s3Options.UrlExpirySeconds,
                 MediaUrlContext.ForPhoto(dto.Id),
+                requestHost,
                 cancellationToken);
         });
 
         await Task.WhenAll(tasks);
+    }
+
+    private string? GetRequestHost()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext == null)
+        {
+            return null;
+        }
+
+        var host = httpContext.Request.Host;
+        return host.HasValue ? host.Value : null;
     }
 }
