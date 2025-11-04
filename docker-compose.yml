@@ -26,8 +26,6 @@ services:
     environment:
       MINIO_ROOT_USER: alexandr
       MINIO_ROOT_PASSWORD: 12345678
-      MINIO_BROWSER_REDIRECT_URL: "http://makhin.ddns.net:9011"
-      MINIO_SERVER_URL: "http://makhin.ddns.net:9010"
     volumes:
       - /srv/minio/data:/data
     healthcheck:
