@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Vitest - Telegram Bot" type="JavaScriptTestRunnerVitest">
+    <config-file value="$PROJECT_DIR$/frontend/packages/telegram-bot/vitest.config.ts" />
+    <node-interpreter value="project" />
+    <package-manager value="pnpm" />
+    <vitest-package value="$PROJECT_DIR$/frontend/node_modules/vitest" />
+    <working-dir value="$PROJECT_DIR$/frontend/packages/telegram-bot" />
+    <envs>
+      <env name="BOT_TOKEN" value="test-token" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>

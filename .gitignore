@@ -15,6 +15,11 @@ pnpm-debug.log*
 # OS files
 .DS_Store
 
+# IDE
+.idea/*
+!.idea/runConfigurations/
+!.idea/VITEST_SETUP.md
+
 # Environment files
 .env
 .env.*
