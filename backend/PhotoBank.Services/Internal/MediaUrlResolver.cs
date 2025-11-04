@@ -1,8 +1,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
@@ -27,18 +25,15 @@ public sealed class MediaUrlResolver : IMediaUrlResolver
     private readonly IMinioClient _minioClient;
     private readonly IOptions<S3Options> _s3Options;
     private readonly ILogger<MediaUrlResolver> _logger;
-    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public MediaUrlResolver(
         IMinioClient minioClient,
         IOptions<S3Options> s3Options,
-        ILogger<MediaUrlResolver> logger,
-        IHttpContextAccessor httpContextAccessor)
+        ILogger<MediaUrlResolver> logger)
     {
         _minioClient = minioClient ?? throw new ArgumentNullException(nameof(minioClient));
         _s3Options = s3Options ?? throw new ArgumentNullException(nameof(s3Options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
     }
 
     public async Task<string?> ResolveAsync(string? key, int ttlSeconds, MediaUrlContext context, CancellationToken cancellationToken = default)
@@ -62,13 +57,6 @@ public sealed class MediaUrlResolver : IMediaUrlResolver
 
         var s3 = _s3Options.Value ?? new S3Options();
 
-        // If local proxy is enabled, generate local URL
-        if (s3.UseLocalProxy)
-        {
-            return GenerateLocalProxyUrl(key);
-        }
-
-        // Otherwise, generate presigned S3 URL
         try
         {
             return await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
@@ -90,23 +78,5 @@ public sealed class MediaUrlResolver : IMediaUrlResolver
                 key);
             return null;
         }
-    }
-
-    private string GenerateLocalProxyUrl(string key)
-    {
-        var httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext == null)
-        {
-            _logger.LogWarning("HttpContext is not available for generating local proxy URL");
-            return $"/media?key={HttpUtility.UrlEncode(key)}";
-        }
-
-        var request = httpContext.Request;
-        var scheme = request.Scheme;
-        var host = request.Host.Value;
-        var pathBase = request.PathBase.Value;
-
-        var encodedKey = HttpUtility.UrlEncode(key);
-        return $"{scheme}://{host}{pathBase}/media?key={encodedKey}";
     }
 }
