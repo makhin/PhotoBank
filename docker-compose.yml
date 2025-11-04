@@ -1,18 +1,40 @@
 services:
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
   api:
     image: makhin/photobank-api:latest
     env_file: .env
     environment:
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
       - Auth__Telegram__ServiceKey=${BOT_SERVICE_KEY}
-      - Minio__Endpoint=${MINIO_ENDPOINT}
-      - Minio__AccessKey=${MINIO_ACCESS} 
-      - Minio__SecretKey=${MINIO_SECRET}
+      - Minio__Endpoint=${MINIO_ENDPOINT:-minio:9000}
+      - Minio__AccessKey=${MINIO_ACCESS:-minioadmin}
+      - Minio__SecretKey=${MINIO_SECRET:-minioadmin}
       - Translator__Endpoint=${TRANSLATOR_ENDPOINT}
-      - Translator__Region=${TRANSLATOR_REGION} 
+      - Translator__Region=${TRANSLATOR_REGION}
       - Translator__Key=${TRANSLATOR_KEY}
     ports:
       - "5066:5066"
+    depends_on:
+      minio:
+        condition: service_healthy
 
   frontend:
     image: makhin/photobank-frontend:latest
@@ -45,4 +67,7 @@ services:
     restart: unless-stopped
     depends_on:
       - api
+
+volumes:
+  minio_data:
 
