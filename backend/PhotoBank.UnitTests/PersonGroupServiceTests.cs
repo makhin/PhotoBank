@@ -68,8 +68,9 @@ public class PersonGroupServiceTests
                 It.IsAny<string?>(),
                 It.IsAny<int>(),
                 It.IsAny<MediaUrlContext>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string? key, int _, MediaUrlContext _, CancellationToken _) =>
+            .ReturnsAsync((string? key, int _, MediaUrlContext _, string? _, CancellationToken _) =>
                 string.IsNullOrEmpty(key) ? null : $"resolved-{key}");
         var s3Options = Options.Create(new S3Options());
 
@@ -84,6 +85,7 @@ public class PersonGroupServiceTests
             normalizer.Object,
             photoFilterSpecification,
             mediaUrlResolver.Object,
+            httpContextAccessor.Object,
             s3Options);
 
         var personDirectoryService = new PersonDirectoryService(
@@ -99,10 +101,13 @@ public class PersonGroupServiceTests
             referenceDataService,
             NullLogger<PersonGroupService>.Instance);
 
+        var httpContextAccessor = new Mock<IHttpContextAccessor>();
+
         var faceCatalogService = new FaceCatalogService(
             faceRepository,
             mapper,
             mediaUrlResolver.Object,
+            httpContextAccessor.Object,
             s3Options);
 
         var duplicateFinder = new Mock<IPhotoDuplicateFinder>();

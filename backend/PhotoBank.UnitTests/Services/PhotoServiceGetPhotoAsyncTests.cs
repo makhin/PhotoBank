@@ -118,10 +118,12 @@ namespace PhotoBank.UnitTests.Services
                     It.IsAny<string?>(),
                     It.IsAny<int>(),
                     It.IsAny<MediaUrlContext>(),
+                    It.IsAny<string?>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync("https://example.com/object");
 
             var filterNormalizer = new Mock<ISearchFilterNormalizer>();
+            var httpContextAccessor = new Mock<IHttpContextAccessor>();
 
             var photoRepository = new Repository<Photo>(provider);
             var personRepository = new Repository<Person>(provider);
@@ -140,6 +142,7 @@ namespace PhotoBank.UnitTests.Services
                 filterNormalizer.Object,
                 photoFilterSpecification,
                 mediaUrlResolver.Object,
+                httpContextAccessor.Object,
                 s3Options);
 
             var personDirectoryService = new PersonDirectoryService(
@@ -159,6 +162,7 @@ namespace PhotoBank.UnitTests.Services
                 faceRepository,
                 _mapper,
                 mediaUrlResolver.Object,
+                httpContextAccessor.Object,
                 s3Options);
 
             var duplicateFinder = new Mock<IPhotoDuplicateFinder>();

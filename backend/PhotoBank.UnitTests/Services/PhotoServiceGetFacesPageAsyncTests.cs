@@ -124,6 +124,7 @@ public class PhotoServiceGetFacesPageAsyncTests
                 It.IsAny<string?>(),
                 It.IsAny<int>(),
                 It.IsAny<MediaUrlContext>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://example.com/face.jpg");
 
@@ -172,6 +173,7 @@ public class PhotoServiceGetFacesPageAsyncTests
         var faceRepository = new Repository<Face>(provider);
         var personGroupRepository = new Repository<PersonGroup>(provider);
         var s3Options = Options.Create(new S3Options { Bucket = "bucket", UrlExpirySeconds = 60 });
+        var httpContextAccessor = new Mock<IHttpContextAccessor>();
 
         var photoFilterSpecification = new PhotoFilterSpecification(context);
         var currentUserAccessor = new TestCurrentUserAccessor(new DummyCurrentUser());
@@ -185,6 +187,7 @@ public class PhotoServiceGetFacesPageAsyncTests
             normalizer.Object,
             photoFilterSpecification,
             mediaUrlResolver,
+            httpContextAccessor.Object,
             s3Options);
 
         var personDirectoryService = new PersonDirectoryService(
@@ -204,6 +207,7 @@ public class PhotoServiceGetFacesPageAsyncTests
             faceRepository,
             _mapper,
             mediaUrlResolver,
+            httpContextAccessor.Object,
             s3Options);
 
         var duplicateFinder = new Mock<IPhotoDuplicateFinder>();
