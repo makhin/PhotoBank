@@ -59,10 +59,18 @@ public sealed class MediaUrlResolver : IMediaUrlResolver
 
         try
         {
-            return await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
+            var presignedUrl = await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
                 .WithBucket(s3.Bucket)
                 .WithObject(key)
                 .WithExpiry(ttlSeconds)).ConfigureAwait(false);
+
+            // Если настроен публичный URL, заменяем внутренний адрес MinIO на публичный
+            if (!string.IsNullOrWhiteSpace(s3.PublicUrl) && !string.IsNullOrWhiteSpace(presignedUrl))
+            {
+                presignedUrl = ReplaceWithPublicUrl(presignedUrl, s3.PublicUrl);
+            }
+
+            return presignedUrl;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -78,5 +86,21 @@ public sealed class MediaUrlResolver : IMediaUrlResolver
                 key);
             return null;
         }
+    }
+
+    private static string ReplaceWithPublicUrl(string presignedUrl, string publicUrl)
+    {
+        // presignedUrl: http://minio:9010/photobank/path/to/image.jpg?X-Amz-...
+        // publicUrl: https://makhin.ddns.net/s3
+        // result: https://makhin.ddns.net/s3/photobank/path/to/image.jpg?X-Amz-...
+
+        var uri = new Uri(presignedUrl);
+        var pathAndQuery = uri.PathAndQuery; // /photobank/path/to/image.jpg?X-Amz-...
+
+        // Убираем trailing slash из publicUrl
+        publicUrl = publicUrl.TrimEnd('/');
+
+        // Комбинируем публичный URL с путем и query string
+        return publicUrl + pathAndQuery;
     }
 }
