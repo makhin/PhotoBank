@@ -14,6 +14,7 @@ export default defineConfig({
       mode: 'tags-split',
        override: {
          useDates: true,
+         useTypeOverInterfaces: true,
          mutator: {
             path: path.resolve(__dirname, 'packages/shared/src/api/photobank/fetcher.ts'),
             name: 'customFetcher'

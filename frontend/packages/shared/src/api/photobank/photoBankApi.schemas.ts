@@ -4,13 +4,13 @@
  * PhotoBank.Api
  * OpenAPI spec version: 1.0.0
  */
-export interface AccessProfileDateRangeAllowDto {
+export type AccessProfileDateRangeAllowDto = {
   profileId: number;
   fromDate: Date;
   toDate: Date;
-}
+};
 
-export interface AccessProfileDto {
+export type AccessProfileDto = {
   id: number;
   /**
    * @minLength 1
@@ -34,19 +34,19 @@ export interface AccessProfileDto {
   personGroups?: AccessProfilePersonGroupAllowDto[] | null;
   /** @nullable */
   dateRanges?: AccessProfileDateRangeAllowDto[] | null;
-}
+};
 
-export interface AccessProfilePersonGroupAllowDto {
+export type AccessProfilePersonGroupAllowDto = {
   profileId: number;
   personGroupId: number;
-}
+};
 
-export interface AccessProfileStorageAllowDto {
+export type AccessProfileStorageAllowDto = {
   profileId: number;
   storageId: number;
-}
+};
 
-export interface CreateUserDto {
+export type CreateUserDto = {
   /** @nullable */
   email: string | null;
   /** @nullable */
@@ -55,16 +55,16 @@ export interface CreateUserDto {
   phoneNumber?: string | null;
   /** @nullable */
   roles?: string[] | null;
-}
+};
 
-export interface FaceBoxDto {
+export type FaceBoxDto = {
   top: number;
   left: number;
   width: number;
   height: number;
-}
+};
 
-export interface FaceDto {
+export type FaceDto = {
   id?: number;
   /** @nullable */
   personId?: number | null;
@@ -86,9 +86,9 @@ export interface FaceDto {
   identityStatus?: IdentityStatusDto;
   /** @nullable */
   imageUrl?: string | null;
-}
+};
 
-export interface FilterDto {
+export type FilterDto = {
   page?: number;
   pageSize?: number;
   /** @nullable */
@@ -114,12 +114,12 @@ export interface FilterDto {
   personNames?: string[] | null;
   /** @nullable */
   tagNames?: string[] | null;
-}
+};
 
-export interface GeoPointDto {
+export type GeoPointDto = {
   latitude: number;
   longitude: number;
-}
+};
 
 export type IdentityStatusDto =
   (typeof IdentityStatusDto)[keyof typeof IdentityStatusDto];
@@ -134,40 +134,40 @@ export const IdentityStatusDto = {
   StopProcessing: 'StopProcessing',
 } as const;
 
-export interface LoginRequestDto {
+export type LoginRequestDto = {
   /** @nullable */
   email: string | null;
   /** @nullable */
   password: string | null;
   rememberMe: boolean;
-}
+};
 
-export interface LoginResponseDto {
+export type LoginResponseDto = {
   /** @nullable */
   token: string | null;
-}
+};
 
-export interface PathDto {
+export type PathDto = {
   storageId: number;
   /** @minLength 1 */
   path: string;
-}
+};
 
-export interface PersonDto {
+export type PersonDto = {
   id: number;
   /** @minLength 1 */
   name: string;
-}
+};
 
-export interface PersonGroupDto {
+export type PersonGroupDto = {
   id: number;
   /** @minLength 1 */
   name: string;
   /** @nullable */
   persons?: PersonDto[] | null;
-}
+};
 
-export interface PhotoDto {
+export type PhotoDto = {
   id: number;
   /** @minLength 1 */
   name: string;
@@ -189,9 +189,9 @@ export interface PhotoDto {
   racyScore?: number;
   height?: number;
   width?: number;
-}
+};
 
-export interface PhotoItemDto {
+export type PhotoItemDto = {
   id: number;
   /** @nullable */
   thumbnailUrl?: string | null;
@@ -214,21 +214,21 @@ export interface PhotoItemDto {
   persons?: number[] | null;
   /** @nullable */
   captions?: string[] | null;
-}
+};
 
-export interface PhotoItemDtoPageResponse {
+export type PhotoItemDtoPageResponse = {
   totalCount?: number;
   /** @nullable */
   items?: PhotoItemDto[] | null;
-}
+};
 
-export interface FaceDtoPageResponse {
+export type FaceDtoPageResponse = {
   totalCount?: number;
   /** @nullable */
   items?: FaceDto[] | null;
-}
+};
 
-export interface ProblemDetails {
+export type ProblemDetails = {
   /** @nullable */
   type?: string | null;
   /** @nullable */
@@ -240,69 +240,69 @@ export interface ProblemDetails {
   /** @nullable */
   instance?: string | null;
   [key: string]: unknown;
-}
+};
 
-export interface RegisterRequestDto {
+export type RegisterRequestDto = {
   /** @nullable */
   email: string | null;
   /** @nullable */
   password: string | null;
-}
+};
 
-export interface ResetPasswordDto {
+export type ResetPasswordDto = {
   /** @nullable */
   newPassword: string | null;
-}
+};
 
-export interface SetRolesDto {
+export type SetRolesDto = {
   /** @nullable */
   roles?: string[] | null;
-}
+};
 
-export interface StorageDto {
+export type StorageDto = {
   id: number;
   /** @minLength 1 */
   name: string;
-}
+};
 
-export interface TagDto {
+export type TagDto = {
   id: number;
   /** @minLength 1 */
   name: string;
-}
+};
 
-export interface TelegramExchangeRequest {
+export type TelegramExchangeRequest = {
   telegramUserId?: string;
   /** @nullable */
   username?: string | null;
-}
+};
 
-export interface TelegramExchangeResponse {
+export type TelegramExchangeResponse = {
   /** @nullable */
   accessToken?: string | null;
   expiresIn?: number;
-}
+};
 
-export interface TelegramSubscriptionDto {
+export type TelegramSubscriptionDto = {
   telegramUserId: string;
   telegramSendTimeUtc: string;
-}
+};
 
-export interface ThisDayDto {
+export type ThisDayDto = {
   day?: number;
   month?: number;
-}
+};
 
-export interface UpdateUserDto {
+export type UpdateUserDto = {
   /** @nullable */
   phoneNumber?: string | null;
   /** @nullable */
   telegramUserId?: string | null;
   /** @nullable */
   telegramSendTimeUtc?: string | null;
-}
+};
 
-export interface UserDto {
+export type UserDto = {
   /** @nullable */
   id: string | null;
   /** @nullable */
@@ -315,7 +315,7 @@ export interface UserDto {
   telegramSendTimeUtc?: string | null;
   /** @nullable */
   roles?: string[] | null;
-}
+};
 
 export type FacesGetFacesPageParams = {
   /**

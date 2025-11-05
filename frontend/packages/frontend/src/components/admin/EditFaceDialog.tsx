@@ -52,8 +52,6 @@ const normalizeIdentityStatus = (
     if (match) {
       return match;
     }
-
-    return value;
   }
 
   return validStatuses[0] ?? IdentityStatusDto.Undefined;
@@ -78,22 +76,10 @@ export function EditFaceDialog({ open, onOpenChange, face }: EditFaceDialogProps
     [personsResponse]
   );
 
-  const identityStatuses = useMemo<string[]>(() => {
-    const base: string[] = [...Object.values(IdentityStatusDto)];
-
-    if (face?.identityStatus) {
-      const alreadyPresent = base.some(
-        (status) =>
-          status.toLowerCase() === String(face.identityStatus).trim().toLowerCase()
-      );
-
-      if (!alreadyPresent) {
-        base.push(String(face.identityStatus));
-      }
-    }
-
-    return base;
-  }, [face?.identityStatus]);
+  const identityStatuses = useMemo<string[]>(
+    () => Object.values(IdentityStatusDto),
+    []
+  );
 
   useEffect(() => {
     if (!face) {
