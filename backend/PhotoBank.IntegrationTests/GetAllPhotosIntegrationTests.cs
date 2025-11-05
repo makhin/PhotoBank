@@ -46,7 +46,9 @@ public class GetAllPhotosIntegrationTests
 
         _config = new ConfigurationBuilder()
             .SetBasePath(TestContext.CurrentContext.TestDirectory)
-            .AddJsonFile("appsettings.Development.json")
+            .AddJsonFile("appsettings.json")
+            .AddJsonFile("appsettings.Development.example.json", optional: true)
+            .AddJsonFile("appsettings.Development.json", optional: true)
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Jwt:Issuer"] = "issuer",

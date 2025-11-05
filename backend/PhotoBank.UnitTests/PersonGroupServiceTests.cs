@@ -73,6 +73,7 @@ public class PersonGroupServiceTests
             .ReturnsAsync((string? key, int _, MediaUrlContext _, string? _, CancellationToken _) =>
                 string.IsNullOrEmpty(key) ? null : $"resolved-{key}");
         var s3Options = Options.Create(new S3Options());
+        var httpContextAccessor = new Mock<IHttpContextAccessor>();
 
         var photoFilterSpecification = new PhotoFilterSpecification(db);
 
@@ -100,8 +101,6 @@ public class PersonGroupServiceTests
             mapper,
             referenceDataService,
             NullLogger<PersonGroupService>.Instance);
-
-        var httpContextAccessor = new Mock<IHttpContextAccessor>();
 
         var faceCatalogService = new FaceCatalogService(
             faceRepository,
