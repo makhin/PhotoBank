@@ -123,6 +123,7 @@ public static partial class ServiceCollectionExtensions
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
 
         services.AddFluentValidationAutoValidation();
