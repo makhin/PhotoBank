@@ -40,10 +40,6 @@ const normalizeIdentityStatus = (value: unknown): IdentityStatusType => {
     }
   }
 
-  if (typeof value === 'number' && Number.isInteger(value)) {
-    return identityStatusValues[value] ?? IdentityStatusEnum.Undefined;
-  }
-
   return IdentityStatusEnum.Undefined;
 };
 
