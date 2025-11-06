@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Amazon.Rekognition.Model;
+using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NetTopologySuite;
@@ -20,13 +21,13 @@ namespace PhotoBank.Services
 
         public static List<int?> GetRectangleArray(Geometry geometry)
         {
-            return new List<int?>
-            {
+            return
+            [
                 0,
                 0,
-                (int?)(geometry.Coordinates[1].X - geometry.Coordinates[0].X),
-                (int?)(geometry.Coordinates[3].Y - geometry.Coordinates[0].Y)
-            };
+                (int?) (geometry.Coordinates[1].X - geometry.Coordinates[0].X),
+                (int?) (geometry.Coordinates[3].Y - geometry.Coordinates[0].Y)
+            ];
         }
 
         public static Geometry GetRectangle(uint imageHeight, uint imageWidth, BoundingBox boundingBox, double scale = 1)
@@ -37,14 +38,13 @@ namespace PhotoBank.Services
             var height = (int)(imageHeight * boundingBox.Height / scale);
 
             return GeometryFactory.CreatePolygon(
-                new[]
-                {
-                    new Coordinate(x, y),
+            [
+                new Coordinate(x, y),
                     new Coordinate(x + width, y),
                     new Coordinate(x + width, y + height),
                     new Coordinate(x, y + height),
                     new Coordinate(x, y)
-                });
+            ]);
         }
 
         public static Geometry GetRectangle(BoundingRect rectangle, double scale = 1)
@@ -55,14 +55,13 @@ namespace PhotoBank.Services
             var h = (int)(rectangle.H / scale);
 
             return GeometryFactory.CreatePolygon(
-                new[]
-                {
-                    new Coordinate(x, y),
+            [
+                new Coordinate(x, y),
                     new Coordinate(x + h, y),
                     new Coordinate(x + h, y + w),
                     new Coordinate(x, y + w),
                     new Coordinate(x, y)
-                });
+            ]);
         }
         
         public static Geometry GetRectangle(FaceRectangle rectangle, in double scale = 1)
@@ -73,23 +72,23 @@ namespace PhotoBank.Services
             int height = (int)(rectangle.Height / scale);
 
             return GeometryFactory.CreatePolygon(
-                new[]
-                {
-                    new Coordinate(left, top),
+            [
+                new Coordinate(left, top),
                     new Coordinate(left + width, top),
                     new Coordinate(left + width, top + height),
                     new Coordinate(left, top + height),
-                    new Coordinate(left, top),
-                });
+                    new Coordinate(left, top)
+            ]);
         }
         
-        public static Point GetLocation(GpsDirectory gpsDirectory)
+        public static Point? GetLocation(GpsDirectory gpsDirectory)
         {
-            var location = gpsDirectory.GetGeoLocation();
-            return location != null ? GeometryFactory.CreatePoint(new Coordinate(location.Latitude, location.Longitude)) : null;
+            if (gpsDirectory.TryGetGeoLocation(out var location))
+                return GeometryFactory.CreatePoint(new Coordinate(location.Latitude, location.Longitude));
+            return null;
         }
 
-        public static Geometry GetRectangle(Microsoft.Azure.CognitiveServices.Vision.Face.Models.FaceRectangle rectangle, in double scale)
+        public static Geometry GetRectangle(Microsoft.Azure.CognitiveServices.Vision.Face.Models.FaceRectangle rectangle, in double scale = 1)
         {
             int left = (int)(rectangle.Left / scale);
             int top = (int)(rectangle.Top / scale);
@@ -97,14 +96,13 @@ namespace PhotoBank.Services
             int height = (int)(rectangle.Height / scale);
 
             return GeometryFactory.CreatePolygon(
-                new[]
-                {
-                    new Coordinate(left, top),
+            [
+                new Coordinate(left, top),
                     new Coordinate(left + width, top),
                     new Coordinate(left + width, top + height),
                     new Coordinate(left, top + height),
-                    new Coordinate(left, top),
-                });
+                    new Coordinate(left, top)
+            ]);
         }
     }
 }

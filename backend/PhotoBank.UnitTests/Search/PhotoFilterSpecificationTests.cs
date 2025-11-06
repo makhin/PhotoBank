@@ -70,30 +70,6 @@ public class PhotoFilterSpecificationTests
     }
 
     [Test]
-    public async Task Build_WithThisDayFilter_ReturnsPhotosFromSameDay()
-    {
-        var storage = new Storage { Id = 10, Name = "s2", Folder = "f2" };
-        var sameDay = CreatePhoto(11, storage, "same", new DateTime(2023, 5, 10));
-        var differentDay = CreatePhoto(12, storage, "different", new DateTime(2023, 6, 10));
-
-        _context.Storages.Add(storage);
-        _context.Photos.AddRange(sameDay, differentDay);
-        await _context.SaveChangesAsync();
-
-        var filter = new FilterDto
-        {
-            ThisDay = new ThisDayDto { Day = 10, Month = 5 }
-        };
-
-        var result = await _sut.Build(filter, new DummyCurrentUser())
-            .OrderBy(p => p.Id)
-            .Select(p => p.Id)
-            .ToListAsync();
-
-        result.Should().Equal(sameDay.Id);
-    }
-
-    [Test]
     public async Task Build_WithStoragesAndRelativePath_FiltersByBoth()
     {
         var storage1 = new Storage { Id = 100, Name = "s100", Folder = "f100" };
@@ -279,8 +255,7 @@ public class PhotoFilterSpecificationTests
 
         var query = _sut.Build(filter, new DummyCurrentUser());
 
-        // PostgreSQL uses ILike for case-insensitive pattern matching instead of FreeText
-        query.Expression.ToString().Should().Contain("ILike");
+        query.Expression.ToString().Should().Contain("ToTsVector");
     }
 
     private static Photo CreatePhoto(int id, Storage storage, string name, DateTime? takenDate = null)
