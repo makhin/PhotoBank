@@ -172,8 +172,15 @@ public class AuthServiceTests
 
         var userManager = IdentityTestHelpers.CreateUserManager(db);
         var signInManager = IdentityTestHelpers.CreateSignInManager(userManager);
-        var tokenService = Mock.Of<ITokenService>();
 
-        return new AuthService(userManager, signInManager, tokenService, new TelegramServiceKeyValidator(configuration));
+        var tokenServiceMock = new Mock<ITokenService>();
+        tokenServiceMock
+            .Setup(ts => ts.CreateToken(
+                It.IsAny<ApplicationUser>(),
+                It.IsAny<bool>(),
+                It.IsAny<IEnumerable<Claim>>()))
+            .Returns("test_token");
+
+        return new AuthService(userManager, signInManager, tokenServiceMock.Object, new TelegramServiceKeyValidator(configuration));
     }
 }
