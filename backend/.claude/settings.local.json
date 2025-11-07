@@ -5,7 +5,13 @@
       "Bash(dotnet test:*)",
       "Bash(dotnet build:*)",
       "Bash(dotnet list:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(.generateApi.bat)",
+      "Bash(cmd /c generateApi.bat)",
+      "Bash(set:*)",
+      "Bash(dotnet swagger tofile:*)",
+      "Bash(powershell:*)",
+      "Bash(dotnet tool list:*)"
     ],
     "deny": [],
     "ask": []

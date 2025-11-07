@@ -379,10 +379,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TelegramExchangeResponse'
+                $ref: '#/components/schemas/TelegramExchangeResponseDto'
             text/json:
               schema:
-                $ref: '#/components/schemas/TelegramExchangeResponse'
+                $ref: '#/components/schemas/TelegramExchangeResponseDto'
         '401':
           description: Unauthorized
           content:
@@ -413,22 +413,20 @@ paths:
     get:
       tags:
         - Faces
-      operationId: Faces_GetFacesPage
+      operationId: Faces_GetAll
       parameters:
         - name: page
           in: query
           schema:
             type: integer
             format: int32
-            minimum: 1
-          description: Page number (1-based)
+            default: 1
         - name: pageSize
           in: query
           schema:
             type: integer
             format: int32
-            minimum: 1
-          description: Page size
+            default: 20
       responses:
         '200':
           description: OK
@@ -1258,6 +1256,18 @@ components:
           type: string
           nullable: true
       additionalProperties: false
+    FaceDtoPageResponse:
+      type: object
+      properties:
+        totalCount:
+          type: integer
+          format: int32
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FaceDto'
+          nullable: true
+      additionalProperties: false
     FilterDto:
       type: object
       properties:
@@ -1531,18 +1541,6 @@ components:
             $ref: '#/components/schemas/PhotoItemDto'
           nullable: true
       additionalProperties: false
-    FaceDtoPageResponse:
-      type: object
-      properties:
-        totalCount:
-          type: integer
-          format: int32
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/FaceDto'
-          nullable: true
-      additionalProperties: false
     ProblemDetails:
       type: object
       properties:
@@ -1625,11 +1623,18 @@ components:
       properties:
         telegramUserId:
           type: string
+          nullable: true
         username:
           type: string
           nullable: true
+        languageCode:
+          type: string
+          nullable: true
       additionalProperties: false
-    TelegramExchangeResponse:
+    TelegramExchangeResponseDto:
+      required:
+        - accessToken
+        - expiresIn
       type: object
       properties:
         accessToken:
@@ -1647,6 +1652,7 @@ components:
       properties:
         telegramUserId:
           type: string
+          nullable: true
         telegramSendTimeUtc:
           type: string
           format: date-span
@@ -1706,7 +1712,7 @@ components:
   securitySchemes:
     Bearer:
       type: http
-      description: 'Введите токен JWT так: Bearer {токен}'
+      description: 'Ââåäèòå òîêåí JWT òàê: Bearer {òîêåí}'
       scheme: bearer
       bearerFormat: JWT
 security:
