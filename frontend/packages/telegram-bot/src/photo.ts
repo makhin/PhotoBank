@@ -5,6 +5,7 @@ import type { PhotoDto } from '@photobank/shared/api/photobank';
 import { formatPhotoMessage } from './formatPhotoMessage';
 import type { MyContext } from './i18n';
 import { getPhoto } from './services/photo';
+import { API_BASE_URL } from './config';
 
 export const photoMessages = new Map<number, number>();
 export const currentPagePhotos = new Map<
@@ -42,6 +43,18 @@ function deriveFilename(photo: PhotoDto, imageUrl: string): string | undefined {
   return extractFilenameFromUrl(imageUrl);
 }
 
+function resolveImageUrl(imageUrl: string): string {
+  // Если URL относительный (начинается с /), преобразуем его в абсолютный
+  if (imageUrl.startsWith('/')) {
+    const baseUrl = API_BASE_URL || '';
+    // Убираем trailing slash из baseUrl, если есть
+    const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    return `${normalizedBase}${imageUrl}`;
+  }
+  // Если URL уже абсолютный, возвращаем как есть
+  return imageUrl;
+}
+
 export async function loadPhotoFile(photo: PhotoDto): Promise<{
   caption: string;
   hasSpoiler: boolean;
@@ -53,7 +66,9 @@ export async function loadPhotoFile(photo: PhotoDto): Promise<{
   }
 
   try {
-    const response = await fetch(imageUrl);
+    // Преобразуем относительный URL в абсолютный для серверного fetch
+    const absoluteUrl = resolveImageUrl(imageUrl);
+    const response = await fetch(absoluteUrl);
     if (!response.ok) {
       throw new Error(`Failed to load preview: ${response.status}`);
     }

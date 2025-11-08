@@ -60,6 +60,25 @@ describe('loadPhotoFile', () => {
     expect(result.hasSpoiler).toBe(false);
   });
 
+  it('converts relative paths to absolute URLs using API_BASE_URL', async () => {
+    vi.doMock('./config', () => ({
+      API_BASE_URL: 'https://api.example.com',
+    }));
+
+    const bytes = new Uint8Array([1, 2, 3]);
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async () => new Response(bytes, { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await loadPhotoFile(
+      createPhoto({ previewUrl: '/minio/photobank/photo.jpg' })
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith('https://api.example.com/minio/photobank/photo.jpg');
+    expect(result.photoFile).toBeInstanceOf(InputFile);
+  });
+
   it('derives filename from photo name when missing extension', async () => {
     const bytes = new Uint8Array([4, 5, 6]);
     const fetchMock = vi
