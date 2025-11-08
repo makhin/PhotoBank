@@ -1,16 +1,16 @@
 services:
   postgres:
-    image: kartoza/postgis:16-3.4
+    image: makhin/postgis16-arm64:latest
     container_name: postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: alexandr
       POSTGRES_PASSWORD: 12345678
-      POSTGRES_DB: appdb
+      POSTGRES_DB: photobank
     ports:
       - "5432:5432"
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - ./database:/var/lib/postgresql/data
     platform: linux/arm64
     networks:
       - web
@@ -26,10 +26,10 @@ services:
     environment:
       MINIO_ROOT_USER: alexandr
       MINIO_ROOT_PASSWORD: 12345678
-      MINIO_BROWSER_REDIRECT_URL: "http://makhin.ddns.net:9011"
-      MINIO_SERVER_URL: "http://makhin.ddns.net:9010"
+      MINIO_BROWSER_REDIRECT_URL: "http://raspberrypi.local:9011"
+      MINIO_SERVER_URL: "http://raspberrypi.local:9010"
     volumes:
-      - /srv/minio/data:/data
+      - ./minio/data:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9010/minio/health/ready"]
       interval: 15s
@@ -103,19 +103,16 @@ services:
     ports:
       - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./proxy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - /etc/letsencrypt/live/makhin.ddns.net/fullchain.pem:/etc/ssl/certs/makhin.crt:ro
       - /etc/letsencrypt/live/makhin.ddns.net/privkey.pem:/etc/ssl/private/makhin.key:ro
-      - ./certs/raspberry.crt:/etc/ssl/certs/raspberry.crt:ro
-      - ./certs/raspberry.key:/etc/ssl/private/raspberry.key:ro
+      - ./proxy/certs/raspberry.crt:/etc/ssl/certs/raspberry.crt:ro
+      - ./proxy/certs/raspberry.key:/etc/ssl/private/raspberry.key:ro
     depends_on:
       - frontend
     restart: unless-stopped
     networks:
       - web
-
-volumes:
-  pgdata:
 
 networks:
   web:

@@ -11,7 +11,8 @@
       "Bash(set:*)",
       "Bash(dotnet swagger tofile:*)",
       "Bash(powershell:*)",
-      "Bash(dotnet tool list:*)"
+      "Bash(dotnet tool list:*)",
+      "Read(//c/PhotoBank/**)"
     ],
     "deny": [],
     "ask": []
