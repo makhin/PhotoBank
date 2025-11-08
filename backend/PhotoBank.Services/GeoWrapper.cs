@@ -19,6 +19,21 @@ namespace PhotoBank.Services
             GeometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
         }
 
+        /// <summary>
+        /// Создает прямоугольный полигон по координатам и размерам
+        /// </summary>
+        private static Geometry CreateRectanglePolygon(int x, int y, int width, int height)
+        {
+            return GeometryFactory.CreatePolygon(
+            [
+                new Coordinate(x, y),
+                new Coordinate(x + width, y),
+                new Coordinate(x + width, y + height),
+                new Coordinate(x, y + height),
+                new Coordinate(x, y)
+            ]);
+        }
+
         public static List<int?> GetRectangleArray(Geometry geometry)
         {
             return
@@ -37,50 +52,29 @@ namespace PhotoBank.Services
             var width = (int)(imageWidth * boundingBox.Width / scale);
             var height = (int)(imageHeight * boundingBox.Height / scale);
 
-            return GeometryFactory.CreatePolygon(
-            [
-                new Coordinate(x, y),
-                    new Coordinate(x + width, y),
-                    new Coordinate(x + width, y + height),
-                    new Coordinate(x, y + height),
-                    new Coordinate(x, y)
-            ]);
+            return CreateRectanglePolygon(x, y, width, height);
         }
 
         public static Geometry GetRectangle(BoundingRect rectangle, double scale = 1)
         {
             var x = (int)(rectangle.X / scale);
             var y = (int)(rectangle.Y / scale);
-            var w = (int)(rectangle.W / scale);
-            var h = (int)(rectangle.H / scale);
+            var width = (int)(rectangle.W / scale);
+            var height = (int)(rectangle.H / scale);
 
-            return GeometryFactory.CreatePolygon(
-            [
-                new Coordinate(x, y),
-                    new Coordinate(x + h, y),
-                    new Coordinate(x + h, y + w),
-                    new Coordinate(x, y + w),
-                    new Coordinate(x, y)
-            ]);
+            return CreateRectanglePolygon(x, y, width, height);
         }
-        
+
         public static Geometry GetRectangle(FaceRectangle rectangle, in double scale = 1)
         {
-            int left = (int)(rectangle.Left / scale);
-            int top = (int)(rectangle.Top / scale);
-            int width = (int)(rectangle.Width / scale);
-            int height = (int)(rectangle.Height / scale);
+            var left = (int)(rectangle.Left / scale);
+            var top = (int)(rectangle.Top / scale);
+            var width = (int)(rectangle.Width / scale);
+            var height = (int)(rectangle.Height / scale);
 
-            return GeometryFactory.CreatePolygon(
-            [
-                new Coordinate(left, top),
-                    new Coordinate(left + width, top),
-                    new Coordinate(left + width, top + height),
-                    new Coordinate(left, top + height),
-                    new Coordinate(left, top)
-            ]);
+            return CreateRectanglePolygon(left, top, width, height);
         }
-        
+
         public static Point? GetLocation(GpsDirectory gpsDirectory)
         {
             if (gpsDirectory.TryGetGeoLocation(out var location))
@@ -90,19 +84,12 @@ namespace PhotoBank.Services
 
         public static Geometry GetRectangle(Microsoft.Azure.CognitiveServices.Vision.Face.Models.FaceRectangle rectangle, in double scale = 1)
         {
-            int left = (int)(rectangle.Left / scale);
-            int top = (int)(rectangle.Top / scale);
-            int width = (int)(rectangle.Width / scale);
-            int height = (int)(rectangle.Height / scale);
+            var left = (int)(rectangle.Left / scale);
+            var top = (int)(rectangle.Top / scale);
+            var width = (int)(rectangle.Width / scale);
+            var height = (int)(rectangle.Height / scale);
 
-            return GeometryFactory.CreatePolygon(
-            [
-                new Coordinate(left, top),
-                    new Coordinate(left + width, top),
-                    new Coordinate(left + width, top + height),
-                    new Coordinate(left, top + height),
-                    new Coordinate(left, top)
-            ]);
+            return CreateRectanglePolygon(left, top, width, height);
         }
     }
 }
