@@ -67,8 +67,15 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<IEnricher, TagEnricher>();
         services.AddTransient<IEnricher, ObjectPropertyEnricher>();
         services.AddTransient<IEnricher, AdultEnricher>();
+
+        // Face enrichers - use UnifiedFaceEnricher for new code
+        services.AddTransient<IEnricher, UnifiedFaceEnricher>();
+        // Legacy enrichers - kept for backward compatibility, will be removed in future versions
+#pragma warning disable CS0618 // Type or member is obsolete
         services.AddTransient<IEnricher, FaceEnricher>();
         services.AddTransient<IEnricher, FaceEnricherAws>();
+#pragma warning restore CS0618 // Type or member is obsolete
+
         services.AddTransient<IImageMetadataReaderWrapper, ImageMetadataReaderWrapper>();
         services.AddFaceRecognition(configuration);
         services.AddScoped<UnifiedFaceService>();
