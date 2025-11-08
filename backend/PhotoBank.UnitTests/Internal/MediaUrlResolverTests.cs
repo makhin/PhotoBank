@@ -31,39 +31,30 @@ public sealed class MediaUrlResolverTests
     }
 
     [Test]
-    public async Task ResolveAsync_ReturnsUrl_WhenPresignedSuccessfully()
+    public async Task ResolveAsync_ReturnsRelativePath_WhenKeyIsProvided()
     {
-        const string expectedUrl = "https://example.com/object";
         var minioClient = new Mock<IMinioClient>();
-        minioClient
-            .Setup(c => c.PresignedGetObjectAsync(It.IsAny<PresignedGetObjectArgs>()))
-            .ReturnsAsync(expectedUrl);
         var logger = new TestLogger<MediaUrlResolver>();
-        var resolver = new MediaUrlResolver(minioClient.Object, Options.Create(new S3Options { Bucket = "bucket" }), logger);
+        var resolver = new MediaUrlResolver(minioClient.Object, Options.Create(new S3Options { Bucket = "photobank" }), logger);
 
-        var result = await resolver.ResolveAsync("object-key", 120, MediaUrlContext.ForPhoto(10));
+        var result = await resolver.ResolveAsync("photos/image.jpg", 120, MediaUrlContext.ForPhoto(10));
 
-        result.Should().Be(expectedUrl);
-        logger.Entries.Should().BeEmpty();
-        minioClient.Verify(c => c.PresignedGetObjectAsync(It.IsAny<PresignedGetObjectArgs>()), Times.Once);
+        result.Should().Be("/minio/photobank/photos/image.jpg");
+        logger.Entries.Should().ContainSingle();
+        logger.Entries[0].Level.Should().Be(LogLevel.Debug);
     }
 
     [Test]
-    public async Task ResolveAsync_LogsWarningAndReturnsNull_WhenPresignedFails()
+    public async Task ResolveAsync_ReturnsRelativePath_WithCorrectBucket()
     {
         var minioClient = new Mock<IMinioClient>();
-        minioClient
-            .Setup(c => c.PresignedGetObjectAsync(It.IsAny<PresignedGetObjectArgs>()))
-            .ThrowsAsync(new InvalidOperationException("boom"));
         var logger = new TestLogger<MediaUrlResolver>();
-        var resolver = new MediaUrlResolver(minioClient.Object, Options.Create(new S3Options { Bucket = "bucket" }), logger);
+        var resolver = new MediaUrlResolver(minioClient.Object, Options.Create(new S3Options { Bucket = "custom-bucket" }), logger);
 
         var result = await resolver.ResolveAsync("object-key", 120, MediaUrlContext.ForFace(99, 5));
 
-        result.Should().BeNull();
+        result.Should().Be("/minio/custom-bucket/object-key");
         logger.Entries.Should().ContainSingle();
-        logger.Entries[0].Level.Should().Be(LogLevel.Warning);
-        logger.Entries[0].Message.Should().Contain("Failed to generate presigned URL");
-        logger.Entries[0].Exception.Should().BeOfType<InvalidOperationException>();
+        logger.Entries[0].Level.Should().Be(LogLevel.Debug);
     }
 }
