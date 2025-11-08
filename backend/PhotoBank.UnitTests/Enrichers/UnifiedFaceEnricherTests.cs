@@ -105,8 +105,8 @@ public class UnifiedFaceEnricherTests
 
         var detectedFaces = new List<DetectedFaceDto>
         {
-            new DetectedFaceDto("face1", 0.95f, 25f, "Female"),
-            new DetectedFaceDto("face2", 0.92f, 35f, "Male")
+            new DetectedFaceDto("face1", 0.95f, 25f, "Female", new FaceBoundingBox(0.1f, 0.1f, 0.2f, 0.2f)),
+            new DetectedFaceDto("face2", 0.92f, 35f, "Male", new FaceBoundingBox(0.5f, 0.5f, 0.2f, 0.2f))
         };
 
         _mockFaceService
@@ -125,11 +125,47 @@ public class UnifiedFaceEnricherTests
         photo.Faces[0].Age.Should().Be(25f);
         photo.Faces[0].Gender.Should().BeFalse(); // Female
         photo.Faces[0].IdentityStatus.Should().Be(IdentityStatus.NotIdentified);
+        photo.Faces[0].Rectangle.Should().NotBeNull(); // Rectangle should be set from BoundingBox
 
         photo.Faces[1].PhotoId.Should().Be(123);
         photo.Faces[1].Age.Should().Be(35f);
         photo.Faces[1].Gender.Should().BeTrue(); // Male
         photo.Faces[1].IdentityStatus.Should().Be(IdentityStatus.NotIdentified);
+        photo.Faces[1].Rectangle.Should().NotBeNull(); // Rectangle should be set from BoundingBox
+    }
+
+    [Test]
+    public async Task EnrichAsync_FaceWithBoundingBox_CreatesRectangleGeometry()
+    {
+        // Arrange
+        var photo = new Photo { Id = 123, Scale = 1.0 };
+        var sourceData = new SourceDataDto
+        {
+            PreviewImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+        };
+
+        var detectedFaces = new List<DetectedFaceDto>
+        {
+            new DetectedFaceDto("face1", 0.95f, 25f, "Female", new FaceBoundingBox(0.1f, 0.2f, 0.3f, 0.4f))
+        };
+
+        _mockFaceService
+            .Setup(s => s.DetectFacesAsync(It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(detectedFaces);
+
+        // Act
+        await _enricher.EnrichAsync(photo, sourceData);
+
+        // Assert
+        photo.Faces.Should().HaveCount(1);
+        var face = photo.Faces[0];
+        face.Rectangle.Should().NotBeNull();
+        face.Rectangle!.Coordinates.Should().HaveCount(5); // Rectangle has 5 coordinates (closed polygon)
+
+        // Verify the Rectangle coordinates match the bounding box
+        // BoundingBox(0.1, 0.2, 0.3, 0.4) on 100x100 image = (10, 20, 30, 40)
+        face.Rectangle.Coordinates[0].X.Should().Be(10);
+        face.Rectangle.Coordinates[0].Y.Should().Be(20);
     }
 
     [Test]
@@ -144,7 +180,7 @@ public class UnifiedFaceEnricherTests
 
         var detectedFaces = new List<DetectedFaceDto>
         {
-            new DetectedFaceDto("face1", 0.95f, 25f, null)
+            new DetectedFaceDto("face1", 0.95f, 25f, null, new FaceBoundingBox(0.1f, 0.1f, 0.2f, 0.2f))
         };
 
         _mockFaceService

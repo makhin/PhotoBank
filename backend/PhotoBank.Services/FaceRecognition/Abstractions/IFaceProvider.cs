@@ -11,7 +11,19 @@ public enum FaceProviderKind { Azure, Aws, Local }
 public sealed record PersonSyncItem(int PersonId, string Name, string? ExternalId);
 public sealed record FaceToLink(int FaceId, Func<Stream> OpenStream, string? ExternalId);
 
-public sealed record DetectedFaceDto(string ProviderFaceId, float? Confidence, float? Age, string? Gender);
+/// <summary>
+/// Unified bounding box representation for face detection across all providers.
+/// All values are normalized (0.0 to 1.0) relative to image dimensions.
+/// </summary>
+public sealed record FaceBoundingBox(float Left, float Top, float Width, float Height);
+
+public sealed record DetectedFaceDto(
+    string ProviderFaceId,
+    float? Confidence,
+    float? Age,
+    string? Gender,
+    FaceBoundingBox? BoundingBox);
+
 public sealed record IdentifyCandidateDto(string ProviderPersonId, float Confidence);
 public sealed record IdentifyResultDto(string ProviderFaceId, IReadOnlyList<IdentifyCandidateDto> Candidates);
 public sealed record UserMatchDto(string ProviderPersonId, float Confidence);

@@ -96,9 +96,7 @@ public class UnifiedFaceEnricher : IEnricher
         FaceRecognition.Abstractions.DetectedFaceDto detectedFace,
         CancellationToken cancellationToken)
     {
-        // Create face preview - we need to convert from provider-specific format
-        // For now, we'll use a simple approach - in future iterations, this can be enhanced
-        // to use bounding box from DetectedFaceDto when available
+        // Create face preview
         byte[] facePreviewBytes = await CreateFacePreviewAsync(sourceData.PreviewImage, detectedFace);
         sourceData.FaceImages.Add(facePreviewBytes);
 
@@ -106,9 +104,13 @@ public class UnifiedFaceEnricher : IEnricher
         {
             PhotoId = photo.Id,
             IdentityStatus = IdentityStatus.NotIdentified,
-            // Rectangle will need to be set based on provider-specific data
-            // For now, we'll leave it null - this is a known limitation that should be addressed
-            Rectangle = null,
+            Rectangle = detectedFace.BoundingBox != null
+                ? GeoWrapper.GetRectangle(
+                    detectedFace.BoundingBox,
+                    sourceData.PreviewImage.Width,
+                    sourceData.PreviewImage.Height,
+                    photo.Scale)
+                : null,
             Age = detectedFace.Age,
             Gender = ConvertGender(detectedFace.Gender),
             Smile = null, // Not all providers return smile
@@ -117,28 +119,50 @@ public class UnifiedFaceEnricher : IEnricher
                 detectedFace.ProviderFaceId,
                 detectedFace.Confidence,
                 detectedFace.Age,
-                detectedFace.Gender
+                detectedFace.Gender,
+                detectedFace.BoundingBox
             })
         };
 
         photo.Faces.Add(face);
 
         _logger.LogDebug(
-            "Processed face {FaceId} for photo {PhotoId}: Age={Age}, Gender={Gender}, Confidence={Confidence}",
-            detectedFace.ProviderFaceId, photo.Id, detectedFace.Age, detectedFace.Gender, detectedFace.Confidence);
+            "Processed face {FaceId} for photo {PhotoId}: Age={Age}, Gender={Gender}, Confidence={Confidence}, HasBoundingBox={HasBoundingBox}",
+            detectedFace.ProviderFaceId, photo.Id, detectedFace.Age, detectedFace.Gender, detectedFace.Confidence, detectedFace.BoundingBox != null);
     }
 
     private async Task<byte[]> CreateFacePreviewAsync(
         IMagickImage<byte> previewImage,
         FaceRecognition.Abstractions.DetectedFaceDto detectedFace)
     {
-        // TODO: Use bounding box from detectedFace when it's added to DetectedFaceDto
-        // For now, return the whole preview image as a temporary solution
-        // This is a known limitation that will be addressed in future iterations
+        if (detectedFace.BoundingBox != null)
+        {
+            // Crop the face from the preview image using the bounding box
+            using var memoryStream = new System.IO.MemoryStream();
+            var faceImage = previewImage.Clone();
 
-        using var memoryStream = new System.IO.MemoryStream();
-        await previewImage.WriteAsync(memoryStream);
-        return memoryStream.ToArray();
+            var bbox = detectedFace.BoundingBox;
+            var width = (uint)(previewImage.Width * bbox.Width);
+            var height = (uint)(previewImage.Height * bbox.Height);
+            var left = (int)(previewImage.Width * bbox.Left);
+            var top = (int)(previewImage.Height * bbox.Top);
+
+            var geometry = new MagickGeometry(width, height)
+            {
+                IgnoreAspectRatio = true,
+                X = left,
+                Y = top
+            };
+
+            faceImage.Crop(geometry);
+            await faceImage.WriteAsync(memoryStream);
+            return memoryStream.ToArray();
+        }
+
+        // Fallback: return the whole preview image if no bounding box is available
+        using var fallbackStream = new System.IO.MemoryStream();
+        await previewImage.WriteAsync(fallbackStream);
+        return fallbackStream.ToArray();
     }
 
     private static bool? ConvertGender(string? gender)

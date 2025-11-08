@@ -116,7 +116,14 @@ public sealed class AzureFaceProvider : IFaceProvider
             ProviderFaceId: f.FaceId?.ToString() ?? "",
             Confidence: null,
             Age: (float?)f.FaceAttributes?.Age,
-            Gender: f.FaceAttributes?.Gender?.ToString())).ToList() ?? [];
+            Gender: f.FaceAttributes?.Gender?.ToString(),
+            BoundingBox: f.FaceRectangle != null
+                ? new FaceBoundingBox(
+                    Left: f.FaceRectangle.Left,
+                    Top: f.FaceRectangle.Top,
+                    Width: f.FaceRectangle.Width,
+                    Height: f.FaceRectangle.Height)
+                : null)).ToList() ?? [];
     }
 
     public async Task<IReadOnlyList<IdentifyResultDto>> IdentifyAsync(IReadOnlyList<string> providerFaceIds, CancellationToken ct)

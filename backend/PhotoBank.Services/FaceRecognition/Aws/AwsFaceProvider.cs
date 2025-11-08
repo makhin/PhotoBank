@@ -154,7 +154,18 @@ public sealed class AwsFaceProvider : IFaceProvider
 
         // У DetectFaces нет глобального FaceId — оставим пустой
         return resp.FaceDetails?.Select(fd =>
-            new DetectedFaceDto(ProviderFaceId: "", Confidence: fd.Confidence, Age: (fd.AgeRange?.Low + fd.AgeRange?.High) / 2f, Gender: fd.Gender?.Value))
+            new DetectedFaceDto(
+                ProviderFaceId: "",
+                Confidence: fd.Confidence,
+                Age: (fd.AgeRange?.Low + fd.AgeRange?.High) / 2f,
+                Gender: fd.Gender?.Value,
+                BoundingBox: fd.BoundingBox != null
+                    ? new FaceBoundingBox(
+                        Left: fd.BoundingBox.Left,
+                        Top: fd.BoundingBox.Top,
+                        Width: fd.BoundingBox.Width,
+                        Height: fd.BoundingBox.Height)
+                    : null))
             .ToList() ?? new List<DetectedFaceDto>();
     }
 

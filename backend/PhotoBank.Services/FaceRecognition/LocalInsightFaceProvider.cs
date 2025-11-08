@@ -60,7 +60,18 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
     public async Task<IReadOnlyList<DetectedFaceDto>> DetectAsync(Stream image, CancellationToken ct)
     {
         var resp = await _client.DetectAsync(image, ct);
-        return resp.Faces.Select(f => new DetectedFaceDto(f.Id ?? string.Empty, f.Score, f.Age, f.Gender)).ToList();
+        return resp.Faces.Select(f => new DetectedFaceDto(
+            ProviderFaceId: f.Id ?? string.Empty,
+            Confidence: f.Score,
+            Age: f.Age,
+            Gender: f.Gender,
+            BoundingBox: f.Bbox != null && f.Bbox.Length >= 4
+                ? new FaceBoundingBox(
+                    Left: f.Bbox[0],
+                    Top: f.Bbox[1],
+                    Width: f.Bbox[2] - f.Bbox[0],
+                    Height: f.Bbox[3] - f.Bbox[1])
+                : null)).ToList();
     }
 
     public Task<IReadOnlyList<IdentifyResultDto>> IdentifyAsync(IReadOnlyList<string> providerFaceIds, CancellationToken ct)
