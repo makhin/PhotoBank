@@ -26,8 +26,8 @@ services:
     environment:
       MINIO_ROOT_USER: alexandr
       MINIO_ROOT_PASSWORD: 12345678
-      MINIO_BROWSER_REDIRECT_URL: "http://raspberrypi.local:9011"
-      MINIO_SERVER_URL: "http://raspberrypi.local:9010"
+      MINIO_BROWSER_REDIRECT_URL: "https://makhin.ddns.net/minio"
+      MINIO_SERVER_URL: "https://makhin.ddns.net/minio"
     volumes:
       - ./minio/data:/data
     healthcheck:
