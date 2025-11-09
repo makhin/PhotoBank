@@ -129,7 +129,7 @@ export async function restoreSubscriptions(bot: Bot<MyContext>): Promise<void> {
     }
 
     const normalizedTime = normalizeSubscriptionTime(entry.telegramSendTimeUtc);
-    if (!normalizedTime) {
+    if (normalizedTime === null) {
       logger.warn('Skipping restored subscription due to invalid time', entry);
       continue;
     }
