@@ -240,7 +240,8 @@ public class AzureFaceProviderTests
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
 
-        var faces = new[] { new FaceToLink(42, async () => await CreateTestImageAsync(), null) };
+        using var testImage = await CreateTestImageAsync();
+        var faces = new[] { new FaceToLink(42, () => testImage, null) };
         var result = await provider.LinkFacesToPersonAsync(10, faces, CancellationToken.None);
 
         addFaceRequest.Should().NotBeNull();
@@ -290,7 +291,8 @@ public class AzureFaceProviderTests
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
 
-        var faces = new[] { new FaceToLink(42, async () => await CreateTestImageAsync(), null) };
+        using var testImage = await CreateTestImageAsync();
+        var faces = new[] { new FaceToLink(42, () => testImage, null) };
         await provider.LinkFacesToPersonAsync(10, faces, CancellationToken.None);
 
         logger.Entries.Should().Contain(e => e.Level == LogLevel.Warning && e.Message.Contains("Azure training timeout", StringComparison.Ordinal));
