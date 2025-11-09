@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ImageMagick;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Microsoft.Extensions.Logging;
@@ -102,6 +103,16 @@ public sealed class AzureFaceProvider : IFaceProvider
 
     public async Task<IReadOnlyList<DetectedFaceDto>> DetectAsync(Stream image, CancellationToken ct)
     {
+        // First, get image dimensions by loading it with ImageMagick
+        image.Position = 0;
+        uint imageWidth, imageHeight;
+        using (var magickImage = new MagickImage(image))
+        {
+            imageWidth = magickImage.Width;
+            imageHeight = magickImage.Height;
+        }
+
+        // Reset stream position and call Azure Face API
         image.Position = 0;
         var faces = await _client.Face.DetectWithStreamAsync(
             image,
@@ -112,6 +123,7 @@ public sealed class AzureFaceProvider : IFaceProvider
             returnFaceAttributes: _opts.DetectionModel.Equals("detection_02", StringComparison.OrdinalIgnoreCase) ? null : DefaultAttrs,
             cancellationToken: ct);
 
+        // Azure returns ABSOLUTE pixel coordinates, we need to normalize them (0.0-1.0)
         return faces?.Select(f => new DetectedFaceDto(
             ProviderFaceId: f.FaceId?.ToString() ?? "",
             Confidence: null,
@@ -119,10 +131,10 @@ public sealed class AzureFaceProvider : IFaceProvider
             Gender: f.FaceAttributes?.Gender?.ToString(),
             BoundingBox: f.FaceRectangle != null
                 ? new FaceBoundingBox(
-                    Left: f.FaceRectangle.Left,
-                    Top: f.FaceRectangle.Top,
-                    Width: f.FaceRectangle.Width,
-                    Height: f.FaceRectangle.Height)
+                    Left: f.FaceRectangle.Left / (float)imageWidth,
+                    Top: f.FaceRectangle.Top / (float)imageHeight,
+                    Width: f.FaceRectangle.Width / (float)imageWidth,
+                    Height: f.FaceRectangle.Height / (float)imageHeight)
                 : null)).ToList() ?? [];
     }
 
