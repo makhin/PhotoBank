@@ -125,7 +125,11 @@ export default function AccessProfilesPage() {
             </CardContent>
           </Card>
         ) : (
-          <AccessProfilesGrid profiles={filteredProfiles} onEditProfile={handleEditProfile} />
+          <AccessProfilesGrid
+            profiles={filteredProfiles}
+            onEditProfile={handleEditProfile}
+            onProfileDeleted={refetch}
+          />
         )}
       </div>
 
