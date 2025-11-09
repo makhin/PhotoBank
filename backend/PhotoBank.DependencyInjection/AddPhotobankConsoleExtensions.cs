@@ -78,7 +78,7 @@ public static partial class ServiceCollectionExtensions
 
         services.AddTransient<IImageMetadataReaderWrapper, ImageMetadataReaderWrapper>();
         services.AddFaceRecognition(configuration);
-        services.AddScoped<UnifiedFaceService>();
+        services.AddScoped<IUnifiedFaceService, UnifiedFaceService>();
         services.AddScoped<IFaceService, FaceService>();
         services.AddSingleton<IInsightFaceApiClient, InsightFaceApiClient.InsightFaceApiClient>();
         services.AddTransient<IRecognitionService, RecognitionService>();

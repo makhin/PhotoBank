@@ -18,7 +18,7 @@ namespace PhotoBank.UnitTests.Enrichers;
 [TestFixture]
 public class UnifiedFaceEnricherTests
 {
-    private Mock<UnifiedFaceService> _mockFaceService;
+    private Mock<IUnifiedFaceService> _mockFaceService;
     private Mock<IFacePreviewService> _mockFacePreviewService;
     private Mock<ILogger<UnifiedFaceEnricher>> _mockLogger;
     private UnifiedFaceEnricher _enricher;
@@ -26,13 +26,7 @@ public class UnifiedFaceEnricherTests
     [SetUp]
     public void Setup()
     {
-        _mockFaceService = new Mock<UnifiedFaceService>(
-            Mock.Of<IFaceProvider>(),
-            Mock.Of<Repositories.IRepository<Person>>(),
-            Mock.Of<Repositories.IRepository<Face>>(),
-            Mock.Of<IFaceStorageService>(),
-            Mock.Of<ILogger<UnifiedFaceService>>());
-
+        _mockFaceService = new Mock<IUnifiedFaceService>();
         _mockFacePreviewService = new Mock<IFacePreviewService>();
         _mockLogger = new Mock<ILogger<UnifiedFaceEnricher>>();
 

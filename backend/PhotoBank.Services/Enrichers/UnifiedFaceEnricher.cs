@@ -18,12 +18,12 @@ namespace PhotoBank.Services.Enrichers;
 /// </summary>
 public class UnifiedFaceEnricher : IEnricher
 {
-    private readonly UnifiedFaceService _faceService;
+    private readonly IUnifiedFaceService _faceService;
     private readonly IFacePreviewService _facePreviewService;
     private readonly ILogger<UnifiedFaceEnricher> _logger;
 
     public UnifiedFaceEnricher(
-        UnifiedFaceService faceService,
+        IUnifiedFaceService faceService,
         IFacePreviewService facePreviewService,
         ILogger<UnifiedFaceEnricher> logger)
     {
