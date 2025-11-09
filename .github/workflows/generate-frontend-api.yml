@@ -1,4 +1,4 @@
-9name: Generate Frontend API
+name: Generate Frontend API
 
 on:
   workflow_dispatch:
