@@ -155,7 +155,7 @@ public class UnifiedFaceServiceTests
     public async Task DetectFacesAsync_ForwardsToProvider()
     {
         var bytes = new byte[] { 1, 2, 3 };
-        var expected = new List<DetectedFaceDto> { new("id", 0.9f, 20, "M") };
+        var expected = new List<DetectedFaceDto> { new("id", 0.9f, 20, "M", null) };
         _provider.Setup(p => p.DetectAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>())).ReturnsAsync(expected);
 
         var res = await _service.DetectFacesAsync(bytes);
