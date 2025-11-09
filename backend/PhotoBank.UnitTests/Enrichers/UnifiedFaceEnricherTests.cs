@@ -204,7 +204,7 @@ public class UnifiedFaceEnricherTests
             .ThrowsAsync(new System.Exception("API error"));
 
         // Act & Assert
-        await Assert.ThrowsAsync<System.Exception>(async () =>
+        Assert.ThrowsAsync<System.Exception>(async () =>
             await _enricher.EnrichAsync(photo, sourceData));
     }
 
@@ -226,7 +226,7 @@ public class UnifiedFaceEnricherTests
             .ThrowsAsync(new TaskCanceledException());
 
         // Act & Assert
-        await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+        Assert.ThrowsAsync<TaskCanceledException>(async () =>
             await _enricher.EnrichAsync(photo, sourceData, cts.Token));
     }
 }
