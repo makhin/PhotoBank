@@ -13,7 +13,9 @@ import type {
   AccessProfilePersonGroupAllowDto,
   AccessProfileStorageAllowDto,
 } from '@photobank/shared';
+import { useAdminAccessProfilesDelete } from '@photobank/shared/api/photobank/admin-access-profiles/admin-access-profiles';
 import { format } from 'date-fns';
+import { useState } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
@@ -24,26 +26,65 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 
 interface AccessProfilesGridProps {
   profiles: AccessProfileDto[];
   onEditProfile: (profile: AccessProfileDto) => void;
+  onProfileDeleted?: () => void;
 }
 
-export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGridProps) {
+export function AccessProfilesGrid({ profiles, onEditProfile, onProfileDeleted }: AccessProfilesGridProps) {
   const { toast } = useToast();
+  const [profileToDelete, setProfileToDelete] = useState<AccessProfileDto | null>(null);
+
+  const deleteMutation = useAdminAccessProfilesDelete({
+    mutation: {
+      onSuccess: () => {
+        toast({
+          title: 'Profile Deleted',
+          description: `${profileToDelete?.name} has been removed`,
+          variant: 'default',
+        });
+        setProfileToDelete(null);
+        onProfileDeleted?.();
+      },
+      onError: (error) => {
+        toast({
+          title: 'Failed to delete profile',
+          description: error instanceof Error ? error.message : 'An error occurred',
+          variant: 'destructive',
+        });
+      },
+    },
+  });
 
   const handleEdit = (profile: AccessProfileDto) => {
     onEditProfile(profile);
   };
 
-  const handleDelete = (profile: AccessProfileDto) => {
-    toast({
-      title: 'Profile Deleted',
-      description: `${profile.name} has been removed`,
-      variant: 'destructive',
-    });
+  const handleDeleteClick = (profile: AccessProfileDto) => {
+    setProfileToDelete(profile);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (profileToDelete?.id) {
+      deleteMutation.mutate({ id: profileToDelete.id });
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setProfileToDelete(null);
   };
 
   if (profiles.length === 0) {
@@ -94,7 +135,8 @@ export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGr
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
       {profiles.map((profile) => (
         <Card key={profile.id} className="shadow-card border-border/50 hover:shadow-elevated transition-shadow">
           <CardHeader className="pb-3 p-4 sm:p-6">
@@ -115,7 +157,7 @@ export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGr
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => handleDelete(profile)}
+                    onClick={() => handleDeleteClick(profile)}
                     className="text-destructive focus:text-destructive"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
@@ -216,6 +258,33 @@ export function AccessProfilesGrid({ profiles, onEditProfile }: AccessProfilesGr
           </CardContent>
         </Card>
       ))}
-    </div>
+      </div>
+
+      <AlertDialog open={!!profileToDelete} onOpenChange={(open) => !open && handleDeleteCancel()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Access Profile</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &quot;{profileToDelete?.name}&quot;? This action cannot be undone.
+              {(profileToDelete?.assignedUsersCount ?? 0) > 0 && (
+                <span className="block mt-2 text-destructive font-medium">
+                  Warning: This profile is currently assigned to {profileToDelete?.assignedUsersCount} user(s).
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
