@@ -36,4 +36,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add frontend/packages/shared/src/api/photobank frontend/packages/telegram-bot/src/api/photobank
-          git commit -m "chore: update frontend API client" && git push origin HEAD || echo "No changes to commit"
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update frontend API client"
+            git push origin HEAD
+          fi
