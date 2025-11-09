@@ -1,4 +1,4 @@
-name: Generate Frontend API
+9name: Generate Frontend API
 
 on:
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
 
       - name: Generate API client
         working-directory: frontend
-        run: pnpm run generate:api
+        run: pnpm run orval
 
       - name: Commit generated client
         run: |
