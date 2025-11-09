@@ -422,13 +422,19 @@ export const useAdminAccessProfilesUpdate = <
 
   return useMutation(mutationOptions);
 };
-export type adminAccessProfilesDeleteResponse200 = {
+export type adminAccessProfilesDeleteResponse204 = {
   data: null;
-  status: 200;
+  status: 204;
+};
+
+export type adminAccessProfilesDeleteResponse404 = {
+  data: ProblemDetails;
+  status: 404;
 };
 
 export type adminAccessProfilesDeleteResponseComposite =
-  adminAccessProfilesDeleteResponse200;
+  | adminAccessProfilesDeleteResponse204
+  | adminAccessProfilesDeleteResponse404;
 
 export type adminAccessProfilesDeleteResponse =
   adminAccessProfilesDeleteResponseComposite & {
@@ -453,7 +459,7 @@ export const adminAccessProfilesDelete = async (
 };
 
 export const getAdminAccessProfilesDeleteMutationOptions = <
-  TError = unknown,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -494,10 +500,10 @@ export type AdminAccessProfilesDeleteMutationResult = NonNullable<
   Awaited<ReturnType<typeof adminAccessProfilesDelete>>
 >;
 
-export type AdminAccessProfilesDeleteMutationError = unknown;
+export type AdminAccessProfilesDeleteMutationError = ProblemDetails;
 
 export const useAdminAccessProfilesDelete = <
-  TError = unknown,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -517,13 +523,19 @@ export const useAdminAccessProfilesDelete = <
 
   return useMutation(mutationOptions);
 };
-export type adminAccessProfilesAssignUserResponse200 = {
+export type adminAccessProfilesAssignUserResponse204 = {
   data: null;
-  status: 200;
+  status: 204;
+};
+
+export type adminAccessProfilesAssignUserResponse404 = {
+  data: ProblemDetails;
+  status: 404;
 };
 
 export type adminAccessProfilesAssignUserResponseComposite =
-  adminAccessProfilesAssignUserResponse200;
+  | adminAccessProfilesAssignUserResponse204
+  | adminAccessProfilesAssignUserResponse404;
 
 export type adminAccessProfilesAssignUserResponse =
   adminAccessProfilesAssignUserResponseComposite & {
@@ -552,7 +564,7 @@ export const adminAccessProfilesAssignUser = async (
 };
 
 export const getAdminAccessProfilesAssignUserMutationOptions = <
-  TError = unknown,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -593,10 +605,10 @@ export type AdminAccessProfilesAssignUserMutationResult = NonNullable<
   Awaited<ReturnType<typeof adminAccessProfilesAssignUser>>
 >;
 
-export type AdminAccessProfilesAssignUserMutationError = unknown;
+export type AdminAccessProfilesAssignUserMutationError = ProblemDetails;
 
 export const useAdminAccessProfilesAssignUser = <
-  TError = unknown,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -617,13 +629,19 @@ export const useAdminAccessProfilesAssignUser = <
 
   return useMutation(mutationOptions);
 };
-export type adminAccessProfilesUnassignUserResponse200 = {
+export type adminAccessProfilesUnassignUserResponse204 = {
   data: null;
-  status: 200;
+  status: 204;
+};
+
+export type adminAccessProfilesUnassignUserResponse404 = {
+  data: ProblemDetails;
+  status: 404;
 };
 
 export type adminAccessProfilesUnassignUserResponseComposite =
-  adminAccessProfilesUnassignUserResponse200;
+  | adminAccessProfilesUnassignUserResponse204
+  | adminAccessProfilesUnassignUserResponse404;
 
 export type adminAccessProfilesUnassignUserResponse =
   adminAccessProfilesUnassignUserResponseComposite & {
@@ -652,7 +670,7 @@ export const adminAccessProfilesUnassignUser = async (
 };
 
 export const getAdminAccessProfilesUnassignUserMutationOptions = <
-  TError = unknown,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -693,10 +711,10 @@ export type AdminAccessProfilesUnassignUserMutationResult = NonNullable<
   Awaited<ReturnType<typeof adminAccessProfilesUnassignUser>>
 >;
 
-export type AdminAccessProfilesUnassignUserMutationError = unknown;
+export type AdminAccessProfilesUnassignUserMutationError = ProblemDetails;
 
 export const useAdminAccessProfilesUnassignUser = <
-  TError = unknown,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -717,13 +735,19 @@ export const useAdminAccessProfilesUnassignUser = <
 
   return useMutation(mutationOptions);
 };
-export type adminAccessProfilesAssignRoleResponse200 = {
+export type adminAccessProfilesAssignRoleResponse204 = {
   data: null;
-  status: 200;
+  status: 204;
+};
+
+export type adminAccessProfilesAssignRoleResponse404 = {
+  data: ProblemDetails;
+  status: 404;
 };
 
 export type adminAccessProfilesAssignRoleResponseComposite =
-  adminAccessProfilesAssignRoleResponse200;
+  | adminAccessProfilesAssignRoleResponse204
+  | adminAccessProfilesAssignRoleResponse404;
 
 export type adminAccessProfilesAssignRoleResponse =
   adminAccessProfilesAssignRoleResponseComposite & {
@@ -752,7 +776,7 @@ export const adminAccessProfilesAssignRole = async (
 };
 
 export const getAdminAccessProfilesAssignRoleMutationOptions = <
-  TError = unknown,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -793,10 +817,10 @@ export type AdminAccessProfilesAssignRoleMutationResult = NonNullable<
   Awaited<ReturnType<typeof adminAccessProfilesAssignRole>>
 >;
 
-export type AdminAccessProfilesAssignRoleMutationError = unknown;
+export type AdminAccessProfilesAssignRoleMutationError = ProblemDetails;
 
 export const useAdminAccessProfilesAssignRole = <
-  TError = unknown,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -817,13 +841,19 @@ export const useAdminAccessProfilesAssignRole = <
 
   return useMutation(mutationOptions);
 };
-export type adminAccessProfilesUnassignRoleResponse200 = {
+export type adminAccessProfilesUnassignRoleResponse204 = {
   data: null;
-  status: 200;
+  status: 204;
+};
+
+export type adminAccessProfilesUnassignRoleResponse404 = {
+  data: ProblemDetails;
+  status: 404;
 };
 
 export type adminAccessProfilesUnassignRoleResponseComposite =
-  adminAccessProfilesUnassignRoleResponse200;
+  | adminAccessProfilesUnassignRoleResponse204
+  | adminAccessProfilesUnassignRoleResponse404;
 
 export type adminAccessProfilesUnassignRoleResponse =
   adminAccessProfilesUnassignRoleResponseComposite & {
@@ -852,7 +882,7 @@ export const adminAccessProfilesUnassignRole = async (
 };
 
 export const getAdminAccessProfilesUnassignRoleMutationOptions = <
-  TError = unknown,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -893,10 +923,10 @@ export type AdminAccessProfilesUnassignRoleMutationResult = NonNullable<
   Awaited<ReturnType<typeof adminAccessProfilesUnassignRole>>
 >;
 
-export type AdminAccessProfilesUnassignRoleMutationError = unknown;
+export type AdminAccessProfilesUnassignRoleMutationError = ProblemDetails;
 
 export const useAdminAccessProfilesUnassignRole = <
-  TError = unknown,
+  TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<

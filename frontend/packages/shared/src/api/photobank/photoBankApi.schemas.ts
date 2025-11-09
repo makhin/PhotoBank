@@ -88,6 +88,12 @@ export type FaceDto = {
   imageUrl?: string | null;
 };
 
+export type FaceDtoPageResponse = {
+  totalCount?: number;
+  /** @nullable */
+  items?: FaceDto[] | null;
+};
+
 export type FilterDto = {
   page?: number;
   pageSize?: number;
@@ -222,12 +228,6 @@ export type PhotoItemDtoPageResponse = {
   items?: PhotoItemDto[] | null;
 };
 
-export type FaceDtoPageResponse = {
-  totalCount?: number;
-  /** @nullable */
-  items?: FaceDto[] | null;
-};
-
 export type ProblemDetails = {
   /** @nullable */
   type?: string | null;
@@ -272,19 +272,23 @@ export type TagDto = {
 };
 
 export type TelegramExchangeRequest = {
-  telegramUserId?: string;
+  /** @nullable */
+  telegramUserId?: string | null;
   /** @nullable */
   username?: string | null;
+  /** @nullable */
+  languageCode?: string | null;
 };
 
-export type TelegramExchangeResponse = {
+export type TelegramExchangeResponseDto = {
   /** @nullable */
-  accessToken?: string | null;
-  expiresIn?: number;
+  accessToken: string | null;
+  expiresIn: number;
 };
 
 export type TelegramSubscriptionDto = {
-  telegramUserId: string;
+  /** @nullable */
+  telegramUserId: string | null;
   telegramSendTimeUtc: string;
 };
 
@@ -317,16 +321,8 @@ export type UserDto = {
   roles?: string[] | null;
 };
 
-export type FacesGetFacesPageParams = {
-  /**
-   * Page number (1-based)
-   * @minimum 1
-   */
+export type FacesGetAllParams = {
   page?: number;
-  /**
-   * Page size
-   * @minimum 1
-   */
   pageSize?: number;
 };
 

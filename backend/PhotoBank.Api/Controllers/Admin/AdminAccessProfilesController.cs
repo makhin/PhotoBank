@@ -59,6 +59,8 @@ public class AdminAccessProfilesController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> Delete(int id, CancellationToken ct)
     {
         var deleted = await _profiles.DeleteAsync(id, ct);
@@ -66,6 +68,8 @@ public class AdminAccessProfilesController : ControllerBase
     }
 
     [HttpPost("{id:int}/assign-user/{userId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> AssignUser(int id, string userId, CancellationToken ct)
     {
         var result = await _profiles.AssignUserAsync(id, userId, ct);
@@ -73,6 +77,8 @@ public class AdminAccessProfilesController : ControllerBase
     }
 
     [HttpDelete("{id:int}/assign-user/{userId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> UnassignUser(int id, string userId, CancellationToken ct)
     {
         var result = await _profiles.UnassignUserAsync(id, userId, ct);
@@ -80,6 +86,8 @@ public class AdminAccessProfilesController : ControllerBase
     }
 
     [HttpPost("{id:int}/assign-role/{roleId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> AssignRole(int id, string roleId, CancellationToken ct)
     {
         var result = await _profiles.AssignRoleAsync(id, roleId, ct);
@@ -87,6 +95,8 @@ public class AdminAccessProfilesController : ControllerBase
     }
 
     [HttpDelete("{id:int}/assign-role/{roleId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> UnassignRole(int id, string roleId, CancellationToken ct)
     {
         var result = await _profiles.UnassignRoleAsync(id, roleId, ct);

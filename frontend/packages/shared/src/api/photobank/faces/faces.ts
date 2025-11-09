@@ -18,25 +18,25 @@ import type {
 import type {
   FaceDto,
   FaceDtoPageResponse,
-  FacesGetFacesPageParams,
+  FacesGetAllParams,
 } from '../photoBankApi.schemas';
 
 import { customFetcher } from '.././fetcher';
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-export type facesGetFacesPageResponse200 = {
+export type facesGetAllResponse200 = {
   data: FaceDtoPageResponse;
   status: 200;
 };
 
-export type facesGetFacesPageResponseComposite = facesGetFacesPageResponse200;
+export type facesGetAllResponseComposite = facesGetAllResponse200;
 
-export type facesGetFacesPageResponse = facesGetFacesPageResponseComposite & {
+export type facesGetAllResponse = facesGetAllResponseComposite & {
   headers: Headers;
 };
 
-export const getFacesGetFacesPageUrl = (params?: FacesGetFacesPageParams) => {
+export const getFacesGetAllUrl = (params?: FacesGetAllParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -52,33 +52,28 @@ export const getFacesGetFacesPageUrl = (params?: FacesGetFacesPageParams) => {
     : `/faces`;
 };
 
-export const facesGetFacesPage = async (
-  params?: FacesGetFacesPageParams,
+export const facesGetAll = async (
+  params?: FacesGetAllParams,
   options?: RequestInit
-): Promise<facesGetFacesPageResponse> => {
-  return customFetcher<facesGetFacesPageResponse>(
-    getFacesGetFacesPageUrl(params),
-    {
-      ...options,
-      method: 'GET',
-    }
-  );
+): Promise<facesGetAllResponse> => {
+  return customFetcher<facesGetAllResponse>(getFacesGetAllUrl(params), {
+    ...options,
+    method: 'GET',
+  });
 };
 
-export const getFacesGetFacesPageQueryKey = (
-  params?: FacesGetFacesPageParams
-) => {
+export const getFacesGetAllQueryKey = (params?: FacesGetAllParams) => {
   return [`/faces`, ...(params ? [params] : [])] as const;
 };
 
-export const getFacesGetFacesPageQueryOptions = <
-  TData = Awaited<ReturnType<typeof facesGetFacesPage>>,
+export const getFacesGetAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof facesGetAll>>,
   TError = unknown,
 >(
-  params?: FacesGetFacesPageParams,
+  params?: FacesGetAllParams,
   options?: {
     query?: UseQueryOptions<
-      Awaited<ReturnType<typeof facesGetFacesPage>>,
+      Awaited<ReturnType<typeof facesGetAll>>,
       TError,
       TData
     >;
@@ -87,40 +82,38 @@ export const getFacesGetFacesPageQueryOptions = <
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey =
-    queryOptions?.queryKey ?? getFacesGetFacesPageQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getFacesGetAllQueryKey(params);
 
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof facesGetFacesPage>>
-  > = () => facesGetFacesPage(params, requestOptions);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof facesGetAll>>> = () =>
+    facesGetAll(params, requestOptions);
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof facesGetFacesPage>>,
+    Awaited<ReturnType<typeof facesGetAll>>,
     TError,
     TData
   > & { queryKey: QueryKey };
 };
 
-export type FacesGetFacesPageQueryResult = NonNullable<
-  Awaited<ReturnType<typeof facesGetFacesPage>>
+export type FacesGetAllQueryResult = NonNullable<
+  Awaited<ReturnType<typeof facesGetAll>>
 >;
-export type FacesGetFacesPageQueryError = unknown;
+export type FacesGetAllQueryError = unknown;
 
-export function useFacesGetFacesPage<
-  TData = Awaited<ReturnType<typeof facesGetFacesPage>>,
+export function useFacesGetAll<
+  TData = Awaited<ReturnType<typeof facesGetAll>>,
   TError = unknown,
 >(
-  params?: FacesGetFacesPageParams,
+  params?: FacesGetAllParams,
   options?: {
     query?: UseQueryOptions<
-      Awaited<ReturnType<typeof facesGetFacesPage>>,
+      Awaited<ReturnType<typeof facesGetAll>>,
       TError,
       TData
     >;
     request?: SecondParameter<typeof customFetcher>;
   }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getFacesGetFacesPageQueryOptions(params, options);
+  const queryOptions = getFacesGetAllQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

@@ -21,7 +21,7 @@ import type {
   ProblemDetails,
   RegisterRequestDto,
   TelegramExchangeRequest,
-  TelegramExchangeResponse,
+  TelegramExchangeResponseDto,
   TelegramSubscriptionDto,
   UpdateUserDto,
   UserDto,
@@ -508,7 +508,7 @@ export function useAuthGetTelegramSubscriptions<
 }
 
 export type authTelegramExchangeResponse200 = {
-  data: TelegramExchangeResponse;
+  data: TelegramExchangeResponseDto;
   status: 200;
 };
 
