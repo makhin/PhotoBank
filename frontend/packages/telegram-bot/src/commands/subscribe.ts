@@ -72,7 +72,7 @@ async function buildFromSnapshot(
 }
 
 function isValidSubscription(entry: TelegramSubscriptionDto | undefined): entry is TelegramSubscriptionDto {
-  return !!entry && /^\d+$/.test(entry.telegramUserId);
+  return !!entry && entry.telegramUserId !== null && /^\d+$/.test(entry.telegramUserId);
 }
 
 export function parseSubscribeTime(text?: string): string | null {
@@ -128,16 +128,22 @@ export async function restoreSubscriptions(bot: Bot<MyContext>): Promise<void> {
       continue;
     }
 
+    const telegramUserId = entry.telegramUserId;
+    if (!telegramUserId) {
+      logger.warn('Skipping restored subscription due to missing telegramUserId', entry);
+      continue;
+    }
+
     const normalizedTime = normalizeSubscriptionTime(entry.telegramSendTimeUtc);
     if (normalizedTime === null) {
       logger.warn('Skipping restored subscription due to invalid time', entry);
       continue;
     }
 
-    const { from, chat } = await buildFromSnapshot(bot, entry.telegramUserId);
+    const { from, chat } = await buildFromSnapshot(bot, telegramUserId);
     const locale = DEFAULT_LOCALE;
 
-    subscriptions.set(entry.telegramUserId, {
+    subscriptions.set(telegramUserId, {
       time: normalizedTime,
       locale,
       from,
