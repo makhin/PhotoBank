@@ -85,7 +85,6 @@ public class UnifiedFaceEnricher : IEnricher
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error detecting faces for photo {PhotoId}", photo.Id);
-            photo.FaceIdentifyStatus = FaceIdentifyStatus.ProcessingError;
             throw;
         }
     }

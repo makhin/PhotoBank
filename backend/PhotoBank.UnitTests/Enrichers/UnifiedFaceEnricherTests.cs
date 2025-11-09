@@ -190,7 +190,7 @@ public class UnifiedFaceEnricherTests
     }
 
     [Test]
-    public async Task EnrichAsync_DetectionThrowsException_SetsProcessingErrorStatus()
+    public async Task EnrichAsync_DetectionThrowsException_PropagatesException()
     {
         // Arrange
         var photo = new Photo();
@@ -206,8 +206,6 @@ public class UnifiedFaceEnricherTests
         // Act & Assert
         await Assert.ThrowsAsync<System.Exception>(async () =>
             await _enricher.EnrichAsync(photo, sourceData));
-
-        photo.FaceIdentifyStatus.Should().Be(FaceIdentifyStatus.ProcessingError);
     }
 
     [Test]
