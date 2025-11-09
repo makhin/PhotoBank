@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Search, User, Eye, Loader2 } from 'lucide-react';
 import {
   IdentityStatusDto as IdentityStatusEnum,
-  useFacesGetFacesPage,
+  useFacesGetAll,
   usePersonsGetAll,
   type FaceDto,
   type IdentityStatusDto as IdentityStatusType,
@@ -82,7 +82,7 @@ export default function FacesPage() {
     [currentPage]
   );
 
-  const { data, isLoading, isError, isFetching, refetch } = useFacesGetFacesPage(paginationParams);
+  const { data, isLoading, isError, isFetching, refetch } = useFacesGetAll(paginationParams);
   const { data: personsResponse } = usePersonsGetAll();
   const persons = personsResponse?.data;
 
