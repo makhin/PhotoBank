@@ -142,6 +142,11 @@ namespace PhotoBank.Console
                 // Return non-zero exit code if there were failures
                 return failed > 0 ? 4 : 0; // Exit code 4 for "partial failure"
             }
+            catch (OperationCanceledException)
+            {
+                // Let cancellation bubble up to be handled at the top level
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing storage {StorageId}", storage.Id);
