@@ -143,18 +143,17 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
                     // Use sliding expiration to handle cases when faces are tagged or person groups change
                     entry.SlidingExpiration = TimeSpan.FromMinutes(10);
 
-                    var accessiblePersonIds = await _photoRepository.GetAll()
+                    // Use a subquery to avoid SQL Server's 2100 parameter limit
+                    // This translates to an EXISTS or IN subquery on the server side
+                    var accessiblePhotosQuery = _photoRepository.GetAll()
                         .AsNoTracking()
-                        .MaybeApplyAcl(currentUser)
-                        .SelectMany(p => p.Faces)
-                        .Where(f => f.PersonId != null)
-                        .Select(f => f.PersonId!.Value)
-                        .Distinct()
-                        .ToListAsync();
+                        .MaybeApplyAcl(currentUser);
 
                     query = _personRepository.GetAll()
                         .AsNoTracking()
-                        .Where(p => accessiblePersonIds.Contains(p.Id));
+                        .Where(person => accessiblePhotosQuery
+                            .SelectMany(p => p.Faces)
+                            .Any(f => f.PersonId == person.Id));
                 }
 
                 var items = await query
