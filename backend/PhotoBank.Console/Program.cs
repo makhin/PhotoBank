@@ -3,9 +3,11 @@ using Microsoft.Extensions.Hosting;
 using PhotoBank.DependencyInjection;
 using PhotoBank.Services.Api;
 using Serilog;
+using System.CommandLine;
 
 namespace PhotoBank.Console
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -13,29 +15,107 @@ namespace PhotoBank.Console
     {
         public static async Task<int> Main(string[] args)
         {
-            var options = ConsoleOptions.Parse(args);
+            try
+            {
+                var rootCommand = BuildCommandLine(args);
+                return await rootCommand.InvokeAsync(args);
+            }
+            catch (OperationCanceledException)
+            {
+                System.Console.WriteLine("\nOperation cancelled by user.");
+                return 130; // Standard exit code for SIGINT
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Fatal error: {ex.Message}");
+                System.Console.Error.WriteLine(ex.StackTrace);
+                return 1;
+            }
+        }
 
-            using var host = Host.CreateDefaultBuilder(args)
-                .UseSerilog((context, services, configuration) => configuration
-                    .ReadFrom.Configuration(context.Configuration)
-                    .WriteTo.Console()
-                    .WriteTo.File("consoleapp.log"))
-                .ConfigureServices((context, services) =>
-                {
-                    services
-                        .AddPhotobankDbContext(context.Configuration, usePool: false)
-                        .AddPhotobankCore(context.Configuration)
-                        .AddPhotobankConsole(context.Configuration)
-                        .AddSingleton<App>();
-                })
-                .Build();
+        private static RootCommand BuildCommandLine(string[] args)
+        {
+            var storageOption = new Option<int?>(
+                aliases: new[] { "--storage", "-s" },
+                description: "Storage ID to process files from");
 
-            var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
-            var app = host.Services.GetRequiredService<App>();
-            await app.RunAsync(options, lifetime.ApplicationStopping);
-            await host.StopAsync();
-            return 0;
+            var noRegisterOption = new Option<bool>(
+                aliases: new[] { "--no-register" },
+                description: "Skip person registration step",
+                getDefaultValue: () => false);
+
+            var rootCommand = new RootCommand("PhotoBank Console - Batch photo processing tool")
+            {
+                storageOption,
+                noRegisterOption
+            };
+
+            // Allow unmatched tokens (e.g., --environment, --logging:*) to pass through to the host
+            rootCommand.TreatUnmatchedTokensAsErrors = false;
+
+            rootCommand.SetHandler(async (context) =>
+            {
+                var storageId = context.ParseResult.GetValueForOption(storageOption);
+                var noRegister = context.ParseResult.GetValueForOption(noRegisterOption);
+                var registerPersons = !noRegister;
+                var exitCode = await RunApplicationAsync(registerPersons, storageId, args);
+                context.ExitCode = exitCode;
+            });
+
+            return rootCommand;
+        }
+
+        private static async Task<int> RunApplicationAsync(bool registerPersons, int? storageId, string[] args)
+        {
+            IHost? host = null;
+            try
+            {
+                host = Host.CreateDefaultBuilder(args)
+                    .UseSerilog((context, services, configuration) => configuration
+                        .ReadFrom.Configuration(context.Configuration)
+                        .WriteTo.Console()
+                        .WriteTo.File("logs/photobank-.log",
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 7))
+                    .ConfigureServices((context, services) =>
+                    {
+                        services
+                            .AddPhotobankDbContext(context.Configuration, usePool: false)
+                            .AddPhotobankCore(context.Configuration)
+                            .AddPhotobankConsole(context.Configuration)
+                            .AddSingleton<App>();
+                    })
+                    .Build();
+
+                var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+                var app = host.Services.GetRequiredService<App>();
+
+                var result = await app.RunAsync(registerPersons, storageId, lifetime.ApplicationStopping);
+
+                await host.StopAsync();
+                return result;
+            }
+            catch (InvalidOperationException ex)
+            {
+                System.Console.Error.WriteLine($"Configuration error: {ex.Message}");
+                return 2;
+            }
+            catch (OperationCanceledException)
+            {
+                // Let cancellation bubble up to Main for proper exit code 130
+                throw;
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Application error: {ex.Message}");
+                Log.Fatal(ex, "Application terminated unexpectedly");
+                return 1;
+            }
+            finally
+            {
+                host?.Dispose();
+                Log.CloseAndFlush();
+            }
         }
     }
 }
-
