@@ -50,11 +50,14 @@ namespace PhotoBank.Console
                 noRegisterOption
             };
 
-            rootCommand.SetHandler(async (storageId, noRegister) =>
+            rootCommand.SetHandler(async (context) =>
             {
+                var storageId = context.ParseResult.GetValueForOption(storageOption);
+                var noRegister = context.ParseResult.GetValueForOption(noRegisterOption);
                 var registerPersons = !noRegister;
-                await RunApplicationAsync(registerPersons, storageId);
-            }, storageOption, noRegisterOption);
+                var exitCode = await RunApplicationAsync(registerPersons, storageId);
+                context.ExitCode = exitCode;
+            });
 
             return rootCommand;
         }
