@@ -117,10 +117,10 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
         _persons?.Reset();
 
         // Cancel the shared invalidation token to invalidate all person caches across all instances
+        // Don't dispose the token to avoid ObjectDisposedException race with concurrent cache creation
         lock (_personsTokenLock)
         {
             _personsInvalidationToken.Cancel();
-            _personsInvalidationToken.Dispose();
             _personsInvalidationToken = new CancellationTokenSource();
         }
     }
@@ -130,10 +130,10 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
         _personGroups?.Reset();
 
         // Cancel the shared invalidation token to invalidate all person group caches
+        // Don't dispose the token to avoid ObjectDisposedException race with concurrent cache creation
         lock (_personGroupsTokenLock)
         {
             _personGroupsInvalidationToken.Cancel();
-            _personGroupsInvalidationToken.Dispose();
             _personGroupsInvalidationToken = new CancellationTokenSource();
         }
     }
