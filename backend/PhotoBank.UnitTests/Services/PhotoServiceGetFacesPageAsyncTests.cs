@@ -204,6 +204,7 @@ public class PhotoServiceGetFacesPageAsyncTests
             faceRepository,
             _mapper,
             mediaUrlResolver,
+            referenceDataService.Object,
             s3Options);
 
         var duplicateFinder = new Mock<IPhotoDuplicateFinder>();

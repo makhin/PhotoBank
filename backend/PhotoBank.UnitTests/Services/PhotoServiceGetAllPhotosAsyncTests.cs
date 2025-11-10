@@ -145,6 +145,7 @@ namespace PhotoBank.UnitTests.Services
                 faceRepository,
                 _mapper,
                 mediaUrlResolver.Object,
+                referenceDataService.Object,
                 s3Options.Object);
 
             var duplicateFinder = new Mock<IPhotoDuplicateFinder>();
