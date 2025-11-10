@@ -130,9 +130,29 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             () => CacheKeys.Persons(currentUser),
             async _ =>
             {
-                var query = _personRepository.GetAll()
-                    .AsNoTracking()
-                    .MaybeApplyAcl(currentUser);
+                IQueryable<Person> query;
+
+                if (currentUser.IsAdmin)
+                {
+                    // Admins see all persons
+                    query = _personRepository.GetAll().AsNoTracking();
+                }
+                else
+                {
+                    // Non-admins see only persons that appear in photos they have access to
+                    var accessiblePersonIds = await _photoRepository.GetAll()
+                        .AsNoTracking()
+                        .MaybeApplyAcl(currentUser)
+                        .SelectMany(p => p.Faces)
+                        .Where(f => f.PersonId != null)
+                        .Select(f => f.PersonId!.Value)
+                        .Distinct()
+                        .ToListAsync();
+
+                    query = _personRepository.GetAll()
+                        .AsNoTracking()
+                        .Where(p => accessiblePersonIds.Contains(p.Id));
+                }
 
                 var items = await query
                     .OrderBy(p => p.Name)
