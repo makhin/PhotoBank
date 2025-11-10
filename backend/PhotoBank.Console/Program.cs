@@ -97,6 +97,11 @@ namespace PhotoBank.Console
                 System.Console.Error.WriteLine($"Configuration error: {ex.Message}");
                 return 2;
             }
+            catch (OperationCanceledException)
+            {
+                // Let cancellation bubble up to Main for proper exit code 130
+                throw;
+            }
             catch (Exception ex)
             {
                 System.Console.Error.WriteLine($"Application error: {ex.Message}");
