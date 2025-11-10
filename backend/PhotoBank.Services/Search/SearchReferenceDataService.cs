@@ -7,6 +7,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Primitives;
 using PhotoBank.AccessControl;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
@@ -32,6 +33,14 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
     private CachedAsyncValue<IReadOnlyList<StorageDto>>? _storages;
     private CachedAsyncValue<IReadOnlyList<PersonGroupDto>>? _personGroups;
     private ICurrentUser? _currentUser;
+
+    // Shared cancellation token source for persons cache invalidation across all instances
+    private static CancellationTokenSource _personsInvalidationToken = new();
+    private static readonly object _personsTokenLock = new();
+
+    // Shared cancellation token source for person groups cache invalidation
+    private static CancellationTokenSource _personGroupsInvalidationToken = new();
+    private static readonly object _personGroupsTokenLock = new();
 
     public SearchReferenceDataService(
         IRepository<Person> personRepository,
@@ -106,11 +115,27 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
     public void InvalidatePersons()
     {
         _persons?.Reset();
+
+        // Cancel the shared invalidation token to invalidate all person caches across all instances
+        lock (_personsTokenLock)
+        {
+            _personsInvalidationToken.Cancel();
+            _personsInvalidationToken.Dispose();
+            _personsInvalidationToken = new CancellationTokenSource();
+        }
     }
 
     public void InvalidatePersonGroups()
     {
         _personGroups?.Reset();
+
+        // Cancel the shared invalidation token to invalidate all person group caches
+        lock (_personGroupsTokenLock)
+        {
+            _personGroupsInvalidationToken.Cancel();
+            _personGroupsInvalidationToken.Dispose();
+            _personGroupsInvalidationToken = new CancellationTokenSource();
+        }
     }
 
     public void InvalidateStorages()
@@ -130,6 +155,15 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             () => CacheKeys.Persons(currentUser),
             async entry =>
             {
+                // Register dependency on the shared invalidation token
+                // When InvalidatePersons() is called, this cache entry will be evicted
+                CancellationToken token;
+                lock (_personsTokenLock)
+                {
+                    token = _personsInvalidationToken.Token;
+                }
+                entry.AddExpirationToken(new CancellationChangeToken(token));
+
                 IQueryable<Person> query;
 
                 if (currentUser.IsAdmin)
@@ -243,8 +277,17 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
     private CachedAsyncValue<IReadOnlyList<PersonGroupDto>> CreatePersonGroupsCache()
         => CreateCachedValue(
             () => CacheKeys.PersonGroups,
-            async _ =>
+            async entry =>
             {
+                // Register dependency on the shared invalidation token
+                // When InvalidatePersonGroups() is called, this cache entry will be evicted
+                CancellationToken token;
+                lock (_personGroupsTokenLock)
+                {
+                    token = _personGroupsInvalidationToken.Token;
+                }
+                entry.AddExpirationToken(new CancellationChangeToken(token));
+
                 var items = await _personGroupRepository.GetAll()
                     .AsNoTracking()
                     .OrderBy(pg => pg.Name)
