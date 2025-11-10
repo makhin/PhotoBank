@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Internal;
+using PhotoBank.Services.Search;
 using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.Services.Photos.Faces;
@@ -25,17 +26,20 @@ public class FaceCatalogService : IFaceCatalogService
     private readonly IRepository<Face> _faceRepository;
     private readonly IMapper _mapper;
     private readonly IMediaUrlResolver _mediaUrlResolver;
+    private readonly ISearchReferenceDataService _searchReferenceDataService;
     private readonly S3Options _s3;
 
     public FaceCatalogService(
         IRepository<Face> faceRepository,
         IMapper mapper,
         IMediaUrlResolver mediaUrlResolver,
+        ISearchReferenceDataService searchReferenceDataService,
         IOptions<S3Options> s3Options)
     {
         _faceRepository = faceRepository;
         _mapper = mapper;
         _mediaUrlResolver = mediaUrlResolver;
+        _searchReferenceDataService = searchReferenceDataService;
         _s3 = s3Options?.Value ?? new S3Options();
     }
 
@@ -87,6 +91,9 @@ public class FaceCatalogService : IFaceCatalogService
             PersonId = personId == -1 ? null : personId
         };
         await _faceRepository.UpdateAsync(face, f => f.PersonId, f => f.IdentifiedWithConfidence, f => f.IdentityStatus);
+
+        // Invalidate persons cache because non-admin users' person lists depend on face assignments
+        _searchReferenceDataService.InvalidatePersons();
     }
 
     private async Task FillUrlsAsync(IEnumerable<FaceDto> faces)

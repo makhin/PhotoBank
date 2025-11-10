@@ -128,18 +128,21 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
     private CachedAsyncValue<IReadOnlyList<PersonDto>> CreatePersonsCache(ICurrentUser currentUser)
         => CreateCachedValue(
             () => CacheKeys.Persons(currentUser),
-            async _ =>
+            async entry =>
             {
                 IQueryable<Person> query;
 
                 if (currentUser.IsAdmin)
                 {
-                    // Admins see all persons
+                    // Admins see all persons - cache indefinitely until explicit invalidation
                     query = _personRepository.GetAll().AsNoTracking();
                 }
                 else
                 {
                     // Non-admins see only persons that appear in photos they have access to
+                    // Use sliding expiration to handle cases when faces are tagged or person groups change
+                    entry.SlidingExpiration = TimeSpan.FromMinutes(10);
+
                     var accessiblePersonIds = await _photoRepository.GetAll()
                         .AsNoTracking()
                         .MaybeApplyAcl(currentUser)

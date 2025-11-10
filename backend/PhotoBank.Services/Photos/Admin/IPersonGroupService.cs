@@ -105,5 +105,8 @@ public class PersonGroupService : IPersonGroupService
     {
         _logger.LogDebug("Invalidating person group cache");
         _searchReferenceDataService.InvalidatePersonGroups();
+
+        // Also invalidate persons cache because non-admin users' person lists depend on person groups
+        _searchReferenceDataService.InvalidatePersons();
     }
 }
