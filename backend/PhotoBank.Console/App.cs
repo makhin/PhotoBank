@@ -33,58 +33,121 @@ namespace PhotoBank.Console
             _checkDuplicates = configuration.GetValue("CheckDuplicates", true);
         }
 
-        public async Task RunAsync(ConsoleOptions options, CancellationToken token)
+        public async Task<int> RunAsync(bool registerPersons, int? storageId, CancellationToken token)
         {
-            if (options.RegisterPersons)
+            try
             {
-                await _recognitionService.RegisterPersonsAsync();
-            }
+                if (registerPersons)
+                {
+                    _logger.LogInformation("Starting person registration...");
+                    await _recognitionService.RegisterPersonsAsync();
+                    _logger.LogInformation("Person registration completed");
+                }
 
-            if (options.StorageId.HasValue)
+                if (storageId.HasValue)
+                {
+                    return await ProcessStorageAsync(storageId.Value, token);
+                }
+
+                if (!registerPersons)
+                {
+                    System.Console.WriteLine("No operation specified. Use --storage to process files or enable person registration.");
+                    System.Console.WriteLine("Run with --help for usage information.");
+                    return 0;
+                }
+
+                return 0;
+            }
+            catch (OperationCanceledException)
             {
-                var storage = await _storages.GetAsync(options.StorageId.Value);
-                await AddFilesAsync(storage, token);
+                _logger.LogWarning("Operation was cancelled");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error in application");
+                return 1;
             }
         }
 
-        private async Task AddFilesAsync(Storage storage, CancellationToken token)
+        private async Task<int> ProcessStorageAsync(int storageId, CancellationToken token)
         {
-            var files = await _syncService.SyncStorage(storage);
-            var fileList = files.ToList();
-            var total = fileList.Count;
-            var processed = 0;
-            var failed = 0;
-            var duplicates = 0;
+            _logger.LogInformation("Loading storage {StorageId}...", storageId);
 
-            Console.WriteLine($"Processing {total} files...");
-            DisplayProgress(0, 0, 0, total);
+            var storage = await _storages.GetAsync(storageId);
 
-            await Parallel.ForEachAsync(fileList, token, async (file, ct) =>
+            if (storage == null)
             {
-                try
+                var errorMessage = $"Storage with ID {storageId} not found";
+                _logger.LogError(errorMessage);
+                System.Console.Error.WriteLine($"Error: {errorMessage}");
+                System.Console.Error.WriteLine("Please verify the storage ID exists in the database.");
+                return 3; // Exit code for "not found"
+            }
+
+            _logger.LogInformation("Processing storage: {StorageName} (ID: {StorageId})", storage.Name, storage.Id);
+            return await AddFilesAsync(storage, token);
+        }
+
+        private async Task<int> AddFilesAsync(Storage storage, CancellationToken token)
+        {
+            try
+            {
+                var files = await _syncService.SyncStorage(storage);
+                var fileList = files.ToList();
+                var total = fileList.Count;
+
+                if (total == 0)
                 {
-                    if (_checkDuplicates && await _photoProcessor.IsDuplicateAsync(storage, file))
-                    {
-                        Interlocked.Increment(ref duplicates);
-                    }
-                    else
-                    {
-                        await _photoProcessor.AddPhotoAsync(storage, file);
-                        Interlocked.Increment(ref processed);
-                    }
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError(e, "Error processing {File}", file);
-                    Interlocked.Increment(ref failed);
+                    _logger.LogInformation("No files found in storage {StorageId}", storage.Id);
+                    System.Console.WriteLine("No files to process.");
+                    return 0;
                 }
 
-                DisplayProgress(Volatile.Read(ref processed), Volatile.Read(ref failed), Volatile.Read(ref duplicates), total);
-            });
+                var processed = 0;
+                var failed = 0;
+                var duplicates = 0;
 
-            Console.WriteLine();
-            _logger.LogInformation("Processed {Processed} files with {Failed} failures and {Duplicates} duplicates", processed, failed, duplicates);
-            Console.WriteLine("Done");
+                System.Console.WriteLine($"Processing {total} files from storage '{storage.Name}'...");
+                DisplayProgress(0, 0, 0, total);
+
+                await Parallel.ForEachAsync(fileList, token, async (file, ct) =>
+                {
+                    try
+                    {
+                        if (_checkDuplicates && await _photoProcessor.IsDuplicateAsync(storage, file))
+                        {
+                            Interlocked.Increment(ref duplicates);
+                        }
+                        else
+                        {
+                            await _photoProcessor.AddPhotoAsync(storage, file);
+                            Interlocked.Increment(ref processed);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, "Error processing {File}", file);
+                        Interlocked.Increment(ref failed);
+                    }
+
+                    DisplayProgress(Volatile.Read(ref processed), Volatile.Read(ref failed), Volatile.Read(ref duplicates), total);
+                });
+
+                System.Console.WriteLine();
+                _logger.LogInformation("Processing completed: {Processed} processed, {Failed} failed, {Duplicates} duplicates",
+                    processed, failed, duplicates);
+                System.Console.WriteLine($"Done! Processed: {processed}, Failed: {failed}, Duplicates: {duplicates}");
+
+                // Return non-zero exit code if there were failures
+                return failed > 0 ? 4 : 0; // Exit code 4 for "partial failure"
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing storage {StorageId}", storage.Id);
+                System.Console.Error.WriteLine($"Error processing storage: {ex.Message}");
+                return 1;
+            }
         }
 
         private void DisplayProgress(int processed, int failed, int duplicates, int total)
@@ -97,9 +160,8 @@ namespace PhotoBank.Console
 
             lock (_progressLock)
             {
-                Console.Write($"\r[{bar}] {completed}/{total} files ({failed} failed, {duplicates} duplicates)");
+                System.Console.Write($"\r[{bar}] {completed}/{total} files ({failed} failed, {duplicates} duplicates)");
             }
         }
     }
 }
-
