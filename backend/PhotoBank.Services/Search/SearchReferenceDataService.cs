@@ -142,6 +142,10 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
     {
         _storages?.Reset();
         _paths?.Reset();
+
+        // Also invalidate persons cache because non-admin users' person lists depend on accessible photos,
+        // which are filtered by storage ACLs
+        InvalidatePersons();
     }
 
     private CachedAsyncValue<T> CreateCachedValue<T>(
