@@ -17,7 +17,7 @@ namespace PhotoBank.Console
         {
             try
             {
-                var rootCommand = BuildCommandLine();
+                var rootCommand = BuildCommandLine(args);
                 return await rootCommand.InvokeAsync(args);
             }
             catch (OperationCanceledException)
@@ -33,7 +33,7 @@ namespace PhotoBank.Console
             }
         }
 
-        private static RootCommand BuildCommandLine()
+        private static RootCommand BuildCommandLine(string[] args)
         {
             var storageOption = new Option<int?>(
                 aliases: new[] { "--storage", "-s" },
@@ -50,24 +50,27 @@ namespace PhotoBank.Console
                 noRegisterOption
             };
 
+            // Allow unmatched tokens (e.g., --environment, --logging:*) to pass through to the host
+            rootCommand.TreatUnmatchedTokensAsErrors = false;
+
             rootCommand.SetHandler(async (context) =>
             {
                 var storageId = context.ParseResult.GetValueForOption(storageOption);
                 var noRegister = context.ParseResult.GetValueForOption(noRegisterOption);
                 var registerPersons = !noRegister;
-                var exitCode = await RunApplicationAsync(registerPersons, storageId);
+                var exitCode = await RunApplicationAsync(registerPersons, storageId, args);
                 context.ExitCode = exitCode;
             });
 
             return rootCommand;
         }
 
-        private static async Task<int> RunApplicationAsync(bool registerPersons, int? storageId)
+        private static async Task<int> RunApplicationAsync(bool registerPersons, int? storageId, string[] args)
         {
             IHost? host = null;
             try
             {
-                host = Host.CreateDefaultBuilder()
+                host = Host.CreateDefaultBuilder(args)
                     .UseSerilog((context, services, configuration) => configuration
                         .ReadFrom.Configuration(context.Configuration)
                         .WriteTo.Console()
