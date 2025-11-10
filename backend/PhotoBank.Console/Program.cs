@@ -106,7 +106,7 @@ namespace PhotoBank.Console
             finally
             {
                 host?.Dispose();
-                await Log.CloseAndFlushAsync();
+                Log.CloseAndFlush();
             }
         }
     }
