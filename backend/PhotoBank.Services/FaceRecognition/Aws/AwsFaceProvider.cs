@@ -153,8 +153,24 @@ public sealed class AwsFaceProvider : IFaceProvider
         }, ct);
 
         // У DetectFaces нет глобального FaceId — оставим пустой
+        // AWS Rekognition returns normalized coordinates (0.0-1.0) as nullable float?
         return resp.FaceDetails?.Select(fd =>
-            new DetectedFaceDto(ProviderFaceId: "", Confidence: fd.Confidence, Age: (fd.AgeRange?.Low + fd.AgeRange?.High) / 2f, Gender: fd.Gender?.Value))
+            new DetectedFaceDto(
+                ProviderFaceId: "",
+                Confidence: fd.Confidence,
+                Age: (fd.AgeRange?.Low + fd.AgeRange?.High) / 2f,
+                Gender: fd.Gender?.Value,
+                BoundingBox: fd.BoundingBox != null &&
+                             fd.BoundingBox.Left.HasValue &&
+                             fd.BoundingBox.Top.HasValue &&
+                             fd.BoundingBox.Width.HasValue &&
+                             fd.BoundingBox.Height.HasValue
+                    ? new FaceBoundingBox(
+                        Left: fd.BoundingBox.Left.Value,
+                        Top: fd.BoundingBox.Top.Value,
+                        Width: fd.BoundingBox.Width.Value,
+                        Height: fd.BoundingBox.Height.Value)
+                    : null))
             .ToList() ?? new List<DetectedFaceDto>();
     }
 

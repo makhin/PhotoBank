@@ -273,7 +273,7 @@ public class ServiceCollectionExtensionsTests
         AssertTransientRegistration<ISyncService, SyncService>(services);
         AssertTransientRegistration<IRecognitionService, RecognitionService>(services);
         AssertTransientRegistration<IImageMetadataReaderWrapper, ImageMetadataReaderWrapper>(services);
-        AssertScopedRegistration<UnifiedFaceService, UnifiedFaceService>(services);
+        AssertScopedRegistration<IUnifiedFaceService, UnifiedFaceService>(services);
         AssertScopedRegistration<IFaceService, FaceService>(services);
         AssertSingletonRegistration<IInsightFaceApiClient, InsightFaceClient>(services);
         AssertSingletonRegistration<IEnrichmentPipeline, EnrichmentPipeline>(services);
@@ -296,7 +296,7 @@ public class ServiceCollectionExtensionsTests
             typeof(IRecognitionService),
             typeof(IInsightFaceApiClient),
             typeof(IEnrichmentPipeline),
-            typeof(UnifiedFaceService));
+            typeof(IUnifiedFaceService));
 
         var activeEnrichers = new[]
         {

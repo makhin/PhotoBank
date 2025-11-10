@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using ImageMagick;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -61,7 +62,7 @@ public class AzureFaceProviderTests
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
 
-        using var image = new MemoryStream(new byte[] { 1, 2, 3 });
+        using var image = await CreateTestImageAsync();
         var result = await provider.DetectAsync(image, CancellationToken.None);
 
         detectedRequest.Should().NotBeNull();
@@ -125,7 +126,7 @@ public class AzureFaceProviderTests
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
 
-        using var image = new MemoryStream(new byte[] { 1 });
+        using var image = await CreateTestImageAsync();
         var faces = await provider.DetectAsync(image, CancellationToken.None);
 
         detectedRequest.Should().NotBeNull();
@@ -239,7 +240,8 @@ public class AzureFaceProviderTests
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
 
-        var faces = new[] { new FaceToLink(42, () => new MemoryStream(new byte[] { 5, 4, 3 }), null) };
+        using var testImage = await CreateTestImageAsync();
+        var faces = new[] { new FaceToLink(42, () => testImage, null) };
         var result = await provider.LinkFacesToPersonAsync(10, faces, CancellationToken.None);
 
         addFaceRequest.Should().NotBeNull();
@@ -289,7 +291,8 @@ public class AzureFaceProviderTests
         var logger = new TestLogger<AzureFaceProvider>();
         var provider = CreateProvider(options, handler, logger);
 
-        var faces = new[] { new FaceToLink(42, () => new MemoryStream(new byte[] { 5, 4, 3 }), null) };
+        using var testImage = await CreateTestImageAsync();
+        var faces = new[] { new FaceToLink(42, () => testImage, null) };
         await provider.LinkFacesToPersonAsync(10, faces, CancellationToken.None);
 
         logger.Entries.Should().Contain(e => e.Level == LogLevel.Warning && e.Message.Contains("Azure training timeout", StringComparison.Ordinal));
@@ -431,9 +434,80 @@ public class AzureFaceProviderTests
         handler.PendingHandlers.Should().Be(0);
     }
 
+    [Test]
+    public async Task DetectAsync_NormalizesBoundingBoxCoordinates()
+    {
+        // Azure returns absolute pixel coordinates, we need to verify they're normalized to 0-1 range
+        var options = new AzureFaceOptions
+        {
+            Endpoint = Endpoint,
+            Key = ApiKey,
+            DetectionModel = "detection_01",
+            RecognitionModel = "recognition_04"
+        };
+        var handler = new HttpMockSequenceHandler();
+        handler.Enqueue((req, _) =>
+        {
+            var response = HttpResponseBuilder.Create()
+                .WithJson(new[]
+                {
+                    new
+                    {
+                        faceId = "11111111-1111-1111-1111-111111111111",
+                        faceRectangle = new { left = 100, top = 200, width = 300, height = 400 },
+                        faceAttributes = new { age = 25.0 }
+                    }
+                })
+                .Build();
+            return Task.FromResult(response);
+        });
+        var logger = new TestLogger<AzureFaceProvider>();
+        var provider = CreateProvider(options, handler, logger);
+
+        // Create a real image (1000x1000) to test normalization
+        using var image = new MemoryStream();
+        using (var magickImage = new MagickImage(MagickColors.Red, 1000, 1000))
+        {
+            magickImage.Format = MagickFormat.Jpeg;
+            magickImage.Quality = 10; // Low quality to reduce size
+            await magickImage.WriteAsync(image);
+        }
+        image.Position = 0;
+
+        var result = await provider.DetectAsync(image, CancellationToken.None);
+
+        result.Should().ContainSingle();
+        var face = result[0];
+
+        // Azure returned absolute coordinates: (100, 200, 300, 400) on 1000x1000 image
+        // Should be normalized to: (0.1, 0.2, 0.3, 0.4)
+        face.BoundingBox.Should().NotBeNull();
+        face.BoundingBox!.Left.Should().BeApproximately(0.1f, 0.001f, "Left should be normalized: 100/1000 = 0.1");
+        face.BoundingBox.Top.Should().BeApproximately(0.2f, 0.001f, "Top should be normalized: 200/1000 = 0.2");
+        face.BoundingBox.Width.Should().BeApproximately(0.3f, 0.001f, "Width should be normalized: 300/1000 = 0.3");
+        face.BoundingBox.Height.Should().BeApproximately(0.4f, 0.001f, "Height should be normalized: 400/1000 = 0.4");
+    }
+
     private static AzureFaceProvider CreateProvider(AzureFaceOptions options, HttpMockSequenceHandler handler, ILogger<AzureFaceProvider> logger)
     {
         var client = AzureFaceClientFactory.Create(options, handler);
         return new AzureFaceProvider(client, Options.Create(options), logger);
+    }
+
+    /// <summary>
+    /// Creates a minimal valid JPEG image for testing.
+    /// Azure provider needs to read image dimensions using ImageMagick.
+    /// </summary>
+    private static async Task<MemoryStream> CreateTestImageAsync(uint width = 100, uint height = 100)
+    {
+        var stream = new MemoryStream();
+        using (var image = new MagickImage(MagickColors.Red, width, height))
+        {
+            image.Format = MagickFormat.Jpeg;
+            image.Quality = 1; // Minimum quality for smallest size
+            await image.WriteAsync(stream);
+        }
+        stream.Position = 0;
+        return stream;
     }
 }

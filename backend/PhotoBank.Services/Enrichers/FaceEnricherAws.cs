@@ -12,6 +12,11 @@ using DbFace = PhotoBank.DbContext.Models.Face;
 
 namespace PhotoBank.Services.Enrichers;
 
+/// <summary>
+/// Legacy face enricher using AWS Rekognition API directly.
+/// Use <see cref="UnifiedFaceEnricher"/> instead, which supports multiple providers.
+/// </summary>
+[Obsolete("Use UnifiedFaceEnricher instead. This class will be removed in a future version.")]
 public class FaceEnricherAws : IEnricher
 {
     private const int MinFaceSize = 36;

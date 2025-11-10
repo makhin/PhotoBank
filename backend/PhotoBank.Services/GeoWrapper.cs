@@ -5,6 +5,7 @@ using MetadataExtractor.Formats.Exif;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
+using PhotoBank.Services.FaceRecognition.Abstractions;
 using Geometry = NetTopologySuite.Geometries.Geometry;
 using Point = NetTopologySuite.Geometries.Point;
 
@@ -90,6 +91,24 @@ namespace PhotoBank.Services
             var height = (int)(rectangle.Height / scale);
 
             return CreateRectanglePolygon(left, top, width, height);
+        }
+
+        /// <summary>
+        /// Creates a rectangle geometry from unified FaceBoundingBox (normalized coordinates 0-1).
+        /// </summary>
+        /// <param name="boundingBox">Normalized bounding box (values 0.0 to 1.0)</param>
+        /// <param name="imageWidth">Image width in pixels</param>
+        /// <param name="imageHeight">Image height in pixels</param>
+        /// <param name="scale">Scale factor to apply</param>
+        /// <returns>Rectangle geometry</returns>
+        public static Geometry GetRectangle(FaceBoundingBox boundingBox, uint imageWidth, uint imageHeight, double scale = 1)
+        {
+            var x = (int)(imageWidth * boundingBox.Left / scale);
+            var y = (int)(imageHeight * boundingBox.Top / scale);
+            var width = (int)(imageWidth * boundingBox.Width / scale);
+            var height = (int)(imageHeight * boundingBox.Height / scale);
+
+            return CreateRectanglePolygon(x, y, width, height);
         }
     }
 }

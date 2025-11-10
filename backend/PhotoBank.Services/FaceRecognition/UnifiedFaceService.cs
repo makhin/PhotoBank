@@ -12,7 +12,7 @@ using PhotoBank.Services.FaceRecognition.Abstractions;
 
 namespace PhotoBank.Services.FaceRecognition;
 
-public sealed class UnifiedFaceService
+public class UnifiedFaceService : IUnifiedFaceService
 {
     private readonly IFaceProvider _provider;
     private readonly IRepository<Person> _persons;

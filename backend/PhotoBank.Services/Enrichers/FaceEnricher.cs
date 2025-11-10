@@ -13,6 +13,11 @@ using Gender = Microsoft.Azure.CognitiveServices.Vision.Face.Models.Gender;
 
 namespace PhotoBank.Services.Enrichers;
 
+/// <summary>
+/// Legacy face enricher using Azure Face API directly.
+/// Use <see cref="UnifiedFaceEnricher"/> instead, which supports multiple providers.
+/// </summary>
+[Obsolete("Use UnifiedFaceEnricher instead. This class will be removed in a future version.")]
 public class FaceEnricher : IEnricher
 {
     private readonly IFaceService _faceService;
