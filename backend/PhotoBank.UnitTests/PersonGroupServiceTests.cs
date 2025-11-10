@@ -103,6 +103,7 @@ public class PersonGroupServiceTests
             faceRepository,
             mapper,
             mediaUrlResolver.Object,
+            referenceDataService,
             s3Options);
 
         var duplicateFinder = new Mock<IPhotoDuplicateFinder>();
