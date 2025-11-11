@@ -70,6 +70,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    mode: 'onBlur',
     defaultValues: {
       email: '',
       password: '',
@@ -81,6 +82,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log('Form submitted with values:', values);
     setIsLoading(true);
     try {
       // Create the user with basic fields
@@ -125,14 +127,26 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       onOpenChange(false);
     } catch (error) {
       console.error('Error creating user:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to create user. Please try again.';
       toast({
         title: 'Error',
-        description: 'Failed to create user. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onError = (errors: typeof form.formState.errors) => {
+    console.error('Form validation errors:', errors);
+    const firstError = Object.values(errors)[0];
+    toast({
+      title: 'Validation Error',
+      description: firstError?.message || 'Please check the form for errors.',
+      variant: 'destructive',
+    });
   };
 
   const timeOptions = Array.from({ length: 24 }, (_, i) => {
@@ -149,7 +163,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
         <Form {...form}>
           {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-4">
             <FormField
               control={form.control}
               name="email"
