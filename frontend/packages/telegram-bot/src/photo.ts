@@ -5,7 +5,7 @@ import type { PhotoDto } from '@photobank/shared/api/photobank';
 import { formatPhotoMessage } from './formatPhotoMessage';
 import type { MyContext } from './i18n';
 import { getPhoto } from './services/photo';
-import { API_BASE_URL } from './config';
+import { IMAGE_BASE_URL } from './config';
 
 export const photoMessages = new Map<number, number>();
 export const currentPagePhotos = new Map<
@@ -46,7 +46,7 @@ function deriveFilename(photo: PhotoDto, imageUrl: string): string | undefined {
 function resolveImageUrl(imageUrl: string): string {
   // Если URL относительный (начинается с /), преобразуем его в абсолютный
   if (imageUrl.startsWith('/')) {
-    const baseUrl = API_BASE_URL || '';
+    const baseUrl = IMAGE_BASE_URL || '';
     // Убираем trailing slash из baseUrl, если есть
     const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     return `${normalizedBase}${imageUrl}`;
@@ -196,7 +196,13 @@ export async function openPhotoInline(ctx: MyContext, id: number) {
       }
       return;
     } catch {
+      // Если редактирование не удалось, удаляем старое сообщение и создадим новое
       photoMessages.delete(chatId);
+      try {
+        await ctx.api.deleteMessage(chatId, existing);
+      } catch {
+        // Игнорируем ошибку удаления (сообщение может быть уже удалено)
+      }
     }
   }
 
