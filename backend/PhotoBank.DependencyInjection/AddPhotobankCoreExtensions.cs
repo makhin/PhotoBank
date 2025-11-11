@@ -35,6 +35,7 @@ public static partial class ServiceCollectionExtensions
                 .WithCredentials(opts.AccessKey, opts.SecretKey)
                 .Build();
         });
+        services.AddHostedService<MinioInitializationService>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<IFaceStorageService, FaceStorageService>();
         services.AddScoped<MinioObjectService>();

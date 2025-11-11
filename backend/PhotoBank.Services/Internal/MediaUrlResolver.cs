@@ -45,38 +45,19 @@ public sealed class MediaUrlResolver : IMediaUrlResolver
             return null;
         }
 
-        if (ttlSeconds <= 0)
-        {
-            _logger.LogWarning(
-                "TTL must be positive when resolving media URL. PhotoId: {PhotoId}; FaceId: {FaceId}; Key: {S3Key}.",
-                context.PhotoId,
-                context.FaceId,
-                key);
-            return null;
-        }
-
         var s3 = _s3Options.Value ?? new S3Options();
 
-        try
-        {
-            return await _minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs()
-                .WithBucket(s3.Bucket)
-                .WithObject(key)
-                .WithExpiry(ttlSeconds)).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "Failed to generate presigned URL. PhotoId: {PhotoId}; FaceId: {FaceId}; Key: {S3Key}.",
-                context.PhotoId,
-                context.FaceId,
-                key);
-            return null;
-        }
+        // Возвращаем относительный путь через nginx proxy
+        // Это позволяет URL автоматически работать с любым хостом (makhin.ddns.net или raspberrypi.local)
+        var relativePath = $"/minio/{s3.Bucket}/{key}";
+
+        _logger.LogDebug(
+            "Resolved media URL to relative path. PhotoId: {PhotoId}; FaceId: {FaceId}; Key: {S3Key}; Path: {Path}.",
+            context.PhotoId,
+            context.FaceId,
+            key,
+            relativePath);
+
+        return await Task.FromResult(relativePath);
     }
 }

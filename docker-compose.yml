@@ -26,8 +26,8 @@ services:
     environment:
       MINIO_ROOT_USER: alexandr
       MINIO_ROOT_PASSWORD: 12345678
-      MINIO_BROWSER_REDIRECT_URL: "https://makhin.ddns.net/minio"
-      MINIO_SERVER_URL: "https://makhin.ddns.net/minio"
+      # MINIO_SERVER_URL больше не нужен, так как используются относительные пути через nginx
+      # MINIO_BROWSER_REDIRECT_URL убран, чтобы MinIO автоматически использовал текущий хост
     volumes:
       - ./minio/data:/data
     healthcheck:
