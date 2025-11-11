@@ -83,8 +83,12 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log('Form submitted with values:', values);
+    console.log('Form state errors:', form.formState.errors);
+    console.log('Form is valid:', form.formState.isValid);
+
     setIsLoading(true);
     try {
+      console.log('Calling createUserMutation.mutateAsync...');
       // Create the user with basic fields
       const createResponse = await createUserMutation.mutateAsync({
         data: {
@@ -94,6 +98,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
           roles: values.roles,
         },
       });
+      console.log('Create user response:', createResponse);
 
       // If telegram fields are provided, update the user
       if (
@@ -127,6 +132,11 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       onOpenChange(false);
     } catch (error) {
       console.error('Error creating user:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        fullError: error,
+      });
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to create user. Please try again.';
       toast({
@@ -154,6 +164,11 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
     return `${hour}:00:00`;
   });
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    console.log('Form onSubmit event triggered', e);
+    // Don't prevent default, let react-hook-form handle it
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -163,7 +178,13 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
         <Form {...form}>
           {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-          <form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              handleFormSubmit(e);
+              void form.handleSubmit(onSubmit, onError)(e);
+            }}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="email"
@@ -315,11 +336,16 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isLoading}
                 className="w-full sm:w-auto h-12"
                 size="lg"
+                onClick={() => {
+                  console.log('Create User button clicked');
+                  console.log('isLoading:', isLoading);
+                  console.log('Form errors:', form.formState.errors);
+                }}
               >
                 <Save className="w-4 h-4 mr-2" />
                 {isLoading ? 'Creating...' : 'Create User'}
