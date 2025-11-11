@@ -27,6 +27,7 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.IntegrationTests;
 
 [TestFixture]
+[Category("Integration")]
 public class ProgramSmokeTests
 {
     private TextWriter? _originalConsoleOut;

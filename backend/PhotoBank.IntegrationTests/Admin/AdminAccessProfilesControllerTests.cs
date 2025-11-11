@@ -27,6 +27,7 @@ using Testcontainers.PostgreSql;
 namespace PhotoBank.IntegrationTests.Admin;
 
 [TestFixture]
+[Category("Integration")]
 public class AdminAccessProfilesControllerTests
 {
     private const string AdminRole = "Admin";

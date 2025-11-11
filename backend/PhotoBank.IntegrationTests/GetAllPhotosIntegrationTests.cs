@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 namespace PhotoBank.IntegrationTests;
 
 [TestFixture]
+[Category("Integration")]
 public class GetAllPhotosIntegrationTests
 {
     private ServiceProvider _provider = null!;

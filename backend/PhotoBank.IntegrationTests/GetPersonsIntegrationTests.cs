@@ -27,6 +27,7 @@ using Testcontainers.PostgreSql;
 namespace PhotoBank.IntegrationTests;
 
 [TestFixture]
+[Category("Integration")]
 public class GetPersonsIntegrationTests
 {
     private PostgreSqlContainer _dbContainer = null!;

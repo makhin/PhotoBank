@@ -24,6 +24,7 @@ using Testcontainers.PostgreSql;
 namespace PhotoBank.IntegrationTests.Auth;
 
 [TestFixture]
+[Category("Integration")]
 public class TelegramSubscriptionsTests
 {
     private const string ServiceKey = "integration-telegram-key";
