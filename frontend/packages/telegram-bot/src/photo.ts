@@ -5,7 +5,7 @@ import type { PhotoDto } from '@photobank/shared/api/photobank';
 import { formatPhotoMessage } from './formatPhotoMessage';
 import type { MyContext } from './i18n';
 import { getPhoto } from './services/photo';
-import { IMAGE_BASE_URL } from './config';
+import { IMAGE_BASE_URL, API_BASE_URL } from './config';
 
 export const photoMessages = new Map<number, number>();
 export const currentPagePhotos = new Map<
@@ -46,7 +46,8 @@ function deriveFilename(photo: PhotoDto, imageUrl: string): string | undefined {
 function resolveImageUrl(imageUrl: string): string {
   // Если URL относительный (начинается с /), преобразуем его в абсолютный
   if (imageUrl.startsWith('/')) {
-    const baseUrl = IMAGE_BASE_URL || '';
+    // Используем IMAGE_BASE_URL, если задан, иначе fallback на API_BASE_URL для обратной совместимости
+    const baseUrl = IMAGE_BASE_URL || API_BASE_URL || '';
     // Убираем trailing slash из baseUrl, если есть
     const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
     return `${normalizedBase}${imageUrl}`;
