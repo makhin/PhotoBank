@@ -15,6 +15,7 @@ export const BOT_TOKEN: string = process.env.BOT_TOKEN || '';
 if (!BOT_TOKEN) throw new Error(botTokenNotDefinedError);
 
 export const API_BASE_URL = process.env.API_BASE_URL;
+export const IMAGE_BASE_URL = process.env.IMAGE_BASE_URL;
 export const BOT_SERVICE_KEY = process.env.BOT_SERVICE_KEY;
 
 export const AZURE_OPENAI_ENDPOINT: string =
