@@ -18,6 +18,7 @@ import {
 
 import { i18n } from './i18n';
 import type { MyContext } from './i18n';
+import { logger } from './logger';
 import {
   fetchPaths,
   fetchPersons,
@@ -72,32 +73,39 @@ function getDict(): DictData {
 
 export async function loadDictionaries(ctx: MyContext) {
   if (cache.has(currentUser)) return;
-  const tagList = await fetchTags(ctx);
-  const personList = await fetchPersons(ctx);
-  const storageList = await fetchStorages(ctx);
-  const pathList = await fetchPaths(ctx);
-  const tagMap = buildTagMap(tagList);
-  const personMap = buildPersonMap(personList);
-  const storageMap = buildStorageMap(storageList);
-  const tagIndex = buildTagSearchIndex(tagList);
-  const personIndex = buildPersonSearchIndex(personList);
-  const pathsMap = new Map<number, string[]>();
-  for (const p of pathList) {
-    const arr = pathsMap.get(p.storageId) ?? [];
-    arr.push(p.path);
-    pathsMap.set(p.storageId, arr);
+
+  try {
+    const tagList = await fetchTags(ctx);
+    const personList = await fetchPersons(ctx);
+    const storageList = await fetchStorages(ctx);
+    const pathList = await fetchPaths(ctx);
+    const tagMap = buildTagMap(tagList);
+    const personMap = buildPersonMap(personList);
+    const storageMap = buildStorageMap(storageList);
+    const tagIndex = buildTagSearchIndex(tagList);
+    const personIndex = buildPersonSearchIndex(personList);
+    const pathsMap = new Map<number, string[]>();
+    for (const p of pathList) {
+      const arr = pathsMap.get(p.storageId) ?? [];
+      arr.push(p.path);
+      pathsMap.set(p.storageId, arr);
+    }
+    cache.set(currentUser, {
+      tagMap,
+      personMap,
+      tagIndex,
+      personIndex,
+      tagList,
+      personList,
+      storageList,
+      storageMap,
+      pathsMap,
+    });
+  } catch (error) {
+    logger.error(`Failed to load dictionaries for user ${currentUser}:`, error);
+    // Re-throw to prevent bot from continuing with invalid state
+    throw error;
   }
-  cache.set(currentUser, {
-    tagMap,
-    personMap,
-    tagIndex,
-    personIndex,
-    tagList,
-    personList,
-    storageList,
-    storageMap,
-    pathsMap,
-  });
 }
 
 export function getTagName(id: number): string {

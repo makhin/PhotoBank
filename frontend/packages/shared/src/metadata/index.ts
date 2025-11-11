@@ -15,7 +15,8 @@ const createMemoizedBuilder = <TEntity, TResult>(
   let emptyCache: TResult | undefined;
 
   return (entities?: MaybeEntities<TEntity>): TResult => {
-    if (!entities || entities.length === 0) {
+    // Ensure entities is a valid array
+    if (!entities || !Array.isArray(entities) || entities.length === 0) {
       if (!emptyCache) {
         emptyCache = factory([]);
       }
