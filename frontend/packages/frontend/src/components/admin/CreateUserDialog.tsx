@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Clock, Save, X } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import {
   Dialog,
@@ -30,6 +31,11 @@ import {
   SelectValue,
 } from '@/shared/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import {
+  useUsersCreate,
+  useUsersUpdate,
+  getUsersGetAllQueryKey,
+} from '@photobank/shared/api/photobank';
 
 const roles = ['Admin', 'User'] as const;
 
@@ -57,6 +63,10 @@ interface CreateUserDialogProps {
 export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+
+  const createUserMutation = useUsersCreate();
+  const updateUserMutation = useUsersUpdate();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -73,18 +83,48 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Create the user with basic fields
+      const createResponse = await createUserMutation.mutateAsync({
+        data: {
+          email: values.email,
+          password: values.password,
+          phoneNumber: values.phoneNumber || null,
+          roles: values.roles,
+        },
+      });
+
+      // If telegram fields are provided, update the user
+      if (
+        createResponse.status === 201 &&
+        (values.telegramUserId || values.telegramSendTimeUtc)
+      ) {
+        const userId = createResponse.data.id;
+        if (userId) {
+          await updateUserMutation.mutateAsync({
+            id: userId,
+            data: {
+              phoneNumber: values.phoneNumber || null,
+              telegramUserId: values.telegramUserId || null,
+              telegramSendTimeUtc: values.telegramSendTimeUtc || null,
+            },
+          });
+        }
+      }
+
+      // Invalidate and refetch users list
+      await queryClient.invalidateQueries({
+        queryKey: getUsersGetAllQueryKey(),
+      });
+
       toast({
         title: 'User Created',
         description: `${values.email} has been successfully created.`,
       });
-      
+
       form.reset();
       onOpenChange(false);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
+      console.error('Error creating user:', error);
       toast({
         title: 'Error',
         description: 'Failed to create user. Please try again.',
