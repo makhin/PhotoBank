@@ -1,6 +1,34 @@
-pluginManagement { includeBuild("../../../node_modules/@react-native/gradle-plugin") }
+def resolveReactNativeGradlePlugin() {
+    def nodeModulesDir = file("../../../node_modules")
+    def candidate = file(new File(nodeModulesDir, "@react-native/gradle-plugin"))
+
+    if (!candidate.exists()) {
+        def pnpmDir = new File(nodeModulesDir, ".pnpm")
+        if (pnpmDir.exists()) {
+            def matches = pnpmDir.listFiles({ file ->
+                file.isDirectory() && file.name.startsWith("@react-native+gradle-plugin@")
+            } as FileFilter)
+
+            if (matches && matches.length > 0) {
+                def matchList = matches.toList().sort { it.name }
+                // Use the newest match; pnpm keeps the actual package inside node_modules/@react-native/gradle-plugin
+                candidate = new File(matchList.last(), "node_modules/@react-native/gradle-plugin")
+            }
+        }
+    }
+
+    if (!candidate.exists()) {
+        throw new GradleException("Unable to locate @react-native/gradle-plugin. Have you run `pnpm install` in the frontend workspace?")
+    }
+
+    return candidate
+}
+
+def reactNativeGradlePluginDir = resolveReactNativeGradlePlugin()
+
+pluginManagement { includeBuild(reactNativeGradlePluginDir) }
 plugins { id("com.facebook.react.settings") }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
 rootProject.name = 'tv'
 include ':app'
-includeBuild('../../../node_modules/@react-native/gradle-plugin')
+includeBuild(reactNativeGradlePluginDir)
