@@ -35,8 +35,8 @@ const config = {
     // ������� ������� � �������������� ������� React
     // ��������� �� ������ node_modules ������, ��� ��� react/react-native - ������ �����������
     extraNodeModules: {
-      'react': path.resolve(__dirname, 'node_modules/react'),
-      'react-native': path.resolve(__dirname, 'node_modules/react-native'),
+      'react': path.resolve(__dirname, '../../node_modules/react'),
+      'react-native': path.resolve(__dirname, '../../node_modules/react-native'),
     },
   },
 
