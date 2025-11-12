@@ -4,6 +4,7 @@ import { Pressable, Text, Image, View } from 'react-native';
 import { format } from 'date-fns';
 import { TagBadge } from './TagBadge';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { resolveMediaUrl } from '@/utils/urlHelpers';
 
 interface PhotoListItemProps {
   thumbnailUrl?: string | null;
@@ -75,7 +76,7 @@ export const PhotoListItem: React.FC<PhotoListItemProps> = ({
       {/* Thumbnail */}
       <View style={appStyles.list.thumbnailContainer}>
         {thumbnailUrl ? (
-          <Image source={{ uri: thumbnailUrl }} style={appStyles.list.thumbnail} resizeMode="cover" />
+          <Image source={{ uri: resolveMediaUrl(thumbnailUrl) }} style={appStyles.list.thumbnail} resizeMode="cover" />
         ) : (
           <View style={[appStyles.list.thumbnail, appStyles.list.thumbnailPlaceholder]}>
             <Text style={appStyles.list.placeholderText}>?</Text>
