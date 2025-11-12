@@ -2,18 +2,18 @@ const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const path = require('path');
 
 /**
- * Metro configuration для TV с поддержкой pnpm
+ * Metro configuration пїЅпїЅпїЅ TV пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ pnpm
  * @type {import('metro-config').MetroConfig}
  */
 const config = {
   projectRoot: __dirname,
   
-  // Поддержка pnpm symlinks
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ pnpm symlinks
   watchFolders: [__dirname],
   
   resolver: {
-    // TV-специфичные расширения файлов
-    // Metro будет искать .tv.tsx, .android.tv.tsx, .ios.tv.tsx
+    // TV-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+    // Metro пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ .tv.tsx, .android.tv.tsx, .ios.tv.tsx
     platforms: ['android', 'ios', 'native', 'tv'],
     
     sourceExts: [
@@ -28,11 +28,12 @@ const config = {
       'json',
     ],
     
-    // Поддержка symlinks для pnpm
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ symlinks пїЅпїЅпїЅ pnpm
     unstable_enableSymlinks: true,
     unstable_enablePackageExports: true,
-    
-    // Решение проблем с множественными копиями React
+
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ React
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ node_modules пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅ react/react-native - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     extraNodeModules: {
       'react': path.resolve(__dirname, 'node_modules/react'),
       'react-native': path.resolve(__dirname, 'node_modules/react-native'),
