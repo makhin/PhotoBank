@@ -8,8 +8,11 @@ const path = require('path');
 const config = {
   projectRoot: __dirname,
   
-  // ��������� pnpm symlinks
-  watchFolders: [__dirname],
+  // ��������� pnpm symlinks � workspace node_modules
+  watchFolders: [
+    __dirname,
+    path.resolve(__dirname, '../../node_modules'),
+  ],
   
   resolver: {
     // TV-����������� ���������� ������
@@ -31,6 +34,12 @@ const config = {
     // ��������� symlinks ��� pnpm
     unstable_enableSymlinks: true,
     unstable_enablePackageExports: true,
+
+    // ������� ���� ��� ������ node_modules � pnpm workspace
+    nodeModulesPaths: [
+      path.resolve(__dirname, '../../node_modules'),
+      path.resolve(__dirname, 'node_modules'),
+    ],
 
     // ������� ������� � �������������� ������� React
     // ��������� �� ������ node_modules ������, ��� ��� react/react-native - ������ �����������
