@@ -70,6 +70,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    mode: 'onBlur',
     defaultValues: {
       email: '',
       password: '',
@@ -81,8 +82,13 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log('Form submitted with values:', values);
+    console.log('Form state errors:', form.formState.errors);
+    console.log('Form is valid:', form.formState.isValid);
+
     setIsLoading(true);
     try {
+      console.log('Calling createUserMutation.mutateAsync...');
       // Create the user with basic fields
       const createResponse = await createUserMutation.mutateAsync({
         data: {
@@ -92,6 +98,7 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
           roles: values.roles,
         },
       });
+      console.log('Create user response:', createResponse);
 
       // If telegram fields are provided, update the user
       if (
@@ -125,9 +132,16 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
       onOpenChange(false);
     } catch (error) {
       console.error('Error creating user:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        fullError: error,
+      });
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to create user. Please try again.';
       toast({
         title: 'Error',
-        description: 'Failed to create user. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -135,10 +149,25 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
     }
   };
 
+  const onError = (errors: typeof form.formState.errors) => {
+    console.error('Form validation errors:', errors);
+    const firstError = Object.values(errors)[0];
+    toast({
+      title: 'Validation Error',
+      description: firstError?.message || 'Please check the form for errors.',
+      variant: 'destructive',
+    });
+  };
+
   const timeOptions = Array.from({ length: 24 }, (_, i) => {
     const hour = i.toString().padStart(2, '0');
     return `${hour}:00:00`;
   });
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    console.log('Form onSubmit event triggered', e);
+    // Don't prevent default, let react-hook-form handle it
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -149,7 +178,13 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
         <Form {...form}>
           {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              handleFormSubmit(e);
+              void form.handleSubmit(onSubmit, onError)(e);
+            }}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="email"
@@ -301,11 +336,16 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isLoading}
                 className="w-full sm:w-auto h-12"
                 size="lg"
+                onClick={() => {
+                  console.log('Create User button clicked');
+                  console.log('isLoading:', isLoading);
+                  console.log('Form errors:', form.formState.errors);
+                }}
               >
                 <Save className="w-4 h-4 mr-2" />
                 {isLoading ? 'Creating...' : 'Create User'}
