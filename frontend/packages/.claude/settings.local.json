@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/PhotoBank/**)",
+      "Bash(cat:*)",
+      "Bash(pnpm run generate:api:*)",
+      "Read(//c//**)",
+      "Bash(node -e:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm list:*)",
+      "Bash(pnpm run type-check:*)",
+      "Bash(pnpm run orval:*)",
+      "Bash(pnpm -r --filter \"@photobank/shared\" run typecheck:*)",
+      "Bash(pnpm -r --filter \"@photobank/frontend\" run build:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

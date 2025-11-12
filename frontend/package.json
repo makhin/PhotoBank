@@ -10,12 +10,15 @@
   "private": true,
   "scripts": {
     "orval": "orval --config orval.config.ts",
+    "orval:frontend": "orval --config orval.config.ts --project frontend",
+    "orval:tv": "orval --config orval.config.ts --project tv",
     "build:types": "pnpm --filter @photobank/shared run build",
     "build:frontend": "pnpm --filter @photobank/frontend run build",
     "build:bot": "pnpm --filter @photobank/telegram-bot run build",
     "build": "pnpm run orval && pnpm -r --filter \"@photobank/*\" run build",
     "dev:frontend": "pnpm --filter @photobank/frontend run dev",
     "dev:bot": "pnpm --filter @photobank/telegram-bot run dev",
+    "dev:tv": "pnpm --filter @photobank/tv run start",
     "lint": "eslint packages --ext .ts,.tsx --max-warnings=0",
     "lint:fix": "eslint packages --ext .ts,.tsx --max-warnings=0 --fix"
   },
