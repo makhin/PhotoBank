@@ -1,3 +1,20 @@
+pluginManagement {
+    def resolvedDir = resolveReactNativeGradlePlugin()
+    settings.ext.reactNativeGradlePluginDir = resolvedDir
+    includeBuild(resolvedDir)
+}
+
+plugins { id("com.facebook.react.settings") }
+
+def reactNativeGradlePluginDir = settings.ext.reactNativeGradlePluginDir ?: resolveReactNativeGradlePlugin()
+
+extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
+    ex.autolinkLibrariesFromCommand()
+}
+rootProject.name = 'tv'
+include ':app'
+includeBuild(reactNativeGradlePluginDir)
+
 def resolveReactNativeGradlePlugin() {
     def nodeModulesDir = file("../../../node_modules")
     def candidate = file(new File(nodeModulesDir, "@react-native/gradle-plugin"))
@@ -23,12 +40,3 @@ def resolveReactNativeGradlePlugin() {
 
     return candidate
 }
-
-def reactNativeGradlePluginDir = resolveReactNativeGradlePlugin()
-
-pluginManagement { includeBuild(reactNativeGradlePluginDir) }
-plugins { id("com.facebook.react.settings") }
-extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
-rootProject.name = 'tv'
-include ':app'
-includeBuild(reactNativeGradlePluginDir)
