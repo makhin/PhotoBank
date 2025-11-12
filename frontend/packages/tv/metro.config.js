@@ -31,11 +31,12 @@ const config = {
     // ��������� symlinks ��� pnpm
     unstable_enableSymlinks: true,
     unstable_enablePackageExports: true,
-    
-    // ������� ������� � �������������� ������� React (� workspace root ��-�� pnpm hoisting)
+
+    // ������� ������� � �������������� ������� React
+    // ��������� �� ������ node_modules ������, ��� ��� react/react-native - ������ �����������
     extraNodeModules: {
-      'react': path.resolve(__dirname, '../../node_modules/react'),
-      'react-native': path.resolve(__dirname, '../../node_modules/react-native'),
+      'react': path.resolve(__dirname, 'node_modules/react'),
+      'react-native': path.resolve(__dirname, 'node_modules/react-native'),
     },
   },
 
