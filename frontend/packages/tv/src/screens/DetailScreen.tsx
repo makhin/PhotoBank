@@ -14,6 +14,7 @@ import { RootStackParamList } from '@/navigation/RootNavigator';
 import { usePhotosGetPhoto } from '@/api/generated/photos/photos';
 import { useAppStore } from '@/store/useAppStore';
 import { useThemedStyles } from '@/hooks/useThemedStyles';
+import { resolveMediaUrl } from '@/utils/urlHelpers';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>;
 
@@ -109,7 +110,7 @@ const DetailScreen: React.FC<Props> = ({ route, navigation }) => {
     >
       {photo.previewUrl && (
         <Image
-          source={{ uri: photo.previewUrl }}
+          source={{ uri: resolveMediaUrl(photo.previewUrl) }}
           style={appStyles.media.fullscreenImage}
           resizeMode="contain"
         />
