@@ -54,18 +54,14 @@ export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawe
   );
 
   const derivedAssignedProfileIds = useMemo(() => {
-    const rawProfiles = (user as {
-      accessProfiles?: Array<{ profileId?: number | null; id?: number | null }>;
-    }).accessProfiles;
-
-    if (!rawProfiles) {
+    if (!user.accessProfiles?.length) {
       return [] as number[];
     }
 
-    return rawProfiles
-      .map((profile) => profile?.profileId ?? profile?.id)
+    return user.accessProfiles
+      .map((assignment) => assignment?.profileId)
       .filter((profileId): profileId is number => typeof profileId === 'number');
-  }, [user]);
+  }, [user.accessProfiles]);
 
   const [assignedProfileIds, setAssignedProfileIds] = useState<Set<number>>(
     () => new Set(derivedAssignedProfileIds)

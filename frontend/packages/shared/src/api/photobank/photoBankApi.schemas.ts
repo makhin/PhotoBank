@@ -55,6 +55,12 @@ export type CreateUserDto = {
   phoneNumber?: string | null;
   /** @nullable */
   roles?: string[] | null;
+  /** @nullable */
+  accessProfiles?: UserAccessProfileAssignmentDto[] | null;
+};
+
+export type UserAccessProfileAssignmentDto = {
+  profileId: number;
 };
 
 export type FaceBoxDto = {
@@ -257,6 +263,8 @@ export type ResetPasswordDto = {
 export type SetRolesDto = {
   /** @nullable */
   roles?: string[] | null;
+  /** @nullable */
+  accessProfiles?: UserAccessProfileAssignmentDto[] | null;
 };
 
 export type StorageDto = {
@@ -319,6 +327,8 @@ export type UserDto = {
   telegramSendTimeUtc?: string | null;
   /** @nullable */
   roles?: string[] | null;
+  /** @nullable */
+  accessProfiles?: UserAccessProfileAssignmentDto[] | null;
 };
 
 export type FacesGetAllParams = {

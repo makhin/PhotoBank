@@ -11,4 +11,6 @@ public class UserDto : IHasId<string>
     public string? TelegramUserId { get; set; }
     public TimeSpan? TelegramSendTimeUtc { get; set; }
     public IReadOnlyCollection<string> Roles { get; init; } = Array.Empty<string>();
+    public IReadOnlyCollection<UserAccessProfileAssignmentDto> AccessProfiles { get; init; } =
+        Array.Empty<UserAccessProfileAssignmentDto>();
 }
