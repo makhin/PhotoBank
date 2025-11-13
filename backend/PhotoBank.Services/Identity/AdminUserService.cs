@@ -1,18 +1,20 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using PhotoBank.DbContext.Models;
-using PhotoBank.ViewModel.Dto;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using PhotoBank.AccessControl;
+using PhotoBank.DbContext.Models;
+using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.Services.Identity;
 
 public sealed class AdminUserService(
     UserManager<ApplicationUser> userManager,
-    RoleManager<IdentityRole> roleManager) : IAdminUserService
+    RoleManager<IdentityRole> roleManager,
+    AccessControlDbContext accessControlDbContext) : IAdminUserService
 {
     public async Task<IReadOnlyCollection<UserDto>> GetUsersAsync(UsersQuery query, CancellationToken cancellationToken = default)
     {
@@ -52,11 +54,14 @@ public sealed class AdminUserService(
             .Take(query.Limit)
             .ToListAsync(cancellationToken);
 
+        var assignmentsLookup = await LoadAccessProfileAssignmentsAsync(users, cancellationToken);
+
         var result = new List<UserDto>(users.Count);
         foreach (var user in users)
         {
             var roles = await userManager.GetRolesAsync(user);
-            result.Add(UserDtoMapper.Map(user, roles));
+            assignmentsLookup.TryGetValue(user.Id, out var profileIds);
+            result.Add(UserDtoMapper.Map(user, roles, profileIds));
         }
 
         return result;
@@ -199,5 +204,29 @@ public sealed class AdminUserService(
         }
 
         return IdentityOperationResult.Success();
+    }
+
+    private async Task<Dictionary<string, IReadOnlyCollection<int>>> LoadAccessProfileAssignmentsAsync(
+        IReadOnlyCollection<ApplicationUser> users,
+        CancellationToken cancellationToken)
+    {
+        if (users.Count == 0)
+        {
+            return new Dictionary<string, IReadOnlyCollection<int>>();
+        }
+
+        var userIds = users.Select(u => u.Id).ToArray();
+
+        var assignments = await accessControlDbContext.UserAccessProfiles
+            .AsNoTracking()
+            .Where(link => userIds.Contains(link.UserId))
+            .Select(link => new { link.UserId, link.ProfileId })
+            .ToListAsync(cancellationToken);
+
+        return assignments
+            .GroupBy(x => x.UserId)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyCollection<int>)group.Select(x => x.ProfileId).ToArray());
     }
 }

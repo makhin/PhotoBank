@@ -235,6 +235,58 @@ public class AdminUsersControllerTests
     }
 
     [Test]
+    public async Task List_IncludesAccessProfileAssignments()
+    {
+        var user = new ApplicationUser
+        {
+            UserName = "assigned@example.com",
+            Email = "assigned@example.com",
+            PhoneNumber = "123456"
+        };
+
+        await SeedUsersAsync((user, new[] { "Viewer" }));
+
+        int profileId;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var accessDb = scope.ServiceProvider.GetRequiredService<AccessControlDbContext>();
+
+            var profile = new AccessProfile
+            {
+                Name = "Night Shift",
+                Description = "Night shift profile"
+            };
+
+            accessDb.AccessProfiles.Add(profile);
+            await accessDb.SaveChangesAsync();
+
+            accessDb.UserAccessProfiles.Add(new UserAccessProfile
+            {
+                UserId = user.Id,
+                ProfileId = profile.Id
+            });
+            await accessDb.SaveChangesAsync();
+
+            profileId = profile.Id;
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/admin/users?limit=10");
+        AddAdminHeaders(request);
+
+        var response = await _client.SendAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var payload = await response.Content.ReadAsStringAsync();
+        var users = JsonSerializer.Deserialize<List<UserDto>>(payload, _jsonOptions);
+
+        users.Should().NotBeNull();
+        var assignedUser = users!.Single(u => u.Id == user.Id);
+        assignedUser.AccessProfiles.Should().NotBeNull();
+        assignedUser.AccessProfiles.Should().ContainSingle(assignment => assignment.ProfileId == profileId);
+    }
+
+    [Test]
     public async Task Update_WithHugeTelegramId_RoundTripsValue()
     {
         var user = new ApplicationUser

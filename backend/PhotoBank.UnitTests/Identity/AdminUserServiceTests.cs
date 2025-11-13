@@ -1,12 +1,15 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using NUnit.Framework;
+using PhotoBank.AccessControl;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Identity;
 using PhotoBank.ViewModel.Dto;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace PhotoBank.UnitTests.Identity;
 
@@ -17,9 +20,10 @@ public class AdminUserServiceTests
     public async Task CreateAsync_DuplicateEmail_ReturnsConflict()
     {
         await using var db = TestDbFactory.CreateInMemory();
+        await using var accessDb = CreateAccessControlInMemory();
         var userManager = IdentityTestHelpers.CreateUserManager(db);
         var roleManager = CreateRoleManager(db);
-        var service = new AdminUserService(userManager, roleManager);
+        var service = new AdminUserService(userManager, roleManager, accessDb);
 
         var user = new ApplicationUser { UserName = "user@example.com", Email = "user@example.com" };
         await userManager.CreateAsync(user, "Str0ngP@ssw0rd!");
@@ -38,9 +42,10 @@ public class AdminUserServiceTests
     public async Task UpdateAsync_InvalidTelegramId_ReturnsValidationFailure()
     {
         await using var db = TestDbFactory.CreateInMemory();
+        await using var accessDb = CreateAccessControlInMemory();
         var userManager = IdentityTestHelpers.CreateUserManager(db);
         var roleManager = CreateRoleManager(db);
-        var service = new AdminUserService(userManager, roleManager);
+        var service = new AdminUserService(userManager, roleManager, accessDb);
 
         var user = new ApplicationUser { UserName = "user@example.com", Email = "user@example.com" };
         await userManager.CreateAsync(user, "Str0ngP@ssw0rd!");
@@ -58,11 +63,12 @@ public class AdminUserServiceTests
     public async Task SetRolesAsync_AddsOnlyExistingRoles()
     {
         await using var db = TestDbFactory.CreateInMemory();
+        await using var accessDb = CreateAccessControlInMemory();
         var userManager = IdentityTestHelpers.CreateUserManager(db);
         var roleManager = CreateRoleManager(db);
         await roleManager.CreateAsync(new IdentityRole("Admin"));
 
-        var service = new AdminUserService(userManager, roleManager);
+        var service = new AdminUserService(userManager, roleManager, accessDb);
 
         var user = new ApplicationUser { UserName = "user@example.com", Email = "user@example.com" };
         await userManager.CreateAsync(user, "Str0ngP@ssw0rd!");
@@ -87,5 +93,18 @@ public class AdminUserServiceTests
             new UpperInvariantLookupNormalizer(),
             new IdentityErrorDescriber(),
             null);
+    }
+
+    private static AccessControlDbContext CreateAccessControlInMemory()
+    {
+        var options = new DbContextOptionsBuilder<AccessControlDbContext>()
+            .UseInMemoryDatabase($"pb-access-tests-{Guid.NewGuid()}")
+            .EnableSensitiveDataLogging()
+            .EnableDetailedErrors()
+            .Options;
+
+        var ctx = new AccessControlDbContext(options);
+        ctx.Database.EnsureCreated();
+        return ctx;
     }
 }
