@@ -115,7 +115,7 @@ public sealed class AccessProfileService : IAccessProfileService
         return true;
     }
 
-    public async Task<bool> AssignUserAsync(int profileId, string userId, CancellationToken ct)
+    public async Task<bool> AssignUserAsync(int profileId, Guid userId, CancellationToken ct)
     {
         var profileExists = await _db.AccessProfiles.AnyAsync(x => x.Id == profileId, ct);
         if (!profileExists)
@@ -133,13 +133,13 @@ public sealed class AccessProfileService : IAccessProfileService
                 UserId = userId
             });
             await _db.SaveChangesAsync(ct);
-            _effectiveAccessProvider.Invalidate(userId);
+            _effectiveAccessProvider.Invalidate(userId.ToString());
         }
 
         return true;
     }
 
-    public async Task<bool> UnassignUserAsync(int profileId, string userId, CancellationToken ct)
+    public async Task<bool> UnassignUserAsync(int profileId, Guid userId, CancellationToken ct)
     {
         var link = await _db.UserAccessProfiles
             .FirstOrDefaultAsync(x => x.ProfileId == profileId && x.UserId == userId, ct);
@@ -150,11 +150,11 @@ public sealed class AccessProfileService : IAccessProfileService
 
         _db.UserAccessProfiles.Remove(link);
         await _db.SaveChangesAsync(ct);
-        _effectiveAccessProvider.Invalidate(userId);
+        _effectiveAccessProvider.Invalidate(userId.ToString());
         return true;
     }
 
-    public async Task<bool> AssignRoleAsync(int profileId, string roleId, CancellationToken ct)
+    public async Task<bool> AssignRoleAsync(int profileId, Guid roleId, CancellationToken ct)
     {
         var profileExists = await _db.AccessProfiles.AnyAsync(x => x.Id == profileId, ct);
         if (!profileExists)
@@ -177,7 +177,7 @@ public sealed class AccessProfileService : IAccessProfileService
         return true;
     }
 
-    public async Task<bool> UnassignRoleAsync(int profileId, string roleId, CancellationToken ct)
+    public async Task<bool> UnassignRoleAsync(int profileId, Guid roleId, CancellationToken ct)
     {
         var link = await _db.RoleAccessProfiles
             .FirstOrDefaultAsync(x => x.ProfileId == profileId && x.RoleId == roleId, ct);
@@ -279,11 +279,11 @@ public sealed class AccessProfileService : IAccessProfileService
         }
     }
 
-    private void InvalidateUsers(IEnumerable<string> userIds)
+    private void InvalidateUsers(IEnumerable<Guid> userIds)
     {
-        foreach (var userId in userIds.Distinct(StringComparer.Ordinal))
+        foreach (var userId in userIds.Distinct())
         {
-            _effectiveAccessProvider.Invalidate(userId);
+            _effectiveAccessProvider.Invalidate(userId.ToString());
         }
     }
 }

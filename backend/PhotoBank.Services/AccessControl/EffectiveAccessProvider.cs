@@ -34,12 +34,24 @@ public sealed class EffectiveAccessProvider : IEffectiveAccessProvider
             return admin;
         }
 
-        var roleIds = principal.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
+        var roleIds = principal.Claims
+            .Where(c => c.Type == ClaimTypes.Role)
+            .Select(c => c.Value)
+            .Where(v => Guid.TryParse(v, out _))
+            .Select(v => Guid.Parse(v))
+            .ToList();
+
+        if (!Guid.TryParse(userId, out var userGuid))
+        {
+            var empty = new EffectiveAccess(new HashSet<int>(), new HashSet<int>(), new List<(DateOnly, DateOnly)>(), false, false);
+            _cache.Set(key, empty, TimeSpan.FromMinutes(5));
+            return empty;
+        }
 
         var profileIds = await _db.RoleAccessProfiles
             .Where(rp => roleIds.Contains(rp.RoleId))
             .Select(rp => rp.ProfileId)
-            .Concat(_db.UserAccessProfiles.Where(up => up.UserId == userId).Select(up => up.ProfileId))
+            .Concat(_db.UserAccessProfiles.Where(up => up.UserId == userGuid).Select(up => up.ProfileId))
             .Distinct()
             .ToListAsync(ct);
 
