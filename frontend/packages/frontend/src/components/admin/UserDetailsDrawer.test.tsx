@@ -25,11 +25,17 @@ if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
 
-vi.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({
-    invalidateQueries: invalidateQueriesMock,
+vi.mock(
+  '@tanstack/react-query',
+  () => ({
+    useQueryClient: () => ({
+      invalidateQueries: invalidateQueriesMock,
+    }),
+    useQuery: vi.fn(),
+    useMutation: vi.fn(),
   }),
-}));
+  { virtual: true }
+);
 
 vi.mock('@photobank/shared/api/photobank', () => ({
   useUsersUpdate: () => updateMutationMock,
@@ -157,5 +163,59 @@ describe('UserDetailsDrawer', () => {
       })
     );
     expect(invalidateQueriesMock).toHaveBeenCalledWith({ queryKey: ['/admin/users'] });
+  });
+
+  it('resets telegram form when switching to a different user with identical values', async () => {
+    const baseUser: UserDto = {
+      id: 'user-aaa',
+      email: 'first@example.com',
+      phoneNumber: null,
+      roles: ['Viewer'],
+      telegramUserId: null,
+      telegramSendTimeUtc: null,
+      accessProfiles: [],
+    };
+
+    listMock.mockReturnValue({
+      data: { data: [] },
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    const { rerender } = render(
+      <UserDetailsDrawer
+        user={baseUser}
+        open
+        onOpenChange={() => {}}
+        onUserUpdated={() => {}}
+      />
+    );
+
+    const ui = userEvent.setup();
+    const telegramInput = screen.getByLabelText(/telegram id/i);
+
+    await ui.type(telegramInput, '13579');
+    expect(telegramInput).toHaveValue('13579');
+
+    const nextUser: UserDto = {
+      ...baseUser,
+      id: 'user-bbb',
+      email: 'second@example.com',
+    };
+
+    rerender(
+      <UserDetailsDrawer
+        user={nextUser}
+        open
+        onOpenChange={() => {}}
+        onUserUpdated={() => {}}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/telegram id/i)).toHaveValue('');
+    });
   });
 });

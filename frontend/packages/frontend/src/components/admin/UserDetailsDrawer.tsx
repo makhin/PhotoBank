@@ -155,7 +155,7 @@ export function UserDetailsDrawer({
       telegramUserId: user.telegramUserId ?? '',
       telegramSendTimeUtc: user.telegramSendTimeUtc ?? TELEGRAM_SEND_TIME_NOT_SET,
     });
-  }, [user.telegramUserId, user.telegramSendTimeUtc, telegramSettingsForm]);
+  }, [user.id, user.telegramUserId, user.telegramSendTimeUtc, telegramSettingsForm]);
 
   const handleSubmitTelegramSettings = async (values: TelegramSettingsFormValues) => {
     if (!userId) {
