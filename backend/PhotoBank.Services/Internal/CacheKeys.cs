@@ -1,4 +1,5 @@
-﻿using PhotoBank.AccessControl;
+﻿using System;
+using PhotoBank.AccessControl;
 
 namespace PhotoBank.Services.Internal;
 
@@ -15,7 +16,7 @@ public static class CacheKeys
     public static string PathsAll => "paths_all";
     public static string StoragesAll => "storages_all";
 
-    public static string PersonsOf(string userId) => $"persons_{userId}";
-    public static string PathsOf(string userId) => $"paths_{userId}";
-    public static string StoragesOf(string userId) => $"storages_{userId}";
+    public static string PersonsOf(Guid userId) => $"persons_{userId}";
+    public static string PathsOf(Guid userId) => $"paths_{userId}";
+    public static string StoragesOf(Guid userId) => $"storages_{userId}";
 }
