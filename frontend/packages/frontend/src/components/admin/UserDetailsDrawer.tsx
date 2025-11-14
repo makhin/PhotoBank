@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { User as UserIcon, Key, UserX, Loader2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { User as UserIcon, Key, UserX, Loader2, Save } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { AccessProfileDto, UserDto } from '@photobank/shared';
 import {
@@ -8,6 +11,10 @@ import {
   useAdminAccessProfilesList,
   useAdminAccessProfilesUnassignUser,
 } from '@photobank/shared/api/photobank/admin-access-profiles/admin-access-profiles';
+import {
+  getUsersGetAllQueryKey,
+  useUsersUpdate,
+} from '@photobank/shared/api/photobank';
 
 import { Button } from '@/shared/ui/button';
 import { Label } from '@/shared/ui/label';
@@ -23,17 +30,69 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/shared/ui/sheet';
+import { Input } from '@/shared/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/shared/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select';
+
+const TELEGRAM_SEND_TIME_NOT_SET = 'not-set';
+
+const telegramSettingsSchema = z.object({
+  telegramUserId: z
+    .string()
+    .trim()
+    .refine((value) => value.length === 0 || /^\d+$/.test(value), {
+      message: 'Telegram ID must contain only digits',
+    }),
+  telegramSendTimeUtc: z.union([
+    z.literal(TELEGRAM_SEND_TIME_NOT_SET),
+    z
+      .string()
+      .trim()
+      .refine(
+        (value) => value.length === 0 || /^\d{2}:\d{2}:\d{2}$/.test(value),
+        {
+          message: 'Use HH:MM:SS format',
+        }
+      ),
+  ]),
+});
+
+type TelegramSettingsFormValues = z.infer<typeof telegramSettingsSchema>;
+
+const telegramSendTimeOptions = Array.from({ length: 24 }, (_, index) =>
+  `${index.toString().padStart(2, '0')}:00:00`
+);
 
 
 interface UserDetailsDrawerProps {
   user: UserDto;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUserUpdated: (user: UserDto) => void;
 }
 
-export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawerProps) {
+export function UserDetailsDrawer({
+  user,
+  open,
+  onOpenChange,
+  onUserUpdated,
+}: UserDetailsDrawerProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const updateUserMutation = useUsersUpdate();
 
   const accessProfilesQueryKey = useMemo(
     () => getAdminAccessProfilesListQueryKey(),
@@ -54,18 +113,14 @@ export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawe
   );
 
   const derivedAssignedProfileIds = useMemo(() => {
-    const rawProfiles = (user as {
-      accessProfiles?: Array<{ profileId?: number | null; id?: number | null }>;
-    }).accessProfiles;
-
-    if (!rawProfiles) {
+    if (!user.accessProfiles?.length) {
       return [] as number[];
     }
 
-    return rawProfiles
-      .map((profile) => profile?.profileId ?? profile?.id)
+    return user.accessProfiles
+      .map((assignment) => assignment?.profileId)
       .filter((profileId): profileId is number => typeof profileId === 'number');
-  }, [user]);
+  }, [user.accessProfiles]);
 
   const [assignedProfileIds, setAssignedProfileIds] = useState<Set<number>>(
     () => new Set(derivedAssignedProfileIds)
@@ -85,6 +140,89 @@ export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawe
 
   const showAccessProfilesLoading = isAccessProfilesLoading && accessProfiles.length === 0;
   const showAccessProfilesError = isAccessProfilesError && accessProfiles.length === 0;
+
+  const telegramSettingsForm = useForm<TelegramSettingsFormValues>({
+    resolver: zodResolver(telegramSettingsSchema),
+    defaultValues: {
+      telegramUserId: user.telegramUserId ?? '',
+      telegramSendTimeUtc: user.telegramSendTimeUtc ?? TELEGRAM_SEND_TIME_NOT_SET,
+    },
+    mode: 'onBlur',
+  });
+
+  useEffect(() => {
+    telegramSettingsForm.reset({
+      telegramUserId: user.telegramUserId ?? '',
+      telegramSendTimeUtc: user.telegramSendTimeUtc ?? TELEGRAM_SEND_TIME_NOT_SET,
+    });
+  }, [user.id, user.telegramUserId, user.telegramSendTimeUtc, telegramSettingsForm]);
+
+  const handleSubmitTelegramSettings = async (values: TelegramSettingsFormValues) => {
+    if (!userId) {
+      toast({
+        title: 'Unable to update user',
+        description: 'This user does not have an identifier.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const trimmedTelegramUserId = values.telegramUserId.trim();
+    const normalizedTelegramUserId =
+      trimmedTelegramUserId.length > 0 ? trimmedTelegramUserId : null;
+
+    const normalizedSendTime =
+      values.telegramSendTimeUtc === TELEGRAM_SEND_TIME_NOT_SET
+        ? null
+        : values.telegramSendTimeUtc;
+
+    const hasTelegramChanged =
+      normalizedTelegramUserId !== (user.telegramUserId ?? null) ||
+      normalizedSendTime !== (user.telegramSendTimeUtc ?? null);
+
+    if (!hasTelegramChanged) {
+      toast({
+        title: 'No changes to save',
+        description: 'Telegram settings are already up to date.',
+      });
+      return;
+    }
+
+    try {
+      await updateUserMutation.mutateAsync({
+        id: userId,
+        data: {
+          telegramUserId: normalizedTelegramUserId,
+          telegramSendTimeUtc: normalizedSendTime,
+        },
+      });
+
+      const nextUser: UserDto = {
+        ...user,
+        telegramUserId: normalizedTelegramUserId,
+        telegramSendTimeUtc: normalizedSendTime,
+      };
+
+      onUserUpdated(nextUser);
+      telegramSettingsForm.reset({
+        telegramUserId: normalizedTelegramUserId ?? '',
+        telegramSendTimeUtc: normalizedSendTime ?? TELEGRAM_SEND_TIME_NOT_SET,
+      });
+
+      toast({
+        title: 'Telegram settings updated',
+        description: 'The user will receive updates with the new preferences.',
+      });
+
+      await queryClient.invalidateQueries({ queryKey: getUsersGetAllQueryKey() });
+    } catch (error) {
+      toast({
+        title: 'Failed to update telegram settings',
+        description: 'Please try again later.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleAssignProfile = async (profile: AccessProfileDto) => {
     const profileId = profile.id;
@@ -236,12 +374,12 @@ export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawe
           <TabsContent value="profile" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <UserIcon className="w-5 h-5" />
-                  Basic Information
-                </CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <UserIcon className="w-5 h-5" />
+                Basic Information
+              </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">Email</Label>
@@ -253,21 +391,78 @@ export function UserDetailsDrawer({ user, open, onOpenChange }: UserDetailsDrawe
                   </div>
                 </div>
 
-                {user.telegramUserId && (
-                  <>
-                    <Separator />
+                <Separator />
+                <Form {...telegramSettingsForm}>
+                  {/* eslint-disable-next-line @typescript-eslint/no-misused-promises */}
+                  <form
+                    onSubmit={telegramSettingsForm.handleSubmit(handleSubmitTelegramSettings)}
+                    className="space-y-4"
+                  >
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Telegram ID</Label>
-                        <p className="text-sm">{user.telegramUserId}</p>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-muted-foreground">Send Time</Label>
-                        <p className="text-sm">{user.telegramSendTimeUtc || 'Not set'}</p>
-                      </div>
+                      <FormField
+                        control={telegramSettingsForm.control}
+                        name="telegramUserId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="telegramUserId">Telegram ID</FormLabel>
+                            <FormControl>
+                              <Input
+                                id="telegramUserId"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                placeholder="Enter telegram user ID"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={telegramSettingsForm.control}
+                        name="telegramSendTimeUtc"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel htmlFor="telegramSendTimeUtc">Send Time (UTC)</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger id="telegramSendTimeUtc">
+                                  <SelectValue placeholder="Not set" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value={TELEGRAM_SEND_TIME_NOT_SET}>Not set</SelectItem>
+                                {telegramSendTimeOptions.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                  </>
-                )}
+                    <div className="flex justify-end">
+                      <Button
+                        type="submit"
+                        className="w-full sm:w-auto h-11"
+                        disabled={updateUserMutation.isPending}
+                      >
+                        {updateUserMutation.isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Save className="mr-2 h-4 w-4" />
+                        )}
+                        Save Telegram Settings
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
 
                 <Separator />
                 <div className="flex flex-col sm:flex-row gap-3">

@@ -70,6 +70,10 @@ export default function UsersPage() {
     setIsUserDrawerOpen(true);
   };
 
+  const handleUserUpdated = (updatedUser: UserDto) => {
+    setSelectedUser(updatedUser);
+  };
+
   const renderUsersSection = () => {
     if (showLoading) {
       return (
@@ -181,6 +185,7 @@ export default function UsersPage() {
           user={selectedUser}
           open={isUserDrawerOpen}
           onOpenChange={setIsUserDrawerOpen}
+          onUserUpdated={handleUserUpdated}
         />
       )}
     </div>
