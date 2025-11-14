@@ -79,8 +79,12 @@ public sealed class HttpContextCurrentUserAccessor : ICurrentUserAccessor
             throw new UnauthorizedAccessException("User identifier is not a valid GUID");
         }
 
+        // Normalize GUID to lowercase string to match cache invalidation format
+        // (Guid.ToString() always produces lowercase, so invalidation uses lowercase keys)
+        var normalizedUserId = identifier.ToString();
+
         var effectiveAccess = await _effectiveAccessProvider
-            .GetAsync(identifierString, principal, ct)
+            .GetAsync(normalizedUserId, principal, ct)
             .ConfigureAwait(false);
 
         var user = global::PhotoBank.AccessControl.CurrentUser.FromEffectiveAccess(identifier, effectiveAccess);
