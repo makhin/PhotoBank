@@ -47,8 +47,8 @@ namespace PhotoBank.DbContext.Migrations.AccessControlDb
                 UPDATE ""UserAccessProfiles"" uap
                 SET ""NewUserId"" =
                     CASE
-                        -- If UserId is already a valid UUID, use it
-                        WHEN uap.""UserId"" ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+                        -- If UserId is already a valid UUID, use it (case-insensitive match)
+                        WHEN uap.""UserId"" ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
                         THEN uap.""UserId""::uuid
                         -- Otherwise look up by username or email
                         ELSE (
