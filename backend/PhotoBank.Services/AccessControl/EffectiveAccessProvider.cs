@@ -4,8 +4,10 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using PhotoBank.DbContext.Models;
 
 namespace PhotoBank.AccessControl;
 
@@ -13,10 +15,13 @@ public sealed class EffectiveAccessProvider : IEffectiveAccessProvider
 {
     private readonly AccessControlDbContext _db;
     private readonly IMemoryCache _cache;
+    private readonly RoleManager<ApplicationRole> _roleManager;
 
-    public EffectiveAccessProvider(AccessControlDbContext db, IMemoryCache cache)
+    public EffectiveAccessProvider(AccessControlDbContext db, IMemoryCache cache, RoleManager<ApplicationRole> roleManager)
     {
-        _db = db; _cache = cache;
+        _db = db;
+        _cache = cache;
+        _roleManager = roleManager;
     }
 
     public void Invalidate(string userId) => _cache.Remove(CacheKey(userId));
@@ -34,12 +39,22 @@ public sealed class EffectiveAccessProvider : IEffectiveAccessProvider
             return admin;
         }
 
-        var roleIds = principal.Claims
+        // Extract role names from claims
+        var roleNames = principal.Claims
             .Where(c => c.Type == ClaimTypes.Role)
             .Select(c => c.Value)
-            .Where(v => Guid.TryParse(v, out _))
-            .Select(v => Guid.Parse(v))
             .ToList();
+
+        // Look up role IDs from role names
+        var roleIds = new List<Guid>();
+        foreach (var roleName in roleNames)
+        {
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role != null)
+            {
+                roleIds.Add(role.Id);
+            }
+        }
 
         if (!Guid.TryParse(userId, out var userGuid))
         {
