@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace PhotoBank.DbContext.Models
 {
-    public class ApplicationUser : IdentityUser
+    public class ApplicationUser : IdentityUser<Guid>
     {
         public long? TelegramUserId { get; set; }
         public TimeSpan? TelegramSendTimeUtc { get; set; }
