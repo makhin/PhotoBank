@@ -295,7 +295,7 @@ public class PhotoFilterSpecificationTests
             AllowedDateRanges = ranges?.ToArray() ?? Array.Empty<(DateOnly From, DateOnly To)>();
         }
 
-        public string UserId => "user";
+        public Guid UserId => Guid.Empty;
 
         public bool IsAdmin => false;
 
