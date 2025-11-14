@@ -32,3 +32,9 @@
 - При добавлении новых API-эндпоинтов синхронизируй с root openapi.yaml и запускай generate:api
 - Конфигурация orval централизована в frontend/orval.config.ts (два проекта: frontend для web, tv для React Native)
 - API типы генерируются из общего openapi.yaml, но с разными клиентами (fetch для web, axios для tv)
+
+## Особенности pnpm монорепы
+- Gradle ищет @react-native/codegen в локальном node_modules, но pnpm поднимает его на уровень выше
+- После установки зависимостей автоматически создаётся symlink через postinstall хук
+- При проблемах со сборкой запусти вручную: `pnpm run setup-symlinks`
+- Пути в android/app/build.gradle настроены на ../../node_modules (относительно packages/tv/)

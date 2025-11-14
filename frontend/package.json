@@ -19,6 +19,9 @@
     "dev:frontend": "pnpm --filter @photobank/frontend run dev",
     "dev:bot": "pnpm --filter @photobank/telegram-bot run dev",
     "dev:tv": "pnpm --filter @photobank/tv run start",
+    "tv:android": "pnpm --filter @photobank/tv run android",
+    "tv:ios": "pnpm --filter @photobank/tv run ios",
+    "tv:start": "pnpm --filter @photobank/tv run start",
     "lint": "eslint packages --ext .ts,.tsx --max-warnings=0",
     "lint:fix": "eslint packages --ext .ts,.tsx --max-warnings=0 --fix"
   },

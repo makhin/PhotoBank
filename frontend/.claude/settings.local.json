@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git rm:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm list:*)",
+      "Bash(pnpm type-check:*)",
+      "Bash(test:*)",
+      "Bash(cat:*)",
+      "Bash(gradlew.bat clean:*)",
+      "Bash(./gradlew.bat clean)",
+      "Bash(pnpm run tv:android:*)",
+      "Bash(cmd.exe /c \"gradlew.bat app:installDebug -PreactNativeDevServerPort=8081\")",
+      "Bash(bash gradlew:*)",
+      "Bash(ln:*)",
+      "Bash(chmod:*)",
+      "Bash(bash scripts/setup-symlinks.sh:*)",
+      "Bash(pnpm start:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx react-native start --reset-cache)",
+      "Bash(gradlew.bat:*)",
+      "Bash(cmd.exe /c \"gradlew.bat --stop\")",
+      "Bash(pnpm run android:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

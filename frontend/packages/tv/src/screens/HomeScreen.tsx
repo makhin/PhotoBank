@@ -1,6 +1,6 @@
 // src/screens/HomeScreen.final.tsx (финальная версия с лучшим UX)
-import React, { useCallback, useMemo, useEffect, useRef, useState } from 'react';
-import { View, Text, Platform, FlatList } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { FlatList, Platform, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/RootNavigator';
 import { PhotoListItem } from '@/components/PhotoListItem';
@@ -52,7 +52,8 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   // Обрабатываем возврат на экран - скроллим к сохраненному фото
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
+
+    return navigation.addListener('focus', () => {
       if (focusedItemId && photos.length > 0) {
         const index = photos.findIndex((p) => String(p.id) === focusedItemId);
         if (index !== -1 && flatListRef.current) {
@@ -69,8 +70,6 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         }
       }
     });
-
-    return unsubscribe;
   }, [navigation, focusedItemId, photos, setShouldRestoreFocus]);
 
   const handleItemFocus = useCallback(
@@ -244,7 +243,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         // Оптимизация для TV
         getItemLayout={
           Platform.isTV
-            ? (data, index) => ({
+            ? (_, index) => ({
                 length: 102, // Примерная высота элемента
                 offset: 102 * index,
                 index,

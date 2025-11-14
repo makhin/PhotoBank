@@ -2,6 +2,37 @@
 import { format } from 'date-fns';
 import type { PhotoItemDto, PersonDto, TagDto } from '@/api';
 
+// Base URL for images
+const BASE_URL = 'https://makhin.ddns.net';
+
+/**
+ * Transforms image URLs to the format: https://makhin.ddns.net/minio/...
+ * Extracts the path after /minio/ and constructs the proper URL
+ */
+export const getAbsoluteImageUrl = (url?: string | null): string | undefined => {
+  if (!url) return undefined;
+
+  // If URL already starts with the correct base, return as-is
+  if (url.startsWith(`${BASE_URL}/minio/`)) {
+    return url;
+  }
+
+  // Extract the minio path from various URL formats
+  const minioMatch = url.match(/\/minio\/.+/);
+  if (minioMatch) {
+    return `${BASE_URL}${minioMatch[0]}`;
+  }
+
+  // If it's already a relative path starting with /minio/, prepend base URL
+  if (url.startsWith('/minio/')) {
+    return `${BASE_URL}${url}`;
+  }
+
+  // If it's a relative path without /minio/, assume it should be added
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return `${BASE_URL}${cleanUrl}`;
+};
+
 /**
  * Расширенный тип PhotoItem с преобразованными именами
  */
@@ -135,9 +166,9 @@ export const filterPhotos = (
 
       // takenDate уже Date объект
       if (filters.dateFrom && takenDate < filters.dateFrom) return false;
-      if (filters.dateTo && takenDate > filters.dateTo) return false;
+      return !(filters.dateTo && takenDate > filters.dateTo);
 
-      return true;
+
     });
   }
 

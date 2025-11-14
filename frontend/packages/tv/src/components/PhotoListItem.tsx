@@ -35,6 +35,7 @@ export const PhotoListItem: React.FC<PhotoListItemProps> = ({
 }) => {
   const { styles: appStyles } = useThemedStyles();
   const [isFocused, setIsFocused] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -75,8 +76,16 @@ export const PhotoListItem: React.FC<PhotoListItemProps> = ({
     >
       {/* Thumbnail */}
       <View style={appStyles.list.thumbnailContainer}>
-        {thumbnailUrl ? (
-          <Image source={{ uri: resolveMediaUrl(thumbnailUrl) }} style={appStyles.list.thumbnail} resizeMode="cover" />
+        {thumbnailUrl && !imageError ? (
+          <Image
+            source={{ uri: resolveMediaUrl(thumbnailUrl) }}
+            style={appStyles.list.thumbnail}
+            resizeMode="cover"
+            onError={() => {
+              console.warn('Failed to load thumbnail:', resolveMediaUrl(thumbnailUrl));
+              setImageError(true);
+            }}
+          />
         ) : (
           <View style={[appStyles.list.thumbnail, appStyles.list.thumbnailPlaceholder]}>
             <Text style={appStyles.list.placeholderText}>?</Text>

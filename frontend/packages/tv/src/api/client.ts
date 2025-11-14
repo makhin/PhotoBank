@@ -6,7 +6,7 @@ const STORAGE_TOKEN_KEY = 'auth_token';
 
 // Создаём экземпляр axios
 export const axiosInstance = axios.create({
-  baseURL: 'https://makhin.ddns.net/api',
+  baseURL: 'https://makhin.ddns.net',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

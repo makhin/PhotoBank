@@ -1,5 +1,5 @@
 // src/screens/DetailScreen.tsx
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Image,
@@ -22,23 +22,25 @@ const DetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { photoId, photoIds } = route.params;
   const { setFocusedItemId } = useAppStore();
   const { styles: appStyles, colors } = useThemedStyles();
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   const { data: photo, isLoading, isError } = usePhotosGetPhoto(photoId);
 
   // Находим текущий индекс фото в списке
   const currentIndex = photoIds.indexOf(photoId);
-  const hasPrevious = currentIndex > 0;
-  const hasNext = currentIndex < photoIds.length - 1;
+
+  // Reset image states when photoId changes (MUST be before conditional returns)
+  useEffect(() => {
+    setImageLoading(true);
+    setImageError(false);
+  }, [photoId]);
 
   // Сохраняем текущий photoId при каждом изменении
   useEffect(() => {
     console.log('Current photoId changed to:', photoId);
     setFocusedItemId(String(photoId));
   }, [photoId, setFocusedItemId]);
-
-  const handleKeyPress = useCallback((evt: any) => {
-    console.log('Key press event:', evt.nativeEvent);
-  }, []);
 
   // Используем TVEventHandler через addListener
   useEffect(() => {
@@ -108,12 +110,34 @@ const DetailScreen: React.FC<Props> = ({ route, navigation }) => {
       onPress={() => console.log('Screen pressed')}
       hasTVPreferredFocus={true}
     >
-      {photo.previewUrl && (
+      {photo.previewUrl && !imageError && (
         <Image
           source={{ uri: resolveMediaUrl(photo.previewUrl) }}
           style={appStyles.media.fullscreenImage}
           resizeMode="contain"
+          onLoadStart={() => setImageLoading(true)}
+          onLoadEnd={() => setImageLoading(false)}
+          onError={() => {
+            console.error('Failed to load preview image:', resolveMediaUrl(photo.previewUrl));
+            setImageLoading(false);
+            setImageError(true);
+          }}
         />
+      )}
+
+      {/* Show loading indicator while image is loading */}
+      {imageLoading && !imageError && photo.previewUrl && (
+        <View style={appStyles.layout.centeredOverlay}>
+          <ActivityIndicator size="large" color={colors.accentPrimary} />
+        </View>
+      )}
+
+      {/* Show error message if image failed to load */}
+      {imageError && (
+        <View style={[appStyles.layout.centeredOverlay, appStyles.insets.sectionPadding]}>
+          <Text style={appStyles.text.error}>Не удалось загрузить изображение</Text>
+          <Text style={appStyles.text.status}>{resolveMediaUrl(photo.previewUrl)}</Text>
+        </View>
       )}
 
       {/* Photo counter */}

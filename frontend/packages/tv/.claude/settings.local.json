@@ -13,7 +13,8 @@
       "Bash(pnpm store prune:*)",
       "Bash(pnpm start:*)",
       "Bash(cat:*)",
-      "Bash(npx react-native log-android:*)"
+      "Bash(npx react-native log-android:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

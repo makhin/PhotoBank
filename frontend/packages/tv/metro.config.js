@@ -9,7 +9,10 @@ const config = {
   projectRoot: __dirname,
   
   // ��������� pnpm symlinks
-  watchFolders: [__dirname],
+  watchFolders: [
+    __dirname,
+    path.resolve(__dirname, '../../node_modules'),
+  ],
   
   resolver: {
     // TV-����������� ���������� ������
@@ -34,10 +37,9 @@ const config = {
 
     // ������� ������� � �������������� ������� React
     // ��������� �� ������ node_modules ������, ��� ��� react/react-native - ������ �����������
-    extraNodeModules: {
-      'react': path.resolve(__dirname, 'node_modules/react'),
-      'react-native': path.resolve(__dirname, 'node_modules/react-native'),
-    },
+    nodeModulesPaths: [
+      path.resolve(__dirname, '../../node_modules'),
+    ],
   },
 
   transformer: {
