@@ -55,12 +55,6 @@ export type CreateUserDto = {
   phoneNumber?: string | null;
   /** @nullable */
   roles?: string[] | null;
-  /** @nullable */
-  accessProfiles?: UserAccessProfileAssignmentDto[] | null;
-};
-
-export type UserAccessProfileAssignmentDto = {
-  profileId: number;
 };
 
 export type FaceBoxDto = {
@@ -262,8 +256,6 @@ export type ResetPasswordDto = {
 export type SetRolesDto = {
   /** @nullable */
   roles?: string[] | null;
-  /** @nullable */
-  accessProfiles?: UserAccessProfileAssignmentDto[] | null;
 };
 
 export type StorageDto = {
@@ -311,6 +303,10 @@ export type UpdateUserDto = {
   telegramUserId?: string | null;
   /** @nullable */
   telegramSendTimeUtc?: string | null;
+};
+
+export type UserAccessProfileAssignmentDto = {
+  profileId: number;
 };
 
 export type UserDto = {

@@ -14,7 +14,7 @@ const updateMutationMock = {
 };
 
 if (!Element.prototype.hasPointerCapture) {
-  Element.prototype.hasPointerCapture = () => {};
+  Element.prototype.hasPointerCapture = () => false;
 }
 
 if (!Element.prototype.releasePointerCapture) {
@@ -25,17 +25,13 @@ if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
 
-vi.mock(
-  '@tanstack/react-query',
-  () => ({
-    useQueryClient: () => ({
-      invalidateQueries: invalidateQueriesMock,
-    }),
-    useQuery: vi.fn(),
-    useMutation: vi.fn(),
+vi.mock('@tanstack/react-query', () => ({
+  useQueryClient: () => ({
+    invalidateQueries: invalidateQueriesMock,
   }),
-  { virtual: true }
-);
+  useQuery: vi.fn(),
+  useMutation: vi.fn(),
+}));
 
 vi.mock('@photobank/shared/api/photobank', () => ({
   useUsersUpdate: () => updateMutationMock,

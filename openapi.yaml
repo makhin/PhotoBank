@@ -1235,20 +1235,6 @@ components:
           items:
             type: string
           nullable: true
-        accessProfiles:
-          type: array
-          items:
-            $ref: '#/components/schemas/UserAccessProfileAssignmentDto'
-          nullable: true
-      additionalProperties: false
-    UserAccessProfileAssignmentDto:
-      required:
-        - profileId
-      type: object
-      properties:
-        profileId:
-          type: integer
-          format: int32
       additionalProperties: false
     FaceBoxDto:
       required:
@@ -1650,11 +1636,6 @@ components:
           items:
             type: string
           nullable: true
-        accessProfiles:
-          type: array
-          items:
-            $ref: '#/components/schemas/UserAccessProfileAssignmentDto'
-          nullable: true
       additionalProperties: false
     StorageDto:
       required:
@@ -1744,6 +1725,15 @@ components:
           type: string
           format: date-span
           nullable: true
+      additionalProperties: false
+    UserAccessProfileAssignmentDto:
+      required:
+        - profileId
+      type: object
+      properties:
+        profileId:
+          type: integer
+          format: int32
       additionalProperties: false
     UserDto:
       required:

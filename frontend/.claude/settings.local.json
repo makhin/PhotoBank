@@ -22,7 +22,9 @@
       "Bash(npx react-native start --reset-cache)",
       "Bash(gradlew.bat:*)",
       "Bash(cmd.exe /c \"gradlew.bat --stop\")",
-      "Bash(pnpm run android:*)"
+      "Bash(pnpm run android:*)",
+      "Bash(pnpm -w type-check:*)",
+      "Bash(pnpm -w build:*)"
     ],
     "deny": [],
     "ask": []
