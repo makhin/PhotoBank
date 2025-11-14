@@ -14,8 +14,7 @@
     "type-check": "tsc --noEmit",
     "generate:api": "orval --config ../../orval.config.ts --project tv",
     "generate:api:watch": "orval --config ../../orval.config.ts --project tv --watch",
-    "setup-symlinks": "bash scripts/setup-symlinks.sh",
-    "postinstall": "bash scripts/setup-symlinks.sh"
+    "setup-symlinks": "bash scripts/setup-symlinks.sh"
   },
   "dependencies": {
     "@photobank/shared": "workspace:*",
