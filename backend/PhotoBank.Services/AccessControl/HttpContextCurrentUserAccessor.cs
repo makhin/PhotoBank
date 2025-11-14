@@ -64,18 +64,27 @@ public sealed class HttpContextCurrentUserAccessor : ICurrentUserAccessor
             return anonymous;
         }
 
-        var identifier = principal.FindFirstValue(ClaimTypes.NameIdentifier)
+        var identifierString = principal.FindFirstValue(ClaimTypes.NameIdentifier)
                          ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
                          ?? principal.FindFirstValue(ClaimTypes.Name)
                          ?? principal.Identity?.Name;
 
-        if (string.IsNullOrWhiteSpace(identifier))
+        if (string.IsNullOrWhiteSpace(identifierString))
         {
             throw new UnauthorizedAccessException("Authenticated user missing identifier claim");
         }
 
+        if (!Guid.TryParse(identifierString, out var identifier))
+        {
+            throw new UnauthorizedAccessException("User identifier is not a valid GUID");
+        }
+
+        // Normalize GUID to lowercase string to match cache invalidation format
+        // (Guid.ToString() always produces lowercase, so invalidation uses lowercase keys)
+        var normalizedUserId = identifier.ToString();
+
         var effectiveAccess = await _effectiveAccessProvider
-            .GetAsync(identifier, principal, ct)
+            .GetAsync(normalizedUserId, principal, ct)
             .ConfigureAwait(false);
 
         var user = global::PhotoBank.AccessControl.CurrentUser.FromEffectiveAccess(identifier, effectiveAccess);

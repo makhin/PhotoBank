@@ -48,7 +48,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IAccessProfileService, AccessProfileService>();
         services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
         services.AddDefaultIdentity<ApplicationUser>()
-            .AddRoles<IdentityRole>()
+            .AddRoles<ApplicationRole>()
             .AddEntityFrameworkStores<PhotoBankDbContext>();
 
         var jwtSection = configuration.GetSection("Jwt");

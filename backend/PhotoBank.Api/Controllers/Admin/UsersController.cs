@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PhotoBank.Services.Identity;
@@ -43,7 +44,7 @@ public class UsersController(IAdminUserService adminUserService) : ControllerBas
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> UpdateAsync(string id, [FromBody] UpdateUserDto dto)
+    public async Task<IActionResult> UpdateAsync(Guid id, [FromBody] UpdateUserDto dto)
     {
         var result = await adminUserService.UpdateAsync(id, dto);
         if (result.NotFound)
@@ -64,7 +65,7 @@ public class UsersController(IAdminUserService adminUserService) : ControllerBas
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteAsync(string id)
+    public async Task<IActionResult> DeleteAsync(Guid id)
     {
         var result = await adminUserService.DeleteAsync(id);
         if (result.NotFound)
@@ -79,7 +80,7 @@ public class UsersController(IAdminUserService adminUserService) : ControllerBas
     [HttpPost("{id}/reset-password")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> ResetPasswordAsync(string id, [FromBody] ResetPasswordDto dto)
+    public async Task<IActionResult> ResetPasswordAsync(Guid id, [FromBody] ResetPasswordDto dto)
     {
         var result = await adminUserService.ResetPasswordAsync(id, dto);
         if (result.NotFound)
@@ -94,7 +95,7 @@ public class UsersController(IAdminUserService adminUserService) : ControllerBas
     [HttpPut("{id}/roles")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> SetRolesAsync(string id, [FromBody] SetRolesDto dto)
+    public async Task<IActionResult> SetRolesAsync(Guid id, [FromBody] SetRolesDto dto)
     {
         var result = await adminUserService.SetRolesAsync(id, dto);
         if (result.NotFound)

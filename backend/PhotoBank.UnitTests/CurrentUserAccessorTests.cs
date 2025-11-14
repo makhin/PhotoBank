@@ -18,7 +18,8 @@ public class CurrentUserAccessorTests
     [Test]
     public async Task GetCurrentUserAsync_ShouldPopulateProperties_WhenAuthenticated()
     {
-        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "user1") }, "auth");
+        var userId = Guid.NewGuid();
+        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) }, "auth");
         var principal = new ClaimsPrincipal(identity);
         var httpContext = new DefaultHttpContext { User = principal };
         var http = new Mock<IHttpContextAccessor>();
@@ -32,19 +33,19 @@ public class CurrentUserAccessorTests
             true);
 
         var provider = new Mock<IEffectiveAccessProvider>();
-        provider.Setup(p => p.GetAsync("user1", principal, It.IsAny<CancellationToken>()))
+        provider.Setup(p => p.GetAsync(userId.ToString(), principal, It.IsAny<CancellationToken>()))
             .ReturnsAsync(access);
 
         var accessor = new HttpContextCurrentUserAccessor(http.Object, provider.Object);
 
         var current = await accessor.GetCurrentUserAsync();
 
-        current.UserId.Should().Be("user1");
+        current.UserId.Should().Be(userId);
         current.IsAdmin.Should().BeTrue();
         current.AllowedStorageIds.Should().Contain(1);
         current.AllowedPersonGroupIds.Should().Contain(2);
         current.CanSeeNsfw.Should().BeTrue();
-        provider.Verify(p => p.GetAsync("user1", principal, It.IsAny<CancellationToken>()), Times.Once);
+        provider.Verify(p => p.GetAsync(userId.ToString(), principal, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -61,7 +62,7 @@ public class CurrentUserAccessorTests
 
         var current = await accessor.GetCurrentUserAsync();
 
-        current.UserId.Should().BeEmpty();
+        current.UserId.Should().Be(Guid.Empty);
         current.IsAdmin.Should().BeFalse();
         current.AllowedStorageIds.Should().BeEmpty();
         current.AllowedPersonGroupIds.Should().BeEmpty();
@@ -73,8 +74,9 @@ public class CurrentUserAccessorTests
     [Test]
     public async Task GetCurrentUserAsync_ShouldFallbackToSubClaim_WhenNameIdentifierMissing()
     {
+        var userId = Guid.NewGuid();
         var identity = new ClaimsIdentity(
-            new[] { new Claim(JwtRegisteredClaimNames.Sub, "jwt-sub") },
+            new[] { new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()) },
             authenticationType: "auth");
         var principal = new ClaimsPrincipal(identity);
         var httpContext = new DefaultHttpContext { User = principal };
@@ -89,15 +91,15 @@ public class CurrentUserAccessorTests
             false);
 
         var provider = new Mock<IEffectiveAccessProvider>();
-        provider.Setup(p => p.GetAsync("jwt-sub", principal, It.IsAny<CancellationToken>()))
+        provider.Setup(p => p.GetAsync(userId.ToString(), principal, It.IsAny<CancellationToken>()))
             .ReturnsAsync(access);
 
         var accessor = new HttpContextCurrentUserAccessor(http.Object, provider.Object);
 
         var current = await accessor.GetCurrentUserAsync();
 
-        current.UserId.Should().Be("jwt-sub");
-        provider.Verify(p => p.GetAsync("jwt-sub", principal, It.IsAny<CancellationToken>()), Times.Once);
+        current.UserId.Should().Be(userId);
+        provider.Verify(p => p.GetAsync(userId.ToString(), principal, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -121,7 +123,8 @@ public class CurrentUserAccessorTests
     [Test]
     public async Task GetCurrentUserAsync_ShouldCacheResultInHttpContextItems()
     {
-        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "cached-user") }, "auth");
+        var userId = Guid.NewGuid();
+        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) }, "auth");
         var principal = new ClaimsPrincipal(identity);
         var httpContext = new DefaultHttpContext { User = principal };
         var http = new Mock<IHttpContextAccessor>();
@@ -135,7 +138,7 @@ public class CurrentUserAccessorTests
             false);
 
         var provider = new Mock<IEffectiveAccessProvider>();
-        provider.Setup(p => p.GetAsync("cached-user", principal, It.IsAny<CancellationToken>()))
+        provider.Setup(p => p.GetAsync(userId.ToString(), principal, It.IsAny<CancellationToken>()))
             .ReturnsAsync(access);
 
         var accessor = new HttpContextCurrentUserAccessor(http.Object, provider.Object);
@@ -144,13 +147,14 @@ public class CurrentUserAccessorTests
         var second = accessor.CurrentUser;
 
         first.Should().BeSameAs(second);
-        provider.Verify(p => p.GetAsync("cached-user", principal, It.IsAny<CancellationToken>()), Times.Once);
+        provider.Verify(p => p.GetAsync(userId.ToString(), principal, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
     public async Task GetCurrentUserAsync_ShouldNotCompleteSynchronously_WhenEffectiveAccessProviderDelays()
     {
-        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "async-user") }, "auth");
+        var userId = Guid.NewGuid();
+        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) }, "auth");
         var principal = new ClaimsPrincipal(identity);
         var httpContext = new DefaultHttpContext { User = principal };
         var http = new Mock<IHttpContextAccessor>();
@@ -159,7 +163,7 @@ public class CurrentUserAccessorTests
         var tcs = new TaskCompletionSource<EffectiveAccess>();
 
         var provider = new Mock<IEffectiveAccessProvider>();
-        provider.Setup(p => p.GetAsync("async-user", principal, It.IsAny<CancellationToken>()))
+        provider.Setup(p => p.GetAsync(userId.ToString(), principal, It.IsAny<CancellationToken>()))
             .Returns(tcs.Task);
 
         var accessor = new HttpContextCurrentUserAccessor(http.Object, provider.Object);
@@ -175,6 +179,6 @@ public class CurrentUserAccessorTests
             false));
 
         var result = await task;
-        result.UserId.Should().Be("async-user");
+        result.UserId.Should().Be(userId);
     }
 }

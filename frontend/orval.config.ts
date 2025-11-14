@@ -16,6 +16,7 @@ export default defineConfig({
       override: {
         useDates: true,
         useTypeOverInterfaces: true,
+        useUnionTypes: true,
         mutator: {
           path: path.resolve(__dirname, 'packages/shared/src/api/photobank/fetcher.ts'),
           name: 'customFetcher'
@@ -42,6 +43,7 @@ export default defineConfig({
       override: {
         useDates: true,
         useTypeOverInterfaces: true,
+        useUnionTypes: true,
         mutator: {
           path: path.resolve(__dirname, 'packages/tv/src/api/client.ts'),
           name: 'customInstance',

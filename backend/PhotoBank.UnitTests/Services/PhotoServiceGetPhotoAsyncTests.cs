@@ -195,7 +195,7 @@ namespace PhotoBank.UnitTests.Services
                 AllowedDateRanges = Array.Empty<(DateOnly From, DateOnly To)>();
             }
 
-            public string UserId => "user";
+            public Guid UserId => Guid.Empty;
 
             public bool IsAdmin => false;
 

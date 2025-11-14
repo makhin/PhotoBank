@@ -5,7 +5,7 @@ namespace PhotoBank.AccessControl;
 
 public sealed class DummyCurrentUser : ICurrentUser
 {
-    public string UserId => string.Empty;
+    public Guid UserId => Guid.Empty;
     public bool IsAdmin => true;
     public IReadOnlySet<int>? AllowedStorageIds => null;
     public IReadOnlySet<int>? AllowedPersonGroupIds => null;

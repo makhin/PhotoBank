@@ -12,7 +12,7 @@ namespace PhotoBank.DbContext.DbContext
     using Microsoft.EntityFrameworkCore.Internal;
     using Models;
 
-    public class PhotoBankDbContext : IdentityDbContext<ApplicationUser>, IDbContextPoolable
+    public class PhotoBankDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>, IDbContextPoolable
     {
         public static readonly ILoggerFactory PhotoBankLoggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 

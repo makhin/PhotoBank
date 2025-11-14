@@ -5,7 +5,7 @@ namespace PhotoBank.AccessControl;
 
 public interface ICurrentUser
 {
-    string UserId { get; }
+    Guid UserId { get; }
     bool IsAdmin { get; }
     IReadOnlySet<int>? AllowedStorageIds { get; }
     IReadOnlySet<int>? AllowedPersonGroupIds { get; }

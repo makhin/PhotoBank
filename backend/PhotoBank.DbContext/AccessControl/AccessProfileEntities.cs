@@ -46,13 +46,13 @@ public class AccessProfileDateRangeAllow
 
 public class RoleAccessProfile
 {
-    public string RoleId { get; set; } = default!;
+    public Guid RoleId { get; set; }
     public int ProfileId { get; set; }
 }
 
 public class UserAccessProfile
 {
-    public string UserId { get; set; } = default!;
+    public Guid UserId { get; set; }
     public int ProfileId { get; set; }
     public AccessProfile Profile { get; set; } = default!;
 }

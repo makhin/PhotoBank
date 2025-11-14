@@ -392,7 +392,7 @@ public class AdminUsersControllerTests
     {
         using var scope = _factory.Services.CreateScope();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
 
         foreach (var (user, roles) in users)
         {
@@ -409,7 +409,7 @@ public class AdminUsersControllerTests
             {
                 if (!await roleManager.RoleExistsAsync(role))
                 {
-                    var createRoleResult = await roleManager.CreateAsync(new IdentityRole(role));
+                    var createRoleResult = await roleManager.CreateAsync(new ApplicationRole { Name = role });
                     createRoleResult.Succeeded.Should().BeTrue(createRoleResult.Errors.FirstOrDefault()?.Description);
                 }
 

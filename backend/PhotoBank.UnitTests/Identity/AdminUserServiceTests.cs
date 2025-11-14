@@ -66,7 +66,7 @@ public class AdminUserServiceTests
         await using var accessDb = CreateAccessControlInMemory();
         var userManager = IdentityTestHelpers.CreateUserManager(db);
         var roleManager = CreateRoleManager(db);
-        await roleManager.CreateAsync(new IdentityRole("Admin"));
+        await roleManager.CreateAsync(new ApplicationRole { Name = "Admin" });
 
         var service = new AdminUserService(userManager, roleManager, accessDb);
 
@@ -84,12 +84,12 @@ public class AdminUserServiceTests
         roles.Should().ContainSingle().Which.Should().Be("Admin");
     }
 
-    private static RoleManager<IdentityRole> CreateRoleManager(PhotoBank.DbContext.DbContext.PhotoBankDbContext db)
+    private static RoleManager<ApplicationRole> CreateRoleManager(PhotoBank.DbContext.DbContext.PhotoBankDbContext db)
     {
-        var store = new RoleStore<IdentityRole>(db);
-        return new RoleManager<IdentityRole>(
+        var store = new RoleStore<ApplicationRole, PhotoBank.DbContext.DbContext.PhotoBankDbContext, Guid>(db);
+        return new RoleManager<ApplicationRole>(
             store,
-            new IRoleValidator<IdentityRole>[] { new RoleValidator<IdentityRole>() },
+            new IRoleValidator<ApplicationRole>[] { new RoleValidator<ApplicationRole>() },
             new UpperInvariantLookupNormalizer(),
             new IdentityErrorDescriber(),
             null);

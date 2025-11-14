@@ -222,7 +222,7 @@ public class SearchReferenceDataServiceTests
             var personGroupRepository = _scope.ServiceProvider.GetRequiredService<IRepository<PersonGroup>>();
 
             User = new TestCurrentUser(
-                isAdmin ? "admin" : "user",
+                Guid.NewGuid(),
                 isAdmin,
                 allowedStorages,
                 allowedPersonGroupIds ?? Array.Empty<int>());
@@ -256,7 +256,7 @@ public class SearchReferenceDataServiceTests
         private readonly HashSet<int> _allowedPersonGroupIds;
 
         public TestCurrentUser(
-            string userId,
+            Guid userId,
             bool isAdmin,
             IEnumerable<int> allowedStorages,
             IEnumerable<int> allowedPersonGroupIds)
@@ -267,7 +267,7 @@ public class SearchReferenceDataServiceTests
             _allowedPersonGroupIds = new HashSet<int>(allowedPersonGroupIds);
         }
 
-        public string UserId { get; }
+        public Guid UserId { get; }
         public bool IsAdmin { get; }
         public IReadOnlySet<int> AllowedStorageIds => _allowedStorageIds;
         public IReadOnlySet<int> AllowedPersonGroupIds => _allowedPersonGroupIds;

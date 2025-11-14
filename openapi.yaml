@@ -993,6 +993,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       requestBody:
         content:
           application/json:
@@ -1035,6 +1036,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       responses:
         '204':
           description: No Content
@@ -1058,6 +1060,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       requestBody:
         content:
           application/json:
@@ -1092,6 +1095,7 @@ paths:
           required: true
           schema:
             type: string
+            format: uuid
       requestBody:
         content:
           application/json:
@@ -1743,6 +1747,7 @@ components:
       properties:
         id:
           type: string
+          format: uuid
           nullable: true
         email:
           type: string
