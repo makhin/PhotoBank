@@ -11,9 +11,19 @@ The codebase has been updated to use `IdentityDbContext<ApplicationUser, Applica
 1. **20251114204752_MigrateIdentityToGuid.cs** - Converts Identity tables (AspNetUsers, AspNetRoles, etc.)
 2. **20251114204752_MigrateAccessProfileToGuid.cs** - Converts AccessControl tables (RoleAccessProfiles, UserAccessProfiles)
 
+## Important: Role Name to Role ID Conversion
+
+⚠️ **The old code stored role NAMES (e.g., "Admin") in RoleAccessProfiles.RoleId, not role IDs.**
+
+The AccessControl migration now includes logic to automatically convert:
+- **RoleAccessProfiles.RoleId**: Looks up role names in AspNetRoles to find the corresponding Guid
+- **UserAccessProfiles.UserId**: Attempts to parse as UUID, or looks up by username/email
+
+Any rows that cannot be mapped (orphaned data) will be deleted during migration.
+
 ## Important Warnings
 
-⚠️ **These migrations will fail if you have existing data with non-UUID string IDs.**
+⚠️ **Identity migrations will fail if you have existing data with non-UUID string IDs.**
 
 PostgreSQL cannot automatically cast arbitrary strings to UUIDs. You have three options:
 
@@ -32,21 +42,30 @@ dotnet ef database update --context PhotoBankDbContext
 dotnet ef database update --context AccessControlDbContext
 ```
 
-### Option 2: Existing Data with Valid UUID IDs
+### Option 2: Existing Data with Valid UUID IDs or Role Names
 
-If your existing user/role IDs are already valid UUIDs (e.g., `"123e4567-e89b-12d3-a456-426614174000"`):
+If your existing user/role IDs are already valid UUIDs (e.g., `"123e4567-e89b-12d3-a456-426614174000"`), or if you have role names in RoleAccessProfiles:
 
 ```bash
 cd backend/PhotoBank.Api
 
-# Apply Identity migration
+# IMPORTANT: Apply Identity migration FIRST
+# This must complete before AccessControl migration, because the AccessControl
+# migration joins with AspNetRoles to look up role IDs from role names
 dotnet ef database update --context PhotoBankDbContext
 
-# Apply AccessControl migration
+# Then apply AccessControl migration
+# This will automatically convert role names to role IDs
 dotnet ef database update --context AccessControlDbContext
 ```
 
-PostgreSQL will automatically cast the text UUIDs to the uuid type.
+**What happens:**
+1. Identity migration converts AspNetUsers.Id and AspNetRoles.Id from text to uuid
+2. AccessControl migration:
+   - Looks up role names in AspNetRoles (e.g., "Admin" → corresponding Guid)
+   - Converts valid UUID strings directly
+   - Looks up usernames/emails in AspNetUsers to find user IDs
+   - Deletes any orphaned rows that cannot be mapped
 
 ### Option 3: Existing Data with Non-UUID String IDs
 
