@@ -2,13 +2,6 @@ name: Android TV APK Build
 
 on:
   workflow_dispatch:  # Manual trigger
-  push:
-    branches:
-      - master
-      - main
-    paths:
-      - 'frontend/packages/tv/**'
-      - '.github/workflows/android-tv-build.yml'
 
 env:
   NODE_VERSION: '22'
