@@ -434,13 +434,14 @@ public class AdminAccessProfilesControllerTests
             Flags_CanSeeNsfw = false
         });
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/admin/access-profiles/{seeded.Id}/assign-user/user-assign");
+        var userId = Guid.NewGuid();
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/admin/access-profiles/{seeded.Id}/assign-user/{userId}");
         AddAdminHeaders(request);
 
         var response = await _client.SendAsync(request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        _effMock.Verify(x => x.Invalidate("user-assign"), Times.Once);
+        _effMock.Verify(x => x.Invalidate(userId.ToString()), Times.Once);
     }
 
     [Test]
@@ -453,22 +454,23 @@ public class AdminAccessProfilesControllerTests
             Flags_CanSeeNsfw = false
         });
 
+        var userId = Guid.NewGuid();
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AccessControlDbContext>();
-            db.UserAccessProfiles.Add(new UserAccessProfile { ProfileId = seeded.Id, UserId = "user-unassign" });
+            db.UserAccessProfiles.Add(new UserAccessProfile { ProfileId = seeded.Id, UserId = userId });
             await db.SaveChangesAsync();
         }
 
         _effMock.Invocations.Clear();
 
-        using var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/admin/access-profiles/{seeded.Id}/assign-user/user-unassign");
+        using var request = new HttpRequestMessage(HttpMethod.Delete, $"/api/admin/access-profiles/{seeded.Id}/assign-user/{userId}");
         AddAdminHeaders(request);
 
         var response = await _client.SendAsync(request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        _effMock.Verify(x => x.Invalidate("user-unassign"), Times.Once);
+        _effMock.Verify(x => x.Invalidate(userId.ToString()), Times.Once);
     }
 
     [Test]
@@ -481,10 +483,11 @@ public class AdminAccessProfilesControllerTests
             Flags_CanSeeNsfw = false
         });
 
+        var userId = Guid.NewGuid();
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AccessControlDbContext>();
-            db.UserAccessProfiles.Add(new UserAccessProfile { ProfileId = seeded.Id, UserId = "user-update" });
+            db.UserAccessProfiles.Add(new UserAccessProfile { ProfileId = seeded.Id, UserId = userId });
             await db.SaveChangesAsync();
         }
 
@@ -510,7 +513,7 @@ public class AdminAccessProfilesControllerTests
         var response = await _client.SendAsync(request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        _effMock.Verify(x => x.Invalidate("user-update"), Times.Once);
+        _effMock.Verify(x => x.Invalidate(userId.ToString()), Times.Once);
     }
 
     [Test]
@@ -523,10 +526,11 @@ public class AdminAccessProfilesControllerTests
             Flags_CanSeeNsfw = false
         });
 
+        var userId = Guid.NewGuid();
         using (var scope = _factory.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<AccessControlDbContext>();
-            db.UserAccessProfiles.Add(new UserAccessProfile { ProfileId = seeded.Id, UserId = "user-delete" });
+            db.UserAccessProfiles.Add(new UserAccessProfile { ProfileId = seeded.Id, UserId = userId });
             await db.SaveChangesAsync();
         }
 
@@ -538,7 +542,7 @@ public class AdminAccessProfilesControllerTests
         var response = await _client.SendAsync(request);
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        _effMock.Verify(x => x.Invalidate("user-delete"), Times.Once);
+        _effMock.Verify(x => x.Invalidate(userId.ToString()), Times.Once);
     }
 
     [Test]
