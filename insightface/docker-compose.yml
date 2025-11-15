@@ -1,10 +1,29 @@
 services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-insightface}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-insightface}
+      POSTGRES_DB: ${POSTGRES_DB:-insightface}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-insightface}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   insightface-api:
     build: .
     ports:
       - "5555:5555"
     environment:
-      - DB_URL=${DB_URL}
+      - DB_URL=${DB_URL:-postgresql://insightface:insightface@postgres:5432/insightface}
+    depends_on:
+      postgres:
+        condition: service_healthy
     deploy:
       resources:
         reservations:
@@ -13,3 +32,6 @@ services:
               count: all
               capabilities: [gpu]
     runtime: nvidia
+
+volumes:
+  postgres_data:

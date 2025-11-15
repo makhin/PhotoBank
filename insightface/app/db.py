@@ -4,40 +4,40 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения
+# Load environment variables
 load_dotenv(dotenv_path="/app/.env")
 
 DB_URL = os.getenv("DB_URL")
 
-# Подключение к БД
+# Connect to PostgreSQL database
 engine = create_engine(DB_URL)
 SessionLocal = sessionmaker(bind=engine)
 
-# Явно указываем схему dbo
-metadata = MetaData(schema="dbo")
+# Base model without schema specification (PostgreSQL uses 'public' by default)
+metadata = MetaData()
 Base = declarative_base(metadata=metadata)
 
-# Модель для PersonEmbeddings (создаём, если нужно)
+# Model for PersonEmbeddings
 class PersonEmbedding(Base):
-    __tablename__ = "PersonEmbeddings"
+    __tablename__ = "person_embeddings"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    person_id = Column(Integer, ForeignKey('Persons.Id'))
+    person_id = Column(Integer, ForeignKey('persons.id'))
     embedding_binary = Column(LargeBinary)
     embedding_json = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-# Функция инициализации БД
+# Database initialization function
 def init_db():
     inspector = inspect(engine)
-    if not inspector.has_table("PersonEmbeddings", schema="dbo"):
+    if not inspector.has_table("person_embeddings"):
         Base.metadata.create_all(bind=engine)
 
-# Получение списка персон из существующей таблицы dbo.Persons
+# Get list of persons from persons table
 def get_persons():
     try:
         with SessionLocal() as db:
             print("Connected to DB")
-            result = db.execute(text("SELECT Id, Name FROM dbo.Persons")).fetchall()
+            result = db.execute(text("SELECT id, name FROM persons")).fetchall()
             print(f"Query result: {result}")
             return [{"id": r[0], "name": r[1]} for r in result]
     except Exception as e:

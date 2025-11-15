@@ -69,10 +69,37 @@ curl -X POST "http://localhost:5555/embed" \
 
 ## Конфигурация
 
-### .env
-Настройте строку подключения к MS SQL в `.env`:
+### База данных
+
+Сервис использует **PostgreSQL** для хранения эмбеддингов лиц. Docker Compose автоматически поднимает PostgreSQL контейнер.
+
+#### Настройки по умолчанию:
+- **Host**: postgres (внутри Docker сети) или localhost (снаружи)
+- **Port**: 5432
+- **Database**: insightface
+- **User**: insightface
+- **Password**: insightface
+
+#### Переменные окружения (.env)
+
+Вы можете переопределить настройки через `.env` файл:
+
+```env
+# PostgreSQL connection
+DB_URL=postgresql://insightface:insightface@postgres:5432/insightface
+
+# PostgreSQL credentials (опционально)
+POSTGRES_USER=insightface
+POSTGRES_PASSWORD=insightface
+POSTGRES_DB=insightface
 ```
-DB_URL=mssql+pyodbc://sa:YourPassword@localhost:1433/Photobank?driver=ODBC+Driver+18+for+SQL+Server
+
+#### Подключение к внешней БД
+
+Для подключения к существующей PostgreSQL:
+
+```env
+DB_URL=postgresql://username:password@host:5432/database_name
 ```
 
 ## Технические детали
@@ -81,3 +108,4 @@ DB_URL=mssql+pyodbc://sa:YourPassword@localhost:1433/Photobank?driver=ODBC+Drive
 - **Размерность эмбеддинга**: 512
 - **Входной размер**: 112x112 (автоматическое масштабирование)
 - **Backend**: ONNX Runtime с поддержкой CUDA
+- **База данных**: PostgreSQL 16
