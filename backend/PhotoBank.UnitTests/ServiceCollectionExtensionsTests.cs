@@ -32,7 +32,6 @@ using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.DependencyInjection;
-using PhotoBank.InsightFaceApiClient;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
@@ -52,7 +51,6 @@ using PhotoBank.Services.Recognition;
 using PhotoBank.Services.Search;
 using PhotoBank.Services.Translator;
 using Minio;
-using InsightFaceClient = PhotoBank.InsightFaceApiClient.InsightFaceApiClient;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace PhotoBank.UnitTests;
@@ -275,7 +273,6 @@ public class ServiceCollectionExtensionsTests
         AssertTransientRegistration<IImageMetadataReaderWrapper, ImageMetadataReaderWrapper>(services);
         AssertScopedRegistration<IUnifiedFaceService, UnifiedFaceService>(services);
         AssertScopedRegistration<IFaceService, FaceService>(services);
-        AssertSingletonRegistration<IInsightFaceApiClient, InsightFaceClient>(services);
         AssertSingletonRegistration<IEnrichmentPipeline, EnrichmentPipeline>(services);
         AssertFactoryRegistration<EnricherTypeCatalog>(services, "Singleton");
         AssertFactoryRegistration<EnricherResolver>(services, "Singleton");
@@ -294,7 +291,6 @@ public class ServiceCollectionExtensionsTests
             typeof(IEnricher),
             typeof(IImageMetadataReaderWrapper),
             typeof(IRecognitionService),
-            typeof(IInsightFaceApiClient),
             typeof(IEnrichmentPipeline),
             typeof(IUnifiedFaceService));
 
