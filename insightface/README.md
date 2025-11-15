@@ -24,7 +24,7 @@ docker compose up --build
 | Method | Endpoint             | Description                                                  |
 |--------|----------------------|--------------------------------------------------------------|
 | POST   | /embed               | **Получить эмбеддинг из обрезанного изображения лица**      |
-| POST   | /register            | Зарегистрировать лицо для персоны                           |
+| POST   | /register            | Зарегистрировать эмбеддинг для конкретного face_id           |
 | POST   | /recognize           | Распознать лица на изображении (с детекцией)                |
 | POST   | /batch_recognize     | Распознать лица на нескольких изображениях                  |
 | GET    | /persons             | Получить список персон                                       |
@@ -109,3 +109,21 @@ DB_URL=postgresql://username:password@host:5432/database_name
 - **Входной размер**: 112x112 (автоматическое масштабирование)
 - **Backend**: ONNX Runtime с поддержкой CUDA
 - **База данных**: PostgreSQL 16
+
+## Структура базы данных
+
+### Таблица `face_embeddings`
+
+Хранит эмбеддинги для каждого обнаруженного лица:
+
+```sql
+CREATE TABLE face_embeddings (
+    id SERIAL PRIMARY KEY,
+    face_id INTEGER NOT NULL UNIQUE REFERENCES faces(id),
+    embedding_binary BYTEA,
+    embedding_json TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Важно**: Таблица `face_embeddings` ссылается на таблицу `faces` (face_id -> faces.id), а не на `persons`. Это позволяет хранить эмбеддинги для каждого конкретного лица независимо от персоны, к которой оно относится.

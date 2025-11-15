@@ -130,8 +130,8 @@ def extract_face_data(face):
         }
     }
 
-def register_face(person_id: int, file: UploadFile):
-    logger.info(f"Registering face for person_id={person_id}")
+def register_face(face_id: int, file: UploadFile):
+    logger.info(f"Registering face embedding for face_id={face_id}")
     faces = process_image(file)
     if isinstance(faces, dict) and "error" in faces:
         logger.error(f"Face registration failed: {faces['error']}")
@@ -142,16 +142,16 @@ def register_face(person_id: int, file: UploadFile):
     try:
         with SessionLocal() as db:
             embedding = PersonEmbedding(
-                person_id=person_id,
+                face_id=face_id,
                 embedding_binary=emb_bin,
                 embedding_json=emb_json
             )
             db.add(embedding)
             db.commit()
-            logger.info(f"Face embedding registered for person_id={person_id}")
+            logger.info(f"Face embedding registered for face_id={face_id}")
             return {
                 "status": "registered",
-                "person_id": person_id,
+                "face_id": face_id,
                 "details": extract_face_data(face)
             }
     except Exception as e:

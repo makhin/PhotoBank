@@ -23,8 +23,14 @@ async def persons():
     return get_persons()
 
 @app.post("/register")
-async def register(person_id: int, file: UploadFile = File(...)):
-    return register_face(person_id, file)
+async def register(face_id: int, file: UploadFile = File(...)):
+    """
+    Register a face embedding for a specific face ID.
+
+    This endpoint detects faces in the image and stores the embedding
+    for the detected face with the provided face_id.
+    """
+    return register_face(face_id, file)
 
 @app.post("/recognize")
 async def recognize(file: UploadFile = File(...)):

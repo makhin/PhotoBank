@@ -17,11 +17,11 @@ SessionLocal = sessionmaker(bind=engine)
 metadata = MetaData()
 Base = declarative_base(metadata=metadata)
 
-# Model for PersonEmbeddings
+# Model for FaceEmbeddings (stores embeddings for each detected face)
 class PersonEmbedding(Base):
-    __tablename__ = "person_embeddings"
+    __tablename__ = "face_embeddings"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    person_id = Column(Integer, ForeignKey('persons.id'))
+    face_id = Column(Integer, ForeignKey('faces.id'), nullable=False, unique=True)
     embedding_binary = Column(LargeBinary)
     embedding_json = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -29,7 +29,7 @@ class PersonEmbedding(Base):
 # Database initialization function
 def init_db():
     inspector = inspect(engine)
-    if not inspector.has_table("person_embeddings"):
+    if not inspector.has_table("face_embeddings"):
         Base.metadata.create_all(bind=engine)
 
 # Get list of persons from persons table
