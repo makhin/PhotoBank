@@ -241,6 +241,33 @@ public class PhotoFilterSpecificationTests
     }
 
     [Test]
+    public async Task Build_AllowsPhotosWithoutTakenDate_WhenAclHasDateRanges()
+    {
+        var storage = new Storage { Id = 420, Name = "allowed-null-date", Folder = "fd" };
+        var withoutDate = CreatePhoto(421, storage, "no-date");
+        var insideRange = CreatePhoto(422, storage, "inside", new DateTime(2012, 5, 10));
+        var outsideRange = CreatePhoto(423, storage, "outside", new DateTime(2013, 5, 10));
+
+        _context.Storages.Add(storage);
+        _context.Photos.AddRange(withoutDate, insideRange, outsideRange);
+        await _context.SaveChangesAsync();
+
+        var user = new TestCurrentUser(
+            storage.Id,
+            new[]
+            {
+                (new DateOnly(2012, 1, 1), new DateOnly(2012, 12, 31))
+            });
+
+        var result = await _sut.Build(new FilterDto(), user)
+            .OrderBy(p => p.Id)
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        result.Should().Equal(withoutDate.Id, insideRange.Id);
+    }
+
+    [Test]
     public void Build_WithCaption_AddsILikeExpression()
     {
         var storage = new Storage { Id = 500, Name = "s500", Folder = "f500" };
