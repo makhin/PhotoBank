@@ -82,25 +82,18 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
         var embResp = await _client.EmbedAsync(image, includeAttributes: false, ct);
         var q = Normalize(embResp.Embedding);
 
-        // Use optimized pgvector similarity search with HNSW index
-        // Query top N*2 faces to ensure we get enough candidates after grouping by person
-        var similarFaces = await _embeddings.FindSimilarFacesAsync(q, _opts.TopK * 2, ct);
+        // Use optimized pgvector similarity search with HNSW index and SQL-level grouping
+        // FindSimilarFacesAsync returns the best face for each person (using DISTINCT ON),
+        // already sorted by distance and limited to TopK persons
+        var similarFaces = await _embeddings.FindSimilarFacesAsync(q, _opts.TopK, ct);
 
-        // Group by PersonId and find best match (minimum distance) for each person
-        // pgvector CosineDistance returns (1 - cosine_similarity), so similarity = 1 - distance
-        var byPerson = similarFaces.GroupBy(x => x.PersonId)
-                                   .Select(g => new
-                                   {
-                                       PersonId = g.Key,
-                                       Best = 1f - g.Min(e => e.Distance)
-                                   })
-                                   .OrderByDescending(x => x.Best)
-                                   .Take(_opts.TopK)
-                                   .ToList();
+        // Convert cosine distance to similarity: pgvector CosineDistance = 1 - cosine_similarity
+        var results = similarFaces
+            .Select(x => new UserMatchDto($"local:{x.PersonId}", 1f - x.Distance))
+            .Where(x => x.Confidence >= _opts.FaceMatchThreshold)
+            .ToList();
 
-        return byPerson.Where(x => x.Best >= _opts.FaceMatchThreshold)
-                       .Select(x => new UserMatchDto($"local:{x.PersonId}", x.Best))
-                       .ToList();
+        return results;
     }
 
     private static float[] Normalize(float[] v)

@@ -45,24 +45,39 @@ public sealed class FaceEmbeddingRepository : IFaceEmbeddingRepository
     {
         var embeddingVector = new Vector(embedding);
 
-        // Use pgvector cosine distance operator (<=>) for efficient similarity search
-        // The HNSW index will be used automatically for this query
-        var results = await _db.Faces
-            .AsNoTracking()
-            .Where(x => x.Embedding != null && x.PersonId != null && x.IdentityStatus == IdentityStatus.Identified)
-            .Select(x => new
-            {
-                x.PersonId,
-                x.Id,
-                Distance = x.Embedding!.CosineDistance(embeddingVector)
-            })
-            .OrderBy(x => x.Distance)
-            .Take(limit)
+        // Use SQL with DISTINCT ON to find the best face for each person,
+        // then order by distance and limit to top N persons.
+        // This prevents a single person with many faces from dominating results.
+        var sql = @"
+            SELECT ""PersonId"", ""Id"", ""Distance""
+            FROM (
+                SELECT DISTINCT ON (""PersonId"")
+                    ""PersonId"",
+                    ""Id"",
+                    ""Embedding"" <=> {0} AS ""Distance""
+                FROM ""Faces""
+                WHERE ""Embedding"" IS NOT NULL
+                    AND ""PersonId"" IS NOT NULL
+                    AND ""IdentityStatus"" = {1}
+                ORDER BY ""PersonId"", ""Embedding"" <=> {0}
+            ) AS best_faces
+            ORDER BY ""Distance""
+            LIMIT {2}";
+
+        var results = await _db.Database
+            .SqlQueryRaw<FaceSimilarityResult>(sql, embeddingVector, (int)IdentityStatus.Identified, limit)
             .ToListAsync(ct);
 
         return results
-            .Where(x => x.PersonId.HasValue)
-            .Select(x => (x.PersonId!.Value, x.Id, (float)x.Distance))
+            .Select(x => (x.PersonId, x.Id, x.Distance))
             .ToList();
+    }
+
+    // Helper class for SQL query results
+    private class FaceSimilarityResult
+    {
+        public int PersonId { get; set; }
+        public int Id { get; set; }
+        public float Distance { get; set; }
     }
 }

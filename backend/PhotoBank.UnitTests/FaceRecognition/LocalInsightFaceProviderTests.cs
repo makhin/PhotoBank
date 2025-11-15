@@ -72,25 +72,25 @@ public class LocalInsightFaceProviderTests
         _client.Setup(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LocalEmbedResponse(new float[] { 1, 1 }, new int[] { 2 }, 2, null, null, null));
 
-        // Mock FindSimilarFacesAsync instead of GetAllAsync
-        // TopK=2, so limit will be 2*2=4
+        // Mock FindSimilarFacesAsync with SQL-level grouping (DISTINCT ON)
+        // TopK=2, so limit is exactly 2 (best face per person)
         // pgvector CosineDistance returns (1 - cosine_similarity), so similarity = 1 - distance
-        // Return faces with cosine distances:
-        // - PersonId=2, FaceId=2, Distance=0.0 (perfect match) -> similarity = 1 - 0.0 = 1.0
-        // - PersonId=1, FaceId=1, Distance=0.3 -> similarity = 1 - 0.3 = 0.7
-        // - PersonId=3, FaceId=3, Distance=0.6 -> similarity = 1 - 0.6 = 0.4 (below threshold 0.5)
-        _repo.Setup(r => r.FindSimilarFacesAsync(It.IsAny<float[]>(), 4, It.IsAny<CancellationToken>()))
+        // Repository returns already grouped and sorted results:
+        // - PersonId=2, Distance=0.0 (perfect match) -> similarity = 1 - 0.0 = 1.0
+        // - PersonId=1, Distance=0.3 -> similarity = 1 - 0.3 = 0.7
+        _repo.Setup(r => r.FindSimilarFacesAsync(It.IsAny<float[]>(), 2, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<(int PersonId, int FaceId, float Distance)>
             {
                 (2, 2, 0.0f),           // Best match, similarity=1.0
-                (1, 1, 0.3f),           // Good match, similarity=0.7
-                (3, 3, 0.6f)            // Poor match, similarity=0.4 (below threshold)
+                (1, 1, 0.3f)            // Good match, similarity=0.7
             });
 
         var res = await _provider.SearchUsersByImageAsync(new MemoryStream(new byte[]{1}), CancellationToken.None);
 
         res.Should().HaveCount(2);
         res[0].ProviderPersonId.Should().Be("local:2");
+        res[0].Confidence.Should().BeApproximately(1.0f, 0.001f);
         res[1].ProviderPersonId.Should().Be("local:1");
+        res[1].Confidence.Should().BeApproximately(0.7f, 0.001f);
     }
 }
