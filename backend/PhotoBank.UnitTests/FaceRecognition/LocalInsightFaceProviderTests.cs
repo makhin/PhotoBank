@@ -68,14 +68,23 @@ public class LocalInsightFaceProviderTests
     [Test]
     public async Task SearchUsersByImageAsync_ReturnsOrderedMatchesAboveThreshold()
     {
+        // Query embedding [1, 1] will be normalized to [0.707, 0.707]
         _client.Setup(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new LocalEmbedResponse(new float[] { 1, 1 }, new int[] { 2 }, 2, null, null, null));
-        _repo.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<(int, int, float[])>
-        {
-            (1, 1, new float[]{1,0}),
-            (2, 2, new float[]{0.70710677f,0.70710677f}),
-            (3, 3, new float[]{-1,0})
-        });
+
+        // Mock FindSimilarFacesAsync instead of GetAllAsync
+        // TopK=2, so limit will be 2*2=4
+        // Return faces with cosine distances:
+        // - PersonId=2, FaceId=2, Distance=0.0 (perfect match) -> similarity = 1 - (0/2) = 1.0
+        // - PersonId=1, FaceId=1, Distance=0.293 -> similarity = 1 - (0.293/2) = 0.8535
+        // - PersonId=3, FaceId=3, Distance=1.707 -> similarity = 1 - (1.707/2) = 0.1465 (below threshold 0.5)
+        _repo.Setup(r => r.FindSimilarFacesAsync(It.IsAny<float[]>(), 4, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<(int PersonId, int FaceId, float Distance)>
+            {
+                (2, 2, 0.0f),           // Best match
+                (1, 1, 0.293f),         // Good match
+                (3, 3, 1.707f)          // Poor match (below threshold)
+            });
 
         var res = await _provider.SearchUsersByImageAsync(new MemoryStream(new byte[]{1}), CancellationToken.None);
 
