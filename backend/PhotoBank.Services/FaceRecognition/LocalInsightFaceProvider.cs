@@ -87,12 +87,12 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
         var similarFaces = await _embeddings.FindSimilarFacesAsync(q, _opts.TopK * 2, ct);
 
         // Group by PersonId and find best match (minimum distance) for each person
-        // Convert cosine distance to similarity: similarity = 1 - (distance / 2)
+        // pgvector CosineDistance returns (1 - cosine_similarity), so similarity = 1 - distance
         var byPerson = similarFaces.GroupBy(x => x.PersonId)
                                    .Select(g => new
                                    {
                                        PersonId = g.Key,
-                                       Best = 1f - (g.Min(e => e.Distance) / 2f)
+                                       Best = 1f - g.Min(e => e.Distance)
                                    })
                                    .OrderByDescending(x => x.Best)
                                    .Take(_opts.TopK)
