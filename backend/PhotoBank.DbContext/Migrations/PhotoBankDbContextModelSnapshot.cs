@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using Pgvector;
 using PhotoBank.DbContext.DbContext;
 
 #nullable disable
@@ -22,6 +23,7 @@ namespace PhotoBank.DbContext.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -327,6 +329,9 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.Property<long?>("BlobSize_Image")
                         .HasColumnType("bigint");
+
+                    b.Property<Vector>("Embedding")
+                        .HasColumnType("vector(512)");
 
                     b.Property<Guid>("ExternalGuid")
                         .HasColumnType("uuid");
