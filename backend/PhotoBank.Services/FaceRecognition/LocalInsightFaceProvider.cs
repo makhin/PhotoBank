@@ -47,7 +47,7 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
             try
             {
                 using var stream = f.OpenStream();
-                var emb = await _client.EmbedAsync(stream, ct);
+                var emb = await _client.EmbedAsync(stream, includeAttributes: false, ct);
                 await _embeddings.UpsertAsync(personId, f.FaceId, Normalize(emb.Embedding), emb.Model ?? _opts.Model, ct);
                 result[f.FaceId] = $"local:{f.FaceId}";
             }
@@ -79,7 +79,7 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
 
     public async Task<IReadOnlyList<UserMatchDto>> SearchUsersByImageAsync(Stream image, CancellationToken ct)
     {
-        var embResp = await _client.EmbedAsync(image, ct);
+        var embResp = await _client.EmbedAsync(image, includeAttributes: false, ct);
         var q = Normalize(embResp.Embedding);
 
         var all = await _embeddings.GetAllAsync(ct);

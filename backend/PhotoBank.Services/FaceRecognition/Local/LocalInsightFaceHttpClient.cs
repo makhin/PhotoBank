@@ -14,7 +14,6 @@ public interface ILocalInsightFaceClient
 {
     Task<LocalDetectResponse> DetectAsync(Stream image, CancellationToken ct);
     Task<LocalEmbedResponse> EmbedAsync(Stream image, bool includeAttributes, CancellationToken ct);
-    Task<LocalAttributesResponse> AttributesAsync(Stream image, CancellationToken ct);
 }
 
 public sealed class LocalInsightFaceHttpClient : ILocalInsightFaceClient
@@ -38,7 +37,7 @@ public sealed class LocalInsightFaceHttpClient : ILocalInsightFaceClient
         throw new NotSupportedException(
             "Face detection endpoint has been removed. " +
             "InsightFace service now works only with pre-cropped face images. " +
-            "Use EmbedAsync or AttributesAsync with cropped face images instead.");
+            "Use EmbedAsync with cropped face images instead.");
     }
 
     /// <summary>
@@ -62,25 +61,6 @@ public sealed class LocalInsightFaceHttpClient : ILocalInsightFaceClient
         return JsonSerializer.Deserialize<LocalEmbedResponse>(json, JsonOpts())!;
     }
 
-    /// <summary>
-    /// Extract face attributes from a pre-cropped face image
-    /// </summary>
-    /// <param name="image">Stream containing cropped face image</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Face attributes including age, gender, and pose</returns>
-    public async Task<LocalAttributesResponse> AttributesAsync(Stream image, CancellationToken ct)
-    {
-        using var form = new MultipartFormDataContent();
-        var sc = new StreamContent(image);
-        sc.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
-        form.Add(sc, "file", "face.jpg");
-
-        var res = await _http.PostAsync("/attributes", form, ct);
-        res.EnsureSuccessStatusCode();
-        var json = await res.Content.ReadAsStringAsync(ct);
-        return JsonSerializer.Deserialize<LocalAttributesResponse>(json, JsonOpts())!;
-    }
-
     private static JsonSerializerOptions JsonOpts() => new(JsonSerializerDefaults.Web)
     { PropertyNameCaseInsensitive = true };
 }
@@ -99,14 +79,6 @@ public sealed record LocalEmbedResponse(
     string? Model,
     string? InputSize,
     FaceAttributes? Attributes
-);
-
-/// <summary>
-/// Response from InsightFace /attributes endpoint
-/// </summary>
-public sealed record LocalAttributesResponse(
-    string Status,
-    FaceAttributes Attributes
 );
 
 /// <summary>
