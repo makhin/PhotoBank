@@ -44,9 +44,9 @@ public static class AclPredicates
             return _ => true;
         }
 
-        var predicate = BuildRangePredicate(ranges[0]);
+        var predicate = (Expression<Func<Photo, bool>>)(p => !p.TakenDate.HasValue);
 
-        for (var i = 1; i < ranges.Length; i++)
+        for (var i = 0; i < ranges.Length; i++)
         {
             predicate = predicate.OrElse(BuildRangePredicate(ranges[i]));
         }
