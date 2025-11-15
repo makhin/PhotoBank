@@ -31,7 +31,7 @@ public sealed class FaceEmbeddingRepository : IFaceEmbeddingRepository
     {
         var faces = await _db.Faces
             .AsNoTracking()
-            .Where(x => x.Embedding != null && x.PersonId != null)
+            .Where(x => x.Embedding != null && x.PersonId != null && x.IdentityStatus == IdentityStatus.Identified)
             .Select(x => new { x.PersonId, x.Id, x.Embedding })
             .ToListAsync(ct);
 
