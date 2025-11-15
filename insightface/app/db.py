@@ -1,6 +1,7 @@
 import os
-from sqlalchemy import create_engine, Column, Integer, LargeBinary, String, DateTime, ForeignKey, inspect, MetaData, Table, text
+from sqlalchemy import create_engine, Column, Integer, DateTime, ForeignKey, inspect, MetaData, Table, text
 from sqlalchemy.orm import sessionmaker, declarative_base
+from pgvector.sqlalchemy import Vector
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -22,12 +23,17 @@ class PersonEmbedding(Base):
     __tablename__ = "face_embeddings"
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     face_id = Column(Integer, ForeignKey('faces.id'), nullable=False, unique=True)
-    embedding_binary = Column(LargeBinary)
-    embedding_json = Column(String)
+    embedding = Column(Vector(512))  # pgvector column for 512-dimensional ArcFace embeddings
     created_at = Column(DateTime, default=datetime.utcnow)
 
 # Database initialization function
 def init_db():
+    # Enable pgvector extension
+    with engine.connect() as conn:
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+        conn.commit()
+
+    # Create tables if they don't exist
     inspector = inspect(engine)
     if not inspector.has_table("face_embeddings"):
         Base.metadata.create_all(bind=engine)

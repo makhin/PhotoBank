@@ -160,14 +160,11 @@ def register_face(face_id: int, file: UploadFile):
     try:
         # Extract embedding from the cropped face
         embedding = get_embedding_from_cropped_face(img)
-        emb_bin = embedding.tobytes()
-        emb_json = json.dumps(embedding.tolist())
 
         with SessionLocal() as db:
             embedding_record = PersonEmbedding(
                 face_id=face_id,
-                embedding_binary=emb_bin,
-                embedding_json=emb_json
+                embedding=embedding.tolist()  # pgvector accepts list/array directly
             )
             db.add(embedding_record)
             db.commit()
