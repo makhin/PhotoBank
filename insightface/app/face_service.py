@@ -130,7 +130,7 @@ def get_face_attributes(img):
     # Extract attributes
     attributes = {
         "age": int(face.age) if hasattr(face, 'age') and face.age is not None else None,
-        "gender": "male" if hasattr(face, 'gender') and face.gender == 1 else "female" if hasattr(face, 'gender') else None,
+        "gender": "male" if hasattr(face, 'gender') and face.gender == 1 else "female" if hasattr(face, 'gender') and face.gender == 0 else None,
     }
 
     # Add pose if available
