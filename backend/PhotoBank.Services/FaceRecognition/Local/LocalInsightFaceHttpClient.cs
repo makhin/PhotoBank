@@ -30,14 +30,22 @@ public sealed class LocalInsightFaceHttpClient : ILocalInsightFaceClient
     }
 
     /// <summary>
-    /// DEPRECATED: Face detection endpoint removed. Service now works only with pre-cropped faces.
+    /// Detect all faces in a full image
     /// </summary>
-    public Task<LocalDetectResponse> DetectAsync(Stream image, CancellationToken ct)
+    /// <param name="image">Stream containing full image (can contain multiple faces)</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Detection response with list of detected faces and their attributes</returns>
+    public async Task<LocalDetectResponse> DetectAsync(Stream image, CancellationToken ct)
     {
-        throw new NotSupportedException(
-            "Face detection endpoint has been removed. " +
-            "InsightFace service now works only with pre-cropped face images. " +
-            "Use EmbedAsync with cropped face images instead.");
+        using var form = new MultipartFormDataContent();
+        var sc = new StreamContent(image);
+        sc.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+        form.Add(sc, "file", "photo.jpg");
+
+        var res = await _http.PostAsync("/detect", form, ct);
+        res.EnsureSuccessStatusCode();
+        var json = await res.Content.ReadAsStringAsync(ct);
+        return JsonSerializer.Deserialize<LocalDetectResponse>(json, JsonOpts())!;
     }
 
     /// <summary>

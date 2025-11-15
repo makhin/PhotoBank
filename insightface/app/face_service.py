@@ -183,3 +183,53 @@ def embed_cropped_face(file: UploadFile, include_attributes: bool = False):
     except Exception as e:
         logger.exception(f"Error extracting embedding: {str(e)}")
         return {"error": f"Failed to extract embedding: {str(e)}"}
+
+
+def detect_faces(file: UploadFile):
+    """
+    Detect all faces in a full image.
+
+    Args:
+        file: UploadFile containing an image with potentially multiple faces
+
+    Returns:
+        dict with list of detected faces and their metadata in JSON format
+    """
+    logger.info(f"Processing image for face detection: {file.filename}")
+
+    # Read image bytes
+    img_bytes = file.file.read()
+    np_arr = np.frombuffer(img_bytes, np.uint8)
+    img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+    if img is None:
+        logger.error("Failed to decode image")
+        return {"error": "Invalid image format"}
+
+    logger.info(f"Image size: {img.shape[1]}x{img.shape[0]}")
+
+    try:
+        # Detect all faces in the image
+        faces = app_insightface.get(img)
+
+        logger.info(f"Detected {len(faces)} face(s) in the image")
+
+        # Convert each detected face to response format
+        detected_faces = []
+        for idx, face in enumerate(faces):
+            face_data = {
+                "id": str(idx),
+                "score": float(face.det_score) if hasattr(face, 'det_score') else 1.0,
+                "bbox": face.bbox.tolist() if hasattr(face, 'bbox') and face.bbox is not None else None,
+                "landmark": face.kps.tolist() if hasattr(face, 'kps') and face.kps is not None else None,
+                "age": int(face.age) if hasattr(face, 'age') and face.age is not None else None,
+                "gender": "male" if hasattr(face, 'gender') and face.gender == 1 else "female" if hasattr(face, 'gender') and face.gender == 0 else None,
+            }
+            detected_faces.append(face_data)
+
+        return {"faces": detected_faces}
+
+    except Exception as e:
+        logger.exception(f"Error detecting faces: {str(e)}")
+        return {"error": f"Failed to detect faces: {str(e)}"}
+
