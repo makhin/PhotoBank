@@ -48,9 +48,9 @@ public class LocalInsightFaceProviderTests
     [Test]
     public async Task LinkFacesToPersonAsync_EmbedsAndStoresVectors()
     {
-        _client.SetupSequence(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new LocalEmbedResponse(new float[] { 2, 0 }, "m"))
-            .ReturnsAsync(new LocalEmbedResponse(new float[] { 0, 3 }, "m"));
+        _client.SetupSequence(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LocalEmbedResponse(new float[] { 2, 0 }, new int[] { 2 }, 2, "m", "112x112", null))
+            .ReturnsAsync(new LocalEmbedResponse(new float[] { 0, 3 }, new int[] { 2 }, 2, "m", "112x112", null));
 
         var faces = new List<FaceToLink>
         {
@@ -60,7 +60,7 @@ public class LocalInsightFaceProviderTests
 
         await _provider.LinkFacesToPersonAsync(5, faces, CancellationToken.None);
 
-        _client.Verify(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        _client.Verify(c => c.EmbedAsync(It.IsAny<Stream>(), false, It.IsAny<CancellationToken>()), Times.Exactly(2));
         _repo.Verify(r => r.UpsertAsync(5, 10, It.Is<float[]>(v => System.Math.Abs(v[0]-1f) < 1e-6 && System.Math.Abs(v[1]) < 1e-6), "m", It.IsAny<CancellationToken>()));
         _repo.Verify(r => r.UpsertAsync(5, 11, It.Is<float[]>(v => System.Math.Abs(v[1]-1f) < 1e-6 && System.Math.Abs(v[0]) < 1e-6), "m", It.IsAny<CancellationToken>()));
     }
@@ -68,8 +68,8 @@ public class LocalInsightFaceProviderTests
     [Test]
     public async Task SearchUsersByImageAsync_ReturnsOrderedMatchesAboveThreshold()
     {
-        _client.Setup(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new LocalEmbedResponse(new float[] { 1, 1 }, null));
+        _client.Setup(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LocalEmbedResponse(new float[] { 1, 1 }, new int[] { 2 }, 2, null, null, null));
         _repo.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<(int, int, float[])>
         {
             (1, 1, new float[]{1,0}),
