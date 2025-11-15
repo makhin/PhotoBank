@@ -4,6 +4,7 @@ import insightface
 import json
 import logging
 import cv2
+import onnxruntime as ort
 
 # Setup logger
 logger = logging.getLogger("face_service")
@@ -13,10 +14,27 @@ logger.setLevel(logging.INFO)
 # Using antelopev2 model pack which includes ResNet100@Glint360K recognition model
 logger.info("Initializing InsightFace ArcFace recognition model (antelopev2 with glint360k)...")
 
+# Detect available ONNX Runtime providers
+available_providers = ort.get_available_providers()
+logger.info(f"Available ONNX Runtime providers: {available_providers}")
+
+# Build provider list with preference for CUDA if available
+providers = []
+if 'CUDAExecutionProvider' in available_providers:
+    providers.append('CUDAExecutionProvider')
+    logger.info("CUDA provider is available - GPU acceleration enabled")
+else:
+    logger.info("CUDA provider not available - using CPU only")
+
+if 'CPUExecutionProvider' in available_providers:
+    providers.append('CPUExecutionProvider')
+
+logger.info(f"Using providers: {providers}")
+
 # Load the model pack to access models
 app_insightface = insightface.app.FaceAnalysis(
     name='antelopev2',
-    providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
+    providers=providers
 )
 app_insightface.prepare(ctx_id=0, det_size=(640, 640))
 
