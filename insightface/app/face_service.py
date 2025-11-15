@@ -136,9 +136,9 @@ def get_face_attributes(img):
     # Add pose if available
     if hasattr(face, 'pose') and face.pose is not None:
         attributes["pose"] = {
-            "yaw": float(face.pose[0]) if len(face.pose) > 0 else None,
-            "pitch": float(face.pose[1]) if len(face.pose) > 1 else None,
-            "roll": float(face.pose[2]) if len(face.pose) > 2 else None,
+            "yaw": float(face.pose.yaw) if hasattr(face.pose, 'yaw') else None,
+            "pitch": float(face.pose.pitch) if hasattr(face.pose, 'pitch') else None,
+            "roll": float(face.pose.roll) if hasattr(face.pose, 'roll') else None,
         }
 
     # Add embedding shape info
