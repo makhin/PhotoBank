@@ -82,12 +82,21 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
         var embResp = await _client.EmbedAsync(image, includeAttributes: false, ct);
         var q = Normalize(embResp.Embedding);
 
-        var all = await _embeddings.GetAllAsync(ct);
-        var byPerson = all.GroupBy(x => x.PersonId)
-                          .Select(g => new { PersonId = g.Key, Best = g.Max(e => CosSim(q, e.Vector)) })
-                          .OrderByDescending(x => x.Best)
-                          .Take(_opts.TopK)
-                          .ToList();
+        // Use optimized pgvector similarity search with HNSW index
+        // Query top N*2 faces to ensure we get enough candidates after grouping by person
+        var similarFaces = await _embeddings.FindSimilarFacesAsync(q, _opts.TopK * 2, ct);
+
+        // Group by PersonId and find best match (minimum distance) for each person
+        // Convert cosine distance to similarity: similarity = 1 - (distance / 2)
+        var byPerson = similarFaces.GroupBy(x => x.PersonId)
+                                   .Select(g => new
+                                   {
+                                       PersonId = g.Key,
+                                       Best = 1f - (g.Min(e => e.Distance) / 2f)
+                                   })
+                                   .OrderByDescending(x => x.Best)
+                                   .Take(_opts.TopK)
+                                   .ToList();
 
         return byPerson.Where(x => x.Best >= _opts.FaceMatchThreshold)
                        .Select(x => new UserMatchDto($"local:{x.PersonId}", x.Best))

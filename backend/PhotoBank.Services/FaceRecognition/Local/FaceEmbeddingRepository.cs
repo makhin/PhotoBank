@@ -40,4 +40,29 @@ public sealed class FaceEmbeddingRepository : IFaceEmbeddingRepository
             .Select(x => (x.PersonId!.Value, x.Id, x.Embedding!.ToArray()))
             .ToList();
     }
+
+    public async Task<IReadOnlyList<(int PersonId, int FaceId, float Distance)>> FindSimilarFacesAsync(float[] embedding, int limit, CancellationToken ct)
+    {
+        var embeddingVector = new Vector(embedding);
+
+        // Use pgvector cosine distance operator (<=>) for efficient similarity search
+        // The HNSW index will be used automatically for this query
+        var results = await _db.Faces
+            .AsNoTracking()
+            .Where(x => x.Embedding != null && x.PersonId != null && x.IdentityStatus == IdentityStatus.Identified)
+            .Select(x => new
+            {
+                x.PersonId,
+                x.Id,
+                Distance = x.Embedding!.CosineDistance(embeddingVector)
+            })
+            .OrderBy(x => x.Distance)
+            .Take(limit)
+            .ToListAsync(ct);
+
+        return results
+            .Where(x => x.PersonId.HasValue)
+            .Select(x => (x.PersonId!.Value, x.Id, (float)x.Distance))
+            .ToList();
+    }
 }
