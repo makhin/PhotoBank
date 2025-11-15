@@ -42,12 +42,18 @@ public sealed class LocalInsightFaceHttpClient : ILocalInsightFaceClient
         return JsonSerializer.Deserialize<LocalDetectResponse>(json, JsonOpts())!;
     }
 
+    /// <summary>
+    /// Extract face embedding from a pre-cropped face image using ArcFace (Glint360K) model
+    /// </summary>
+    /// <param name="image">Stream containing cropped face image (will be resized to 112x112)</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Face embedding response with 512-dimensional vector</returns>
     public async Task<LocalEmbedResponse> EmbedAsync(Stream image, CancellationToken ct)
     {
         using var form = new MultipartFormDataContent();
         var sc = new StreamContent(image);
         sc.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
-        form.Add(sc, "image", "image.jpg");
+        form.Add(sc, "file", "face.jpg");  // Changed from "image" to "file" to match FastAPI parameter name
 
         var res = await _http.PostAsync("/embed", form, ct);
         res.EnsureSuccessStatusCode();
@@ -61,4 +67,15 @@ public sealed class LocalInsightFaceHttpClient : ILocalInsightFaceClient
 
 public sealed record LocalDetectResponse(List<LocalDetectedFace> Faces);
 public sealed record LocalDetectedFace(string Id, float Score, float[]? Bbox, float[]? Landmark, float? Age, string? Gender);
-public sealed record LocalEmbedResponse(float[] Embedding, string? Model);
+
+/// <summary>
+/// Response from InsightFace /embed endpoint
+/// Contains face embedding vector from ArcFace (Glint360K) model
+/// </summary>
+public sealed record LocalEmbedResponse(
+    float[] Embedding,
+    int[]? EmbeddingShape,
+    int? EmbeddingDim,
+    string? Model,
+    string? InputSize
+);

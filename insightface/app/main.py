@@ -1,10 +1,14 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from .face_service import process_image, recognize_faces, register_face
+from .face_service import process_image, recognize_faces, register_face, embed_cropped_face
 from typing import List, Dict, Tuple
 from .db import init_db, get_persons
 import uvicorn
 
-app = FastAPI(title="InsightFace API", version="1.0")
+app = FastAPI(
+    title="InsightFace ArcFace API",
+    version="2.0",
+    description="Face recognition service using ArcFace (Glint360K) model"
+)
 
 @app.on_event("startup")
 async def startup_event():
@@ -34,3 +38,16 @@ async def batch_recognize(files: List[UploadFile] = File(...)):
         result = recognize_faces(content)
         results.append(result)
     return results
+
+@app.post("/embed")
+async def embed(file: UploadFile = File(...)):
+    """
+    Extract face embedding from a pre-cropped face image.
+
+    The image should contain a single cropped face.
+    It will be automatically resized to 112x112 for processing.
+
+    Returns:
+        JSON with embedding vector and metadata
+    """
+    return embed_cropped_face(file)
