@@ -1,7 +1,8 @@
 fastapi
 uvicorn
 sqlalchemy
-pyodbc
+psycopg2-binary
+pgvector
 pydantic
 insightface
 numpy
@@ -9,4 +10,3 @@ scikit-learn
 python-multipart
 onnxruntime>=1.17.0
 python-dotenv>=1.0.0
-pyodbc>=5.0.0

@@ -48,9 +48,9 @@ public class LocalInsightFaceProviderTests
     [Test]
     public async Task LinkFacesToPersonAsync_EmbedsAndStoresVectors()
     {
-        _client.SetupSequence(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new LocalEmbedResponse(new float[] { 2, 0 }, "m"))
-            .ReturnsAsync(new LocalEmbedResponse(new float[] { 0, 3 }, "m"));
+        _client.SetupSequence(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LocalEmbedResponse(new float[] { 2, 0 }, new int[] { 2 }, 2, "m", "112x112", null))
+            .ReturnsAsync(new LocalEmbedResponse(new float[] { 0, 3 }, new int[] { 2 }, 2, "m", "112x112", null));
 
         var faces = new List<FaceToLink>
         {
@@ -60,7 +60,7 @@ public class LocalInsightFaceProviderTests
 
         await _provider.LinkFacesToPersonAsync(5, faces, CancellationToken.None);
 
-        _client.Verify(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        _client.Verify(c => c.EmbedAsync(It.IsAny<Stream>(), false, It.IsAny<CancellationToken>()), Times.Exactly(2));
         _repo.Verify(r => r.UpsertAsync(5, 10, It.Is<float[]>(v => System.Math.Abs(v[0]-1f) < 1e-6 && System.Math.Abs(v[1]) < 1e-6), "m", It.IsAny<CancellationToken>()));
         _repo.Verify(r => r.UpsertAsync(5, 11, It.Is<float[]>(v => System.Math.Abs(v[1]-1f) < 1e-6 && System.Math.Abs(v[0]) < 1e-6), "m", It.IsAny<CancellationToken>()));
     }
@@ -68,19 +68,29 @@ public class LocalInsightFaceProviderTests
     [Test]
     public async Task SearchUsersByImageAsync_ReturnsOrderedMatchesAboveThreshold()
     {
-        _client.Setup(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new LocalEmbedResponse(new float[] { 1, 1 }, null));
-        _repo.Setup(r => r.GetAllAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<(int, int, float[])>
-        {
-            (1, 1, new float[]{1,0}),
-            (2, 2, new float[]{0.70710677f,0.70710677f}),
-            (3, 3, new float[]{-1,0})
-        });
+        // Query embedding [1, 1] will be normalized to [0.707, 0.707]
+        _client.Setup(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LocalEmbedResponse(new float[] { 1, 1 }, new int[] { 2 }, 2, null, null, null));
+
+        // Mock FindSimilarFacesAsync with SQL-level grouping (DISTINCT ON)
+        // TopK=2, so limit is exactly 2 (best face per person)
+        // pgvector CosineDistance returns (1 - cosine_similarity), so similarity = 1 - distance
+        // Repository returns already grouped and sorted results:
+        // - PersonId=2, Distance=0.0 (perfect match) -> similarity = 1 - 0.0 = 1.0
+        // - PersonId=1, Distance=0.3 -> similarity = 1 - 0.3 = 0.7
+        _repo.Setup(r => r.FindSimilarFacesAsync(It.IsAny<float[]>(), 2, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<(int PersonId, int FaceId, float Distance)>
+            {
+                (2, 2, 0.0f),           // Best match, similarity=1.0
+                (1, 1, 0.3f)            // Good match, similarity=0.7
+            });
 
         var res = await _provider.SearchUsersByImageAsync(new MemoryStream(new byte[]{1}), CancellationToken.None);
 
         res.Should().HaveCount(2);
         res[0].ProviderPersonId.Should().Be("local:2");
+        res[0].Confidence.Should().BeApproximately(1.0f, 0.001f);
         res[1].ProviderPersonId.Should().Be("local:1");
+        res[1].Confidence.Should().BeApproximately(0.7f, 0.001f);
     }
 }

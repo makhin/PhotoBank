@@ -1,30 +1,163 @@
-# insightface-api
+# InsightFace ArcFace API
 
-REST API for face recognition using InsightFace and MS SQL backend.
+REST API для детекции лиц и извлечения эмбеддингов с использованием InsightFace ArcFace модели (Glint360K).
 
-## Features
-- Register faces and save embeddings (binary + JSON)
-- Search for similar faces
-- Batch recognition
-- Swagger UI available at `/docs`
+## Модель
 
-## Quick Start
+Сервис использует **antelopev2** model pack с моделью распознавания **ResNet100@Glint360K** для получения высококачественных эмбеддингов лиц.
+
+## Основные возможности
+- **Детекция лиц** на полных изображениях
+- Извлечение 512-мерных эмбеддингов из обрезанных лиц
+- **Опциональное извлечение атрибутов лица**: возраст, пол, поза головы
+- Без привязки к базе данных - чистый сервис детекции и извлечения эмбеддингов
+- Swagger UI доступен по адресу `/docs`
+
+## Быстрый старт
 
 ```bash
 docker compose up --build
 ```
 
 ## API Endpoints
-| Method | Endpoint             | Description                   |
-|--------|----------------------|-------------------------------|
-| POST   | /register            | Register a face for a person |
-| POST   | /recognize           | Recognize face in image      |
-| POST   | /batch/recognize     | Recognize faces in batch     |
-| GET    | /persons             | Get list of persons          |
-| GET    | /health              | Health check                 |
 
-## .env
-Configure your MS SQL connection string in `.env`:
+| Method | Endpoint     | Description                                               |
+|--------|--------------|-----------------------------------------------------------|
+| POST   | /detect      | Обнаружить все лица на изображении                        |
+| POST   | /embed       | Получить эмбеддинг из обрезанного изображения лица (опционально с атрибутами) |
+| GET    | /health      | Проверка здоровья сервиса                                 |
+
+## Endpoint: /detect
+
+### Описание
+Принимает изображение и обнаруживает все лица на нем, возвращая информацию о каждом лице.
+
+### Входные данные
+- Изображение (может содержать несколько лиц)
+- Поддерживаемые форматы: JPEG, PNG
+
+### Пример запроса
+
+```bash
+curl -X POST "http://localhost:5555/detect" \
+  -H "accept: application/json" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@photo.jpg"
 ```
-DB_URL=mssql+pyodbc://sa:YourPassword@localhost:1433/Photobank?driver=ODBC+Driver+18+for+SQL+Server
+
+### Пример ответа
+
+```json
+{
+  "faces": [
+    {
+      "id": "0",
+      "score": 0.99,
+      "bbox": [100, 150, 250, 300],
+      "landmark": [[120, 180], [180, 180], [150, 220], [130, 250], [170, 250]],
+      "age": 28,
+      "gender": "male"
+    }
+  ]
+}
 ```
+
+### Поля ответа
+- `faces` - массив обнаруженных лиц
+  - `id` - уникальный идентификатор лица в изображении
+  - `score` - уровень уверенности детекции (0-1)
+  - `bbox` - координаты ограничивающей рамки [left, top, right, bottom]
+  - `landmark` - координаты ключевых точек лица (глаза, нос, рот)
+  - `age` - предполагаемый возраст
+  - `gender` - пол ("male" или "female")
+
+## Endpoint: /embed
+
+### Описание
+Принимает изображение с **уже обрезанным лицом** и возвращает вектор эмбеддинга.
+
+### Входные данные
+- Изображение с обрезанным лицом (любой размер, будет автоматически масштабировано до 112x112)
+- Поддерживаемые форматы: JPEG, PNG
+
+### Пример запроса
+
+```bash
+curl -X POST "http://localhost:5555/embed" \
+  -H "accept: application/json" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@cropped_face.jpg"
+```
+
+### Пример ответа
+
+```json
+{
+  "embedding": [0.123, -0.456, 0.789, ...],
+  "embedding_shape": [512],
+  "embedding_dim": 512,
+  "model": "antelopev2_glint360k",
+  "input_size": "112x112"
+}
+```
+
+### Поля ответа
+- `embedding` - вектор эмбеддинга (массив из 512 чисел float)
+- `embedding_shape` - форма тензора эмбеддинга
+- `embedding_dim` - размерность вектора (512 для ArcFace)
+- `model` - используемая модель
+- `input_size` - размер входного изображения для модели
+- `attributes` - (опционально) атрибуты лица, если указан параметр `include_attributes=true`
+
+### Параметры запроса
+
+- `include_attributes` (query, boolean, default=false) - включить атрибуты лица в ответ
+
+### Пример с атрибутами
+
+```bash
+curl -X POST "http://localhost:5555/embed?include_attributes=true" \
+  -H "accept: application/json" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@cropped_face.jpg"
+```
+
+Ответ:
+```json
+{
+  "embedding": [0.123, -0.456, ...],
+  "embedding_shape": [512],
+  "embedding_dim": 512,
+  "model": "antelopev2_glint360k",
+  "input_size": "112x112",
+  "attributes": {
+    "age": 28,
+    "gender": "male",
+    "pose": {
+      "yaw": -5.2,
+      "pitch": 2.1,
+      "roll": 0.8
+    }
+  }
+}
+```
+
+
+## Технические детали
+
+- **Модель**: ResNet100 trained on Glint360K dataset
+- **Размерность эмбеддинга**: 512
+- **Входной размер**: 112x112 (автоматическое масштабирование)
+- **Backend**: ONNX Runtime с поддержкой CUDA
+- **Архитектура**: Stateless сервис без привязки к базе данных
+
+## Интеграция
+
+Сервис предназначен для интеграции с вашим основным приложением:
+
+1. Отправьте обрезанное изображение лица на `/embed`
+2. Получите 512-мерный вектор эмбеддинга
+3. Сохраните эмбеддинг в вашей базе данных (например, PostgreSQL с pgvector)
+4. Выполняйте поиск похожих лиц и кластеризацию в вашем приложении
+
+Все операции с данными (хранение, сравнение, кластеризация) выполняются на стороне вашего приложения.

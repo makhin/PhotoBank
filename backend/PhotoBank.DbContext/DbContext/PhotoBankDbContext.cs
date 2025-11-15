@@ -74,6 +74,9 @@ namespace PhotoBank.DbContext.DbContext
         {
             base.OnModelCreating(modelBuilder);
 
+            // Enable pgvector extension for vector operations
+            modelBuilder.HasPostgresExtension("vector");
+
             modelBuilder.Entity<ApplicationUser>(b =>
             {
                 b.HasIndex(u => u.TelegramUserId)

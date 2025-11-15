@@ -20,6 +20,13 @@ pnpm-debug.log*
 .env.*
 !.env.example
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
 # Temporary files
 *.tmp
 *.swp

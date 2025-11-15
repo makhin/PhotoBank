@@ -50,6 +50,15 @@ namespace PhotoBank.Console
                 noRegisterOption
             };
 
+            // Add migrate-embeddings subcommand
+            var migrateCommand = new Command("migrate-embeddings", "Migrate face embeddings for all faces without embeddings");
+            migrateCommand.SetHandler(async () =>
+            {
+                var exitCode = await RunMigrationAsync(args);
+                Environment.Exit(exitCode);
+            });
+            rootCommand.AddCommand(migrateCommand);
+
             // Allow unmatched tokens (e.g., --environment, --logging:*) to pass through to the host
             rootCommand.TreatUnmatchedTokensAsErrors = false;
 
@@ -63,6 +72,60 @@ namespace PhotoBank.Console
             });
 
             return rootCommand;
+        }
+
+        private static async Task<int> RunMigrationAsync(string[] args)
+        {
+            IHost? host = null;
+            try
+            {
+                host = Host.CreateDefaultBuilder(args)
+                    .UseSerilog((context, services, configuration) => configuration
+                        .ReadFrom.Configuration(context.Configuration)
+                        .WriteTo.Console()
+                        .WriteTo.File("logs/photobank-.log",
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 7))
+                    .ConfigureServices((context, services) =>
+                    {
+                        services
+                            .AddPhotobankDbContext(context.Configuration, usePool: false)
+                            .AddPhotobankCore(context.Configuration)
+                            .AddPhotobankConsole(context.Configuration);
+                    })
+                    .Build();
+
+                System.Console.WriteLine("Starting face embeddings migration...");
+                System.Console.WriteLine("This will process all faces without embeddings and extract embeddings from InsightFace API.");
+                System.Console.WriteLine();
+
+                var recognitionService = host.Services.GetRequiredService<PhotoBank.Services.Recognition.IRecognitionService>();
+                var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+
+                await recognitionService.MigrateEmbeddingsAsync(lifetime.ApplicationStopping);
+
+                System.Console.WriteLine();
+                System.Console.WriteLine("Migration completed successfully!");
+
+                await host.StopAsync();
+                return 0;
+            }
+            catch (OperationCanceledException)
+            {
+                System.Console.WriteLine("\nMigration cancelled by user.");
+                return 130;
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Migration error: {ex.Message}");
+                Log.Fatal(ex, "Migration failed");
+                return 1;
+            }
+            finally
+            {
+                host?.Dispose();
+                Log.CloseAndFlush();
+            }
         }
 
         private static async Task<int> RunApplicationAsync(bool registerPersons, int? storageId, string[] args)

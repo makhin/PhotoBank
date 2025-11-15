@@ -1,44 +1,83 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using EfDbContext = Microsoft.EntityFrameworkCore.DbContext;
+using Pgvector;
+using PhotoBank.DbContext.Models;
 
 namespace PhotoBank.Services.FaceRecognition.Local;
 
 public sealed class FaceEmbeddingRepository : IFaceEmbeddingRepository
 {
-    private readonly EfDbContext _db;
-    public FaceEmbeddingRepository(EfDbContext db) => _db = db;
+    private readonly DbContext.DbContext.PhotoBankDbContext _db;
+
+    public FaceEmbeddingRepository(DbContext.DbContext.PhotoBankDbContext db) => _db = db;
 
     public async Task UpsertAsync(int personId, int faceId, float[] vector, string model, CancellationToken ct)
     {
-        var bytes = MemoryMarshal.AsBytes(vector.AsSpan()).ToArray();
-        var set = _db.Set<FaceEmbedding>();
-        var entity = await set.FirstOrDefaultAsync(x => x.FaceId == faceId, ct);
-        if (entity is null)
+        var face = await _db.Faces.FirstOrDefaultAsync(x => x.Id == faceId, ct);
+        if (face is null)
         {
-            entity = new FaceEmbedding { FaceId = faceId, PersonId = personId, Model = model, Vector = bytes };
-            set.Add(entity);
+            throw new InvalidOperationException($"Face with ID {faceId} not found");
         }
-        else
-        {
-            entity.PersonId = personId;
-            entity.Model = model;
-            entity.Vector = bytes;
-        }
+
+        face.Embedding = new Vector(vector);
         await _db.SaveChangesAsync(ct);
     }
 
     public async Task<IReadOnlyList<(int PersonId, int FaceId, float[] Vector)>> GetAllAsync(CancellationToken ct)
     {
-        var rows = await _db.Set<FaceEmbedding>()
+        var faces = await _db.Faces
             .AsNoTracking()
-            .Select(x => new { x.PersonId, x.FaceId, x.Vector })
+            .Where(x => x.Embedding != null && x.PersonId != null && x.IdentityStatus == IdentityStatus.Identified)
+            .Select(x => new { x.PersonId, x.Id, x.Embedding })
             .ToListAsync(ct);
-        return rows.Select(x => (x.PersonId, x.FaceId, MemoryMarshal.Cast<byte, float>(x.Vector.AsSpan()).ToArray())).ToList();
+
+        return faces
+            .Where(x => x.PersonId.HasValue && x.Embedding != null)
+            .Select(x => (x.PersonId!.Value, x.Id, x.Embedding!.ToArray()))
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<(int PersonId, int FaceId, float Distance)>> FindSimilarFacesAsync(float[] embedding, int limit, CancellationToken ct)
+    {
+        var embeddingVector = new Vector(embedding);
+
+        // Use SQL with DISTINCT ON to find the best face for each person,
+        // then order by distance and limit to top N persons.
+        // This prevents a single person with many faces from dominating results.
+        var sql = @"
+            SELECT ""PersonId"", ""Id"", ""Distance""
+            FROM (
+                SELECT DISTINCT ON (""PersonId"")
+                    ""PersonId"",
+                    ""Id"",
+                    ""Embedding"" <=> {0} AS ""Distance""
+                FROM ""Faces""
+                WHERE ""Embedding"" IS NOT NULL
+                    AND ""PersonId"" IS NOT NULL
+                    AND ""IdentityStatus"" = {1}
+                ORDER BY ""PersonId"", ""Embedding"" <=> {0}
+            ) AS best_faces
+            ORDER BY ""Distance""
+            LIMIT {2}";
+
+        var results = await _db.Database
+            .SqlQueryRaw<FaceSimilarityResult>(sql, embeddingVector, (int)IdentityStatus.Identified, limit)
+            .ToListAsync(ct);
+
+        return results
+            .Select(x => (x.PersonId, x.Id, x.Distance))
+            .ToList();
+    }
+
+    // Helper class for SQL query results
+    private class FaceSimilarityResult
+    {
+        public int PersonId { get; set; }
+        public int Id { get; set; }
+        public float Distance { get; set; }
     }
 }
