@@ -16,7 +16,7 @@
 ### Аппаратные требования
 - **GPU**: Nvidia GPU с поддержкой CUDA 12.x (архитектура от Pascal и новее)
   - Минимум 4 GB VRAM (рекомендуется 6+ GB)
-  - Примеры: GTX 1060, RTX 2060, RTX 3050, RTX 4050 и выше
+  - Примеры: GTX 1060, GTX 1070, RTX 2060, RTX 3050, RTX 4050 и выше
 - **RAM**: Минимум 8 GB (рекомендуется 16 GB)
 - **Свободное место**: 10+ GB для Docker образов и моделей
 
@@ -769,6 +769,7 @@ ERROR: [Errno 10048] error while attempting to bind on address ('0.0.0.0', 5555)
 | RTX 4060 (GPU) | 10-15ms | 60-80 req/s | ~1.2 GB |
 | RTX 3060 (GPU) | 15-20ms | 50-60 req/s | ~1.2 GB |
 | RTX 2060 (GPU) | 20-30ms | 35-50 req/s | ~1.2 GB |
+| **GTX 1070 (GPU)** | **20-30ms** | **35-50 req/s** | **~1.2 GB** |
 | GTX 1660 (GPU) | 25-35ms | 30-40 req/s | ~1.2 GB |
 | CPU i7-12700 | 60-80ms | 12-15 req/s | N/A |
 
