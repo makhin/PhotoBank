@@ -2,13 +2,16 @@
 
 REST API для детекции лиц и извлечения эмбеддингов с использованием InsightFace ArcFace модели (Glint360K).
 
-## Модель
+## Модели
 
-Сервис использует **antelopev2** model pack с моделью распознавания **ResNet100@Glint360K** для получения высококачественных эмбеддингов лиц.
+Сервис использует две нейросетевые модели:
+- **InsightFace antelopev2** (ResNet100@Glint360K) - распознавание лиц и эмбеддинги
+- **HSEmotion** (EfficientNet-B0 trained on AffectNet) - определение эмоций
 
 ## Основные возможности
 - **Детекция лиц** на полных изображениях
 - Извлечение 512-мерных эмбеддингов из обрезанных лиц
+- **Определение эмоций**: 8 классов (гнев, презрение, отвращение, страх, радость, нейтральность, грусть, удивление)
 - **Опциональное извлечение атрибутов лица**: возраст, пол, поза головы
 - Без привязки к базе данных - чистый сервис детекции и извлечения эмбеддингов
 - Swagger UI доступен по адресу `/docs`
@@ -60,7 +63,18 @@ curl -X POST "http://localhost:5555/detect" \
       "bbox": [100, 150, 250, 300],
       "landmark": [[120, 180], [180, 180], [150, 220], [130, 250], [170, 250]],
       "age": 28,
-      "gender": "male"
+      "gender": "male",
+      "emotion": "happiness",
+      "emotion_scores": {
+        "anger": 0.01,
+        "contempt": 0.02,
+        "disgust": 0.01,
+        "fear": 0.03,
+        "happiness": 0.85,
+        "neutral": 0.05,
+        "sadness": 0.01,
+        "surprise": 0.02
+      }
     }
   ]
 }
@@ -87,6 +101,17 @@ curl -X POST "http://localhost:5555/detect?include_embeddings=true" \
       "landmark": [[120, 180], [180, 180], [150, 220], [130, 250], [170, 250]],
       "age": 28,
       "gender": "male",
+      "emotion": "happiness",
+      "emotion_scores": {
+        "anger": 0.01,
+        "contempt": 0.02,
+        "disgust": 0.01,
+        "fear": 0.03,
+        "happiness": 0.85,
+        "neutral": 0.05,
+        "sadness": 0.01,
+        "surprise": 0.02
+      },
       "embedding": [0.123, -0.456, 0.789, ...],
       "embedding_dim": 512
     }
@@ -102,6 +127,8 @@ curl -X POST "http://localhost:5555/detect?include_embeddings=true" \
   - `landmark` - координаты ключевых точек лица (глаза, нос, рот)
   - `age` - предполагаемый возраст
   - `gender` - пол ("male" или "female")
+  - `emotion` - доминирующая эмоция (anger, contempt, disgust, fear, happiness, neutral, sadness, surprise)
+  - `emotion_scores` - вероятности для всех 8 эмоций (сумма = 1.0)
   - `embedding` - (опционально) вектор эмбеддинга (512 чисел float)
   - `embedding_dim` - (опционально) размерность вектора эмбеддинга
 
@@ -172,6 +199,17 @@ curl -X POST "http://localhost:5555/embed?include_attributes=true" \
       "pitch": 2.1,
       "roll": 0.8
     }
+  },
+  "emotion": "happiness",
+  "emotion_scores": {
+    "anger": 0.01,
+    "contempt": 0.02,
+    "disgust": 0.01,
+    "fear": 0.03,
+    "happiness": 0.85,
+    "neutral": 0.05,
+    "sadness": 0.01,
+    "surprise": 0.02
   }
 }
 ```
@@ -179,9 +217,11 @@ curl -X POST "http://localhost:5555/embed?include_attributes=true" \
 
 ## Технические детали
 
-- **Модель**: ResNet100 trained on Glint360K dataset
+- **Модель распознавания**: ResNet100 trained on Glint360K dataset
+- **Модель эмоций**: HSEmotion (EfficientNet-B0) trained on AffectNet
 - **Размерность эмбеддинга**: 512
 - **Входной размер**: 112x112 (автоматическое масштабирование)
+- **Эмоции**: 8 классов (anger, contempt, disgust, fear, happiness, neutral, sadness, surprise)
 - **Backend**: ONNX Runtime с поддержкой CUDA
 - **Архитектура**: Stateless сервис без привязки к базе данных
 
