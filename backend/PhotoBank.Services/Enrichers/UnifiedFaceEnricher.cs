@@ -113,6 +113,7 @@ public class UnifiedFaceEnricher : IEnricher
             Age = detectedFace.Age,
             Gender = ConvertGender(detectedFace.Gender),
             Smile = null, // Not all providers return smile
+            Provider = _faceService.ProviderKind.ToString(),
             FaceAttributes = JsonConvert.SerializeObject(new
             {
                 detectedFace.ProviderFaceId,
