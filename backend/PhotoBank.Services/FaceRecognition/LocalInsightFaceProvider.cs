@@ -93,7 +93,7 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is not OperationCanceledException)
                 {
                     // Log error but don't fail detection
                     _log.LogWarning(ex, "Failed to identify face {FaceId} during detection", f.Id);
