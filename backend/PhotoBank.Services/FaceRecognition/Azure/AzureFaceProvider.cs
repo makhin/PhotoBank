@@ -135,7 +135,10 @@ public sealed class AzureFaceProvider : IFaceProvider
                     Top: f.FaceRectangle.Top / (float)imageHeight,
                     Width: f.FaceRectangle.Width / (float)imageWidth,
                     Height: f.FaceRectangle.Height / (float)imageHeight)
-                : null)).ToList() ?? [];
+                : null,
+            Emotion: null,  // Azure Face API doesn't provide emotion detection
+            EmotionScores: null
+        )).ToList() ?? [];
     }
 
     public async Task<IReadOnlyList<IdentifyResultDto>> IdentifyAsync(IReadOnlyList<string> providerFaceIds, CancellationToken ct)

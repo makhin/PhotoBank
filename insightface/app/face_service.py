@@ -5,6 +5,7 @@ import json
 import logging
 import cv2
 import onnxruntime as ort
+from hsemotion.facial_emotions import HSEmotionRecognizer
 
 # Setup logger
 logger = logging.getLogger("face_service")
@@ -59,6 +60,11 @@ if recognition_model is None:
     raise RuntimeError("Could not extract recognition model from antelopev2 pack")
 
 logger.info(f"InsightFace models initialized - Recognition: ✓, GenderAge: {'✓' if genderage_model else '✗'}")
+
+# Initialize HSEmotion model for emotion recognition
+logger.info("Initializing HSEmotion model for emotion recognition...")
+emotion_model = HSEmotionRecognizer(model_name='enet_b0_8_best_afew')
+logger.info("HSEmotion model initialized successfully - Emotions: ✓")
 
 
 def preprocess_face_image(img):
@@ -149,6 +155,48 @@ def get_face_attributes(img):
     return attributes
 
 
+def get_emotion(img):
+    """
+    Detect emotion from a face image.
+
+    Args:
+        img: numpy array of face image (RGB format)
+
+    Returns:
+        dict with dominant emotion and scores for all emotions
+    """
+    try:
+        # HSEmotion expects RGB format
+        if len(img.shape) == 2:  # Grayscale
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        elif img.shape[2] == 3:
+            # Check if BGR (from cv2.imread) and convert to RGB
+            img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        else:
+            img_rgb = img
+
+        # Get emotion prediction
+        # HSEmotion returns: emotion as string (e.g., "Happiness"), scores as array
+        emotion, scores = emotion_model.predict_emotions(img_rgb, logits=False)
+
+        # HSEmotion returns: Anger, Contempt, Disgust, Fear, Happiness, Neutral, Sadness, Surprise
+        emotion_labels = ['anger', 'contempt', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise']
+
+        # Create scores dictionary
+        emotion_scores = {label: float(score) for label, score in zip(emotion_labels, scores)}
+
+        # emotion is already a string from HSEmotion, just convert to lowercase
+        dominant_emotion = emotion.lower()
+
+        return {
+            "emotion": dominant_emotion,
+            "emotion_scores": emotion_scores
+        }
+    except Exception as e:
+        logger.warning(f"Failed to detect emotion: {str(e)}")
+        return None
+
+
 def embed_cropped_face(file: UploadFile, include_attributes: bool = False):
     """
     Extract embedding from a pre-cropped face image.
@@ -195,6 +243,12 @@ def embed_cropped_face(file: UploadFile, include_attributes: bool = False):
             if attributes:
                 result["attributes"] = attributes
 
+            # Add emotion detection
+            emotion_data = get_emotion(img)
+            if emotion_data:
+                result["emotion"] = emotion_data["emotion"]
+                result["emotion_scores"] = emotion_data["emotion_scores"]
+
         logger.info(f"Successfully extracted embedding with dimension {len(embedding_list)}")
         return result
 
@@ -203,17 +257,18 @@ def embed_cropped_face(file: UploadFile, include_attributes: bool = False):
         return {"error": f"Failed to extract embedding: {str(e)}"}
 
 
-def detect_faces(file: UploadFile):
+def detect_faces(file: UploadFile, include_embeddings: bool = False):
     """
     Detect all faces in a full image.
 
     Args:
         file: UploadFile containing an image with potentially multiple faces
+        include_embeddings: whether to include face embeddings in response
 
     Returns:
         dict with list of detected faces and their metadata in JSON format
     """
-    logger.info(f"Processing image for face detection: {file.filename}")
+    logger.info(f"Processing image for face detection: {file.filename}, include_embeddings={include_embeddings}")
 
     # Read image bytes
     img_bytes = file.file.read()
@@ -243,6 +298,35 @@ def detect_faces(file: UploadFile):
                 "age": int(face.age) if hasattr(face, 'age') and face.age is not None else None,
                 "gender": "male" if hasattr(face, 'gender') and face.gender == 1 else "female" if hasattr(face, 'gender') and face.gender == 0 else None,
             }
+
+            # Optionally include embedding
+            if include_embeddings:
+                if hasattr(face, 'embedding') and face.embedding is not None:
+                    face_data["embedding"] = face.embedding.tolist()
+                    face_data["embedding_dim"] = len(face.embedding)
+                else:
+                    face_data["embedding"] = None
+
+            # Add emotion detection for each face
+            if hasattr(face, 'bbox') and face.bbox is not None:
+                try:
+                    # Crop face from image using bbox
+                    bbox = face.bbox.astype(int)
+                    x1, y1, x2, y2 = bbox[0], bbox[1], bbox[2], bbox[3]
+                    # Ensure bbox is within image bounds
+                    x1, y1 = max(0, x1), max(0, y1)
+                    x2, y2 = min(img.shape[1], x2), min(img.shape[0], y2)
+
+                    face_crop = img[y1:y2, x1:x2]
+
+                    if face_crop.size > 0:
+                        emotion_data = get_emotion(face_crop)
+                        if emotion_data:
+                            face_data["emotion"] = emotion_data["emotion"]
+                            face_data["emotion_scores"] = emotion_data["emotion_scores"]
+                except Exception as e:
+                    logger.warning(f"Failed to extract emotion for face {idx}: {str(e)}")
+
             detected_faces.append(face_data)
 
         return {"faces": detected_faces}

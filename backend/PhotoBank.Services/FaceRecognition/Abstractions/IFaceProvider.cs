@@ -17,12 +17,20 @@ public sealed record FaceToLink(int FaceId, Func<Stream> OpenStream, string? Ext
 /// </summary>
 public sealed record FaceBoundingBox(float Left, float Top, float Width, float Height);
 
+/// <summary>
+/// Detected face with optional emotion recognition
+/// Emotion scores dictionary: key is emotion name (anger, contempt, disgust, fear, happiness, neutral, sadness, surprise),
+/// value is probability score (0.0 to 1.0). Supported by Local (InsightFace + HSEmotion) provider.
+/// </summary>
 public sealed record DetectedFaceDto(
     string ProviderFaceId,
     float? Confidence,
     float? Age,
     string? Gender,
-    FaceBoundingBox? BoundingBox);
+    FaceBoundingBox? BoundingBox,
+    string? Emotion = null,
+    Dictionary<string, float>? EmotionScores = null
+);
 
 public sealed record IdentifyCandidateDto(string ProviderPersonId, float Confidence);
 public sealed record IdentifyResultDto(string ProviderFaceId, IReadOnlyList<IdentifyCandidateDto> Candidates);
