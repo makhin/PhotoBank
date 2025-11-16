@@ -36,7 +36,11 @@ docker compose up --build
 - Изображение (может содержать несколько лиц)
 - Поддерживаемые форматы: JPEG, PNG
 
-### Пример запроса
+### Параметры запроса
+
+- `include_embeddings` (query, boolean, default=false) - включить 512-мерные векторы эмбеддингов для каждого лица
+
+### Пример запроса (без эмбеддингов)
 
 ```bash
 curl -X POST "http://localhost:5555/detect" \
@@ -45,7 +49,7 @@ curl -X POST "http://localhost:5555/detect" \
   -F "file=@photo.jpg"
 ```
 
-### Пример ответа
+### Пример ответа (без эмбеддингов)
 
 ```json
 {
@@ -62,6 +66,34 @@ curl -X POST "http://localhost:5555/detect" \
 }
 ```
 
+### Пример запроса (с эмбеддингами)
+
+```bash
+curl -X POST "http://localhost:5555/detect?include_embeddings=true" \
+  -H "accept: application/json" \
+  -H "Content-Type: multipart/form-data" \
+  -F "file=@photo.jpg"
+```
+
+### Пример ответа (с эмбеддингами)
+
+```json
+{
+  "faces": [
+    {
+      "id": "0",
+      "score": 0.99,
+      "bbox": [100, 150, 250, 300],
+      "landmark": [[120, 180], [180, 180], [150, 220], [130, 250], [170, 250]],
+      "age": 28,
+      "gender": "male",
+      "embedding": [0.123, -0.456, 0.789, ...],
+      "embedding_dim": 512
+    }
+  ]
+}
+```
+
 ### Поля ответа
 - `faces` - массив обнаруженных лиц
   - `id` - уникальный идентификатор лица в изображении
@@ -70,6 +102,8 @@ curl -X POST "http://localhost:5555/detect" \
   - `landmark` - координаты ключевых точек лица (глаза, нос, рот)
   - `age` - предполагаемый возраст
   - `gender` - пол ("male" или "female")
+  - `embedding` - (опционально) вектор эмбеддинга (512 чисел float)
+  - `embedding_dim` - (опционально) размерность вектора эмбеддинга
 
 ## Endpoint: /embed
 
