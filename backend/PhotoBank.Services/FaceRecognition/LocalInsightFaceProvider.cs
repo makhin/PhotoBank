@@ -59,7 +59,7 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
 
     public async Task<IReadOnlyList<DetectedFaceDto>> DetectAsync(Stream image, CancellationToken ct)
     {
-        var resp = await _client.DetectAsync(image, ct);
+        var resp = await _client.DetectAsync(image, includeEmbeddings: false, ct);
         return resp.Faces.Select(f => new DetectedFaceDto(
             ProviderFaceId: f.Id ?? string.Empty,
             Confidence: f.Score,
@@ -71,7 +71,10 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
                     Top: f.Bbox[1],
                     Width: f.Bbox[2] - f.Bbox[0],
                     Height: f.Bbox[3] - f.Bbox[1])
-                : null)).ToList();
+                : null,
+            Emotion: f.Emotion,
+            EmotionScores: f.EmotionScores
+        )).ToList();
     }
 
     public Task<IReadOnlyList<IdentifyResultDto>> IdentifyAsync(IReadOnlyList<string> providerFaceIds, CancellationToken ct)

@@ -170,7 +170,10 @@ public sealed class AwsFaceProvider : IFaceProvider
                         Top: fd.BoundingBox.Top.Value,
                         Width: fd.BoundingBox.Width.Value,
                         Height: fd.BoundingBox.Height.Value)
-                    : null))
+                    : null,
+                Emotion: null,  // AWS Rekognition doesn't provide emotion detection
+                EmotionScores: null
+            ))
             .ToList() ?? new List<DetectedFaceDto>();
     }
 
