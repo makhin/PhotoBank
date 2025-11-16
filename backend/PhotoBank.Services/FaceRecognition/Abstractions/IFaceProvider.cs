@@ -18,9 +18,11 @@ public sealed record FaceToLink(int FaceId, Func<Stream> OpenStream, string? Ext
 public sealed record FaceBoundingBox(float Left, float Top, float Width, float Height);
 
 /// <summary>
-/// Detected face with optional emotion recognition
+/// Detected face with optional emotion recognition and automatic identification
 /// Emotion scores dictionary: key is emotion name (anger, contempt, disgust, fear, happiness, neutral, sadness, surprise),
 /// value is probability score (0.0 to 1.0). Supported by Local (InsightFace + HSEmotion) provider.
+/// Automatic identification: when using Local provider with embeddings enabled, detected faces are automatically
+/// compared against known faces in the database using cosine similarity on face embeddings.
 /// </summary>
 public sealed record DetectedFaceDto(
     string ProviderFaceId,
@@ -29,7 +31,9 @@ public sealed record DetectedFaceDto(
     string? Gender,
     FaceBoundingBox? BoundingBox,
     string? Emotion = null,
-    Dictionary<string, float>? EmotionScores = null
+    Dictionary<string, float>? EmotionScores = null,
+    int? IdentifiedPersonId = null,
+    float? IdentificationConfidence = null
 );
 
 public sealed record IdentifyCandidateDto(string ProviderPersonId, float Confidence);
