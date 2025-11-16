@@ -120,14 +120,16 @@ public class UnifiedFaceEnricher : IEnricher
                 detectedFace.Age,
                 detectedFace.Gender,
                 detectedFace.BoundingBox
-            })
+            }),
+            // Save embedding immediately (already computed by InsightFace during detection!)
+            Embedding = detectedFace.Embedding != null ? new Pgvector.Vector(detectedFace.Embedding) : null
         };
 
         photo.Faces.Add(face);
 
         _logger.LogDebug(
-            "Processed face {FaceId} for photo {PhotoId}: Age={Age}, Gender={Gender}, Confidence={Confidence}, HasBoundingBox={HasBoundingBox}",
-            detectedFace.ProviderFaceId, photo.Id, detectedFace.Age, detectedFace.Gender, detectedFace.Confidence, detectedFace.BoundingBox != null);
+            "Processed face {FaceId} for photo {PhotoId}: Age={Age}, Gender={Gender}, Confidence={Confidence}, HasBoundingBox={HasBoundingBox}, HasEmbedding={HasEmbedding}",
+            detectedFace.ProviderFaceId, photo.Id, detectedFace.Age, detectedFace.Gender, detectedFace.Confidence, detectedFace.BoundingBox != null, detectedFace.Embedding != null);
     }
 
     private async Task<byte[]> CreateFacePreviewAsync(

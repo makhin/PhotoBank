@@ -12,27 +12,31 @@ using PhotoBank.Services.Events;
 using PhotoBank.Services.FaceRecognition;
 using PhotoBank.Services.FaceRecognition.Abstractions;
 using PhotoBank.Services.FaceRecognition.Local;
+using static System.Math;
 
 namespace PhotoBank.Services.Handlers;
 
 /// <summary>
 /// Automatically identifies faces after photo creation by matching them against known persons.
-/// Triggers after PhotoCreatedHandler completes S3 upload.
+/// Uses embeddings already extracted during face detection (no duplicate API calls!).
 /// </summary>
 public class FaceAutoIdentificationHandler : INotificationHandler<PhotoCreated>
 {
     private readonly IFaceProvider _faceProvider;
+    private readonly IFaceEmbeddingRepository _embeddings;
     private readonly PhotoBankDbContext _context;
     private readonly LocalInsightFaceOptions _opts;
     private readonly ILogger<FaceAutoIdentificationHandler> _log;
 
     public FaceAutoIdentificationHandler(
         IFaceProvider faceProvider,
+        IFaceEmbeddingRepository embeddings,
         PhotoBankDbContext context,
         IOptions<LocalInsightFaceOptions> opts,
         ILogger<FaceAutoIdentificationHandler> log)
     {
         _faceProvider = faceProvider;
+        _embeddings = embeddings;
         _context = context;
         _opts = opts.Value;
         _log = log;
@@ -58,65 +62,70 @@ public class FaceAutoIdentificationHandler : INotificationHandler<PhotoCreated>
 
         try
         {
-            // Build provider face IDs ("local:123")
-            var providerFaceIds = notification.Faces
-                .Select(f => $"local:{f.FaceId}")
-                .ToList();
+            // Load Face records with embeddings (already saved during detection!)
+            var faceIds = notification.Faces.Select(f => f.FaceId).ToList();
+            var faces = await _context.Faces
+                .Where(f => faceIds.Contains(f.Id) && f.Embedding != null)
+                .ToListAsync(cancellationToken);
 
-            // Call IdentifyAsync to find matching persons
-            var identifyResults = await _faceProvider.IdentifyAsync(providerFaceIds, cancellationToken);
+            if (faces.Count == 0)
+            {
+                _log.LogWarning("No faces with embeddings found for photo {PhotoId}", notification.PhotoId);
+                return;
+            }
+
+            _log.LogDebug("Found {Count} faces with embeddings for photo {PhotoId}", faces.Count, notification.PhotoId);
 
             var identifiedCount = 0;
-            foreach (var result in identifyResults)
+
+            // Process each face with embedding
+            foreach (var face in faces)
             {
-                if (result.Candidates == null || result.Candidates.Count == 0)
+                // Skip if already identified
+                if (face.PersonId != null)
+                {
+                    _log.LogDebug("Face {FaceId} already assigned to person {PersonId}", face.Id, face.PersonId);
                     continue;
+                }
 
-                // Get the best candidate
-                var bestCandidate = result.Candidates
-                    .OrderByDescending(c => c.Confidence)
-                    .First();
+                // Convert pgvector to float[] and normalize
+                var embedding = face.Embedding.ToArray();
+                var normalized = Normalize(embedding);
 
-                // Check if confidence is high enough for auto-identification
-                if (bestCandidate.Confidence < _opts.AutoIdentifyThreshold)
+                // Search for similar faces in database
+                var similarFaces = await _embeddings.FindSimilarFacesAsync(normalized, _opts.IdentifyMaxCandidates, cancellationToken);
+
+                if (similarFaces.Count == 0)
+                {
+                    _log.LogDebug("No similar faces found for face {FaceId}", face.Id);
+                    continue;
+                }
+
+                // Get best match (lowest distance = highest similarity)
+                var bestMatch = similarFaces.First(); // Already sorted by distance
+                var confidence = 1f - bestMatch.Distance; // Convert distance to confidence
+
+                // Check if confidence meets threshold
+                if (confidence < _opts.AutoIdentifyThreshold)
                 {
                     _log.LogDebug(
                         "Face {FaceId} best match has confidence {Confidence:F3}, below threshold {Threshold:F3}",
-                        result.ProviderFaceId, bestCandidate.Confidence, _opts.AutoIdentifyThreshold);
-                    continue;
-                }
-
-                // Parse face ID and person ID
-                var faceId = int.Parse(result.ProviderFaceId.Replace("local:", ""));
-                var personId = int.Parse(bestCandidate.ProviderPersonId.Replace("local:", ""));
-
-                // Update face with person assignment
-                var face = await _context.Faces.FindAsync(new object[] { faceId }, cancellationToken);
-                if (face == null)
-                {
-                    _log.LogWarning("Face {FaceId} not found in database", faceId);
-                    continue;
-                }
-
-                // Check if face is already identified
-                if (face.PersonId != null)
-                {
-                    _log.LogDebug("Face {FaceId} already assigned to person {PersonId}", faceId, face.PersonId);
+                        face.Id, confidence, _opts.AutoIdentifyThreshold);
                     continue;
                 }
 
                 // Auto-assign face to person
-                face.PersonId = personId;
+                face.PersonId = bestMatch.PersonId;
                 face.IdentityStatus = IdentityStatus.Identified;
-                face.IdentifiedWithConfidence = bestCandidate.Confidence;
+                face.IdentifiedWithConfidence = confidence;
                 face.Provider = "Local";
-                face.ExternalId = $"local:{faceId}";
+                face.ExternalId = $"local:{face.Id}";
 
                 identifiedCount++;
 
                 _log.LogInformation(
                     "Auto-identified face {FaceId} as person {PersonId} with confidence {Confidence:F3}",
-                    faceId, personId, bestCandidate.Confidence);
+                    face.Id, bestMatch.PersonId, confidence);
             }
 
             if (identifiedCount > 0)
@@ -138,5 +147,17 @@ public class FaceAutoIdentificationHandler : INotificationHandler<PhotoCreated>
             _log.LogError(ex, "Error during auto-identification for photo {PhotoId}", notification.PhotoId);
             // Don't throw - this is a best-effort feature
         }
+    }
+
+    private static float[] Normalize(float[] v)
+    {
+        var sum = 0f;
+        for (int i = 0; i < v.Length; i++)
+            sum += v[i] * v[i];
+        var inv = 1f / (float)Sqrt(Max(sum, 1e-12f));
+        var r = new float[v.Length];
+        for (int i = 0; i < v.Length; i++)
+            r[i] = v[i] * inv;
+        return r;
     }
 }

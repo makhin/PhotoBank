@@ -203,17 +203,18 @@ def embed_cropped_face(file: UploadFile, include_attributes: bool = False):
         return {"error": f"Failed to extract embedding: {str(e)}"}
 
 
-def detect_faces(file: UploadFile):
+def detect_faces(file: UploadFile, include_embeddings: bool = True):
     """
     Detect all faces in a full image.
 
     Args:
         file: UploadFile containing an image with potentially multiple faces
+        include_embeddings: If true, include 512-dim embeddings for each face
 
     Returns:
         dict with list of detected faces and their metadata in JSON format
     """
-    logger.info(f"Processing image for face detection: {file.filename}")
+    logger.info(f"Processing image for face detection: {file.filename}, include_embeddings={include_embeddings}")
 
     # Read image bytes
     img_bytes = file.file.read()
@@ -227,7 +228,7 @@ def detect_faces(file: UploadFile):
     logger.info(f"Image size: {img.shape[1]}x{img.shape[0]}")
 
     try:
-        # Detect all faces in the image
+        # Detect all faces in the image (InsightFace already computes embeddings here!)
         faces = app_insightface.get(img)
 
         logger.info(f"Detected {len(faces)} face(s) in the image")
@@ -243,6 +244,13 @@ def detect_faces(file: UploadFile):
                 "age": int(face.age) if hasattr(face, 'age') and face.age is not None else None,
                 "gender": "male" if hasattr(face, 'gender') and face.gender == 1 else "female" if hasattr(face, 'gender') and face.gender == 0 else None,
             }
+
+            # Add embedding if requested (already computed by InsightFace!)
+            if include_embeddings and hasattr(face, 'normed_embedding') and face.normed_embedding is not None:
+                face_data["embedding"] = face.normed_embedding.tolist()
+            elif include_embeddings and hasattr(face, 'embedding') and face.embedding is not None:
+                face_data["embedding"] = face.embedding.tolist()
+
             detected_faces.append(face_data)
 
         return {"faces": detected_faces}

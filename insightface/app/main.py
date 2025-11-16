@@ -13,21 +13,23 @@ async def health():
 
 @app.post("/detect")
 async def detect(
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    include_embeddings: bool = Query(True, description="Include face embeddings in response")
 ):
     """
     Detect all faces in a full image.
 
     Detects all faces in the provided image and returns information about each face
-    including bounding boxes, landmarks, age, and gender.
+    including bounding boxes, landmarks, age, gender, and optionally embeddings.
 
     Args:
         file: Image file (can contain multiple faces)
+        include_embeddings: If true, includes 512-dim embeddings for each face (default: true)
 
     Returns:
         JSON with list of detected faces and their attributes
     """
-    return detect_faces(file)
+    return detect_faces(file, include_embeddings)
 
 @app.post("/embed")
 async def embed(

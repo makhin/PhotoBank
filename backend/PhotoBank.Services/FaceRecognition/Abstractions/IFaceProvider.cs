@@ -22,7 +22,9 @@ public sealed record DetectedFaceDto(
     float? Confidence,
     float? Age,
     string? Gender,
-    FaceBoundingBox? BoundingBox);
+    FaceBoundingBox? BoundingBox,
+    float[]? Embedding = null  // 512-dim face embedding (if provider supports it)
+);
 
 public sealed record IdentifyCandidateDto(string ProviderPersonId, float Confidence);
 public sealed record IdentifyResultDto(string ProviderFaceId, IReadOnlyList<IdentifyCandidateDto> Candidates);

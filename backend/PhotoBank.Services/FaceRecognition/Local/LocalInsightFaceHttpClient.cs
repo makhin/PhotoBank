@@ -12,7 +12,7 @@ namespace PhotoBank.Services.FaceRecognition.Local;
 
 public interface ILocalInsightFaceClient
 {
-    Task<LocalDetectResponse> DetectAsync(Stream image, CancellationToken ct);
+    Task<LocalDetectResponse> DetectAsync(Stream image, CancellationToken ct, bool includeEmbeddings = true);
     Task<LocalEmbedResponse> EmbedAsync(Stream image, bool includeAttributes, CancellationToken ct);
 }
 
@@ -34,15 +34,17 @@ public sealed class LocalInsightFaceHttpClient : ILocalInsightFaceClient
     /// </summary>
     /// <param name="image">Stream containing full image (can contain multiple faces)</param>
     /// <param name="ct">Cancellation token</param>
+    /// <param name="includeEmbeddings">Include 512-dim embeddings for each detected face (default: true)</param>
     /// <returns>Detection response with list of detected faces and their attributes</returns>
-    public async Task<LocalDetectResponse> DetectAsync(Stream image, CancellationToken ct)
+    public async Task<LocalDetectResponse> DetectAsync(Stream image, CancellationToken ct, bool includeEmbeddings = true)
     {
         using var form = new MultipartFormDataContent();
         var sc = new StreamContent(image);
         sc.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
         form.Add(sc, "file", "photo.jpg");
 
-        var res = await _http.PostAsync("/detect", form, ct);
+        var endpoint = includeEmbeddings ? "/detect?include_embeddings=true" : "/detect?include_embeddings=false";
+        var res = await _http.PostAsync(endpoint, form, ct);
         res.EnsureSuccessStatusCode();
         var json = await res.Content.ReadAsStringAsync(ct);
         return JsonSerializer.Deserialize<LocalDetectResponse>(json, JsonOpts())!;
@@ -74,7 +76,19 @@ public sealed class LocalInsightFaceHttpClient : ILocalInsightFaceClient
 }
 
 public sealed record LocalDetectResponse(List<LocalDetectedFace> Faces);
-public sealed record LocalDetectedFace(string Id, float Score, float[]? Bbox, float[]? Landmark, float? Age, string? Gender);
+
+/// <summary>
+/// Single detected face from /detect endpoint
+/// </summary>
+public sealed record LocalDetectedFace(
+    string Id,
+    float Score,
+    float[]? Bbox,
+    float[]? Landmark,
+    float? Age,
+    string? Gender,
+    float[]? Embedding  // 512-dimensional embedding (already computed by InsightFace!)
+);
 
 /// <summary>
 /// Response from InsightFace /embed endpoint
