@@ -4,7 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using PhotoBank.DbContext.Models;
+using PhotoBank.Repositories;
 using PhotoBank.Services.FaceRecognition.Abstractions;
 using PhotoBank.Services.FaceRecognition.Local;
 using static System.Math;
@@ -17,17 +20,23 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
 
     private readonly ILocalInsightFaceClient _client;
     private readonly IFaceEmbeddingRepository _embeddings;
+    private readonly IRepository<Face> _faces;
+    private readonly IFaceStorageService _storage;
     private readonly LocalInsightFaceOptions _opts;
     private readonly ILogger<LocalInsightFaceProvider> _log;
 
     public LocalInsightFaceProvider(
         ILocalInsightFaceClient client,
         IFaceEmbeddingRepository embeddings,
+        IRepository<Face> faces,
+        IFaceStorageService storage,
         Microsoft.Extensions.Options.IOptions<LocalInsightFaceOptions> opts,
         ILogger<LocalInsightFaceProvider> log)
     {
         _client = client;
         _embeddings = embeddings;
+        _faces = faces;
+        _storage = storage;
         _opts = opts.Value;
         _log = log;
     }
@@ -74,8 +83,120 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
                 : null)).ToList();
     }
 
-    public Task<IReadOnlyList<IdentifyResultDto>> IdentifyAsync(IReadOnlyList<string> providerFaceIds, CancellationToken ct)
-        => Task.FromResult<IReadOnlyList<IdentifyResultDto>>(Array.Empty<IdentifyResultDto>());
+    public async Task<IReadOnlyList<IdentifyResultDto>> IdentifyAsync(IReadOnlyList<string> providerFaceIds, CancellationToken ct)
+    {
+        if (providerFaceIds == null || providerFaceIds.Count == 0)
+            return Array.Empty<IdentifyResultDto>();
+
+        _log.LogInformation("Starting face identification for {Count} face(s)", providerFaceIds.Count);
+
+        // Parse face IDs from "local:123" or "123" format
+        var faceIds = providerFaceIds
+            .Select(id => int.TryParse(id.Replace("local:", ""), out var faceId) ? faceId : (int?)null)
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .ToList();
+
+        if (faceIds.Count == 0)
+        {
+            _log.LogWarning("No valid face IDs found in provider face IDs");
+            return Array.Empty<IdentifyResultDto>();
+        }
+
+        // Load Face records from database
+        var faces = await _faces.GetAll()
+            .Where(f => faceIds.Contains(f.Id) && !string.IsNullOrEmpty(f.S3Key_Image))
+            .ToListAsync(ct);
+
+        if (faces.Count == 0)
+        {
+            _log.LogWarning("No faces found in database for provided IDs");
+            return Array.Empty<IdentifyResultDto>();
+        }
+
+        var results = new List<IdentifyResultDto>();
+        using var sem = new SemaphoreSlim(_opts.MaxParallelism);
+
+        var tasks = faces.Select(async face =>
+        {
+            await sem.WaitAsync(ct);
+            try
+            {
+                var candidates = await IdentifySingleFaceAsync(face, ct);
+                lock (results)
+                {
+                    results.Add(new IdentifyResultDto(
+                        ProviderFaceId: $"local:{face.Id}",
+                        Candidates: candidates
+                    ));
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "Failed to identify face {FaceId}", face.Id);
+                lock (results)
+                {
+                    results.Add(new IdentifyResultDto(
+                        ProviderFaceId: $"local:{face.Id}",
+                        Candidates: Array.Empty<IdentifyCandidateDto>()
+                    ));
+                }
+            }
+            finally { sem.Release(); }
+        });
+
+        await Task.WhenAll(tasks);
+
+        _log.LogInformation("Completed identification for {Count} face(s), found {MatchCount} with candidates",
+            faces.Count, results.Count(r => r.Candidates.Count > 0));
+
+        return results;
+    }
+
+    private async Task<IReadOnlyList<IdentifyCandidateDto>> IdentifySingleFaceAsync(Face face, CancellationToken ct)
+    {
+        try
+        {
+            // Load face image from S3
+            await using var stream = await _storage.OpenReadStreamAsync(face, ct);
+
+            // Extract embedding using InsightFace API
+            var embResp = await _client.EmbedAsync(stream, includeAttributes: false, ct);
+            var embedding = Normalize(embResp.Embedding);
+
+            // Find similar faces in database using pgvector
+            var similarFaces = await _embeddings.FindSimilarFacesAsync(embedding, _opts.IdentifyMaxCandidates, ct);
+
+            // Convert to candidates (distance -> confidence, filter by threshold)
+            var candidates = similarFaces
+                .Select(x => new IdentifyCandidateDto(
+                    ProviderPersonId: $"local:{x.PersonId}",
+                    Confidence: 1f - x.Distance  // Convert cosine distance to similarity
+                ))
+                .Where(c => c.Confidence >= _opts.FaceMatchThreshold)
+                .OrderByDescending(c => c.Confidence)
+                .ToList();
+
+            if (candidates.Count > 0)
+            {
+                _log.LogInformation(
+                    "Face {FaceId} matched {Count} candidate(s), best: PersonId={PersonId} with confidence={Confidence:F3}",
+                    face.Id, candidates.Count, candidates[0].ProviderPersonId, candidates[0].Confidence);
+            }
+            else
+            {
+                _log.LogDebug("Face {FaceId} has no matches above threshold {Threshold}",
+                    face.Id, _opts.FaceMatchThreshold);
+            }
+
+            return candidates;
+        }
+        catch (Exception ex)
+        {
+            _log.LogError(ex, "Error identifying single face {FaceId}", face.Id);
+            return Array.Empty<IdentifyCandidateDto>();
+        }
+    }
 
     public async Task<IReadOnlyList<UserMatchDto>> SearchUsersByImageAsync(Stream image, CancellationToken ct)
     {
