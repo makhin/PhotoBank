@@ -120,7 +120,9 @@ public class UnifiedFaceEnricher : IEnricher
                 detectedFace.Confidence,
                 detectedFace.Age,
                 detectedFace.Gender,
-                detectedFace.BoundingBox
+                detectedFace.BoundingBox,
+                detectedFace.Emotion,
+                detectedFace.EmotionScores
             })
         };
 
