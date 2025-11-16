@@ -87,7 +87,18 @@ public sealed record LocalDetectedFace(
     float[]? Landmark,
     float? Age,
     string? Gender,
-    float[]? Embedding  // 512-dimensional embedding (already computed by InsightFace!)
+    float[]? Embedding,  // 512-dimensional embedding (already computed by InsightFace!)
+    object? Emotion,     // Emotion (can be string label or array of probabilities)
+    LocalPoseInfo? Pose  // Head pose angles (yaw, pitch, roll)
+);
+
+/// <summary>
+/// Head pose angles from face detection (in degrees)
+/// </summary>
+public sealed record LocalPoseInfo(
+    float Yaw,
+    float Pitch,
+    float Roll
 );
 
 /// <summary>
