@@ -28,8 +28,8 @@ public sealed record DetectedFaceDto(
     float? Age,
     string? Gender,
     FaceBoundingBox? BoundingBox,
-    string? Emotion,
-    Dictionary<string, float>? EmotionScores
+    string? Emotion = null,
+    Dictionary<string, float>? EmotionScores = null
 );
 
 public sealed record IdentifyCandidateDto(string ProviderPersonId, float Confidence);
