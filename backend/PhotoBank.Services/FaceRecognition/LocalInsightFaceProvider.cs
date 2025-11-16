@@ -77,7 +77,7 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
                     var normalizedEmbedding = Normalize(f.Embedding);
 
                     // Search for similar faces in database using pgvector HNSW index
-                    var similarFaces = await _embeddings.FindSimilarFacesAsync(normalizedEmbedding, topK: 1, ct);
+                    var similarFaces = await _embeddings.FindSimilarFacesAsync(normalizedEmbedding, limit: 1, ct);
 
                     if (similarFaces.Count > 0)
                     {
