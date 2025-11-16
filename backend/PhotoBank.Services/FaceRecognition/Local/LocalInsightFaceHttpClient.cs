@@ -4,6 +4,7 @@ using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
@@ -89,9 +90,9 @@ public sealed record LocalDetectedFace(
     int? Age,
     string? Gender,
     string? Emotion = null,
-    Dictionary<string, float>? EmotionScores = null,
+    [property: JsonPropertyName("emotion_scores")] Dictionary<string, float>? EmotionScores = null,
     float[]? Embedding = null,
-    int? EmbeddingDim = null
+    [property: JsonPropertyName("embedding_dim")] int? EmbeddingDim = null
 );
 
 /// <summary>
@@ -101,13 +102,13 @@ public sealed record LocalDetectedFace(
 /// </summary>
 public sealed record LocalEmbedResponse(
     float[] Embedding,
-    int[]? EmbeddingShape = null,
-    int? EmbeddingDim = null,
+    [property: JsonPropertyName("embedding_shape")] int[]? EmbeddingShape = null,
+    [property: JsonPropertyName("embedding_dim")] int? EmbeddingDim = null,
     string? Model = null,
-    string? InputSize = null,
+    [property: JsonPropertyName("input_size")] string? InputSize = null,
     FaceAttributes? Attributes = null,
     string? Emotion = null,
-    Dictionary<string, float>? EmotionScores = null
+    [property: JsonPropertyName("emotion_scores")] Dictionary<string, float>? EmotionScores = null
 );
 
 /// <summary>
@@ -117,8 +118,8 @@ public sealed record FaceAttributes(
     int? Age,
     string? Gender,
     PoseInfo? Pose,
-    bool? EmbeddingAvailable,
-    int? EmbeddingDim
+    [property: JsonPropertyName("embedding_available")] bool? EmbeddingAvailable,
+    [property: JsonPropertyName("embedding_dim")] int? EmbeddingDim
 );
 
 /// <summary>
