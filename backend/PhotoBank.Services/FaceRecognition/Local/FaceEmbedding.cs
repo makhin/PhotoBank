@@ -31,4 +31,5 @@ public interface IFaceEmbeddingRepository
 {
     Task UpsertAsync(int personId, int faceId, float[] vector, string model, CancellationToken ct);
     Task<IReadOnlyList<(int PersonId, int FaceId, float[] Vector)>> GetAllAsync(CancellationToken ct);
+    Task<IReadOnlyList<(int PersonId, int FaceId, float Distance)>> FindSimilarFacesAsync(float[] embedding, int limit, CancellationToken ct);
 }

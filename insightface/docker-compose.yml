@@ -3,8 +3,6 @@ services:
     build: .
     ports:
       - "5555:5555"
-    environment:
-      - DB_URL=${DB_URL}
     deploy:
       resources:
         reservations:

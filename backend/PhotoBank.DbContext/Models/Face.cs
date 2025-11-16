@@ -2,13 +2,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using NetTopologySuite.Geometries;
+using Pgvector;
 
 namespace PhotoBank.DbContext.Models
 {
     public class Face : IEntityBase
     {
         public int Id { get; set; }
-        [Column(TypeName = "geometry")] 
+        [Column(TypeName = "geometry")]
         public Geometry Rectangle { get; set; }
         public double? Age { get; set; }
         public bool? Gender { get; set; }
@@ -33,5 +34,7 @@ namespace PhotoBank.DbContext.Models
         public IdentityStatus IdentityStatus { get; set; }
         public double IdentifiedWithConfidence { get; set; }
         public string FaceAttributes { get; set; }
+        [Column(TypeName = "vector(512)")]
+        public Vector? Embedding { get; set; }
     }
 }

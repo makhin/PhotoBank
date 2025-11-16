@@ -10,7 +10,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PhotoBank.AccessControl;
-using PhotoBank.InsightFaceApiClient;
 using PhotoBank.Services;
 using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Enrichers;
@@ -80,7 +79,6 @@ public static partial class ServiceCollectionExtensions
         services.AddFaceRecognition(configuration);
         services.AddScoped<IUnifiedFaceService, UnifiedFaceService>();
         services.AddScoped<IFaceService, FaceService>();
-        services.AddSingleton<IInsightFaceApiClient, InsightFaceApiClient.InsightFaceApiClient>();
         services.AddTransient<IRecognitionService, RecognitionService>();
         services.TryAddSingleton<IActiveEnricherProvider, ActiveEnricherProvider>();
         services.AddOptions<EnrichmentPipelineOptions>();

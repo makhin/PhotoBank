@@ -47,7 +47,7 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
             try
             {
                 using var stream = f.OpenStream();
-                var emb = await _client.EmbedAsync(stream, ct);
+                var emb = await _client.EmbedAsync(stream, includeAttributes: false, ct);
                 await _embeddings.UpsertAsync(personId, f.FaceId, Normalize(emb.Embedding), emb.Model ?? _opts.Model, ct);
                 result[f.FaceId] = $"local:{f.FaceId}";
             }
@@ -79,19 +79,21 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
 
     public async Task<IReadOnlyList<UserMatchDto>> SearchUsersByImageAsync(Stream image, CancellationToken ct)
     {
-        var embResp = await _client.EmbedAsync(image, ct);
+        var embResp = await _client.EmbedAsync(image, includeAttributes: false, ct);
         var q = Normalize(embResp.Embedding);
 
-        var all = await _embeddings.GetAllAsync(ct);
-        var byPerson = all.GroupBy(x => x.PersonId)
-                          .Select(g => new { PersonId = g.Key, Best = g.Max(e => CosSim(q, e.Vector)) })
-                          .OrderByDescending(x => x.Best)
-                          .Take(_opts.TopK)
-                          .ToList();
+        // Use optimized pgvector similarity search with HNSW index and SQL-level grouping
+        // FindSimilarFacesAsync returns the best face for each person (using DISTINCT ON),
+        // already sorted by distance and limited to TopK persons
+        var similarFaces = await _embeddings.FindSimilarFacesAsync(q, _opts.TopK, ct);
 
-        return byPerson.Where(x => x.Best >= _opts.FaceMatchThreshold)
-                       .Select(x => new UserMatchDto($"local:{x.PersonId}", x.Best))
-                       .ToList();
+        // Convert cosine distance to similarity: pgvector CosineDistance = 1 - cosine_similarity
+        var results = similarFaces
+            .Select(x => new UserMatchDto($"local:{x.PersonId}", 1f - x.Distance))
+            .Where(x => x.Confidence >= _opts.FaceMatchThreshold)
+            .ToList();
+
+        return results;
     }
 
     private static float[] Normalize(float[] v)

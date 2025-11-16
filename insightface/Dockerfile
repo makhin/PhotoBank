@@ -1,24 +1,27 @@
-# Базируемся на образе с Python + pyodbc + MS ODBC Driver 17
-FROM tadeorubio/pyodbc-msodbcsql17:latest
+# Use official Python image
+FROM python:3.11-slim
 
-# Установим виртуальное окружение Python
-RUN python3 -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Install system dependencies for psycopg2 and opencv
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Обновляем pip и ставим зависимости
+# Upgrade pip and install build tools
 RUN pip install --upgrade pip setuptools wheel
 
 WORKDIR /app
 
-# Копируем зависимости и устанавливаем Python-библиотеки
+# Copy and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем код приложения
+# Copy application code
 COPY app/ ./app/
-COPY .env /app/.env
 
 ENV PYTHONPATH=/app
 
-# Запускаем API
+# Start API
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5555"]
