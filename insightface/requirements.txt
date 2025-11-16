@@ -1,12 +1,22 @@
-fastapi
-uvicorn
-sqlalchemy
-psycopg2-binary
-pgvector
-pydantic
-insightface
-numpy
-scikit-learn
-python-multipart
-onnxruntime>=1.17.0
-python-dotenv>=1.0.0
+# Web framework
+fastapi>=0.115.0,<0.116.0
+uvicorn[standard]>=0.32.0,<0.33.0
+python-multipart>=0.0.9,<0.1.0
+
+# Database
+sqlalchemy>=2.0.0,<3.0.0
+psycopg2-binary>=2.9.9,<3.0.0
+pgvector>=0.3.0,<0.4.0
+
+# Data and config
+pydantic>=2.0.0,<3.0.0
+python-dotenv>=1.0.0,<2.0.0
+numpy>=1.24.0,<2.0.0
+
+# Face recognition
+insightface>=0.7.3,<0.8.0
+onnxruntime>=1.19.0,<2.0.0
+scikit-learn>=1.3.0,<2.0.0
+
+# Healthcheck
+requests>=2.31.0,<3.0.0
