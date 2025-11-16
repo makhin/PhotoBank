@@ -88,10 +88,10 @@ public sealed record LocalDetectedFace(
     float[]? Landmark,
     int? Age,
     string? Gender,
-    string? Emotion,
-    Dictionary<string, float>? EmotionScores,
-    float[]? Embedding,
-    int? EmbeddingDim
+    string? Emotion = null,
+    Dictionary<string, float>? EmotionScores = null,
+    float[]? Embedding = null,
+    int? EmbeddingDim = null
 );
 
 /// <summary>
@@ -101,13 +101,13 @@ public sealed record LocalDetectedFace(
 /// </summary>
 public sealed record LocalEmbedResponse(
     float[] Embedding,
-    int[]? EmbeddingShape,
-    int? EmbeddingDim,
-    string? Model,
-    string? InputSize,
-    FaceAttributes? Attributes,
-    string? Emotion,
-    Dictionary<string, float>? EmotionScores
+    int[]? EmbeddingShape = null,
+    int? EmbeddingDim = null,
+    string? Model = null,
+    string? InputSize = null,
+    FaceAttributes? Attributes = null,
+    string? Emotion = null,
+    Dictionary<string, float>? EmotionScores = null
 );
 
 /// <summary>
