@@ -59,22 +59,67 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
 
     public async Task<IReadOnlyList<DetectedFaceDto>> DetectAsync(Stream image, CancellationToken ct)
     {
-        var resp = await _client.DetectAsync(image, includeEmbeddings: false, ct);
-        return resp.Faces.Select(f => new DetectedFaceDto(
-            ProviderFaceId: f.Id ?? string.Empty,
-            Confidence: f.Score,
-            Age: f.Age,
-            Gender: f.Gender,
-            BoundingBox: f.Bbox != null && f.Bbox.Length >= 4
-                ? new FaceBoundingBox(
-                    Left: f.Bbox[0],
-                    Top: f.Bbox[1],
-                    Width: f.Bbox[2] - f.Bbox[0],
-                    Height: f.Bbox[3] - f.Bbox[1])
-                : null,
-            Emotion: f.Emotion,
-            EmotionScores: f.EmotionScores
-        )).ToList();
+        // Include embeddings for automatic face identification
+        var resp = await _client.DetectAsync(image, includeEmbeddings: true, ct);
+
+        var results = new List<DetectedFaceDto>();
+
+        foreach (var f in resp.Faces)
+        {
+            int? identifiedPersonId = null;
+            float? identificationConfidence = null;
+
+            // Perform automatic identification if embedding is available
+            if (f.Embedding != null && f.Embedding.Length > 0)
+            {
+                try
+                {
+                    var normalizedEmbedding = Normalize(f.Embedding);
+
+                    // Search for similar faces in database using pgvector HNSW index
+                    var similarFaces = await _embeddings.FindSimilarFacesAsync(normalizedEmbedding, limit: 1, ct);
+
+                    if (similarFaces.Count > 0)
+                    {
+                        var bestMatch = similarFaces[0];
+                        // Convert cosine distance to similarity (confidence)
+                        var confidence = 1f - bestMatch.Distance;
+
+                        // Only return match if it exceeds threshold
+                        if (confidence >= _opts.FaceMatchThreshold)
+                        {
+                            identifiedPersonId = bestMatch.PersonId;
+                            identificationConfidence = confidence;
+                        }
+                    }
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    // Log error but don't fail detection
+                    _log.LogWarning(ex, "Failed to identify face {FaceId} during detection", f.Id);
+                }
+            }
+
+            results.Add(new DetectedFaceDto(
+                ProviderFaceId: f.Id ?? string.Empty,
+                Confidence: f.Score,
+                Age: f.Age,
+                Gender: f.Gender,
+                BoundingBox: f.Bbox != null && f.Bbox.Length >= 4
+                    ? new FaceBoundingBox(
+                        Left: f.Bbox[0],
+                        Top: f.Bbox[1],
+                        Width: f.Bbox[2] - f.Bbox[0],
+                        Height: f.Bbox[3] - f.Bbox[1])
+                    : null,
+                Emotion: f.Emotion,
+                EmotionScores: f.EmotionScores,
+                IdentifiedPersonId: identifiedPersonId,
+                IdentificationConfidence: identificationConfidence
+            ));
+        }
+
+        return results;
     }
 
     public Task<IReadOnlyList<IdentifyResultDto>> IdentifyAsync(IReadOnlyList<string> providerFaceIds, CancellationToken ct)
