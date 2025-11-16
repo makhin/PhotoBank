@@ -11,6 +11,11 @@ namespace PhotoBank.Services.FaceRecognition;
 public interface IUnifiedFaceService
 {
     /// <summary>
+    /// Gets the kind of face recognition provider being used.
+    /// </summary>
+    FaceProviderKind ProviderKind { get; }
+
+    /// <summary>
     /// Ensures the face recognition provider is ready (e.g., creates collections if needed).
     /// </summary>
     Task EnsureReadyAsync(CancellationToken ct = default);

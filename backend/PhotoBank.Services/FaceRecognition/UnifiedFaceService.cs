@@ -34,6 +34,8 @@ public class UnifiedFaceService : IUnifiedFaceService
         _log = log;
     }
 
+    public FaceProviderKind ProviderKind => _provider.Kind;
+
     public Task EnsureReadyAsync(CancellationToken ct = default) => _provider.EnsureReadyAsync(ct);
 
     public async Task SyncPersonsAsync(CancellationToken ct = default)
