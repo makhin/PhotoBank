@@ -23,9 +23,7 @@ public sealed record DetectedFaceDto(
     float? Age,
     string? Gender,
     FaceBoundingBox? BoundingBox,
-    float[]? Embedding = null,  // 512-dim face embedding (if provider supports it)
-    object? Emotion = null,      // Emotion label or probabilities (provider-specific)
-    object? Pose = null           // Head pose info (provider-specific format)
+    float[]? Embedding = null  // 512-dim face embedding (if provider supports it)
 );
 
 public sealed record IdentifyCandidateDto(string ProviderPersonId, float Confidence);

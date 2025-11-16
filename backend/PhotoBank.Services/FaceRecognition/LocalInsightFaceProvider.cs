@@ -81,9 +81,7 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
                     Width: f.Bbox[2] - f.Bbox[0],
                     Height: f.Bbox[3] - f.Bbox[1])
                 : null,
-            Embedding: f.Embedding,  // Pass through embedding from Python API!
-            Emotion: f.Emotion,       // Pass through emotion if available
-            Pose: f.Pose              // Pass through pose if available
+            Embedding: f.Embedding  // Pass through embedding from Python API!
         )).ToList();
     }
 

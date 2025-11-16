@@ -251,28 +251,6 @@ def detect_faces(file: UploadFile, include_embeddings: bool = True):
             elif include_embeddings and hasattr(face, 'embedding') and face.embedding is not None:
                 face_data["embedding"] = face.embedding.tolist()
 
-            # Add emotion if available (some InsightFace models support emotions)
-            if hasattr(face, 'emotion') and face.emotion is not None:
-                # emotion can be array of probabilities or single label
-                if isinstance(face.emotion, (list, np.ndarray)):
-                    face_data["emotion"] = face.emotion.tolist() if isinstance(face.emotion, np.ndarray) else face.emotion
-                else:
-                    face_data["emotion"] = str(face.emotion)
-
-            # Add pose angles if available (yaw, pitch, roll)
-            if hasattr(face, 'pose') and face.pose is not None:
-                if isinstance(face.pose, (list, np.ndarray)):
-                    pose_array = face.pose.tolist() if isinstance(face.pose, np.ndarray) else face.pose
-                    # Typically pose is [yaw, pitch, roll]
-                    if len(pose_array) >= 3:
-                        face_data["pose"] = {
-                            "yaw": float(pose_array[0]),
-                            "pitch": float(pose_array[1]),
-                            "roll": float(pose_array[2])
-                        }
-                    else:
-                        face_data["pose"] = pose_array
-
             detected_faces.append(face_data)
 
         return {"faces": detected_faces}
