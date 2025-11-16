@@ -18,21 +18,10 @@ public sealed record FaceToLink(int FaceId, Func<Stream> OpenStream, string? Ext
 public sealed record FaceBoundingBox(float Left, float Top, float Width, float Height);
 
 /// <summary>
-/// Emotion recognition scores from face detection
-/// 8 emotion classes: anger, contempt, disgust, fear, happiness, neutral, sadness, surprise
-/// Supported by Local (InsightFace + HSEmotion) provider
+/// Detected face with optional emotion recognition
+/// Emotion scores dictionary: key is emotion name (anger, contempt, disgust, fear, happiness, neutral, sadness, surprise),
+/// value is probability score (0.0 to 1.0). Supported by Local (InsightFace + HSEmotion) provider.
 /// </summary>
-public sealed record EmotionScoresDto(
-    float? Anger,
-    float? Contempt,
-    float? Disgust,
-    float? Fear,
-    float? Happiness,
-    float? Neutral,
-    float? Sadness,
-    float? Surprise
-);
-
 public sealed record DetectedFaceDto(
     string ProviderFaceId,
     float? Confidence,
@@ -40,7 +29,7 @@ public sealed record DetectedFaceDto(
     string? Gender,
     FaceBoundingBox? BoundingBox,
     string? Emotion,
-    EmotionScoresDto? EmotionScores
+    Dictionary<string, float>? EmotionScores
 );
 
 public sealed record IdentifyCandidateDto(string ProviderPersonId, float Confidence);

@@ -89,7 +89,7 @@ public sealed record LocalDetectedFace(
     int? Age,
     string? Gender,
     string? Emotion,
-    EmotionScoresDto? EmotionScores,
+    Dictionary<string, float>? EmotionScores,
     float[]? Embedding,
     int? EmbeddingDim
 );
@@ -107,7 +107,7 @@ public sealed record LocalEmbedResponse(
     string? InputSize,
     FaceAttributes? Attributes,
     string? Emotion,
-    EmotionScoresDto? EmotionScores
+    Dictionary<string, float>? EmotionScores
 );
 
 /// <summary>
