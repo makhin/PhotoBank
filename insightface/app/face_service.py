@@ -176,6 +176,7 @@ def get_emotion(img):
             img_rgb = img
 
         # Get emotion prediction
+        # HSEmotion returns: emotion as string (e.g., "Happiness"), scores as array
         emotion, scores = emotion_model.predict_emotions(img_rgb, logits=False)
 
         # HSEmotion returns: Anger, Contempt, Disgust, Fear, Happiness, Neutral, Sadness, Surprise
@@ -184,8 +185,8 @@ def get_emotion(img):
         # Create scores dictionary
         emotion_scores = {label: float(score) for label, score in zip(emotion_labels, scores)}
 
-        # Get dominant emotion
-        dominant_emotion = emotion_labels[emotion]
+        # emotion is already a string from HSEmotion, just convert to lowercase
+        dominant_emotion = emotion.lower()
 
         return {
             "emotion": dominant_emotion,
