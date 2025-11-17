@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using ImageMagick;
+using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
@@ -26,11 +27,18 @@ public class OnnxObjectDetectionEnricherTests
     {
         _mockPropertyNameRepository = new Mock<IRepository<PropertyName>>();
         _mockYoloService = new Mock<IYoloOnnxService>();
+
+        var mockOptions = new Mock<IOptions<YoloOnnxOptions>>();
+        mockOptions.Setup(o => o.Value).Returns(new YoloOnnxOptions
+        {
+            ConfidenceThreshold = 0.5f,
+            NmsThreshold = 0.45f
+        });
+
         _enricher = new OnnxObjectDetectionEnricher(
             _mockPropertyNameRepository.Object,
             _mockYoloService.Object,
-            confidenceThreshold: 0.5f,
-            nmsThreshold: 0.45f);
+            mockOptions.Object);
     }
 
     [Test]

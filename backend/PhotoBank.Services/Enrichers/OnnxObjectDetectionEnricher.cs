@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers.Onnx;
@@ -25,13 +26,16 @@ public class OnnxObjectDetectionEnricher : IEnricher
     public OnnxObjectDetectionEnricher(
         IRepository<PropertyName> propertyNameRepository,
         IYoloOnnxService yoloService,
-        float confidenceThreshold = 0.5f,
-        float nmsThreshold = 0.45f)
+        IOptions<YoloOnnxOptions> options)
     {
         _propertyNameRepository = propertyNameRepository ?? throw new ArgumentNullException(nameof(propertyNameRepository));
         _yoloService = yoloService ?? throw new ArgumentNullException(nameof(yoloService));
-        _confidenceThreshold = confidenceThreshold;
-        _nmsThreshold = nmsThreshold;
+
+        if (options == null) throw new ArgumentNullException(nameof(options));
+
+        // Read thresholds from configuration
+        _confidenceThreshold = options.Value.ConfidenceThreshold;
+        _nmsThreshold = options.Value.NmsThreshold;
     }
 
     public EnricherType EnricherType => EnricherType.ObjectProperty;
