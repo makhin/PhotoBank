@@ -75,7 +75,7 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<IEnricher, TagEnricher>();
 
         // Object detection enrichers - use ONNX-based or Azure-based depending on configuration
-        // Register ONNX PredictionEnginePool if enabled
+        // IMPORTANT: Must register as concrete type (not factory) so enricher appears in EnricherTypeCatalog
         var yoloOptions = configuration.GetSection(yoloOnnx).Get<YoloOnnxOptions>();
         if (yoloOptions?.Enabled == true && !string.IsNullOrWhiteSpace(yoloOptions.ModelPath))
         {
@@ -87,37 +87,25 @@ public static partial class ServiceCollectionExtensions
 
                 // Register YoloOnnxService as transient (pool is singleton)
                 services.AddTransient<IYoloOnnxService, YoloOnnxService>();
+
+                // Register ONNX enricher as concrete type (required for EnricherTypeCatalog)
+                services.AddTransient<IEnricher, OnnxObjectDetectionEnricher>();
             }
             else
             {
                 // Log warning if model file not found
                 var logger = services.BuildServiceProvider().GetService<ILogger<YoloOnnxService>>();
                 logger?.LogWarning("ONNX model file not found at: {ModelPath}. Falling back to Azure Computer Vision.", yoloOptions.ModelPath);
+
+                // Fallback to Azure-based object detection
+                services.AddTransient<IEnricher, ObjectPropertyEnricher>();
             }
         }
-
-        services.AddTransient<IEnricher>(provider =>
+        else
         {
-            var options = provider.GetRequiredService<IOptions<YoloOnnxOptions>>().Value;
-            var propertyNameRepository = provider.GetRequiredService<IRepository<PropertyName>>();
-
-            if (options.Enabled && !string.IsNullOrWhiteSpace(options.ModelPath))
-            {
-                var yoloService = provider.GetService<IYoloOnnxService>();
-                if (yoloService != null)
-                {
-                    // Use ONNX-based object detection
-                    return new OnnxObjectDetectionEnricher(
-                        propertyNameRepository,
-                        yoloService,
-                        options.ConfidenceThreshold,
-                        options.NmsThreshold);
-                }
-            }
-
-            // Fallback to Azure-based object detection
-            return new ObjectPropertyEnricher(propertyNameRepository);
-        });
+            // ONNX not enabled, use Azure-based object detection
+            services.AddTransient<IEnricher, ObjectPropertyEnricher>();
+        }
 
         services.AddTransient<IEnricher, AdultEnricher>();
 

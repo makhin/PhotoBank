@@ -103,11 +103,33 @@ NMS применяется только к bbox одного класса, ус�
 
 ### Регистрация в DI
 
+Enricher регистрируется **условно** в зависимости от конфигурации:
+
+**Если ONNX включен и модель существует:**
+```csharp
+services.AddPredictionEnginePool<YoloImageInput, YoloOutput>()
+    .FromUri(modelUri: yoloOptions.ModelPath, period: null);  // Singleton
+services.AddTransient<IYoloOnnxService, YoloOnnxService>();    // Transient
+services.AddTransient<IEnricher, OnnxObjectDetectionEnricher>(); // Transient
+```
+
+**Если ONNX выключен или модель не найдена:**
+```csharp
+services.AddTransient<IEnricher, ObjectPropertyEnricher>(); // Fallback to Azure
+```
+
+**Важно**: Enricher должен быть зарегистрирован как **конкретный тип** (не через factory),
+чтобы попасть в `EnricherTypeCatalog` и быть доступным для резолвинга по типу в pipeline.
+
+**Lifetimes:**
 - `PredictionEnginePool<YoloImageInput, YoloOutput>` - **Singleton**
 - `IYoloOnnxService` / `YoloOnnxService` - **Transient**
-- `OnnxObjectDetectionEnricher` - **Transient**
+- `IEnricher` / `OnnxObjectDetectionEnricher` или `ObjectPropertyEnricher` - **Transient**
 
 Это обеспечивает оптимальную производительность и безопасное использование в ASP.NET Core приложениях с параллельными запросами.
+
+**Примечание**: Для переключения между ONNX и Azure требуется перезапуск приложения
+(регистрация происходит при запуске). Runtime переключение не поддерживается.
 
 ### YOLO Tensor Layout
 
