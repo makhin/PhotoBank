@@ -178,14 +178,26 @@ public class YoloOnnxService : IYoloOnnxService
             var w = width * originalWidth / InputWidth;
             var h = height * originalHeight / InputHeight;
 
+            // Clamp coordinates to image bounds to prevent negative dimensions
+            var clampedX = Math.Max(0, Math.Min(x, originalWidth));
+            var clampedY = Math.Max(0, Math.Min(y, originalHeight));
+
+            // Calculate right and bottom edges, clamped to image bounds
+            var rightEdge = Math.Min(x + w, originalWidth);
+            var bottomEdge = Math.Min(y + h, originalHeight);
+
+            // Calculate final width and height (guaranteed non-negative)
+            var clampedW = Math.Max(0, rightEdge - clampedX);
+            var clampedH = Math.Max(0, bottomEdge - clampedY);
+
             detections.Add(new DetectedObjectOnnx
             {
                 ClassName = CocoClassNames.Names[maxClassIndex],
                 Confidence = confidence,
-                X = Math.Max(0, x),
-                Y = Math.Max(0, y),
-                Width = Math.Min(w, originalWidth - x),
-                Height = Math.Min(h, originalHeight - y)
+                X = clampedX,
+                Y = clampedY,
+                Width = clampedW,
+                Height = clampedH
             });
         }
 
@@ -240,14 +252,26 @@ public class YoloOnnxService : IYoloOnnxService
             var w = width * originalWidth / InputWidth;
             var h = height * originalHeight / InputHeight;
 
+            // Clamp coordinates to image bounds to prevent negative dimensions
+            var clampedX = Math.Max(0, Math.Min(x, originalWidth));
+            var clampedY = Math.Max(0, Math.Min(y, originalHeight));
+
+            // Calculate right and bottom edges, clamped to image bounds
+            var rightEdge = Math.Min(x + w, originalWidth);
+            var bottomEdge = Math.Min(y + h, originalHeight);
+
+            // Calculate final width and height (guaranteed non-negative)
+            var clampedW = Math.Max(0, rightEdge - clampedX);
+            var clampedH = Math.Max(0, bottomEdge - clampedY);
+
             detections.Add(new DetectedObjectOnnx
             {
                 ClassName = CocoClassNames.Names[maxClassIndex],
                 Confidence = maxClassScore,
-                X = Math.Max(0, x),
-                Y = Math.Max(0, y),
-                Width = Math.Min(w, originalWidth - x),
-                Height = Math.Min(h, originalHeight - y)
+                X = clampedX,
+                Y = clampedY,
+                Width = clampedW,
+                Height = clampedH
             });
         }
 
