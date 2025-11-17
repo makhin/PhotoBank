@@ -68,6 +68,24 @@ model.export(format='onnx')
 - **ConfidenceThreshold** (float): Минимальный порог уверенности для детекции объектов (0.0 - 1.0). Рекомендуется 0.5
 - **NmsThreshold** (float): Порог для NMS (Non-Maximum Suppression) алгоритма для устранения дублирующихся детекций (0.0 - 1.0). Рекомендуется 0.45
 
+## Архитектура и потокобезопасность
+
+### Thread-Safety
+
+`YoloOnnxService` использует `PredictionEnginePool` из `Microsoft.Extensions.ML` для обеспечения потокобезопасности при параллельной обработке изображений:
+
+- **PredictionEnginePool** - управляет пулом `PredictionEngine` экземпляров
+- **Thread-safe** - безопасен для использования в многопоточных сценариях
+- **Optimal performance** - переиспользует экземпляры вместо создания новых для каждого запроса
+
+### Регистрация в DI
+
+- `PredictionEnginePool<YoloImageInput, YoloOutput>` - **Singleton**
+- `IYoloOnnxService` / `YoloOnnxService` - **Transient**
+- `OnnxObjectDetectionEnricher` - **Transient**
+
+Это обеспечивает оптимальную производительность и безопасное использование в ASP.NET Core приложениях с параллельными запросами.
+
 ## Использование
 
 После настройки enricher будет автоматически использоваться в pipeline обработки изображений вместо Azure-based `ObjectPropertyEnricher`.

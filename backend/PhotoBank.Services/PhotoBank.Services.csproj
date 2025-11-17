@@ -30,6 +30,7 @@
     <PackageReference Include="Microsoft.ML" Version="3.0.1" />
     <PackageReference Include="Microsoft.ML.ImageAnalytics" Version="3.0.1" />
     <PackageReference Include="Microsoft.ML.OnnxTransformer" Version="3.0.1" />
+    <PackageReference Include="Microsoft.Extensions.ML" Version="3.0.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
   </ItemGroup>
 

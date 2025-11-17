@@ -1,14 +1,18 @@
 using System;
 using ApiKeyServiceClientCredentials = Microsoft.Azure.CognitiveServices.Vision.ComputerVision.ApiKeyServiceClientCredentials;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Amazon.Rekognition;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.ML;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.ML;
 using PhotoBank.AccessControl;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
@@ -71,16 +75,26 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<IEnricher, TagEnricher>();
 
         // Object detection enrichers - use ONNX-based or Azure-based depending on configuration
-        services.AddSingleton<IYoloOnnxService>(provider =>
+        // Register ONNX PredictionEnginePool if enabled
+        var yoloOptions = configuration.GetSection(yoloOnnx).Get<YoloOnnxOptions>();
+        if (yoloOptions?.Enabled == true && !string.IsNullOrWhiteSpace(yoloOptions.ModelPath))
         {
-            var options = provider.GetRequiredService<IOptions<YoloOnnxOptions>>().Value;
-            if (!options.Enabled || string.IsNullOrWhiteSpace(options.ModelPath))
+            if (File.Exists(yoloOptions.ModelPath))
             {
-                // Return a dummy implementation if ONNX is not enabled
-                return null!;
+                // Register PredictionEnginePool for thread-safe YOLO inference
+                services.AddPredictionEnginePool<YoloImageInput, YoloOutput>()
+                    .FromUri(modelUri: yoloOptions.ModelPath, period: null);
+
+                // Register YoloOnnxService as transient (pool is singleton)
+                services.AddTransient<IYoloOnnxService, YoloOnnxService>();
             }
-            return new YoloOnnxService(options.ModelPath);
-        });
+            else
+            {
+                // Log warning if model file not found
+                var logger = services.BuildServiceProvider().GetService<ILogger<YoloOnnxService>>();
+                logger?.LogWarning("ONNX model file not found at: {ModelPath}. Falling back to Azure Computer Vision.", yoloOptions.ModelPath);
+            }
+        }
 
         services.AddTransient<IEnricher>(provider =>
         {
@@ -89,19 +103,20 @@ public static partial class ServiceCollectionExtensions
 
             if (options.Enabled && !string.IsNullOrWhiteSpace(options.ModelPath))
             {
-                // Use ONNX-based object detection
-                var yoloService = provider.GetRequiredService<IYoloOnnxService>();
-                return new OnnxObjectDetectionEnricher(
-                    propertyNameRepository,
-                    yoloService,
-                    options.ConfidenceThreshold,
-                    options.NmsThreshold);
+                var yoloService = provider.GetService<IYoloOnnxService>();
+                if (yoloService != null)
+                {
+                    // Use ONNX-based object detection
+                    return new OnnxObjectDetectionEnricher(
+                        propertyNameRepository,
+                        yoloService,
+                        options.ConfidenceThreshold,
+                        options.NmsThreshold);
+                }
             }
-            else
-            {
-                // Fallback to Azure-based object detection
-                return new ObjectPropertyEnricher(propertyNameRepository);
-            }
+
+            // Fallback to Azure-based object detection
+            return new ObjectPropertyEnricher(propertyNameRepository);
         });
 
         services.AddTransient<IEnricher, AdultEnricher>();

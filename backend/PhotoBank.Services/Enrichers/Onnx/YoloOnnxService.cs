@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using Microsoft.ML;
-using Microsoft.ML.Data;
+using Microsoft.Extensions.ML;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -11,43 +9,26 @@ using SixLabors.ImageSharp.Processing;
 namespace PhotoBank.Services.Enrichers.Onnx;
 
 /// <summary>
-/// Service for YOLO ONNX model inference
+/// Service for YOLO ONNX model inference (thread-safe)
 /// </summary>
-public interface IYoloOnnxService : IDisposable
+public interface IYoloOnnxService
 {
     List<DetectedObjectOnnx> DetectObjects(byte[] imageData, float confidenceThreshold = 0.5f, float nmsThreshold = 0.45f);
 }
 
+/// <summary>
+/// Thread-safe YOLO service using PredictionEnginePool
+/// </summary>
 public class YoloOnnxService : IYoloOnnxService
 {
-    private readonly MLContext _mlContext;
-    private readonly PredictionEngine<YoloImageInput, YoloOutput> _predictionEngine;
-    private readonly string _modelPath;
+    private readonly PredictionEnginePool<YoloImageInput, YoloOutput> _predictionEnginePool;
     private const int InputWidth = 640;
     private const int InputHeight = 640;
     private const int OutputDimensions = 84; // 4 bbox coords + 80 classes for YOLOv8
 
-    public YoloOnnxService(string modelPath)
+    public YoloOnnxService(PredictionEnginePool<YoloImageInput, YoloOutput> predictionEnginePool)
     {
-        if (string.IsNullOrWhiteSpace(modelPath))
-            throw new ArgumentException("Model path cannot be null or empty", nameof(modelPath));
-
-        if (!File.Exists(modelPath))
-            throw new FileNotFoundException($"ONNX model file not found at: {modelPath}", modelPath);
-
-        _modelPath = modelPath;
-        _mlContext = new MLContext();
-
-        // Load the ONNX model
-        var pipeline = _mlContext.Transforms.ApplyOnnxModel(
-            modelFile: _modelPath,
-            outputColumnNames: new[] { "output0" },
-            inputColumnNames: new[] { "images" }
-        );
-
-        var emptyData = _mlContext.Data.LoadFromEnumerable(new List<YoloImageInput>());
-        var model = pipeline.Fit(emptyData);
-        _predictionEngine = _mlContext.Model.CreatePredictionEngine<YoloImageInput, YoloOutput>(model);
+        _predictionEnginePool = predictionEnginePool ?? throw new ArgumentNullException(nameof(predictionEnginePool));
     }
 
     public List<DetectedObjectOnnx> DetectObjects(byte[] imageData, float confidenceThreshold = 0.5f, float nmsThreshold = 0.45f)
@@ -62,8 +43,8 @@ public class YoloOnnxService : IYoloOnnxService
         // Prepare input
         var input = PrepareInput(image);
 
-        // Run prediction
-        var output = _predictionEngine.Predict(input);
+        // Run prediction using thread-safe pool
+        var output = _predictionEnginePool.Predict(input);
 
         if (output?.Output == null || output.Output.Length == 0)
             return new List<DetectedObjectOnnx>();
@@ -196,10 +177,5 @@ public class YoloOnnxService : IYoloOnnxService
         var unionArea = box1Area + box2Area - intersectionArea;
 
         return unionArea > 0 ? intersectionArea / unionArea : 0;
-    }
-
-    public void Dispose()
-    {
-        _predictionEngine?.Dispose();
     }
 }
