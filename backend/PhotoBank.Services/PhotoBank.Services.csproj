@@ -25,6 +25,7 @@
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10" />
     <PackageReference Include="Minio" Version="7.0.0" />
     <PackageReference Include="MediatR" Version="13.1.0" />
+    <PackageReference Include="Smartcrop.net" Version="1.0.4" />
     <PackageReference Include="System.IO.Abstractions" Version="22.0.16" />
   </ItemGroup>
 
