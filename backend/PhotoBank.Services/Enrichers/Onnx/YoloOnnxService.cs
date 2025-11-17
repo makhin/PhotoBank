@@ -24,7 +24,8 @@ public class YoloOnnxService : IYoloOnnxService
     private readonly PredictionEnginePool<YoloImageInput, YoloOutput> _predictionEnginePool;
     private const int InputWidth = 640;
     private const int InputHeight = 640;
-    private const int OutputDimensions = 84; // 4 bbox coords + 80 classes for YOLOv8
+    private const int NumClasses = 80;
+    private const int NumPredictions = 8400; // YOLOv8 outputs 8400 predictions
 
     public YoloOnnxService(PredictionEnginePool<YoloImageInput, YoloOutput> predictionEnginePool)
     {
@@ -90,29 +91,28 @@ public class YoloOnnxService : IYoloOnnxService
     {
         var detections = new List<DetectedObjectOnnx>();
 
-        // YOLOv8 output format: [batch, 84, 8400]
-        // 84 = 4 bbox coordinates + 80 class scores
-        // 8400 = number of predictions
+        // YOLOv8 output format: [1, 84, 8400]
+        // Layout: channels-first (CHW), where:
+        // - Channel dimension (84) = 4 bbox coords + 80 class scores
+        // - Predictions dimension (8400) = number of anchor boxes
+        // Memory layout: [all_centerX, all_centerY, all_width, all_height, all_class0_scores, ..., all_class79_scores]
+        // To access prediction i for channel c: output[c * NumPredictions + i]
 
-        var numPredictions = output.Length / OutputDimensions;
-
-        for (int i = 0; i < numPredictions; i++)
+        for (int i = 0; i < NumPredictions; i++)
         {
-            var offset = i * OutputDimensions;
+            // Read bbox coordinates using channel stride
+            var centerX = output[0 * NumPredictions + i];  // Channel 0
+            var centerY = output[1 * NumPredictions + i];  // Channel 1
+            var width = output[2 * NumPredictions + i];    // Channel 2
+            var height = output[3 * NumPredictions + i];   // Channel 3
 
-            // Get bbox coordinates (center_x, center_y, width, height)
-            var centerX = output[offset];
-            var centerY = output[offset + 1];
-            var width = output[offset + 2];
-            var height = output[offset + 3];
-
-            // Get class scores (80 classes)
+            // Find max class score across 80 classes
             var maxClassScore = 0f;
             var maxClassIndex = -1;
 
-            for (int classIdx = 0; classIdx < 80; classIdx++)
+            for (int classIdx = 0; classIdx < NumClasses; classIdx++)
             {
-                var classScore = output[offset + 4 + classIdx];
+                var classScore = output[(4 + classIdx) * NumPredictions + i];
                 if (classScore > maxClassScore)
                 {
                     maxClassScore = classScore;
