@@ -145,20 +145,34 @@ public class YoloOnnxService : IYoloOnnxService
         return detections;
     }
 
+    /// <summary>
+    /// Applies class-aware Non-Maximum Suppression (NMS) to filter overlapping detections.
+    /// NMS is applied independently for each class to avoid removing valid detections
+    /// of different objects that happen to overlap (e.g., person on a bicycle).
+    /// </summary>
     private List<DetectedObjectOnnx> ApplyNMS(List<DetectedObjectOnnx> detections, float nmsThreshold)
     {
         var result = new List<DetectedObjectOnnx>();
-        var sortedDetections = detections.OrderByDescending(d => d.Confidence).ToList();
 
-        while (sortedDetections.Count > 0)
+        // Group detections by class name and apply NMS per class
+        var groupedByClass = detections.GroupBy(d => d.ClassName);
+
+        foreach (var classGroup in groupedByClass)
         {
-            var best = sortedDetections[0];
-            result.Add(best);
-            sortedDetections.RemoveAt(0);
+            var classDetections = classGroup.OrderByDescending(d => d.Confidence).ToList();
 
-            sortedDetections = sortedDetections
-                .Where(d => CalculateIoU(best, d) < nmsThreshold)
-                .ToList();
+            while (classDetections.Count > 0)
+            {
+                var best = classDetections[0];
+                result.Add(best);
+                classDetections.RemoveAt(0);
+
+                // Remove boxes that overlap significantly with the best box
+                // Only compare within the same class
+                classDetections = classDetections
+                    .Where(d => CalculateIoU(best, d) < nmsThreshold)
+                    .ToList();
+            }
         }
 
         return result;
