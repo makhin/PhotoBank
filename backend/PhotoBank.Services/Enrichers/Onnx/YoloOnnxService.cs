@@ -17,6 +17,16 @@ public interface IYoloOnnxService
 }
 
 /// <summary>
+/// YOLO output format type
+/// </summary>
+internal enum YoloFormat
+{
+    Unknown,
+    YoloV5,  // [1, 25200, 85] - boxes-first layout
+    YoloV8   // [1, 84, 8400] - channels-first layout
+}
+
+/// <summary>
 /// Thread-safe YOLO service using PredictionEnginePool
 /// </summary>
 public class YoloOnnxService : IYoloOnnxService
@@ -25,7 +35,14 @@ public class YoloOnnxService : IYoloOnnxService
     private const int InputWidth = 640;
     private const int InputHeight = 640;
     private const int NumClasses = 80;
-    private const int NumPredictions = 8400; // YOLOv8 outputs 8400 predictions
+
+    // YOLOv5 constants
+    private const int YoloV5NumPredictions = 25200;
+    private const int YoloV5OutputSize = 85; // 4 bbox + 1 objectness + 80 classes
+
+    // YOLOv8 constants
+    private const int YoloV8NumPredictions = 8400;
+    private const int YoloV8OutputSize = 84; // 4 bbox + 80 classes (no objectness)
 
     public YoloOnnxService(PredictionEnginePool<YoloImageInput, YoloOutput> predictionEnginePool)
     {
@@ -50,11 +67,33 @@ public class YoloOnnxService : IYoloOnnxService
         if (output?.Output == null || output.Output.Length == 0)
             return new List<DetectedObjectOnnx>();
 
-        // Parse output and apply NMS
-        var detections = ParseOutput(output.Output, originalWidth, originalHeight, confidenceThreshold);
+        // Detect YOLO format and parse output accordingly
+        var format = DetectYoloFormat(output.Output);
+        var detections = format switch
+        {
+            YoloFormat.YoloV5 => ParseYoloV5Output(output.Output, originalWidth, originalHeight, confidenceThreshold),
+            YoloFormat.YoloV8 => ParseYoloV8Output(output.Output, originalWidth, originalHeight, confidenceThreshold),
+            _ => throw new NotSupportedException($"Unsupported YOLO output format. Output array length: {output.Output.Length}")
+        };
+
         var filteredDetections = ApplyNMS(detections, nmsThreshold);
 
         return filteredDetections;
+    }
+
+    private YoloFormat DetectYoloFormat(float[] output)
+    {
+        var length = output.Length;
+
+        // YOLOv8: [1, 84, 8400] = 705,600 elements (channels-first)
+        if (length == YoloV8OutputSize * YoloV8NumPredictions)
+            return YoloFormat.YoloV8;
+
+        // YOLOv5: [1, 25200, 85] = 2,142,000 elements (boxes-first)
+        if (length == YoloV5NumPredictions * YoloV5OutputSize)
+            return YoloFormat.YoloV5;
+
+        return YoloFormat.Unknown;
     }
 
     private YoloImageInput PrepareInput(Image<Rgb24> image)
@@ -87,24 +126,29 @@ public class YoloOnnxService : IYoloOnnxService
         return new YoloImageInput { Image = input };
     }
 
-    private List<DetectedObjectOnnx> ParseOutput(float[] output, int originalWidth, int originalHeight, float confidenceThreshold)
+    /// <summary>
+    /// Parse YOLOv5 output: [1, 25200, 85] boxes-first layout
+    /// Each prediction: [centerX, centerY, width, height, objectness, class0_score, ..., class79_score]
+    /// </summary>
+    private List<DetectedObjectOnnx> ParseYoloV5Output(float[] output, int originalWidth, int originalHeight, float confidenceThreshold)
     {
         var detections = new List<DetectedObjectOnnx>();
 
-        // YOLOv8 output format: [1, 84, 8400]
-        // Layout: channels-first (CHW), where:
-        // - Channel dimension (84) = 4 bbox coords + 80 class scores
-        // - Predictions dimension (8400) = number of anchor boxes
-        // Memory layout: [all_centerX, all_centerY, all_width, all_height, all_class0_scores, ..., all_class79_scores]
-        // To access prediction i for channel c: output[c * NumPredictions + i]
+        // YOLOv5 output format: [1, 25200, 85]
+        // Layout: boxes-first, where each of 25200 predictions has 85 consecutive values
+        // [centerX, centerY, width, height, objectness, class0, class1, ..., class79]
+        // To access prediction i, field f: output[i * 85 + f]
 
-        for (int i = 0; i < NumPredictions; i++)
+        for (int i = 0; i < YoloV5NumPredictions; i++)
         {
-            // Read bbox coordinates using channel stride
-            var centerX = output[0 * NumPredictions + i];  // Channel 0
-            var centerY = output[1 * NumPredictions + i];  // Channel 1
-            var width = output[2 * NumPredictions + i];    // Channel 2
-            var height = output[3 * NumPredictions + i];   // Channel 3
+            var offset = i * YoloV5OutputSize;
+
+            // Read bbox coordinates
+            var centerX = output[offset + 0];
+            var centerY = output[offset + 1];
+            var width = output[offset + 2];
+            var height = output[offset + 3];
+            var objectness = output[offset + 4];
 
             // Find max class score across 80 classes
             var maxClassScore = 0f;
@@ -112,7 +156,7 @@ public class YoloOnnxService : IYoloOnnxService
 
             for (int classIdx = 0; classIdx < NumClasses; classIdx++)
             {
-                var classScore = output[(4 + classIdx) * NumPredictions + i];
+                var classScore = output[offset + 5 + classIdx];
                 if (classScore > maxClassScore)
                 {
                     maxClassScore = classScore;
@@ -120,7 +164,72 @@ public class YoloOnnxService : IYoloOnnxService
                 }
             }
 
+            // YOLOv5 uses objectness * class_score as final confidence
+            var confidence = objectness * maxClassScore;
+
             // Filter by confidence threshold
+            if (confidence < confidenceThreshold || maxClassIndex < 0)
+                continue;
+
+            // Convert from center coordinates to corner coordinates
+            // and scale to original image size
+            var x = (centerX - width / 2) * originalWidth / InputWidth;
+            var y = (centerY - height / 2) * originalHeight / InputHeight;
+            var w = width * originalWidth / InputWidth;
+            var h = height * originalHeight / InputHeight;
+
+            detections.Add(new DetectedObjectOnnx
+            {
+                ClassName = CocoClassNames.Names[maxClassIndex],
+                Confidence = confidence,
+                X = Math.Max(0, x),
+                Y = Math.Max(0, y),
+                Width = Math.Min(w, originalWidth - x),
+                Height = Math.Min(h, originalHeight - y)
+            });
+        }
+
+        return detections;
+    }
+
+    /// <summary>
+    /// Parse YOLOv8 output: [1, 84, 8400] channels-first layout
+    /// All predictions for each channel are grouped together
+    /// </summary>
+    private List<DetectedObjectOnnx> ParseYoloV8Output(float[] output, int originalWidth, int originalHeight, float confidenceThreshold)
+    {
+        var detections = new List<DetectedObjectOnnx>();
+
+        // YOLOv8 output format: [1, 84, 8400]
+        // Layout: channels-first (CHW), where:
+        // - Channel dimension (84) = 4 bbox coords + 80 class scores (no objectness)
+        // - Predictions dimension (8400) = number of anchor boxes
+        // Memory layout: [all_centerX, all_centerY, all_width, all_height, all_class0_scores, ..., all_class79_scores]
+        // To access prediction i for channel c: output[c * 8400 + i]
+
+        for (int i = 0; i < YoloV8NumPredictions; i++)
+        {
+            // Read bbox coordinates using channel stride
+            var centerX = output[0 * YoloV8NumPredictions + i];  // Channel 0
+            var centerY = output[1 * YoloV8NumPredictions + i];  // Channel 1
+            var width = output[2 * YoloV8NumPredictions + i];    // Channel 2
+            var height = output[3 * YoloV8NumPredictions + i];   // Channel 3
+
+            // Find max class score across 80 classes
+            var maxClassScore = 0f;
+            var maxClassIndex = -1;
+
+            for (int classIdx = 0; classIdx < NumClasses; classIdx++)
+            {
+                var classScore = output[(4 + classIdx) * YoloV8NumPredictions + i];
+                if (classScore > maxClassScore)
+                {
+                    maxClassScore = classScore;
+                    maxClassIndex = classIdx;
+                }
+            }
+
+            // Filter by confidence threshold (YOLOv8 has no objectness score)
             if (maxClassScore < confidenceThreshold || maxClassIndex < 0)
                 continue;
 
