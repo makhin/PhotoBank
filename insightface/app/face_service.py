@@ -5,6 +5,7 @@ import json
 import logging
 import cv2
 import onnxruntime as ort
+from . import emotion_patch
 from hsemotion.facial_emotions import HSEmotionRecognizer
 
 # Setup logger
@@ -34,7 +35,7 @@ logger.info(f"Using providers: {providers}")
 
 # Load the model pack to access models
 app_insightface = insightface.app.FaceAnalysis(
-    name='antelopev2',
+    name='buffalo_l',
     providers=providers
 )
 app_insightface.prepare(ctx_id=0, det_size=(640, 640))
