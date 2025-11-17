@@ -10,9 +10,12 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PhotoBank.AccessControl;
+using PhotoBank.DbContext.Models;
+using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.Enrichers.Onnx;
 using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.FaceRecognition;
 using PhotoBank.Services.Recognition;
@@ -25,9 +28,11 @@ public static partial class ServiceCollectionExtensions
     {
         const string computerVision = "ComputerVision";
         const string face = "Face";
+        const string yoloOnnx = "YoloOnnx";
 
         services.Configure<ComputerVisionOptions>(configuration.GetSection(computerVision));
         services.Configure<FaceApiOptions>(configuration.GetSection(face));
+        services.Configure<YoloOnnxOptions>(configuration.GetSection(yoloOnnx));
 
         services.AddSingleton<IComputerVisionClient, ComputerVisionClient>(provider =>
         {
@@ -64,7 +69,41 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<IEnricher, ColorEnricher>();
         services.AddTransient<IEnricher, CaptionEnricher>();
         services.AddTransient<IEnricher, TagEnricher>();
-        services.AddTransient<IEnricher, ObjectPropertyEnricher>();
+
+        // Object detection enrichers - use ONNX-based or Azure-based depending on configuration
+        services.AddSingleton<IYoloOnnxService>(provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<YoloOnnxOptions>>().Value;
+            if (!options.Enabled || string.IsNullOrWhiteSpace(options.ModelPath))
+            {
+                // Return a dummy implementation if ONNX is not enabled
+                return null!;
+            }
+            return new YoloOnnxService(options.ModelPath);
+        });
+
+        services.AddTransient<IEnricher>(provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<YoloOnnxOptions>>().Value;
+            var propertyNameRepository = provider.GetRequiredService<IRepository<PropertyName>>();
+
+            if (options.Enabled && !string.IsNullOrWhiteSpace(options.ModelPath))
+            {
+                // Use ONNX-based object detection
+                var yoloService = provider.GetRequiredService<IYoloOnnxService>();
+                return new OnnxObjectDetectionEnricher(
+                    propertyNameRepository,
+                    yoloService,
+                    options.ConfidenceThreshold,
+                    options.NmsThreshold);
+            }
+            else
+            {
+                // Fallback to Azure-based object detection
+                return new ObjectPropertyEnricher(propertyNameRepository);
+            }
+        });
+
         services.AddTransient<IEnricher, AdultEnricher>();
 
         // Face enrichers - use UnifiedFaceEnricher for new code
