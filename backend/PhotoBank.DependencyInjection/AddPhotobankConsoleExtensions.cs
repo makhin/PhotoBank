@@ -110,9 +110,9 @@ public static partial class ServiceCollectionExtensions
             }
             else
             {
-                // Log warning if model file not found
-                var logger = services.BuildServiceProvider().GetService<ILogger<YoloOnnxService>>();
-                logger?.LogWarning("ONNX model file not found at: {ModelPath}. Falling back to Azure Computer Vision.", yoloOptions.ModelPath);
+                // Model file not found - fallback to Azure Computer Vision
+                // Note: Cannot use ILogger here as it would require BuildServiceProvider() which leaks resources
+                Console.WriteLine($"WARNING: ONNX model file not found at: {yoloOptions.ModelPath}. Falling back to Azure Computer Vision.");
 
                 // Fallback to Azure-based object detection
                 services.AddTransient<IEnricher, ObjectPropertyEnricher>();
