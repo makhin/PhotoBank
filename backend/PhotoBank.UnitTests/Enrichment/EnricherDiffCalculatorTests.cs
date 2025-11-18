@@ -60,26 +60,28 @@ public class EnricherDiffCalculatorTests
     }
 
     [Test]
-    public void CalculateMissingEnrichers_WhenAllEnrichersApplied_ReturnsEmpty()
+    public void CalculateMissingEnrichers_WhenAllNonDataProviderEnrichersApplied_ReturnsEmpty()
     {
-        // Arrange
+        // Arrange: Use only non-data provider enrichers that are already applied
+        // Both Metadata and Face are already applied and are not data providers
         var photo = new Photo
         {
-            EnrichedWithEnricherType = EnricherType.Preview | EnricherType.Metadata
+            EnrichedWithEnricherType = EnricherType.Metadata | EnricherType.Face
         };
-        var activeEnrichers = new[] { typeof(MockEnricherA), typeof(MockEnricherB) };
+        var activeEnrichers = new[] { typeof(MockEnricherB), typeof(MockEnricherC) };
 
         // Act
         var result = _calculator.CalculateMissingEnrichers(photo, activeEnrichers);
 
         // Assert
+        // Both enrichers are already applied and not data providers, so nothing to run
         result.Should().BeEmpty();
     }
 
     [Test]
     public void CalculateMissingEnrichers_WhenPartiallyApplied_ReturnsOnlyMissing()
     {
-        // Arrange
+        // Arrange: Preview already applied, but it's a data provider
         var photo = new Photo
         {
             EnrichedWithEnricherType = EnricherType.Preview // Only EnricherA applied
@@ -90,9 +92,11 @@ public class EnricherDiffCalculatorTests
         var result = _calculator.CalculateMissingEnrichers(photo, activeEnrichers);
 
         // Assert
-        result.Should().HaveCount(1);
-        result.Should().Contain(typeof(MockEnricherB));
-        result.Should().NotContain(typeof(MockEnricherA));
+        // Preview is a data provider, so it's re-run even though already applied
+        // Metadata is not applied, so it's included
+        result.Should().HaveCount(2);
+        result.Should().Contain(typeof(MockEnricherA)); // Preview (data provider, always included)
+        result.Should().Contain(typeof(MockEnricherB)); // Metadata (not applied yet)
     }
 
     [Test]
