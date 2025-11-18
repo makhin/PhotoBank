@@ -96,9 +96,12 @@ public class OnnxObjectDetectionEnricher : IEnricher
         string[] classNames,
         CancellationToken cancellationToken)
     {
-        // Get existing property names from database
+        // Normalize class names to lowercase for case-insensitive comparison
+        var normalizedClassNames = classNames.Select(cn => cn.ToLowerInvariant()).ToList();
+
+        // Get existing property names from database (case-insensitive lookup)
         var existingPropertyNames = _propertyNameRepository
-            .GetByCondition(p => classNames.Contains(p.Name))
+            .GetByCondition(p => normalizedClassNames.Contains(p.Name.ToLower()))
             .ToList();
 
         var result = existingPropertyNames.ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
