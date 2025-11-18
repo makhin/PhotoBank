@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.ML;
 using Microsoft.ML;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+using ImageMagick;
 
 namespace PhotoBank.Services.Enrichers.Onnx;
 
@@ -56,9 +54,9 @@ public class YoloOnnxService : IYoloOnnxService
         if (imageData == null || imageData.Length == 0)
             throw new ArgumentException("Image data cannot be null or empty", nameof(imageData));
 
-        using var image = Image.Load<Rgb24>(imageData);
-        var originalWidth = image.Width;
-        var originalHeight = image.Height;
+        using var image = new MagickImage(imageData);
+        var originalWidth = (int)image.Width;
+        var originalHeight = (int)image.Height;
 
         // Prepare input with letterboxing (preserve aspect ratio + padding)
         var (input, scale, padX, padY) = PrepareInputWithLetterbox(image);
@@ -102,50 +100,52 @@ public class YoloOnnxService : IYoloOnnxService
     /// Prepare input with letterboxing: resize preserving aspect ratio and add padding.
     /// Returns the input tensor and letterbox parameters (scale, padX, padY) for coordinate conversion.
     /// </summary>
-    private (YoloImageInput input, float scale, int padX, int padY) PrepareInputWithLetterbox(Image<Rgb24> image)
+    private (YoloImageInput input, float scale, int padX, int padY) PrepareInputWithLetterbox(MagickImage image)
     {
-        var originalWidth = image.Width;
-        var originalHeight = image.Height;
+        var originalWidth = (int)image.Width;
+        var originalHeight = (int)image.Height;
 
         // Calculate scale to fit image into 640x640 while preserving aspect ratio
         var scale = Math.Min((float)InputWidth / originalWidth, (float)InputHeight / originalHeight);
 
         // Calculate new dimensions after scaling
-        var newWidth = (int)(originalWidth * scale);
-        var newHeight = (int)(originalHeight * scale);
+        var newWidth = (uint)(originalWidth * scale);
+        var newHeight = (uint)(originalHeight * scale);
 
         // Calculate padding to center the image in 640x640
-        var padX = (InputWidth - newWidth) / 2;
-        var padY = (InputHeight - newHeight) / 2;
+        var padX = (InputWidth - (int)newWidth) / 2;
+        var padY = (InputHeight - (int)newHeight) / 2;
 
         // Create letterboxed image (640x640 with black padding)
-        using var letterboxed = new Image<Rgb24>(InputWidth, InputHeight);
-
-        // Fill with black (padding)
-        letterboxed.Mutate(ctx => ctx.BackgroundColor(Color.Black));
+        using var letterboxed = new MagickImage(MagickColors.Black, (uint)InputWidth, (uint)InputHeight);
 
         // Resize original image preserving aspect ratio
-        image.Mutate(x => x.Resize(newWidth, newHeight));
+        using var resized = (MagickImage)image.Clone();
+        resized.Resize(newWidth, newHeight);
 
         // Copy resized image to center of letterboxed canvas
-        letterboxed.Mutate(ctx => ctx.DrawImage(image, new Point(padX, padY), 1f));
+        letterboxed.Composite(resized, padX, padY, CompositeOperator.Over);
+
+        // Ensure RGB format
+        letterboxed.ColorSpace = ColorSpace.sRGB;
 
         // Convert to CHW format (Channel, Height, Width) and normalize [0, 255] -> [0, 1]
         var input = new float[1 * 3 * InputHeight * InputWidth];
-        var index = 0;
+        var pixels = letterboxed.GetPixels();
 
+        var index = 0;
         for (int c = 0; c < 3; c++) // RGB channels
         {
             for (int y = 0; y < InputHeight; y++)
             {
                 for (int x = 0; x < InputWidth; x++)
                 {
-                    var pixel = letterboxed[x, y];
+                    var pixel = pixels.GetPixel(x, y);
                     input[index++] = c switch
                     {
-                        0 => pixel.R / 255f,
-                        1 => pixel.G / 255f,
-                        2 => pixel.B / 255f,
+                        0 => pixel.GetChannel(0) / 255f,  // R
+                        1 => pixel.GetChannel(1) / 255f,  // G
+                        2 => pixel.GetChannel(2) / 255f,  // B
                         _ => 0
                     };
                 }
