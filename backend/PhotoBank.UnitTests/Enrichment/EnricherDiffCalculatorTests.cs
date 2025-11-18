@@ -24,13 +24,14 @@ public class EnricherDiffCalculatorTests
     {
         var services = new ServiceCollection();
 
-        // Register mock enrichers
-        services.AddTransient<IEnricher, MockEnricherA>();
-        services.AddTransient<IEnricher, MockEnricherB>();
-        services.AddTransient<IEnricher, MockEnricherC>();
-        services.AddTransient<IEnricher, MockEnricherD>();
-        services.AddTransient<IEnricher, MockEnricherE>();
-        services.AddTransient<IEnricher, MockEnricherF>();
+        // Register mock enrichers under their concrete types
+        // (required for GetRequiredService to resolve them by Type)
+        services.AddTransient<MockEnricherA>();
+        services.AddTransient<MockEnricherB>();
+        services.AddTransient<MockEnricherC>();
+        services.AddTransient<MockEnricherD>();
+        services.AddTransient<MockEnricherE>();
+        services.AddTransient<MockEnricherF>();
 
         _serviceProvider = services.BuildServiceProvider();
         _calculator = new EnricherDiffCalculator(_serviceProvider);
