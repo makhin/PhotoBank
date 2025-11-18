@@ -63,10 +63,11 @@ public class EnricherDiffCalculatorTests
     public void CalculateMissingEnrichers_WhenAllNonDataProviderEnrichersApplied_ReturnsEmpty()
     {
         // Arrange: Use only non-data provider enrichers that are already applied
-        // Both Metadata and Face are already applied and are not data providers
+        // Preview, Metadata and Face are all already applied
+        // Even though Metadata depends on Preview, it's already applied so dependencies aren't checked
         var photo = new Photo
         {
-            EnrichedWithEnricherType = EnricherType.Metadata | EnricherType.Face
+            EnrichedWithEnricherType = EnricherType.Preview | EnricherType.Metadata | EnricherType.Face
         };
         var activeEnrichers = new[] { typeof(MockEnricherB), typeof(MockEnricherC) };
 
@@ -75,6 +76,7 @@ public class EnricherDiffCalculatorTests
 
         // Assert
         // Both enrichers are already applied and not data providers, so nothing to run
+        // (dependencies are not checked when enricher is already applied)
         result.Should().BeEmpty();
     }
 
@@ -322,7 +324,7 @@ public class EnricherDiffCalculatorTests
     private class MockEnricherB : IEnricher
     {
         public EnricherType EnricherType => EnricherType.Metadata;
-        public Type[] Dependencies => Array.Empty<Type>();
+        public Type[] Dependencies => new[] { typeof(MockEnricherA) }; // Depends on Preview
         public Task EnrichAsync(Photo photo, SourceDataDto path, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
     }
