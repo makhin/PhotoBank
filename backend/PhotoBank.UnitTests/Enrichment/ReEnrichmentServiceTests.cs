@@ -35,7 +35,10 @@ public class ReEnrichmentServiceTests
         _enricherRepositoryMock = new Mock<IRepository<Enricher>>();
         _enrichmentPipelineMock = new Mock<IEnrichmentPipeline>();
         _activeEnricherProviderMock = new Mock<IActiveEnricherProvider>();
-        _enricherDiffCalculatorMock = new Mock<EnricherDiffCalculator>(MockBehavior.Strict, null);
+
+        // Create a mock IServiceProvider to satisfy EnricherDiffCalculator constructor
+        var serviceProviderMock = new Mock<IServiceProvider>();
+        _enricherDiffCalculatorMock = new Mock<EnricherDiffCalculator>(MockBehavior.Strict, serviceProviderMock.Object);
 
         _service = new ReEnrichmentService(
             _photoRepositoryMock.Object,
