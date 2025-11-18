@@ -58,8 +58,8 @@ public class YoloOnnxService : IYoloOnnxService
         var originalWidth = image.Width;
         var originalHeight = image.Height;
 
-        // Prepare input
-        var input = PrepareInput(image);
+        // Prepare input with letterboxing (preserve aspect ratio + padding)
+        var (input, scale, padX, padY) = PrepareInputWithLetterbox(image);
 
         // Run prediction using thread-safe pool
         var output = _predictionEnginePool.Predict(input);
@@ -71,8 +71,8 @@ public class YoloOnnxService : IYoloOnnxService
         var format = DetectYoloFormat(output.Output);
         var detections = format switch
         {
-            YoloFormat.YoloV5 => ParseYoloV5Output(output.Output, originalWidth, originalHeight, confidenceThreshold),
-            YoloFormat.YoloV8 => ParseYoloV8Output(output.Output, originalWidth, originalHeight, confidenceThreshold),
+            YoloFormat.YoloV5 => ParseYoloV5Output(output.Output, originalWidth, originalHeight, scale, padX, padY, confidenceThreshold),
+            YoloFormat.YoloV8 => ParseYoloV8Output(output.Output, originalWidth, originalHeight, scale, padX, padY, confidenceThreshold),
             _ => throw new NotSupportedException($"Unsupported YOLO output format. Output array length: {output.Output.Length}")
         };
 
@@ -96,22 +96,49 @@ public class YoloOnnxService : IYoloOnnxService
         return YoloFormat.Unknown;
     }
 
-    private YoloImageInput PrepareInput(Image<Rgb24> image)
+    /// <summary>
+    /// Prepare input with letterboxing: resize preserving aspect ratio and add padding.
+    /// Returns the input tensor and letterbox parameters (scale, padX, padY) for coordinate conversion.
+    /// </summary>
+    private (YoloImageInput input, float scale, int padX, int padY) PrepareInputWithLetterbox(Image<Rgb24> image)
     {
-        // Resize image to 640x640
-        image.Mutate(x => x.Resize(InputWidth, InputHeight));
+        var originalWidth = image.Width;
+        var originalHeight = image.Height;
 
+        // Calculate scale to fit image into 640x640 while preserving aspect ratio
+        var scale = Math.Min((float)InputWidth / originalWidth, (float)InputHeight / originalHeight);
+
+        // Calculate new dimensions after scaling
+        var newWidth = (int)(originalWidth * scale);
+        var newHeight = (int)(originalHeight * scale);
+
+        // Calculate padding to center the image in 640x640
+        var padX = (InputWidth - newWidth) / 2;
+        var padY = (InputHeight - newHeight) / 2;
+
+        // Create letterboxed image (640x640 with black padding)
+        using var letterboxed = new Image<Rgb24>(InputWidth, InputHeight);
+
+        // Fill with black (padding)
+        letterboxed.Mutate(ctx => ctx.BackgroundColor(Color.Black));
+
+        // Resize original image preserving aspect ratio
+        image.Mutate(x => x.Resize(newWidth, newHeight));
+
+        // Copy resized image to center of letterboxed canvas
+        letterboxed.Mutate(ctx => ctx.DrawImage(image, new Point(padX, padY), 1f));
+
+        // Convert to CHW format (Channel, Height, Width) and normalize [0, 255] -> [0, 1]
         var input = new float[1 * 3 * InputHeight * InputWidth];
         var index = 0;
 
-        // Convert to CHW format (Channel, Height, Width) and normalize [0, 255] -> [0, 1]
         for (int c = 0; c < 3; c++) // RGB channels
         {
             for (int y = 0; y < InputHeight; y++)
             {
                 for (int x = 0; x < InputWidth; x++)
                 {
-                    var pixel = image[x, y];
+                    var pixel = letterboxed[x, y];
                     input[index++] = c switch
                     {
                         0 => pixel.R / 255f,
@@ -123,14 +150,14 @@ public class YoloOnnxService : IYoloOnnxService
             }
         }
 
-        return new YoloImageInput { Image = input };
+        return (new YoloImageInput { Image = input }, scale, padX, padY);
     }
 
     /// <summary>
     /// Parse YOLOv5 output: [1, 25200, 85] boxes-first layout
     /// Each prediction: [centerX, centerY, width, height, objectness, class0_score, ..., class79_score]
     /// </summary>
-    private List<DetectedObjectOnnx> ParseYoloV5Output(float[] output, int originalWidth, int originalHeight, float confidenceThreshold)
+    private List<DetectedObjectOnnx> ParseYoloV5Output(float[] output, int originalWidth, int originalHeight, float scale, int padX, int padY, float confidenceThreshold)
     {
         var detections = new List<DetectedObjectOnnx>();
 
@@ -171,12 +198,16 @@ public class YoloOnnxService : IYoloOnnxService
             if (confidence < confidenceThreshold || maxClassIndex < 0)
                 continue;
 
-            // Convert from center coordinates to corner coordinates
-            // and scale to original image size
-            var x = (centerX - width / 2) * originalWidth / InputWidth;
-            var y = (centerY - height / 2) * originalHeight / InputHeight;
-            var w = width * originalWidth / InputWidth;
-            var h = height * originalHeight / InputHeight;
+            // Convert from letterboxed coordinates (640x640) to original image coordinates
+            // Step 1: Remove padding offset to get coordinates in scaled image space
+            var centerXScaled = centerX - padX;
+            var centerYScaled = centerY - padY;
+
+            // Step 2: Scale back to original image dimensions
+            var x = (centerXScaled - width / 2) / scale;
+            var y = (centerYScaled - height / 2) / scale;
+            var w = width / scale;
+            var h = height / scale;
 
             // Clamp coordinates to image bounds to prevent negative dimensions
             var clampedX = Math.Max(0, Math.Min(x, originalWidth));
@@ -208,7 +239,7 @@ public class YoloOnnxService : IYoloOnnxService
     /// Parse YOLOv8 output: [1, 84, 8400] channels-first layout
     /// All predictions for each channel are grouped together
     /// </summary>
-    private List<DetectedObjectOnnx> ParseYoloV8Output(float[] output, int originalWidth, int originalHeight, float confidenceThreshold)
+    private List<DetectedObjectOnnx> ParseYoloV8Output(float[] output, int originalWidth, int originalHeight, float scale, int padX, int padY, float confidenceThreshold)
     {
         var detections = new List<DetectedObjectOnnx>();
 
@@ -245,12 +276,16 @@ public class YoloOnnxService : IYoloOnnxService
             if (maxClassScore < confidenceThreshold || maxClassIndex < 0)
                 continue;
 
-            // Convert from center coordinates to corner coordinates
-            // and scale to original image size
-            var x = (centerX - width / 2) * originalWidth / InputWidth;
-            var y = (centerY - height / 2) * originalHeight / InputHeight;
-            var w = width * originalWidth / InputWidth;
-            var h = height * originalHeight / InputHeight;
+            // Convert from letterboxed coordinates (640x640) to original image coordinates
+            // Step 1: Remove padding offset to get coordinates in scaled image space
+            var centerXScaled = centerX - padX;
+            var centerYScaled = centerY - padY;
+
+            // Step 2: Scale back to original image dimensions
+            var x = (centerXScaled - width / 2) / scale;
+            var y = (centerYScaled - height / 2) / scale;
+            var w = width / scale;
+            var h = height / scale;
 
             // Clamp coordinates to image bounds to prevent negative dimensions
             var clampedX = Math.Max(0, Math.Min(x, originalWidth));
