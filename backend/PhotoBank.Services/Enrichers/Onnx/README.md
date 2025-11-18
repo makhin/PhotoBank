@@ -121,6 +121,24 @@ NMS применяется только к bbox одного класса, ус�
 
 ## Архитектура и потокобезопасность
 
+### ONNX Model Loading
+
+Система загружает raw ONNX-файлы через ML.NET pipeline с использованием `ApplyOnnxModel`:
+
+```csharp
+// ML.NET создает pipeline с ONNX-моделью
+var pipeline = mlContext.Transforms.ApplyOnnxModel(
+    outputColumnName: "output0",
+    inputColumnName: "images",
+    modelFile: "/path/to/yolov8n.onnx");
+
+// Pipeline регистрируется в PredictionEnginePool
+services.AddPredictionEnginePool<YoloImageInput, YoloOutput>()
+    .FromFile(modelPath, modelLoader: ...);
+```
+
+**Важно**: Используйте напрямую `.onnx` файлы (YOLOv5/YOLOv8), **не** `.zip` файлы ML.NET моделей.
+
 ### Thread-Safety
 
 `YoloOnnxService` использует `PredictionEnginePool` из `Microsoft.Extensions.ML` для обеспечения потокобезопасности при параллельной обработке изображений:
@@ -128,6 +146,7 @@ NMS применяется только к bbox одного класса, ус�
 - **PredictionEnginePool** - управляет пулом `PredictionEngine` экземпляров
 - **Thread-safe** - безопасен для использования в многопоточных сценариях
 - **Optimal performance** - переиспользует экземпляры вместо создания новых для каждого запроса
+- **ONNX Integration** - автоматически оборачивает ONNX модель в ML.NET pipeline при загрузке
 
 ### Регистрация в DI
 

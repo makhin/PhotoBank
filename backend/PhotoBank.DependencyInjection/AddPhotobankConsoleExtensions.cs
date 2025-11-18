@@ -82,8 +82,25 @@ public static partial class ServiceCollectionExtensions
             if (File.Exists(yoloOptions.ModelPath))
             {
                 // Register PredictionEnginePool for thread-safe YOLO inference
+                // Build ML.NET pipeline with ONNX model (FromUri expects .zip, not .onnx)
                 services.AddPredictionEnginePool<YoloImageInput, YoloOutput>()
-                    .FromUri(modelUri: yoloOptions.ModelPath, period: null);
+                    .FromFile(
+                        filePath: yoloOptions.ModelPath,
+                        watchForChanges: false,
+                        modelLoader: (mlContext, path) =>
+                        {
+                            // Create input schema for YOLO (3 channels, 640x640 input)
+                            var dataView = mlContext.Data.LoadFromEnumerable(new List<YoloImageInput>());
+
+                            // Build pipeline with ONNX model
+                            var pipeline = mlContext.Transforms.ApplyOnnxModel(
+                                outputColumnName: "output0",
+                                inputColumnName: "images",
+                                modelFile: path);
+
+                            // Fit the pipeline to create the model
+                            return pipeline.Fit(dataView);
+                        });
 
                 // Register YoloOnnxService as transient (pool is singleton)
                 services.AddTransient<IYoloOnnxService, YoloOnnxService>();
