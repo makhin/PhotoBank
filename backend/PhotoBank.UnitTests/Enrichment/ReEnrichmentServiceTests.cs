@@ -415,6 +415,12 @@ public class ReEnrichmentServiceTests
         _enricherDiffCalculatorMock
             .Setup(c => c.CalculateMissingEnrichers(photo, activeEnrichers))
             .Returns(enrichersToRun);
+
+        // Setup ExpandWithDependencies to return the same enrichers (with dependencies already included in tests)
+        // The actual dependency expansion logic is tested in EnricherDiffCalculatorTests
+        _enricherDiffCalculatorMock
+            .Setup(c => c.ExpandWithDependencies(It.IsAny<IReadOnlyCollection<Type>>()))
+            .Returns<IReadOnlyCollection<Type>>(enrichers => enrichers);
     }
 
     private void SetupEnrichmentPipelineToSucceed()
