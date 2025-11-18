@@ -12,7 +12,11 @@
       "Bash(dotnet swagger tofile:*)",
       "Bash(powershell:*)",
       "Bash(dotnet tool list:*)",
-      "Read(//c/PhotoBank/**)"
+      "Read(//c/PhotoBank/**)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.nuget.org)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []

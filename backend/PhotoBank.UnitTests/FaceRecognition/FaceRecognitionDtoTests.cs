@@ -81,8 +81,8 @@ public class LocalDetectionDtoTests
         var bbox = new[] { 1f, 2f, 3f, 4f };
         var landmark = new[] { 5f, 6f, 7f, 8f, 9f, 10f };
 
-        var face1 = new LocalDetectedFace("face-1", 0.82f, bbox, landmark, 30.5f, "male");
-        var face2 = new LocalDetectedFace("face-1", 0.82f, bbox, landmark, 30.5f, "male");
+        var face1 = new LocalDetectedFace("face-1", 0.82f, bbox, landmark, 30, "male");
+        var face2 = new LocalDetectedFace("face-1", 0.82f, bbox, landmark, 30, "male");
 
         face1.Should().Be(face2);
         face1.GetHashCode().Should().Be(face2.GetHashCode());
@@ -96,7 +96,7 @@ public class LocalDetectionDtoTests
             0.82f,
             new[] { 1f, 2f, 3f, 4f },
             new[] { 5f, 6f, 7f, 8f, 9f, 10f },
-            30.5f,
+            30,
             "male");
 
         var json = JsonSerializer.Serialize(face, JsonOptions);
@@ -123,7 +123,7 @@ public class LocalDetectionDtoTests
     [Test]
     public void LocalDetectResponse_ShouldRoundtripThroughJson()
     {
-        var face = new LocalDetectedFace("face-1", 0.82f, new[] { 1f, 2f, 3f, 4f }, null, 30.5f, "male");
+        var face = new LocalDetectedFace("face-1", 0.82f, new[] { 1f, 2f, 3f, 4f }, null, 30, "male");
         var faces = new List<LocalDetectedFace> { face };
         var response = new LocalDetectResponse(faces);
 
@@ -139,7 +139,7 @@ public class LocalDetectionDtoTests
     {
         var faces = new List<LocalDetectedFace>
         {
-            new("face-1", 0.82f, new[] { 1f, 2f, 3f, 4f }, null, 30.5f, "male")
+            new("face-1", 0.82f, new[] { 1f, 2f, 3f, 4f }, null, 30, "male")
         };
 
         var response1 = new LocalDetectResponse(faces);

@@ -38,8 +38,8 @@ public sealed class ThumbnailEnricher : IEnricher
         var cropGeometry = new MagickGeometry(
             (int)cropResult.Area.X,
             (int)cropResult.Area.Y,
-            (int)cropResult.Area.Width,
-            (int)cropResult.Area.Height);
+            (uint)cropResult.Area.Width,
+            (uint)cropResult.Area.Height);
 
         magickImage.Crop(cropGeometry);
 

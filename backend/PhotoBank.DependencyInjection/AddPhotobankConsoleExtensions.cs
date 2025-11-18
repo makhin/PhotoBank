@@ -79,30 +79,31 @@ public static partial class ServiceCollectionExtensions
         var yoloOptions = configuration.GetSection(yoloOnnx).Get<YoloOnnxOptions>();
         if (yoloOptions?.Enabled == true && !string.IsNullOrWhiteSpace(yoloOptions.ModelPath))
         {
-            if (File.Exists(yoloOptions.ModelPath))
+            if (System.IO.File.Exists(yoloOptions.ModelPath))
             {
-                // Register PredictionEnginePool for thread-safe YOLO inference
-                // Build ML.NET pipeline with ONNX model (FromUri expects .zip, not .onnx)
-                services.AddPredictionEnginePool<YoloImageInput, YoloOutput>()
-                    .FromFile(
-                        filePath: yoloOptions.ModelPath,
-                        watchForChanges: false,
-                        modelLoader: (mlContext, path) =>
-                        {
-                            // Create input schema for YOLO (3 channels, 640x640 input)
-                            var dataView = mlContext.Data.LoadFromEnumerable(new List<YoloImageInput>());
+                // Register PredictionEngine for ONNX model
+                // Note: PredictionEngine.Predict() is thread-safe for concurrent read operations
+                services.AddSingleton(provider =>
+                {
+                    var mlContext = new MLContext();
 
-                            // Build pipeline with ONNX model
-                            var pipeline = mlContext.Transforms.ApplyOnnxModel(
-                                outputColumnName: "output0",
-                                inputColumnName: "images",
-                                modelFile: path);
+                    // Create input schema for YOLO (3 channels, 640x640 input)
+                    var dataView = mlContext.Data.LoadFromEnumerable(new List<YoloImageInput>());
 
-                            // Fit the pipeline to create the model
-                            return pipeline.Fit(dataView);
-                        });
+                    // Build pipeline with ONNX model
+                    var pipeline = mlContext.Transforms.ApplyOnnxModel(
+                        outputColumnName: "output0",
+                        inputColumnName: "images",
+                        modelFile: yoloOptions.ModelPath);
 
-                // Register YoloOnnxService as transient (pool is singleton)
+                    // Fit the pipeline to create the model
+                    var model = pipeline.Fit(dataView);
+
+                    // Create PredictionEngine (thread-safe for Predict operations)
+                    return mlContext.Model.CreatePredictionEngine<YoloImageInput, YoloOutput>(model);
+                });
+
+                // Register YoloOnnxService as transient (engine is singleton)
                 services.AddTransient<IYoloOnnxService, YoloOnnxService>();
 
                 // Register ONNX enricher as concrete type (required for EnricherTypeCatalog)

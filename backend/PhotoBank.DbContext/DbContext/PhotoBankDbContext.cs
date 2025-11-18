@@ -77,6 +77,14 @@ namespace PhotoBank.DbContext.DbContext
             // Enable pgvector extension for vector operations
             modelBuilder.HasPostgresExtension("vector");
 
+            // For in-memory database testing, ignore the Vector property since it's PostgreSQL-specific
+            // The in-memory provider doesn't support Pgvector types
+            if (Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
+            {
+                modelBuilder.Entity<Face>()
+                    .Ignore(f => f.Embedding);
+            }
+
             modelBuilder.Entity<ApplicationUser>(b =>
             {
                 b.HasIndex(u => u.TelegramUserId)

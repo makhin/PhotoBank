@@ -399,6 +399,7 @@ public class ServiceCollectionExtensionsTests
             typeof(TagEnricher),
             typeof(ObjectPropertyEnricher),
             typeof(AdultEnricher),
+            typeof(UnifiedFaceEnricher),
             typeof(FaceEnricher),
             typeof(FaceEnricherAws)
         };

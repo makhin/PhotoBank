@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.ML;
+using Microsoft.ML;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -27,11 +28,12 @@ internal enum YoloFormat
 }
 
 /// <summary>
-/// Thread-safe YOLO service using PredictionEnginePool
+/// Thread-safe YOLO service using PredictionEngine
+/// Note: PredictionEngine is thread-safe for read operations (Predict method)
 /// </summary>
 public class YoloOnnxService : IYoloOnnxService
 {
-    private readonly PredictionEnginePool<YoloImageInput, YoloOutput> _predictionEnginePool;
+    private readonly PredictionEngine<YoloImageInput, YoloOutput> _predictionEngine;
     private const int InputWidth = 640;
     private const int InputHeight = 640;
     private const int NumClasses = 80;
@@ -44,9 +46,9 @@ public class YoloOnnxService : IYoloOnnxService
     private const int YoloV8NumPredictions = 8400;
     private const int YoloV8OutputSize = 84; // 4 bbox + 80 classes (no objectness)
 
-    public YoloOnnxService(PredictionEnginePool<YoloImageInput, YoloOutput> predictionEnginePool)
+    public YoloOnnxService(PredictionEngine<YoloImageInput, YoloOutput> predictionEngine)
     {
-        _predictionEnginePool = predictionEnginePool ?? throw new ArgumentNullException(nameof(predictionEnginePool));
+        _predictionEngine = predictionEngine ?? throw new ArgumentNullException(nameof(predictionEngine));
     }
 
     public List<DetectedObjectOnnx> DetectObjects(byte[] imageData, float confidenceThreshold = 0.5f, float nmsThreshold = 0.45f)
@@ -61,8 +63,8 @@ public class YoloOnnxService : IYoloOnnxService
         // Prepare input with letterboxing (preserve aspect ratio + padding)
         var (input, scale, padX, padY) = PrepareInputWithLetterbox(image);
 
-        // Run prediction using thread-safe pool
-        var output = _predictionEnginePool.Predict(input);
+        // Run prediction using PredictionEngine (thread-safe for Predict operations)
+        var output = _predictionEngine.Predict(input);
 
         if (output?.Output == null || output.Output.Length == 0)
             return new List<DetectedObjectOnnx>();
