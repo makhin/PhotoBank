@@ -29,6 +29,8 @@ public class EnricherDiffCalculatorTests
         services.AddTransient<IEnricher, MockEnricherB>();
         services.AddTransient<IEnricher, MockEnricherC>();
         services.AddTransient<IEnricher, MockEnricherD>();
+        services.AddTransient<IEnricher, MockEnricherE>();
+        services.AddTransient<IEnricher, MockEnricherF>();
 
         _serviceProvider = services.BuildServiceProvider();
         _calculator = new EnricherDiffCalculator(_serviceProvider);
@@ -232,6 +234,36 @@ public class EnricherDiffCalculatorTests
         result.Should().BeEmpty();
     }
 
+    [Test]
+    public void CalculateMissingEnrichers_WithCyclicDependencies_ThrowsInvalidOperationException()
+    {
+        // Arrange: MockEnricherE depends on MockEnricherF, which depends on MockEnricherE (cycle)
+        var photo = new Photo { EnrichedWithEnricherType = EnricherType.None };
+        var activeEnrichers = new[] { typeof(MockEnricherE) };
+
+        // Act
+        Action act = () => _calculator.CalculateMissingEnrichers(photo, activeEnrichers);
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*cycle*");
+    }
+
+    [Test]
+    public void CalculateMissingEnrichers_WithCyclicDependencies_DirectCycle_ThrowsInvalidOperationException()
+    {
+        // Arrange: MockEnricherF also has a direct cycle
+        var photo = new Photo { EnrichedWithEnricherType = EnricherType.None };
+        var activeEnrichers = new[] { typeof(MockEnricherF) };
+
+        // Act
+        Action act = () => _calculator.CalculateMissingEnrichers(photo, activeEnrichers);
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*cycle*");
+    }
+
     // Mock enrichers for testing
     private class MockEnricherA : IEnricher
     {
@@ -261,6 +293,23 @@ public class EnricherDiffCalculatorTests
     {
         public EnricherType EnricherType => EnricherType.Tag;
         public Type[] Dependencies => new[] { typeof(MockEnricherC) };
+        public Task EnrichAsync(Photo photo, SourceDataDto path, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+    }
+
+    // Mock enrichers with cyclic dependencies for testing cycle detection
+    private class MockEnricherE : IEnricher
+    {
+        public EnricherType EnricherType => EnricherType.Color;
+        public Type[] Dependencies => new[] { typeof(MockEnricherF) }; // Depends on F
+        public Task EnrichAsync(Photo photo, SourceDataDto path, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+    }
+
+    private class MockEnricherF : IEnricher
+    {
+        public EnricherType EnricherType => EnricherType.Category;
+        public Type[] Dependencies => new[] { typeof(MockEnricherE) }; // Depends on E (creates cycle)
         public Task EnrichAsync(Photo photo, SourceDataDto path, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
     }

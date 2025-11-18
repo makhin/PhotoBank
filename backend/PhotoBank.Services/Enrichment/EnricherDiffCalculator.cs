@@ -35,11 +35,12 @@ public class EnricherDiffCalculator
 
         var alreadyApplied = photo.EnrichedWithEnricherType;
         var enrichersToRun = new HashSet<Type>();
+        var visitingStack = new HashSet<Type>();
 
         // For each active enricher, check if it needs to be run
         foreach (var enricherType in activeEnricherTypes)
         {
-            AddEnricherWithDependencies(enricherType, alreadyApplied, enrichersToRun);
+            AddEnricherWithDependencies(enricherType, alreadyApplied, enrichersToRun, visitingStack);
         }
 
         return enrichersToRun.ToArray();
@@ -48,7 +49,15 @@ public class EnricherDiffCalculator
     /// <summary>
     /// Recursively adds an enricher and its dependencies if they haven't been applied yet
     /// </summary>
-    private void AddEnricherWithDependencies(Type enricherType, EnricherType alreadyApplied, HashSet<Type> enrichersToRun)
+    /// <param name="enricherType">The enricher type to add</param>
+    /// <param name="alreadyApplied">Bitmask of already applied enrichers</param>
+    /// <param name="enrichersToRun">Set of enrichers that need to be run</param>
+    /// <param name="visitingStack">Set of types currently being visited (for cycle detection)</param>
+    private void AddEnricherWithDependencies(
+        Type enricherType,
+        EnricherType alreadyApplied,
+        HashSet<Type> enrichersToRun,
+        HashSet<Type> visitingStack)
     {
         // Get enricher instance to check its type and dependencies
         var enricher = (IEnricher)_serviceProvider.GetRequiredService(enricherType);
@@ -60,17 +69,40 @@ public class EnricherDiffCalculator
             return;
         }
 
-        // Check and add dependencies first
-        if (enricher.Dependencies != null)
+        // Check if already in the result set (dependencies already processed)
+        if (enrichersToRun.Contains(enricherType))
         {
-            foreach (var dependency in enricher.Dependencies)
-            {
-                AddEnricherWithDependencies(dependency, alreadyApplied, enrichersToRun);
-            }
+            return;
         }
 
-        // Add this enricher to the list
-        enrichersToRun.Add(enricherType);
+        // Check for cyclic dependency
+        if (visitingStack.Contains(enricherType))
+        {
+            throw new InvalidOperationException($"Dependency cycle detected around {enricherType.Name}");
+        }
+
+        // Mark as visiting
+        visitingStack.Add(enricherType);
+
+        try
+        {
+            // Check and add dependencies first
+            if (enricher.Dependencies != null)
+            {
+                foreach (var dependency in enricher.Dependencies)
+                {
+                    AddEnricherWithDependencies(dependency, alreadyApplied, enrichersToRun, visitingStack);
+                }
+            }
+
+            // Add this enricher to the list
+            enrichersToRun.Add(enricherType);
+        }
+        finally
+        {
+            // Remove from visiting stack
+            visitingStack.Remove(enricherType);
+        }
     }
 
     /// <summary>
