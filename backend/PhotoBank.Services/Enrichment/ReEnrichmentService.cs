@@ -1,0 +1,271 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using PhotoBank.DbContext.Models;
+using PhotoBank.Repositories;
+using PhotoBank.Services.Models;
+
+namespace PhotoBank.Services.Enrichment;
+
+/// <summary>
+/// Service for re-running enrichers on already processed photos
+/// </summary>
+public sealed class ReEnrichmentService : IReEnrichmentService
+{
+    private readonly IRepository<Photo> _photoRepository;
+    private readonly IRepository<Enricher> _enricherRepository;
+    private readonly IEnrichmentPipeline _enrichmentPipeline;
+    private readonly IActiveEnricherProvider _activeEnricherProvider;
+    private readonly EnricherDiffCalculator _enricherDiffCalculator;
+    private readonly ILogger<ReEnrichmentService> _logger;
+
+    public ReEnrichmentService(
+        IRepository<Photo> photoRepository,
+        IRepository<Enricher> enricherRepository,
+        IEnrichmentPipeline enrichmentPipeline,
+        IActiveEnricherProvider activeEnricherProvider,
+        EnricherDiffCalculator enricherDiffCalculator,
+        ILogger<ReEnrichmentService> logger)
+    {
+        _photoRepository = photoRepository ?? throw new ArgumentNullException(nameof(photoRepository));
+        _enricherRepository = enricherRepository ?? throw new ArgumentNullException(nameof(enricherRepository));
+        _enrichmentPipeline = enrichmentPipeline ?? throw new ArgumentNullException(nameof(enrichmentPipeline));
+        _activeEnricherProvider = activeEnricherProvider ?? throw new ArgumentNullException(nameof(activeEnricherProvider));
+        _enricherDiffCalculator = enricherDiffCalculator ?? throw new ArgumentNullException(nameof(enricherDiffCalculator));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    public async Task<bool> ReEnrichPhotoAsync(int photoId, IReadOnlyCollection<Type> enricherTypes, CancellationToken ct = default)
+    {
+        if (enricherTypes == null || !enricherTypes.Any())
+        {
+            _logger.LogWarning("No enricher types specified for re-enrichment of photo {PhotoId}", photoId);
+            return false;
+        }
+
+        var photo = await LoadPhotoWithDependenciesAsync(photoId, ct);
+        if (photo == null)
+        {
+            _logger.LogWarning("Photo {PhotoId} not found", photoId);
+            return false;
+        }
+
+        var absolutePath = GetPhotoAbsolutePath(photo);
+        if (absolutePath == null)
+        {
+            _logger.LogWarning("Photo {PhotoId} has no files or file path does not exist", photoId);
+            return false;
+        }
+
+        try
+        {
+            // Calculate which enrichers need to run (including dependencies)
+            var enrichersToRun = _enricherDiffCalculator.CalculateMissingEnrichers(photo, enricherTypes);
+
+            if (!enrichersToRun.Any())
+            {
+                _logger.LogInformation("No enrichers need to run for photo {PhotoId} (all already applied)", photoId);
+                return true;
+            }
+
+            _logger.LogInformation("Re-enriching photo {PhotoId} with {Count} enrichers: {Enrichers}",
+                photoId, enrichersToRun.Count, string.Join(", ", enrichersToRun.Select(t => t.Name)));
+
+            var sourceData = new SourceDataDto { AbsolutePath = absolutePath };
+
+            // Run enrichment pipeline with filtered enrichers
+            await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersToRun, ct);
+
+            // Update photo in database
+            await _photoRepository.UpdateAsync(photo);
+
+            _logger.LogInformation("Successfully re-enriched photo {PhotoId}", photoId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to re-enrich photo {PhotoId}", photoId);
+            throw;
+        }
+    }
+
+    public async Task<int> ReEnrichPhotosAsync(IReadOnlyCollection<int> photoIds, IReadOnlyCollection<Type> enricherTypes, CancellationToken ct = default)
+    {
+        if (photoIds == null || !photoIds.Any())
+        {
+            _logger.LogWarning("No photo IDs specified for re-enrichment");
+            return 0;
+        }
+
+        if (enricherTypes == null || !enricherTypes.Any())
+        {
+            _logger.LogWarning("No enricher types specified for re-enrichment");
+            return 0;
+        }
+
+        _logger.LogInformation("Starting batch re-enrichment for {Count} photos with enrichers: {Enrichers}",
+            photoIds.Count, string.Join(", ", enricherTypes.Select(t => t.Name)));
+
+        var successCount = 0;
+        foreach (var photoId in photoIds)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            try
+            {
+                var success = await ReEnrichPhotoAsync(photoId, enricherTypes, ct);
+                if (success)
+                {
+                    successCount++;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to re-enrich photo {PhotoId}, continuing with next photo", photoId);
+                // Continue with other photos
+            }
+        }
+
+        _logger.LogInformation("Batch re-enrichment completed: {SuccessCount}/{TotalCount} photos successfully processed",
+            successCount, photoIds.Count);
+
+        return successCount;
+    }
+
+    public async Task<bool> ReEnrichMissingAsync(int photoId, CancellationToken ct = default)
+    {
+        var photo = await LoadPhotoWithDependenciesAsync(photoId, ct);
+        if (photo == null)
+        {
+            _logger.LogWarning("Photo {PhotoId} not found", photoId);
+            return false;
+        }
+
+        var absolutePath = GetPhotoAbsolutePath(photo);
+        if (absolutePath == null)
+        {
+            _logger.LogWarning("Photo {PhotoId} has no files or file path does not exist", photoId);
+            return false;
+        }
+
+        // Get currently active enrichers from configuration
+        var activeEnrichers = _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
+        if (!activeEnrichers.Any())
+        {
+            _logger.LogWarning("No active enrichers configured");
+            return false;
+        }
+
+        try
+        {
+            // Calculate missing enrichers based on what's already applied
+            var missingEnrichers = _enricherDiffCalculator.CalculateMissingEnrichers(photo, activeEnrichers);
+
+            if (!missingEnrichers.Any())
+            {
+                _logger.LogDebug("Photo {PhotoId} has all active enrichers already applied", photoId);
+                return false; // Nothing to do
+            }
+
+            _logger.LogInformation("Re-enriching photo {PhotoId} with {Count} missing enrichers: {Enrichers}",
+                photoId, missingEnrichers.Count, string.Join(", ", missingEnrichers.Select(t => t.Name)));
+
+            var sourceData = new SourceDataDto { AbsolutePath = absolutePath };
+
+            // Run enrichment pipeline with missing enrichers
+            await _enrichmentPipeline.RunAsync(photo, sourceData, missingEnrichers, ct);
+
+            // Update photo in database
+            await _photoRepository.UpdateAsync(photo);
+
+            _logger.LogInformation("Successfully re-enriched photo {PhotoId} with missing enrichers", photoId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to re-enrich photo {PhotoId} with missing enrichers", photoId);
+            throw;
+        }
+    }
+
+    public async Task<int> ReEnrichMissingBatchAsync(IReadOnlyCollection<int> photoIds, CancellationToken ct = default)
+    {
+        if (photoIds == null || !photoIds.Any())
+        {
+            _logger.LogWarning("No photo IDs specified for missing enrichers re-enrichment");
+            return 0;
+        }
+
+        _logger.LogInformation("Starting batch re-enrichment for {Count} photos (missing enrichers only)", photoIds.Count);
+
+        var successCount = 0;
+        foreach (var photoId in photoIds)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            try
+            {
+                var success = await ReEnrichMissingAsync(photoId, ct);
+                if (success)
+                {
+                    successCount++;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to re-enrich photo {PhotoId} with missing enrichers, continuing with next photo", photoId);
+                // Continue with other photos
+            }
+        }
+
+        _logger.LogInformation("Batch re-enrichment (missing) completed: {SuccessCount}/{TotalCount} photos successfully processed",
+            successCount, photoIds.Count);
+
+        return successCount;
+    }
+
+    /// <summary>
+    /// Loads a photo with all necessary dependencies for re-enrichment
+    /// </summary>
+    private async Task<Photo> LoadPhotoWithDependenciesAsync(int photoId, CancellationToken ct)
+    {
+        return await _photoRepository.GetAll()
+            .Include(p => p.Storage)
+            .Include(p => p.Files)
+            .Include(p => p.Captions)
+            .Include(p => p.PhotoTags)
+                .ThenInclude(pt => pt.Tag)
+            .Include(p => p.PhotoCategories)
+                .ThenInclude(pc => pc.Category)
+            .Include(p => p.ObjectProperties)
+            .Include(p => p.Faces)
+            .FirstOrDefaultAsync(p => p.Id == photoId, ct);
+    }
+
+    /// <summary>
+    /// Gets the absolute file path for a photo
+    /// </summary>
+    private string GetPhotoAbsolutePath(Photo photo)
+    {
+        if (photo.Files == null || !photo.Files.Any())
+        {
+            return null;
+        }
+
+        var file = photo.Files.First();
+        var absolutePath = Path.Combine(photo.Storage.Folder, photo.RelativePath, file.Name);
+
+        if (!File.Exists(absolutePath))
+        {
+            _logger.LogWarning("Photo file does not exist: {Path}", absolutePath);
+            return null;
+        }
+
+        return absolutePath;
+    }
+}

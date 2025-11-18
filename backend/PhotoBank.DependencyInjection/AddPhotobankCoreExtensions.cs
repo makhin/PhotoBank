@@ -55,6 +55,8 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<ISearchReferenceDataService, SearchReferenceDataService>();
         services.AddSingleton<IActiveEnricherProvider, ActiveEnricherProvider>();
+        services.AddScoped<EnricherDiffCalculator>();
+        services.AddScoped<IReEnrichmentService, ReEnrichmentService>();
         services.AddPhotoEvents();
         if (configuration != null)
         {
