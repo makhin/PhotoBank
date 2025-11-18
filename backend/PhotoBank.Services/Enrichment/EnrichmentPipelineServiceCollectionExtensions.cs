@@ -45,5 +45,43 @@ public static class EnrichmentPipelineServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Registers enrichment infrastructure (pipeline, catalog, re-enrichment service) using already registered enrichers.
+    /// Call this AFTER registering enricher implementations with services.AddTransient&lt;IEnricher, YourEnricher&gt;().
+    /// </summary>
+    public static IServiceCollection AddEnrichmentInfrastructure(
+        this IServiceCollection services,
+        Action<EnrichmentPipelineOptions>? configure = null)
+    {
+        // Collect already registered enricher types from service descriptors
+        var enricherTypes = services
+            .Where(d => d.ServiceType == typeof(IEnricher) && d.ImplementationType is not null)
+            .Select(d => d.ImplementationType!)
+            .Distinct()
+            .ToArray();
+
+        if (enricherTypes.Length == 0)
+        {
+            throw new InvalidOperationException(
+                "No enrichers registered. Register enricher implementations before calling AddEnrichmentInfrastructure(). " +
+                "Example: services.AddTransient<IEnricher, MetadataEnricher>();");
+        }
+
+        // Configure pipeline options
+        if (configure != null)
+            services.Configure(configure);
+        else
+            services.Configure<EnrichmentPipelineOptions>(_ => { });
+
+        // Register enrichment infrastructure
+        services.AddSingleton(_ => new EnricherTypeCatalog(enricherTypes));
+        services.AddSingleton<IEnrichmentPipeline, EnrichmentPipeline>();
+        services.AddScoped<EnricherDiffCalculator>();
+        services.AddScoped<IReEnrichmentService, ReEnrichmentService>();
+
+        return services;
+    }
 }
+
 

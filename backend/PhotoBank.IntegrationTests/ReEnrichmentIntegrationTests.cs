@@ -51,17 +51,17 @@ public class ReEnrichmentIntegrationTests
         // Add PhotoBank core services
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddSingleton<IActiveEnricherProvider, ActiveEnricherProvider>();
-        services.AddScoped<EnricherDiffCalculator>();
-        services.AddScoped<IReEnrichmentService, ReEnrichmentService>();
 
-        // Add enrichment pipeline with test enrichers
-        services.AddEnrichmentPipeline(
-            opts =>
-            {
-                opts.LogTimings = false;
-                opts.ContinueOnError = true;
-            },
-            typeof(TestEnricherA).Assembly);
+        // Register test enrichers
+        services.AddTransient<IEnricher, TestEnricherA>();
+        services.AddTransient<IEnricher, TestEnricherB>();
+
+        // Add enrichment infrastructure (pipeline, catalog, re-enrichment service)
+        services.AddEnrichmentInfrastructure(opts =>
+        {
+            opts.LogTimings = false;
+            opts.ContinueOnError = true;
+        });
 
         _provider = services.BuildServiceProvider();
 
