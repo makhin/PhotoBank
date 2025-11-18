@@ -78,8 +78,11 @@ public sealed class ReEnrichmentService : IReEnrichmentService
 
             var sourceData = new SourceDataDto { AbsolutePath = absolutePath };
 
-            // Run enrichment pipeline with filtered enrichers
-            await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersToRun, ct);
+            // Expand with all dependencies for EnrichmentPipeline (needed for topological sorting)
+            var enrichersForPipeline = _enricherDiffCalculator.ExpandWithDependencies(enrichersToRun);
+
+            // Run enrichment pipeline with enrichers and all their dependencies
+            await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersForPipeline, ct);
 
             // Update photo in database
             await _photoRepository.UpdateAsync(photo);
@@ -177,8 +180,11 @@ public sealed class ReEnrichmentService : IReEnrichmentService
 
             var sourceData = new SourceDataDto { AbsolutePath = absolutePath };
 
-            // Run enrichment pipeline with missing enrichers
-            await _enrichmentPipeline.RunAsync(photo, sourceData, missingEnrichers, ct);
+            // Expand with all dependencies for EnrichmentPipeline (needed for topological sorting)
+            var enrichersForPipeline = _enricherDiffCalculator.ExpandWithDependencies(missingEnrichers);
+
+            // Run enrichment pipeline with missing enrichers and all their dependencies
+            await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersForPipeline, ct);
 
             // Update photo in database
             await _photoRepository.UpdateAsync(photo);

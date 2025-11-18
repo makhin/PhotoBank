@@ -131,6 +131,71 @@ public class EnricherDiffCalculator
     }
 
     /// <summary>
+    /// Expands a list of enricher types to include all their dependencies.
+    /// This is necessary for EnrichmentPipeline which requires all dependencies to be present in the list
+    /// for topological sorting, even if some dependencies are already applied.
+    /// </summary>
+    /// <param name="enrichers">Enricher types to expand</param>
+    /// <returns>Enricher types with all dependencies included</returns>
+    public IReadOnlyCollection<Type> ExpandWithDependencies(IReadOnlyCollection<Type> enrichers)
+    {
+        if (enrichers == null || !enrichers.Any())
+            return Array.Empty<Type>();
+
+        var result = new HashSet<Type>();
+        var visitingStack = new HashSet<Type>();
+
+        foreach (var enricherType in enrichers)
+        {
+            AddEnricherWithAllDependencies(enricherType, result, visitingStack);
+        }
+
+        return result.ToArray();
+    }
+
+    /// <summary>
+    /// Recursively adds an enricher and ALL its dependencies to the result set,
+    /// regardless of whether they've already been applied to a photo.
+    /// This ensures EnrichmentPipeline has all dependencies needed for topological sorting.
+    /// </summary>
+    private void AddEnricherWithAllDependencies(
+        Type enricherType,
+        HashSet<Type> result,
+        HashSet<Type> visitingStack)
+    {
+        // Already processed
+        if (result.Contains(enricherType))
+            return;
+
+        // Check for cyclic dependency
+        if (visitingStack.Contains(enricherType))
+            throw new InvalidOperationException($"Dependency cycle detected around {enricherType.Name}");
+
+        visitingStack.Add(enricherType);
+
+        try
+        {
+            var enricher = (IEnricher)_serviceProvider.GetRequiredService(enricherType);
+
+            // Recursively add all dependencies first
+            if (enricher.Dependencies != null)
+            {
+                foreach (var dependency in enricher.Dependencies)
+                {
+                    AddEnricherWithAllDependencies(dependency, result, visitingStack);
+                }
+            }
+
+            // Add this enricher to the result
+            result.Add(enricherType);
+        }
+        finally
+        {
+            visitingStack.Remove(enricherType);
+        }
+    }
+
+    /// <summary>
     /// Gets enricher types that have been applied to a photo
     /// </summary>
     /// <param name="photo">The photo to check</param>
