@@ -264,6 +264,47 @@ public class EnricherDiffCalculatorTests
             .WithMessage("*cycle*");
     }
 
+    [Test]
+    public void CalculateMissingEnrichers_DataProviderEnricherAlreadyApplied_StillIncludedAsDependency()
+    {
+        // Arrange: PreviewEnricher (data provider) already applied
+        // MockEnricherB (Metadata) depends on PreviewEnricher
+        // PreviewEnricher should be included even though already applied
+        var photo = new Photo
+        {
+            EnrichedWithEnricherType = EnricherType.Preview // PreviewEnricher already applied
+        };
+        var activeEnrichers = new[] { typeof(MockEnricherB) };
+
+        // Act
+        var result = _calculator.CalculateMissingEnrichers(photo, activeEnrichers);
+
+        // Assert
+        // Even though Preview was already applied, it should be included as a data provider
+        result.Should().Contain(typeof(MockEnricherA)); // PreviewEnricher
+        result.Should().Contain(typeof(MockEnricherB)); // MetadataEnricher
+    }
+
+    [Test]
+    public void CalculateMissingEnrichers_NonDataProviderEnricherAlreadyApplied_NotIncludedAsDependency()
+    {
+        // Arrange: MetadataEnricher (NOT a data provider) already applied
+        // MockEnricherC (Face) depends on both Preview and Metadata
+        var photo = new Photo
+        {
+            EnrichedWithEnricherType = EnricherType.Preview | EnricherType.Metadata
+        };
+        var activeEnrichers = new[] { typeof(MockEnricherC) };
+
+        // Act
+        var result = _calculator.CalculateMissingEnrichers(photo, activeEnrichers);
+
+        // Assert
+        result.Should().Contain(typeof(MockEnricherA)); // PreviewEnricher (data provider, always included)
+        result.Should().NotContain(typeof(MockEnricherB)); // MetadataEnricher (not data provider, skip)
+        result.Should().Contain(typeof(MockEnricherC)); // FaceEnricher
+    }
+
     // Mock enrichers for testing
     private class MockEnricherA : IEnricher
     {

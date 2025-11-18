@@ -14,6 +14,16 @@ public class EnricherDiffCalculator
 {
     private readonly IServiceProvider _serviceProvider;
 
+    /// <summary>
+    /// Enricher types that populate SourceDataDto fields (not persisted to database).
+    /// These must be re-run even if already applied, since their data is needed by dependent enrichers.
+    /// </summary>
+    private static readonly HashSet<EnricherType> DataProviderEnricherTypes = new()
+    {
+        EnricherType.Preview,  // Populates PreviewImage, OriginalImage in SourceDataDto
+        EnricherType.Analyze   // Populates ImageAnalysis in SourceDataDto
+    };
+
     public EnricherDiffCalculator(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
@@ -63,9 +73,12 @@ public class EnricherDiffCalculator
         var enricher = (IEnricher)_serviceProvider.GetRequiredService(enricherType);
 
         // Check if this enricher has already been applied
-        if ((alreadyApplied & enricher.EnricherType) != 0)
+        // Exception: Data provider enrichers must run even if already applied,
+        // because they populate SourceDataDto fields that aren't persisted to DB
+        var isDataProvider = DataProviderEnricherTypes.Contains(enricher.EnricherType);
+        if (!isDataProvider && (alreadyApplied & enricher.EnricherType) != 0)
         {
-            // Already applied, skip
+            // Already applied and not a data provider, skip
             return;
         }
 
