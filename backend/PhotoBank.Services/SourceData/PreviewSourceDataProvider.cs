@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using ImageMagick;
@@ -10,7 +9,9 @@ namespace PhotoBank.Services.SourceData;
 
 /// <summary>
 /// Provides source data from the preview image stored in S3/MinIO.
-/// Populates both PreviewImage and OriginalImage fields for enrichers that depend on them.
+/// Populates PreviewImage and OriginalImage for enrichers that work with image data
+/// (Face, Analyze, Tag, etc). Does not provide AbsolutePath - for file-based enrichers
+/// like MetadataEnricher, use OriginalFileSourceDataProvider instead.
 /// </summary>
 public class PreviewSourceDataProvider : ISourceDataProvider
 {
@@ -36,10 +37,6 @@ public class PreviewSourceDataProvider : ISourceDataProvider
         // Download preview from S3/MinIO
         var previewBytes = await _minioObjectService.GetObjectAsync(photo.S3Key_Preview);
 
-        // Create a temporary file for the preview (for enrichers that need AbsolutePath)
-        var tempPath = Path.Combine(Path.GetTempPath(), $"photobank_preview_{photo.Id}_{Guid.NewGuid()}.jpg");
-        await File.WriteAllBytesAsync(tempPath, previewBytes, cancellationToken);
-
         // Load the preview image into MagickImage for enrichers that need PreviewImage
         // Note: Since we're loading from preview (not original), both Original and Preview
         // will point to the same image data
@@ -47,7 +44,10 @@ public class PreviewSourceDataProvider : ISourceDataProvider
 
         var sourceData = new SourceDataDto
         {
-            AbsolutePath = tempPath,
+            // AbsolutePath not meaningful for preview provider - enrichers using preview
+            // (Face, Analyze, Tag, etc) work with PreviewImage/ImageAnalysis, not file paths.
+            // MetadataEnricher (which needs AbsolutePath) should use OriginalFileSourceDataProvider.
+            AbsolutePath = string.Empty,
             PreviewImage = previewImage,
             OriginalImage = previewImage.Clone() // Clone to avoid disposal issues
         };
