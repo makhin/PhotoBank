@@ -110,5 +110,18 @@ namespace PhotoBank.Services
 
             return CreateRectanglePolygon(x, y, width, height);
         }
+
+        /// <summary>
+        /// Creates a rectangle geometry from ONNX object detection coordinates
+        /// </summary>
+        /// <param name="x">X coordinate (top-left corner)</param>
+        /// <param name="y">Y coordinate (top-left corner)</param>
+        /// <param name="width">Width of the rectangle</param>
+        /// <param name="height">Height of the rectangle</param>
+        /// <returns>Rectangle geometry</returns>
+        public static Geometry CreateRectangleFromOnnxDetection(int x, int y, int width, int height)
+        {
+            return CreateRectanglePolygon(x, y, width, height);
+        }
     }
 }

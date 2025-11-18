@@ -1,18 +1,25 @@
 using System;
 using ApiKeyServiceClientCredentials = Microsoft.Azure.CognitiveServices.Vision.ComputerVision.ApiKeyServiceClientCredentials;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Amazon.Rekognition;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.ML;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.ML;
 using PhotoBank.AccessControl;
+using PhotoBank.DbContext.Models;
+using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.Enrichers.Onnx;
 using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.FaceRecognition;
 using PhotoBank.Services.Recognition;
@@ -25,9 +32,11 @@ public static partial class ServiceCollectionExtensions
     {
         const string computerVision = "ComputerVision";
         const string face = "Face";
+        const string yoloOnnx = "YoloOnnx";
 
         services.Configure<ComputerVisionOptions>(configuration.GetSection(computerVision));
         services.Configure<FaceApiOptions>(configuration.GetSection(face));
+        services.Configure<YoloOnnxOptions>(configuration.GetSection(yoloOnnx));
 
         services.AddSingleton<IComputerVisionClient, ComputerVisionClient>(provider =>
         {
@@ -64,7 +73,57 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<IEnricher, ColorEnricher>();
         services.AddTransient<IEnricher, CaptionEnricher>();
         services.AddTransient<IEnricher, TagEnricher>();
-        services.AddTransient<IEnricher, ObjectPropertyEnricher>();
+
+        // Object detection enrichers - use ONNX-based or Azure-based depending on configuration
+        // IMPORTANT: Must register as concrete type (not factory) so enricher appears in EnricherTypeCatalog
+        var yoloOptions = configuration.GetSection(yoloOnnx).Get<YoloOnnxOptions>();
+        if (yoloOptions?.Enabled == true && !string.IsNullOrWhiteSpace(yoloOptions.ModelPath))
+        {
+            if (File.Exists(yoloOptions.ModelPath))
+            {
+                // Register PredictionEnginePool for thread-safe YOLO inference
+                // Build ML.NET pipeline with ONNX model (FromUri expects .zip, not .onnx)
+                services.AddPredictionEnginePool<YoloImageInput, YoloOutput>()
+                    .FromFile(
+                        filePath: yoloOptions.ModelPath,
+                        watchForChanges: false,
+                        modelLoader: (mlContext, path) =>
+                        {
+                            // Create input schema for YOLO (3 channels, 640x640 input)
+                            var dataView = mlContext.Data.LoadFromEnumerable(new List<YoloImageInput>());
+
+                            // Build pipeline with ONNX model
+                            var pipeline = mlContext.Transforms.ApplyOnnxModel(
+                                outputColumnName: "output0",
+                                inputColumnName: "images",
+                                modelFile: path);
+
+                            // Fit the pipeline to create the model
+                            return pipeline.Fit(dataView);
+                        });
+
+                // Register YoloOnnxService as transient (pool is singleton)
+                services.AddTransient<IYoloOnnxService, YoloOnnxService>();
+
+                // Register ONNX enricher as concrete type (required for EnricherTypeCatalog)
+                services.AddTransient<IEnricher, OnnxObjectDetectionEnricher>();
+            }
+            else
+            {
+                // Model file not found - fallback to Azure Computer Vision
+                // Note: Cannot use ILogger here as it would require BuildServiceProvider() which leaks resources
+                Console.WriteLine($"WARNING: ONNX model file not found at: {yoloOptions.ModelPath}. Falling back to Azure Computer Vision.");
+
+                // Fallback to Azure-based object detection
+                services.AddTransient<IEnricher, ObjectPropertyEnricher>();
+            }
+        }
+        else
+        {
+            // ONNX not enabled, use Azure-based object detection
+            services.AddTransient<IEnricher, ObjectPropertyEnricher>();
+        }
+
         services.AddTransient<IEnricher, AdultEnricher>();
 
         // Face enrichers - use UnifiedFaceEnricher for new code
