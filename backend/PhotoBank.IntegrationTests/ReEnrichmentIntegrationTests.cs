@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DotNet.Testcontainers.Builders;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,14 +22,53 @@ namespace PhotoBank.IntegrationTests;
 [Category("Integration")]
 public class ReEnrichmentIntegrationTests
 {
+    private TestDatabaseFixture _dbFixture = null!;
     private ServiceProvider _provider = null!;
     private PhotoBankDbContext _context = null!;
     private string _testStorageFolder = null!;
     private string _testFilePath = null!;
 
+    [OneTimeSetUp]
+    public async Task OneTimeSetUp()
+    {
+        // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
+        try
+        {
+            _dbFixture = new TestDatabaseFixture();
+            await _dbFixture.InitializeAsync();
+        }
+        catch (ArgumentException ex) when (ex.Message.Contains("Docker endpoint"))
+        {
+            Assert.Ignore("Docker not available: " + ex.Message);
+        }
+        catch (DockerUnavailableException ex)
+        {
+            Assert.Ignore("Docker not available: " + ex.Message);
+        }
+    }
+
+    [OneTimeTearDown]
+    public async Task OneTimeTearDown()
+    {
+        if (_dbFixture != null)
+        {
+            await _dbFixture.DisposeAsync();
+        }
+    }
+
     [SetUp]
     public async Task SetUp()
     {
+        if (_dbFixture == null)
+        {
+            Assert.Ignore("Database fixture is not available.");
+        }
+
+        // Reset database to clean state
+        await _dbFixture.ResetDatabaseAsync();
+
         // Create test storage folder and file
         _testStorageFolder = Path.Combine(Path.GetTempPath(), "PhotoBankTest_" + Guid.NewGuid());
         Directory.CreateDirectory(_testStorageFolder);
@@ -39,8 +79,8 @@ public class ReEnrichmentIntegrationTests
         _testFilePath = Path.Combine(photoFolder, "test.jpg");
         await File.WriteAllBytesAsync(_testFilePath, new byte[] { 0xFF, 0xD8, 0xFF }); // Minimal JPEG header
 
-        // Setup in-memory database
-        _context = TestDbFactory.CreateInMemory();
+        // Create context connected to PostgreSQL Testcontainer
+        _context = _dbFixture.CreateContext();
 
         var services = new ServiceCollection();
         services.AddSingleton(_context);
