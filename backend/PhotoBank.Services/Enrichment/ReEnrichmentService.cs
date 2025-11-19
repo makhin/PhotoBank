@@ -244,10 +244,24 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             // The expanded list includes both missing enrichers AND their already-applied dependencies.
             var expandedEnrichers = _enricherDiffCalculator.ExpandWithDependencies(missingEnrichers);
 
-            // Filter to identify enrichers that are actually missing (not already applied).
-            // We only want to CLEAR data for enrichers that are missing, not for already-applied dependencies.
-            // Example: Photo has Metadata but missing UnifiedFaceEnricher (depends on Metadata).
-            // We should clear UnifiedFaceEnricher data but NOT Metadata data.
+            // Filter to identify enrichers that should have their data cleared.
+            // We clear data for enrichers that are:
+            //   1. In the missingEnrichers list (what the diff calculator wants to run), OR
+            //   2. Not already applied (flag not set)
+            //
+            // This respects the diff calculator's decision about data-provider enrichers (Preview/Analyze).
+            // Data providers may be returned by CalculateMissingEnrichers even if their flags are set,
+            // because they populate SourceDataDto fields that need regeneration after algorithm changes.
+            //
+            // Example 1: Photo has Metadata but missing UnifiedFaceEnricher (depends on Metadata).
+            //   - missingEnrichers = [UnifiedFaceEnricher]
+            //   - expandedEnrichers = [Metadata, UnifiedFaceEnricher]
+            //   - enrichersToClean = [UnifiedFaceEnricher] (Metadata already applied and not in missing list)
+            //
+            // Example 2: Photo has Preview already applied, but it's a data provider.
+            //   - missingEnrichers = [Preview] (returned by CalculateMissingEnrichers for re-run)
+            //   - expandedEnrichers = [Preview]
+            //   - enrichersToClean = [Preview] (in missing list, so clear and re-run)
             var enrichersToClean = expandedEnrichers
                 .Where(enricherType =>
                 {
@@ -257,15 +271,19 @@ public sealed class ReEnrichmentService : IReEnrichmentService
                         return false;
                     }
 
-                    // Only include if the enricher's flag is NOT already set
+                    var isInMissingList = missingEnrichers.Contains(enricherType);
                     var isAlreadyApplied = photo.EnrichedWithEnricherType.HasFlag(enricher.EnricherType);
-                    if (isAlreadyApplied)
+
+                    // Include if in missing list (diff calculator wants it) OR not already applied
+                    if (isAlreadyApplied && !isInMissingList)
                     {
                         _logger.LogDebug(
                             "Not clearing already-applied dependency {EnricherType} for photo {PhotoId}",
                             enricherType.Name, photoId);
+                        return false;
                     }
-                    return !isAlreadyApplied;
+
+                    return true;
                 })
                 .ToArray();
 
