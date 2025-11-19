@@ -19,6 +19,7 @@ namespace PhotoBank.Services.Enrichment;
 public sealed class ReEnrichmentService : IReEnrichmentService
 {
     private readonly PhotoBankDbContext _context;
+    private readonly IServiceProvider _serviceProvider;
     private readonly IRepository<Enricher> _enricherRepository;
     private readonly IEnrichmentPipeline _enrichmentPipeline;
     private readonly IActiveEnricherProvider _activeEnricherProvider;
@@ -27,6 +28,7 @@ public sealed class ReEnrichmentService : IReEnrichmentService
 
     public ReEnrichmentService(
         PhotoBankDbContext context,
+        IServiceProvider serviceProvider,
         IRepository<Enricher> enricherRepository,
         IEnrichmentPipeline enrichmentPipeline,
         IActiveEnricherProvider activeEnricherProvider,
@@ -34,6 +36,7 @@ public sealed class ReEnrichmentService : IReEnrichmentService
         ILogger<ReEnrichmentService> logger)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _enricherRepository = enricherRepository ?? throw new ArgumentNullException(nameof(enricherRepository));
         _enrichmentPipeline = enrichmentPipeline ?? throw new ArgumentNullException(nameof(enrichmentPipeline));
         _activeEnricherProvider = activeEnricherProvider ?? throw new ArgumentNullException(nameof(activeEnricherProvider));
@@ -73,6 +76,9 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             // Expand specified enrichers with all their dependencies for EnrichmentPipeline
             // This is a FORCE re-run, so we don't filter by already-applied status
             var enrichersForPipeline = _enricherDiffCalculator.ExpandWithDependencies(enricherTypes);
+
+            // Clear existing enrichment data for the enrichers being run to prevent duplicates
+            ClearEnrichmentData(photo, enrichersForPipeline);
 
             // Run enrichment pipeline with all specified enrichers and their dependencies
             await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersForPipeline, ct);
@@ -182,6 +188,9 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             // Expand with all dependencies for EnrichmentPipeline (needed for topological sorting)
             var enrichersForPipeline = _enricherDiffCalculator.ExpandWithDependencies(missingEnrichers);
 
+            // Clear existing enrichment data for the enrichers being run to prevent duplicates
+            ClearEnrichmentData(photo, enrichersForPipeline);
+
             // Run enrichment pipeline with missing enrichers and all their dependencies
             await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersForPipeline, ct);
 
@@ -257,6 +266,66 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             .Include(p => p.ObjectProperties)
             .Include(p => p.Faces)
             .FirstOrDefaultAsync(p => p.Id == photoId, ct);
+    }
+
+    /// <summary>
+    /// Clears existing enrichment data for the specified enricher types to prevent duplicates.
+    /// This method removes collection entries (captions, tags, faces, etc.) and clears the
+    /// corresponding flags from EnrichedWithEnricherType so enrichers can repopulate fresh data.
+    /// </summary>
+    private void ClearEnrichmentData(Photo photo, IReadOnlyCollection<Type> enricherTypes)
+    {
+        // Determine which EnricherType flags are being re-run by instantiating enrichers
+        var enricherTypeFlags = EnricherType.None;
+        foreach (var enricherType in enricherTypes)
+        {
+            var enricher = _serviceProvider.GetService(enricherType) as Services.Enrichers.IEnricher;
+            if (enricher != null)
+            {
+                enricherTypeFlags |= enricher.EnricherType;
+            }
+        }
+
+        _logger.LogDebug("Clearing enrichment data for photo {PhotoId} with flags: {Flags}",
+            photo.Id, enricherTypeFlags);
+
+        // Clear collections based on which enricher types are running
+        if (enricherTypeFlags.HasFlag(EnricherType.Caption) && photo.Captions != null)
+        {
+            _logger.LogDebug("Clearing {Count} captions for photo {PhotoId}", photo.Captions.Count, photo.Id);
+            photo.Captions.Clear();
+        }
+
+        if (enricherTypeFlags.HasFlag(EnricherType.Tag) && photo.PhotoTags != null)
+        {
+            _logger.LogDebug("Clearing {Count} photo tags for photo {PhotoId}", photo.PhotoTags.Count, photo.Id);
+            photo.PhotoTags.Clear();
+        }
+
+        if (enricherTypeFlags.HasFlag(EnricherType.Category) && photo.PhotoCategories != null)
+        {
+            _logger.LogDebug("Clearing {Count} categories for photo {PhotoId}", photo.PhotoCategories.Count, photo.Id);
+            photo.PhotoCategories.Clear();
+        }
+
+        if (enricherTypeFlags.HasFlag(EnricherType.Face) && photo.Faces != null)
+        {
+            _logger.LogDebug("Clearing {Count} faces for photo {PhotoId}", photo.Faces.Count, photo.Id);
+            photo.Faces.Clear();
+        }
+
+        if (enricherTypeFlags.HasFlag(EnricherType.ObjectProperty) && photo.ObjectProperties != null)
+        {
+            _logger.LogDebug("Clearing {Count} object properties for photo {PhotoId}", photo.ObjectProperties.Count, photo.Id);
+            photo.ObjectProperties.Clear();
+        }
+
+        // Clear the enricher type flags for the types being re-run
+        // The pipeline will set them back after successful enrichment
+        photo.EnrichedWithEnricherType &= ~enricherTypeFlags;
+
+        _logger.LogDebug("Updated EnrichedWithEnricherType for photo {PhotoId}: {Flags}",
+            photo.Id, photo.EnrichedWithEnricherType);
     }
 
     /// <summary>
