@@ -49,7 +49,10 @@ public class ReEnrichmentIntegrationTests
 
         // Add PhotoBank core services
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-        services.AddSingleton<IActiveEnricherProvider, ActiveEnricherProvider>();
+
+        // Use test-specific active enricher provider that can resolve test enrichers
+        services.AddSingleton<IActiveEnricherProvider>(new TestActiveEnricherProvider(
+            new[] { typeof(TestEnricherA), typeof(TestEnricherB) }));
 
         // Register test enrichers
         services.AddTransient<IEnricher, TestEnricherA>();
@@ -341,5 +344,37 @@ public class TestEnricherB : Services.Enrichers.IEnricher
     {
         // Simulate enrichment
         return Task.CompletedTask;
+    }
+}
+
+// Test-specific active enricher provider that can resolve enrichers from test assembly
+internal class TestActiveEnricherProvider : Services.Enrichment.IActiveEnricherProvider
+{
+    private readonly IReadOnlyDictionary<string, Type> _enricherTypeMap;
+
+    public TestActiveEnricherProvider(IEnumerable<Type> enricherTypes)
+    {
+        _enricherTypeMap = enricherTypes.ToDictionary(t => t.Name, t => t, StringComparer.OrdinalIgnoreCase);
+    }
+
+    public IReadOnlyCollection<Type> GetActiveEnricherTypes(IRepository<Enricher> repository)
+    {
+        var activeNames = repository.GetAll()
+            .Where(e => e.IsActive)
+            .Select(e => e.Name)
+            .ToArray();
+
+        var result = new List<Type>(activeNames.Length);
+        foreach (var name in activeNames)
+        {
+            if (!_enricherTypeMap.TryGetValue(name, out var type))
+            {
+                throw new NotSupportedException($"Test enricher '{name}' not found. Available: {string.Join(", ", _enricherTypeMap.Keys)}");
+            }
+
+            result.Add(type);
+        }
+
+        return result;
     }
 }
