@@ -420,6 +420,110 @@ public class ReEnrichmentServiceTests
             Times.Never);
     }
 
+    [Test]
+    public async Task ReEnrichPhotosAsync_WhenCancelled_PropagatesCancellation()
+    {
+        // Arrange
+        var photoIds = new[] { 1, 2, 3 };
+        var enricherTypes = new[] { typeof(MockEnricherA) };
+        var cts = new CancellationTokenSource();
+
+        // Setup first photo to succeed
+        var photo1 = CreateTestPhoto(1);
+        SetupPhotoRepositoryToReturn(1, photo1);
+
+        // Setup enrichment pipeline to cancel after first photo
+        var callCount = 0;
+        _enrichmentPipelineMock
+            .Setup(p => p.RunAsync(
+                It.IsAny<Photo>(),
+                It.IsAny<SourceDataDto>(),
+                It.IsAny<IReadOnlyCollection<Type>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                callCount++;
+                if (callCount == 1)
+                {
+                    return Task.CompletedTask; // First call succeeds
+                }
+                // Second call triggers cancellation
+                cts.Cancel();
+                throw new OperationCanceledException(cts.Token);
+            });
+
+        _enricherDiffCalculatorMock
+            .Setup(c => c.ExpandWithDependencies(enricherTypes))
+            .Returns(enricherTypes);
+
+        SetupPhotoRepositoryUpdateToSucceed();
+
+        // Setup second photo
+        var photo2 = CreateTestPhoto(2);
+        SetupPhotoRepositoryToReturn(2, photo2);
+
+        // Act & Assert
+        var act = async () => await _service.ReEnrichPhotosAsync(photoIds, enricherTypes, cts.Token);
+        await act.Should().ThrowAsync<OperationCanceledException>();
+
+        // Verify processing stopped after cancellation (no third photo processed)
+        _enrichmentPipelineMock.Verify(
+            p => p.RunAsync(It.IsAny<Photo>(), It.IsAny<SourceDataDto>(), It.IsAny<IReadOnlyCollection<Type>>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2)); // Only first and second photos
+    }
+
+    [Test]
+    public async Task ReEnrichMissingBatchAsync_WhenCancelled_PropagatesCancellation()
+    {
+        // Arrange
+        var photoIds = new[] { 1, 2, 3 };
+        var activeEnrichers = new[] { typeof(MockEnricherA) };
+        var cts = new CancellationTokenSource();
+
+        SetupActiveEnricherProvider(activeEnrichers);
+
+        // Setup first photo to succeed
+        var photo1 = CreateTestPhoto(1);
+        SetupPhotoRepositoryToReturn(1, photo1);
+        SetupDiffCalculatorToReturnEnrichers(photo1, activeEnrichers, activeEnrichers);
+
+        // Setup enrichment pipeline to cancel after first photo
+        var callCount = 0;
+        _enrichmentPipelineMock
+            .Setup(p => p.RunAsync(
+                It.IsAny<Photo>(),
+                It.IsAny<SourceDataDto>(),
+                It.IsAny<IReadOnlyCollection<Type>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                callCount++;
+                if (callCount == 1)
+                {
+                    return Task.CompletedTask; // First call succeeds
+                }
+                // Second call triggers cancellation
+                cts.Cancel();
+                throw new OperationCanceledException(cts.Token);
+            });
+
+        SetupPhotoRepositoryUpdateToSucceed();
+
+        // Setup second photo
+        var photo2 = CreateTestPhoto(2);
+        SetupPhotoRepositoryToReturn(2, photo2);
+        SetupDiffCalculatorToReturnEnrichers(photo2, activeEnrichers, activeEnrichers);
+
+        // Act & Assert
+        var act = async () => await _service.ReEnrichMissingBatchAsync(photoIds, cts.Token);
+        await act.Should().ThrowAsync<OperationCanceledException>();
+
+        // Verify processing stopped after cancellation (no third photo processed)
+        _enrichmentPipelineMock.Verify(
+            p => p.RunAsync(It.IsAny<Photo>(), It.IsAny<SourceDataDto>(), It.IsAny<IReadOnlyCollection<Type>>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2)); // Only first and second photos
+    }
+
     // Helper methods
     private Photo CreateTestPhoto(int id)
     {

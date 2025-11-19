@@ -120,6 +120,11 @@ public sealed class ReEnrichmentService : IReEnrichmentService
                     successCount++;
                 }
             }
+            catch (OperationCanceledException)
+            {
+                // Propagate cancellation to caller
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to re-enrich photo {PhotoId}, continuing with next photo", photoId);
@@ -214,6 +219,11 @@ public sealed class ReEnrichmentService : IReEnrichmentService
                 {
                     successCount++;
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                // Propagate cancellation to caller
+                throw;
             }
             catch (Exception ex)
             {
