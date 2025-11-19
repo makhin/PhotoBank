@@ -69,6 +69,13 @@ public static class EnrichmentPipelineServiceCollectionExtensions
                 "Example: services.AddTransient<IEnricher, MetadataEnricher>();");
         }
 
+        // Register each concrete enricher type so EnrichmentPipeline and EnricherDiffCalculator
+        // can resolve them by concrete type via provider.GetRequiredService(enricherType)
+        foreach (var enricherType in enricherTypes)
+        {
+            services.AddTransient(enricherType);
+        }
+
         // Configure pipeline options
         if (configure != null)
             services.Configure(configure);
