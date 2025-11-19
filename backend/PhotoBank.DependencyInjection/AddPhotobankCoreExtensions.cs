@@ -5,6 +5,7 @@ using Minio;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
+using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Internal;
 using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Photos;
@@ -55,6 +56,18 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<ISearchReferenceDataService, SearchReferenceDataService>();
         services.AddSingleton<IActiveEnricherProvider, ActiveEnricherProvider>();
+
+        // Register core enrichers needed by both API and Console
+        // These are minimal enrichers that don't require heavy dependencies (Azure/AWS clients)
+        services.AddTransient<IEnricher, MetadataEnricher>();
+        services.AddTransient<IEnricher, ThumbnailEnricher>();
+        services.AddTransient<IEnricher, PreviewEnricher>();
+        services.AddTransient<IImageMetadataReaderWrapper, ImageMetadataReaderWrapper>();
+
+        // Register enrichment infrastructure (pipeline, catalog, re-enrichment service)
+        // This allows API to use IReEnrichmentService and related services
+        services.AddEnrichmentInfrastructure();
+
         services.AddPhotoEvents();
         if (configuration != null)
         {
