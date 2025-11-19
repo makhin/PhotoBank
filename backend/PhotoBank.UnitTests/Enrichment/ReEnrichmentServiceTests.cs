@@ -381,7 +381,7 @@ public class ReEnrichmentServiceTests
     }
 
     [Test]
-    public async Task ReEnrichMissingAsync_WithAlreadyAppliedDependencies_OnlyRunsMissingEnrichers()
+    public async Task ReEnrichMissingAsync_WithAlreadyAppliedDependencies_DoesNotClearDependencyData()
     {
         // Arrange
         var photoId = 1;
@@ -397,7 +397,7 @@ public class ReEnrichmentServiceTests
         // MockEnricherB is missing (depends on MockEnricherA which is already applied)
         var missingEnrichers = new[] { typeof(MockEnricherB) };
 
-        // ExpandWithDependencies would normally return both A and B for topological sorting
+        // ExpandWithDependencies returns both A and B for topological sorting
         var expandedEnrichers = new[] { typeof(MockEnricherA), typeof(MockEnricherB) };
 
         SetupActiveEnricherProvider(activeEnrichers);
@@ -418,21 +418,24 @@ public class ReEnrichmentServiceTests
         // Assert
         result.Should().BeTrue();
 
-        // Verify pipeline only ran MockEnricherB (not MockEnricherA which was already applied)
+        // Verify pipeline received FULL expanded list (including already-applied dependency A).
+        // This is required for TopoSort to work correctly - it needs all dependencies present.
         _enrichmentPipelineMock.Verify(
             p => p.RunAsync(
                 It.IsAny<Photo>(),
                 It.IsAny<SourceDataDto>(),
                 It.Is<IReadOnlyCollection<Type>>(types =>
-                    types.Count == 1 &&
-                    types.Contains(typeof(MockEnricherB)) &&
-                    !types.Contains(typeof(MockEnricherA))),
+                    types.Count == 2 &&
+                    types.Contains(typeof(MockEnricherA)) &&
+                    types.Contains(typeof(MockEnricherB))),
                 It.IsAny<CancellationToken>()),
             Times.Once);
 
-        // Verify photo's Preview flag is still set (MockEnricherA was not cleared/re-run)
+        // Verify photo's Preview flag is still set (MockEnricherA data was not cleared).
+        // The pipeline re-runs MockEnricherA but since we didn't clear its data/flag, it's idempotent.
         var updatedPhoto = await _context.Photos.FirstOrDefaultAsync(p => p.Id == photoId);
         updatedPhoto.EnrichedWithEnricherType.Should().HaveFlag(EnricherType.Preview);
+        updatedPhoto.EnrichedWithEnricherType.Should().HaveFlag(EnricherType.Metadata); // MockEnricherB was applied
     }
 
     [Test]
