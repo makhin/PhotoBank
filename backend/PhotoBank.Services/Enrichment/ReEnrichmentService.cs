@@ -135,6 +135,12 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to re-enrich photo {PhotoId}, continuing with next photo", photoId);
+
+                // Clear change tracker to discard any tracked changes from the failed photo.
+                // Without this, cleared enrichment data (from ClearEnrichmentData) would be
+                // persisted when the next successful photo calls SaveChangesAsync, causing data loss.
+                _context.ChangeTracker.Clear();
+
                 // Continue with other photos
             }
         }
@@ -238,6 +244,12 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to re-enrich photo {PhotoId} with missing enrichers, continuing with next photo", photoId);
+
+                // Clear change tracker to discard any tracked changes from the failed photo.
+                // Without this, cleared enrichment data (from ClearEnrichmentData) would be
+                // persisted when the next successful photo calls SaveChangesAsync, causing data loss.
+                _context.ChangeTracker.Clear();
+
                 // Continue with other photos
             }
         }

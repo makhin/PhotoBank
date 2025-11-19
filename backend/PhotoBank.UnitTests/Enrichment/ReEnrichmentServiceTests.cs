@@ -524,6 +524,66 @@ public class ReEnrichmentServiceTests
             Times.Exactly(2)); // Only first and second photos
     }
 
+    [Test]
+    public async Task ReEnrichPhotosAsync_WhenPhotoFailsAfterClearing_ChangeTrackerClearedForNextPhoto()
+    {
+        // Arrange
+        var photoIds = new[] { 1, 2 };
+        var enricherTypes = new[] { typeof(MockEnricherA) };
+
+        // Setup first photo with some existing captions to clear
+        var photo1 = CreateTestPhoto(1);
+        photo1.Captions = new List<Caption>
+        {
+            new Caption { Id = 1, PhotoId = 1, Text = "Existing caption" }
+        };
+        await SeedPhotoAsync(photo1);
+
+        // Setup second photo to succeed
+        var photo2 = CreateTestPhoto(2);
+        await SeedPhotoAsync(photo2);
+
+        _enricherDiffCalculatorMock
+            .Setup(c => c.ExpandWithDependencies(enricherTypes))
+            .Returns(enricherTypes);
+
+        // Setup pipeline to fail on first photo (after clearing) but succeed on second
+        var callCount = 0;
+        _enrichmentPipelineMock
+            .Setup(p => p.RunAsync(
+                It.IsAny<Photo>(),
+                It.IsAny<SourceDataDto>(),
+                It.IsAny<IReadOnlyCollection<Type>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                callCount++;
+                if (callCount == 1)
+                {
+                    // First photo fails - throw exception after ClearEnrichmentData has run
+                    throw new InvalidOperationException("Simulated enrichment failure");
+                }
+                // Second photo succeeds
+                return Task.CompletedTask;
+            });
+
+        // Act
+        var result = await _service.ReEnrichPhotosAsync(photoIds, enricherTypes);
+
+        // Assert
+        result.Should().Be(1); // Only second photo succeeded
+
+        // Verify change tracker was cleared - no tracked entities should remain
+        _context.ChangeTracker.Entries().Should().BeEmpty();
+
+        // Verify the failed photo's caption was NOT deleted from database
+        _context.ChangeTracker.Clear(); // Clear to reload from DB
+        var photo1FromDb = await _context.Photos.Include(p => p.Captions).FirstOrDefaultAsync(p => p.Id == 1);
+        photo1FromDb.Should().NotBeNull();
+        photo1FromDb.Captions.Should().HaveCount(1); // Original caption still exists
+        photo1FromDb.Captions.First().Text.Should().Be("Existing caption");
+    }
+
     // Helper methods
     private Photo CreateTestPhoto(int id)
     {
