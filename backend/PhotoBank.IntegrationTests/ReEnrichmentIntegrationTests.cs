@@ -14,7 +14,6 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.DependencyInjection;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichment;
-using PhotoBank.UnitTests;
 
 namespace PhotoBank.IntegrationTests;
 
