@@ -84,17 +84,33 @@ public class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
 
     public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
     {
-        var resultType = typeof(TResult).GetGenericArguments()[0];
-        var executionResult = typeof(IQueryProvider)
-            .GetMethod(
-                name: nameof(IQueryProvider.Execute),
-                genericParameterCount: 1,
-                types: new[] { typeof(Expression) })
-            ?.MakeGenericMethod(resultType)
-            .Invoke(this, new[] { expression });
+        var resultType = typeof(TResult);
 
-        return (TResult)typeof(Task).GetMethod(nameof(Task.FromResult))
-            ?.MakeGenericMethod(resultType)
-            .Invoke(null, new[] { executionResult });
+        // Check if TResult is a generic type (e.g., Task<int>)
+        if (resultType.IsGenericType)
+        {
+            // Extract the inner type from Task<T>
+            var innerType = resultType.GetGenericArguments()[0];
+
+            // Execute the query to get the result
+            var executionResult = typeof(IQueryProvider)
+                .GetMethod(
+                    name: nameof(IQueryProvider.Execute),
+                    genericParameterCount: 1,
+                    types: new[] { typeof(Expression) })
+                ?.MakeGenericMethod(innerType)
+                .Invoke(this, new[] { expression });
+
+            // Wrap in Task.FromResult
+            return (TResult)typeof(Task).GetMethod(nameof(Task.FromResult))
+                ?.MakeGenericMethod(innerType)
+                .Invoke(null, new[] { executionResult });
+        }
+        else
+        {
+            // TResult is a scalar type (e.g., int for CountAsync, bool for AnyAsync)
+            // Execute directly and return the result
+            return _inner.Execute<TResult>(expression);
+        }
     }
 }
