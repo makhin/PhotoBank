@@ -64,30 +64,23 @@ public sealed class ReEnrichmentService : IReEnrichmentService
 
         try
         {
-            // Calculate which enrichers need to run (including dependencies)
-            var enrichersToRun = _enricherDiffCalculator.CalculateMissingEnrichers(photo, enricherTypes);
-
-            if (!enrichersToRun.Any())
-            {
-                _logger.LogInformation("No enrichers need to run for photo {PhotoId} (all already applied)", photoId);
-                return true;
-            }
-
-            _logger.LogInformation("Re-enriching photo {PhotoId} with {Count} enrichers: {Enrichers}",
-                photoId, enrichersToRun.Count, string.Join(", ", enrichersToRun.Select(t => t.Name)));
+            _logger.LogInformation("Force re-running {Count} enrichers for photo {PhotoId}: {Enrichers}",
+                enricherTypes.Count, photoId, string.Join(", ", enricherTypes.Select(t => t.Name)));
 
             var sourceData = new SourceDataDto { AbsolutePath = absolutePath };
 
-            // Expand with all dependencies for EnrichmentPipeline (needed for topological sorting)
-            var enrichersForPipeline = _enricherDiffCalculator.ExpandWithDependencies(enrichersToRun);
+            // Expand specified enrichers with all their dependencies for EnrichmentPipeline
+            // This is a FORCE re-run, so we don't filter by already-applied status
+            var enrichersForPipeline = _enricherDiffCalculator.ExpandWithDependencies(enricherTypes);
 
-            // Run enrichment pipeline with enrichers and all their dependencies
+            // Run enrichment pipeline with all specified enrichers and their dependencies
             await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersForPipeline, ct);
 
             // Update photo in database
             await _photoRepository.UpdateAsync(photo);
 
-            _logger.LogInformation("Successfully re-enriched photo {PhotoId}", photoId);
+            _logger.LogInformation("Successfully re-enriched photo {PhotoId} with {Count} enrichers",
+                photoId, enrichersForPipeline.Count);
             return true;
         }
         catch (Exception ex)

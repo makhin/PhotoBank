@@ -50,7 +50,7 @@ public class ReEnrichmentServiceTests
     }
 
     [Test]
-    public async Task ReEnrichPhotoAsync_WithValidPhoto_RunsEnrichersAndUpdatesPhoto()
+    public async Task ReEnrichPhotoAsync_WithValidPhoto_ForceRunsEnrichersAndUpdatesPhoto()
     {
         // Arrange
         var photoId = 1;
@@ -58,7 +58,12 @@ public class ReEnrichmentServiceTests
         var photo = CreateTestPhoto(photoId);
 
         SetupPhotoRepositoryToReturn(photoId, photo);
-        SetupDiffCalculatorToReturnEnrichers(photo, enricherTypes, enricherTypes);
+
+        // Setup ExpandWithDependencies for force re-run (no CalculateMissingEnrichers)
+        _enricherDiffCalculatorMock
+            .Setup(c => c.ExpandWithDependencies(enricherTypes))
+            .Returns(enricherTypes);
+
         SetupEnrichmentPipelineToSucceed();
         SetupPhotoRepositoryUpdateToSucceed();
 
@@ -75,6 +80,51 @@ public class ReEnrichmentServiceTests
                 It.IsAny<CancellationToken>()),
             Times.Once);
         _photoRepositoryMock.Verify(p => p.UpdateAsync(photo), Times.Once);
+
+        // Verify CalculateMissingEnrichers was NOT called (force re-run)
+        _enricherDiffCalculatorMock.Verify(
+            c => c.CalculateMissingEnrichers(It.IsAny<Photo>(), It.IsAny<IReadOnlyCollection<Type>>()),
+            Times.Never);
+    }
+
+    [Test]
+    public async Task ReEnrichPhotoAsync_WithAlreadyAppliedEnrichers_ForceRunsThem()
+    {
+        // Arrange
+        var photoId = 1;
+        var enricherTypes = new[] { typeof(MockEnricherA) };
+        var photo = CreateTestPhoto(photoId);
+
+        // Mark enricher as already applied
+        photo.EnrichedWithEnricherType = EnricherType.Metadata;
+
+        SetupPhotoRepositoryToReturn(photoId, photo);
+
+        // Setup ExpandWithDependencies - should return enrichers regardless of applied status
+        _enricherDiffCalculatorMock
+            .Setup(c => c.ExpandWithDependencies(enricherTypes))
+            .Returns(enricherTypes);
+
+        SetupEnrichmentPipelineToSucceed();
+        SetupPhotoRepositoryUpdateToSucceed();
+
+        // Act
+        var result = await _service.ReEnrichPhotoAsync(photoId, enricherTypes);
+
+        // Assert - enricher should run even though it's already applied
+        result.Should().BeTrue();
+        _enrichmentPipelineMock.Verify(
+            p => p.RunAsync(
+                It.IsAny<Photo>(),
+                It.IsAny<SourceDataDto>(),
+                It.Is<IReadOnlyCollection<Type>>(types => types.Contains(typeof(MockEnricherA))),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        // Verify CalculateMissingEnrichers was NOT called (bypasses already-applied check)
+        _enricherDiffCalculatorMock.Verify(
+            c => c.CalculateMissingEnrichers(It.IsAny<Photo>(), It.IsAny<IReadOnlyCollection<Type>>()),
+            Times.Never);
     }
 
     [Test]
@@ -135,27 +185,6 @@ public class ReEnrichmentServiceTests
     }
 
     [Test]
-    public async Task ReEnrichPhotoAsync_WhenNoEnrichersNeedToRun_ReturnsTrue()
-    {
-        // Arrange
-        var photoId = 1;
-        var enricherTypes = new[] { typeof(MockEnricherA) };
-        var photo = CreateTestPhoto(photoId);
-
-        SetupPhotoRepositoryToReturn(photoId, photo);
-        SetupDiffCalculatorToReturnEnrichers(photo, enricherTypes, Array.Empty<Type>());
-
-        // Act
-        var result = await _service.ReEnrichPhotoAsync(photoId, enricherTypes);
-
-        // Assert
-        result.Should().BeTrue();
-        _enrichmentPipelineMock.Verify(
-            p => p.RunAsync(It.IsAny<Photo>(), It.IsAny<SourceDataDto>(), It.IsAny<IReadOnlyCollection<Type>>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    [Test]
     public async Task ReEnrichPhotosAsync_WithMultiplePhotos_ProcessesAll()
     {
         // Arrange
@@ -166,8 +195,12 @@ public class ReEnrichmentServiceTests
         {
             var photo = CreateTestPhoto(id);
             SetupPhotoRepositoryToReturn(id, photo);
-            SetupDiffCalculatorToReturnEnrichers(photo, enricherTypes, enricherTypes);
         }
+
+        // Setup ExpandWithDependencies for force re-run
+        _enricherDiffCalculatorMock
+            .Setup(c => c.ExpandWithDependencies(enricherTypes))
+            .Returns(enricherTypes);
 
         SetupEnrichmentPipelineToSucceed();
         SetupPhotoRepositoryUpdateToSucceed();
@@ -192,7 +225,6 @@ public class ReEnrichmentServiceTests
         // Photo 1 - success
         var photo1 = CreateTestPhoto(1);
         SetupPhotoRepositoryToReturn(1, photo1);
-        SetupDiffCalculatorToReturnEnrichers(photo1, enricherTypes, enricherTypes);
 
         // Photo 2 - not found
         SetupPhotoRepositoryToReturn(2, null);
@@ -200,7 +232,11 @@ public class ReEnrichmentServiceTests
         // Photo 3 - success
         var photo3 = CreateTestPhoto(3);
         SetupPhotoRepositoryToReturn(3, photo3);
-        SetupDiffCalculatorToReturnEnrichers(photo3, enricherTypes, enricherTypes);
+
+        // Setup ExpandWithDependencies for force re-run
+        _enricherDiffCalculatorMock
+            .Setup(c => c.ExpandWithDependencies(enricherTypes))
+            .Returns(enricherTypes);
 
         SetupEnrichmentPipelineToSucceed();
         SetupPhotoRepositoryUpdateToSucceed();
