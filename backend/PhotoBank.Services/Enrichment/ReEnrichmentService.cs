@@ -175,10 +175,32 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             return false;
         }
 
+        // Filter to only include enrichers that are actually registered in the DI container
+        // In API, only core enrichers (Metadata, Thumbnail, Preview) are registered
+        // In Console, all enrichers are registered
+        var registeredEnrichers = activeEnrichers
+            .Where(enricherType =>
+            {
+                var isRegistered = _serviceProvider.GetService(enricherType) != null;
+                if (!isRegistered)
+                {
+                    _logger.LogDebug("Skipping unregistered enricher {EnricherType} for photo {PhotoId}",
+                        enricherType.Name, photoId);
+                }
+                return isRegistered;
+            })
+            .ToArray();
+
+        if (!registeredEnrichers.Any())
+        {
+            _logger.LogWarning("No registered enrichers found among active enrichers for photo {PhotoId}", photoId);
+            return false;
+        }
+
         try
         {
             // Calculate missing enrichers based on what's already applied
-            var missingEnrichers = _enricherDiffCalculator.CalculateMissingEnrichers(photo, activeEnrichers);
+            var missingEnrichers = _enricherDiffCalculator.CalculateMissingEnrichers(photo, registeredEnrichers);
 
             if (!missingEnrichers.Any())
             {
