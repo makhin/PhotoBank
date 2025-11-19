@@ -381,6 +381,61 @@ public class ReEnrichmentServiceTests
     }
 
     [Test]
+    public async Task ReEnrichMissingAsync_WithAlreadyAppliedDependencies_OnlyRunsMissingEnrichers()
+    {
+        // Arrange
+        var photoId = 1;
+        var photo = CreateTestPhoto(photoId);
+
+        // Photo already has MockEnricherA applied (Preview flag)
+        photo.EnrichedWithEnricherType = EnricherType.Preview;
+
+        await SeedPhotoAsync(photo);
+
+        var activeEnrichers = new[] { typeof(MockEnricherA), typeof(MockEnricherB) };
+
+        // MockEnricherB is missing (depends on MockEnricherA which is already applied)
+        var missingEnrichers = new[] { typeof(MockEnricherB) };
+
+        // ExpandWithDependencies would normally return both A and B for topological sorting
+        var expandedEnrichers = new[] { typeof(MockEnricherA), typeof(MockEnricherB) };
+
+        SetupActiveEnricherProvider(activeEnrichers);
+
+        _enricherDiffCalculatorMock
+            .Setup(c => c.CalculateMissingEnrichers(It.IsAny<Photo>(), activeEnrichers))
+            .Returns(missingEnrichers);
+
+        _enricherDiffCalculatorMock
+            .Setup(c => c.ExpandWithDependencies(missingEnrichers))
+            .Returns(expandedEnrichers);
+
+        SetupEnrichmentPipelineToSucceed();
+
+        // Act
+        var result = await _service.ReEnrichMissingAsync(photoId);
+
+        // Assert
+        result.Should().BeTrue();
+
+        // Verify pipeline only ran MockEnricherB (not MockEnricherA which was already applied)
+        _enrichmentPipelineMock.Verify(
+            p => p.RunAsync(
+                It.IsAny<Photo>(),
+                It.IsAny<SourceDataDto>(),
+                It.Is<IReadOnlyCollection<Type>>(types =>
+                    types.Count == 1 &&
+                    types.Contains(typeof(MockEnricherB)) &&
+                    !types.Contains(typeof(MockEnricherA))),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        // Verify photo's Preview flag is still set (MockEnricherA was not cleared/re-run)
+        var updatedPhoto = await _context.Photos.FirstOrDefaultAsync(p => p.Id == photoId);
+        updatedPhoto.EnrichedWithEnricherType.Should().HaveFlag(EnricherType.Preview);
+    }
+
+    [Test]
     public async Task ReEnrichMissingBatchAsync_WithMultiplePhotos_ProcessesAll()
     {
         // Arrange

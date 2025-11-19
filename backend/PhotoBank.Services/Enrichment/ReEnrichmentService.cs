@@ -240,12 +240,43 @@ public sealed class ReEnrichmentService : IReEnrichmentService
 
             var sourceData = new SourceDataDto { AbsolutePath = absolutePath };
 
-            // Expand with all dependencies for EnrichmentPipeline (needed for topological sorting)
-            var enrichersForPipeline = _enricherDiffCalculator.ExpandWithDependencies(missingEnrichers);
+            // Expand with all dependencies for topological sorting
+            var expandedEnrichers = _enricherDiffCalculator.ExpandWithDependencies(missingEnrichers);
+
+            // Filter to only include enrichers that are actually missing (not already applied).
+            // This prevents clearing/re-running dependencies that are already present.
+            // Example: Photo has Metadata but missing UnifiedFaceEnricher (depends on Metadata).
+            // Without filtering, we'd clear Metadata fields even though Metadata wasn't missing.
+            var enrichersToRun = expandedEnrichers
+                .Where(enricherType =>
+                {
+                    var enricher = _serviceProvider.GetService(enricherType) as Services.Enrichers.IEnricher;
+                    if (enricher == null)
+                    {
+                        return false;
+                    }
+
+                    // Only include if the enricher's flag is NOT already set
+                    var isAlreadyApplied = photo.EnrichedWithEnricherType.HasFlag(enricher.EnricherType);
+                    if (isAlreadyApplied)
+                    {
+                        _logger.LogDebug(
+                            "Skipping already-applied dependency {EnricherType} for photo {PhotoId}",
+                            enricherType.Name, photoId);
+                    }
+                    return !isAlreadyApplied;
+                })
+                .ToArray();
+
+            if (!enrichersToRun.Any())
+            {
+                _logger.LogDebug("Photo {PhotoId} has all required enrichers (including dependencies) already applied", photoId);
+                return false;
+            }
 
             // Determine which EnricherType flags we expect to be set after successful enrichment
             var expectedFlags = EnricherType.None;
-            foreach (var enricherType in enrichersForPipeline)
+            foreach (var enricherType in enrichersToRun)
             {
                 var enricher = _serviceProvider.GetService(enricherType) as Services.Enrichers.IEnricher;
                 if (enricher != null)
@@ -254,11 +285,13 @@ public sealed class ReEnrichmentService : IReEnrichmentService
                 }
             }
 
-            // Clear existing enrichment data for the enrichers being run to prevent duplicates
-            ClearEnrichmentData(photo, enrichersForPipeline);
+            // Clear existing enrichment data ONLY for enrichers that are actually missing
+            // (not their already-applied dependencies)
+            ClearEnrichmentData(photo, enrichersToRun);
 
-            // Run enrichment pipeline with missing enrichers and all their dependencies
-            await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersForPipeline, ct);
+            // Run enrichment pipeline with missing enrichers (dependencies that are already
+            // applied have been filtered out, so we only run what's actually missing)
+            await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersToRun, ct);
 
             // Verify all enrichers succeeded by checking if they set their flags
             // With ContinueOnError=true, the pipeline swallows exceptions but enrichers won't set flags if they fail
