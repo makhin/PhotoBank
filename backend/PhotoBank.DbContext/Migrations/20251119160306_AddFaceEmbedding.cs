@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 using Pgvector;
 
 #nullable disable
@@ -12,7 +12,9 @@ namespace PhotoBank.DbContext.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterDatabase()
-                .Annotation("Npgsql:PostgresExtension:vector", ",,");
+                .Annotation("Npgsql:PostgresExtension:postgis", ",,")
+                .Annotation("Npgsql:PostgresExtension:vector", ",,")
+                .OldAnnotation("Npgsql:PostgresExtension:postgis", ",,");
 
             migrationBuilder.AddColumn<Vector>(
                 name: "Embedding",
@@ -27,6 +29,11 @@ namespace PhotoBank.DbContext.Migrations
             migrationBuilder.DropColumn(
                 name: "Embedding",
                 table: "Faces");
+
+            migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:PostgresExtension:postgis", ",,")
+                .OldAnnotation("Npgsql:PostgresExtension:postgis", ",,")
+                .OldAnnotation("Npgsql:PostgresExtension:vector", ",,");
         }
     }
 }

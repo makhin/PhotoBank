@@ -14,6 +14,7 @@ namespace PhotoBank.ServerBlazorApp
             {
                 b.MigrationsAssembly(typeof(PhotoBankDbContext).GetTypeInfo().Assembly.GetName().Name);
                 b.UseNetTopologySuite();
+                b.UseVector();
             });
 
             return new PhotoBankDbContext(optionsBuilder.Options);

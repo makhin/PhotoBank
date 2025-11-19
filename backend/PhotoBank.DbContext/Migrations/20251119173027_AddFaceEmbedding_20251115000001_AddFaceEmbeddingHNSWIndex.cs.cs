@@ -1,11 +1,11 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace PhotoBank.DbContext.Migrations
 {
     /// <inheritdoc />
-    public partial class AddFaceEmbeddingHNSWIndex : Migration
+    public partial class AddFaceEmbedding_20251115000001_AddFaceEmbeddingHNSWIndexcs : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

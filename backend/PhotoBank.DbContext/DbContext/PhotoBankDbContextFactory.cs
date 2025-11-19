@@ -25,6 +25,7 @@ namespace PhotoBank.DbContext.DbContext
                 npgsql.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 npgsql.MigrationsHistoryTable("__EFMigrationsHistory_Photo");
                 npgsql.UseNetTopologySuite();
+                npgsql.UseVector();
             });
             return new PhotoBankDbContext(optionsBuilder.Options);
         }

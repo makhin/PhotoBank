@@ -42,6 +42,7 @@ public static partial class ServiceCollectionExtensions
                     {
                         npgsql.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                         npgsql.UseNetTopologySuite();
+                        npgsql.UseVector();
                         npgsql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(5), null);
                         npgsql.CommandTimeout(60);
                         npgsql.MaxBatchSize(128);
@@ -72,6 +73,7 @@ public static partial class ServiceCollectionExtensions
                     {
                         npgsql.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                         npgsql.UseNetTopologySuite();
+                        npgsql.UseVector();
                         npgsql.CommandTimeout(120);
                     });
             });
