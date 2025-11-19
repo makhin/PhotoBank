@@ -77,11 +77,38 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             // This is a FORCE re-run, so we don't filter by already-applied status
             var enrichersForPipeline = _enricherDiffCalculator.ExpandWithDependencies(enricherTypes);
 
+            // Determine which EnricherType flags we expect to be set after successful enrichment
+            var expectedFlags = EnricherType.None;
+            foreach (var enricherType in enrichersForPipeline)
+            {
+                var enricher = _serviceProvider.GetService(enricherType) as Services.Enrichers.IEnricher;
+                if (enricher != null)
+                {
+                    expectedFlags |= enricher.EnricherType;
+                }
+            }
+
             // Clear existing enrichment data for the enrichers being run to prevent duplicates
             ClearEnrichmentData(photo, enrichersForPipeline);
 
             // Run enrichment pipeline with all specified enrichers and their dependencies
             await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersForPipeline, ct);
+
+            // Verify all enrichers succeeded by checking if they set their flags
+            // With ContinueOnError=true, the pipeline swallows exceptions but enrichers won't set flags if they fail
+            var actualFlags = photo.EnrichedWithEnricherType & expectedFlags;
+            if (actualFlags != expectedFlags)
+            {
+                var missingFlags = expectedFlags & ~actualFlags;
+                _logger.LogWarning(
+                    "Some enrichers failed for photo {PhotoId} (expected flags: {Expected}, actual: {Actual}, missing: {Missing}). " +
+                    "Not saving cleared state to prevent data loss.",
+                    photoId, expectedFlags, actualFlags, missingFlags);
+
+                // Clear change tracker to discard all changes (including cleared data)
+                _context.ChangeTracker.Clear();
+                return false;
+            }
 
             // Save changes - EF Core's change tracker will only update modified properties
             await _context.SaveChangesAsync(ct);
@@ -216,11 +243,38 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             // Expand with all dependencies for EnrichmentPipeline (needed for topological sorting)
             var enrichersForPipeline = _enricherDiffCalculator.ExpandWithDependencies(missingEnrichers);
 
+            // Determine which EnricherType flags we expect to be set after successful enrichment
+            var expectedFlags = EnricherType.None;
+            foreach (var enricherType in enrichersForPipeline)
+            {
+                var enricher = _serviceProvider.GetService(enricherType) as Services.Enrichers.IEnricher;
+                if (enricher != null)
+                {
+                    expectedFlags |= enricher.EnricherType;
+                }
+            }
+
             // Clear existing enrichment data for the enrichers being run to prevent duplicates
             ClearEnrichmentData(photo, enrichersForPipeline);
 
             // Run enrichment pipeline with missing enrichers and all their dependencies
             await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersForPipeline, ct);
+
+            // Verify all enrichers succeeded by checking if they set their flags
+            // With ContinueOnError=true, the pipeline swallows exceptions but enrichers won't set flags if they fail
+            var actualFlags = photo.EnrichedWithEnricherType & expectedFlags;
+            if (actualFlags != expectedFlags)
+            {
+                var missingFlags = expectedFlags & ~actualFlags;
+                _logger.LogWarning(
+                    "Some enrichers failed for photo {PhotoId} (expected flags: {Expected}, actual: {Actual}, missing: {Missing}). " +
+                    "Not saving cleared state to prevent data loss.",
+                    photoId, expectedFlags, actualFlags, missingFlags);
+
+                // Clear change tracker to discard all changes (including cleared data)
+                _context.ChangeTracker.Clear();
+                return false;
+            }
 
             // Save changes - EF Core's change tracker will only update modified properties
             await _context.SaveChangesAsync(ct);
