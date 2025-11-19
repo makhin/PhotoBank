@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Models;
@@ -17,7 +18,7 @@ namespace PhotoBank.Services.Enrichment;
 /// </summary>
 public sealed class ReEnrichmentService : IReEnrichmentService
 {
-    private readonly IRepository<Photo> _photoRepository;
+    private readonly PhotoBankDbContext _context;
     private readonly IRepository<Enricher> _enricherRepository;
     private readonly IEnrichmentPipeline _enrichmentPipeline;
     private readonly IActiveEnricherProvider _activeEnricherProvider;
@@ -25,14 +26,14 @@ public sealed class ReEnrichmentService : IReEnrichmentService
     private readonly ILogger<ReEnrichmentService> _logger;
 
     public ReEnrichmentService(
-        IRepository<Photo> photoRepository,
+        PhotoBankDbContext context,
         IRepository<Enricher> enricherRepository,
         IEnrichmentPipeline enrichmentPipeline,
         IActiveEnricherProvider activeEnricherProvider,
         EnricherDiffCalculator enricherDiffCalculator,
         ILogger<ReEnrichmentService> logger)
     {
-        _photoRepository = photoRepository ?? throw new ArgumentNullException(nameof(photoRepository));
+        _context = context ?? throw new ArgumentNullException(nameof(context));
         _enricherRepository = enricherRepository ?? throw new ArgumentNullException(nameof(enricherRepository));
         _enrichmentPipeline = enrichmentPipeline ?? throw new ArgumentNullException(nameof(enrichmentPipeline));
         _activeEnricherProvider = activeEnricherProvider ?? throw new ArgumentNullException(nameof(activeEnricherProvider));
@@ -76,8 +77,8 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             // Run enrichment pipeline with all specified enrichers and their dependencies
             await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersForPipeline, ct);
 
-            // Update photo in database
-            await _photoRepository.UpdateAsync(photo);
+            // Save changes - EF Core's change tracker will only update modified properties
+            await _context.SaveChangesAsync(ct);
 
             _logger.LogInformation("Successfully re-enriched photo {PhotoId} with {Count} enrichers",
                 photoId, enrichersForPipeline.Count);
@@ -184,8 +185,8 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             // Run enrichment pipeline with missing enrichers and all their dependencies
             await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersForPipeline, ct);
 
-            // Update photo in database
-            await _photoRepository.UpdateAsync(photo);
+            // Save changes - EF Core's change tracker will only update modified properties
+            await _context.SaveChangesAsync(ct);
 
             _logger.LogInformation("Successfully re-enriched photo {PhotoId} with missing enrichers", photoId);
             return true;
@@ -239,11 +240,13 @@ public sealed class ReEnrichmentService : IReEnrichmentService
     }
 
     /// <summary>
-    /// Loads a photo with all necessary dependencies for re-enrichment
+    /// Loads a photo with all necessary dependencies for re-enrichment.
+    /// Uses tracked query so EF Core's change tracker only updates modified properties,
+    /// avoiding the lost update problem where concurrent user edits would be overwritten.
     /// </summary>
     private async Task<Photo> LoadPhotoWithDependenciesAsync(int photoId, CancellationToken ct)
     {
-        return await _photoRepository.GetAll()
+        return await _context.Photos
             .Include(p => p.Storage)
             .Include(p => p.Files)
             .Include(p => p.Captions)
