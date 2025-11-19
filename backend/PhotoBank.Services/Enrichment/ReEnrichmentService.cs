@@ -332,6 +332,41 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             photo.ObjectProperties.Clear();
         }
 
+        // Clear metadata fields when Metadata enricher is being re-run
+        // Without this, MetadataEnricher's ??= operators would leave existing values untouched
+        if (enricherTypeFlags.HasFlag(EnricherType.Metadata))
+        {
+            _logger.LogDebug("Clearing metadata fields for photo {PhotoId}", photo.Id);
+            photo.Height = null;
+            photo.Width = null;
+            photo.Orientation = null;
+            photo.TakenDate = null;
+            photo.Location = null;
+            photo.ImageHash = null;
+            // Note: TakenMonth and TakenDay have private setters and are derived from TakenDate
+        }
+
+        // Clear adult content fields when Adult enricher is being re-run
+        if (enricherTypeFlags.HasFlag(EnricherType.Adult))
+        {
+            _logger.LogDebug("Clearing adult content fields for photo {PhotoId}", photo.Id);
+            photo.IsAdultContent = false;
+            photo.AdultScore = 0;
+            photo.IsRacyContent = false;
+            photo.RacyScore = 0;
+        }
+
+        // Clear color fields when Color enricher is being re-run
+        if (enricherTypeFlags.HasFlag(EnricherType.Color))
+        {
+            _logger.LogDebug("Clearing color fields for photo {PhotoId}", photo.Id);
+            photo.AccentColor = null;
+            photo.DominantColorBackground = null;
+            photo.DominantColorForeground = null;
+            photo.DominantColors = null;
+            photo.IsBW = false;
+        }
+
         // Clear the enricher type flags for the types being re-run
         // The pipeline will set them back after successful enrichment
         photo.EnrichedWithEnricherType &= ~enricherTypeFlags;
