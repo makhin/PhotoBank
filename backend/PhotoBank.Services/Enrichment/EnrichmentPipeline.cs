@@ -35,7 +35,7 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
         RunAsync(photo, source, _enricherTypes, ct);
 
     public Task RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, CancellationToken ct = default) =>
-        RunAsync(photo, source, enrichers, serviceProvider: null, ct);
+        RunAsync(photo, source, enrichers, null, ct);
 
     public async Task RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, IServiceProvider? serviceProvider, CancellationToken ct = default)
     {
