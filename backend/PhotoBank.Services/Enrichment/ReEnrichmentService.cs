@@ -66,6 +66,12 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             return false;
         }
 
+        // Start a database transaction to ensure atomicity.
+        // Enrichers (like BaseLookupEnricher) may call repository.InsertAsync() which commits immediately.
+        // Without a transaction, if flag verification fails, photo changes are rolled back via ChangeTracker.Clear()
+        // but lookup entities (tags/categories) inserted by enrichers remain orphaned in the database.
+        await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+
         try
         {
             _logger.LogInformation("Force re-running {Count} enrichers for photo {PhotoId}: {Enrichers}",
@@ -102,16 +108,18 @@ public sealed class ReEnrichmentService : IReEnrichmentService
                 var missingFlags = expectedFlags & ~actualFlags;
                 _logger.LogWarning(
                     "Some enrichers failed for photo {PhotoId} (expected flags: {Expected}, actual: {Actual}, missing: {Missing}). " +
-                    "Not saving cleared state to prevent data loss.",
+                    "Rolling back transaction to prevent partial state.",
                     photoId, expectedFlags, actualFlags, missingFlags);
 
-                // Clear change tracker to discard all changes (including cleared data)
-                _context.ChangeTracker.Clear();
+                // Rollback transaction - this discards all changes including lookup entities
+                // inserted by enrichers (tags/categories via BaseLookupEnricher.InsertAsync)
+                await transaction.RollbackAsync(ct);
                 return false;
             }
 
-            // Save changes - EF Core's change tracker will only update modified properties
+            // Save changes and commit transaction
             await _context.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
 
             _logger.LogInformation("Successfully re-enriched photo {PhotoId} with {Count} enrichers",
                 photoId, enrichersForPipeline.Count);
@@ -119,7 +127,11 @@ public sealed class ReEnrichmentService : IReEnrichmentService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to re-enrich photo {PhotoId}", photoId);
+            _logger.LogError(ex, "Failed to re-enrich photo {PhotoId}, rolling back transaction", photoId);
+
+            // Rollback transaction on exception - this ensures all changes (including
+            // lookup entities inserted by enrichers) are discarded
+            await transaction.RollbackAsync(ct);
             throw;
         }
     }
@@ -163,9 +175,8 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             {
                 _logger.LogError(ex, "Failed to re-enrich photo {PhotoId}, continuing with next photo", photoId);
 
-                // Clear change tracker to discard any tracked changes from the failed photo.
-                // Without this, cleared enrichment data (from ClearEnrichmentData) would be
-                // persisted when the next successful photo calls SaveChangesAsync, causing data loss.
+                // Clear change tracker for safety. The transaction in ReEnrichPhotoAsync was already
+                // rolled back, but clearing the tracker ensures we start fresh for the next photo.
                 _context.ChangeTracker.Clear();
 
                 // Continue with other photos
@@ -224,17 +235,23 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             return false;
         }
 
+        // Calculate missing enrichers based on what's already applied
+        var missingEnrichers = _enricherDiffCalculator.CalculateMissingEnrichers(photo, registeredEnrichers);
+
+        if (!missingEnrichers.Any())
+        {
+            _logger.LogDebug("Photo {PhotoId} has all active enrichers already applied", photoId);
+            return false; // Nothing to do
+        }
+
+        // Start a database transaction to ensure atomicity.
+        // Enrichers (like BaseLookupEnricher) may call repository.InsertAsync() which commits immediately.
+        // Without a transaction, if flag verification fails, photo changes are rolled back via ChangeTracker.Clear()
+        // but lookup entities (tags/categories) inserted by enrichers remain orphaned in the database.
+        await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+
         try
         {
-            // Calculate missing enrichers based on what's already applied
-            var missingEnrichers = _enricherDiffCalculator.CalculateMissingEnrichers(photo, registeredEnrichers);
-
-            if (!missingEnrichers.Any())
-            {
-                _logger.LogDebug("Photo {PhotoId} has all active enrichers already applied", photoId);
-                return false; // Nothing to do
-            }
-
             _logger.LogInformation("Re-enriching photo {PhotoId} with {Count} missing enrichers: {Enrichers}",
                 photoId, missingEnrichers.Count, string.Join(", ", missingEnrichers.Select(t => t.Name)));
 
@@ -322,23 +339,29 @@ public sealed class ReEnrichmentService : IReEnrichmentService
                 var missingFlags = expectedFlags & ~actualFlags;
                 _logger.LogWarning(
                     "Some enrichers failed for photo {PhotoId} (expected flags: {Expected}, actual: {Actual}, missing: {Missing}). " +
-                    "Not saving cleared state to prevent data loss.",
+                    "Rolling back transaction to prevent partial state.",
                     photoId, expectedFlags, actualFlags, missingFlags);
 
-                // Clear change tracker to discard all changes (including cleared data)
-                _context.ChangeTracker.Clear();
+                // Rollback transaction - this discards all changes including lookup entities
+                // inserted by enrichers (tags/categories via BaseLookupEnricher.InsertAsync)
+                await transaction.RollbackAsync(ct);
                 return false;
             }
 
-            // Save changes - EF Core's change tracker will only update modified properties
+            // Save changes and commit transaction
             await _context.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
 
             _logger.LogInformation("Successfully re-enriched photo {PhotoId} with missing enrichers", photoId);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to re-enrich photo {PhotoId} with missing enrichers", photoId);
+            _logger.LogError(ex, "Failed to re-enrich photo {PhotoId} with missing enrichers, rolling back transaction", photoId);
+
+            // Rollback transaction on exception - this ensures all changes (including
+            // lookup entities inserted by enrichers) are discarded
+            await transaction.RollbackAsync(ct);
             throw;
         }
     }
@@ -375,9 +398,8 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             {
                 _logger.LogError(ex, "Failed to re-enrich photo {PhotoId} with missing enrichers, continuing with next photo", photoId);
 
-                // Clear change tracker to discard any tracked changes from the failed photo.
-                // Without this, cleared enrichment data (from ClearEnrichmentData) would be
-                // persisted when the next successful photo calls SaveChangesAsync, causing data loss.
+                // Clear change tracker for safety. The transaction in ReEnrichMissingAsync was already
+                // rolled back, but clearing the tracker ensures we start fresh for the next photo.
                 _context.ChangeTracker.Clear();
 
                 // Continue with other photos
