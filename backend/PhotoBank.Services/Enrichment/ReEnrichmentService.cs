@@ -111,9 +111,15 @@ public sealed class ReEnrichmentService : IReEnrichmentService
                     "Rolling back transaction to prevent partial state.",
                     photoId, expectedFlags, actualFlags, missingFlags);
 
-                // Rollback transaction - this discards all changes including lookup entities
+                // Rollback transaction - this discards database changes including lookup entities
                 // inserted by enrichers (tags/categories via BaseLookupEnricher.InsertAsync)
                 await transaction.RollbackAsync(ct);
+
+                // Clear change tracker - rollback discards database changes but tracked entities
+                // remain in memory. In batch operations, the same DbContext is reused for the next
+                // photo, and SaveChangesAsync would persist these rolled-back changes.
+                _context.ChangeTracker.Clear();
+
                 return false;
             }
 
@@ -129,9 +135,15 @@ public sealed class ReEnrichmentService : IReEnrichmentService
         {
             _logger.LogError(ex, "Failed to re-enrich photo {PhotoId}, rolling back transaction", photoId);
 
-            // Rollback transaction on exception - this ensures all changes (including
-            // lookup entities inserted by enrichers) are discarded
+            // Rollback transaction on exception - this discards database changes including
+            // lookup entities inserted by enrichers
             await transaction.RollbackAsync(ct);
+
+            // Clear change tracker - rollback discards database changes but tracked entities
+            // remain in memory. In batch operations, the same DbContext is reused for the next
+            // photo, and SaveChangesAsync would persist these rolled-back changes.
+            _context.ChangeTracker.Clear();
+
             throw;
         }
     }
@@ -342,9 +354,15 @@ public sealed class ReEnrichmentService : IReEnrichmentService
                     "Rolling back transaction to prevent partial state.",
                     photoId, expectedFlags, actualFlags, missingFlags);
 
-                // Rollback transaction - this discards all changes including lookup entities
+                // Rollback transaction - this discards database changes including lookup entities
                 // inserted by enrichers (tags/categories via BaseLookupEnricher.InsertAsync)
                 await transaction.RollbackAsync(ct);
+
+                // Clear change tracker - rollback discards database changes but tracked entities
+                // remain in memory. In batch operations, the same DbContext is reused for the next
+                // photo, and SaveChangesAsync would persist these rolled-back changes.
+                _context.ChangeTracker.Clear();
+
                 return false;
             }
 
@@ -359,9 +377,15 @@ public sealed class ReEnrichmentService : IReEnrichmentService
         {
             _logger.LogError(ex, "Failed to re-enrich photo {PhotoId} with missing enrichers, rolling back transaction", photoId);
 
-            // Rollback transaction on exception - this ensures all changes (including
-            // lookup entities inserted by enrichers) are discarded
+            // Rollback transaction on exception - this discards database changes including
+            // lookup entities inserted by enrichers
             await transaction.RollbackAsync(ct);
+
+            // Clear change tracker - rollback discards database changes but tracked entities
+            // remain in memory. In batch operations, the same DbContext is reused for the next
+            // photo, and SaveChangesAsync would persist these rolled-back changes.
+            _context.ChangeTracker.Clear();
+
             throw;
         }
     }
