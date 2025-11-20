@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Minio;
 using PhotoBank.Repositories;
@@ -56,6 +57,11 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IPhotoService, PhotoService>();
         services.AddScoped<ISearchReferenceDataService, SearchReferenceDataService>();
         services.AddSingleton<IActiveEnricherProvider, ActiveEnricherProvider>();
+
+        // Register IImageService required by PreviewEnricher
+        // This stateless service handles image resizing operations
+        // Use TryAdd to avoid duplicate registration if API/Console extensions already registered it
+        services.TryAddSingleton<IImageService, ImageService>();
 
         // Register core enrichers needed by both API and Console
         // These are minimal enrichers that don't require heavy dependencies (Azure/AWS clients)
