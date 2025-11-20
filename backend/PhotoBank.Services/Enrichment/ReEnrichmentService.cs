@@ -335,13 +335,34 @@ public sealed class ReEnrichmentService : IReEnrichmentService
                 }
             }
 
-            // Clear existing enrichment data ONLY for enrichers that are actually missing.
-            // Already-applied dependencies are NOT cleared, so their data and flags remain intact.
+            // Clear enrichment data ONLY for enrichers that are actually missing.
+            // This clears both data (captions, tags, etc.) and flags for missing enrichers.
             ClearEnrichmentData(photo, enrichersToClean);
+
+            // Clear flags for already-applied dependencies that will be re-run.
+            // We don't clear their data (to preserve it), but we MUST clear their flags
+            // so we can detect if they fail when re-run with ContinueOnError=true.
+            // Without this, a failed dependency's pre-existing flag masks the failure.
+            var alreadyAppliedDependencies = expandedEnrichers
+                .Except(enrichersToClean)
+                .ToArray();
+
+            foreach (var enricherType in alreadyAppliedDependencies)
+            {
+                var enricher = _serviceProvider.GetService(enricherType) as Services.Enrichers.IEnricher;
+                if (enricher != null)
+                {
+                    // Clear only the flag, not the data
+                    photo.EnrichedWithEnricherType &= ~enricher.EnricherType;
+                    _logger.LogDebug(
+                        "Cleared flag for already-applied dependency {EnricherType} on photo {PhotoId} to enable failure detection",
+                        enricherType.Name, photoId);
+                }
+            }
 
             // Run enrichment pipeline with FULL expanded list (missing enrichers + dependencies).
             // TopoSort requires all dependencies to be present in the list for proper ordering.
-            // Already-applied dependencies will re-run but won't overwrite cleared data (since we didn't clear them).
+            // Already-applied dependencies will re-run and re-set their flags if successful.
             // Pass the current ServiceProvider so enrichers use the same DbContext that's in the transaction.
             await _enrichmentPipeline.RunAsync(photo, sourceData, expandedEnrichers, _serviceProvider, ct);
 
