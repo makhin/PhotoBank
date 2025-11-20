@@ -15,6 +15,13 @@ public interface IEnrichmentPipeline
     /// <summary>Run a subset of enrichers for a single item.</summary>
     Task RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, CancellationToken ct = default);
 
+    /// <summary>
+    /// Run a subset of enrichers for a single item using a specific service provider.
+    /// When serviceProvider is provided, enrichers are resolved from it instead of creating a new scope.
+    /// This allows enrichers to participate in the caller's transaction by sharing the same DbContext instance.
+    /// </summary>
+    Task RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, IServiceProvider serviceProvider, CancellationToken ct = default);
+
     /// <summary>Run pipeline for many items with optional parallelism.</summary>
     Task RunBatchAsync(IEnumerable<(Photo photo, SourceDataDto source)> items, CancellationToken ct = default);
 }

@@ -97,8 +97,9 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             // Clear existing enrichment data for the enrichers being run to prevent duplicates
             ClearEnrichmentData(photo, enrichersForPipeline);
 
-            // Run enrichment pipeline with all specified enrichers and their dependencies
-            await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersForPipeline, ct);
+            // Run enrichment pipeline with all specified enrichers and their dependencies.
+            // Pass the current ServiceProvider so enrichers use the same DbContext that's in the transaction.
+            await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersForPipeline, _serviceProvider, ct);
 
             // Verify all enrichers succeeded by checking if they set their flags
             // With ContinueOnError=true, the pipeline swallows exceptions but enrichers won't set flags if they fail
@@ -341,7 +342,8 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             // Run enrichment pipeline with FULL expanded list (missing enrichers + dependencies).
             // TopoSort requires all dependencies to be present in the list for proper ordering.
             // Already-applied dependencies will re-run but won't overwrite cleared data (since we didn't clear them).
-            await _enrichmentPipeline.RunAsync(photo, sourceData, expandedEnrichers, ct);
+            // Pass the current ServiceProvider so enrichers use the same DbContext that's in the transaction.
+            await _enrichmentPipeline.RunAsync(photo, sourceData, expandedEnrichers, _serviceProvider, ct);
 
             // Verify all enrichers succeeded by checking if they set their flags
             // With ContinueOnError=true, the pipeline swallows exceptions but enrichers won't set flags if they fail

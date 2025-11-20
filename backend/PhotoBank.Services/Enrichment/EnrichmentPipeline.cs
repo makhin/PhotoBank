@@ -34,34 +34,59 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
     public Task RunAsync(Photo photo, SourceDataDto source, CancellationToken ct = default) =>
         RunAsync(photo, source, _enricherTypes, ct);
 
-    public async Task RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, CancellationToken ct = default)
+    public Task RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, CancellationToken ct = default) =>
+        RunAsync(photo, source, enrichers, serviceProvider: null, ct);
+
+    public async Task RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, IServiceProvider? serviceProvider, CancellationToken ct = default)
     {
-        using var scope = _root.CreateScope();
-        var provider = scope.ServiceProvider;
+        // If a service provider is provided, use it directly (for transaction participation).
+        // Otherwise, create a new scope to isolate enricher resolution.
+        IServiceScope? scope = null;
+        IServiceProvider provider;
 
-        var ordered = TopoSort(enrichers.ToArray(), provider);
-        foreach (var t in ordered)
+        if (serviceProvider != null)
         {
-            ct.ThrowIfCancellationRequested();
+            // Use provided service provider - enrichers will share the caller's DbContext
+            // and participate in any active transaction
+            provider = serviceProvider;
+        }
+        else
+        {
+            // Create new scope - enrichers get fresh DbContext instances
+            scope = _root.CreateScope();
+            provider = scope.ServiceProvider;
+        }
 
-            var enricher = (IEnricher)provider.GetRequiredService(t);
-            var sw = _opts.LogTimings ? Stopwatch.StartNew() : null;
+        try
+        {
+            var ordered = TopoSort(enrichers.ToArray(), provider);
+            foreach (var t in ordered)
+            {
+                ct.ThrowIfCancellationRequested();
 
-            try
-            {
-                await enricher.EnrichAsync(photo, source, ct);
-                photo.EnrichedWithEnricherType |= enricher.EnricherType;
+                var enricher = (IEnricher)provider.GetRequiredService(t);
+                var sw = _opts.LogTimings ? Stopwatch.StartNew() : null;
+
+                try
+                {
+                    await enricher.EnrichAsync(photo, source, ct);
+                    photo.EnrichedWithEnricherType |= enricher.EnricherType;
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError(ex, "Enricher {Enricher} failed", t.Name);
+                    if (!_opts.ContinueOnError) throw;
+                }
+                finally
+                {
+                    if (sw is { })
+                        _log.LogInformation("Enricher {Enricher} took {Ms} ms", t.Name, sw.ElapsedMilliseconds);
+                }
             }
-            catch (Exception ex)
-            {
-                _log.LogError(ex, "Enricher {Enricher} failed", t.Name);
-                if (!_opts.ContinueOnError) throw;
-            }
-            finally
-            {
-                if (sw is { })
-                    _log.LogInformation("Enricher {Enricher} took {Ms} ms", t.Name, sw.ElapsedMilliseconds);
-            }
+        }
+        finally
+        {
+            scope?.Dispose();
         }
     }
 
