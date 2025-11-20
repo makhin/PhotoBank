@@ -543,6 +543,15 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             photo.Location = null;
             photo.ImageHash = null;
             // Note: TakenMonth and TakenDay have private setters and are derived from TakenDate
+
+            // Clear Files collection - MetadataEnricher creates a new List<File> with current filename.
+            // Without clearing, existing tracked File rows remain and new File is added, causing
+            // unique constraint violations on (PhotoId, Name) index or duplicate file records.
+            if (photo.Files != null)
+            {
+                _logger.LogDebug("Clearing {Count} files for photo {PhotoId}", photo.Files.Count, photo.Id);
+                photo.Files.Clear();
+            }
         }
 
         // Clear adult content fields when Adult enricher is being re-run
