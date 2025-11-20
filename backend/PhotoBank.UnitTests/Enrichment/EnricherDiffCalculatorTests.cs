@@ -312,6 +312,154 @@ public class EnricherDiffCalculatorTests
         result.Should().Contain(typeof(MockEnricherC)); // FaceEnricher
     }
 
+    [Test]
+    public void ExpandWithDependencies_WithSingleEnricher_IncludesAllDependencies()
+    {
+        // Arrange: MockEnricherC depends on MockEnricherA and MockEnricherB
+        var enrichers = new[] { typeof(MockEnricherC) };
+
+        // Act
+        var result = _calculator.ExpandWithDependencies(enrichers);
+
+        // Assert
+        result.Should().HaveCount(3);
+        result.Should().Contain(typeof(MockEnricherA)); // Dependency
+        result.Should().Contain(typeof(MockEnricherB)); // Dependency
+        result.Should().Contain(typeof(MockEnricherC)); // Main enricher
+    }
+
+    [Test]
+    public void ExpandWithDependencies_WithMultipleEnrichers_IncludesAllUniqueDependencies()
+    {
+        // Arrange: Both MockEnricherC and MockEnricherD depend on MockEnricherA (shared dependency)
+        var enrichers = new[] { typeof(MockEnricherC), typeof(MockEnricherD) };
+
+        // Act
+        var result = _calculator.ExpandWithDependencies(enrichers);
+
+        // Assert
+        result.Should().HaveCount(4);
+        result.Should().Contain(typeof(MockEnricherA)); // Shared dependency
+        result.Should().Contain(typeof(MockEnricherB)); // Dependency of C
+        result.Should().Contain(typeof(MockEnricherC));
+        result.Should().Contain(typeof(MockEnricherD));
+    }
+
+    [Test]
+    public void ExpandWithDependencies_WithEnricherWithoutDependencies_ReturnsOnlyThatEnricher()
+    {
+        // Arrange: MockEnricherA has no dependencies
+        var enrichers = new[] { typeof(MockEnricherA) };
+
+        // Act
+        var result = _calculator.ExpandWithDependencies(enrichers);
+
+        // Assert
+        result.Should().HaveCount(1);
+        result.Should().Contain(typeof(MockEnricherA));
+    }
+
+    [Test]
+    public void ExpandWithDependencies_WithEmptyList_ReturnsEmpty()
+    {
+        // Arrange
+        var enrichers = Array.Empty<Type>();
+
+        // Act
+        var result = _calculator.ExpandWithDependencies(enrichers);
+
+        // Assert
+        result.Should().BeEmpty();
+    }
+
+    [Test]
+    public void ExpandWithDependencies_WithChainedDependencies_IncludesEntireChain()
+    {
+        // Arrange: MockEnricherD depends on MockEnricherC, which depends on MockEnricherA and MockEnricherB
+        var enrichers = new[] { typeof(MockEnricherD) };
+
+        // Act
+        var result = _calculator.ExpandWithDependencies(enrichers);
+
+        // Assert
+        result.Should().HaveCount(4);
+        result.Should().Contain(typeof(MockEnricherA)); // Transitive dependency
+        result.Should().Contain(typeof(MockEnricherB)); // Transitive dependency
+        result.Should().Contain(typeof(MockEnricherC)); // Direct dependency
+        result.Should().Contain(typeof(MockEnricherD)); // Main enricher
+    }
+
+    [Test]
+    public void ExpandWithDependencies_WithCyclicDependencies_ThrowsInvalidOperationException()
+    {
+        // Arrange: MockEnricherE and MockEnricherF have cyclic dependencies
+        var enrichers = new[] { typeof(MockEnricherE) };
+
+        // Act
+        Action act = () => _calculator.ExpandWithDependencies(enrichers);
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*cycle*");
+    }
+
+    [Test]
+    public void ExpandWithDependencies_MissingEnrichersPlusExpand_ResolvesForPipeline()
+    {
+        // Arrange: This simulates the real-world scenario where:
+        // 1. Photo has dependency A already applied
+        // 2. CalculateMissingEnrichers returns only [B] (missing)
+        // 3. ExpandWithDependencies should add A back for pipeline
+        var photo = new Photo
+        {
+            EnrichedWithEnricherType = EnricherType.Preview // MockEnricherA already applied
+        };
+        var activeEnrichers = new[] { typeof(MockEnricherB) };
+
+        // Act - simulate the two-step process in ReEnrichmentService
+        var missingEnrichers = _calculator.CalculateMissingEnrichers(photo, activeEnrichers);
+        var enrichersForPipeline = _calculator.ExpandWithDependencies(missingEnrichers);
+
+        // Assert
+        // missingEnrichers should contain Preview (data provider) and Metadata (missing)
+        missingEnrichers.Should().Contain(typeof(MockEnricherA)); // Preview (data provider)
+        missingEnrichers.Should().Contain(typeof(MockEnricherB)); // Metadata (missing)
+
+        // enrichersForPipeline should be the same since both are already in the list
+        enrichersForPipeline.Should().HaveCount(2);
+        enrichersForPipeline.Should().Contain(typeof(MockEnricherA));
+        enrichersForPipeline.Should().Contain(typeof(MockEnricherB));
+    }
+
+    [Test]
+    public void ExpandWithDependencies_NonDataProviderDependencyAlreadyApplied_StillIncluded()
+    {
+        // Arrange: This is the key fix - when MockEnricherB is already applied but not a data provider,
+        // CalculateMissingEnrichers won't include it, but ExpandWithDependencies must add it back
+        var photo = new Photo
+        {
+            EnrichedWithEnricherType = EnricherType.Preview | EnricherType.Metadata // Both already applied
+        };
+        var activeEnrichers = new[] { typeof(MockEnricherC) }; // MockEnricherC depends on A and B
+
+        // Act
+        var missingEnrichers = _calculator.CalculateMissingEnrichers(photo, activeEnrichers);
+        var enrichersForPipeline = _calculator.ExpandWithDependencies(missingEnrichers);
+
+        // Assert
+        // missingEnrichers should only contain Preview (data provider) and Face (missing)
+        // but NOT Metadata (already applied, not data provider)
+        missingEnrichers.Should().Contain(typeof(MockEnricherA)); // Preview (data provider)
+        missingEnrichers.Should().NotContain(typeof(MockEnricherB)); // Metadata (already applied, not data provider)
+        missingEnrichers.Should().Contain(typeof(MockEnricherC)); // Face (missing)
+
+        // enrichersForPipeline MUST include Metadata for pipeline's topological sort to work
+        enrichersForPipeline.Should().HaveCount(3);
+        enrichersForPipeline.Should().Contain(typeof(MockEnricherA)); // Preview
+        enrichersForPipeline.Should().Contain(typeof(MockEnricherB)); // Metadata (added back by ExpandWithDependencies!)
+        enrichersForPipeline.Should().Contain(typeof(MockEnricherC)); // Face
+    }
+
     // Mock enrichers for testing
     private class MockEnricherA : IEnricher
     {
