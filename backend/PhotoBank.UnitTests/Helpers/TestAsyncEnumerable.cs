@@ -82,35 +82,16 @@ public class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
         return _inner.Execute<TResult>(expression);
     }
 
-    public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
+    public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
     {
-        var resultType = typeof(TResult);
+        // Execute the query synchronously and wrap in completed task
+        var result = _inner.Execute<TResult>(expression);
+        return Task.FromResult(result);
+    }
 
-        // Check if TResult is a generic type (e.g., Task<int>)
-        if (resultType.IsGenericType)
-        {
-            // Extract the inner type from Task<T>
-            var innerType = resultType.GetGenericArguments()[0];
-
-            // Execute the query to get the result
-            var executionResult = typeof(IQueryProvider)
-                .GetMethod(
-                    name: nameof(IQueryProvider.Execute),
-                    genericParameterCount: 1,
-                    types: new[] { typeof(Expression) })
-                ?.MakeGenericMethod(innerType)
-                .Invoke(this, new[] { expression });
-
-            // Wrap in Task.FromResult
-            return (TResult)typeof(Task).GetMethod(nameof(Task.FromResult))
-                ?.MakeGenericMethod(innerType)
-                .Invoke(null, new[] { executionResult });
-        }
-        else
-        {
-            // TResult is a scalar type (e.g., int for CountAsync, bool for AnyAsync)
-            // Execute directly and return the result
-            return _inner.Execute<TResult>(expression);
-        }
+    public IAsyncEnumerable<TResult> ExecuteAsync<TResult>(Expression expression)
+    {
+        // Return the async enumerable query
+        return new TestAsyncEnumerable<TResult>(expression);
     }
 }
