@@ -53,7 +53,7 @@ namespace PhotoBank.Services.Recognition
                     var response = await _client.EmbedAsync(fileStream, includeAttributes: false, ct);
 
                     // Save embedding to Face entity
-                    face.Embedding = new Vector(response.Embedding);
+                    face.Embedding = new Vector(response.FlatEmbedding);
                     await _faces.UpdateAsync(face);
 
                     _logger.LogInformation("Successfully extracted embedding for face {FaceId} (person {PersonId})",
@@ -103,7 +103,7 @@ namespace PhotoBank.Services.Recognition
                     var response = await _client.EmbedAsync(fileStream, includeAttributes: false, ct);
 
                     // Save embedding to database
-                    face.Embedding = new Vector(response.Embedding);
+                    face.Embedding = new Vector(response.FlatEmbedding);
                     await _faces.UpdateAsync(face);
 
                     processed++;

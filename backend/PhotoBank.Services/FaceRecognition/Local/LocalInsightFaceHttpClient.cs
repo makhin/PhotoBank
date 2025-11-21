@@ -101,7 +101,7 @@ public sealed record LocalDetectedFace(
 /// When include_attributes=true, also includes face attributes and emotions
 /// </summary>
 public sealed record LocalEmbedResponse(
-    float[] Embedding,
+    float[][] Embedding,
     [property: JsonPropertyName("embedding_shape")] int[]? EmbeddingShape = null,
     [property: JsonPropertyName("embedding_dim")] int? EmbeddingDim = null,
     string? Model = null,
@@ -109,7 +109,14 @@ public sealed record LocalEmbedResponse(
     FaceAttributes? Attributes = null,
     string? Emotion = null,
     [property: JsonPropertyName("emotion_scores")] Dictionary<string, float>? EmotionScores = null
-);
+)
+{
+    /// <summary>
+    /// Get the flattened embedding vector (first element of the 2D array)
+    /// </summary>
+    [JsonIgnore]
+    public float[] FlatEmbedding => Embedding.Length > 0 ? Embedding[0] : Array.Empty<float>();
+};
 
 /// <summary>
 /// Face attributes extracted from a face image

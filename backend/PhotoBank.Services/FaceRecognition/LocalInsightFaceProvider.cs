@@ -48,7 +48,7 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
             {
                 using var stream = f.OpenStream();
                 var emb = await _client.EmbedAsync(stream, includeAttributes: false, ct);
-                await _embeddings.UpsertAsync(personId, f.FaceId, Normalize(emb.Embedding), emb.Model ?? _opts.Model, ct);
+                await _embeddings.UpsertAsync(personId, f.FaceId, Normalize(emb.FlatEmbedding), emb.Model ?? _opts.Model, ct);
                 result[f.FaceId] = $"local:{f.FaceId}";
             }
             finally { sem.Release(); }
@@ -128,7 +128,7 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
     public async Task<IReadOnlyList<UserMatchDto>> SearchUsersByImageAsync(Stream image, CancellationToken ct)
     {
         var embResp = await _client.EmbedAsync(image, includeAttributes: false, ct);
-        var q = Normalize(embResp.Embedding);
+        var q = Normalize(embResp.FlatEmbedding);
 
         // Use optimized pgvector similarity search with HNSW index and SQL-level grouping
         // FindSimilarFacesAsync returns the best face for each person (using DISTINCT ON),

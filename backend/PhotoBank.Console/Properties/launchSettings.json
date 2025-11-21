@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PhotoBank.Console": {
+      "commandName": "Project",
+      "commandLineArgs": "migrate-embeddings"
+    }
+  }
+}

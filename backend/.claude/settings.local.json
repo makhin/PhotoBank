@@ -1,22 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit:*)",
-      "Bash(dotnet test:*)",
-      "Bash(dotnet build:*)",
-      "Bash(dotnet list:*)",
-      "Bash(findstr:*)",
-      "Bash(.generateApi.bat)",
-      "Bash(cmd /c generateApi.bat)",
-      "Bash(set:*)",
-      "Bash(dotnet swagger tofile:*)",
-      "Bash(powershell:*)",
-      "Bash(dotnet tool list:*)",
-      "Read(//c/PhotoBank/**)",
-      "WebSearch",
-      "WebFetch(domain:github.com)",
-      "WebFetch(domain:www.nuget.org)",
-      "Bash(git stash:*)"
+      "Bash(dir:*)",
+      "Bash(dotnet run)",
+      "Bash(dotnet run:*)"
     ],
     "deny": [],
     "ask": []
