@@ -119,21 +119,22 @@ public class EnricherDiffCalculatorTests
     }
 
     [Test]
-    public void CalculateMissingEnrichers_WithDependenciesAlreadyApplied_OnlyIncludesMissing()
+    public void CalculateMissingEnrichers_WithDependenciesAlreadyApplied_IncludesDataProviderDependency()
     {
-        // Arrange: EnricherC depends on EnricherA and EnricherB, but EnricherA is already applied
+        // Arrange: EnricherC depends on EnricherA and EnricherB, EnricherA (Preview) is already applied
+        // But EnricherA is a data provider, so it must still be included
         var photo = new Photo
         {
-            EnrichedWithEnricherType = EnricherType.Preview // EnricherA applied
+            EnrichedWithEnricherType = EnricherType.Preview // EnricherA applied (but it's a data provider)
         };
         var activeEnrichers = new[] { typeof(MockEnricherC) };
 
         // Act
         var result = _calculator.CalculateMissingEnrichers(photo, activeEnrichers);
 
-        // Assert
-        result.Should().HaveCount(2);
-        result.Should().NotContain(typeof(MockEnricherA)); // Already applied
+        // Assert - EnricherA is included because it's a data provider (Preview)
+        result.Should().HaveCount(3);
+        result.Should().Contain(typeof(MockEnricherA)); // Data provider - always included
         result.Should().Contain(typeof(MockEnricherB)); // Missing dependency
         result.Should().Contain(typeof(MockEnricherC)); // Main enricher
     }
@@ -173,17 +174,21 @@ public class EnricherDiffCalculatorTests
     [Test]
     public void NeedsEnrichment_WhenNoMissingEnrichers_ReturnsFalse()
     {
-        // Arrange
+        // Arrange - use non-data-provider enrichers (Metadata and Face)
+        // to test the case where all enrichers are already applied
         var photo = new Photo
         {
-            EnrichedWithEnricherType = EnricherType.Preview
+            EnrichedWithEnricherType = EnricherType.Metadata | EnricherType.Face
         };
-        var activeEnrichers = new[] { typeof(MockEnricherA) };
+        // MockEnricherB is Metadata, MockEnricherC is Face - both non-data-providers
+        var activeEnrichers = new[] { typeof(MockEnricherB), typeof(MockEnricherC) };
 
         // Act
         var result = _calculator.NeedsEnrichment(photo, activeEnrichers);
 
-        // Assert
+        // Assert - no missing enrichers when all non-data-provider enrichers are applied
+        // Note: Data provider dependencies (Preview) will be included but the main enrichers
+        // themselves are already applied, so NeedsEnrichment checks if any are missing
         result.Should().BeFalse();
     }
 

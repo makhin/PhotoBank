@@ -35,7 +35,7 @@ public class EnricherDiffCalculator
     /// <param name="photo">The photo to check</param>
     /// <param name="activeEnricherTypes">Currently active enricher types from configuration</param>
     /// <returns>List of enricher types that need to be executed</returns>
-    public IReadOnlyCollection<Type> CalculateMissingEnrichers(Photo photo, IReadOnlyCollection<Type> activeEnricherTypes)
+    public virtual IReadOnlyCollection<Type> CalculateMissingEnrichers(Photo photo, IReadOnlyCollection<Type> activeEnricherTypes)
     {
         if (photo == null)
             throw new ArgumentNullException(nameof(photo));
@@ -124,7 +124,7 @@ public class EnricherDiffCalculator
     /// <param name="photo">The photo to check</param>
     /// <param name="activeEnricherTypes">Currently active enricher types</param>
     /// <returns>True if the photo needs enrichment, false otherwise</returns>
-    public bool NeedsEnrichment(Photo photo, IReadOnlyCollection<Type> activeEnricherTypes)
+    public virtual bool NeedsEnrichment(Photo photo, IReadOnlyCollection<Type> activeEnricherTypes)
     {
         var missing = CalculateMissingEnrichers(photo, activeEnricherTypes);
         return missing.Any();
@@ -137,7 +137,7 @@ public class EnricherDiffCalculator
     /// </summary>
     /// <param name="enrichers">Enricher types to expand</param>
     /// <returns>Enricher types with all dependencies included</returns>
-    public IReadOnlyCollection<Type> ExpandWithDependencies(IReadOnlyCollection<Type> enrichers)
+    public virtual IReadOnlyCollection<Type> ExpandWithDependencies(IReadOnlyCollection<Type> enrichers)
     {
         if (enrichers == null || !enrichers.Any())
             return Array.Empty<Type>();
@@ -201,7 +201,7 @@ public class EnricherDiffCalculator
     /// <param name="photo">The photo to check</param>
     /// <param name="allEnricherTypes">All available enricher types</param>
     /// <returns>List of enricher types that have been applied</returns>
-    public IReadOnlyCollection<Type> GetAppliedEnrichers(Photo photo, IReadOnlyCollection<Type> allEnricherTypes)
+    public virtual IReadOnlyCollection<Type> GetAppliedEnrichers(Photo photo, IReadOnlyCollection<Type> allEnricherTypes)
     {
         if (photo == null)
             throw new ArgumentNullException(nameof(photo));

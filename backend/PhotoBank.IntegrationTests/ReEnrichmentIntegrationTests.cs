@@ -317,6 +317,54 @@ public class ReEnrichmentIntegrationTests
         updatedPhoto.EnrichedWithEnricherType.Should().HaveFlag(EnricherType.Tag); // TestEnricherB
     }
 
+    [Test]
+    public async Task ReEnrichPhotoAsync_WhenEnricherFails_RollsBackChanges()
+    {
+        // Arrange - rebuild provider with failing enricher
+        await _provider.DisposeAsync();
+
+        var services = new ServiceCollection();
+        services.AddSingleton(_context);
+        services.AddLogging();
+        services.AddSingleton<IMinioClient>(Mock.Of<IMinioClient>());
+        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddSingleton<IActiveEnricherProvider>(new TestActiveEnricherProvider(
+            new[] { typeof(FailingTestEnricher) }));
+        services.AddTransient<IEnricher, FailingTestEnricher>();
+
+        _provider = services.BuildServiceProvider();
+
+        var service = _provider.GetRequiredService<IReEnrichmentService>();
+        var photoRepo = _provider.GetRequiredService<IRepository<Photo>>();
+
+        var photo = await photoRepo.GetAll().Include(p => p.Captions).FirstAsync();
+        var originalFlags = photo.EnrichedWithEnricherType;
+
+        // Add a caption to verify it's not deleted on rollback
+        photo.Captions ??= new List<Caption>();
+        photo.Captions.Add(new Caption { Text = "Original caption", Confidence = 0.9 });
+        await _context.SaveChangesAsync();
+        var photoId = photo.Id;
+        _context.ChangeTracker.Clear();
+
+        // Act - this should fail and rollback
+        var enricherTypes = new[] { typeof(FailingTestEnricher) };
+        var result = await service.ReEnrichPhotoAsync(photoId, enricherTypes);
+
+        // Assert - should return false on failure
+        result.Should().BeFalse();
+
+        // Verify caption still exists (transaction rolled back)
+        _context.ChangeTracker.Clear();
+        var photoAfter = await photoRepo.GetAll().Include(p => p.Captions).FirstAsync(p => p.Id == photoId);
+        photoAfter.Captions.Should().NotBeNull();
+        photoAfter.Captions.Should().HaveCount(1);
+        photoAfter.Captions!.First().Text.Should().Be("Original caption");
+
+        // Verify photo flags unchanged
+        photoAfter.EnrichedWithEnricherType.Should().Be(originalFlags);
+    }
+
     private async Task SeedTestDataAsync()
     {
         var storage = new Storage
@@ -379,6 +427,20 @@ public class TestEnricherB : Services.Enrichers.IEnricher
     {
         // Simulate enrichment
         return Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// Test enricher that always fails - used to test transaction rollback behavior.
+/// </summary>
+public class FailingTestEnricher : Services.Enrichers.IEnricher
+{
+    public EnricherType EnricherType => EnricherType.Caption;
+    public Type[] Dependencies => Array.Empty<Type>();
+
+    public Task EnrichAsync(Photo photo, Services.Models.SourceDataDto source, System.Threading.CancellationToken cancellationToken = default)
+    {
+        throw new InvalidOperationException("Simulated enricher failure for testing rollback");
     }
 }
 

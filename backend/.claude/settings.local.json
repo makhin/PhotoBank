@@ -3,7 +3,9 @@
     "allow": [
       "Bash(dir:*)",
       "Bash(dotnet run)",
-      "Bash(dotnet run:*)"
+      "Bash(dotnet run:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)"
     ],
     "deny": [],
     "ask": []
