@@ -7,7 +7,7 @@ namespace PhotoBank.AccessControl;
 public sealed class CurrentUser : ICurrentUser
 {
     private CurrentUser(
-        string userId,
+        Guid userId,
         bool isAdmin,
         IReadOnlySet<int> allowedStorageIds,
         IReadOnlySet<int> allowedPersonGroupIds,
@@ -22,7 +22,7 @@ public sealed class CurrentUser : ICurrentUser
         CanSeeNsfw = canSeeNsfw;
     }
 
-    public string UserId { get; }
+    public Guid UserId { get; }
     public bool IsAdmin { get; }
     public IReadOnlySet<int> AllowedStorageIds { get; }
     public IReadOnlySet<int> AllowedPersonGroupIds { get; }
@@ -31,18 +31,18 @@ public sealed class CurrentUser : ICurrentUser
 
     public static CurrentUser CreateAnonymous()
         => new(
-            string.Empty,
+            Guid.Empty,
             isAdmin: false,
             Array.Empty<int>().ToHashSet(),
             Array.Empty<int>().ToHashSet(),
             Array.Empty<(DateOnly From, DateOnly To)>(),
             canSeeNsfw: false);
 
-    public static CurrentUser FromEffectiveAccess(string userId, EffectiveAccess access)
+    public static CurrentUser FromEffectiveAccess(Guid userId, EffectiveAccess access)
     {
-        if (string.IsNullOrWhiteSpace(userId))
+        if (userId == Guid.Empty)
         {
-            throw new ArgumentException("User identifier cannot be null or whitespace", nameof(userId));
+            throw new ArgumentException("User identifier cannot be empty", nameof(userId));
         }
 
         if (access is null)

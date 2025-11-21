@@ -13,7 +13,7 @@ namespace PhotoBank.Services.Identity;
 
 public sealed class AdminUserService(
     UserManager<ApplicationUser> userManager,
-    RoleManager<IdentityRole> roleManager,
+    RoleManager<ApplicationRole> roleManager,
     AccessControlDbContext accessControlDbContext) : IAdminUserService
 {
     public async Task<IReadOnlyCollection<UserDto>> GetUsersAsync(UsersQuery query, CancellationToken cancellationToken = default)
@@ -98,10 +98,10 @@ public sealed class AdminUserService(
         return CreateUserResult.Success(UserDtoMapper.Map(user, createdRoles));
     }
 
-    public async Task<UpdateUserResult> UpdateAsync(string id, UpdateUserDto dto, CancellationToken cancellationToken = default)
+    public async Task<UpdateUserResult> UpdateAsync(Guid id, UpdateUserDto dto, CancellationToken cancellationToken = default)
     {
         _ = cancellationToken;
-        var user = await userManager.FindByIdAsync(id);
+        var user = await userManager.FindByIdAsync(id.ToString());
         if (user is null)
         {
             return UpdateUserResult.NotFoundResult();
@@ -130,10 +130,10 @@ public sealed class AdminUserService(
         return UpdateUserResult.Success();
     }
 
-    public async Task<IdentityOperationResult> DeleteAsync(string id, CancellationToken cancellationToken = default)
+    public async Task<IdentityOperationResult> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         _ = cancellationToken;
-        var user = await userManager.FindByIdAsync(id);
+        var user = await userManager.FindByIdAsync(id.ToString());
         if (user is null)
         {
             return IdentityOperationResult.NotFoundResult();
@@ -148,10 +148,10 @@ public sealed class AdminUserService(
         return IdentityOperationResult.Success();
     }
 
-    public async Task<IdentityOperationResult> ResetPasswordAsync(string id, ResetPasswordDto dto, CancellationToken cancellationToken = default)
+    public async Task<IdentityOperationResult> ResetPasswordAsync(Guid id, ResetPasswordDto dto, CancellationToken cancellationToken = default)
     {
         _ = cancellationToken;
-        var user = await userManager.FindByIdAsync(id);
+        var user = await userManager.FindByIdAsync(id.ToString());
         if (user is null)
         {
             return IdentityOperationResult.NotFoundResult();
@@ -167,10 +167,10 @@ public sealed class AdminUserService(
         return IdentityOperationResult.Success();
     }
 
-    public async Task<IdentityOperationResult> SetRolesAsync(string id, SetRolesDto dto, CancellationToken cancellationToken = default)
+    public async Task<IdentityOperationResult> SetRolesAsync(Guid id, SetRolesDto dto, CancellationToken cancellationToken = default)
     {
         _ = cancellationToken;
-        var user = await userManager.FindByIdAsync(id);
+        var user = await userManager.FindByIdAsync(id.ToString());
         if (user is null)
         {
             return IdentityOperationResult.NotFoundResult();
@@ -206,13 +206,13 @@ public sealed class AdminUserService(
         return IdentityOperationResult.Success();
     }
 
-    private async Task<Dictionary<string, IReadOnlyCollection<int>>> LoadAccessProfileAssignmentsAsync(
+    private async Task<Dictionary<Guid, IReadOnlyCollection<int>>> LoadAccessProfileAssignmentsAsync(
         IReadOnlyCollection<ApplicationUser> users,
         CancellationToken cancellationToken)
     {
         if (users.Count == 0)
         {
-            return new Dictionary<string, IReadOnlyCollection<int>>();
+            return new Dictionary<Guid, IReadOnlyCollection<int>>();
         }
 
         var userIds = users.Select(u => u.Id).ToArray();

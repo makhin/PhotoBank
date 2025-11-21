@@ -225,7 +225,7 @@ public class GetPersonsIntegrationTests
         services.AddPhotobankCors();
 
         services.RemoveAll<ICurrentUserAccessor>();
-        services.AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new NonAdminTestUser("user", allowedPersonGroupIds)));
+        services.AddScoped<ICurrentUserAccessor>(_ => new TestCurrentUserAccessor(new NonAdminTestUser(Guid.NewGuid(), allowedPersonGroupIds)));
 
         services.AddLogging();
         services.AddSingleton<IMinioClient>(Mock.Of<IMinioClient>());
@@ -252,13 +252,13 @@ public class GetPersonsIntegrationTests
 
     private sealed class NonAdminTestUser : ICurrentUser
     {
-        public NonAdminTestUser(string userId, IEnumerable<int> allowedPersonGroupIds)
+        public NonAdminTestUser(Guid userId, IEnumerable<int> allowedPersonGroupIds)
         {
             UserId = userId;
             AllowedPersonGroupIds = new HashSet<int>(allowedPersonGroupIds);
         }
 
-        public string UserId { get; }
+        public Guid UserId { get; }
         public bool IsAdmin => false;
         public IReadOnlySet<int> AllowedStorageIds { get; } = new HashSet<int>();
         public IReadOnlySet<int> AllowedPersonGroupIds { get; }

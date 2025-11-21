@@ -76,7 +76,7 @@ namespace PhotoBank.ServerBlazorApp
             builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
                     // options are set here
                 })
-                .AddRoles<IdentityRole>()
+                .AddRoles<ApplicationRole>()
                 .AddDefaultTokenProviders()
                 .AddEntityFrameworkStores<PhotoBankDbContext>();
 

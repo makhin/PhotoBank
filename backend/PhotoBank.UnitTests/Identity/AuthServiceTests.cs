@@ -68,7 +68,7 @@ public class AuthServiceTests
         var userManager = IdentityTestHelpers.CreateUserManager(db);
         var signInManager = IdentityTestHelpers.CreateSignInManager(userManager);
 
-        var adminRole = new IdentityRole("Admin") { NormalizedName = "ADMIN" };
+        var adminRole = new ApplicationRole { Name = "Admin", NormalizedName = "ADMIN" };
         await db.Roles.AddAsync(adminRole);
         await db.SaveChangesAsync();
 
@@ -82,7 +82,7 @@ public class AuthServiceTests
         await userManager.CreateAsync(user, "Str0ngP@ssw0rd!");
         await userManager.AddClaimAsync(user, new Claim("ExistingClaim", "Value"));
 
-        db.UserRoles.Add(new IdentityUserRole<string>
+        db.UserRoles.Add(new IdentityUserRole<Guid>
         {
             RoleId = adminRole.Id,
             UserId = user.Id

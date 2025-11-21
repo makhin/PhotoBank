@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PhotoBank.AccessControl;
 using PhotoBank.ViewModel.Dto;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,7 +71,7 @@ public class AdminAccessProfilesController : ControllerBase
     [HttpPost("{id:int}/assign-user/{userId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> AssignUser(int id, string userId, CancellationToken ct)
+    public async Task<ActionResult> AssignUser(int id, Guid userId, CancellationToken ct)
     {
         var result = await _profiles.AssignUserAsync(id, userId, ct);
         return result ? NoContent() : NotFound();
@@ -79,7 +80,7 @@ public class AdminAccessProfilesController : ControllerBase
     [HttpDelete("{id:int}/assign-user/{userId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> UnassignUser(int id, string userId, CancellationToken ct)
+    public async Task<ActionResult> UnassignUser(int id, Guid userId, CancellationToken ct)
     {
         var result = await _profiles.UnassignUserAsync(id, userId, ct);
         return result ? NoContent() : NotFound();
@@ -88,7 +89,7 @@ public class AdminAccessProfilesController : ControllerBase
     [HttpPost("{id:int}/assign-role/{roleId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> AssignRole(int id, string roleId, CancellationToken ct)
+    public async Task<ActionResult> AssignRole(int id, Guid roleId, CancellationToken ct)
     {
         var result = await _profiles.AssignRoleAsync(id, roleId, ct);
         return result ? NoContent() : NotFound();
@@ -97,7 +98,7 @@ public class AdminAccessProfilesController : ControllerBase
     [HttpDelete("{id:int}/assign-role/{roleId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> UnassignRole(int id, string roleId, CancellationToken ct)
+    public async Task<ActionResult> UnassignRole(int id, Guid roleId, CancellationToken ct)
     {
         var result = await _profiles.UnassignRoleAsync(id, roleId, ct);
         return result ? NoContent() : NotFound();
