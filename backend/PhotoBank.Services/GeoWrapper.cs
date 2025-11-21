@@ -6,6 +6,7 @@ using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
 using PhotoBank.Services.FaceRecognition.Abstractions;
+using PhotoBank.Services.ImageAnalysis;
 using Geometry = NetTopologySuite.Geometries.Geometry;
 using Point = NetTopologySuite.Geometries.Point;
 
@@ -57,6 +58,16 @@ namespace PhotoBank.Services
         }
 
         public static Geometry GetRectangle(BoundingRect rectangle, double scale = 1)
+        {
+            var x = (int)(rectangle.X / scale);
+            var y = (int)(rectangle.Y / scale);
+            var width = (int)(rectangle.W / scale);
+            var height = (int)(rectangle.H / scale);
+
+            return CreateRectanglePolygon(x, y, width, height);
+        }
+
+        public static Geometry GetRectangle(ObjectRectangle rectangle, double scale = 1)
         {
             var x = (int)(rectangle.X / scale);
             var y = (int)(rectangle.Y / scale);

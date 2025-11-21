@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using ImageMagick;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using PhotoBank.Services.ImageAnalysis;
 
 namespace PhotoBank.Services.Models;
 
@@ -11,7 +11,7 @@ public class SourceDataDto
     public string AbsolutePath { get; set; }
 
     [Required]
-    public ImageAnalysis ImageAnalysis { get; set; }
+    public ImageAnalysisResult ImageAnalysis { get; set; }
     [Required]
     public IMagickImage<byte> OriginalImage { get; set; }
     [Required]

@@ -13,17 +13,17 @@ namespace PhotoBank.Services.Enrichers
         public CategoryEnricher(IRepository<Category> categoryRepository)
             : base(
                 categoryRepository,
-                src => src.ImageAnalysis.Categories.Select(c => c.Name),
+                src => src.ImageAnalysis?.Categories?.Select(c => c.Name) ?? Enumerable.Empty<string>(),
                 model => model.Name,
                 name => new Category { Name = name },
                 (photo, name, categoryModel, src) =>
                 {
-                    var cat = src.ImageAnalysis.Categories.First(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase));
+                    var cat = src.ImageAnalysis?.Categories?.FirstOrDefault(c => string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase));
                     return new PhotoCategory
                     {
                         Photo = photo,
                         Category = categoryModel,
-                        Score = cat.Score
+                        Score = cat?.Score ?? 0
                     };
                 })
         {

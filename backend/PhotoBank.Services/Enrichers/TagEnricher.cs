@@ -12,13 +12,13 @@ namespace PhotoBank.Services.Enrichers
         public TagEnricher(IRepository<Tag> repo)
             : base(
                 repo,
-                src => src.ImageAnalysis.Tags.Select(t => t.Name),
+                src => src.ImageAnalysis?.Tags?.Select(t => t.Name) ?? Enumerable.Empty<string>(),
                 model => model.Name,
                 name => new Tag { Name = name },
                 (photo, name, tagModel, src) =>
                 {
-                    var tag = src.ImageAnalysis.Tags.First(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
-                    return new PhotoTag { Photo = photo, Tag = tagModel, Confidence = tag.Confidence };
+                    var tag = src.ImageAnalysis?.Tags?.FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
+                    return new PhotoTag { Photo = photo, Tag = tagModel, Confidence = tag?.Confidence ?? 0 };
                 })
         {
         }

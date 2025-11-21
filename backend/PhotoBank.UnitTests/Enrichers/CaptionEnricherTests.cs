@@ -1,11 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.ImageAnalysis;
 using PhotoBank.Services.Models;
 
 namespace PhotoBank.UnitTests.Enrichers
@@ -22,15 +21,15 @@ namespace PhotoBank.UnitTests.Enrichers
             var photo = new Photo();
             var sourceData = new SourceDataDto
             {
-                ImageAnalysis = new ImageAnalysis
+                ImageAnalysis = new ImageAnalysisResult
                 {
-                    Description = new ImageDescriptionDetails
+                    Description = new ImageDescription
                     {
-                        Captions = new List<ImageCaption>
-                        {
+                        Captions =
+                        [
                             new ImageCaption { Text = "A beautiful sunset", Confidence = 0.95 },
                             new ImageCaption { Text = "A scenic view", Confidence = 0.85 }
-                        }
+                        ]
                     }
                 }
             };

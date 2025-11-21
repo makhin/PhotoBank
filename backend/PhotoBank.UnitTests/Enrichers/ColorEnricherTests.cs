@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.ImageAnalysis;
 using PhotoBank.Services.Models;
 
 namespace PhotoBank.UnitTests.Enrichers
@@ -23,7 +24,7 @@ namespace PhotoBank.UnitTests.Enrichers
             var photo = new Photo();
             var sourceData = new SourceDataDto
             {
-                ImageAnalysis = new ImageAnalysis
+                ImageAnalysis = new ImageAnalysisResult
                 {
                     Color = new ColorInfo
                     {
@@ -31,7 +32,7 @@ namespace PhotoBank.UnitTests.Enrichers
                         AccentColor = accentColor,
                         DominantColorBackground = dominantColorBackground,
                         DominantColorForeground = dominantColorForeground,
-                        DominantColors = dominantColors
+                        DominantColors = new List<string>(dominantColors)
                     }
                 }
             };

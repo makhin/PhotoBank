@@ -3,12 +3,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Linq.Expressions;
 using FluentAssertions;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.ImageAnalysis;
 using PhotoBank.Services.Models;
 using Category = PhotoBank.DbContext.Models.Category;
 
@@ -54,15 +54,15 @@ namespace PhotoBank.UnitTests.Enrichers
             // Arrange
             var photo = new Photo();
 
-            var categories = new List<Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models.Category>()
-                    {
-                        new() { Name = "Nature", Score = 0.95 },
-                        new() { Name = "City", Score = 0.85 }
-                    };
+            var categories = new List<ImageCategory>
+            {
+                new() { Name = "Nature", Score = 0.95 },
+                new() { Name = "City", Score = 0.85 }
+            };
 
             var sourceData = new SourceDataDto
             {
-                ImageAnalysis = new ImageAnalysis
+                ImageAnalysis = new ImageAnalysisResult
                 {
                     Categories = categories
                 }
@@ -97,9 +97,9 @@ namespace PhotoBank.UnitTests.Enrichers
             var photo = new Photo();
             var sourceData = new SourceDataDto
             {
-                ImageAnalysis = new ImageAnalysis
+                ImageAnalysis = new ImageAnalysisResult
                 {
-                    Categories = new List<Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models.Category>
+                    Categories = new List<ImageCategory>
                     {
                         new() { Name = "Beach", Score = 0.5 }
                     }

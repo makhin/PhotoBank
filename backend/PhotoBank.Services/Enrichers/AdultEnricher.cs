@@ -14,10 +14,13 @@ namespace PhotoBank.Services.Enrichers
 
         public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
-            photo.IsAdultContent = sourceData.ImageAnalysis.Adult.IsAdultContent;
-            photo.AdultScore = sourceData.ImageAnalysis.Adult.AdultScore;
-            photo.IsRacyContent = sourceData.ImageAnalysis.Adult.IsRacyContent;
-            photo.RacyScore = sourceData.ImageAnalysis.Adult.RacyScore;
+            var adult = sourceData.ImageAnalysis?.Adult;
+            if (adult == null) return Task.CompletedTask;
+
+            photo.IsAdultContent = adult.IsAdultContent;
+            photo.AdultScore = adult.AdultScore;
+            photo.IsRacyContent = adult.IsRacyContent;
+            photo.RacyScore = adult.RacyScore;
             return Task.CompletedTask;
         }
     }

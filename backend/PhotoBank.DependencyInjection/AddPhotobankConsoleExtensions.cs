@@ -22,6 +22,7 @@ using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichers.Onnx;
 using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.FaceRecognition;
+using PhotoBank.Services.ImageAnalysis;
 using PhotoBank.Services.Recognition;
 
 namespace PhotoBank.DependencyInjection;
@@ -37,16 +38,31 @@ public static partial class ServiceCollectionExtensions
         services.Configure<ComputerVisionOptions>(configuration.GetSection(computerVision));
         services.Configure<FaceApiOptions>(configuration.GetSection(face));
         services.Configure<YoloOnnxOptions>(configuration.GetSection(yoloOnnx));
+        services.Configure<ImageAnalyzerOptions>(configuration.GetSection(ImageAnalyzerOptions.SectionName));
+        services.Configure<OllamaOptions>(configuration.GetSection(OllamaOptions.SectionName));
 
-        services.AddSingleton<IComputerVisionClient, ComputerVisionClient>(provider =>
+        // Register IImageAnalyzer based on configuration
+        var imageAnalyzerOptions = configuration.GetSection(ImageAnalyzerOptions.SectionName).Get<ImageAnalyzerOptions>()
+            ?? new ImageAnalyzerOptions();
+
+        if (imageAnalyzerOptions.Provider == ImageAnalyzerKind.Ollama)
         {
-            var options = provider.GetRequiredService<IOptions<ComputerVisionOptions>>().Value;
-            var credentials = new ApiKeyServiceClientCredentials(options.Key);
-            return new ComputerVisionClient(credentials)
+            services.AddSingleton<IImageAnalyzer, OllamaImageAnalyzer>();
+        }
+        else
+        {
+            // Only register Azure Computer Vision client when using Azure provider
+            services.AddSingleton<IComputerVisionClient, ComputerVisionClient>(provider =>
             {
-                Endpoint = options.Endpoint
-            };
-        });
+                var options = provider.GetRequiredService<IOptions<ComputerVisionOptions>>().Value;
+                var credentials = new ApiKeyServiceClientCredentials(options.Key);
+                return new ComputerVisionClient(credentials)
+                {
+                    Endpoint = options.Endpoint
+                };
+            });
+            services.AddSingleton<IImageAnalyzer, AzureImageAnalyzer>();
+        }
 
         services.AddSingleton<IFaceClient, FaceClient>(provider =>
         {

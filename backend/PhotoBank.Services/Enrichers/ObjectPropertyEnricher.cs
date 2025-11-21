@@ -13,16 +13,20 @@ namespace PhotoBank.Services.Enrichers
         public ObjectPropertyEnricher(IRepository<PropertyName> propertyNameRepository)
             : base(
                 propertyNameRepository,
-                src => src.ImageAnalysis.Objects.Select(o => o.ObjectProperty),
+                // Skip objects without rectangles (EF model requires Rectangle)
+                src => src.ImageAnalysis?.Objects?
+                    .Where(o => o.Rectangle != null)
+                    .Select(o => o.ObjectProperty) ?? Enumerable.Empty<string>(),
                 model => model.Name,
                 name => new PropertyName { Name = name },
                 (photo, name, propertyName, src) =>
                 {
-                    var detectedObject = src.ImageAnalysis.Objects.First(o => string.Equals(o.ObjectProperty, name, StringComparison.OrdinalIgnoreCase));
+                    var detectedObject = src.ImageAnalysis?.Objects?
+                        .FirstOrDefault(o => o.Rectangle != null && string.Equals(o.ObjectProperty, name, StringComparison.OrdinalIgnoreCase));
                     return new ObjectProperty
                     {
                         PropertyName = propertyName,
-                        Rectangle = GeoWrapper.GetRectangle(detectedObject.Rectangle, photo.Scale),
+                        Rectangle = GeoWrapper.GetRectangle(detectedObject!.Rectangle!, photo.Scale),
                         Confidence = detectedObject.Confidence
                     };
                 })

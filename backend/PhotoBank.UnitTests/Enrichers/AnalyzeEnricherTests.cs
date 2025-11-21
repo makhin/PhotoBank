@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,8 +6,7 @@ using Moq;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Enrichers;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using PhotoBank.Services.ImageAnalysis;
 using PhotoBank.Services.Models;
 using ImageMagick;
 
@@ -17,14 +15,14 @@ namespace PhotoBank.UnitTests.Enrichers
     [TestFixture]
     public class AnalyzeEnricherTests
     {
-        private Mock<IComputerVisionClient> _mockClient;
+        private Mock<IImageAnalyzer> _mockAnalyzer;
         private AnalyzeEnricher _analyzeEnricher;
 
         [SetUp]
         public void Setup()
         {
-            _mockClient = new Mock<IComputerVisionClient>();
-            _analyzeEnricher = new AnalyzeEnricher(_mockClient.Object);
+            _mockAnalyzer = new Mock<IImageAnalyzer>();
+            _analyzeEnricher = new AnalyzeEnricher(_mockAnalyzer.Object);
         }
 
         [Test]
@@ -49,7 +47,6 @@ namespace PhotoBank.UnitTests.Enrichers
         }
 
         [Test]
-        [Ignore("Need to fix")]
         public async Task EnrichAsync_ShouldSetImageAnalysis()
         {
             // Arrange
@@ -59,9 +56,9 @@ namespace PhotoBank.UnitTests.Enrichers
             {
                 PreviewImage = preview
             };
-            var imageAnalysis = new ImageAnalysis
+            var imageAnalysisResult = new ImageAnalysisResult
             {
-                Adult = new AdultInfo
+                Adult = new AdultContent
                 {
                     IsAdultContent = true,
                     AdultScore = 0.95,
@@ -70,15 +67,55 @@ namespace PhotoBank.UnitTests.Enrichers
                 }
             };
 
-            _mockClient.Setup(client => client.AnalyzeImageInStreamAsync(It.IsAny<Stream>(), It.IsAny<IList<VisualFeatureTypes?>>(), It.IsAny<IList<Details?>>(), It.IsAny<string>(), It.IsAny<IList<DescriptionExclude?>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(imageAnalysis);
+            _mockAnalyzer
+                .Setup(a => a.AnalyzeAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(imageAnalysisResult);
 
             // Act
             await _analyzeEnricher.EnrichAsync(photo, sourceData);
 
             // Assert
-            sourceData.ImageAnalysis.Should().Be(imageAnalysis);
-            _mockClient.Verify(client => client.AnalyzeImageInStreamAsync(It.IsAny<Stream>(), It.IsAny<IList<VisualFeatureTypes?>>(), It.IsAny<IList<Details?>>(), It.IsAny<string>(), It.IsAny<IList<DescriptionExclude?>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+            sourceData.ImageAnalysis.Should().Be(imageAnalysisResult);
+            _mockAnalyzer.Verify(a => a.AnalyzeAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task EnrichAsync_ShouldSkipIfImageAnalysisAlreadySet()
+        {
+            // Arrange
+            var photo = new Photo();
+            var preview = new MagickImage(MagickColors.Red, 10, 10) { Format = MagickFormat.Jpeg };
+            var existingResult = new ImageAnalysisResult();
+            var sourceData = new SourceDataDto
+            {
+                PreviewImage = preview,
+                ImageAnalysis = existingResult
+            };
+
+            // Act
+            await _analyzeEnricher.EnrichAsync(photo, sourceData);
+
+            // Assert
+            sourceData.ImageAnalysis.Should().Be(existingResult);
+            _mockAnalyzer.Verify(a => a.AnalyzeAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Test]
+        public async Task EnrichAsync_ShouldSkipIfNoPreviewImage()
+        {
+            // Arrange
+            var photo = new Photo();
+            var sourceData = new SourceDataDto
+            {
+                PreviewImage = null
+            };
+
+            // Act
+            await _analyzeEnricher.EnrichAsync(photo, sourceData);
+
+            // Assert
+            sourceData.ImageAnalysis.Should().BeNull();
+            _mockAnalyzer.Verify(a => a.AnalyzeAsync(It.IsAny<Stream>(), It.IsAny<CancellationToken>()), Times.Never);
         }
     }
 }

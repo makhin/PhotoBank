@@ -3,12 +3,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Linq.Expressions;
 using FluentAssertions;
-using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.ImageAnalysis;
 using PhotoBank.Services.Models;
 
 namespace PhotoBank.UnitTests.Enrichers
@@ -54,12 +54,22 @@ namespace PhotoBank.UnitTests.Enrichers
             var photo = new Photo { Scale = 1 };
             var sourceData = new SourceDataDto
             {
-                ImageAnalysis = new ImageAnalysis
+                ImageAnalysis = new ImageAnalysisResult
                 {
                     Objects = new List<DetectedObject>
                     {
-                        new DetectedObject(new BoundingRect { X = 10, Y = 10, W = 50, H = 50 }, "Car", 0.9),
-                        new DetectedObject(new BoundingRect { X = 20, Y = 20, W = 60, H = 60 }, "Tree", 0.8)
+                        new DetectedObject
+                        {
+                            ObjectProperty = "Car",
+                            Confidence = 0.9,
+                            Rectangle = new ObjectRectangle { X = 10, Y = 10, W = 50, H = 50 }
+                        },
+                        new DetectedObject
+                        {
+                            ObjectProperty = "Tree",
+                            Confidence = 0.8,
+                            Rectangle = new ObjectRectangle { X = 20, Y = 20, W = 60, H = 60 }
+                        }
                     }
                 }
             };
@@ -93,11 +103,16 @@ namespace PhotoBank.UnitTests.Enrichers
             var photo = new Photo { Scale = 1 };
             var sourceData = new SourceDataDto
             {
-                ImageAnalysis = new ImageAnalysis
+                ImageAnalysis = new ImageAnalysisResult
                 {
                     Objects = new List<DetectedObject>
                     {
-                        new DetectedObject(new BoundingRect() { X = 30, Y = 30, W = 70, H = 70 }, "Bike", 0.7)
+                        new DetectedObject
+                        {
+                            ObjectProperty = "Bike",
+                            Confidence = 0.7,
+                            Rectangle = new ObjectRectangle { X = 30, Y = 30, W = 70, H = 70 }
+                        }
                     }
                 }
             };
@@ -105,7 +120,7 @@ namespace PhotoBank.UnitTests.Enrichers
             _mockPropertyNameRepository
                 .Setup(repo => repo.GetByCondition(It.IsAny<Expression<System.Func<PropertyName, bool>>>() ))
                 .Returns(Enumerable.Empty<PropertyName>().AsQueryable());
-            
+
             // Act
             await _objectPropertyEnricher.EnrichAsync(photo, sourceData);
 
@@ -114,5 +129,3 @@ namespace PhotoBank.UnitTests.Enrichers
         }
     }
 }
-
-

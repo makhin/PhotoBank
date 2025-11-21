@@ -14,8 +14,13 @@ namespace PhotoBank.Services.Enrichers
 
         public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
+            var captions = sourceData.ImageAnalysis?.Description?.Captions;
+            if (captions == null || captions.Count == 0)
+                return Task.CompletedTask;
+
             photo.Captions = new List<Caption>();
-            foreach (var caption in sourceData.ImageAnalysis.Description.Captions)
+
+            foreach (var caption in captions)
             {
                 photo.Captions.Add(new Caption
                 {

@@ -13,11 +13,14 @@ namespace PhotoBank.Services.Enrichers
 
         public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
-            photo.IsBW = sourceData.ImageAnalysis.Color.IsBWImg;
-            photo.AccentColor = sourceData.ImageAnalysis.Color.AccentColor;
-            photo.DominantColorBackground = sourceData.ImageAnalysis.Color.DominantColorBackground;
-            photo.DominantColorForeground = sourceData.ImageAnalysis.Color.DominantColorForeground;
-            photo.DominantColors = string.Join(",", sourceData.ImageAnalysis.Color.DominantColors);
+            var color = sourceData.ImageAnalysis?.Color;
+            if (color == null) return Task.CompletedTask;
+
+            photo.IsBW = color.IsBWImg;
+            photo.AccentColor = color.AccentColor;
+            photo.DominantColorBackground = color.DominantColorBackground;
+            photo.DominantColorForeground = color.DominantColorForeground;
+            photo.DominantColors = string.Join(",", color.DominantColors);
             return Task.CompletedTask;
         }
     }
