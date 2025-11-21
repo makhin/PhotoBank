@@ -19,6 +19,7 @@ using PhotoBank.Services.Translator;
 using Polly;
 using System;
 using System.IO.Abstractions;
+using PhotoBank.Services.Enrichers.Services;
 
 namespace PhotoBank.DependencyInjection;
 

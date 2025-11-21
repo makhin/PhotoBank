@@ -82,11 +82,10 @@ public class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
         return _inner.Execute<TResult>(expression);
     }
 
-    public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
+    public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
     {
-        // Execute the query synchronously and wrap in completed task
-        var result = _inner.Execute<TResult>(expression);
-        return Task.FromResult(result);
+        // TResult is already Task<T> when called from async LINQ methods
+        return _inner.Execute<TResult>(expression);
     }
 
     public IAsyncEnumerable<TResult> ExecuteAsync<TResult>(Expression expression)

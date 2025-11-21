@@ -49,8 +49,8 @@ public class LocalInsightFaceProviderTests
     public async Task LinkFacesToPersonAsync_EmbedsAndStoresVectors()
     {
         _client.SetupSequence(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new LocalEmbedResponse(new float[] { 2, 0 }, new int[] { 2 }, 2, "m", "112x112", null))
-            .ReturnsAsync(new LocalEmbedResponse(new float[] { 0, 3 }, new int[] { 2 }, 2, "m", "112x112", null));
+            .ReturnsAsync(new LocalEmbedResponse(new[] { new float[] { 2, 0 } }, new int[] { 2 }, 2, "m", "112x112", null))
+            .ReturnsAsync(new LocalEmbedResponse(new[] { new float[] { 0, 3 } }, new int[] { 2 }, 2, "m", "112x112", null));
 
         var faces = new List<FaceToLink>
         {
@@ -70,7 +70,7 @@ public class LocalInsightFaceProviderTests
     {
         // Query embedding [1, 1] will be normalized to [0.707, 0.707]
         _client.Setup(c => c.EmbedAsync(It.IsAny<Stream>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new LocalEmbedResponse(new float[] { 1, 1 }, new int[] { 2 }, 2, null, null, null));
+            .ReturnsAsync(new LocalEmbedResponse(new[] { new float[] { 1, 1 } }, new int[] { 2 }, 2, null, null, null));
 
         // Mock FindSimilarFacesAsync with SQL-level grouping (DISTINCT ON)
         // TopK=2, so limit is exactly 2 (best face per person)

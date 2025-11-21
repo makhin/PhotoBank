@@ -646,7 +646,7 @@ public class ReEnrichmentServiceTests
         var photo1 = CreateTestPhoto(1);
         photo1.Captions = new List<Caption>
         {
-            new Caption { Id = 1, PhotoId = 1, Text = "Existing caption" }
+            new Caption { Id = 1, Text = "Existing caption" }
         };
         await SeedPhotoAsync(photo1);
 

@@ -10,6 +10,7 @@ using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Models;
+using File = System.IO.File;
 
 namespace PhotoBank.Services.Enrichment;
 

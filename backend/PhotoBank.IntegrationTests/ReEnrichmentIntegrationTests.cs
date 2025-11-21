@@ -14,7 +14,9 @@ using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.DependencyInjection;
 using PhotoBank.Repositories;
+using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichment;
+using File = System.IO.File;
 
 namespace PhotoBank.IntegrationTests;
 
@@ -97,13 +99,6 @@ public class ReEnrichmentIntegrationTests
         // Register test enrichers
         services.AddTransient<IEnricher, TestEnricherA>();
         services.AddTransient<IEnricher, TestEnricherB>();
-
-        // Add enrichment infrastructure (pipeline, catalog, re-enrichment service)
-        services.AddEnrichmentInfrastructure(opts =>
-        {
-            opts.LogTimings = false;
-            opts.ContinueOnError = true;
-        });
 
         _provider = services.BuildServiceProvider();
 
