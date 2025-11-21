@@ -141,16 +141,11 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IFaceService, FaceService>();
         services.AddTransient<IRecognitionService, RecognitionService>();
         services.TryAddSingleton<IActiveEnricherProvider, ActiveEnricherProvider>();
-        services.AddOptions<EnrichmentPipelineOptions>();
 
-        var enricherTypes = services
-            .Where(d => d.ServiceType == typeof(IEnricher) && d.ImplementationType is not null)
-            .Select(d => d.ImplementationType!)
-            .Distinct()
-            .ToArray();
+        // Register enrichment infrastructure (pipeline, catalog, re-enrichment service)
+        // This uses all enrichers registered above
+        services.AddEnrichmentInfrastructure();
 
-        services.AddSingleton(_ => new EnricherTypeCatalog(enricherTypes));
-        services.AddSingleton<IEnrichmentPipeline, EnrichmentPipeline>();
         services.AddSingleton<EnricherResolver>(provider =>
         {
             var activeEnricherProvider = provider.GetRequiredService<IActiveEnricherProvider>();
