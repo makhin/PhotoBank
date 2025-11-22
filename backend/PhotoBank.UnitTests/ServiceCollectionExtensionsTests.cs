@@ -399,9 +399,7 @@ public class ServiceCollectionExtensionsTests
             typeof(TagEnricher),
             typeof(ObjectPropertyEnricher),
             typeof(AdultEnricher),
-            typeof(UnifiedFaceEnricher),
-            typeof(FaceEnricher),
-            typeof(FaceEnricherAws)
+            typeof(UnifiedFaceEnricher)
         };
 
         enrichers.Select(d => d.ImplementationType).Should().BeEquivalentTo(expected, options => options.WithoutStrictOrdering());

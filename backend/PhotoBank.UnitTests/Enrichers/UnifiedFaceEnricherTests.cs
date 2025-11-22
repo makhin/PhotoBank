@@ -8,7 +8,6 @@ using Moq;
 using NUnit.Framework;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Enrichers;
-using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.FaceRecognition;
 using PhotoBank.Services.FaceRecognition.Abstractions;
 using PhotoBank.Services.Models;
@@ -19,7 +18,6 @@ namespace PhotoBank.UnitTests.Enrichers;
 public class UnifiedFaceEnricherTests
 {
     private Mock<IUnifiedFaceService> _mockFaceService;
-    private Mock<IFacePreviewService> _mockFacePreviewService;
     private Mock<ILogger<UnifiedFaceEnricher>> _mockLogger;
     private UnifiedFaceEnricher _enricher;
 
@@ -27,13 +25,11 @@ public class UnifiedFaceEnricherTests
     public void Setup()
     {
         _mockFaceService = new Mock<IUnifiedFaceService>();
-        _mockFacePreviewService = new Mock<IFacePreviewService>();
         _mockLogger = new Mock<ILogger<UnifiedFaceEnricher>>();
 
         _enricher = new UnifiedFaceEnricher(
             _mockFaceService.Object,
-            _mockFacePreviewService.Object,
-            _mockLogger.Object);
+ _mockLogger.Object);
     }
 
     [Test]
