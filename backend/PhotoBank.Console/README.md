@@ -61,6 +61,9 @@ PhotoBank.Console --no-register
   "ConnectionStrings": {
     "DefaultConnection": "Server=localhost;Database=Photobank;..."
   },
+  "Processing": {
+    "MaxDegreeOfParallelism": 4
+  },
   "ComputerVision": {
     "Key": "your-azure-cv-key",
     "Endpoint": "https://your-region.api.cognitive.microsoft.com/"
