@@ -4,6 +4,7 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
+using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Recognition;
 using System.Linq;
 using System.Threading;
@@ -17,16 +18,28 @@ namespace PhotoBank.Console
     {
         private readonly IPhotoProcessor _photoProcessor;
         private readonly IRepository<Storage> _storages;
+        private readonly IRepository<Enricher> _enricherRepository;
+        private readonly IActiveEnricherProvider _activeEnricherProvider;
         private readonly ILogger<App> _logger;
         private readonly ISyncService _syncService;
         private readonly IRecognitionService _recognitionService;
         private readonly bool _checkDuplicates;
         private readonly object _progressLock = new();
 
-        public App(IPhotoProcessor photoProcessor, IRepository<Storage> storages, ILogger<App> logger, ISyncService syncService, IRecognitionService recognitionService, IConfiguration configuration)
+        public App(
+            IPhotoProcessor photoProcessor,
+            IRepository<Storage> storages,
+            IRepository<Enricher> enricherRepository,
+            IActiveEnricherProvider activeEnricherProvider,
+            ILogger<App> logger,
+            ISyncService syncService,
+            IRecognitionService recognitionService,
+            IConfiguration configuration)
         {
             _photoProcessor = photoProcessor;
             _storages = storages;
+            _enricherRepository = enricherRepository;
+            _activeEnricherProvider = activeEnricherProvider;
             _logger = logger;
             _syncService = syncService;
             _recognitionService = recognitionService;
@@ -108,6 +121,8 @@ namespace PhotoBank.Console
                 var failed = 0;
                 var duplicates = 0;
 
+                var activeEnrichers = _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
+
                 System.Console.WriteLine($"Processing {total} files from storage '{storage.Name}'...");
                 DisplayProgress(0, 0, 0, total);
 
@@ -121,7 +136,7 @@ namespace PhotoBank.Console
                         }
                         else
                         {
-                            await _photoProcessor.AddPhotoAsync(storage, file);
+                            await _photoProcessor.AddPhotoAsync(storage, file, activeEnrichers);
                             Interlocked.Increment(ref processed);
                         }
                     }
