@@ -7,19 +7,25 @@ using PhotoBank.Services.Models;
 
 namespace PhotoBank.Services.Enrichers;
 
-public class PreviewEnricher : IEnricher
+public sealed class PreviewEnricher : IEnricher
 {
     private readonly IImageService _imageService;
-    public EnricherType EnricherType => EnricherType.Preview;
-    public Type[] Dependencies => Array.Empty<Type>();
 
     public PreviewEnricher(IImageService imageService)
     {
-        _imageService = imageService;
+        _imageService = imageService ?? throw new ArgumentNullException(nameof(imageService));
     }
+
+    public EnricherType EnricherType => EnricherType.Preview;
+
+    private static readonly Type[] s_dependencies = Array.Empty<Type>();
+    public Type[] Dependencies => s_dependencies;
 
     public Task EnrichAsync(Photo photo, SourceDataDto source, CancellationToken cancellationToken = default)
     {
+        if (photo is null) throw new ArgumentNullException(nameof(photo));
+        if (source is null) throw new ArgumentNullException(nameof(source));
+
         using var image = new MagickImage(source.AbsolutePath);
         image.AutoOrient();
         source.OriginalImage = image.Clone();
@@ -30,6 +36,7 @@ public class PreviewEnricher : IEnricher
         image.Format = MagickFormat.Jpg;
         photo.Scale = scale;
         source.PreviewImage = image.Clone();
+        photo.ImageHash = ImageHashHelper.ComputeHash(source.PreviewImage.ToByteArray());
         return Task.CompletedTask;
     }
 }

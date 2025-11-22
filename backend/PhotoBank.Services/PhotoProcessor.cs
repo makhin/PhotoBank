@@ -84,11 +84,6 @@ namespace PhotoBank.Services
             var enrichersToUse = activeEnrichers ?? _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
             await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersToUse);
 
-            if (sourceData.PreviewImage != null)
-            {
-                photo.ImageHash = ImageHashHelper.ComputeHash(sourceData.PreviewImage.ToByteArray());
-            }
-
             try
             {
                 await _photoRepository.InsertAsync(photo);
