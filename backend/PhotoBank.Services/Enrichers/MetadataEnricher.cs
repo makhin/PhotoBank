@@ -57,17 +57,6 @@ namespace PhotoBank.Services.Enrichers
                 photo.TakenDate = GetTakenDate(new Directory[] { exifIfd0Directory, exifSubIfdDirectory, fileMetadataDirectory });
             }
 
-            if (exifSubIfdDirectory != null)
-            {
-                photo.Height ??= GetHeight(exifSubIfdDirectory);
-                photo.Width ??= GetWidth(exifSubIfdDirectory);
-            }
-
-            if (exifIfd0Directory != null)
-            {
-                photo.Orientation ??= GetOrientation(exifIfd0Directory);
-            }
-
             if (gpsDirectory != null)
             {
                 photo.Location = GeoWrapper.GetLocation(gpsDirectory);
@@ -97,58 +86,6 @@ namespace PhotoBank.Services.Enrichers
                         // ignored
                     }
                 }
-            }
-
-            return null;
-        }
-
-        private static uint? GetHeight(Directory directory)
-        {
-            int[] tags = [ExifDirectoryBase.TagImageHeight, ExifDirectoryBase.TagExifImageHeight];
-
-            foreach (var tag in tags)
-            {
-                try
-                {
-                    return (uint)directory?.GetInt32(tag);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
-
-            return null;
-        }
-
-        private static uint? GetWidth(Directory directory)
-        {
-            int[] tags = [ExifDirectoryBase.TagImageWidth, ExifDirectoryBase.TagExifImageWidth];
-
-            foreach (var tag in tags)
-            {
-                try
-                {
-                    return (uint)directory?.GetInt32(tag);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
-
-            return null;
-        }
-
-        private static int? GetOrientation(Directory directory)
-        {
-            try
-            {
-                return directory?.GetInt32(ExifDirectoryBase.TagOrientation);
-            }
-            catch (Exception)
-            {
-                // ignored
             }
 
             return null;
