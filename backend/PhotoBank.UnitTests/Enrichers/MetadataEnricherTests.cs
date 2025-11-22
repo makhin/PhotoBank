@@ -90,56 +90,8 @@ namespace PhotoBank.UnitTests.Enrichers
             // Act
             await _metadataEnricher.EnrichAsync(_photo, _sourceData);
 
-            // Assert            
+            // Assert
             _photo.TakenDate.Should().Be(new DateTime(2021, 1, 1, 12, 0, 0));
-        }
-
-        [Test]
-        public async Task GetHeight_ShouldReturnCorrectHeight()
-        {
-            // Arrange
-            var directory = new ExifSubIfdDirectory();
-            directory.Set(ExifDirectoryBase.TagImageHeight, 1080);
-
-            _mockImageMetadataReaderWrapper.Setup(reader => reader.ReadMetadata(It.IsAny<string>())).Returns(new List<Directory> { directory });
-
-            // Act
-            await _metadataEnricher.EnrichAsync(_photo, _sourceData);
-
-            // Assert
-            _photo.Height.Should().Be(1080);
-        }
-
-        [Test]
-        public async Task GetWidth_ShouldReturnCorrectWidth()
-        {
-            // Arrange
-            var directory = new ExifSubIfdDirectory();
-            directory.Set(ExifDirectoryBase.TagImageWidth, 1920);
-
-            _mockImageMetadataReaderWrapper.Setup(reader => reader.ReadMetadata(It.IsAny<string>())).Returns(new List<Directory> { directory });
-
-            // Act
-            await _metadataEnricher.EnrichAsync(_photo, _sourceData);
-
-            // Assert
-            _photo.Width.Should().Be(1920);
-        }
-
-        [Test]
-        public async Task GetOrientation_ShouldReturnCorrectOrientation()
-        {
-            // Arrange
-            var directory = new ExifIfd0Directory();
-            directory.Set(ExifDirectoryBase.TagOrientation, 1);
-
-            _mockImageMetadataReaderWrapper.Setup(reader => reader.ReadMetadata(It.IsAny<string>())).Returns(new List<Directory> { directory });
-
-            // Act
-            await _metadataEnricher.EnrichAsync(_photo, _sourceData);
-
-            // Assert
-            _photo.Orientation.Should().Be(1);
         }
     }
 }

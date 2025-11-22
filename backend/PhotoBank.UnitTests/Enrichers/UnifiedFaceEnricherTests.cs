@@ -40,10 +40,11 @@ public class UnifiedFaceEnricherTests
     }
 
     [Test]
-    public void Dependencies_ShouldContainPreviewAndMetadata()
+    public void Dependencies_ShouldContainPreview()
     {
         // Act & Assert
-        _enricher.Dependencies.Should().Contain(new[] { typeof(PreviewEnricher), typeof(MetadataEnricher) });
+        _enricher.Dependencies.Should().ContainSingle()
+            .And.Contain(typeof(PreviewEnricher));
     }
 
     [Test]
