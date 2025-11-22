@@ -5,6 +5,7 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Recognition;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -93,9 +94,10 @@ namespace PhotoBank.Console
         {
             try
             {
-                var files = await _syncService.SyncStorage(storage);
-                var fileList = files.ToList();
-                var total = fileList.Count;
+                var syncResult = await _syncService.SyncStorage(storage);
+                var existingFiles = syncResult.ExistingFiles.ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var fileList = syncResult.NewFiles.ToList();
+                var total = fileList.Count + existingFiles.Count;
 
                 if (total == 0)
                 {
@@ -106,16 +108,16 @@ namespace PhotoBank.Console
 
                 var processed = 0;
                 var failed = 0;
-                var duplicates = 0;
+                var duplicates = existingFiles.Count;
 
                 System.Console.WriteLine($"Processing {total} files from storage '{storage.Name}'...");
-                DisplayProgress(0, 0, 0, total);
+                DisplayProgress(0, 0, duplicates, total);
 
                 await Parallel.ForEachAsync(fileList, token, async (file, ct) =>
                 {
                     try
                     {
-                        if (_checkDuplicates && await _photoProcessor.IsDuplicateAsync(storage, file))
+                        if (_checkDuplicates && _photoProcessor.IsDuplicate(storage, file, existingFiles))
                         {
                             Interlocked.Increment(ref duplicates);
                         }

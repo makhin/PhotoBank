@@ -21,6 +21,7 @@ namespace PhotoBank.Services
     {
         Task<int> AddPhotoAsync(Storage storage, string path);
         Task<bool> IsDuplicateAsync(Storage storage, string path);
+        bool IsDuplicate(Storage storage, string path, IReadOnlySet<string> existingRelativePaths);
         Task AddFacesAsync(Storage storage);
         Task UpdatePhotosAsync(Storage storage);
     }
@@ -37,9 +38,18 @@ namespace PhotoBank.Services
 
         private class PhotoFilePath
         {
-            public int PhotoId { get; init; }
-            public string RelativePath { get; init; }
-            public List<File> Files { get; init; }
+            public required int PhotoId { get; init; }
+            public required string RelativePath { get; init; }
+            public required List<File> Files { get; init; }
+        }
+
+        private class FilePathInfo
+        {
+            public required string AbsolutePath { get; init; }
+            public required string RelativeFilePath { get; init; }
+            public required string RelativeDirectory { get; init; }
+            public required string FileName { get; init; }
+            public required string FileNameWithoutExtension { get; init; }
         }
 
         public PhotoProcessor(
@@ -63,7 +73,8 @@ namespace PhotoBank.Services
 
         public async Task<int> AddPhotoAsync(Storage storage, string path)
         {
-            var duplicate = await VerifyDuplicates(storage, path);
+            var pathInfo = GetFilePathInfo(storage, path);
+            var duplicate = await VerifyDuplicates(storage, pathInfo);
 
             if (duplicate.DuplicateStatus == DuplicateStatus.FileExists)
             {
@@ -80,8 +91,13 @@ namespace PhotoBank.Services
                 return duplicate.PhotoId;
             }
 
-            var sourceData = new SourceDataDto { AbsolutePath = path };
-            var photo = new Photo { Storage = storage };
+            var sourceData = new SourceDataDto { AbsolutePath = pathInfo.AbsolutePath };
+            var photo = new Photo
+            {
+                Storage = storage,
+                RelativePath = pathInfo.RelativeDirectory,
+                Name = pathInfo.FileNameWithoutExtension
+            };
 
             var activeEnrichers = _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
             await _enrichmentPipeline.RunAsync(photo, sourceData, activeEnrichers);
@@ -103,7 +119,8 @@ namespace PhotoBank.Services
             var faces = (photo.Faces ?? new List<Face>())
                 .Zip(sourceData.FaceImages, (f, img) => new PhotoCreatedFace(f.Id, img))
                 .ToList();
-            var evt = new PhotoCreated(photo.Id, sourceData.PreviewImage.ToByteArray(), sourceData.ThumbnailImage, faces);
+            var previewBytes = sourceData.PreviewImage?.ToByteArray() ?? Array.Empty<byte>();
+            var evt = new PhotoCreated(photo.Id, previewBytes, sourceData.ThumbnailImage, faces);
             await _mediator.Publish(evt);
 
             return photo.Id;
@@ -111,8 +128,14 @@ namespace PhotoBank.Services
 
         public async Task<bool> IsDuplicateAsync(Storage storage, string path)
         {
-            var duplicate = await VerifyDuplicates(storage, path);
+            var duplicate = await VerifyDuplicates(storage, GetFilePathInfo(storage, path));
             return duplicate.DuplicateStatus == DuplicateStatus.FileExists;
+        }
+
+        public bool IsDuplicate(Storage storage, string path, IReadOnlySet<string> existingRelativePaths)
+        {
+            var pathInfo = GetFilePathInfo(storage, path);
+            return existingRelativePaths.Contains(pathInfo.RelativeFilePath);
         }
 
         public async Task AddFacesAsync(Storage storage)
@@ -124,7 +147,7 @@ namespace PhotoBank.Services
                 .Where(p => p.StorageId == storage.Id && p.FaceIdentifyStatus == FaceIdentifyStatus.Undefined)
                 .Select(p => new PhotoFilePath
                 {
-                    PhotoId =p.Id,
+                    PhotoId = p.Id,
                     RelativePath = p.RelativePath,
                     Files = p.Files
                 }).ToListAsync();
@@ -224,17 +247,17 @@ namespace PhotoBank.Services
             }
         }
 
-        private async Task<DuplicateVerification> VerifyDuplicates(Storage storage, string path)
+        private async Task<DuplicateVerification> VerifyDuplicates(Storage storage, FilePathInfo pathInfo)
         {
-            var name = Path.GetFileNameWithoutExtension(path);
-            var relativePath = Path.GetRelativePath(storage.Folder, Path.GetDirectoryName(path));
             var result = new DuplicateVerification
             {
                 PhotoId = await _photoRepository.GetByCondition(p =>
-                        p.Name == name && p.RelativePath == relativePath && p.Storage.Id == storage.Id)
+                        p.Name == pathInfo.FileNameWithoutExtension &&
+                        p.RelativePath == pathInfo.RelativeDirectory &&
+                        p.Storage.Id == storage.Id)
                     .Select(p => p.Id)
                     .SingleOrDefaultAsync(),
-                Name = Path.GetFileName(path)
+                Name = pathInfo.FileName
             };
             
             if (result.PhotoId == 0)
@@ -248,6 +271,32 @@ namespace PhotoBank.Services
                 .AnyAsync();
             result.DuplicateStatus = fileExists ? DuplicateStatus.FileExists : DuplicateStatus.FileNotExists;
             return result;
+        }
+
+        private FilePathInfo GetFilePathInfo(Storage storage, string path)
+        {
+            var absolutePath = Path.IsPathRooted(path) ? path : Path.Combine(storage.Folder, path);
+            var relativeFilePath = Path.GetRelativePath(storage.Folder, absolutePath);
+            var directory = Path.GetDirectoryName(relativeFilePath);
+
+            return new FilePathInfo
+            {
+                AbsolutePath = absolutePath,
+                RelativeFilePath = relativeFilePath,
+                RelativeDirectory = NormalizeDirectory(directory),
+                FileName = Path.GetFileName(relativeFilePath),
+                FileNameWithoutExtension = Path.GetFileNameWithoutExtension(relativeFilePath)
+            };
+        }
+
+        private static string NormalizeDirectory(string? directory)
+        {
+            if (string.IsNullOrWhiteSpace(directory) || directory == ".")
+            {
+                return string.Empty;
+            }
+
+            return directory;
         }
 
         private class DuplicateVerification
