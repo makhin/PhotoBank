@@ -76,6 +76,27 @@ namespace PhotoBank.Api
                     var feature = context.Features.Get<IExceptionHandlerFeature>();
                     var ex = feature?.Error;
 
+                    var correlationId = context.Request.Headers.TryGetValue("X-Correlation-Id", out var cid) && !string.IsNullOrWhiteSpace(cid)
+                        ? cid.ToString()
+                        : context.TraceIdentifier;
+                    var traceId = context.TraceIdentifier;
+
+                    if (ex != null)
+                    {
+                        var logger = Log.ForContext("TraceId", traceId)
+                            .ForContext("CorrelationId", correlationId);
+
+                        if (app.Environment.IsDevelopment())
+                        {
+                            logger.Error(ex, "Unhandled exception while processing {Path}", context.Request.Path);
+                        }
+                        else
+                        {
+                            var sanitizedException = new Exception(ex.GetType().FullName ?? "Unhandled exception");
+                            logger.Error(sanitizedException, "Unhandled exception while processing {Path}. Sensitive details suppressed in production.", context.Request.Path);
+                        }
+                    }
+
                     var (status, title, type) = ex switch
                     {
                         UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized", "https://httpstatuses.io/401"),
