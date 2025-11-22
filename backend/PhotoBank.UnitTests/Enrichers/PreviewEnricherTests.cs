@@ -94,8 +94,8 @@ public class PreviewEnricherTests
         var expectedScale = 0.5;
 
         _mockImageService
-            .Setup(s => s.ResizeImage(It.IsAny<IMagickImage<byte>>(), out It.Ref<double>.IsAny))
-            .Callback(new ResizeImageCallback((IMagickImage<byte> img, out double scale) =>
+            .Setup(s => s.ResizeImage(It.IsAny<MagickImage>(), out It.Ref<double>.IsAny))
+            .Callback(new ResizeImageCallback((MagickImage img, out double scale) =>
             {
                 scale = expectedScale;
             }));
@@ -119,8 +119,8 @@ public class PreviewEnricherTests
         var sourceData = new SourceDataDto { AbsolutePath = _tempImagePath };
 
         _mockImageService
-            .Setup(s => s.ResizeImage(It.IsAny<IMagickImage<byte>>(), out It.Ref<double>.IsAny))
-            .Callback(new ResizeImageCallback((IMagickImage<byte> img, out double scale) =>
+            .Setup(s => s.ResizeImage(It.IsAny<MagickImage>(), out It.Ref<double>.IsAny))
+            .Callback(new ResizeImageCallback((MagickImage img, out double scale) =>
             {
                 scale = 1.0;
             }));
@@ -142,8 +142,8 @@ public class PreviewEnricherTests
         var sourceData = new SourceDataDto { AbsolutePath = _tempImagePath };
 
         _mockImageService
-            .Setup(s => s.ResizeImage(It.IsAny<IMagickImage<byte>>(), out It.Ref<double>.IsAny))
-            .Callback(new ResizeImageCallback((IMagickImage<byte> img, out double scale) =>
+            .Setup(s => s.ResizeImage(It.IsAny<MagickImage>(), out It.Ref<double>.IsAny))
+            .Callback(new ResizeImageCallback((MagickImage img, out double scale) =>
             {
                 scale = 1.0;
             }));
@@ -164,8 +164,8 @@ public class PreviewEnricherTests
         var sourceData = new SourceDataDto { AbsolutePath = _tempImagePath };
 
         _mockImageService
-            .Setup(s => s.ResizeImage(It.IsAny<IMagickImage<byte>>(), out It.Ref<double>.IsAny))
-            .Callback(new ResizeImageCallback((IMagickImage<byte> img, out double scale) =>
+            .Setup(s => s.ResizeImage(It.IsAny<MagickImage>(), out It.Ref<double>.IsAny))
+            .Callback(new ResizeImageCallback((MagickImage img, out double scale) =>
             {
                 scale = 1.0;
             }));
@@ -187,8 +187,8 @@ public class PreviewEnricherTests
         var sourceData = new SourceDataDto { AbsolutePath = _tempImagePath };
 
         _mockImageService
-            .Setup(s => s.ResizeImage(It.IsAny<IMagickImage<byte>>(), out It.Ref<double>.IsAny))
-            .Callback(new ResizeImageCallback((IMagickImage<byte> img, out double scale) =>
+            .Setup(s => s.ResizeImage(It.IsAny<MagickImage>(), out It.Ref<double>.IsAny))
+            .Callback(new ResizeImageCallback((MagickImage img, out double scale) =>
             {
                 scale = 1.0;
             }));
@@ -198,10 +198,10 @@ public class PreviewEnricherTests
 
         // Assert
         _mockImageService.Verify(
-            s => s.ResizeImage(It.IsAny<IMagickImage<byte>>(), out It.Ref<double>.IsAny),
+            s => s.ResizeImage(It.IsAny<MagickImage>(), out It.Ref<double>.IsAny),
             Times.Once);
     }
 
     // Delegate for mocking out parameter
-    private delegate void ResizeImageCallback(IMagickImage<byte> image, out double scale);
+    private delegate void ResizeImageCallback(MagickImage image, out double scale);
 }
