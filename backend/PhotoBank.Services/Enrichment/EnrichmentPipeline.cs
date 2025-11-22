@@ -105,15 +105,11 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
 
     private static Type[] TopoSort(IReadOnlyList<Type> types, IServiceProvider sp)
     {
-        // зависимости из интерфейса и [DependsOn]
         var edges = new Dictionary<Type, HashSet<Type>>();
         foreach (var t in types)
         {
             var deps = new HashSet<Type>(
                 ((IOrderDependent)sp.GetRequiredService(t)).Dependencies ?? Array.Empty<Type>());
-
-            foreach (var a in t.GetCustomAttributes(typeof(DependsOnAttribute), inherit: true).Cast<DependsOnAttribute>())
-                deps.Add(a.EnricherType);
 
             edges[t] = deps;
         }
