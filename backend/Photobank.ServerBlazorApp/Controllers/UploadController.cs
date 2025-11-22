@@ -57,7 +57,7 @@ namespace PhotoBank.ServerBlazorApp.Controllers
                 }
 
                 var storage = await _repository.GetAsync(12);
-                var photoId = await _photoProcessor.AddPhotoAsync(storage, fullPath);
+                var (photoId, _) = await _photoProcessor.AddPhotoAsync(storage, fullPath);
 
                 return photoId;
             }
