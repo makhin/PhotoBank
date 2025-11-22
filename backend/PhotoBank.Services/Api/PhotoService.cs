@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using PhotoBank.Services.Models;
 using PhotoBank.Services.Photos;
 using PhotoBank.Services.Photos.Admin;
 using PhotoBank.Services.Photos.Faces;

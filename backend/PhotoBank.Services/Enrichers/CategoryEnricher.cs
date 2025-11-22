@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
-using PhotoBank.Services.Models;
 using Category = PhotoBank.DbContext.Models.Category;
 
 namespace PhotoBank.Services.Enrichers

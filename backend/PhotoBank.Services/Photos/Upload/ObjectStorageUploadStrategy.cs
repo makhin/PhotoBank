@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
-using Minio.DataModel;
 using Minio.DataModel.Args;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Internal;

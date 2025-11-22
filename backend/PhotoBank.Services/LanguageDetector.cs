@@ -1,5 +1,3 @@
-using System;
-
 namespace PhotoBank.Services
 {
     public static class LanguageDetector

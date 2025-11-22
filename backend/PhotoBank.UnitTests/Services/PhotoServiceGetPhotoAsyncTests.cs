@@ -22,7 +22,6 @@ using PhotoBank.Services.Search;
 using PhotoBank.ViewModel.Dto;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace PhotoBank.UnitTests.Services

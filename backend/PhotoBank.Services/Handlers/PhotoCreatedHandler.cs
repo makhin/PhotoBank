@@ -14,7 +14,8 @@ using PhotoBank.Services.Events;
 using System.Linq;
 
 // ReSharper disable once CheckNamespace
-using PhotoBank.Services; // For S3KeyBuilder
+
+// For S3KeyBuilder
 
 namespace PhotoBank.Services.Handlers;
 

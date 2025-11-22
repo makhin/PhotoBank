@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Api;
 using PhotoBank.ViewModel.Dto;
-using System;
 using System.Globalization;
 using System.Linq;
 using System.Security.Claims;

@@ -1,6 +1,5 @@
 using System.Net.Http;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
-using Microsoft.Rest;
 using PhotoBank.Services.FaceRecognition.Azure;
 
 namespace PhotoBank.UnitTests.Infrastructure.FaceRecognition;

@@ -1,4 +1,3 @@
-using System;
 using ImageMagick;
 
 namespace PhotoBank.Services;

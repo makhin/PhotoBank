@@ -1,11 +1,8 @@
-using System;
-using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
-using Minio.DataModel.Args;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.Services.Internal;

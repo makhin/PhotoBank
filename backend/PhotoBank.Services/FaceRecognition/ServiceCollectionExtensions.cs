@@ -2,7 +2,6 @@ using System;
 using Amazon;
 using Amazon.Rekognition;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
-using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PhotoBank.Services.FaceRecognition.Abstractions;

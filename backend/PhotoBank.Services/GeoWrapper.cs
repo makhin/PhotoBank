@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Amazon.Rekognition.Model;
-using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NetTopologySuite;

@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using PhotoBank.Services;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
-using PhotoBank.Services.Models;
 
 namespace PhotoBank.Services.Enrichers
 {

@@ -1,14 +1,11 @@
-using System;
 using System.Collections.Generic;
 using Amazon.Rekognition.Model;
 using FluentAssertions;
-using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using NetTopologySuite.Geometries;
 using NUnit.Framework;
 using PhotoBank.Services;
-using Geometry = NetTopologySuite.Geometries.Geometry;
 using Point = NetTopologySuite.Geometries.Point;
 
 namespace PhotoBank.UnitTests.Services

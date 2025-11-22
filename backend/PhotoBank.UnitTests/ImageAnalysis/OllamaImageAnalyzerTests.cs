@@ -2,7 +2,6 @@ using System;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Moq;
 using NUnit.Framework;
 using PhotoBank.Services.ImageAnalysis;
 using PhotoBank.UnitTests.Infrastructure.Logging;

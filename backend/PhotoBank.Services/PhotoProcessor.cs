@@ -13,7 +13,6 @@ using PhotoBank.Services.Events;
 using PhotoBank.Services.Models;
 using File = PhotoBank.DbContext.Models.File;
 using Storage = PhotoBank.DbContext.Models.Storage;
-using ImageMagick;
 
 namespace PhotoBank.Services
 {

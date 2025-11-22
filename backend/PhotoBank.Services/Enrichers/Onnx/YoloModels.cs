@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Microsoft.ML.Data;
 
 namespace PhotoBank.Services.Enrichers.Onnx;

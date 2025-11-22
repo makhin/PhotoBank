@@ -6,7 +6,6 @@ using ImageMagick;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.FaceRecognition;
 using PhotoBank.Services.Models;
 

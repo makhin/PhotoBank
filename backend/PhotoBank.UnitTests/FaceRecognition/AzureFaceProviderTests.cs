@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using ImageMagick;
-using Microsoft.Azure.CognitiveServices.Vision.Face;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NUnit.Framework;

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using PhotoBank.ViewModel.Dto;
 using System.Collections.Generic;
 using System.Threading;

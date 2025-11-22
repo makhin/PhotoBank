@@ -8,7 +8,6 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
-using PhotoBank.Services.FaceRecognition.Abstractions;
 
 namespace PhotoBank.Services.FaceRecognition.Local;
 

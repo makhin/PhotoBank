@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -16,7 +15,6 @@ using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Models;
-using PhotoBank.UnitTests.Helpers;
 
 namespace PhotoBank.UnitTests.Enrichment;
 

@@ -1,8 +1,6 @@
-using System;
 using AutoMapper;
 using PhotoBank.AccessControl;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Services.Models;
 using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.Services

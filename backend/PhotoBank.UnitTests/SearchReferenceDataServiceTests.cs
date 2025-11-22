@@ -14,9 +14,7 @@ using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
-using PhotoBank.Services.Internal;
 using PhotoBank.Services.Search;
-using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.UnitTests;
 

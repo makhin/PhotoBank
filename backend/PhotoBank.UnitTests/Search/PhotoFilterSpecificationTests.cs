@@ -10,7 +10,6 @@ using PhotoBank.AccessControl;
 using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Search;
-using PhotoBank.UnitTests;
 using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.UnitTests.Search;

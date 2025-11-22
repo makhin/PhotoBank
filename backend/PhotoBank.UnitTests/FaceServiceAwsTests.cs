@@ -13,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using PhotoBank.DbContext.DbContext;
-using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.UnitTests.Infrastructure.FaceRecognition.Aws;

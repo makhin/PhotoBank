@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using ImageMagick;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PhotoBank.AccessControl;
@@ -13,7 +12,6 @@ using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Internal;
-using PhotoBank.Services.Models;
 using PhotoBank.Services.Search;
 using PhotoBank.ViewModel.Dto;
 

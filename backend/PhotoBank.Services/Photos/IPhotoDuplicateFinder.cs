@@ -8,10 +8,8 @@ using ImageMagick;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PhotoBank.DbContext.Models;
-using PhotoBank.Services;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Internal;
-using PhotoBank.Services.Models;
 using PhotoBank.ViewModel.Dto;
 
 namespace PhotoBank.Services.Photos;

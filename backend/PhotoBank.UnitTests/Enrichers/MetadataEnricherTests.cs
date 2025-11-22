@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
-using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.FileSystem;
 using Moq;
@@ -14,7 +11,6 @@ using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.Models;
 using Directory = MetadataExtractor.Directory;
-using File = PhotoBank.DbContext.Models.File;
 
 namespace PhotoBank.UnitTests.Enrichers
 {
