@@ -23,7 +23,6 @@ namespace PhotoBank.Console
         private readonly ILogger<App> _logger;
         private readonly ISyncService _syncService;
         private readonly IRecognitionService _recognitionService;
-        private readonly bool _checkDuplicates;
         private readonly int _maxDegreeOfParallelism;
         private readonly object _progressLock = new();
 
@@ -44,7 +43,6 @@ namespace PhotoBank.Console
             _logger = logger;
             _syncService = syncService;
             _recognitionService = recognitionService;
-            _checkDuplicates = configuration.GetValue("CheckDuplicates", true);
             _maxDegreeOfParallelism = configuration.GetValue<int?>("Processing:MaxDegreeOfParallelism")
                 ?? Environment.ProcessorCount;
         }
@@ -141,13 +139,14 @@ namespace PhotoBank.Console
                 {
                     try
                     {
-                        if (_checkDuplicates && await _photoProcessor.IsDuplicateAsync(storage, file))
+                        var (_, wasDuplicate) = await _photoProcessor.AddPhotoAsync(storage, file, activeEnrichers);
+
+                        if (wasDuplicate)
                         {
                             Interlocked.Increment(ref duplicates);
                         }
                         else
                         {
-                            await _photoProcessor.AddPhotoAsync(storage, file, activeEnrichers);
                             Interlocked.Increment(ref processed);
                         }
                     }

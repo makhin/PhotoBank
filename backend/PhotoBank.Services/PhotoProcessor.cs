@@ -19,8 +19,7 @@ namespace PhotoBank.Services
 {
     public interface IPhotoProcessor
     {
-        Task<int> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null);
-        Task<bool> IsDuplicateAsync(Storage storage, string path);
+        Task<(int PhotoId, bool WasDuplicate)> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null);
         Task AddFacesAsync(Storage storage);
         Task UpdatePhotosAsync(Storage storage);
     }
@@ -61,13 +60,13 @@ namespace PhotoBank.Services
             _mediator = mediator;
         }
 
-        public async Task<int> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null)
+        public async Task<(int PhotoId, bool WasDuplicate)> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null)
         {
             var duplicate = await VerifyDuplicates(storage, path);
 
             if (duplicate.DuplicateStatus == DuplicateStatus.FileExists)
             {
-                return duplicate.PhotoId;
+                return (duplicate.PhotoId, true);
             }
 
             if (duplicate.DuplicateStatus == DuplicateStatus.FileNotExists)
@@ -77,7 +76,7 @@ namespace PhotoBank.Services
                     Photo = new Photo {Id = duplicate.PhotoId},
                     Name = duplicate.Name,
                 });
-                return duplicate.PhotoId;
+                return (duplicate.PhotoId, false);
             }
 
             var sourceData = new SourceDataDto { AbsolutePath = path };
@@ -106,14 +105,9 @@ namespace PhotoBank.Services
             var evt = new PhotoCreated(photo.Id, sourceData.PreviewImage.ToByteArray(), sourceData.ThumbnailImage, faces);
             await _mediator.Publish(evt);
 
-            return photo.Id;
+            return (photo.Id, false);
         }
 
-        public async Task<bool> IsDuplicateAsync(Storage storage, string path)
-        {
-            var duplicate = await VerifyDuplicates(storage, path);
-            return duplicate.DuplicateStatus == DuplicateStatus.FileExists;
-        }
 
         public async Task AddFacesAsync(Storage storage)
         {
