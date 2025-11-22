@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +13,7 @@ namespace PhotoBank.UnitTests.Enrichment;
 public class EnricherDependencyResolverTests
 {
     [Test]
-    public void Sort_ShouldCombineAttributeAndInstancePropertyDependencies()
+    public void Sort_ShouldUseInstancePropertyDependencies()
     {
         using var provider = BuildProvider(services => services.AddSingleton<DependencyHolder>());
         var holder = provider.GetRequiredService<DependencyHolder>();
@@ -20,13 +21,12 @@ public class EnricherDependencyResolverTests
         var types = new[]
         {
             typeof(InstanceDependentEnricher),
-            typeof(AttributeDependentEnricher),
             typeof(BaseEnricher)
         };
 
         var result = InvokeSort(types, provider);
 
-        result.Should().Equal(typeof(BaseEnricher), typeof(AttributeDependentEnricher), typeof(InstanceDependentEnricher));
+        result.Should().Equal(typeof(BaseEnricher), typeof(InstanceDependentEnricher));
         holder.WasAccessed.Should().BeTrue();
     }
 
@@ -86,8 +86,11 @@ public class EnricherDependencyResolverTests
 
     private static Type[] InvokeSort(IReadOnlyList<Type> types, IServiceProvider provider)
     {
-        var resolverType = typeof(DependsOnAttribute).Assembly
-            .GetType("PhotoBank.Services.Enrichment.EnricherDependencyResolver")
+        var servicesAssembly = AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(a => a.GetName().Name == "PhotoBank.Services")
+            ?? throw new InvalidOperationException("PhotoBank.Services assembly not found.");
+
+        var resolverType = servicesAssembly.GetType("PhotoBank.Services.Enrichment.EnricherDependencyResolver")
             ?? throw new InvalidOperationException("Resolver type not found.");
 
         var method = resolverType.GetMethod("Sort", BindingFlags.Public | BindingFlags.Static)
@@ -107,11 +110,6 @@ public class EnricherDependencyResolverTests
     {
     }
 
-    [DependsOn(typeof(BaseEnricher))]
-    private sealed class AttributeDependentEnricher
-    {
-    }
-
     private sealed class InstanceDependentEnricher
     {
         private readonly DependencyHolder _holder;
@@ -126,7 +124,7 @@ public class EnricherDependencyResolverTests
             get
             {
                 _holder.WasAccessed = true;
-                return new[] { typeof(AttributeDependentEnricher) };
+                return new[] { typeof(BaseEnricher) };
             }
         }
     }

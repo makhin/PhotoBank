@@ -14,9 +14,6 @@ internal static class EnricherDependencyResolver
             .GroupBy(t => t.Name)
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
-        static IEnumerable<Type> GetAttrDeps(Type t) =>
-            t.GetCustomAttributes<DependsOnAttribute>(inherit: true).Select(a => a.EnricherType);
-
         static IEnumerable<Type> GetPropertyDeps(Type t, object? instance, IReadOnlyDictionary<string, Type> map)
         {
             var prop = t.GetProperty("Dependencies", BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy | BindingFlags.Static);
@@ -66,7 +63,6 @@ internal static class EnricherDependencyResolver
         foreach (var t in types)
         {
             var deps = new HashSet<Type>();
-            foreach (var d in GetAttrDeps(t)) deps.Add(d);
             foreach (var d in GetPropertyDeps(t, tempInstances[t], byName)) deps.Add(d);
 
             foreach (var d in deps)
