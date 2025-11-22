@@ -24,6 +24,7 @@ namespace PhotoBank.Console
         private readonly ISyncService _syncService;
         private readonly IRecognitionService _recognitionService;
         private readonly bool _checkDuplicates;
+        private readonly int _maxDegreeOfParallelism;
         private readonly object _progressLock = new();
 
         public App(
@@ -44,6 +45,8 @@ namespace PhotoBank.Console
             _syncService = syncService;
             _recognitionService = recognitionService;
             _checkDuplicates = configuration.GetValue("CheckDuplicates", true);
+            _maxDegreeOfParallelism = configuration.GetValue<int?>("Processing:MaxDegreeOfParallelism")
+                ?? Environment.ProcessorCount;
         }
 
         public async Task<int> RunAsync(bool registerPersons, int? storageId, CancellationToken token)
@@ -124,9 +127,17 @@ namespace PhotoBank.Console
                 var activeEnrichers = _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
 
                 System.Console.WriteLine($"Processing {total} files from storage '{storage.Name}'...");
+                System.Console.WriteLine($"Max degree of parallelism: {_maxDegreeOfParallelism}");
+                _logger.LogInformation("Using max degree of parallelism: {MaxDegreeOfParallelism}", _maxDegreeOfParallelism);
                 DisplayProgress(0, 0, 0, total);
 
-                await Parallel.ForEachAsync(fileList, token, async (file, ct) =>
+                var parallelOptions = new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = _maxDegreeOfParallelism,
+                    CancellationToken = token
+                };
+
+                await Parallel.ForEachAsync(fileList, parallelOptions, async (file, ct) =>
                 {
                     try
                     {
