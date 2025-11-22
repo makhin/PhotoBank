@@ -14,7 +14,7 @@ namespace PhotoBank.Services
 {
     public interface ISyncService
     {
-        Task<IEnumerable<string>> SyncStorage(Storage storage);
+        Task<SyncStorageResult> SyncStorage(Storage storage);
     }
 
     public class SyncService : ISyncService 
@@ -42,7 +42,7 @@ namespace PhotoBank.Services
             _fileSystem = fileSystem;
         }
 
-        public async Task<IEnumerable<string>> SyncStorage(Storage storage)
+        public async Task<SyncStorageResult> SyncStorage(Storage storage)
         {
             // Files on disk relative to storage folder
             var folderFiles = new HashSet<string>(
@@ -65,7 +65,7 @@ namespace PhotoBank.Services
                 .ToListAsync();
 
             // Alive files in DB
-            var dbAlive = new HashSet<string>(
+            var existingFiles = new HashSet<string>(
                 storageFiles.Where(sf => !sf.IsDeleted).Select(sf => sf.Path),
                 StringComparer.OrdinalIgnoreCase);
 
@@ -77,12 +77,16 @@ namespace PhotoBank.Services
                     var file = await _fileRepository.GetAsync(sf.Id);
                     file.IsDeleted = false;
                     await _fileRepository.UpdateAsync(file);
+
+                    existingFiles.Add(sf.Path);
                 }
             }
 
             // New files: exist on disk but not in DB
-            var newFiles = folderFiles.Except(dbAlive, StringComparer.OrdinalIgnoreCase).ToList();
-            return newFiles;
+            var newFiles = folderFiles.Except(existingFiles, StringComparer.OrdinalIgnoreCase).ToList();
+            return new SyncStorageResult(newFiles, existingFiles.ToList());
         }
     }
+
+    public record SyncStorageResult(IReadOnlyCollection<string> NewFiles, IReadOnlyCollection<string> ExistingFiles);
 }
