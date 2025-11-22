@@ -89,6 +89,7 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<IEnricher, ColorEnricher>();
         services.AddTransient<IEnricher, CaptionEnricher>();
         services.AddTransient<IEnricher, TagEnricher>();
+        services.AddTransient<IEnricher, CategoryEnricher>();
 
         // Object detection enrichers - use ONNX-based or Azure-based depending on configuration
         // IMPORTANT: Must register as concrete type (not factory) so enricher appears in EnricherTypeCatalog

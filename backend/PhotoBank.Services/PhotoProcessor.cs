@@ -227,7 +227,16 @@ namespace PhotoBank.Services
         private async Task<DuplicateVerification> VerifyDuplicates(Storage storage, string path)
         {
             var name = Path.GetFileNameWithoutExtension(path);
-            var relativePath = Path.GetRelativePath(storage.Folder, Path.GetDirectoryName(path));
+            var directoryName = Path.GetDirectoryName(path);
+            var relativePath = string.IsNullOrEmpty(directoryName)
+                ? string.Empty
+                : Path.GetRelativePath(storage.Folder, directoryName);
+
+            // Convert "." to empty string for files in root directory
+            if (relativePath == ".")
+            {
+                relativePath = string.Empty;
+            }
             var result = new DuplicateVerification
             {
                 PhotoId = await _photoRepository.GetByCondition(p =>

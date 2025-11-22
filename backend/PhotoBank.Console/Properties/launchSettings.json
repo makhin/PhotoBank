@@ -2,7 +2,7 @@
   "profiles": {
     "PhotoBank.Console": {
       "commandName": "Project",
-      "commandLineArgs": "migrate-embeddings"
+      "commandLineArgs": "--storage 14 --no-register"
     }
   }
 }

@@ -397,6 +397,7 @@ public class ServiceCollectionExtensionsTests
             typeof(ColorEnricher),
             typeof(CaptionEnricher),
             typeof(TagEnricher),
+            typeof(CategoryEnricher),
             typeof(ObjectPropertyEnricher),
             typeof(AdultEnricher),
             typeof(UnifiedFaceEnricher)

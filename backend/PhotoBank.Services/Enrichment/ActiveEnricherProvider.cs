@@ -23,6 +23,9 @@ public sealed class ActiveEnricherProvider : IActiveEnricherProvider
         var activeNames = repository.GetAll()
             .Where(e => e.IsActive)
             .Select(e => e.Name)
+            .ToArray()
+            .Select(name => name?.Trim() ?? string.Empty)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
             .ToArray();
 
         var result = new List<Type>(activeNames.Length);
