@@ -19,7 +19,7 @@ namespace PhotoBank.Services
 {
     public interface IPhotoProcessor
     {
-        Task<int> AddPhotoAsync(Storage storage, string path);
+        Task<int> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null);
         Task<bool> IsDuplicateAsync(Storage storage, string path);
         Task AddFacesAsync(Storage storage);
         Task UpdatePhotosAsync(Storage storage);
@@ -61,7 +61,7 @@ namespace PhotoBank.Services
             _mediator = mediator;
         }
 
-        public async Task<int> AddPhotoAsync(Storage storage, string path)
+        public async Task<int> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null)
         {
             var duplicate = await VerifyDuplicates(storage, path);
 
@@ -83,8 +83,8 @@ namespace PhotoBank.Services
             var sourceData = new SourceDataDto { AbsolutePath = path };
             var photo = new Photo { Storage = storage };
 
-            var activeEnrichers = _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
-            await _enrichmentPipeline.RunAsync(photo, sourceData, activeEnrichers);
+            var enrichersToUse = activeEnrichers ?? _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
+            await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersToUse);
 
             if (sourceData.PreviewImage != null)
             {
