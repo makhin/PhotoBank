@@ -38,6 +38,7 @@ using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.Events;
+using PhotoBank.Services.ObjectDetection;
 using PhotoBank.Services.FaceRecognition;
 using PhotoBank.Services.FaceRecognition.Abstractions;
 using PhotoBank.Services.Photos;
@@ -394,7 +395,7 @@ public class ServiceCollectionExtensionsTests
             typeof(CaptionEnricher),
             typeof(TagEnricher),
             typeof(CategoryEnricher),
-            typeof(ObjectPropertyEnricher),
+            typeof(UnifiedObjectPropertyEnricher),
             typeof(AdultEnricher),
             typeof(UnifiedFaceEnricher)
         };
