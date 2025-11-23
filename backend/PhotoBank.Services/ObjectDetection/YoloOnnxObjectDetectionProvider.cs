@@ -30,7 +30,7 @@ public class YoloOnnxObjectDetectionProvider : IObjectDetectionProvider
 
     public ObjectDetectionProviderKind Kind => ObjectDetectionProviderKind.YoloOnnx;
 
-    public IReadOnlyList<DetectedObjectDto> DetectObjects(byte[] imageBytes, float scale)
+    public IReadOnlyList<DetectedObjectDto> DetectObjects(byte[]? imageBytes, float scale)
     {
         if (imageBytes == null || imageBytes.Length == 0)
             return Array.Empty<DetectedObjectDto>();

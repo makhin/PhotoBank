@@ -39,9 +39,9 @@ public class UnifiedObjectPropertyEnricher : IEnricher
     // - YOLO ONNX provider needs PreviewEnricher (uses PreviewImage to detect objects)
     public Type[] Dependencies => _provider.Kind switch
     {
-        ObjectDetectionProviderKind.Azure => new[] { typeof(AnalyzeEnricher) },
-        ObjectDetectionProviderKind.YoloOnnx => new[] { typeof(PreviewEnricher) },
-        _ => Array.Empty<Type>()
+        ObjectDetectionProviderKind.Azure => [typeof(AnalyzeEnricher)],
+        ObjectDetectionProviderKind.YoloOnnx => [typeof(PreviewEnricher)],
+        _ => []
     };
 
     public async Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
@@ -56,8 +56,8 @@ public class UnifiedObjectPropertyEnricher : IEnricher
             // Get detected objects from the provider
             detectedObjects = _provider.Kind switch
             {
-                ObjectDetectionProviderKind.Azure => GetObjectsFromAzureProvider(sourceData, photo.Scale),
-                ObjectDetectionProviderKind.YoloOnnx => GetObjectsFromYoloProvider(sourceData, photo.Scale),
+                ObjectDetectionProviderKind.Azure => GetObjectsFromAzureProvider(sourceData, (float)photo.Scale),
+                ObjectDetectionProviderKind.YoloOnnx => GetObjectsFromYoloProvider(sourceData, (float)photo.Scale),
                 _ => throw new NotSupportedException($"Provider kind {_provider.Kind} is not supported")
             };
         }
@@ -88,7 +88,7 @@ public class UnifiedObjectPropertyEnricher : IEnricher
         var propertyNameMap = await GetOrCreatePropertyNamesAsync(classNames, cancellationToken);
 
         // Create ObjectProperty entities
-        photo.ObjectProperties ??= new List<ObjectProperty>();
+        photo.ObjectProperties ??= [];
 
         foreach (var detectedObject in detectedObjects)
         {
@@ -136,7 +136,7 @@ public class UnifiedObjectPropertyEnricher : IEnricher
         if (sourceData.PreviewImage == null)
         {
             _logger.LogDebug("No preview image available for YOLO object detection");
-            return Array.Empty<DetectedObjectDto>();
+            return [];
         }
 
         var imageBytes = sourceData.PreviewImage.ToByteArray();

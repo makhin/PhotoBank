@@ -131,8 +131,12 @@ public class UnifiedObjectPropertyEnricherTests
 
         // Assert
         photo.ObjectProperties.Should().HaveCount(2);
-        photo.ObjectProperties.Should().Contain(op => op.PropertyName.Name == "Car" && op.Confidence == 0.9);
-        photo.ObjectProperties.Should().Contain(op => op.PropertyName.Name == "Tree" && op.Confidence == 0.8);
+
+        var carProperty = photo.ObjectProperties.Should().ContainSingle(op => op.PropertyName.Name == "Car").Subject;
+        carProperty.Confidence.Should().BeApproximately(0.9, 0.0001);
+
+        var treeProperty = photo.ObjectProperties.Should().ContainSingle(op => op.PropertyName.Name == "Tree").Subject;
+        treeProperty.Confidence.Should().BeApproximately(0.8, 0.0001);
     }
 
     [Test]
@@ -175,8 +179,12 @@ public class UnifiedObjectPropertyEnricherTests
 
         // Assert
         photo.ObjectProperties.Should().HaveCount(2);
-        photo.ObjectProperties.Should().Contain(op => op.PropertyName.Name == "car" && op.Confidence == 0.9f);
-        photo.ObjectProperties.Should().Contain(op => op.PropertyName.Name == "person" && op.Confidence == 0.85f);
+
+        var carProperty = photo.ObjectProperties.Should().ContainSingle(op => op.PropertyName.Name == "car").Subject;
+        carProperty.Confidence.Should().BeApproximately(0.9, 0.0001);
+
+        var personProperty = photo.ObjectProperties.Should().ContainSingle(op => op.PropertyName.Name == "person").Subject;
+        personProperty.Confidence.Should().BeApproximately(0.85, 0.0001);
     }
 
     [Test]

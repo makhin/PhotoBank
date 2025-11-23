@@ -78,7 +78,8 @@ namespace PhotoBank.Services
                 return (duplicate.PhotoId, false);
             }
 
-            var sourceData = new SourceDataDto { AbsolutePath = path };
+            var absolutePath = Path.Combine(storage.Folder, path);
+            var sourceData = new SourceDataDto { AbsolutePath = absolutePath };
             var photo = new Photo { Storage = storage };
 
             var enrichersToUse = activeEnrichers ?? _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
@@ -216,9 +217,10 @@ namespace PhotoBank.Services
         {
             var name = Path.GetFileNameWithoutExtension(path);
             var directoryName = Path.GetDirectoryName(path);
+            // path is already relative to storage.Folder, so directoryName is the relative path
             var relativePath = string.IsNullOrEmpty(directoryName)
                 ? string.Empty
-                : Path.GetRelativePath(storage.Folder, directoryName);
+                : directoryName;
 
             // Convert "." to empty string for files in root directory
             if (relativePath == ".")

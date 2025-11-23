@@ -9,6 +9,7 @@ using PhotoBank.DbContext.Models;
 using PhotoBank.Services;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Models;
+using File = System.IO.File;
 
 namespace PhotoBank.UnitTests.Enrichers;
 
@@ -175,8 +176,9 @@ public class PreviewEnricherTests
 
         // Assert
         photo.ImageHash.Should().NotBeNullOrEmpty();
-        // Verify the hash is in the expected format (PerceptualHash ToString format)
-        photo.ImageHash.Should().Contain(",");
+        // Verify the hash is in hex format (current PerceptualHash ToString format)
+        photo.ImageHash.Should().MatchRegex("^[0-9a-f]+$");
+        photo.ImageHash.Length.Should().BeGreaterThan(0);
     }
 
     [Test]

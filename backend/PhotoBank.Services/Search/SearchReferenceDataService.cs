@@ -177,21 +177,14 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
                 }
                 else
                 {
-                    // Non-admins see only persons that appear in photos they have access to
-                    // Use sliding expiration to handle cases when faces are tagged or person groups change
+                    // Non-admins see only persons in allowed person groups
+                    // Use sliding expiration to handle cases when person groups change
                     entry.SlidingExpiration = TimeSpan.FromMinutes(10);
 
-                    // Use a subquery to avoid SQL Server's 2100 parameter limit
-                    // This translates to an EXISTS or IN subquery on the server side
-                    var accessiblePhotosQuery = _photoRepository.GetAll()
+                    query = _personRepository.GetAll()
+                        .Include(p => p.PersonGroups)
                         .AsNoTracking()
                         .MaybeApplyAcl(currentUser);
-
-                    query = _personRepository.GetAll()
-                        .AsNoTracking()
-                        .Where(person => accessiblePhotosQuery
-                            .SelectMany(p => p.Faces)
-                            .Any(f => f.PersonId == person.Id));
                 }
 
                 var items = await query
