@@ -23,6 +23,8 @@ using PhotoBank.Services.Enrichers.Onnx;
 using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.FaceRecognition;
 using PhotoBank.Services.ImageAnalysis;
+using PhotoBank.Services.ObjectDetection;
+using PhotoBank.Services.ObjectDetection.Abstractions;
 using PhotoBank.Services.Recognition;
 
 namespace PhotoBank.DependencyInjection;
@@ -91,8 +93,8 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<IEnricher, TagEnricher>();
         services.AddTransient<IEnricher, CategoryEnricher>();
 
-        // Object detection enrichers - use ONNX-based or Azure-based depending on configuration
-        // IMPORTANT: Must register as concrete type (not factory) so enricher appears in EnricherTypeCatalog
+        // Object detection - unified approach with provider pattern
+        // Register provider based on configuration (YOLO ONNX or Azure Computer Vision)
         var yoloOptions = configuration.GetSection(yoloOnnx).Get<YoloOnnxOptions>();
         if (yoloOptions?.Enabled == true && !string.IsNullOrWhiteSpace(yoloOptions.ModelPath))
         {
@@ -123,8 +125,8 @@ public static partial class ServiceCollectionExtensions
                 // Register YoloOnnxService as transient (engine is singleton)
                 services.AddTransient<IYoloOnnxService, YoloOnnxService>();
 
-                // Register ONNX enricher as concrete type (required for EnricherTypeCatalog)
-                services.AddTransient<IEnricher, OnnxObjectDetectionEnricher>();
+                // Register YOLO ONNX provider
+                services.AddTransient<IObjectDetectionProvider, YoloOnnxObjectDetectionProvider>();
             }
             else
             {
@@ -133,14 +135,17 @@ public static partial class ServiceCollectionExtensions
                 Console.WriteLine($"WARNING: ONNX model file not found at: {yoloOptions.ModelPath}. Falling back to Azure Computer Vision.");
 
                 // Fallback to Azure-based object detection
-                services.AddTransient<IEnricher, ObjectPropertyEnricher>();
+                services.AddTransient<IObjectDetectionProvider, AzureObjectDetectionProvider>();
             }
         }
         else
         {
             // ONNX not enabled, use Azure-based object detection
-            services.AddTransient<IEnricher, ObjectPropertyEnricher>();
+            services.AddTransient<IObjectDetectionProvider, AzureObjectDetectionProvider>();
         }
+
+        // Register unified object property enricher (uses the provider registered above)
+        services.AddTransient<IEnricher, UnifiedObjectPropertyEnricher>();
 
         services.AddTransient<IEnricher, AdultEnricher>();
         services.AddTransient<IEnricher, UnifiedFaceEnricher>();
