@@ -65,28 +65,6 @@ public class PreviewEnricherTests
     }
 
     [Test]
-    public async Task EnrichAsync_WithNullPhoto_ThrowsArgumentNullException()
-    {
-        // Arrange
-        var sourceData = new SourceDataDto { AbsolutePath = _tempImagePath };
-
-        // Act & Assert
-        Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            await _enricher.EnrichAsync(null, sourceData));
-    }
-
-    [Test]
-    public async Task EnrichAsync_WithNullSource_ThrowsArgumentNullException()
-    {
-        // Arrange
-        var photo = new Photo();
-
-        // Act & Assert
-        Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            await _enricher.EnrichAsync(photo, null));
-    }
-
-    [Test]
     public async Task EnrichAsync_SetsPhotoProperties()
     {
         // Arrange

@@ -25,9 +25,6 @@ public sealed class AnalyzeEnricher : IEnricher
 
     public async Task EnrichAsync(Photo photo, SourceDataDto source, CancellationToken cancellationToken = default)
     {
-        if (photo is null) throw new ArgumentNullException(nameof(photo));
-        if (source is null) throw new ArgumentNullException(nameof(source));
-
         if (source.PreviewImage is null)
             return;
 
