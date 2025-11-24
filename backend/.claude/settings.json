@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "SessionStart": [{
+      "matcher": "startup",
+      "hooks": [{
+        "type": "command",
+        "command": "bash -c 'wget https://dot.net/v1/dotnet-install.sh && bash dotnet-install.sh'"
+      }]
+    }]
+  }
+}
