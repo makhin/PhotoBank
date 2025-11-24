@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
@@ -39,48 +40,68 @@ public class PhotoCreatedHandler : INotificationHandler<PhotoCreated>
             .SingleAsync(cancellationToken);
 
         var photoEntry = GetPhotoEntry(notification.PhotoId);
+        var uploadedKeys = new List<string>();
 
-        var previewKey = S3KeyBuilder.BuildPreviewKey(info.Storage, info.RelativePath, notification.PhotoId);
-        var (previewEtag, previewSha, previewSize) = await UploadAsync(previewKey, notification.Preview, cancellationToken);
-        photoEntry.Property(p => p.S3Key_Preview).CurrentValue = previewKey;
-        photoEntry.Property(p => p.S3Key_Preview).IsModified = true;
-        photoEntry.Property(p => p.S3ETag_Preview).CurrentValue = previewEtag;
-        photoEntry.Property(p => p.S3ETag_Preview).IsModified = true;
-        photoEntry.Property(p => p.Sha256_Preview).CurrentValue = previewSha;
-        photoEntry.Property(p => p.Sha256_Preview).IsModified = true;
-        photoEntry.Property(p => p.BlobSize_Preview).CurrentValue = previewSize;
-        photoEntry.Property(p => p.BlobSize_Preview).IsModified = true;
-
-        if (notification.Thumbnail != null)
+        try
         {
-            var thumbKey = S3KeyBuilder.BuildThumbnailKey(info.Storage, info.RelativePath, notification.PhotoId);
-            var (thumbEtag, thumbSha, thumbSize) = await UploadAsync(thumbKey, notification.Thumbnail, cancellationToken);
-            photoEntry.Property(p => p.S3Key_Thumbnail).CurrentValue = thumbKey;
-            photoEntry.Property(p => p.S3Key_Thumbnail).IsModified = true;
-            photoEntry.Property(p => p.S3ETag_Thumbnail).CurrentValue = thumbEtag;
-            photoEntry.Property(p => p.S3ETag_Thumbnail).IsModified = true;
-            photoEntry.Property(p => p.Sha256_Thumbnail).CurrentValue = thumbSha;
-            photoEntry.Property(p => p.Sha256_Thumbnail).IsModified = true;
-            photoEntry.Property(p => p.BlobSize_Thumbnail).CurrentValue = thumbSize;
-            photoEntry.Property(p => p.BlobSize_Thumbnail).IsModified = true;
-        }
+            // Upload preview to S3
+            var previewKey = S3KeyBuilder.BuildPreviewKey(info.Storage, info.RelativePath, notification.PhotoId);
+            var (previewEtag, previewSha, previewSize) = await UploadAsync(previewKey, notification.Preview, cancellationToken);
+            uploadedKeys.Add(previewKey);
 
-        foreach (var face in notification.Faces)
+            photoEntry.Property(p => p.S3Key_Preview).CurrentValue = previewKey;
+            photoEntry.Property(p => p.S3Key_Preview).IsModified = true;
+            photoEntry.Property(p => p.S3ETag_Preview).CurrentValue = previewEtag;
+            photoEntry.Property(p => p.S3ETag_Preview).IsModified = true;
+            photoEntry.Property(p => p.Sha256_Preview).CurrentValue = previewSha;
+            photoEntry.Property(p => p.Sha256_Preview).IsModified = true;
+            photoEntry.Property(p => p.BlobSize_Preview).CurrentValue = previewSize;
+            photoEntry.Property(p => p.BlobSize_Preview).IsModified = true;
+
+            // Upload thumbnail to S3 if exists
+            if (notification.Thumbnail != null)
+            {
+                var thumbKey = S3KeyBuilder.BuildThumbnailKey(info.Storage, info.RelativePath, notification.PhotoId);
+                var (thumbEtag, thumbSha, thumbSize) = await UploadAsync(thumbKey, notification.Thumbnail, cancellationToken);
+                uploadedKeys.Add(thumbKey);
+
+                photoEntry.Property(p => p.S3Key_Thumbnail).CurrentValue = thumbKey;
+                photoEntry.Property(p => p.S3Key_Thumbnail).IsModified = true;
+                photoEntry.Property(p => p.S3ETag_Thumbnail).CurrentValue = thumbEtag;
+                photoEntry.Property(p => p.S3ETag_Thumbnail).IsModified = true;
+                photoEntry.Property(p => p.Sha256_Thumbnail).CurrentValue = thumbSha;
+                photoEntry.Property(p => p.Sha256_Thumbnail).IsModified = true;
+                photoEntry.Property(p => p.BlobSize_Thumbnail).CurrentValue = thumbSize;
+                photoEntry.Property(p => p.BlobSize_Thumbnail).IsModified = true;
+            }
+
+            // Upload face images to S3
+            foreach (var face in notification.Faces)
+            {
+                var key = S3KeyBuilder.BuildFaceKey(face.FaceId);
+                var (etag, sha, size) = await UploadAsync(key, face.Image, cancellationToken);
+                uploadedKeys.Add(key);
+
+                var faceEntry = GetFaceEntry(face.FaceId);
+                faceEntry.Property(f => f.S3Key_Image).CurrentValue = key;
+                faceEntry.Property(f => f.S3Key_Image).IsModified = true;
+                faceEntry.Property(f => f.S3ETag_Image).CurrentValue = etag;
+                faceEntry.Property(f => f.S3ETag_Image).IsModified = true;
+                faceEntry.Property(f => f.Sha256_Image).CurrentValue = sha;
+                faceEntry.Property(f => f.Sha256_Image).IsModified = true;
+                faceEntry.Property(f => f.BlobSize_Image).CurrentValue = size;
+                faceEntry.Property(f => f.BlobSize_Image).IsModified = true;
+            }
+
+            // Save changes to database
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception)
         {
-            var key = S3KeyBuilder.BuildFaceKey(face.FaceId);
-            var (etag, sha, size) = await UploadAsync(key, face.Image, cancellationToken);
-            var faceEntry = GetFaceEntry(face.FaceId);
-            faceEntry.Property(f => f.S3Key_Image).CurrentValue = key;
-            faceEntry.Property(f => f.S3Key_Image).IsModified = true;
-            faceEntry.Property(f => f.S3ETag_Image).CurrentValue = etag;
-            faceEntry.Property(f => f.S3ETag_Image).IsModified = true;
-            faceEntry.Property(f => f.Sha256_Image).CurrentValue = sha;
-            faceEntry.Property(f => f.Sha256_Image).IsModified = true;
-            faceEntry.Property(f => f.BlobSize_Image).CurrentValue = size;
-            faceEntry.Property(f => f.BlobSize_Image).IsModified = true;
+            // Rollback: Delete all uploaded S3 objects if database save fails
+            await CleanupS3ObjectsAsync(uploadedKeys, cancellationToken);
+            throw;
         }
-
-        await _context.SaveChangesAsync(cancellationToken);
     }
 
     private async Task<(string etag, string sha, long size)> UploadAsync(string key, byte[] data, CancellationToken ct)
@@ -100,6 +121,24 @@ public class PhotoCreatedHandler : INotificationHandler<PhotoCreated>
             .WithContentType("image/jpeg"), ct);
         var stat = await _minio.StatObjectAsync(new StatObjectArgs().WithBucket("photobank").WithObject(key), ct);
         return (stat.ETag ?? string.Empty, sha, ms.Length);
+    }
+
+    private async Task CleanupS3ObjectsAsync(List<string> keys, CancellationToken ct)
+    {
+        foreach (var key in keys)
+        {
+            try
+            {
+                await _minio.RemoveObjectAsync(new RemoveObjectArgs()
+                    .WithBucket("photobank")
+                    .WithObject(key), ct);
+            }
+            catch
+            {
+                // Ignore cleanup errors - this is best-effort rollback
+                // Orphaned objects can be cleaned up later by a maintenance job
+            }
+        }
     }
 
     private EntityEntry<Photo> GetPhotoEntry(int photoId)

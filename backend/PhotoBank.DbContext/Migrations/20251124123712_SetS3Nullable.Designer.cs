@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -13,9 +14,11 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    partial class PhotoBankDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251124123712_SetS3Nullable")]
+    partial class SetS3Nullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
