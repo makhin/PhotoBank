@@ -202,6 +202,7 @@ public class ServiceCollectionExtensionsTests
         AssertScopedRegistration<ISearchFilterNormalizer, SearchFilterNormalizer>(services);
         AssertScopedRegistration<PhotoFilterSpecification, PhotoFilterSpecification>(services);
         AssertScopedRegistration<IPhotoDuplicateFinder, PhotoDuplicateFinder>(services);
+        AssertScopedRegistration<IPhotoFileSystemDuplicateChecker, PhotoFileSystemDuplicateChecker>(services);
         AssertScopedRegistration<IPhotoIngestionService, PhotoIngestionService>(services);
         AssertScopedRegistration<IPhotoService, PhotoService>(services);
         AssertScopedRegistration<ISearchReferenceDataService, SearchReferenceDataService>(services);
@@ -220,6 +221,7 @@ public class ServiceCollectionExtensionsTests
             typeof(ISearchFilterNormalizer),
             typeof(PhotoFilterSpecification),
             typeof(IPhotoDuplicateFinder),
+            typeof(IPhotoFileSystemDuplicateChecker),
             typeof(IPhotoIngestionService),
             typeof(IPhotoService),
             typeof(ISearchReferenceDataService));
