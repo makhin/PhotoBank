@@ -50,6 +50,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IPersonGroupService, PersonGroupService>();
         services.AddScoped<IFaceCatalogService, FaceCatalogService>();
         services.AddScoped<IPhotoDuplicateFinder, PhotoDuplicateFinder>();
+        services.AddScoped<IPhotoFileSystemDuplicateChecker, PhotoFileSystemDuplicateChecker>();
         services.AddSingleton<UploadNameResolver>();
         services.AddScoped<IStorageUploadStrategy, ObjectStorageUploadStrategy>();
         services.AddScoped<IStorageUploadStrategy, FileSystemStorageUploadStrategy>();

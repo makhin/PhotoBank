@@ -11,6 +11,7 @@ using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Events;
 using PhotoBank.Services.Models;
+using PhotoBank.Services.Photos;
 using File = PhotoBank.DbContext.Models.File;
 using Storage = PhotoBank.DbContext.Models.Storage;
 
@@ -32,6 +33,7 @@ namespace PhotoBank.Services
         private readonly IEnrichmentPipeline _enrichmentPipeline;
         private readonly IActiveEnricherProvider _activeEnricherProvider;
         private readonly IMediator _mediator;
+        private readonly IPhotoFileSystemDuplicateChecker _duplicateChecker;
 
         private class PhotoFilePath
         {
@@ -47,7 +49,8 @@ namespace PhotoBank.Services
             IRepository<Enricher> enricherRepository,
             IEnrichmentPipeline enrichmentPipeline,
             IActiveEnricherProvider activeEnricherProvider,
-            IMediator mediator
+            IMediator mediator,
+            IPhotoFileSystemDuplicateChecker duplicateChecker
             )
         {
             _photoRepository = photoRepository;
@@ -57,11 +60,12 @@ namespace PhotoBank.Services
             _enrichmentPipeline = enrichmentPipeline;
             _activeEnricherProvider = activeEnricherProvider;
             _mediator = mediator;
+            _duplicateChecker = duplicateChecker;
         }
 
         public async Task<(int PhotoId, bool WasDuplicate)> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null)
         {
-            var duplicate = await VerifyDuplicates(storage, path);
+            var duplicate = await _duplicateChecker.VerifyDuplicatesAsync(storage, path);
 
             if (duplicate.DuplicateStatus == DuplicateStatus.FileExists)
             {
@@ -213,54 +217,5 @@ namespace PhotoBank.Services
             }
         }
 
-        private async Task<DuplicateVerification> VerifyDuplicates(Storage storage, string path)
-        {
-            var name = Path.GetFileNameWithoutExtension(path);
-            var directoryName = Path.GetDirectoryName(path);
-            // path is already relative to storage.Folder, so directoryName is the relative path
-            var relativePath = string.IsNullOrEmpty(directoryName)
-                ? string.Empty
-                : directoryName;
-
-            // Convert "." to empty string for files in root directory
-            if (relativePath == ".")
-            {
-                relativePath = string.Empty;
-            }
-            var result = new DuplicateVerification
-            {
-                PhotoId = await _photoRepository.GetByCondition(p =>
-                        p.Name == name && p.RelativePath == relativePath && p.Storage.Id == storage.Id)
-                    .Select(p => p.Id)
-                    .SingleOrDefaultAsync(),
-                Name = Path.GetFileName(path)
-            };
-            
-            if (result.PhotoId == 0)
-            {
-                result.DuplicateStatus = DuplicateStatus.PhotoNotExists;
-                return result;
-            }
-
-            var fileExists = await _fileRepository
-                .GetByCondition(f => f.Name == result.Name && f.Photo.Id == result.PhotoId)
-                .AnyAsync();
-            result.DuplicateStatus = fileExists ? DuplicateStatus.FileExists : DuplicateStatus.FileNotExists;
-            return result;
-        }
-
-        private class DuplicateVerification
-        {
-            public DuplicateStatus DuplicateStatus { get; set; }
-            public int PhotoId { get; init; }
-            public string Name { get; init; }
-        }
-
-        private enum DuplicateStatus
-        {
-            PhotoNotExists,
-            FileNotExists,
-            FileExists
-        }
     }
 }
