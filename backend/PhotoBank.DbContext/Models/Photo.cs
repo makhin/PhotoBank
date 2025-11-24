@@ -30,19 +30,19 @@ namespace PhotoBank.DbContext.Models
         [Column(TypeName = "geometry")]
         public Point? Location { get; set; }
         [MaxLength(512)]
-        public string S3Key_Preview { get; set; }
+        public string? S3Key_Preview { get; set; }
         [MaxLength(128)]
-        public string S3ETag_Preview { get; set; }
+        public string? S3ETag_Preview { get; set; }
         [MaxLength(64)]
-        public string Sha256_Preview { get; set; }
+        public string? Sha256_Preview { get; set; }
         public long? BlobSize_Preview { get; set; }
         public DateTime? MigratedAt_Preview { get; set; }
         [MaxLength(512)]
-        public string S3Key_Thumbnail { get; set; }
+        public string? S3Key_Thumbnail { get; set; }
         [MaxLength(128)]
-        public string S3ETag_Thumbnail { get; set; }
+        public string? S3ETag_Thumbnail { get; set; }
         [MaxLength(64)]
-        public string Sha256_Thumbnail { get; set; }
+        public string? Sha256_Thumbnail { get; set; }
         public long? BlobSize_Thumbnail { get; set; }
         public DateTime? MigratedAt_Thumbnail { get; set; }
         public uint? Height { get; set; }

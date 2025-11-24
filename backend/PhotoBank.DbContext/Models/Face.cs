@@ -15,11 +15,11 @@ namespace PhotoBank.DbContext.Models
         public bool? Gender { get; set; }
         public double? Smile { get; set; }
         [MaxLength(512)]
-        public string S3Key_Image { get; set; }
+        public string? S3Key_Image { get; set; }
         [MaxLength(128)]
-        public string S3ETag_Image { get; set; }
+        public string? S3ETag_Image { get; set; }
         [MaxLength(64)]
-        public string Sha256_Image { get; set; }
+        public string? Sha256_Image { get; set; }
         public long? BlobSize_Image { get; set; }
         public DateTime? MigratedAt_Image { get; set; }
         [MaxLength(64)]
