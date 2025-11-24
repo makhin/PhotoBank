@@ -229,40 +229,6 @@ public class UnifiedObjectPropertyEnricherTests
     }
 
     [Test]
-    public async Task EnrichAsync_WithNullPhoto_ShouldThrowArgumentNullException()
-    {
-        // Arrange
-        var mockProvider = new Mock<IObjectDetectionProvider>();
-        mockProvider.Setup(p => p.Kind).Returns(ObjectDetectionProviderKind.Azure);
-        var sourceData = new SourceDataDto();
-        var enricher = new UnifiedObjectPropertyEnricher(
-            mockProvider.Object,
-            _mockPropertyNameRepository.Object,
-            _mockLogger.Object);
-
-        // Act & Assert
-        await enricher.Invoking(e => e.EnrichAsync(null!, sourceData))
-            .Should().ThrowAsync<ArgumentNullException>();
-    }
-
-    [Test]
-    public async Task EnrichAsync_WithNullSourceData_ShouldThrowArgumentNullException()
-    {
-        // Arrange
-        var mockProvider = new Mock<IObjectDetectionProvider>();
-        mockProvider.Setup(p => p.Kind).Returns(ObjectDetectionProviderKind.Azure);
-        var photo = new Photo();
-        var enricher = new UnifiedObjectPropertyEnricher(
-            mockProvider.Object,
-            _mockPropertyNameRepository.Object,
-            _mockLogger.Object);
-
-        // Act & Assert
-        await enricher.Invoking(e => e.EnrichAsync(photo, null!))
-            .Should().ThrowAsync<ArgumentNullException>();
-    }
-
-    [Test]
     public async Task EnrichAsync_WithNoDetections_ShouldNotAddObjectProperties()
     {
         // Arrange

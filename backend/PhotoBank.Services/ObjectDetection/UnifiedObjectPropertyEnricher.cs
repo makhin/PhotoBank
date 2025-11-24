@@ -46,9 +46,6 @@ public class UnifiedObjectPropertyEnricher : IEnricher
 
     public async Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
     {
-        if (photo == null) throw new ArgumentNullException(nameof(photo));
-        if (sourceData == null) throw new ArgumentNullException(nameof(sourceData));
-
         IReadOnlyList<DetectedObjectDto> detectedObjects;
 
         try

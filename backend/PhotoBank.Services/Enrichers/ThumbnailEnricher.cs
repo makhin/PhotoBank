@@ -21,7 +21,6 @@ public sealed class ThumbnailEnricher : IEnricher
 
     public Task EnrichAsync(Photo photo, SourceDataDto source, CancellationToken cancellationToken = default)
     {
-        if (photo is null) throw new ArgumentNullException(nameof(photo));
         if (source?.PreviewImage is null)
             return Task.CompletedTask;
 

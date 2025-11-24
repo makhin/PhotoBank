@@ -23,9 +23,6 @@ public sealed class PreviewEnricher : IEnricher
 
     public Task EnrichAsync(Photo photo, SourceDataDto source, CancellationToken cancellationToken = default)
     {
-        if (photo is null) throw new ArgumentNullException(nameof(photo));
-        if (source is null) throw new ArgumentNullException(nameof(source));
-
         using var image = new MagickImage(source.AbsolutePath);
         image.AutoOrient();
         source.OriginalImage = image.Clone();
