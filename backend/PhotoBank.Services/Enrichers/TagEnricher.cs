@@ -13,7 +13,7 @@ namespace PhotoBank.Services.Enrichers
                 repo,
                 src => src.ImageAnalysis?.Tags?.Select(t => t.Name) ?? Enumerable.Empty<string>(),
                 model => model.Name,
-                name => new Tag { Name = name },
+                name => new Tag { Name = name, Hint = string.Empty },
                 (photo, name, tagModel, src) =>
                 {
                     var tag = src.ImageAnalysis?.Tags?.FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
