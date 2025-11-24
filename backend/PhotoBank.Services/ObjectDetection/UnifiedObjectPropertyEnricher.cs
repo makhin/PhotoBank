@@ -167,7 +167,11 @@ public class UnifiedObjectPropertyEnricher : IEnricher
             if (result.ContainsKey(className))
                 continue;
 
-            var newPropertyName = new PropertyName { Name = className };
+            var newPropertyName = new PropertyName
+            {
+                Id = default,
+                Name = className
+            };
             await _propertyNameRepository.InsertAsync(newPropertyName);
             result[className] = newPropertyName;
         }

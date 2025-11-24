@@ -75,6 +75,7 @@ namespace PhotoBank.Services.Enrichers
                 if (!map.TryGetValue(name, out var model))
                 {
                     model = _modelFactory(name);
+                    model.Id = default;
                     await _repository.InsertAsync(model);
                     map[name] = model;
                 }

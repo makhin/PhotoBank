@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -105,6 +106,72 @@ namespace PhotoBank.UnitTests.Enrichers
 
             // Assert
             _mockTagRepository.Verify(repo => repo.InsertAsync(It.Is<Tag>(t => t.Name == "Bike")), Times.Once);
+        }
+
+        [Test]
+        public async Task EnrichAsync_ShouldResetIncomingIdBeforeInsert()
+        {
+            // Arrange
+            var photo = new Photo();
+            var sourceData = new SourceDataDto
+            {
+                ImageAnalysis = new ImageAnalysisResult
+                {
+                    Tags = new List<ImageTag>
+                    {
+                        new ImageTag { Name = "Bike", Confidence = 0.7 }
+                    }
+                }
+            };
+
+            _mockTagRepository
+                .Setup(r => r.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<System.Func<Tag, bool>>>()
+                ))
+                .Returns(Enumerable.Empty<Tag>().AsQueryable());
+
+            Tag? inserted = null;
+            _mockTagRepository.Setup(r => r.InsertAsync(It.IsAny<Tag>()))
+                .Callback<Tag>(t => inserted = t)
+                .ReturnsAsync((Tag t) => t);
+
+            var enricher = new IncomingIdTagEnricher(_mockTagRepository.Object);
+
+            // Act
+            await enricher.EnrichAsync(photo, sourceData);
+
+            // Assert
+            inserted.Should().NotBeNull();
+            inserted!.Id.Should().Be(0);
+            inserted.Name.Should().Be("Bike");
+        }
+
+        private sealed class IncomingIdTagEnricher : BaseLookupEnricher<Tag, PhotoTag>
+        {
+            public IncomingIdTagEnricher(IRepository<Tag> repo)
+                : base(
+                    repo,
+                    src => src.ImageAnalysis?.Tags?.Select(t => t.Name) ?? Enumerable.Empty<string>(),
+                    model => model.Name,
+                    name => new Tag { Id = 123, Name = name, Hint = string.Empty },
+                    (photo, name, tagModel, src) =>
+                    {
+                        var tag = src.ImageAnalysis?.Tags?.FirstOrDefault(t =>
+                            string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
+
+                        return new PhotoTag
+                        {
+                            Photo = photo,
+                            Tag = tagModel,
+                            Confidence = tag?.Confidence ?? 0
+                        };
+                    })
+            {
+            }
+
+            public override EnricherType EnricherType => EnricherType.Tag;
+
+            protected override ICollection<PhotoTag> GetCollection(Photo photo) =>
+                photo.PhotoTags ??= new List<PhotoTag>();
         }
     }
 }

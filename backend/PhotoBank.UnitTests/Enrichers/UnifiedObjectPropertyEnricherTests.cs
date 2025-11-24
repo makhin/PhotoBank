@@ -229,6 +229,54 @@ public class UnifiedObjectPropertyEnricherTests
     }
 
     [Test]
+    public async Task EnrichAsync_ShouldResetIncomingPropertyNameId()
+    {
+        // Arrange
+        var photo = new Photo { Scale = 1 };
+        var sourceData = new SourceDataDto
+        {
+            ImageAnalysis = new ImageAnalysisResult
+            {
+                Objects = new List<DetectedObject>
+                {
+                    new DetectedObject
+                    {
+                        ObjectProperty = "Bike",
+                        Confidence = 0.7,
+                        Rectangle = new ObjectRectangle { X = 30, Y = 30, W = 70, H = 70 }
+                    }
+                }
+            }
+        };
+
+        var azureProvider = new AzureObjectDetectionProvider();
+
+        _mockPropertyNameRepository
+            .Setup(repo => repo.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<Func<PropertyName, bool>>>()
+            ))
+            .Returns(Enumerable.Empty<PropertyName>().AsQueryable());
+
+        PropertyName? inserted = null;
+        _mockPropertyNameRepository
+            .Setup(repo => repo.InsertAsync(It.IsAny<PropertyName>()))
+            .Callback<PropertyName>(pn => inserted = pn)
+            .ReturnsAsync((PropertyName pn) => pn);
+
+        var enricher = new UnifiedObjectPropertyEnricher(
+            azureProvider,
+            _mockPropertyNameRepository.Object,
+            _mockLogger.Object);
+
+        // Act
+        await enricher.EnrichAsync(photo, sourceData);
+
+        // Assert
+        inserted.Should().NotBeNull();
+        inserted!.Id.Should().Be(0);
+        inserted.Name.Should().Be("Bike");
+    }
+
+    [Test]
     public async Task EnrichAsync_WithNullPhoto_ShouldThrowArgumentNullException()
     {
         // Arrange
