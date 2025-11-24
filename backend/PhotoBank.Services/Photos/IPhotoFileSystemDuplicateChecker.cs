@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
+using File = PhotoBank.DbContext.Models.File;
 
 namespace PhotoBank.Services.Photos;
 
