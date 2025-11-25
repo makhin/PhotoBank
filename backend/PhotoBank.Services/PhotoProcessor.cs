@@ -65,6 +65,23 @@ namespace PhotoBank.Services
 
         public async Task<(int PhotoId, bool WasDuplicate)> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null)
         {
+            var duplicateResult = await HandleDuplicateCheckAsync(storage, path);
+            if (duplicateResult.HasValue)
+            {
+                return duplicateResult.Value;
+            }
+
+            var (photo, sourceData) = await CreateAndEnrichPhotoAsync(storage, path, activeEnrichers);
+
+            await InsertPhotoAsync(photo);
+
+            await PublishPhotoCreatedEventAsync(photo, sourceData);
+
+            return (photo.Id, false);
+        }
+
+        private async Task<(int PhotoId, bool WasDuplicate)?> HandleDuplicateCheckAsync(Storage storage, string path)
+        {
             var duplicate = await _duplicateChecker.VerifyDuplicatesAsync(storage, path);
 
             if (duplicate.DuplicateStatus == DuplicateStatus.FileExists)
@@ -76,12 +93,20 @@ namespace PhotoBank.Services
             {
                 await _fileRepository.InsertAsync(new File
                 {
-                    Photo = new Photo {Id = duplicate.PhotoId},
+                    Photo = new Photo { Id = duplicate.PhotoId },
                     Name = duplicate.Name,
                 });
                 return (duplicate.PhotoId, false);
             }
 
+            return null;
+        }
+
+        private async Task<(Photo Photo, SourceDataDto SourceData)> CreateAndEnrichPhotoAsync(
+            Storage storage,
+            string path,
+            IReadOnlyCollection<Type>? activeEnrichers)
+        {
             var absolutePath = Path.Combine(storage.Folder, path);
             var sourceData = new SourceDataDto { AbsolutePath = absolutePath };
             var photo = new Photo { Storage = storage };
@@ -89,6 +114,11 @@ namespace PhotoBank.Services
             var enrichersToUse = activeEnrichers ?? _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
             await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersToUse);
 
+            return (photo, sourceData);
+        }
+
+        private async Task InsertPhotoAsync(Photo photo)
+        {
             try
             {
                 await _photoRepository.InsertAsync(photo);
@@ -97,14 +127,15 @@ namespace PhotoBank.Services
             {
                 Console.WriteLine("An exception occurred: {0}, {1}", exception.InnerException, exception.Message);
             }
+        }
 
+        private async Task PublishPhotoCreatedEventAsync(Photo photo, SourceDataDto sourceData)
+        {
             var faces = (photo.Faces ?? new List<Face>())
                 .Zip(sourceData.FaceImages, (f, img) => new PhotoCreatedFace(f.Id, img))
                 .ToList();
             var evt = new PhotoCreated(photo.Id, sourceData.PreviewImage.ToByteArray(), sourceData.ThumbnailImage, faces);
             await _mediator.Publish(evt);
-
-            return (photo.Id, false);
         }
 
 
