@@ -25,6 +25,7 @@ namespace PhotoBank.Repositories
         Task<TTable> UpdateAsync(TTable entity);
         Task<int> UpdateAsync(TTable entity, params Expression<Func<TTable, object>>[] properties);
         Task<int> DeleteAsync(int id);
+        void Attach(TTable entity);
     }
 
     public class Repository<TTable> : IRepository<TTable> where TTable : class, IEntityBase, new()
@@ -156,6 +157,14 @@ namespace PhotoBank.Repositories
             {
                 Debug.WriteLine("An exception occurred: {0}, {1}", exception.InnerException, exception.Message);
                 throw new Exception("An error occurred; not deleted");
+            }
+        }
+
+        public void Attach(TTable entity)
+        {
+            if (_context.Entry(entity).State == EntityState.Detached)
+            {
+                _entities.Attach(entity);
             }
         }
     }

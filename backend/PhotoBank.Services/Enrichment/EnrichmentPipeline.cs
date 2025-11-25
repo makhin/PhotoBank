@@ -79,7 +79,7 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
                 }
                 finally
                 {
-                    if (sw is { })
+                    if (sw is not null)
                         _log.LogInformation("Enricher {Enricher} took {Ms} ms", t.Name, sw.ElapsedMilliseconds);
                 }
             }
@@ -109,7 +109,7 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
         foreach (var t in types)
         {
             var deps = new HashSet<Type>(
-                ((IOrderDependent)sp.GetRequiredService(t)).Dependencies ?? Array.Empty<Type>());
+                ((IOrderDependent)sp.GetRequiredService(t)).Dependencies);
 
             edges[t] = deps;
         }
@@ -121,10 +121,9 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
         void Visit(Type v)
         {
             if (perm.Contains(v)) return;
-            if (temp.Contains(v))
+            if (!temp.Add(v))
                 throw new InvalidOperationException($"Dependency cycle detected around {v.Name}");
 
-            temp.Add(v);
             foreach (var u in edges[v])
             {
                 if (!edges.ContainsKey(u))

@@ -11,12 +11,12 @@ namespace PhotoBank.Services.Enrichers
         public TagEnricher(IRepository<Tag> repo)
             : base(
                 repo,
-                src => src.ImageAnalysis?.Tags?.Select(t => t.Name) ?? Enumerable.Empty<string>(),
+                src => src.ImageAnalysis.Tags.Select(t => t.Name) ?? [],
                 model => model.Name,
                 name => new Tag { Name = name, Hint = string.Empty },
                 (photo, name, tagModel, src) =>
                 {
-                    var tag = src.ImageAnalysis?.Tags?.FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
+                    var tag = src.ImageAnalysis.Tags.FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase));
                     return new PhotoTag { Photo = photo, Tag = tagModel, Confidence = tag?.Confidence ?? 0 };
                 })
         {
@@ -24,6 +24,10 @@ namespace PhotoBank.Services.Enrichers
 
         public override EnricherType EnricherType => EnricherType.Tag;
 
-        protected override ICollection<PhotoTag> GetCollection(Photo photo) => photo.PhotoTags ??= new List<PhotoTag>();
+        protected override ICollection<PhotoTag> GetCollection(Photo photo)
+        {
+            photo.PhotoTags ??= new List<PhotoTag>();
+            return photo.PhotoTags;
+        }
     }
 }

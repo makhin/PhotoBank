@@ -82,7 +82,7 @@ public class UnifiedObjectPropertyEnricher : IEnricher
             .ToArray();
 
         // Get or create PropertyName entities
-        var propertyNameMap = await GetOrCreatePropertyNamesAsync(classNames, cancellationToken);
+        var propertyNameMap = await GetOrCreatePropertyNamesAsync(classNames);
 
         // Create ObjectProperty entities
         photo.ObjectProperties ??= [];
@@ -144,9 +144,7 @@ public class UnifiedObjectPropertyEnricher : IEnricher
     /// Gets or creates PropertyName entities for detected object classes.
     /// Implements the same case-insensitive lookup logic as the old enrichers.
     /// </summary>
-    private async Task<Dictionary<string, PropertyName>> GetOrCreatePropertyNamesAsync(
-        string[] classNames,
-        CancellationToken cancellationToken)
+    private async Task<Dictionary<string, PropertyName>> GetOrCreatePropertyNamesAsync(string[] classNames)
     {
         // Normalize class names to lowercase for case-insensitive comparison
         var normalizedClassNames = classNames.Select(cn => cn.ToLowerInvariant()).ToList();
@@ -155,6 +153,12 @@ public class UnifiedObjectPropertyEnricher : IEnricher
         var existingPropertyNames = _propertyNameRepository
             .GetByCondition(p => normalizedClassNames.Contains(p.Name.ToLower()))
             .ToList();
+
+        // Attach existing entities so EF knows they already exist in the database
+        foreach (var propertyName in existingPropertyNames)
+        {
+            _propertyNameRepository.Attach(propertyName);
+        }
 
         var result = existingPropertyNames.ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
 
@@ -166,6 +170,8 @@ public class UnifiedObjectPropertyEnricher : IEnricher
 
             var newPropertyName = new PropertyName { Name = className };
             await _propertyNameRepository.InsertAsync(newPropertyName);
+            // Attach newly inserted entity to ensure it's marked as Unchanged
+            _propertyNameRepository.Attach(newPropertyName);
             result[className] = newPropertyName;
         }
 

@@ -68,6 +68,12 @@ namespace PhotoBank.Services.Enrichers
                 existing = query.AsNoTracking().ToList();
             }
 
+            // Attach existing entities so EF knows they already exist in the database
+            foreach (var entity in existing)
+            {
+                _repository.Attach(entity);
+            }
+
             var map = existing.ToDictionary(_nameAccessor, StringComparer.OrdinalIgnoreCase);
 
             foreach (var name in incoming)
@@ -76,6 +82,8 @@ namespace PhotoBank.Services.Enrichers
                 {
                     model = _modelFactory(name);
                     await _repository.InsertAsync(model);
+                    // Attach newly inserted entity to ensure it's marked as Unchanged
+                    _repository.Attach(model);
                     map[name] = model;
                 }
             }
