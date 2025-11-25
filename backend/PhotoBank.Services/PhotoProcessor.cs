@@ -63,6 +63,13 @@ namespace PhotoBank.Services
             _duplicateChecker = duplicateChecker;
         }
 
+        private static string BuildAbsolutePath(Storage storage, params string[] pathSegments)
+        {
+            var allSegments = new List<string> { storage.Folder };
+            allSegments.AddRange(pathSegments);
+            return Path.Combine(allSegments.ToArray());
+        }
+
         public async Task<(int PhotoId, bool WasDuplicate)> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null)
         {
             var duplicateResult = await HandleDuplicateCheckAsync(storage, path);
@@ -107,7 +114,7 @@ namespace PhotoBank.Services
             string path,
             IReadOnlyCollection<Type>? activeEnrichers)
         {
-            var absolutePath = Path.Combine(storage.Folder, path);
+            var absolutePath = BuildAbsolutePath(storage, path);
             var sourceData = new SourceDataDto { AbsolutePath = absolutePath };
             var photo = new Photo { Storage = storage };
 
@@ -218,7 +225,7 @@ namespace PhotoBank.Services
                     continue;
                 }
 
-                var absolutePath = Path.Combine(storage.Folder, photoFile.RelativePath, photoFile.Files.First().Name);
+                var absolutePath = BuildAbsolutePath(storage, photoFile.RelativePath, photoFile.Files.First().Name);
                 if (!Path.Exists(absolutePath))
                 {
                     continue;
