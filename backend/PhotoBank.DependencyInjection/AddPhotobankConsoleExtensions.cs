@@ -81,6 +81,7 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<IFacePreviewService, FacePreviewService>();
         services.AddTransient<IFaceServiceAws, FaceServiceAws>();
         services.AddTransient<IPhotoProcessor, PhotoProcessor>();
+        services.AddScoped<IPhotoDeletionService, PhotoDeletionService>();
         services.AddSingleton<ICurrentUser, DummyCurrentUser>();
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<ISyncService, SyncService>();
