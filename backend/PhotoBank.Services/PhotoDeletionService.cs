@@ -49,20 +49,30 @@ public class PhotoDeletionService : IPhotoDeletionService
         }
 
         var keysToRemove = CollectS3Objects(photo);
-        await RemoveObjectsAsync(keysToRemove, cancellationToken);
 
         await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
-        _context.Captions.RemoveRange(photo.Captions);
-        _context.PhotoTags.RemoveRange(photo.PhotoTags);
-        _context.PhotoCategories.RemoveRange(photo.PhotoCategories);
-        _context.ObjectProperties.RemoveRange(photo.ObjectProperties);
-        _context.Faces.RemoveRange(photo.Faces);
-        _context.Files.RemoveRange(photo.Files);
-        _context.Photos.Remove(photo);
+        try
+        {
+            _context.Captions.RemoveRange(photo.Captions);
+            _context.PhotoTags.RemoveRange(photo.PhotoTags);
+            _context.PhotoCategories.RemoveRange(photo.PhotoCategories);
+            _context.ObjectProperties.RemoveRange(photo.ObjectProperties);
+            _context.Faces.RemoveRange(photo.Faces);
+            _context.Files.RemoveRange(photo.Files);
+            _context.Photos.Remove(photo);
 
-        await _context.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            await RemoveObjectsAsync(keysToRemove, cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
 
         _logger.LogInformation("Deleted photo {PhotoId} and related data", photoId);
         return true;
