@@ -24,5 +24,27 @@ public class MinioObjectService
             .WithCallbackStream(stream => stream.CopyTo(ms)));
         return ms.ToArray();
     }
+
+    public async Task DeleteObjectAsync(string key)
+    {
+        await _minioClient.RemoveObjectAsync(new RemoveObjectArgs()
+            .WithBucket(Bucket)
+            .WithObject(key));
+    }
+
+    public async Task<bool> ObjectExistsAsync(string key)
+    {
+        try
+        {
+            await _minioClient.StatObjectAsync(new StatObjectArgs()
+                .WithBucket(Bucket)
+                .WithObject(key));
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }
 

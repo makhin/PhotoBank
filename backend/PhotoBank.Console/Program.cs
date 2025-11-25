@@ -66,6 +66,10 @@ namespace PhotoBank.Console
             var reEnrichCommand = BuildReEnrichCommand(args);
             rootCommand.AddCommand(reEnrichCommand);
 
+            // Add delete subcommand
+            var deleteCommand = BuildDeleteCommand(args);
+            rootCommand.AddCommand(deleteCommand);
+
             // Allow unmatched tokens (e.g., --environment, --logging:*) to pass through to the host
             rootCommand.TreatUnmatchedTokensAsErrors = false;
 
@@ -473,6 +477,104 @@ namespace PhotoBank.Console
             }
 
             return result;
+        }
+
+        private static Command BuildDeleteCommand(string[] args)
+        {
+            var command = new Command("delete", "Delete a photo by ID, including all related records and S3 objects");
+
+            var photoIdOption = new Option<int>(
+                aliases: new[] { "--photo-id", "-p" },
+                description: "Photo ID to delete")
+            { IsRequired = true };
+
+            var confirmOption = new Option<bool>(
+                aliases: new[] { "--confirm", "-y" },
+                description: "Confirm deletion without prompting",
+                getDefaultValue: () => false);
+
+            command.AddOption(photoIdOption);
+            command.AddOption(confirmOption);
+
+            command.SetHandler(async (context) =>
+            {
+                var photoId = context.ParseResult.GetValueForOption(photoIdOption);
+                var confirm = context.ParseResult.GetValueForOption(confirmOption);
+
+                var exitCode = await RunDeleteAsync(args, photoId, confirm);
+                context.ExitCode = exitCode;
+            });
+
+            return command;
+        }
+
+        private static async Task<int> RunDeleteAsync(string[] args, int photoId, bool autoConfirm)
+        {
+            IHost? host = null;
+            try
+            {
+                host = Host.CreateDefaultBuilder(args)
+                    .UseSerilog((context, services, configuration) => configuration
+                        .ReadFrom.Configuration(context.Configuration)
+                        .WriteTo.Console()
+                        .WriteTo.File("logs/photobank-.log",
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 7))
+                    .ConfigureServices((context, services) =>
+                    {
+                        services
+                            .AddPhotobankDbContext(context.Configuration, usePool: false)
+                            .AddPhotobankCore(context.Configuration);
+                    })
+                    .Build();
+
+                System.Console.WriteLine($"Preparing to delete photo ID: {photoId}");
+                System.Console.WriteLine();
+
+                if (!autoConfirm)
+                {
+                    System.Console.Write("Are you sure you want to delete this photo? This action cannot be undone. (yes/no): ");
+                    var confirmation = System.Console.ReadLine()?.Trim().ToLowerInvariant();
+
+                    if (confirmation != "yes" && confirmation != "y")
+                    {
+                        System.Console.WriteLine("Deletion cancelled.");
+                        return 0;
+                    }
+                    System.Console.WriteLine();
+                }
+
+                var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+                var ct = lifetime.ApplicationStopping;
+
+                using var scope = host.Services.CreateScope();
+                var deletionService = scope.ServiceProvider.GetRequiredService<PhotoBank.Services.Photos.IPhotoDeletionService>();
+
+                System.Console.WriteLine("Deleting photo...");
+                var result = await deletionService.DeletePhotoAsync(photoId, ct);
+                System.Console.WriteLine();
+
+                result.PrintSummary();
+
+                await host.StopAsync();
+                return result.Success ? 0 : 1;
+            }
+            catch (OperationCanceledException)
+            {
+                System.Console.WriteLine("\nDeletion cancelled by user.");
+                return 130;
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Deletion error: {ex.Message}");
+                Log.Fatal(ex, "Photo deletion failed");
+                return 1;
+            }
+            finally
+            {
+                host?.Dispose();
+                Log.CloseAndFlush();
+            }
         }
     }
 }

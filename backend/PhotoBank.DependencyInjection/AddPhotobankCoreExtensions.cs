@@ -57,6 +57,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IPhotoIngestionService, PhotoIngestionService>();
         services.AddScoped<IPhotoAdminService, PhotoAdminService>();
         services.AddScoped<IPhotoService, PhotoService>();
+        services.AddScoped<IPhotoDeletionService, PhotoDeletionService>();
         services.AddScoped<ISearchReferenceDataService, SearchReferenceDataService>();
         services.AddSingleton<IActiveEnricherProvider, ActiveEnricherProvider>();
 
