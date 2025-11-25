@@ -48,7 +48,7 @@ public class PhotoDeletionService : IPhotoDeletionService
             return false;
         }
 
-        var keysToRemove = CollectS3Keys(photo);
+        var keysToRemove = CollectS3Objects(photo);
         await RemoveObjectsAsync(keysToRemove, cancellationToken);
 
         await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
@@ -97,6 +97,7 @@ public class PhotoDeletionService : IPhotoDeletionService
     {
         return await _context.Photos
             .AsTracking()
+            .Include(p => p.Storage)
             .Include(p => p.Files)
             .Include(p => p.Captions)
             .Include(p => p.PhotoTags)
@@ -106,44 +107,116 @@ public class PhotoDeletionService : IPhotoDeletionService
             .FirstOrDefaultAsync(p => p.Id == photoId, cancellationToken);
     }
 
-    private IReadOnlyCollection<string> CollectS3Keys(Photo photo)
+    private IReadOnlyCollection<(string Bucket, string Key)> CollectS3Objects(Photo photo)
     {
-        var keys = new HashSet<string>(StringComparer.Ordinal);
+        var keys = new HashSet<(string Bucket, string Key)>();
 
         if (!string.IsNullOrWhiteSpace(photo.S3Key_Preview))
         {
-            keys.Add(photo.S3Key_Preview);
+            keys.Add((_bucket, photo.S3Key_Preview));
         }
 
         if (!string.IsNullOrWhiteSpace(photo.S3Key_Thumbnail))
         {
-            keys.Add(photo.S3Key_Thumbnail);
+            keys.Add((_bucket, photo.S3Key_Thumbnail));
         }
 
         foreach (var faceKey in photo.Faces.Select(f => f.S3Key_Image).Where(k => !string.IsNullOrWhiteSpace(k)))
         {
-            keys.Add(faceKey!);
+            keys.Add((_bucket, faceKey!));
+        }
+
+        if (TryParseLocation(photo.Storage?.Folder, out var location))
+        {
+            var prefix = CombinePrefixes(location.Prefix, photo.RelativePath);
+
+            foreach (var fileName in photo.Files.Select(f => f.Name).Where(n => !string.IsNullOrWhiteSpace(n)))
+            {
+                var key = BuildObjectKey(prefix, fileName!);
+                keys.Add((location.Bucket, key));
+            }
         }
 
         return keys;
     }
 
-    private async Task RemoveObjectsAsync(IEnumerable<string> keys, CancellationToken cancellationToken)
+    private async Task RemoveObjectsAsync(IEnumerable<(string Bucket, string Key)> objects, CancellationToken cancellationToken)
     {
-        foreach (var key in keys)
+        foreach (var (bucket, key) in objects)
         {
             try
             {
                 await _minioClient.RemoveObjectAsync(
                     new RemoveObjectArgs()
-                        .WithBucket(_bucket)
+                        .WithBucket(bucket)
                         .WithObject(key),
                     cancellationToken);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to remove object {Key} from bucket {Bucket}", key, _bucket);
+                _logger.LogWarning(ex, "Failed to remove object {Key} from bucket {Bucket}", key, bucket);
             }
         }
     }
+
+    private bool TryParseLocation(string? folder, out ObjectStorageLocation location)
+    {
+        location = default;
+
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            return false;
+        }
+
+        if (!Uri.TryCreate(folder, UriKind.Absolute, out var uri))
+        {
+            return false;
+        }
+
+        if (!string.Equals(uri.Scheme, "s3", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(uri.Scheme, "minio", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var bucket = string.IsNullOrWhiteSpace(uri.Host) ? _bucket : uri.Host;
+        if (string.IsNullOrWhiteSpace(bucket))
+        {
+            return false;
+        }
+
+        var prefix = uri.AbsolutePath.Trim('/');
+
+        location = new ObjectStorageLocation(bucket, string.IsNullOrWhiteSpace(prefix) ? null : prefix);
+        return true;
+    }
+
+    private static string CombinePrefixes(string? basePrefix, string? relativePath)
+    {
+        var segments = new List<string>();
+        if (!string.IsNullOrWhiteSpace(basePrefix))
+        {
+            segments.Add(basePrefix.Trim('/'));
+        }
+
+        if (!string.IsNullOrWhiteSpace(relativePath))
+        {
+            segments.Add(relativePath.Replace('\\', '/').Trim('/'));
+        }
+
+        return string.Join('/', segments.Where(s => !string.IsNullOrWhiteSpace(s)));
+    }
+
+    private static string BuildObjectKey(string prefix, string fileName)
+    {
+        var normalized = fileName.Replace('\\', '/');
+        if (string.IsNullOrWhiteSpace(prefix))
+        {
+            return normalized;
+        }
+
+        return string.Join('/', new[] { prefix.TrimEnd('/'), normalized.TrimStart('/') });
+    }
+
+    private readonly record struct ObjectStorageLocation(string Bucket, string? Prefix);
 }
