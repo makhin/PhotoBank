@@ -142,6 +142,8 @@ public class PhotoDeletionService : IPhotoDeletionService
 
     private async Task RemoveObjectsAsync(IEnumerable<(string Bucket, string Key)> objects, CancellationToken cancellationToken)
     {
+        var failures = new List<Exception>();
+
         foreach (var (bucket, key) in objects)
         {
             try
@@ -154,8 +156,14 @@ public class PhotoDeletionService : IPhotoDeletionService
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to remove object {Key} from bucket {Bucket}", key, bucket);
+                _logger.LogError(ex, "Failed to remove object {Key} from bucket {Bucket}", key, bucket);
+                failures.Add(new InvalidOperationException($"Failed to remove object {key} from bucket {bucket}", ex));
             }
+        }
+
+        if (failures.Count > 0)
+        {
+            throw new AggregateException("Failed to remove one or more objects from object storage", failures);
         }
     }
 
