@@ -85,6 +85,8 @@ namespace PhotoBank.DbContext.DbContext
                     .Ignore(f => f.Embedding);
             }
 
+            modelBuilder.UseIdentityAlwaysColumns();
+
             modelBuilder.Entity<ApplicationUser>(b =>
             {
                 b.HasIndex(u => u.TelegramUserId)

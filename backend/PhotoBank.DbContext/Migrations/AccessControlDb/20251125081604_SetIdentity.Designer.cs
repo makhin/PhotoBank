@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PhotoBank.AccessControl;
@@ -11,9 +12,11 @@ using PhotoBank.AccessControl;
 namespace PhotoBank.DbContext.Migrations.AccessControlDb
 {
     [DbContext(typeof(AccessControlDbContext))]
-    partial class AccessControlDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251125081604_SetIdentity")]
+    partial class SetIdentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -13,6 +13,7 @@ using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Events;
 using System.Linq;
+using System.Linq.Expressions;
 
 // ReSharper disable once CheckNamespace
 
@@ -39,58 +40,31 @@ public class PhotoCreatedHandler : INotificationHandler<PhotoCreated>
             .Select(p => new { Storage = p.Storage.Name, p.RelativePath })
             .SingleAsync(cancellationToken);
 
-        var photoEntry = GetPhotoEntry(notification.PhotoId);
+        var photoEntry = GetEntityEntry(p => p.Id == notification.PhotoId, () => new Photo { Id = notification.PhotoId });
         var uploadedKeys = new List<string>();
 
         try
         {
             // Upload preview to S3
             var previewKey = S3KeyBuilder.BuildPreviewKey(info.Storage, info.RelativePath, notification.PhotoId);
-            var (previewEtag, previewSha, previewSize) = await UploadAsync(previewKey, notification.Preview, cancellationToken);
-            uploadedKeys.Add(previewKey);
-
-            photoEntry.Property(p => p.S3Key_Preview).CurrentValue = previewKey;
-            photoEntry.Property(p => p.S3Key_Preview).IsModified = true;
-            photoEntry.Property(p => p.S3ETag_Preview).CurrentValue = previewEtag;
-            photoEntry.Property(p => p.S3ETag_Preview).IsModified = true;
-            photoEntry.Property(p => p.Sha256_Preview).CurrentValue = previewSha;
-            photoEntry.Property(p => p.Sha256_Preview).IsModified = true;
-            photoEntry.Property(p => p.BlobSize_Preview).CurrentValue = previewSize;
-            photoEntry.Property(p => p.BlobSize_Preview).IsModified = true;
+            await UploadAndSetBlobProperties(previewKey, notification.Preview, photoEntry, uploadedKeys, cancellationToken,
+                p => p.S3Key_Preview, p => p.S3ETag_Preview, p => p.Sha256_Preview, p => p.BlobSize_Preview);
 
             // Upload thumbnail to S3 if exists
             if (notification.Thumbnail != null)
             {
                 var thumbKey = S3KeyBuilder.BuildThumbnailKey(info.Storage, info.RelativePath, notification.PhotoId);
-                var (thumbEtag, thumbSha, thumbSize) = await UploadAsync(thumbKey, notification.Thumbnail, cancellationToken);
-                uploadedKeys.Add(thumbKey);
-
-                photoEntry.Property(p => p.S3Key_Thumbnail).CurrentValue = thumbKey;
-                photoEntry.Property(p => p.S3Key_Thumbnail).IsModified = true;
-                photoEntry.Property(p => p.S3ETag_Thumbnail).CurrentValue = thumbEtag;
-                photoEntry.Property(p => p.S3ETag_Thumbnail).IsModified = true;
-                photoEntry.Property(p => p.Sha256_Thumbnail).CurrentValue = thumbSha;
-                photoEntry.Property(p => p.Sha256_Thumbnail).IsModified = true;
-                photoEntry.Property(p => p.BlobSize_Thumbnail).CurrentValue = thumbSize;
-                photoEntry.Property(p => p.BlobSize_Thumbnail).IsModified = true;
+                await UploadAndSetBlobProperties(thumbKey, notification.Thumbnail, photoEntry, uploadedKeys, cancellationToken,
+                    p => p.S3Key_Thumbnail, p => p.S3ETag_Thumbnail, p => p.Sha256_Thumbnail, p => p.BlobSize_Thumbnail);
             }
 
             // Upload face images to S3
             foreach (var face in notification.Faces)
             {
                 var key = S3KeyBuilder.BuildFaceKey(face.FaceId);
-                var (etag, sha, size) = await UploadAsync(key, face.Image, cancellationToken);
-                uploadedKeys.Add(key);
-
-                var faceEntry = GetFaceEntry(face.FaceId);
-                faceEntry.Property(f => f.S3Key_Image).CurrentValue = key;
-                faceEntry.Property(f => f.S3Key_Image).IsModified = true;
-                faceEntry.Property(f => f.S3ETag_Image).CurrentValue = etag;
-                faceEntry.Property(f => f.S3ETag_Image).IsModified = true;
-                faceEntry.Property(f => f.Sha256_Image).CurrentValue = sha;
-                faceEntry.Property(f => f.Sha256_Image).IsModified = true;
-                faceEntry.Property(f => f.BlobSize_Image).CurrentValue = size;
-                faceEntry.Property(f => f.BlobSize_Image).IsModified = true;
+                var faceEntry = GetEntityEntry(f => f.Id == face.FaceId, () => new Face { Id = face.FaceId });
+                await UploadAndSetBlobProperties(key, face.Image, faceEntry, uploadedKeys, cancellationToken,
+                    f => f.S3Key_Image, f => f.S3ETag_Image, f => f.Sha256_Image, f => f.BlobSize_Image);
             }
 
             // Save changes to database
@@ -141,39 +115,46 @@ public class PhotoCreatedHandler : INotificationHandler<PhotoCreated>
         }
     }
 
-    private EntityEntry<Photo> GetPhotoEntry(int photoId)
+    private async Task UploadAndSetBlobProperties<T>(
+        string key,
+        byte[] data,
+        EntityEntry<T> entry,
+        List<string> uploadedKeys,
+        CancellationToken cancellationToken,
+        Expression<Func<T, string?>> s3KeyProp,
+        Expression<Func<T, string?>> etagProp,
+        Expression<Func<T, string?>> shaProp,
+        Expression<Func<T, long?>> sizeProp) where T : class
     {
-        var tracked = _context.ChangeTracker.Entries<Photo>()
-            .FirstOrDefault(e => e.Entity.Id == photoId);
-        if (tracked != null)
-        {
-            return tracked;
-        }
-
-        var local = _context.Photos.Local.FirstOrDefault(p => p.Id == photoId);
-        if (local != null)
-        {
-            return _context.Entry(local);
-        }
-
-        return _context.Photos.Attach(new Photo { Id = photoId });
+        var (etag, sha, size) = await UploadAsync(key, data, cancellationToken);
+        uploadedKeys.Add(key);
+        SetBlobProperties(entry, key, etag, sha, size, s3KeyProp, etagProp, shaProp, sizeProp);
     }
 
-    private EntityEntry<Face> GetFaceEntry(int faceId)
+    private static void SetBlobProperties<T>(EntityEntry<T> entry, string s3Key, string etag, string sha, long size,
+        Expression<Func<T, string?>> s3KeyProp, Expression<Func<T, string?>> etagProp,
+        Expression<Func<T, string?>> shaProp, Expression<Func<T, long?>> sizeProp) where T : class
     {
-        var tracked = _context.ChangeTracker.Entries<Face>()
-            .FirstOrDefault(e => e.Entity.Id == faceId);
+        entry.Property(s3KeyProp).CurrentValue = s3Key;
+        entry.Property(s3KeyProp).IsModified = true;
+        entry.Property(etagProp).CurrentValue = etag;
+        entry.Property(etagProp).IsModified = true;
+        entry.Property(shaProp).CurrentValue = sha;
+        entry.Property(shaProp).IsModified = true;
+        entry.Property(sizeProp).CurrentValue = size;
+        entry.Property(sizeProp).IsModified = true;
+    }
+
+    private EntityEntry<T> GetEntityEntry<T>(Func<T, bool> predicate, Func<T> factory) where T : class
+    {
+        var tracked = _context.ChangeTracker.Entries<T>()
+            .FirstOrDefault(e => predicate(e.Entity));
         if (tracked != null)
         {
             return tracked;
         }
 
-        var local = _context.Faces.Local.FirstOrDefault(f => f.Id == faceId);
-        if (local != null)
-        {
-            return _context.Entry(local);
-        }
-
-        return _context.Faces.Attach(new Face { Id = faceId });
+        var local = _context.Set<T>().Local.FirstOrDefault(predicate);
+        return local != null ? _context.Entry(local) : _context.Attach(factory());
     }
 }

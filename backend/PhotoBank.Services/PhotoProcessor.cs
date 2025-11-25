@@ -81,7 +81,6 @@ namespace PhotoBank.Services
             var (photo, sourceData) = await CreateAndEnrichPhotoAsync(storage, path, activeEnrichers);
 
             await InsertPhotoAsync(photo);
-
             await PublishPhotoCreatedEventAsync(photo, sourceData);
 
             return (photo.Id, false);
@@ -91,22 +90,21 @@ namespace PhotoBank.Services
         {
             var duplicate = await _duplicateChecker.VerifyDuplicatesAsync(storage, path);
 
-            if (duplicate.DuplicateStatus == DuplicateStatus.FileExists)
+            switch (duplicate.DuplicateStatus)
             {
-                return (duplicate.PhotoId, true);
+                case DuplicateStatus.FileExists:
+                    return (duplicate.PhotoId, true);
+                case DuplicateStatus.FileNotExists:
+                    await _fileRepository.InsertAsync(new File
+                    {
+                        Photo = new Photo { Id = duplicate.PhotoId },
+                        Name = duplicate.Name,
+                    });
+                    return (duplicate.PhotoId, false);
+                case DuplicateStatus.PhotoNotExists:
+                default:
+                    return null;
             }
-
-            if (duplicate.DuplicateStatus == DuplicateStatus.FileNotExists)
-            {
-                await _fileRepository.InsertAsync(new File
-                {
-                    Photo = new Photo { Id = duplicate.PhotoId },
-                    Name = duplicate.Name,
-                });
-                return (duplicate.PhotoId, false);
-            }
-
-            return null;
         }
 
         private async Task<(Photo Photo, SourceDataDto SourceData)> CreateAndEnrichPhotoAsync(

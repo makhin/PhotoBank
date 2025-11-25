@@ -1,6 +1,7 @@
-using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using System;
+using System.Reflection.Emit;
 
 namespace PhotoBank.AccessControl;
 
@@ -21,34 +22,36 @@ public class AccessControlDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<RoleAccessProfile> RoleAccessProfiles => Set<RoleAccessProfile>();
     public DbSet<UserAccessProfile> UserAccessProfiles => Set<UserAccessProfile>();
 
-    protected override void OnModelCreating(ModelBuilder b)
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(b);
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.UseIdentityAlwaysColumns();
 
         // PKs
-        b.Entity<AccessProfileStorageAllow>().HasKey(x => new { x.ProfileId, x.StorageId });
-        b.Entity<AccessProfilePersonGroupAllow>().HasKey(x => new { x.ProfileId, x.PersonGroupId });
-        b.Entity<AccessProfileDateRangeAllow>().HasKey(x => new { x.ProfileId, x.FromDate, x.ToDate });
-        b.Entity<RoleAccessProfile>().HasKey(x => new { x.RoleId, x.ProfileId });
-        b.Entity<UserAccessProfile>().HasKey(x => new { x.UserId, x.ProfileId });
+        modelBuilder.Entity<AccessProfileStorageAllow>().HasKey(x => new { x.ProfileId, x.StorageId });
+        modelBuilder.Entity<AccessProfilePersonGroupAllow>().HasKey(x => new { x.ProfileId, x.PersonGroupId });
+        modelBuilder.Entity<AccessProfileDateRangeAllow>().HasKey(x => new { x.ProfileId, x.FromDate, x.ToDate });
+        modelBuilder.Entity<RoleAccessProfile>().HasKey(x => new { x.RoleId, x.ProfileId });
+        modelBuilder.Entity<UserAccessProfile>().HasKey(x => new { x.UserId, x.ProfileId });
 
         // Relations
-        b.Entity<AccessProfileStorageAllow>()
+        modelBuilder.Entity<AccessProfileStorageAllow>()
             .HasOne(x => x.Profile).WithMany(p => p.Storages).HasForeignKey(x => x.ProfileId);
-        b.Entity<AccessProfilePersonGroupAllow>()
+        modelBuilder.Entity<AccessProfilePersonGroupAllow>()
             .HasOne(x => x.Profile).WithMany(p => p.PersonGroups).HasForeignKey(x => x.ProfileId);
-        b.Entity<AccessProfileDateRangeAllow>()
+        modelBuilder.Entity<AccessProfileDateRangeAllow>()
             .HasOne(x => x.Profile).WithMany(p => p.DateRanges).HasForeignKey(x => x.ProfileId);
-        b.Entity<UserAccessProfile>()
+        modelBuilder.Entity<UserAccessProfile>()
             .HasOne(x => x.Profile).WithMany(p => p.UserAssignments).HasForeignKey(x => x.ProfileId);
 
         // DateOnly -> date
         var dConv = new ValueConverter<DateOnly, DateTime>(
             d => d.ToDateTime(TimeOnly.MinValue),
             dt => DateOnly.FromDateTime(dt));
-        b.Entity<AccessProfileDateRangeAllow>().Property(x => x.FromDate).HasConversion(dConv).HasColumnType("date");
-        b.Entity<AccessProfileDateRangeAllow>().Property(x => x.ToDate).HasConversion(dConv).HasColumnType("date");
+        modelBuilder.Entity<AccessProfileDateRangeAllow>().Property(x => x.FromDate).HasConversion(dConv).HasColumnType("date");
+        modelBuilder.Entity<AccessProfileDateRangeAllow>().Property(x => x.ToDate).HasConversion(dConv).HasColumnType("date");
 
-        b.Entity<AccessProfile>().HasIndex(x => x.Name).IsUnique();
+        modelBuilder.Entity<AccessProfile>().HasIndex(x => x.Name).IsUnique();
     }
 }
