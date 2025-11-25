@@ -272,6 +272,17 @@ namespace PhotoBank.Console
                 System.Console.WriteLine("\nDeletion cancelled by user.");
                 return 130;
             }
+            catch (BatchPhotoDeletionException ex)
+            {
+                System.Console.Error.WriteLine($"Deletion error: {ex.Message}");
+                if (ex.FailedPhotoIds.Count > 0)
+                {
+                    System.Console.Error.WriteLine($"Failed photo IDs: {string.Join(", ", ex.FailedPhotoIds)}");
+                }
+
+                Log.Fatal(ex, "Batch photo deletion failed");
+                return 1;
+            }
             catch (Exception ex)
             {
                 System.Console.Error.WriteLine($"Deletion error: {ex.Message}");

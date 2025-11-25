@@ -82,6 +82,7 @@ public class PhotoDeletionService : IPhotoDeletionService
             .ToListAsync(cancellationToken);
 
         var deleted = 0;
+        var failures = new List<(int PhotoId, Exception Error)>();
         foreach (var photoId in photoIds)
         {
             try
@@ -95,7 +96,30 @@ public class PhotoDeletionService : IPhotoDeletionService
             {
                 _logger.LogError(ex, "Failed to delete photo {PhotoId}, continuing with next photo", photoId);
                 _context.ChangeTracker.Clear();
+                failures.Add((photoId, ex));
             }
+        }
+
+        if (failures.Count > 0)
+        {
+            _logger.LogError(
+                "Failed to delete {FailedCount} of {RequestedCount} photos. Successfully deleted {DeletedCount} before failing.",
+                failures.Count,
+                photoIds.Count,
+                deleted);
+
+            var failureExceptions = failures
+                .Select(failure => new InvalidOperationException($"Failed to delete photo {failure.PhotoId}", failure.Error))
+                .ToList();
+
+            throw new BatchPhotoDeletionException(
+                $"Batch photo deletion completed with failures. Deleted {deleted} of {photoIds.Count} photos.",
+                photoIds.Count,
+                deleted,
+                failures.Select(f => f.PhotoId).ToArray(),
+                failureExceptions.Count == 1
+                    ? failureExceptions[0]
+                    : new AggregateException("One or more photo deletions failed", failureExceptions));
         }
 
         return deleted;
@@ -235,4 +259,26 @@ public class PhotoDeletionService : IPhotoDeletionService
     }
 
     private readonly record struct ObjectStorageLocation(string Bucket, string? Prefix);
+}
+
+public class BatchPhotoDeletionException : Exception
+{
+    public BatchPhotoDeletionException(
+        string message,
+        int requestedCount,
+        int deletedCount,
+        IReadOnlyCollection<int> failedPhotoIds,
+        Exception? innerException = null)
+        : base(message, innerException)
+    {
+        RequestedCount = requestedCount;
+        DeletedCount = deletedCount;
+        FailedPhotoIds = failedPhotoIds;
+    }
+
+    public int RequestedCount { get; }
+
+    public int DeletedCount { get; }
+
+    public IReadOnlyCollection<int> FailedPhotoIds { get; }
 }
