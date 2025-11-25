@@ -85,7 +85,7 @@ public sealed record LocalDetectedFace(
     string Id,
     float Score,
     float[]? Bbox,
-    float[]? Landmark,
+    float[][]? Landmark,
     int? Age,
     string? Gender,
     string? Emotion = null,

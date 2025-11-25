@@ -563,6 +563,7 @@ public class ServiceCollectionExtensionsTests
         public Task<Enricher> UpdateAsync(Enricher entity) => throw new NotSupportedException();
         public Task<int> UpdateAsync(Enricher entity, params Expression<Func<Enricher, object>>[] properties) => throw new NotSupportedException();
         public Task<int> DeleteAsync(int id) => throw new NotSupportedException();
+        public void Attach(Enricher entity) => throw new NotSupportedException();
     }
 
     private sealed class FakeDbContextFactory : IDbContextFactory<PhotoBankDbContext>
@@ -600,5 +601,7 @@ public class ServiceCollectionExtensionsTests
         public Task<T> UpdateAsync(T entity) => Task.FromResult(entity);
 
         public Task<int> UpdateAsync(T entity, params Expression<Func<T, object>>[] properties) => Task.FromResult(0);
+
+        public void Attach(T entity) { }
     }
 }

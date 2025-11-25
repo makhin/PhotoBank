@@ -12,7 +12,8 @@
       "Bash(dotnet tool restore:*)",
       "Bash(git checkout:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git show:*)"
     ],
     "deny": [],
     "ask": []

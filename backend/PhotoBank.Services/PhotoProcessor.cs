@@ -34,6 +34,7 @@ namespace PhotoBank.Services
         private readonly IActiveEnricherProvider _activeEnricherProvider;
         private readonly IMediator _mediator;
         private readonly IPhotoFileSystemDuplicateChecker _duplicateChecker;
+        private readonly IServiceProvider _serviceProvider;
 
         private class PhotoFilePath
         {
@@ -50,7 +51,8 @@ namespace PhotoBank.Services
             IEnrichmentPipeline enrichmentPipeline,
             IActiveEnricherProvider activeEnricherProvider,
             IMediator mediator,
-            IPhotoFileSystemDuplicateChecker duplicateChecker
+            IPhotoFileSystemDuplicateChecker duplicateChecker,
+            IServiceProvider serviceProvider
             )
         {
             _photoRepository = photoRepository;
@@ -61,6 +63,7 @@ namespace PhotoBank.Services
             _activeEnricherProvider = activeEnricherProvider;
             _mediator = mediator;
             _duplicateChecker = duplicateChecker;
+            _serviceProvider = serviceProvider;
         }
 
         private static string BuildAbsolutePath(Storage storage, params string[] pathSegments)
@@ -117,7 +120,8 @@ namespace PhotoBank.Services
             var photo = new Photo { Storage = storage };
 
             var enrichersToUse = activeEnrichers ?? _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
-            await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersToUse);
+            // Pass serviceProvider so enrichers use the same DbContext as PhotoProcessor
+            await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersToUse, _serviceProvider);
 
             return (photo, sourceData);
         }
@@ -240,7 +244,8 @@ namespace PhotoBank.Services
                     Storage = storage
                 };
 
-                await _enrichmentPipeline.RunAsync(photo, sourceData, activeEnrichers, CancellationToken.None);
+                // Pass serviceProvider so enrichers use the same DbContext
+                await _enrichmentPipeline.RunAsync(photo, sourceData, activeEnrichers, _serviceProvider, CancellationToken.None);
 
                 try
                 {

@@ -162,9 +162,32 @@ namespace PhotoBank.Repositories
 
         public void Attach(TTable entity)
         {
-            if (_context.Entry(entity).State == EntityState.Detached)
+            // Check if an entity with the same key is already being tracked
+            var tracked = _context.ChangeTracker.Entries<TTable>()
+                .FirstOrDefault(e => e.Entity.Id == entity.Id);
+
+            if (tracked != null)
+            {
+                // Entity with this ID is already tracked, ensure it's marked as Unchanged
+                if (tracked.State != EntityState.Unchanged)
+                {
+                    tracked.State = EntityState.Unchanged;
+                }
+                return;
+            }
+
+            // Entity is not tracked, attach it
+            var entry = _context.Entry(entity);
+            if (entry.State == EntityState.Detached)
             {
                 _entities.Attach(entity);
+            }
+
+            // Explicitly mark as Unchanged to tell EF Core this entity already exists in the database
+            // This prevents EF from trying to insert it again when saving related entities
+            if (entry.State != EntityState.Unchanged)
+            {
+                entry.State = EntityState.Unchanged;
             }
         }
     }

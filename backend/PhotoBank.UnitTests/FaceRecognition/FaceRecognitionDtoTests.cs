@@ -79,7 +79,7 @@ public class LocalDetectionDtoTests
     public void LocalDetectedFace_ShouldSupportValueEquality()
     {
         var bbox = new[] { 1f, 2f, 3f, 4f };
-        var landmark = new[] { 5f, 6f, 7f, 8f, 9f, 10f };
+        var landmark = new[] { new[] { 5f, 6f }, new[] { 7f, 8f }, new[] { 9f, 10f } };
 
         var face1 = new LocalDetectedFace("face-1", 0.82f, bbox, landmark, 30, "male");
         var face2 = new LocalDetectedFace("face-1", 0.82f, bbox, landmark, 30, "male");
@@ -95,7 +95,7 @@ public class LocalDetectionDtoTests
             "face-1",
             0.82f,
             new[] { 1f, 2f, 3f, 4f },
-            new[] { 5f, 6f, 7f, 8f, 9f, 10f },
+            new[] { new[] { 5f, 6f }, new[] { 7f, 8f }, new[] { 9f, 10f } },
             30,
             "male");
 

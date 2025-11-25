@@ -66,5 +66,6 @@ public class ActiveEnricherProviderTests
         public Task<Enricher> UpdateAsync(Enricher entity) => throw new NotSupportedException();
         public Task<int> UpdateAsync(Enricher entity, params Expression<Func<Enricher, object>>[] properties) => throw new NotSupportedException();
         public Task<int> DeleteAsync(int id) => throw new NotSupportedException();
+        public void Attach(Enricher entity) => throw new NotSupportedException();
     }
 }
