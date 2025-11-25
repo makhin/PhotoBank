@@ -84,9 +84,17 @@ public class PhotoDeletionService : IPhotoDeletionService
         var deleted = 0;
         foreach (var photoId in photoIds)
         {
-            if (await DeletePhotoAsync(photoId, cancellationToken))
+            try
             {
-                deleted++;
+                if (await DeletePhotoAsync(photoId, cancellationToken))
+                {
+                    deleted++;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete photo {PhotoId}, continuing with next photo", photoId);
+                _context.ChangeTracker.Clear();
             }
         }
 
