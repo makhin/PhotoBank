@@ -184,8 +184,14 @@ public static partial class ServiceCollectionExtensions
             {
                 try
                 {
-                    // Test ONNX Runtime initialization before registering services
-                    using var testSession = new Microsoft.ML.OnnxRuntime.SessionOptions();
+                    // Validate ONNX model by actually loading it
+                    // This ensures the model file is valid and compatible before registering services
+                    using (var sessionOptions = new Microsoft.ML.OnnxRuntime.SessionOptions())
+                    using (var validationSession = new Microsoft.ML.OnnxRuntime.InferenceSession(nsfwOptions.ModelPath, sessionOptions))
+                    {
+                        // Model loaded successfully, it's valid
+                        Console.WriteLine($"NSFW ONNX model validated: {nsfwOptions.ModelPath}");
+                    }
 
                     // Register NSFW detector as singleton (it manages its own session)
                     services.AddSingleton<INsfwDetector, NsfwDetector>();
@@ -197,8 +203,12 @@ public static partial class ServiceCollectionExtensions
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"WARNING: Failed to initialize NSFW ONNX Runtime: {ex.GetType().Name}: {ex.Message}");
-                    Console.WriteLine("NSFW enricher will not be available. Falling back to Azure Adult enricher.");
+                    Console.WriteLine($"WARNING: Failed to load NSFW ONNX model: {ex.GetType().Name}: {ex.Message}");
+                    Console.WriteLine("This could be caused by:");
+                    Console.WriteLine("  - Corrupt or incompatible model file");
+                    Console.WriteLine("  - Missing ONNX Runtime native libraries");
+                    Console.WriteLine("  - Incompatible model format or version");
+                    Console.WriteLine("Falling back to Azure Adult enricher.");
 
                     // Fallback to Azure Adult enricher
                     services.AddTransient<IEnricher, AdultEnricher>();
