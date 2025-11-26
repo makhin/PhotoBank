@@ -199,6 +199,9 @@ public static partial class ServiceCollectionExtensions
                     // Register NSFW enricher
                     services.AddTransient<IEnricher, NsfwEnricher>();
 
+                    // Keep Azure Adult enricher registered to avoid breaking existing active enricher configurations
+                    services.AddTransient<IEnricher, AdultEnricher>();
+
                     Console.WriteLine("NSFW ONNX enricher initialized successfully.");
                 }
                 catch (Exception ex)
