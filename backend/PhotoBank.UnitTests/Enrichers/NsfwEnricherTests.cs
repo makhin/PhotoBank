@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using ImageMagick;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -37,11 +38,11 @@ public class NsfwEnricherTests
     }
 
     [Test]
-    public void Dependencies_ShouldContainMetadata()
+    public void Dependencies_ShouldContainPreview()
     {
         // Act & Assert
         _enricher.Dependencies.Should().ContainSingle()
-            .And.Contain(typeof(MetadataEnricher));
+            .And.Contain(typeof(PreviewEnricher));
     }
 
     [Test]
@@ -49,8 +50,10 @@ public class NsfwEnricherTests
     {
         // Arrange
         var photo = new Photo { Id = 123 };
-        var imageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }; // JPEG header
-        var sourceData = new SourceDataDto { Bytes = imageBytes };
+        var sourceData = new SourceDataDto
+        {
+            OriginalImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+        };
 
         var detectionResult = new NsfwDetectionResult
         {
@@ -81,7 +84,7 @@ public class NsfwEnricherTests
         photo.IsRacyContent.Should().BeFalse();
         photo.RacyScore.Should().Be(0.098);
 
-        _mockDetector.Verify(d => d.Detect(imageBytes), Times.Once);
+        _mockDetector.Verify(d => d.Detect(It.IsAny<byte[]>()), Times.Once);
     }
 
     [Test]
@@ -89,8 +92,10 @@ public class NsfwEnricherTests
     {
         // Arrange
         var photo = new Photo { Id = 456 };
-        var imageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
-        var sourceData = new SourceDataDto { Bytes = imageBytes };
+        var sourceData = new SourceDataDto
+        {
+            OriginalImage = new MagickImage(MagickColors.Blue, 100, 100) { Format = MagickFormat.Jpeg }
+        };
 
         var detectionResult = new NsfwDetectionResult
         {
@@ -127,8 +132,10 @@ public class NsfwEnricherTests
     {
         // Arrange
         var photo = new Photo { Id = 789 };
-        var imageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
-        var sourceData = new SourceDataDto { Bytes = imageBytes };
+        var sourceData = new SourceDataDto
+        {
+            OriginalImage = new MagickImage(MagickColors.Green, 100, 100) { Format = MagickFormat.Jpeg }
+        };
 
         var detectionResult = new NsfwDetectionResult
         {
@@ -161,11 +168,11 @@ public class NsfwEnricherTests
     }
 
     [Test]
-    public async Task EnrichAsync_WithNullImageData_LogsWarningAndReturns()
+    public async Task EnrichAsync_WithNullOriginalImage_LogsWarningAndReturns()
     {
         // Arrange
         var photo = new Photo { Id = 123 };
-        var sourceData = new SourceDataDto { Bytes = null };
+        var sourceData = new SourceDataDto { OriginalImage = null };
 
         // Act
         await _enricher.EnrichAsync(photo, sourceData);
@@ -178,24 +185,10 @@ public class NsfwEnricherTests
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("No image data available")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("No original image available")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
-    }
-
-    [Test]
-    public async Task EnrichAsync_WithEmptyImageData_LogsWarningAndReturns()
-    {
-        // Arrange
-        var photo = new Photo { Id = 123 };
-        var sourceData = new SourceDataDto { Bytes = Array.Empty<byte>() };
-
-        // Act
-        await _enricher.EnrichAsync(photo, sourceData);
-
-        // Assert
-        _mockDetector.Verify(d => d.Detect(It.IsAny<byte[]>()), Times.Never);
     }
 
     [Test]
@@ -216,8 +209,10 @@ public class NsfwEnricherTests
     {
         // Arrange
         var photo = new Photo { Id = 123 };
-        var imageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
-        var sourceData = new SourceDataDto { Bytes = imageBytes };
+        var sourceData = new SourceDataDto
+        {
+            OriginalImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+        };
 
         _mockDetector
             .Setup(d => d.Detect(It.IsAny<byte[]>()))
@@ -243,8 +238,10 @@ public class NsfwEnricherTests
     {
         // Arrange
         var photo = new Photo { Id = 123 };
-        var imageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
-        var sourceData = new SourceDataDto { Bytes = imageBytes };
+        var sourceData = new SourceDataDto
+        {
+            OriginalImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+        };
 
         var cts = new CancellationTokenSource();
         cts.Cancel();

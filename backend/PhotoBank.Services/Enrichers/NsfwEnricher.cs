@@ -20,7 +20,7 @@ public class NsfwEnricher : IEnricher
 
     public EnricherType EnricherType => EnricherType.Nsfw;
 
-    public Type[] Dependencies => new Type[] { typeof(MetadataEnricher) };
+    public Type[] Dependencies => new Type[] { typeof(PreviewEnricher) };
 
     public NsfwEnricher(INsfwDetector detector, ILogger<NsfwEnricher> logger)
     {
@@ -32,16 +32,19 @@ public class NsfwEnricher : IEnricher
     {
         try
         {
-            if (sourceData?.Bytes == null || sourceData.Bytes.Length == 0)
+            if (sourceData?.OriginalImage == null)
             {
-                _logger.LogWarning("No image data available for photo {PhotoId}", photo.Id);
+                _logger.LogWarning("No original image available for photo {PhotoId}", photo.Id);
                 return;
             }
 
             _logger.LogDebug("Running NSFW detection for photo {PhotoId}", photo.Id);
 
+            // Convert IMagickImage to byte array for ONNX processing
+            var imageBytes = sourceData.OriginalImage.ToByteArray();
+
             // Run detection asynchronously to avoid blocking
-            var result = await Task.Run(() => _detector.Detect(sourceData.Bytes), cancellationToken);
+            var result = await Task.Run(() => _detector.Detect(imageBytes), cancellationToken);
 
             // Update photo properties
             photo.IsAdultContent = result.IsNsfw;
