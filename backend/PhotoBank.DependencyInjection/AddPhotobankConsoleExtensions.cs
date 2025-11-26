@@ -213,7 +213,9 @@ public static partial class ServiceCollectionExtensions
                     Console.WriteLine("  - Incompatible model format or version");
                     Console.WriteLine("Falling back to Azure Adult enricher.");
 
-                    // Fallback to Azure Adult enricher
+                    // Fallback to Azure Adult enricher and keep NSFW enricher resolvable
+                    services.AddSingleton<INsfwDetector, DisabledNsfwDetector>();
+                    services.AddTransient<IEnricher, NsfwEnricher>();
                     services.AddTransient<IEnricher, AdultEnricher>();
                 }
             }
@@ -221,13 +223,17 @@ public static partial class ServiceCollectionExtensions
             {
                 Console.WriteLine($"WARNING: NSFW ONNX model file not found at: {nsfwOptions.ModelPath}. Falling back to Azure Adult enricher.");
 
-                // Fallback to Azure Adult enricher
+                // Fallback to Azure Adult enricher and keep NSFW enricher resolvable
+                services.AddSingleton<INsfwDetector, DisabledNsfwDetector>();
+                services.AddTransient<IEnricher, NsfwEnricher>();
                 services.AddTransient<IEnricher, AdultEnricher>();
             }
         }
         else
         {
-            // NSFW ONNX not enabled, use Azure Adult enricher
+            // NSFW ONNX not enabled, keep enricher registration no-op and use Azure Adult enricher
+            services.AddSingleton<INsfwDetector, DisabledNsfwDetector>();
+            services.AddTransient<IEnricher, NsfwEnricher>();
             services.AddTransient<IEnricher, AdultEnricher>();
         }
 

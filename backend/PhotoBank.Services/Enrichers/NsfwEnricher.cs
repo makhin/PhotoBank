@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ImageMagick;
 using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Enrichers.Onnx;
@@ -40,8 +41,8 @@ public class NsfwEnricher : IEnricher
 
             _logger.LogDebug("Running NSFW detection for photo {PhotoId}", photo.Id);
 
-            // Convert IMagickImage to byte array for ONNX processing
-            var imageBytes = sourceData.OriginalImage.ToByteArray();
+            // Convert IMagickImage to a format supported by the detector (PNG)
+            var imageBytes = sourceData.OriginalImage.ToByteArray(MagickFormat.Png);
 
             // Run detection asynchronously to avoid blocking
             var result = await Task.Run(() => _detector.Detect(imageBytes), cancellationToken);
