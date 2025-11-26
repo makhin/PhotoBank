@@ -70,12 +70,8 @@ public class NsfwDetector : INsfwDetector
         }
 
         // Inference
-        var inputs = new List<NamedOnnxValue>
-        {
-            NamedOnnxValue.CreateFromTensor("input", tensor)
-        };
-
-        using var results = _session.Run(inputs);
+        using var inputValue = NamedOnnxValue.CreateFromTensor("input", tensor);
+        using var results = _session.Run(new[] { inputValue });
         var output = results.First().AsEnumerable<float>().ToArray();
 
         // Model returns [drawings, hentai, neutral, porn, sexy]
