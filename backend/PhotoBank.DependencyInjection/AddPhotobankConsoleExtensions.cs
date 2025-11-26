@@ -36,10 +36,12 @@ public static partial class ServiceCollectionExtensions
         const string computerVision = "ComputerVision";
         const string face = "Face";
         const string yoloOnnx = "YoloOnnx";
+        const string nsfwOnnx = "NsfwOnnx";
 
         services.Configure<ComputerVisionOptions>(configuration.GetSection(computerVision));
         services.Configure<FaceApiOptions>(configuration.GetSection(face));
         services.Configure<YoloOnnxOptions>(configuration.GetSection(yoloOnnx));
+        services.Configure<NsfwOnnxOptions>(configuration.GetSection(nsfwOnnx));
         services.Configure<ImageAnalyzerOptions>(configuration.GetSection(ImageAnalyzerOptions.SectionName));
         services.Configure<OllamaOptions>(configuration.GetSection(OllamaOptions.SectionName));
 
@@ -174,7 +176,48 @@ public static partial class ServiceCollectionExtensions
         // Register unified object property enricher (uses the provider registered above)
         services.AddTransient<IEnricher, UnifiedObjectPropertyEnricher>();
 
-        services.AddTransient<IEnricher, AdultEnricher>();
+        // NSFW detection - local ONNX model
+        var nsfwOptions = configuration.GetSection(nsfwOnnx).Get<NsfwOnnxOptions>();
+        if (nsfwOptions?.Enabled == true && !string.IsNullOrWhiteSpace(nsfwOptions.ModelPath))
+        {
+            if (System.IO.File.Exists(nsfwOptions.ModelPath))
+            {
+                try
+                {
+                    // Test ONNX Runtime initialization before registering services
+                    using var testSession = new Microsoft.ML.OnnxRuntime.SessionOptions();
+
+                    // Register NSFW detector as singleton (it manages its own session)
+                    services.AddSingleton<INsfwDetector, NsfwDetector>();
+
+                    // Register NSFW enricher
+                    services.AddTransient<IEnricher, NsfwEnricher>();
+
+                    Console.WriteLine("NSFW ONNX enricher initialized successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"WARNING: Failed to initialize NSFW ONNX Runtime: {ex.GetType().Name}: {ex.Message}");
+                    Console.WriteLine("NSFW enricher will not be available. Falling back to Azure Adult enricher.");
+
+                    // Fallback to Azure Adult enricher
+                    services.AddTransient<IEnricher, AdultEnricher>();
+                }
+            }
+            else
+            {
+                Console.WriteLine($"WARNING: NSFW ONNX model file not found at: {nsfwOptions.ModelPath}. Falling back to Azure Adult enricher.");
+
+                // Fallback to Azure Adult enricher
+                services.AddTransient<IEnricher, AdultEnricher>();
+            }
+        }
+        else
+        {
+            // NSFW ONNX not enabled, use Azure Adult enricher
+            services.AddTransient<IEnricher, AdultEnricher>();
+        }
+
         services.AddTransient<IEnricher, UnifiedFaceEnricher>();
 
         services.AddTransient<IImageMetadataReaderWrapper, ImageMetadataReaderWrapper>();
