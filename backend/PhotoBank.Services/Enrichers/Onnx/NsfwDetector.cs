@@ -90,23 +90,23 @@ public class NsfwDetector : INsfwDetector
         var sexyScore = scores["sexy"];
         var hentaiScore = scores["hentai"];
 
+        // Use max of porn, sexy (weighted), and hentai as overall NSFW score
         var nsfwScore = Math.Max(pornScore, Math.Max(sexyScore * 0.8f, hentaiScore));
         var isNsfw = pornScore > _options.PornThreshold ||
                      sexyScore > _options.SexyThreshold ||
                      hentaiScore > _options.HentaiThreshold;
 
-        // Racy detection: sexy between thresholds
+        // Racy detection: sexy content that's not explicitly NSFW
         var isRacy = sexyScore > _options.RacyMinThreshold &&
                      sexyScore <= _options.RacyMaxThreshold &&
                      pornScore < _options.PornThreshold;
-        var racyConfidence = isRacy ? sexyScore : 1f - sexyScore;
 
         return new NsfwDetectionResult
         {
             IsNsfw = isNsfw,
-            NsfwConfidence = isNsfw ? nsfwScore : 1f - nsfwScore,
+            NsfwConfidence = nsfwScore, // Raw probability (0-1) of NSFW content
             IsRacy = isRacy,
-            RacyConfidence = racyConfidence,
+            RacyConfidence = sexyScore, // Raw probability (0-1) of racy content
             Scores = scores
         };
     }

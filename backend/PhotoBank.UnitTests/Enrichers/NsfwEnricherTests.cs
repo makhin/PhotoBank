@@ -55,9 +55,9 @@ public class NsfwEnricherTests
         var detectionResult = new NsfwDetectionResult
         {
             IsNsfw = true,
-            NsfwConfidence = 0.87f,
+            NsfwConfidence = 0.872f, // Raw porn score (highest NSFW indicator)
             IsRacy = false,
-            RacyConfidence = 0.13f,
+            RacyConfidence = 0.098f, // Raw sexy score
             Scores = new Dictionary<string, float>
             {
                 { "porn", 0.872f },
@@ -77,9 +77,9 @@ public class NsfwEnricherTests
 
         // Assert
         photo.IsAdultContent.Should().BeTrue();
-        photo.AdultScore.Should().Be(0.87);
+        photo.AdultScore.Should().Be(0.872);
         photo.IsRacyContent.Should().BeFalse();
-        photo.RacyScore.Should().Be(0.13);
+        photo.RacyScore.Should().Be(0.098);
 
         _mockDetector.Verify(d => d.Detect(imageBytes), Times.Once);
     }
@@ -133,9 +133,9 @@ public class NsfwEnricherTests
         var detectionResult = new NsfwDetectionResult
         {
             IsNsfw = false,
-            NsfwConfidence = 0.05f,
+            NsfwConfidence = 0.032f, // Max(porn=0.01, sexy*0.8=0.032, hentai=0.01)
             IsRacy = false,
-            RacyConfidence = 0.95f,
+            RacyConfidence = 0.04f, // Raw sexy score
             Scores = new Dictionary<string, float>
             {
                 { "porn", 0.01f },
@@ -155,9 +155,9 @@ public class NsfwEnricherTests
 
         // Assert
         photo.IsAdultContent.Should().BeFalse();
-        photo.AdultScore.Should().Be(0.05);
+        photo.AdultScore.Should().Be(0.032);
         photo.IsRacyContent.Should().BeFalse();
-        photo.RacyScore.Should().Be(0.95);
+        photo.RacyScore.Should().Be(0.04); // Low racy score for safe content
     }
 
     [Test]
