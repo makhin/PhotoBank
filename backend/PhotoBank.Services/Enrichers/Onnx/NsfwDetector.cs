@@ -54,8 +54,8 @@ public class NsfwDetector : INsfwDetector
         using var image = Image.Load<Rgb24>(imageData);
         image.Mutate(x => x.Resize(ImageSize, ImageSize));
 
-        // Convert to tensor [1, 3, 224, 224]
-        var tensor = new DenseTensor<float>(new[] { 1, 3, ImageSize, ImageSize });
+        // Convert to tensor [1, 224, 224, 3] (NHWC format for TensorFlow models)
+        var tensor = new DenseTensor<float>(new[] { 1, ImageSize, ImageSize, 3 });
 
         for (int y = 0; y < ImageSize; y++)
         {
@@ -63,9 +63,9 @@ public class NsfwDetector : INsfwDetector
             {
                 var pixel = image[x, y];
                 // Normalization for MobileNet: (pixel / 255.0 - 0.5) * 2
-                tensor[0, 0, y, x] = (pixel.R / 255f - 0.5f) * 2f; // R
-                tensor[0, 1, y, x] = (pixel.G / 255f - 0.5f) * 2f; // G
-                tensor[0, 2, y, x] = (pixel.B / 255f - 0.5f) * 2f; // B
+                tensor[0, y, x, 0] = (pixel.R / 255f - 0.5f) * 2f; // R
+                tensor[0, y, x, 1] = (pixel.G / 255f - 0.5f) * 2f; // G
+                tensor[0, y, x, 2] = (pixel.B / 255f - 0.5f) * 2f; // B
             }
         }
 
