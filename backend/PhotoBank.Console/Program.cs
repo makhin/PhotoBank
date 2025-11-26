@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PhotoBank.DependencyInjection;
 using PhotoBank.Services.Api;
+using PhotoBank.Services;
 using Serilog;
 using System.CommandLine;
 
@@ -65,6 +66,10 @@ namespace PhotoBank.Console
             // Add re-enrich subcommand
             var reEnrichCommand = BuildReEnrichCommand(args);
             rootCommand.AddCommand(reEnrichCommand);
+
+            // Add delete-photos subcommand
+            var deleteCommand = BuildDeleteCommand(args);
+            rootCommand.AddCommand(deleteCommand);
 
             // Allow unmatched tokens (e.g., --environment, --logging:*) to pass through to the host
             rootCommand.TreatUnmatchedTokensAsErrors = false;
@@ -135,6 +140,40 @@ namespace PhotoBank.Console
             }
         }
 
+        private static Command BuildDeleteCommand(string[] args)
+        {
+            var command = new Command("delete-photos", "Delete photos and related S3 objects");
+
+            var photoIdOption = new Option<int?>(
+                aliases: new[] { "--photo-id", "-p" },
+                description: "Delete a specific photo by ID");
+
+            var lastOption = new Option<int?>(
+                aliases: new[] { "--last", "-l" },
+                description: "Delete the last N photos ordered by ID");
+
+            command.AddOption(photoIdOption);
+            command.AddOption(lastOption);
+
+            command.SetHandler(async context =>
+            {
+                var photoId = context.ParseResult.GetValueForOption(photoIdOption);
+                var lastCount = context.ParseResult.GetValueForOption(lastOption);
+
+                if (!photoId.HasValue && !lastCount.HasValue)
+                {
+                    System.Console.Error.WriteLine("Specify --photo-id to delete a photo or --last to delete the latest photos.");
+                    context.ExitCode = 1;
+                    return;
+                }
+
+                var exitCode = await RunDeleteAsync(args, photoId, lastCount);
+                context.ExitCode = exitCode;
+            });
+
+            return command;
+        }
+
         private static async Task<int> RunApplicationAsync(bool registerPersons, int? storageId, string[] args)
         {
             IHost? host = null;
@@ -179,6 +218,75 @@ namespace PhotoBank.Console
             {
                 System.Console.Error.WriteLine($"Application error: {ex.Message}");
                 Log.Fatal(ex, "Application terminated unexpectedly");
+                return 1;
+            }
+            finally
+            {
+                host?.Dispose();
+                Log.CloseAndFlush();
+            }
+        }
+
+        private static async Task<int> RunDeleteAsync(string[] args, int? photoId, int? lastCount)
+        {
+            IHost? host = null;
+            try
+            {
+                host = Host.CreateDefaultBuilder(args)
+                    .UseSerilog((context, services, configuration) => configuration
+                        .ReadFrom.Configuration(context.Configuration)
+                        .WriteTo.Console()
+                        .WriteTo.File("logs/photobank-.log",
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 7))
+                    .ConfigureServices((context, services) =>
+                    {
+                        services
+                            .AddPhotobankDbContext(context.Configuration, usePool: false)
+                            .AddPhotobankCore(context.Configuration)
+                            .AddPhotobankConsole(context.Configuration);
+                    })
+                    .Build();
+
+                var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+                var deletionService = host.Services.GetRequiredService<IPhotoDeletionService>();
+
+                if (photoId.HasValue)
+                {
+                    var deleted = await deletionService.DeletePhotoAsync(photoId.Value, lifetime.ApplicationStopping);
+                    System.Console.WriteLine(deleted
+                        ? $"Deleted photo {photoId.Value}."
+                        : $"Photo {photoId.Value} not found.");
+                }
+                else if (lastCount.HasValue)
+                {
+                    var deleted = await deletionService.DeleteLastPhotosAsync(lastCount.Value, lifetime.ApplicationStopping);
+                    System.Console.WriteLine($"Deleted {deleted} photo(s) ordered by newest IDs.");
+                }
+
+                await host.StopAsync();
+                return 0;
+            }
+            catch (OperationCanceledException)
+            {
+                System.Console.WriteLine("\nDeletion cancelled by user.");
+                return 130;
+            }
+            catch (BatchPhotoDeletionException ex)
+            {
+                System.Console.Error.WriteLine($"Deletion error: {ex.Message}");
+                if (ex.FailedPhotoIds.Count > 0)
+                {
+                    System.Console.Error.WriteLine($"Failed photo IDs: {string.Join(", ", ex.FailedPhotoIds)}");
+                }
+
+                Log.Fatal(ex, "Batch photo deletion failed");
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Deletion error: {ex.Message}");
+                Log.Fatal(ex, "Photo deletion failed");
                 return 1;
             }
             finally
