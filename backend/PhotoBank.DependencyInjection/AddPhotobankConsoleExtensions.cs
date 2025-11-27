@@ -36,10 +36,12 @@ public static partial class ServiceCollectionExtensions
         const string computerVision = "ComputerVision";
         const string face = "Face";
         const string yoloOnnx = "YoloOnnx";
+        const string nsfwOnnx = "NsfwOnnx";
 
         services.Configure<ComputerVisionOptions>(configuration.GetSection(computerVision));
         services.Configure<FaceApiOptions>(configuration.GetSection(face));
         services.Configure<YoloOnnxOptions>(configuration.GetSection(yoloOnnx));
+        services.Configure<NsfwOnnxOptions>(configuration.GetSection(nsfwOnnx));
         services.Configure<ImageAnalyzerOptions>(configuration.GetSection(ImageAnalyzerOptions.SectionName));
         services.Configure<OllamaOptions>(configuration.GetSection(OllamaOptions.SectionName));
 
@@ -174,7 +176,67 @@ public static partial class ServiceCollectionExtensions
         // Register unified object property enricher (uses the provider registered above)
         services.AddTransient<IEnricher, UnifiedObjectPropertyEnricher>();
 
-        services.AddTransient<IEnricher, AdultEnricher>();
+        // NSFW detection - local ONNX model
+        var nsfwOptions = configuration.GetSection(nsfwOnnx).Get<NsfwOnnxOptions>();
+        if (nsfwOptions?.Enabled == true && !string.IsNullOrWhiteSpace(nsfwOptions.ModelPath))
+        {
+            if (System.IO.File.Exists(nsfwOptions.ModelPath))
+            {
+                try
+                {
+                    // Validate ONNX model by actually loading it
+                    // This ensures the model file is valid and compatible before registering services
+                    using (var sessionOptions = new Microsoft.ML.OnnxRuntime.SessionOptions())
+                    using (var validationSession = new Microsoft.ML.OnnxRuntime.InferenceSession(nsfwOptions.ModelPath, sessionOptions))
+                    {
+                        // Model loaded successfully, it's valid
+                        Console.WriteLine($"NSFW ONNX model validated: {nsfwOptions.ModelPath}");
+                    }
+
+                    // Register NSFW detector as singleton (it manages its own session)
+                    services.AddSingleton<INsfwDetector, NsfwDetector>();
+
+                    // Register NSFW enricher
+                    services.AddTransient<IEnricher, NsfwEnricher>();
+
+                    // Keep Azure Adult enricher registered to avoid breaking existing active enricher configurations
+                    services.AddTransient<IEnricher, AdultEnricher>();
+
+                    Console.WriteLine("NSFW ONNX enricher initialized successfully.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"WARNING: Failed to load NSFW ONNX model: {ex.GetType().Name}: {ex.Message}");
+                    Console.WriteLine("This could be caused by:");
+                    Console.WriteLine("  - Corrupt or incompatible model file");
+                    Console.WriteLine("  - Missing ONNX Runtime native libraries");
+                    Console.WriteLine("  - Incompatible model format or version");
+                    Console.WriteLine("Falling back to Azure Adult enricher.");
+
+                    // Fallback to Azure Adult enricher and keep NSFW enricher resolvable
+                    services.AddSingleton<INsfwDetector, DisabledNsfwDetector>();
+                    services.AddTransient<IEnricher, NsfwEnricher>();
+                    services.AddTransient<IEnricher, AdultEnricher>();
+                }
+            }
+            else
+            {
+                Console.WriteLine($"WARNING: NSFW ONNX model file not found at: {nsfwOptions.ModelPath}. Falling back to Azure Adult enricher.");
+
+                // Fallback to Azure Adult enricher and keep NSFW enricher resolvable
+                services.AddSingleton<INsfwDetector, DisabledNsfwDetector>();
+                services.AddTransient<IEnricher, NsfwEnricher>();
+                services.AddTransient<IEnricher, AdultEnricher>();
+            }
+        }
+        else
+        {
+            // NSFW ONNX not enabled, keep enricher registration no-op and use Azure Adult enricher
+            services.AddSingleton<INsfwDetector, DisabledNsfwDetector>();
+            services.AddTransient<IEnricher, NsfwEnricher>();
+            services.AddTransient<IEnricher, AdultEnricher>();
+        }
+
         services.AddTransient<IEnricher, UnifiedFaceEnricher>();
 
         services.AddTransient<IImageMetadataReaderWrapper, ImageMetadataReaderWrapper>();

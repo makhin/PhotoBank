@@ -16,6 +16,7 @@ namespace PhotoBank.DbContext.Models
         ObjectProperty = 256,
         Preview = 512,
         Tag = 1024,
-        Thumbnail = 2048
+        Thumbnail = 2048,
+        Nsfw = 4096
     }
 }

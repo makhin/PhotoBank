@@ -555,8 +555,8 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             }
         }
 
-        // Clear adult content fields when Adult enricher is being re-run
-        if (enricherTypeFlags.HasFlag(EnricherType.Adult))
+        // Clear adult content fields when Adult or Nsfw enricher is being re-run
+        if (enricherTypeFlags.HasFlag(EnricherType.Adult) || enricherTypeFlags.HasFlag(EnricherType.Nsfw))
         {
             _logger.LogDebug("Clearing adult content fields for photo {PhotoId}", photo.Id);
             photo.IsAdultContent = false;
