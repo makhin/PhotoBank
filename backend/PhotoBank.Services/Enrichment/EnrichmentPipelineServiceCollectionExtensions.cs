@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using PhotoBank.DbContext.Models;
 using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.Models;
 
 namespace PhotoBank.Services.Enrichment;
 
@@ -38,6 +41,8 @@ public static class EnrichmentPipelineServiceCollectionExtensions
             services.Configure(configure);
         else
             services.Configure<EnrichmentPipelineOptions>(_ => { });
+
+        services.TryAddScoped<IEnrichmentContextAccessor, EnrichmentContextAccessor>();
 
         services.AddSingleton(_ => new EnricherTypeCatalog(enricherTypes));
         services.AddSingleton<IEnrichmentPipeline, EnrichmentPipeline>();
@@ -80,11 +85,24 @@ public static class EnrichmentPipelineServiceCollectionExtensions
         else
             services.Configure<EnrichmentPipelineOptions>(_ => { });
 
+        services.TryAddScoped<IEnrichmentContextAccessor, EnrichmentContextAccessor>();
+
         // Register enrichment infrastructure
         services.AddSingleton(_ => new EnricherTypeCatalog(enricherTypes));
         services.AddSingleton<IEnrichmentPipeline, EnrichmentPipeline>();
         services.AddScoped<EnricherDiffCalculator>();
         services.AddScoped<IReEnrichmentService, ReEnrichmentService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddEnrichmentStopCondition(
+        this IServiceCollection services,
+        string reason,
+        Func<Photo, SourceDataDto, bool> predicate)
+    {
+        services.AddSingleton<IEnrichmentStopCondition>(
+            new PredicateEnrichmentStopCondition(reason, ctx => predicate(ctx.Photo, ctx.Source)));
 
         return services;
     }

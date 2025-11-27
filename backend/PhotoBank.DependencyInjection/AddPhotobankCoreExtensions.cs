@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Minio;
+using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
@@ -20,6 +21,7 @@ using Polly;
 using System;
 using System.IO.Abstractions;
 using PhotoBank.Services.Enrichers.Services;
+using PhotoBank.Services.Models;
 
 namespace PhotoBank.DependencyInjection;
 
@@ -75,6 +77,9 @@ public static partial class ServiceCollectionExtensions
         // Register enrichment infrastructure (pipeline, catalog, re-enrichment service)
         // This allows API to use IReEnrichmentService and related services
         services.AddEnrichmentInfrastructure();
+        services.AddEnrichmentStopCondition(
+            "Adult content detected",
+            static (Photo photo, SourceDataDto _) => photo.IsAdultContent);
 
         services.AddPhotoEvents();
         if (configuration != null)

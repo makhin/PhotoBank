@@ -70,7 +70,7 @@ public class NsfwDetector : INsfwDetector
         }
 
         // Inference
-        using var inputValue = NamedOnnxValue.CreateFromTensor("input", tensor);
+        var inputValue = DisposableNamedOnnxValue.CreateFromTensor("input", tensor);
         using var results = _session.Run(new[] { inputValue });
         var output = results.First().AsEnumerable<float>().ToArray();
 
