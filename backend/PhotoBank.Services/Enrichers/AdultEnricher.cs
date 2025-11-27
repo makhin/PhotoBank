@@ -1,27 +1,73 @@
-﻿using System;
+using System;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ImageMagick;
+using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
+using PhotoBank.Services.Enrichers.Onnx;
 using PhotoBank.Services.Models;
 
-namespace PhotoBank.Services.Enrichers
+namespace PhotoBank.Services.Enrichers;
+
+/// <summary>
+/// Enricher that detects adult content using local ONNX model
+/// </summary>
+public class AdultEnricher : IEnricher
 {
-    public class AdultEnricher : IEnricher
+    private readonly INsfwDetector _detector;
+    private readonly ILogger<AdultEnricher> _logger;
+
+    public EnricherType EnricherType => EnricherType.Adult;
+
+    public Type[] Dependencies => new Type[] { typeof(PreviewEnricher) };
+
+    public AdultEnricher(INsfwDetector detector, ILogger<AdultEnricher> logger)
     {
-        public EnricherType EnricherType => EnricherType.Adult;
+        _detector = detector ?? throw new ArgumentNullException(nameof(detector));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
 
-        public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
-
-        public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
+    public async Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
+    {
+        try
         {
-            var adult = sourceData.ImageAnalysis?.Adult;
-            if (adult == null) return Task.CompletedTask;
+            if (sourceData?.OriginalImage == null)
+            {
+                _logger.LogWarning("No original image available for photo {PhotoId}", photo.Id);
+                return;
+            }
 
-            photo.IsAdultContent = adult.IsAdultContent;
-            photo.AdultScore = adult.AdultScore;
-            photo.IsRacyContent = adult.IsRacyContent;
-            photo.RacyScore = adult.RacyScore;
-            return Task.CompletedTask;
+            _logger.LogDebug("Running NSFW detection for photo {PhotoId}", photo.Id);
+
+            // Convert IMagickImage to a format supported by the detector (PNG)
+            var imageBytes = sourceData.OriginalImage.ToByteArray(MagickFormat.Png);
+
+            // Run detection asynchronously to avoid blocking
+            var result = await Task.Run(() => _detector.Detect(imageBytes), cancellationToken);
+
+            // Update photo properties
+            photo.IsAdultContent = result.IsNsfw;
+            photo.AdultScore = result.NsfwConfidence;
+            photo.IsRacyContent = result.IsRacy;
+            photo.RacyScore = result.RacyConfidence;
+
+            _logger.LogDebug(
+                "NSFW detection completed for photo {PhotoId}: IsNsfw={IsNsfw} (confidence={NsfwConfidence:F2}), IsRacy={IsRacy} (confidence={RacyConfidence:F2})",
+                photo.Id, result.IsNsfw, result.NsfwConfidence, result.IsRacy, result.RacyConfidence);
+
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                _logger.LogTrace("NSFW scores for photo {PhotoId}: {Scores}",
+                    photo.Id,
+                    string.Join(", ", result.Scores.Select(kvp => $"{kvp.Key}={kvp.Value:F3}")));
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during NSFW detection for photo {PhotoId}", photo.Id);
+            throw;
         }
     }
 }
