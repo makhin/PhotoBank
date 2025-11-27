@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -180,6 +181,33 @@ public class EnrichmentPipelineTests
     }
 
     [Test]
+    public async Task RunAsync_StopConditionEvaluatedOnlyForTargetedEnricher()
+    {
+        var log = new List<string>();
+        var stopCondition = new TestStopCondition(
+            "Never stop",
+            _ => false,
+            new[] { typeof(BravoEnricher) });
+
+        var (pipeline, provider) = CreatePipeline(log, new[] { stopCondition });
+
+        try
+        {
+            await pipeline.RunAsync(
+                new Photo(),
+                new SourceDataDto(),
+                new[] { typeof(AlphaEnricher), typeof(BravoEnricher), typeof(CharlieEnricher) },
+                CancellationToken.None);
+        }
+        finally
+        {
+            provider.Dispose();
+        }
+
+        stopCondition.Evaluations.Should().Be(1);
+    }
+
+    [Test]
     public async Task RunAsync_SubsetMissingDependency_Throws()
     {
         var log = new List<string>();
@@ -331,18 +359,27 @@ public class EnrichmentPipelineTests
     {
         private readonly Func<EnrichmentContext, bool> _predicate;
 
-        public TestStopCondition(string reason, Func<EnrichmentContext, bool> predicate)
+        public TestStopCondition(
+            string reason,
+            Func<EnrichmentContext, bool> predicate,
+            IEnumerable<Type>? appliesAfterEnrichers = null)
         {
             Reason = reason;
             _predicate = predicate;
+            AppliesAfterEnrichers = appliesAfterEnrichers?.ToArray() ?? Array.Empty<Type>();
         }
 
         public string Reason { get; }
+
+        public int Evaluations { get; private set; }
+
+        public IReadOnlyCollection<Type> AppliesAfterEnrichers { get; }
 
         public EnrichmentContext? CapturedContext { get; private set; }
 
         public bool ShouldStop(EnrichmentContext context)
         {
+            Evaluations++;
             CapturedContext = context;
             return _predicate(context);
         }

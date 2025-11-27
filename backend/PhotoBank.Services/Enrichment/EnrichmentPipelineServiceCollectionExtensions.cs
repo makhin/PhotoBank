@@ -99,10 +99,14 @@ public static class EnrichmentPipelineServiceCollectionExtensions
     public static IServiceCollection AddEnrichmentStopCondition(
         this IServiceCollection services,
         string reason,
-        Func<Photo, SourceDataDto, bool> predicate)
+        Func<Photo, SourceDataDto, bool> predicate,
+        params Type[] appliesAfterEnrichers)
     {
         services.AddSingleton<IEnrichmentStopCondition>(
-            new PredicateEnrichmentStopCondition(reason, ctx => predicate(ctx.Photo, ctx.Source)));
+            new PredicateEnrichmentStopCondition(
+                reason,
+                ctx => predicate(ctx.Photo, ctx.Source),
+                appliesAfterEnrichers));
 
         return services;
     }

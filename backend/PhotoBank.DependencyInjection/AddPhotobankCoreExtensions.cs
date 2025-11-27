@@ -79,7 +79,8 @@ public static partial class ServiceCollectionExtensions
         services.AddEnrichmentInfrastructure();
         services.AddEnrichmentStopCondition(
             "Adult content detected",
-            static (Photo photo, SourceDataDto _) => photo.IsAdultContent);
+            static (Photo photo, SourceDataDto _) => photo.IsAdultContent,
+            typeof(AdultEnricher));
 
         services.AddPhotoEvents();
         if (configuration != null)

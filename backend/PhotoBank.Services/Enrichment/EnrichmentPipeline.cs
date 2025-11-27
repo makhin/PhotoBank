@@ -19,7 +19,8 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
     private readonly Type[] _enricherTypes;
     private readonly EnrichmentPipelineOptions _opts;
     private readonly ILogger<EnrichmentPipeline> _log;
-    private readonly IReadOnlyCollection<IEnrichmentStopCondition> _stopConditions;
+    private readonly IReadOnlyList<IEnrichmentStopCondition> _globalStopConditions;
+    private readonly IReadOnlyDictionary<Type, IReadOnlyList<IEnrichmentStopCondition>> _stopConditionsByEnricher;
 
     public EnrichmentPipeline(IServiceProvider root,
                               EnricherTypeCatalog enricherCatalog,
@@ -30,7 +31,17 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
         _root = root;
         _enricherTypes = enricherCatalog.Types.ToArray();
         _opts = opts.Value;
-        _stopConditions = stopConditions?.ToArray() ?? Array.Empty<IEnrichmentStopCondition>();
+        var stopConditionsArray = stopConditions?.ToArray() ?? Array.Empty<IEnrichmentStopCondition>();
+        _globalStopConditions = stopConditionsArray
+            .Where(c => c.AppliesAfterEnrichers.Count == 0)
+            .ToArray();
+        _stopConditionsByEnricher = stopConditionsArray
+            .SelectMany(
+                condition => condition.AppliesAfterEnrichers.DefaultIfEmpty(),
+                (condition, enricher) => (condition, enricher))
+            .Where(tuple => tuple.enricher is not null)
+            .GroupBy(tuple => tuple.enricher!, tuple => tuple.condition)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<IEnrichmentStopCondition>)g.ToArray());
         _log = log;
     }
 
@@ -155,7 +166,26 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
 
     private bool EvaluateStopConditions(EnrichmentContext context, Type enricherType)
     {
-        foreach (var stopCondition in _stopConditions)
+        if (EvaluateStopConditions(context, enricherType, _globalStopConditions))
+        {
+            return true;
+        }
+
+        if (_stopConditionsByEnricher.TryGetValue(enricherType, out var targeted) &&
+            EvaluateStopConditions(context, enricherType, targeted))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool EvaluateStopConditions(
+        EnrichmentContext context,
+        Type enricherType,
+        IReadOnlyList<IEnrichmentStopCondition> stopConditions)
+    {
+        foreach (var stopCondition in stopConditions)
         {
             if (!stopCondition.ShouldStop(context)) continue;
 
