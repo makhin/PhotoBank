@@ -196,10 +196,7 @@ public static partial class ServiceCollectionExtensions
                     // Register NSFW detector as singleton (it manages its own session)
                     services.AddSingleton<INsfwDetector, NsfwDetector>();
 
-                    // Register NSFW enricher
-                    services.AddTransient<IEnricher, NsfwEnricher>();
-
-                    // Keep Azure Adult enricher registered to avoid breaking existing active enricher configurations
+                    // Register Adult enricher
                     services.AddTransient<IEnricher, AdultEnricher>();
 
                     Console.WriteLine("NSFW ONNX enricher initialized successfully.");
@@ -211,29 +208,26 @@ public static partial class ServiceCollectionExtensions
                     Console.WriteLine("  - Corrupt or incompatible model file");
                     Console.WriteLine("  - Missing ONNX Runtime native libraries");
                     Console.WriteLine("  - Incompatible model format or version");
-                    Console.WriteLine("Falling back to Azure Adult enricher.");
+                    Console.WriteLine("Adult enricher will be disabled.");
 
-                    // Fallback to Azure Adult enricher and keep NSFW enricher resolvable
+                    // Register disabled detector to keep Adult enricher resolvable
                     services.AddSingleton<INsfwDetector, DisabledNsfwDetector>();
-                    services.AddTransient<IEnricher, NsfwEnricher>();
                     services.AddTransient<IEnricher, AdultEnricher>();
                 }
             }
             else
             {
-                Console.WriteLine($"WARNING: NSFW ONNX model file not found at: {nsfwOptions.ModelPath}. Falling back to Azure Adult enricher.");
+                Console.WriteLine($"WARNING: NSFW ONNX model file not found at: {nsfwOptions.ModelPath}. Adult enricher will be disabled.");
 
-                // Fallback to Azure Adult enricher and keep NSFW enricher resolvable
+                // Register disabled detector to keep Adult enricher resolvable
                 services.AddSingleton<INsfwDetector, DisabledNsfwDetector>();
-                services.AddTransient<IEnricher, NsfwEnricher>();
                 services.AddTransient<IEnricher, AdultEnricher>();
             }
         }
         else
         {
-            // NSFW ONNX not enabled, keep enricher registration no-op and use Azure Adult enricher
+            // NSFW ONNX not enabled, Adult enricher will be disabled
             services.AddSingleton<INsfwDetector, DisabledNsfwDetector>();
-            services.AddTransient<IEnricher, NsfwEnricher>();
             services.AddTransient<IEnricher, AdultEnricher>();
         }
 

@@ -105,10 +105,10 @@ To enable GPU acceleration:
 
 ## Fallback Behavior
 
-If the NSFW ONNX enricher fails to initialize (missing model, ONNX Runtime errors, etc.):
-- The system will fall back to `AdultEnricher` (Azure Cognitive Services)
+If the NSFW ONNX model fails to initialize (missing model, ONNX Runtime errors, etc.):
+- The `AdultEnricher` will be registered but will use `DisabledNsfwDetector`
+- Adult content detection will be disabled for that session
 - A warning will be logged to the console
-- This ensures uninterrupted photo processing
 
 ## Troubleshooting
 

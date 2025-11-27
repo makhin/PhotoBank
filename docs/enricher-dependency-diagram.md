@@ -15,10 +15,12 @@ graph TD
     %% Энричеры второго уровня (зависят от Analyze)
     Analyze --> Color[ColorEnricher<br/>🎨 Цвета]
     Analyze --> Caption[CaptionEnricher<br/>💬 Описание]
-    Analyze --> Adult[AdultEnricher<br/>🔞 Adult контент]
     Analyze --> Tag[TagEnricher<br/>🏷️ Теги]
     Analyze --> Category[CategoryEnricher<br/>📁 Категории]
     Analyze --> Object[ObjectPropertyEnricher<br/>📦 Объекты]
+
+    %% AdultEnricher использует ONNX и зависит от Preview
+    Preview --> Adult[AdultEnricher<br/>🔞 Adult контент ONNX]
 
     %% Энричер с двойной зависимостью
     Preview --> UnifiedFace[UnifiedFaceEnricher<br/>👤 Лица unified]
@@ -67,6 +69,11 @@ graph TD
   - Зависимости: `PreviewEnricher`
   - Сервисы: `IComputerVisionClient` (Azure)
 
+- **AdultEnricher** - проверяет на adult/racy контент с помощью ONNX модели
+  - Зависимости: `PreviewEnricher`
+  - Сервисы: `INsfwDetector` (Local ONNX MobileNet)
+  - Данные: AdultScore, RacyScore, IsAdultContent, IsRacyContent
+
 ### 🟠 Уровень 2 - Детализация анализа
 Все следующие энричеры зависят от **AnalyzeEnricher** и обрабатывают результаты его работы:
 
@@ -75,9 +82,6 @@ graph TD
 
 - **CaptionEnricher** - извлекает описания изображения
   - Данные: Captions с confidence scores
-
-- **AdultEnricher** - проверяет на adult/racy контент
-  - Данные: AdultScore, RacyScore
 
 - **TagEnricher** - создает/связывает теги
   - Базовый класс: `BaseLookupEnricher<Tag, PhotoTag>`
@@ -159,10 +163,10 @@ Enrichment Pipeline использует топологическую сорти
    - AnalyzeEnricher
    - MetadataEnricher
    - ThumbnailEnricher
+   - AdultEnricher (ONNX)
 3. **После AnalyzeEnricher (параллельно):**
    - ColorEnricher
    - CaptionEnricher
-   - AdultEnricher
    - TagEnricher
    - CategoryEnricher
    - ObjectPropertyEnricher
