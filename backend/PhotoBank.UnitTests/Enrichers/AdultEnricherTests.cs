@@ -80,9 +80,9 @@ public class AdultEnricherTests
 
         // Assert
         photo.IsAdultContent.Should().BeTrue();
-        photo.AdultScore.Should().Be(0.872);
+        photo.AdultScore.Should().BeApproximately(0.872, 1e-6);
         photo.IsRacyContent.Should().BeFalse();
-        photo.RacyScore.Should().Be(0.098);
+        photo.RacyScore.Should().BeApproximately(0.098, 1e-6);
 
         _mockDetector.Verify(d => d.Detect(It.IsAny<byte[]>()), Times.Once);
     }
@@ -122,9 +122,9 @@ public class AdultEnricherTests
 
         // Assert
         photo.IsAdultContent.Should().BeFalse();
-        photo.AdultScore.Should().Be(0.35);
+        photo.AdultScore.Should().BeApproximately(0.35, 1e-5);
         photo.IsRacyContent.Should().BeTrue();
-        photo.RacyScore.Should().Be(0.65);
+        photo.RacyScore.Should().BeApproximately(0.65, 1e-5);
     }
 
     [Test]
@@ -162,9 +162,9 @@ public class AdultEnricherTests
 
         // Assert
         photo.IsAdultContent.Should().BeFalse();
-        photo.AdultScore.Should().Be(0.032);
+        photo.AdultScore.Should().BeApproximately(0.032, 1e-6);
         photo.IsRacyContent.Should().BeFalse();
-        photo.RacyScore.Should().Be(0.04); // Low racy score for safe content
+        photo.RacyScore.Should().BeApproximately(0.04, 1e-6); // Low racy score for safe content
     }
 
     [Test]

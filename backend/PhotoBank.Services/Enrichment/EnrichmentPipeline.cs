@@ -19,15 +19,29 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
     private readonly Type[] _enricherTypes;
     private readonly EnrichmentPipelineOptions _opts;
     private readonly ILogger<EnrichmentPipeline> _log;
+    private readonly IReadOnlyList<IEnrichmentStopCondition> _globalStopConditions;
+    private readonly IReadOnlyDictionary<Type, IReadOnlyList<IEnrichmentStopCondition>> _stopConditionsByEnricher;
 
     public EnrichmentPipeline(IServiceProvider root,
                               EnricherTypeCatalog enricherCatalog,
                               IOptions<EnrichmentPipelineOptions> opts,
+                              IEnumerable<IEnrichmentStopCondition> stopConditions,
                               ILogger<EnrichmentPipeline> log)
     {
         _root = root;
         _enricherTypes = enricherCatalog.Types.ToArray();
         _opts = opts.Value;
+        var stopConditionsArray = stopConditions?.ToArray() ?? Array.Empty<IEnrichmentStopCondition>();
+        _globalStopConditions = stopConditionsArray
+            .Where(c => c.AppliesAfterEnrichers.Count == 0)
+            .ToArray();
+        _stopConditionsByEnricher = stopConditionsArray
+            .SelectMany(
+                condition => condition.AppliesAfterEnrichers.DefaultIfEmpty(),
+                (condition, enricher) => (condition, enricher))
+            .Where(tuple => tuple.enricher is not null)
+            .GroupBy(tuple => tuple.enricher!, tuple => tuple.condition)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<IEnrichmentStopCondition>)g.ToArray());
         _log = log;
     }
 
@@ -57,6 +71,11 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
             provider = scope.ServiceProvider;
         }
 
+        var contextAccessor = provider.GetRequiredService<IEnrichmentContextAccessor>();
+        var context = new EnrichmentContext(photo, source);
+        var previousContext = contextAccessor.Current;
+        contextAccessor.Current = context;
+
         try
         {
             var ordered = TopoSort(enrichers.ToArray(), provider);
@@ -82,10 +101,16 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
                     if (sw is not null)
                         _log.LogInformation("Enricher {Enricher} took {Ms} ms", t.Name, sw.ElapsedMilliseconds);
                 }
+
+                if (EvaluateStopConditions(context, t))
+                {
+                    break;
+                }
             }
         }
         finally
         {
+            contextAccessor.Current = previousContext;
             scope?.Dispose();
         }
     }
@@ -137,5 +162,45 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
 
         foreach (var t in types) Visit(t);
         return result.ToArray();
+    }
+
+    private bool EvaluateStopConditions(EnrichmentContext context, Type enricherType)
+    {
+        if (EvaluateStopConditions(context, enricherType, _globalStopConditions))
+        {
+            return true;
+        }
+
+        if (_stopConditionsByEnricher.TryGetValue(enricherType, out var targeted) &&
+            EvaluateStopConditions(context, enricherType, targeted))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool EvaluateStopConditions(
+        EnrichmentContext context,
+        Type enricherType,
+        IReadOnlyList<IEnrichmentStopCondition> stopConditions)
+    {
+        foreach (var stopCondition in stopConditions)
+        {
+            if (!stopCondition.ShouldStop(context)) continue;
+
+            if (context.TryStop(stopCondition.Reason))
+            {
+                _log.LogInformation(
+                    "Stopping enrichment for photo {PhotoId} after {Enricher}: {Reason}",
+                    context.Photo.Id,
+                    enricherType.Name,
+                    stopCondition.Reason);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -17,13 +18,16 @@ namespace PhotoBank.UnitTests.Enrichment;
 [TestFixture]
 public class EnrichmentPipelineTests
 {
-    private static (EnrichmentPipeline Pipeline, ServiceProvider Provider) CreatePipeline(IList<string> log)
+    private static (EnrichmentPipeline Pipeline, ServiceProvider Provider) CreatePipeline(
+        IList<string> log,
+        IEnumerable<IEnrichmentStopCondition>? stopConditions = null)
     {
         var services = new ServiceCollection();
         services.AddSingleton<IList<string>>(log);
         services.AddScoped<AlphaEnricher>();
         services.AddScoped<BravoEnricher>();
         services.AddScoped<CharlieEnricher>();
+        services.AddScoped<IEnrichmentContextAccessor, EnrichmentContextAccessor>();
 
         var provider = services.BuildServiceProvider();
         var catalog = new EnricherTypeCatalog(new[] { typeof(AlphaEnricher), typeof(BravoEnricher), typeof(CharlieEnricher) });
@@ -31,6 +35,7 @@ public class EnrichmentPipelineTests
             provider,
             catalog,
             Options.Create(new EnrichmentPipelineOptions { LogTimings = false }),
+            stopConditions ?? Array.Empty<IEnrichmentStopCondition>(),
             NullLogger<EnrichmentPipeline>.Instance);
 
         return (pipeline, provider);
@@ -87,6 +92,122 @@ public class EnrichmentPipelineTests
     }
 
     [Test]
+    public async Task RunAsync_StopConditionTriggers_StopsPipelineAndSetsReason()
+    {
+        var log = new List<string>();
+        var stopCondition = new TestStopCondition(
+            "Stop on metadata",
+            ctx => ctx.Photo.EnrichedWithEnricherType.HasFlag(EnricherType.Metadata));
+
+        var (pipeline, provider) = CreatePipeline(log, new[] { stopCondition });
+
+        var photo = new Photo();
+
+        try
+        {
+            await pipeline.RunAsync(
+                photo,
+                new SourceDataDto(),
+                new[] { typeof(AlphaEnricher), typeof(BravoEnricher), typeof(CharlieEnricher) },
+                CancellationToken.None);
+        }
+        finally
+        {
+            provider.Dispose();
+        }
+
+        log.Should().Equal(nameof(AlphaEnricher), nameof(BravoEnricher));
+        stopCondition.CapturedContext.Should().NotBeNull();
+        stopCondition.CapturedContext!.StopReason.Should().Be("Stop on metadata");
+    }
+
+    [Test]
+    public async Task RunAsync_StopConditionNotTriggered_AllEnrichersContinue()
+    {
+        var log = new List<string>();
+        var stopCondition = new TestStopCondition(
+            "Never stop",
+            _ => false);
+
+        var (pipeline, provider) = CreatePipeline(log, new[] { stopCondition });
+
+        try
+        {
+            await pipeline.RunAsync(
+                new Photo(),
+                new SourceDataDto(),
+                new[] { typeof(AlphaEnricher), typeof(BravoEnricher), typeof(CharlieEnricher) },
+                CancellationToken.None);
+        }
+        finally
+        {
+            provider.Dispose();
+        }
+
+        log.Should().Equal(
+            nameof(AlphaEnricher),
+            nameof(BravoEnricher),
+            nameof(CharlieEnricher));
+        stopCondition.CapturedContext.Should().NotBeNull();
+        stopCondition.CapturedContext!.StopReason.Should().BeNull();
+    }
+
+    [Test]
+    public async Task RunAsync_StopInMiddle_PreservesExecutedEnricherFlags()
+    {
+        var log = new List<string>();
+        var stopCondition = new TestStopCondition(
+            "Stop on metadata",
+            ctx => ctx.Photo.EnrichedWithEnricherType.HasFlag(EnricherType.Metadata));
+
+        var (pipeline, provider) = CreatePipeline(log, new[] { stopCondition });
+
+        var photo = new Photo();
+
+        try
+        {
+            await pipeline.RunAsync(
+                photo,
+                new SourceDataDto(),
+                new[] { typeof(AlphaEnricher), typeof(BravoEnricher), typeof(CharlieEnricher) },
+                CancellationToken.None);
+        }
+        finally
+        {
+            provider.Dispose();
+        }
+
+        photo.EnrichedWithEnricherType.Should().Be(EnricherType.Analyze | EnricherType.Metadata);
+    }
+
+    [Test]
+    public async Task RunAsync_StopConditionEvaluatedOnlyForTargetedEnricher()
+    {
+        var log = new List<string>();
+        var stopCondition = new TestStopCondition(
+            "Never stop",
+            _ => false,
+            new[] { typeof(BravoEnricher) });
+
+        var (pipeline, provider) = CreatePipeline(log, new[] { stopCondition });
+
+        try
+        {
+            await pipeline.RunAsync(
+                new Photo(),
+                new SourceDataDto(),
+                new[] { typeof(AlphaEnricher), typeof(BravoEnricher), typeof(CharlieEnricher) },
+                CancellationToken.None);
+        }
+        finally
+        {
+            provider.Dispose();
+        }
+
+        stopCondition.Evaluations.Should().Be(1);
+    }
+
+    [Test]
     public async Task RunAsync_SubsetMissingDependency_Throws()
     {
         var log = new List<string>();
@@ -115,6 +236,7 @@ public class EnrichmentPipelineTests
         var services = new ServiceCollection();
         services.AddScoped<CycleAlphaEnricher>();
         services.AddScoped<CycleBravoEnricher>();
+        services.AddScoped<IEnrichmentContextAccessor, EnrichmentContextAccessor>();
 
         var provider = services.BuildServiceProvider();
         var catalog = new EnricherTypeCatalog(new[] { typeof(CycleAlphaEnricher), typeof(CycleBravoEnricher) });
@@ -122,6 +244,7 @@ public class EnrichmentPipelineTests
             provider,
             catalog,
             Options.Create(new EnrichmentPipelineOptions { LogTimings = false }),
+            Array.Empty<IEnrichmentStopCondition>(),
             NullLogger<EnrichmentPipeline>.Instance);
 
         try
@@ -148,6 +271,7 @@ public class EnrichmentPipelineTests
         var services = new ServiceCollection();
         services.AddSingleton(state);
         services.AddScoped<BlockingEnricher>();
+        services.AddScoped<IEnrichmentContextAccessor, EnrichmentContextAccessor>();
 
         var provider = services.BuildServiceProvider();
         var catalog = new EnricherTypeCatalog(new[] { typeof(BlockingEnricher) });
@@ -159,6 +283,7 @@ public class EnrichmentPipelineTests
                 LogTimings = false,
                 MaxDegreeOfParallelism = 2
             }),
+            Array.Empty<IEnrichmentStopCondition>(),
             NullLogger<EnrichmentPipeline>.Instance);
 
         try
@@ -193,6 +318,7 @@ public class EnrichmentPipelineTests
         var services = new ServiceCollection();
         services.AddSingleton(state);
         services.AddScoped<BlockingEnricher>();
+        services.AddScoped<IEnrichmentContextAccessor, EnrichmentContextAccessor>();
 
         var provider = services.BuildServiceProvider();
         var catalog = new EnricherTypeCatalog(new[] { typeof(BlockingEnricher) });
@@ -204,6 +330,7 @@ public class EnrichmentPipelineTests
                 LogTimings = false,
                 MaxDegreeOfParallelism = 0
             }),
+            Array.Empty<IEnrichmentStopCondition>(),
             NullLogger<EnrichmentPipeline>.Instance);
 
         try
@@ -225,6 +352,36 @@ public class EnrichmentPipelineTests
         finally
         {
             provider.Dispose();
+        }
+    }
+
+    private sealed class TestStopCondition : IEnrichmentStopCondition
+    {
+        private readonly Func<EnrichmentContext, bool> _predicate;
+
+        public TestStopCondition(
+            string reason,
+            Func<EnrichmentContext, bool> predicate,
+            IEnumerable<Type>? appliesAfterEnrichers = null)
+        {
+            Reason = reason;
+            _predicate = predicate;
+            AppliesAfterEnrichers = appliesAfterEnrichers?.ToArray() ?? Array.Empty<Type>();
+        }
+
+        public string Reason { get; }
+
+        public int Evaluations { get; private set; }
+
+        public IReadOnlyCollection<Type> AppliesAfterEnrichers { get; }
+
+        public EnrichmentContext? CapturedContext { get; private set; }
+
+        public bool ShouldStop(EnrichmentContext context)
+        {
+            Evaluations++;
+            CapturedContext = context;
+            return _predicate(context);
         }
     }
 
