@@ -36,14 +36,14 @@ namespace PhotoBank.UnitTests.Enrichers
         }
 
         [Test]
-        public void Dependencies_ShouldReturnPreviewEnricher()
+        public void Dependencies_ShouldReturnAdultEnricher()
         {
             // Act
             var result = _analyzeEnricher.Dependencies;
 
             // Assert
             result.Should().ContainSingle()
-                .And.Contain(typeof(PreviewEnricher));
+                .And.Contain(typeof(AdultEnricher));
         }
 
         [Test]

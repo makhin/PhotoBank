@@ -8,19 +8,19 @@ graph TD
     Preview[PreviewEnricher<br/>🖼️ Создание превью]
 
     %% Энричеры первого уровня
-    Preview --> Analyze[AnalyzeEnricher<br/>🔍 Azure Vision API]
+    Preview --> Adult[AdultEnricher<br/>🔞 Adult контент ONNX]
     Preview --> Metadata[MetadataEnricher<br/>📋 EXIF данные]
     Preview --> Thumbnail[ThumbnailEnricher<br/>🔲 Миниатюра]
 
-    %% Энричеры второго уровня (зависят от Analyze)
+    %% Энричеры второго уровня (зависят от Adult)
+    Adult --> Analyze[AnalyzeEnricher<br/>🔍 Azure Vision API]
+
+    %% Энричеры третьего уровня (зависят от Analyze)
     Analyze --> Color[ColorEnricher<br/>🎨 Цвета]
     Analyze --> Caption[CaptionEnricher<br/>💬 Описание]
     Analyze --> Tag[TagEnricher<br/>🏷️ Теги]
     Analyze --> Category[CategoryEnricher<br/>📁 Категории]
     Analyze --> Object[ObjectPropertyEnricher<br/>📦 Объекты]
-
-    %% AdultEnricher использует ONNX и зависит от Preview
-    Preview --> Adult[AdultEnricher<br/>🔞 Adult контент ONNX]
 
     %% Энричер с двойной зависимостью
     Preview --> UnifiedFace[UnifiedFaceEnricher<br/>👤 Лица unified]
@@ -37,12 +37,14 @@ graph TD
     classDef root fill:#4CAF50,stroke:#2E7D32,color:#fff
     classDef level1 fill:#2196F3,stroke:#1565C0,color:#fff
     classDef level2 fill:#FF9800,stroke:#E65100,color:#fff
+    classDef level3 fill:#FFB74D,stroke:#E65100,color:#fff
     classDef unified fill:#9C27B0,stroke:#6A1B9A,color:#fff
     classDef deprecated fill:#757575,stroke:#424242,color:#fff,stroke-dasharray: 5 5
 
     class Preview root
-    class Analyze,Metadata,Thumbnail level1
-    class Color,Caption,Adult,Tag,Category,Object level2
+    class Metadata,Thumbnail,Adult level1
+    class Analyze level2
+    class Color,Caption,Tag,Category,Object level3
     class UnifiedFace unified
     class FaceOld,FaceAws deprecated
 ```
@@ -54,11 +56,11 @@ graph TD
   - Зависимостей: нет
   - Сервисы: `IImageService` (ImageMagick)
 
-### 🔵 Уровень 1 - Базовый анализ
-- **AnalyzeEnricher** - анализирует изображение через Azure Computer Vision API
+### 🔵 Уровень 1 - Базовая подготовка
+- **AdultEnricher** - проверяет на adult/racy контент с помощью ONNX модели
   - Зависимости: `PreviewEnricher`
-  - Сервисы: `IComputerVisionClient` (Azure)
-  - Извлекает: Categories, Description, Tags, Objects, Colors, Adult content
+  - Сервисы: `INsfwDetector` (Local ONNX MobileNet)
+  - Данные: AdultScore, RacyScore, IsAdultContent, IsRacyContent
 
 - **MetadataEnricher** - извлекает EXIF метаданные из файла
   - Зависимости: `PreviewEnricher`
@@ -69,12 +71,13 @@ graph TD
   - Зависимости: `PreviewEnricher`
   - Сервисы: `IComputerVisionClient` (Azure)
 
-- **AdultEnricher** - проверяет на adult/racy контент с помощью ONNX модели
-  - Зависимости: `PreviewEnricher`
-  - Сервисы: `INsfwDetector` (Local ONNX MobileNet)
-  - Данные: AdultScore, RacyScore, IsAdultContent, IsRacyContent
+### 🟠 Уровень 2 - Анализ содержимого
+- **AnalyzeEnricher** - анализирует изображение через Azure Computer Vision API
+  - Зависимости: `AdultEnricher`
+  - Сервисы: `IComputerVisionClient` (Azure)
+  - Извлекает: Categories, Description, Tags, Objects, Colors, Adult content
 
-### 🟠 Уровень 2 - Детализация анализа
+### 🟠 Уровень 3 - Детализация анализа
 Все следующие энричеры зависят от **AnalyzeEnricher** и обрабатывают результаты его работы:
 
 - **ColorEnricher** - извлекает информацию о цветах
@@ -160,17 +163,18 @@ Enrichment Pipeline использует топологическую сорти
 
 1. **PreviewEnricher** (корневой)
 2. **Параллельно:**
-   - AnalyzeEnricher
+   - AdultEnricher (ONNX)
    - MetadataEnricher
    - ThumbnailEnricher
-   - AdultEnricher (ONNX)
-3. **После AnalyzeEnricher (параллельно):**
+3. **После AdultEnricher:**
+   - AnalyzeEnricher
+4. **После AnalyzeEnricher (параллельно):**
    - ColorEnricher
    - CaptionEnricher
    - TagEnricher
    - CategoryEnricher
    - ObjectPropertyEnricher
-4. **После PreviewEnricher + MetadataEnricher:**
+5. **После PreviewEnricher + MetadataEnricher:**
    - UnifiedFaceEnricher
 
 ## Статистика
