@@ -175,15 +175,15 @@ fi
 ### Обогащение фотографий (Enrichment Pipeline)
 
 При обработке каждой фотографии применяются следующие enrichers:
-1. **MetadataEnricher** - извлечение EXIF/метаданных
-2. **ThumbnailEnricher** - генерация миниатюр
-3. **PreviewEnricher** - создание превью
-4. **AnalyzeEnricher** - AI-анализ
-5. **ColorEnricher** - анализ цвета
-6. **CaptionEnricher** - генерация подписей через AI
-7. **TagEnricher** - автотегирование
-8. **ObjectPropertyEnricher** - распознавание объектов
-9. **AdultEnricher** - модерация контента
+1. **PreviewEnricher** - создание превью
+2. **AdultEnricher** - модерация контента
+3. **AnalyzeEnricher** - AI-анализ
+4. **MetadataEnricher** - извлечение EXIF/метаданных
+5. **ThumbnailEnricher** - генерация миниатюр
+6. **ColorEnricher** - анализ цвета
+7. **CaptionEnricher** - генерация подписей через AI
+8. **TagEnricher** - автотегирование
+9. **ObjectPropertyEnricher** - распознавание объектов
 10. **UnifiedFaceEnricher** - распознавание лиц
 
 ## Последние изменения

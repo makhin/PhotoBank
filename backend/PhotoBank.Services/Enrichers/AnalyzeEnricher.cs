@@ -12,7 +12,7 @@ public sealed class AnalyzeEnricher : IEnricher
 {
     private readonly IImageAnalyzer _imageAnalyzer;
 
-    private static readonly Type[] s_dependencies = [typeof(PreviewEnricher)];
+    private static readonly Type[] s_dependencies = [typeof(AdultEnricher)];
 
     public AnalyzeEnricher(IImageAnalyzer imageAnalyzer)
     {
