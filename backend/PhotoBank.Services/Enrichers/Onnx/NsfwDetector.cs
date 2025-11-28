@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Options;
-using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
+using PhotoBank.Services.Onnx.Base;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -19,9 +19,8 @@ public interface INsfwDetector : IDisposable
     NsfwDetectionResult Detect(byte[] imageData);
 }
 
-public class NsfwDetector : INsfwDetector
+public class NsfwDetector : OnnxInferenceServiceBase, INsfwDetector
 {
-    private readonly InferenceSession _session;
     private readonly NsfwOnnxOptions _options;
     private const int ImageSize = 224;
 
@@ -32,16 +31,9 @@ public class NsfwDetector : INsfwDetector
     {
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
-        if (string.IsNullOrWhiteSpace(_options.ModelPath))
-            throw new ArgumentException("Model path cannot be empty", nameof(options));
-
-        if (!System.IO.File.Exists(_options.ModelPath))
-            throw new System.IO.FileNotFoundException($"NSFW model file not found: {_options.ModelPath}");
-
-        var sessionOptions = new SessionOptions();
-        sessionOptions.AppendExecutionProvider_CUDA(0); // Use GPU device 0
-
-        _session = new InferenceSession(_options.ModelPath, sessionOptions);
+        // Initialize ONNX session with CUDA GPU acceleration
+        // Validation is handled by the base class (OnnxSessionFactory)
+        InitializeSession(_options.ModelPath, useCuda: true, cudaDeviceId: 0);
     }
 
     public NsfwDetectionResult Detect(byte[] imageData)
@@ -68,10 +60,8 @@ public class NsfwDetector : INsfwDetector
             }
         }
 
-        // Inference
-        var inputValue = DisposableNamedOnnxValue.CreateFromTensor("input", tensor);
-        using var results = _session.Run(new[] { inputValue });
-        var output = results.First().AsEnumerable<float>().ToArray();
+        // Inference using base class method (with proper resource management)
+        var output = ExecuteInference("input", tensor);
 
         // Model returns [drawings, hentai, neutral, porn, sexy]
         var scores = new Dictionary<string, float>();
@@ -106,8 +96,5 @@ public class NsfwDetector : INsfwDetector
         };
     }
 
-    public void Dispose()
-    {
-        _session?.Dispose();
-    }
+    // Dispose is inherited from OnnxInferenceServiceBase
 }

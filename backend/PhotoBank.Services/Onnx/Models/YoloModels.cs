@@ -1,6 +1,6 @@
 using Microsoft.ML.Data;
 
-namespace PhotoBank.Services.Enrichers.Onnx;
+namespace PhotoBank.Services.Onnx.Models;
 
 /// <summary>
 /// Input data for YOLO model
