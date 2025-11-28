@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.ML;
 using ImageMagick;
+using Microsoft.Extensions.Options;
+using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime.Tensors;
 
 namespace PhotoBank.Services.Enrichers.Onnx;
 
 /// <summary>
 /// Service for YOLO ONNX model inference (thread-safe)
 /// </summary>
-public interface IYoloOnnxService
+public interface IYoloOnnxService : IDisposable
 {
     List<DetectedObjectOnnx> DetectObjects(IMagickImage<byte> image, float confidenceThreshold = 0.5f, float nmsThreshold = 0.45f);
 }
@@ -25,12 +28,12 @@ internal enum YoloFormat
 }
 
 /// <summary>
-/// Thread-safe YOLO service using PredictionEngine
-/// Note: PredictionEngine is thread-safe for read operations (Predict method)
+/// Thread-safe YOLO service using ONNX Runtime with CUDA GPU acceleration
+/// Note: InferenceSession is thread-safe for concurrent inference operations
 /// </summary>
 public class YoloOnnxService : IYoloOnnxService
 {
-    private readonly PredictionEngine<YoloImageInput, YoloOutput> _predictionEngine;
+    private readonly InferenceSession _session;
     private const int InputWidth = 640;
     private const int InputHeight = 640;
     private const int NumClasses = 80;
@@ -43,9 +46,22 @@ public class YoloOnnxService : IYoloOnnxService
     private const int YoloV8NumPredictions = 8400;
     private const int YoloV8OutputSize = 84; // 4 bbox + 80 classes (no objectness)
 
-    public YoloOnnxService(PredictionEngine<YoloImageInput, YoloOutput> predictionEngine)
+    public YoloOnnxService(IOptions<YoloOnnxOptions> options)
     {
-        _predictionEngine = predictionEngine ?? throw new ArgumentNullException(nameof(predictionEngine));
+        if (options == null) throw new ArgumentNullException(nameof(options));
+        var opts = options.Value;
+
+        if (string.IsNullOrWhiteSpace(opts.ModelPath))
+            throw new ArgumentException("Model path cannot be empty", nameof(options));
+
+        if (!System.IO.File.Exists(opts.ModelPath))
+            throw new System.IO.FileNotFoundException($"YOLO model file not found: {opts.ModelPath}");
+
+        // Configure ONNX Runtime to use CUDA GPU (device 0)
+        var sessionOptions = new SessionOptions();
+        sessionOptions.AppendExecutionProvider_CUDA(0);
+
+        _session = new InferenceSession(opts.ModelPath, sessionOptions);
     }
 
     public List<DetectedObjectOnnx> DetectObjects(IMagickImage<byte> image, float confidenceThreshold = 0.5f, float nmsThreshold = 0.45f)
@@ -57,21 +73,27 @@ public class YoloOnnxService : IYoloOnnxService
         var originalHeight = (int)image.Height;
 
         // Prepare input with letterboxing (preserve aspect ratio + padding)
-        var (input, scale, padX, padY) = PrepareInputWithLetterbox(image);
+        var (inputData, scale, padX, padY) = PrepareInputWithLetterbox(image);
 
-        // Run prediction using PredictionEngine (thread-safe for Predict operations)
-        var output = _predictionEngine.Predict(input);
+        // Create tensor from input data [1, 3, 640, 640]
+        var tensor = new DenseTensor<float>(inputData, new[] { 1, 3, InputHeight, InputWidth });
 
-        if (output?.Output == null || output.Output.Length == 0)
+        // Run inference using ONNX Runtime with CUDA (thread-safe for concurrent operations)
+        var inputValue = NamedOnnxValue.CreateFromTensor("images", tensor);
+        using var results = _session.Run(new[] { inputValue });
+        var outputTensor = results.First().AsTensor<float>();
+        var outputArray = outputTensor.ToArray();
+
+        if (outputArray == null || outputArray.Length == 0)
             return new List<DetectedObjectOnnx>();
 
         // Detect YOLO format and parse output accordingly
-        var format = DetectYoloFormat(output.Output);
+        var format = DetectYoloFormat(outputArray);
         var detections = format switch
         {
-            YoloFormat.YoloV5 => ParseYoloV5Output(output.Output, originalWidth, originalHeight, scale, padX, padY, confidenceThreshold),
-            YoloFormat.YoloV8 => ParseYoloV8Output(output.Output, originalWidth, originalHeight, scale, padX, padY, confidenceThreshold),
-            _ => throw new NotSupportedException($"Unsupported YOLO output format. Output array length: {output.Output.Length}")
+            YoloFormat.YoloV5 => ParseYoloV5Output(outputArray, originalWidth, originalHeight, scale, padX, padY, confidenceThreshold),
+            YoloFormat.YoloV8 => ParseYoloV8Output(outputArray, originalWidth, originalHeight, scale, padX, padY, confidenceThreshold),
+            _ => throw new NotSupportedException($"Unsupported YOLO output format. Output array length: {outputArray.Length}")
         };
 
         var filteredDetections = ApplyNMS(detections, nmsThreshold);
@@ -98,7 +120,7 @@ public class YoloOnnxService : IYoloOnnxService
     /// Prepare input with letterboxing: resize preserving aspect ratio and add padding.
     /// Returns the input tensor and letterbox parameters (scale, padX, padY) for coordinate conversion.
     /// </summary>
-    private static (YoloImageInput input, float scale, int padX, int padY) PrepareInputWithLetterbox(IMagickImage<byte> image)
+    private static (float[] input, float scale, int padX, int padY) PrepareInputWithLetterbox(IMagickImage<byte> image)
     {
         var originalWidth = (int)image.Width;
         var originalHeight = (int)image.Height;
@@ -150,7 +172,7 @@ public class YoloOnnxService : IYoloOnnxService
             }
         }
 
-        return (new YoloImageInput { Image = input }, scale, padX, padY);
+        return (input, scale, padX, padY);
     }
 
     /// <summary>
@@ -359,5 +381,10 @@ public class YoloOnnxService : IYoloOnnxService
         var unionArea = box1Area + box2Area - intersectionArea;
 
         return unionArea > 0 ? intersectionArea / unionArea : 0;
+    }
+
+    public void Dispose()
+    {
+        _session?.Dispose();
     }
 }
