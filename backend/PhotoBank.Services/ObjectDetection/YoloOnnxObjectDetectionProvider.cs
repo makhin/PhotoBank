@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ImageMagick;
 using Microsoft.Extensions.Options;
 using PhotoBank.Services.Enrichers.Onnx;
 using PhotoBank.Services.ObjectDetection.Abstractions;
@@ -30,12 +31,12 @@ public class YoloOnnxObjectDetectionProvider : IObjectDetectionProvider
 
     public ObjectDetectionProviderKind Kind => ObjectDetectionProviderKind.YoloOnnx;
 
-    public IReadOnlyList<DetectedObjectDto> DetectObjects(byte[]? imageBytes, float scale)
+    public IReadOnlyList<DetectedObjectDto> DetectObjects(IMagickImage<byte>? image, float scale)
     {
-        if (imageBytes == null || imageBytes.Length == 0)
+        if (image == null)
             return Array.Empty<DetectedObjectDto>();
 
-        var detectedObjects = _yoloService.DetectObjects(imageBytes, _confidenceThreshold, _nmsThreshold);
+        var detectedObjects = _yoloService.DetectObjects(image, _confidenceThreshold, _nmsThreshold);
 
         if (detectedObjects.Count == 0)
             return Array.Empty<DetectedObjectDto>();

@@ -136,8 +136,7 @@ public class UnifiedObjectPropertyEnricher : IEnricher
             return [];
         }
 
-        var imageBytes = sourceData.PreviewImage.ToByteArray();
-        return _provider.DetectObjects(imageBytes, scale);
+        return _provider.DetectObjects(sourceData.PreviewImage, scale);
     }
 
     /// <summary>
