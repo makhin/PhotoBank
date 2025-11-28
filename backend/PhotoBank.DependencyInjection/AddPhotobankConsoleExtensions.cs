@@ -97,75 +97,19 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<IEnricher, CategoryEnricher>();
 
         // Object detection - unified approach with provider pattern
-        // Register provider based on configuration (YOLO ONNX or Azure Computer Vision)
+        // Register YOLO ONNX with CUDA GPU acceleration (no CPU fallback)
         var yoloOptions = configuration.GetSection(yoloOnnx).Get<YoloOnnxOptions>();
         if (yoloOptions?.Enabled == true && !string.IsNullOrWhiteSpace(yoloOptions.ModelPath))
         {
-            if (System.IO.File.Exists(yoloOptions.ModelPath))
-            {
-                bool onnxInitialized = false;
+            // Register YoloOnnxService as singleton (manages InferenceSession with CUDA)
+            // The service uses ONNX Runtime with CUDA execution provider for GPU acceleration
+            services.AddSingleton<IYoloOnnxService, YoloOnnxService>();
 
-                try
-                {
-                    // Test ONNX Runtime initialization before registering services
-                    // This will throw if ONNX Runtime native libraries can't be loaded
-                    using var testSession = new Microsoft.ML.OnnxRuntime.SessionOptions();
+            // Register YOLO ONNX provider
+            services.AddTransient<IObjectDetectionProvider, YoloOnnxObjectDetectionProvider>();
 
-                    // Register PredictionEngine for ONNX model
-                    // Note: PredictionEngine.Predict() is thread-safe for concurrent read operations
-                    services.AddSingleton(provider =>
-                    {
-                        var mlContext = new MLContext();
-
-                        // Create input schema for YOLO (3 channels, 640x640 input)
-                        var dataView = mlContext.Data.LoadFromEnumerable(new List<YoloImageInput>());
-
-                        // Build pipeline with ONNX model
-                        var pipeline = mlContext.Transforms.ApplyOnnxModel(
-                            outputColumnName: "output0",
-                            inputColumnName: "images",
-                            modelFile: yoloOptions.ModelPath);
-
-                        // Fit the pipeline to create the model
-                        var model = pipeline.Fit(dataView);
-
-                        // Create PredictionEngine (thread-safe for Predict operations)
-                        return mlContext.Model.CreatePredictionEngine<YoloImageInput, YoloOutput>(model);
-                    });
-
-                    // Register YoloOnnxService as transient (engine is singleton)
-                    services.AddTransient<IYoloOnnxService, YoloOnnxService>();
-
-                    // Register YOLO ONNX provider
-                    services.AddTransient<IObjectDetectionProvider, YoloOnnxObjectDetectionProvider>();
-
-                    onnxInitialized = true;
-                    Console.WriteLine("YOLO ONNX object detection provider initialized successfully.");
-                }
-                catch (Exception ex)
-                {
-                    // ONNX Runtime initialization failed - fallback to Azure Computer Vision
-                    // This can happen if Visual C++ Redistributables are not installed or ONNX Runtime native libraries are incompatible
-                    Console.WriteLine($"WARNING: Failed to initialize ONNX Runtime: {ex.GetType().Name}: {ex.Message}");
-                    Console.WriteLine("This is often caused by missing Visual C++ Redistributables or incompatible ONNX Runtime native libraries.");
-                    Console.WriteLine("Falling back to Azure Computer Vision for object detection.");
-                }
-
-                if (!onnxInitialized)
-                {
-                    // Fallback to Azure-based object detection
-                    services.AddTransient<IObjectDetectionProvider, AzureObjectDetectionProvider>();
-                }
-            }
-            else
-            {
-                // Model file not found - fallback to Azure Computer Vision
-                // Note: Cannot use ILogger here as it would require BuildServiceProvider() which leaks resources
-                Console.WriteLine($"WARNING: ONNX model file not found at: {yoloOptions.ModelPath}. Falling back to Azure Computer Vision.");
-
-                // Fallback to Azure-based object detection
-                services.AddTransient<IObjectDetectionProvider, AzureObjectDetectionProvider>();
-            }
+            Console.WriteLine($"YOLO ONNX object detection provider initialized with CUDA GPU acceleration.");
+            Console.WriteLine($"Model path: {yoloOptions.ModelPath}");
         }
         else
         {
