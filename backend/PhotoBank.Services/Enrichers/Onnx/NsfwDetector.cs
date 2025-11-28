@@ -60,8 +60,8 @@ public class NsfwDetector : OnnxInferenceServiceBase, INsfwDetector
             }
         }
 
-        // Inference using base class method
-        var output = ExecuteInferenceDisposable("input", tensor);
+        // Inference using base class method (with proper resource management)
+        var output = ExecuteInference("input", tensor);
 
         // Model returns [drawings, hentai, neutral, porn, sexy]
         var scores = new Dictionary<string, float>();

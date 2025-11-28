@@ -34,7 +34,8 @@ public abstract class OnnxInferenceServiceBase : IDisposable
     }
 
     /// <summary>
-    /// Executes ONNX inference with a single tensor input
+    /// Executes ONNX inference with a single tensor input.
+    /// Properly manages resources using DisposableNamedOnnxValue.
     /// </summary>
     /// <param name="inputName">Name of the input tensor in the model</param>
     /// <param name="tensor">Input tensor data</param>
@@ -46,21 +47,6 @@ public abstract class OnnxInferenceServiceBase : IDisposable
             throw new InvalidOperationException("ONNX session is not initialized. Call InitializeSession first.");
 
         return OnnxInferenceHelper.RunInference(_session, inputName, tensor);
-    }
-
-    /// <summary>
-    /// Executes ONNX inference with a single tensor input (using DisposableNamedOnnxValue)
-    /// </summary>
-    /// <param name="inputName">Name of the input tensor in the model</param>
-    /// <param name="tensor">Input tensor data</param>
-    /// <returns>Output tensor as float array</returns>
-    /// <exception cref="InvalidOperationException">Thrown when session is not initialized</exception>
-    protected float[] ExecuteInferenceDisposable(string inputName, DenseTensor<float> tensor)
-    {
-        if (_session == null)
-            throw new InvalidOperationException("ONNX session is not initialized. Call InitializeSession first.");
-
-        return OnnxInferenceHelper.RunInferenceDisposable(_session, inputName, tensor);
     }
 
     /// <summary>
