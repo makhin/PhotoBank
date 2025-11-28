@@ -4,8 +4,9 @@ using System.Linq;
 using Microsoft.ML;
 using ImageMagick;
 using Microsoft.Extensions.Options;
-using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
+using PhotoBank.Services.Onnx.Base;
+using PhotoBank.Services.Onnx.Models;
 
 namespace PhotoBank.Services.Enrichers.Onnx;
 
@@ -31,9 +32,8 @@ internal enum YoloFormat
 /// Thread-safe YOLO service using ONNX Runtime with CUDA GPU acceleration
 /// Note: InferenceSession is thread-safe for concurrent inference operations
 /// </summary>
-public class YoloOnnxService : IYoloOnnxService
+public class YoloOnnxService : OnnxInferenceServiceBase, IYoloOnnxService
 {
-    private readonly InferenceSession _session;
     private const int InputWidth = 640;
     private const int InputHeight = 640;
     private const int NumClasses = 80;
@@ -51,17 +51,9 @@ public class YoloOnnxService : IYoloOnnxService
         if (options == null) throw new ArgumentNullException(nameof(options));
         var opts = options.Value;
 
-        if (string.IsNullOrWhiteSpace(opts.ModelPath))
-            throw new ArgumentException("Model path cannot be empty", nameof(options));
-
-        if (!System.IO.File.Exists(opts.ModelPath))
-            throw new System.IO.FileNotFoundException($"YOLO model file not found: {opts.ModelPath}");
-
-        // Configure ONNX Runtime to use CUDA GPU (device 0)
-        var sessionOptions = new SessionOptions();
-        sessionOptions.AppendExecutionProvider_CUDA(0);
-
-        _session = new InferenceSession(opts.ModelPath, sessionOptions);
+        // Initialize ONNX session with CUDA GPU acceleration
+        // Validation is handled by the base class (OnnxSessionFactory)
+        InitializeSession(opts.ModelPath, useCuda: true, cudaDeviceId: 0);
     }
 
     public List<DetectedObjectOnnx> DetectObjects(IMagickImage<byte> image, float confidenceThreshold = 0.5f, float nmsThreshold = 0.45f)
@@ -78,11 +70,8 @@ public class YoloOnnxService : IYoloOnnxService
         // Create tensor from input data [1, 3, 640, 640]
         var tensor = new DenseTensor<float>(inputData, new[] { 1, 3, InputHeight, InputWidth });
 
-        // Run inference using ONNX Runtime with CUDA (thread-safe for concurrent operations)
-        var inputValue = NamedOnnxValue.CreateFromTensor("images", tensor);
-        using var results = _session.Run(new[] { inputValue });
-        var outputTensor = results.First().AsTensor<float>();
-        var outputArray = outputTensor.ToArray();
+        // Run inference using base class method (thread-safe for concurrent operations)
+        var outputArray = ExecuteInference("images", tensor);
 
         if (outputArray == null || outputArray.Length == 0)
             return new List<DetectedObjectOnnx>();
@@ -383,8 +372,5 @@ public class YoloOnnxService : IYoloOnnxService
         return unionArea > 0 ? intersectionArea / unionArea : 0;
     }
 
-    public void Dispose()
-    {
-        _session?.Dispose();
-    }
+    // Dispose is inherited from OnnxInferenceServiceBase
 }
