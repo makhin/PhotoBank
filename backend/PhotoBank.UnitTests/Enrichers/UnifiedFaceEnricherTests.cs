@@ -226,4 +226,141 @@ public class UnifiedFaceEnricherTests
         Assert.ThrowsAsync<TaskCanceledException>(async () =>
             await _enricher.EnrichAsync(photo, sourceData, cts.Token));
     }
+
+    [Test]
+    public async Task EnrichAsync_FaceWithIdentification_SetsIdentifiedStatusAndPersonId()
+    {
+        // Arrange
+        var photo = new Photo { Id = 123 };
+        var sourceData = new SourceDataDto
+        {
+            PreviewImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+        };
+
+        var detectedFaces = new List<DetectedFaceDto>
+        {
+            new DetectedFaceDto(
+                ProviderFaceId: "face1",
+                Confidence: 0.95f,
+                Age: 30f,
+                Gender: "Male",
+                BoundingBox: new FaceBoundingBox(0.1f, 0.1f, 0.2f, 0.2f),
+                Emotion: null,
+                EmotionScores: null,
+                IdentifiedPersonId: 42,
+                IdentificationConfidence: 0.87f)
+        };
+
+        _mockFaceService
+            .Setup(s => s.DetectFacesAsync(It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(detectedFaces);
+
+        // Act
+        await _enricher.EnrichAsync(photo, sourceData);
+
+        // Assert
+        photo.FaceIdentifyStatus.Should().Be(FaceIdentifyStatus.Detected);
+        photo.Faces.Should().HaveCount(1);
+
+        var face = photo.Faces[0];
+        face.IdentityStatus.Should().Be(IdentityStatus.Identified);
+        face.PersonId.Should().Be(42);
+        face.IdentifiedWithConfidence.Should().BeApproximately(0.87, 0.0001);
+    }
+
+    [Test]
+    public async Task EnrichAsync_MixedIdentificationResults_SetsCorrectStatusForEachFace()
+    {
+        // Arrange
+        var photo = new Photo { Id = 123 };
+        var sourceData = new SourceDataDto
+        {
+            PreviewImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+        };
+
+        var detectedFaces = new List<DetectedFaceDto>
+        {
+            // Identified face
+            new DetectedFaceDto(
+                ProviderFaceId: "face1",
+                Confidence: 0.95f,
+                Age: 30f,
+                Gender: "Male",
+                BoundingBox: new FaceBoundingBox(0.1f, 0.1f, 0.2f, 0.2f),
+                Emotion: null,
+                EmotionScores: null,
+                IdentifiedPersonId: 42,
+                IdentificationConfidence: 0.87f),
+            // Not identified face
+            new DetectedFaceDto(
+                ProviderFaceId: "face2",
+                Confidence: 0.92f,
+                Age: 25f,
+                Gender: "Female",
+                BoundingBox: new FaceBoundingBox(0.5f, 0.5f, 0.2f, 0.2f),
+                Emotion: null,
+                EmotionScores: null,
+                IdentifiedPersonId: null,
+                IdentificationConfidence: null)
+        };
+
+        _mockFaceService
+            .Setup(s => s.DetectFacesAsync(It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(detectedFaces);
+
+        // Act
+        await _enricher.EnrichAsync(photo, sourceData);
+
+        // Assert
+        photo.FaceIdentifyStatus.Should().Be(FaceIdentifyStatus.Detected);
+        photo.Faces.Should().HaveCount(2);
+
+        // First face - identified
+        photo.Faces[0].IdentityStatus.Should().Be(IdentityStatus.Identified);
+        photo.Faces[0].PersonId.Should().Be(42);
+        photo.Faces[0].IdentifiedWithConfidence.Should().BeApproximately(0.87, 0.0001);
+
+        // Second face - not identified
+        photo.Faces[1].IdentityStatus.Should().Be(IdentityStatus.NotIdentified);
+        photo.Faces[1].PersonId.Should().BeNull();
+        photo.Faces[1].IdentifiedWithConfidence.Should().BeApproximately(0.0, 0.0001);
+    }
+
+    [Test]
+    public async Task EnrichAsync_FaceWithoutIdentificationConfidence_SetsConfidenceToZero()
+    {
+        // Arrange
+        var photo = new Photo { Id = 123 };
+        var sourceData = new SourceDataDto
+        {
+            PreviewImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+        };
+
+        var detectedFaces = new List<DetectedFaceDto>
+        {
+            new DetectedFaceDto(
+                ProviderFaceId: "face1",
+                Confidence: 0.95f,
+                Age: 30f,
+                Gender: "Male",
+                BoundingBox: new FaceBoundingBox(0.1f, 0.1f, 0.2f, 0.2f),
+                Emotion: null,
+                EmotionScores: null,
+                IdentifiedPersonId: null,
+                IdentificationConfidence: null)
+        };
+
+        _mockFaceService
+            .Setup(s => s.DetectFacesAsync(It.IsAny<byte[]>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(detectedFaces);
+
+        // Act
+        await _enricher.EnrichAsync(photo, sourceData);
+
+        // Assert
+        photo.Faces.Should().HaveCount(1);
+        photo.Faces[0].IdentityStatus.Should().Be(IdentityStatus.NotIdentified);
+        photo.Faces[0].PersonId.Should().BeNull();
+        photo.Faces[0].IdentifiedWithConfidence.Should().BeApproximately(0.0, 0.0001);
+    }
 }

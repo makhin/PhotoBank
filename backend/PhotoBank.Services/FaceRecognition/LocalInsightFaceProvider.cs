@@ -35,7 +35,7 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
     public Task EnsureReadyAsync(CancellationToken ct) => Task.CompletedTask;
 
     public Task<IReadOnlyDictionary<int, string>> UpsertPersonsAsync(IReadOnlyCollection<PersonSyncItem> persons, CancellationToken ct)
-        => Task.FromResult((IReadOnlyDictionary<int, string>)persons.ToDictionary(p => p.PersonId, p => $"local:{p.PersonId}"));
+        => Task.FromResult<IReadOnlyDictionary<int, string>>(persons.ToDictionary(p => p.PersonId, p => $"local:{p.PersonId}"));
 
     public async Task<IReadOnlyDictionary<int, string>> LinkFacesToPersonAsync(int personId, IReadOnlyCollection<FaceToLink> faces, CancellationToken ct)
     {
@@ -60,17 +60,17 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
     public async Task<IReadOnlyList<DetectedFaceDto>> DetectAsync(Stream image, CancellationToken ct)
     {
         // Include embeddings for automatic face identification
-        var resp = await _client.DetectAsync(image, includeEmbeddings: true, ct);
+        var detectResponse = await _client.DetectAsync(image, includeEmbeddings: true, ct);
 
         var results = new List<DetectedFaceDto>();
 
-        foreach (var f in resp.Faces)
+        foreach (var f in detectResponse.Faces)
         {
             int? identifiedPersonId = null;
             float? identificationConfidence = null;
 
             // Perform automatic identification if embedding is available
-            if (f.Embedding != null && f.Embedding.Length > 0)
+            if (f.Embedding is {Length: > 0})
             {
                 try
                 {
@@ -101,11 +101,11 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
             }
 
             results.Add(new DetectedFaceDto(
-                ProviderFaceId: f.Id ?? string.Empty,
+                ProviderFaceId: f.Id,
                 Confidence: f.Score,
                 Age: f.Age,
                 Gender: f.Gender,
-                BoundingBox: f.Bbox != null && f.Bbox.Length >= 4
+                BoundingBox: f.Bbox is {Length: >= 4}
                     ? new FaceBoundingBox(
                         Left: f.Bbox[0],
                         Top: f.Bbox[1],
@@ -123,7 +123,7 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
     }
 
     public Task<IReadOnlyList<IdentifyResultDto>> IdentifyAsync(IReadOnlyList<string> providerFaceIds, CancellationToken ct)
-        => Task.FromResult<IReadOnlyList<IdentifyResultDto>>(Array.Empty<IdentifyResultDto>());
+        => Task.FromResult<IReadOnlyList<IdentifyResultDto>>([]);
 
     public async Task<IReadOnlyList<UserMatchDto>> SearchUsersByImageAsync(Stream image, CancellationToken ct)
     {
@@ -146,20 +146,11 @@ public sealed class LocalInsightFaceProvider : IFaceProvider
 
     private static float[] Normalize(float[] v)
     {
-        var sum = 0f; for (int i = 0; i < v.Length; i++) sum += v[i] * v[i];
+        var sum = v.Sum(t => t * t);
         var inv = 1f / (float)Sqrt(Max(sum, 1e-12f));
         var r = new float[v.Length];
         for (int i = 0; i < v.Length; i++) r[i] = v[i] * inv;
         return r;
-    }
-
-    private static float CosSim(float[] a, float[] b)
-    {
-        var len = Math.Min(a.Length, b.Length);
-        double dot = 0, na = 0, nb = 0;
-        for (int i = 0; i < len; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
-        if (na == 0 || nb == 0) return 0;
-        return (float)(dot / (Math.Sqrt(na) * Math.Sqrt(nb)));
     }
 }
 

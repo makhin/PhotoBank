@@ -80,7 +80,7 @@ public class YoloOnnxService : IYoloOnnxService
         return filteredDetections;
     }
 
-    private YoloFormat DetectYoloFormat(float[] output)
+    private static YoloFormat DetectYoloFormat(float[] output)
     {
         var length = output.Length;
 
@@ -99,7 +99,7 @@ public class YoloOnnxService : IYoloOnnxService
     /// Prepare input with letterboxing: resize preserving aspect ratio and add padding.
     /// Returns the input tensor and letterbox parameters (scale, padX, padY) for coordinate conversion.
     /// </summary>
-    private (YoloImageInput input, float scale, int padX, int padY) PrepareInputWithLetterbox(MagickImage image)
+    private static (YoloImageInput input, float scale, int padX, int padY) PrepareInputWithLetterbox(MagickImage image)
     {
         var originalWidth = (int)image.Width;
         var originalHeight = (int)image.Height;
@@ -158,7 +158,7 @@ public class YoloOnnxService : IYoloOnnxService
     /// Parse YOLOv5 output: [1, 25200, 85] boxes-first layout
     /// Each prediction: [centerX, centerY, width, height, objectness, class0_score, ..., class79_score]
     /// </summary>
-    private List<DetectedObjectOnnx> ParseYoloV5Output(float[] output, int originalWidth, int originalHeight, float scale, int padX, int padY, float confidenceThreshold)
+    private static List<DetectedObjectOnnx> ParseYoloV5Output(float[] output, int originalWidth, int originalHeight, float scale, int padX, int padY, float confidenceThreshold)
     {
         var detections = new List<DetectedObjectOnnx>();
 
@@ -240,7 +240,7 @@ public class YoloOnnxService : IYoloOnnxService
     /// Parse YOLOv8 output: [1, 84, 8400] channels-first layout
     /// All predictions for each channel are grouped together
     /// </summary>
-    private List<DetectedObjectOnnx> ParseYoloV8Output(float[] output, int originalWidth, int originalHeight, float scale, int padX, int padY, float confidenceThreshold)
+    private static List<DetectedObjectOnnx> ParseYoloV8Output(float[] output, int originalWidth, int originalHeight, float scale, int padX, int padY, float confidenceThreshold)
     {
         var detections = new List<DetectedObjectOnnx>();
 
@@ -347,7 +347,7 @@ public class YoloOnnxService : IYoloOnnxService
         return result;
     }
 
-    private float CalculateIoU(DetectedObjectOnnx box1, DetectedObjectOnnx box2)
+    private static float CalculateIoU(DetectedObjectOnnx box1, DetectedObjectOnnx box2)
     {
         var x1 = Math.Max(box1.X, box2.X);
         var y1 = Math.Max(box1.Y, box2.Y);

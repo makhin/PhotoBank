@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services;
-using PhotoBank.Services.Api;
 using PhotoBank.Services.Enrichment;
 using PhotoBank.Services.Recognition;
 using System.Linq;
@@ -24,7 +23,7 @@ namespace PhotoBank.Console
         private readonly ISyncService _syncService;
         private readonly IRecognitionService _recognitionService;
         private readonly int _maxDegreeOfParallelism;
-        private readonly object _progressLock = new();
+        private readonly Lock _progressLock = new();
 
         public App(
             IPhotoProcessor photoProcessor,
@@ -54,7 +53,7 @@ namespace PhotoBank.Console
                 if (registerPersons)
                 {
                     _logger.LogInformation("Starting person registration...");
-                    await _recognitionService.RegisterPersonsAsync();
+                    await _recognitionService.RegisterPersonsAsync(token);
                     _logger.LogInformation("Person registration completed");
                 }
 
@@ -63,14 +62,11 @@ namespace PhotoBank.Console
                     return await ProcessStorageAsync(storageId.Value, token);
                 }
 
-                if (!registerPersons)
-                {
-                    System.Console.WriteLine("No operation specified. Use --storage to process files or enable person registration.");
-                    System.Console.WriteLine("Run with --help for usage information.");
-                    return 0;
-                }
-
+                if (registerPersons) return 0;
+                Console.WriteLine("No operation specified. Use --storage to process files or enable person registration.");
+                Console.WriteLine("Run with --help for usage information.");
                 return 0;
+
             }
             catch (OperationCanceledException)
             {
@@ -90,15 +86,6 @@ namespace PhotoBank.Console
 
             var storage = await _storages.GetAsync(storageId);
 
-            if (storage == null)
-            {
-                var errorMessage = $"Storage with ID {storageId} not found";
-                _logger.LogError(errorMessage);
-                System.Console.Error.WriteLine($"Error: {errorMessage}");
-                System.Console.Error.WriteLine("Please verify the storage ID exists in the database.");
-                return 3; // Exit code for "not found"
-            }
-
             _logger.LogInformation("Processing storage: {StorageName} (ID: {StorageId})", storage.Name, storage.Id);
             return await AddFilesAsync(storage, token);
         }
@@ -114,7 +101,7 @@ namespace PhotoBank.Console
                 if (total == 0)
                 {
                     _logger.LogInformation("No files found in storage {StorageId}", storage.Id);
-                    System.Console.WriteLine("No files to process.");
+                    Console.WriteLine("No files to process.");
                     return 0;
                 }
 
@@ -124,8 +111,8 @@ namespace PhotoBank.Console
 
                 var activeEnrichers = _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
 
-                System.Console.WriteLine($"Processing {total} files from storage '{storage.Name}'...");
-                System.Console.WriteLine($"Max degree of parallelism: {_maxDegreeOfParallelism}");
+                Console.WriteLine($"Processing {total} files from storage '{storage.Name}'...");
+                Console.WriteLine($"Max degree of parallelism: {_maxDegreeOfParallelism}");
                 _logger.LogInformation("Using max degree of parallelism: {MaxDegreeOfParallelism}", _maxDegreeOfParallelism);
                 DisplayProgress(0, 0, 0, total);
 
@@ -159,10 +146,10 @@ namespace PhotoBank.Console
                     DisplayProgress(Volatile.Read(ref processed), Volatile.Read(ref failed), Volatile.Read(ref duplicates), total);
                 });
 
-                System.Console.WriteLine();
+                Console.WriteLine();
                 _logger.LogInformation("Processing completed: {Processed} processed, {Failed} failed, {Duplicates} duplicates",
                     processed, failed, duplicates);
-                System.Console.WriteLine($"Done! Processed: {processed}, Failed: {failed}, Duplicates: {duplicates}");
+                Console.WriteLine($"Done! Processed: {processed}, Failed: {failed}, Duplicates: {duplicates}");
 
                 // Return non-zero exit code if there were failures
                 return failed > 0 ? 4 : 0; // Exit code 4 for "partial failure"
@@ -175,7 +162,7 @@ namespace PhotoBank.Console
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing storage {StorageId}", storage.Id);
-                System.Console.Error.WriteLine($"Error processing storage: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Error processing storage: {ex.Message}");
                 return 1;
             }
         }
@@ -190,7 +177,7 @@ namespace PhotoBank.Console
 
             lock (_progressLock)
             {
-                System.Console.Write($"\r[{bar}] {completed}/{total} files ({failed} failed, {duplicates} duplicates)");
+                Console.Write($"\r[{bar}] {completed}/{total} files ({failed} failed, {duplicates} duplicates)");
             }
         }
     }

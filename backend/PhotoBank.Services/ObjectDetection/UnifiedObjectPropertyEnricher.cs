@@ -130,12 +130,6 @@ public class UnifiedObjectPropertyEnricher : IEnricher
     /// </summary>
     private IReadOnlyList<DetectedObjectDto> GetObjectsFromYoloProvider(SourceDataDto sourceData, float scale)
     {
-        if (sourceData.PreviewImage == null)
-        {
-            _logger.LogDebug("No preview image available for YOLO object detection");
-            return [];
-        }
-
         var imageBytes = sourceData.PreviewImage.ToByteArray();
         return _provider.DetectObjects(imageBytes, scale);
     }
