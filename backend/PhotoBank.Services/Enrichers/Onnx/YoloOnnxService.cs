@@ -11,7 +11,7 @@ namespace PhotoBank.Services.Enrichers.Onnx;
 /// </summary>
 public interface IYoloOnnxService
 {
-    List<DetectedObjectOnnx> DetectObjects(byte[] imageData, float confidenceThreshold = 0.5f, float nmsThreshold = 0.45f);
+    List<DetectedObjectOnnx> DetectObjects(IMagickImage<byte> image, float confidenceThreshold = 0.5f, float nmsThreshold = 0.45f);
 }
 
 /// <summary>
@@ -48,12 +48,11 @@ public class YoloOnnxService : IYoloOnnxService
         _predictionEngine = predictionEngine ?? throw new ArgumentNullException(nameof(predictionEngine));
     }
 
-    public List<DetectedObjectOnnx> DetectObjects(byte[] imageData, float confidenceThreshold = 0.5f, float nmsThreshold = 0.45f)
+    public List<DetectedObjectOnnx> DetectObjects(IMagickImage<byte> image, float confidenceThreshold = 0.5f, float nmsThreshold = 0.45f)
     {
-        if (imageData == null || imageData.Length == 0)
-            throw new ArgumentException("Image data cannot be null or empty", nameof(imageData));
+        if (image == null)
+            throw new ArgumentNullException(nameof(image));
 
-        using var image = new MagickImage(imageData);
         var originalWidth = (int)image.Width;
         var originalHeight = (int)image.Height;
 
@@ -99,7 +98,7 @@ public class YoloOnnxService : IYoloOnnxService
     /// Prepare input with letterboxing: resize preserving aspect ratio and add padding.
     /// Returns the input tensor and letterbox parameters (scale, padX, padY) for coordinate conversion.
     /// </summary>
-    private static (YoloImageInput input, float scale, int padX, int padY) PrepareInputWithLetterbox(MagickImage image)
+    private static (YoloImageInput input, float scale, int padX, int padY) PrepareInputWithLetterbox(IMagickImage<byte> image)
     {
         var originalWidth = (int)image.Width;
         var originalHeight = (int)image.Height;
@@ -119,7 +118,7 @@ public class YoloOnnxService : IYoloOnnxService
         using var letterboxed = new MagickImage(MagickColors.Black, (uint)InputWidth, (uint)InputHeight);
 
         // Resize original image preserving aspect ratio
-        using var resized = (MagickImage)image.Clone();
+        using var resized = image.Clone();
         resized.Resize(newWidth, newHeight);
 
         // Copy resized image to center of letterboxed canvas
