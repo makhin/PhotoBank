@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PhotoBank.DependencyInjection;
-using PhotoBank.Services.Api;
 using PhotoBank.Services;
 using Serilog;
 using System.CommandLine;
@@ -12,7 +11,6 @@ namespace PhotoBank.Console
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading;
     using System.Threading.Tasks;
 
     public class Program
@@ -26,13 +24,13 @@ namespace PhotoBank.Console
             }
             catch (OperationCanceledException)
             {
-                System.Console.WriteLine("\nOperation cancelled by user.");
+                Console.WriteLine("\nOperation cancelled by user.");
                 return 130; // Standard exit code for SIGINT
             }
             catch (Exception ex)
             {
-                System.Console.Error.WriteLine($"Fatal error: {ex.Message}");
-                System.Console.Error.WriteLine(ex.StackTrace);
+                await Console.Error.WriteLineAsync($"Fatal error: {ex.Message}");
+                await Console.Error.WriteLineAsync(ex.StackTrace);
                 return 1;
             }
         }
@@ -40,11 +38,11 @@ namespace PhotoBank.Console
         private static RootCommand BuildCommandLine(string[] args)
         {
             var storageOption = new Option<int?>(
-                aliases: new[] { "--storage", "-s" },
+                aliases: ["--storage", "-s"],
                 description: "Storage ID to process files from");
 
             var noRegisterOption = new Option<bool>(
-                aliases: new[] { "--no-register" },
+                aliases: ["--no-register"],
                 description: "Skip person registration step",
                 getDefaultValue: () => false);
 
@@ -107,36 +105,36 @@ namespace PhotoBank.Console
                     })
                     .Build();
 
-                System.Console.WriteLine("Starting face embeddings migration...");
-                System.Console.WriteLine("This will process all faces without embeddings and extract embeddings from InsightFace API.");
-                System.Console.WriteLine();
+                Console.WriteLine("Starting face embeddings migration...");
+                Console.WriteLine("This will process all faces without embeddings and extract embeddings from InsightFace API.");
+                Console.WriteLine();
 
-                var recognitionService = host.Services.GetRequiredService<PhotoBank.Services.Recognition.IRecognitionService>();
+                var recognitionService = host.Services.GetRequiredService<Services.Recognition.IRecognitionService>();
                 var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
 
                 await recognitionService.MigrateEmbeddingsAsync(lifetime.ApplicationStopping);
 
-                System.Console.WriteLine();
-                System.Console.WriteLine("Migration completed successfully!");
+                Console.WriteLine();
+                Console.WriteLine("Migration completed successfully!");
 
                 await host.StopAsync();
                 return 0;
             }
             catch (OperationCanceledException)
             {
-                System.Console.WriteLine("\nMigration cancelled by user.");
+                Console.WriteLine("\nMigration cancelled by user.");
                 return 130;
             }
             catch (Exception ex)
             {
-                System.Console.Error.WriteLine($"Migration error: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Migration error: {ex.Message}");
                 Log.Fatal(ex, "Migration failed");
                 return 1;
             }
             finally
             {
                 host?.Dispose();
-                Log.CloseAndFlush();
+                await Log.CloseAndFlushAsync();
             }
         }
 
@@ -145,11 +143,11 @@ namespace PhotoBank.Console
             var command = new Command("delete-photos", "Delete photos and related S3 objects");
 
             var photoIdOption = new Option<int?>(
-                aliases: new[] { "--photo-id", "-p" },
+                aliases: ["--photo-id", "-p"],
                 description: "Delete a specific photo by ID");
 
             var lastOption = new Option<int?>(
-                aliases: new[] { "--last", "-l" },
+                aliases: ["--last", "-l"],
                 description: "Delete the last N photos ordered by ID");
 
             command.AddOption(photoIdOption);
@@ -162,7 +160,7 @@ namespace PhotoBank.Console
 
                 if (!photoId.HasValue && !lastCount.HasValue)
                 {
-                    System.Console.Error.WriteLine("Specify --photo-id to delete a photo or --last to delete the latest photos.");
+                    await Console.Error.WriteLineAsync("Specify --photo-id to delete a photo or --last to delete the latest photos.");
                     context.ExitCode = 1;
                     return;
                 }
@@ -206,7 +204,7 @@ namespace PhotoBank.Console
             }
             catch (InvalidOperationException ex)
             {
-                System.Console.Error.WriteLine($"Configuration error: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Configuration error: {ex.Message}");
                 return 2;
             }
             catch (OperationCanceledException)
@@ -216,14 +214,14 @@ namespace PhotoBank.Console
             }
             catch (Exception ex)
             {
-                System.Console.Error.WriteLine($"Application error: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Application error: {ex.Message}");
                 Log.Fatal(ex, "Application terminated unexpectedly");
                 return 1;
             }
             finally
             {
                 host?.Dispose();
-                Log.CloseAndFlush();
+                await Log.CloseAndFlushAsync();
             }
         }
 
@@ -254,14 +252,14 @@ namespace PhotoBank.Console
                 if (photoId.HasValue)
                 {
                     var deleted = await deletionService.DeletePhotoAsync(photoId.Value, lifetime.ApplicationStopping);
-                    System.Console.WriteLine(deleted
+                    Console.WriteLine(deleted
                         ? $"Deleted photo {photoId.Value}."
                         : $"Photo {photoId.Value} not found.");
                 }
                 else if (lastCount.HasValue)
                 {
                     var deleted = await deletionService.DeleteLastPhotosAsync(lastCount.Value, lifetime.ApplicationStopping);
-                    System.Console.WriteLine($"Deleted {deleted} photo(s) ordered by newest IDs.");
+                    Console.WriteLine($"Deleted {deleted} photo(s) ordered by newest IDs.");
                 }
 
                 await host.StopAsync();
@@ -269,15 +267,15 @@ namespace PhotoBank.Console
             }
             catch (OperationCanceledException)
             {
-                System.Console.WriteLine("\nDeletion cancelled by user.");
+                Console.WriteLine("\nDeletion cancelled by user.");
                 return 130;
             }
             catch (BatchPhotoDeletionException ex)
             {
-                System.Console.Error.WriteLine($"Deletion error: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Deletion error: {ex.Message}");
                 if (ex.FailedPhotoIds.Count > 0)
                 {
-                    System.Console.Error.WriteLine($"Failed photo IDs: {string.Join(", ", ex.FailedPhotoIds)}");
+                    await Console.Error.WriteLineAsync($"Failed photo IDs: {string.Join(", ", ex.FailedPhotoIds)}");
                 }
 
                 Log.Fatal(ex, "Batch photo deletion failed");
@@ -285,14 +283,14 @@ namespace PhotoBank.Console
             }
             catch (Exception ex)
             {
-                System.Console.Error.WriteLine($"Deletion error: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Deletion error: {ex.Message}");
                 Log.Fatal(ex, "Photo deletion failed");
                 return 1;
             }
             finally
             {
                 host?.Dispose();
-                Log.CloseAndFlush();
+                await Log.CloseAndFlushAsync();
             }
         }
 
@@ -301,30 +299,30 @@ namespace PhotoBank.Console
             var command = new Command("re-enrich", "Re-run enrichers on already processed photos");
 
             var storageOption = new Option<int?>(
-                aliases: new[] { "--storage", "-s" },
+                aliases: ["--storage", "-s"],
                 description: "Storage ID to filter photos");
 
             var photoIdsOption = new Option<int[]>(
-                aliases: new[] { "--photo-ids", "-p" },
+                aliases: ["--photo-ids", "-p"],
                 description: "Specific photo IDs to re-enrich (comma-separated)")
             { AllowMultipleArgumentsPerToken = true };
 
             var enrichersOption = new Option<string[]>(
-                aliases: new[] { "--enrichers", "-e" },
+                aliases: ["--enrichers", "-e"],
                 description: "Enricher names to run (e.g., MetadataEnricher, CaptionEnricher). If not specified, runs all active enrichers.")
             { AllowMultipleArgumentsPerToken = true };
 
             var missingOnlyOption = new Option<bool>(
-                aliases: new[] { "--missing-only", "-m" },
+                aliases: ["--missing-only", "-m"],
                 description: "Only apply enrichers that haven't been run yet",
                 getDefaultValue: () => false);
 
             var limitOption = new Option<int?>(
-                aliases: new[] { "--limit", "-l" },
+                aliases: ["--limit", "-l"],
                 description: "Maximum number of photos to process");
 
             var dryRunOption = new Option<bool>(
-                aliases: new[] { "--dry-run" },
+                aliases: ["--dry-run"],
                 description: "Show what would be processed without making changes",
                 getDefaultValue: () => false);
 
@@ -390,25 +388,25 @@ namespace PhotoBank.Console
 
                 using (var initScope = scopeFactory.CreateScope())
                 {
-                    var activeEnricherProvider = initScope.ServiceProvider.GetRequiredService<PhotoBank.Services.Enrichment.IActiveEnricherProvider>();
-                    var enricherRepository = initScope.ServiceProvider.GetRequiredService<PhotoBank.Repositories.IRepository<PhotoBank.DbContext.Models.Enricher>>();
+                    var activeEnricherProvider = initScope.ServiceProvider.GetRequiredService<Services.Enrichment.IActiveEnricherProvider>();
+                    var enricherRepository = initScope.ServiceProvider.GetRequiredService<Repositories.IRepository<DbContext.Models.Enricher>>();
                     var context = initScope.ServiceProvider.GetRequiredService<PhotoBank.DbContext.DbContext.PhotoBankDbContext>();
 
                     // Resolve enricher types
                     if (enricherNames != null && enricherNames.Length > 0)
                     {
                         enricherTypes = ResolveEnricherTypes(enricherNames, initScope.ServiceProvider);
-                        System.Console.WriteLine($"Enrichers to run: {string.Join(", ", enricherTypes.Select(t => t.Name))}");
+                        Console.WriteLine($"Enrichers to run: {string.Join(", ", enricherTypes.Select(t => t.Name))}");
                     }
                     else
                     {
                         enricherTypes = activeEnricherProvider.GetActiveEnricherTypes(enricherRepository);
-                        System.Console.WriteLine($"Using all active enrichers: {string.Join(", ", enricherTypes.Select(t => t.Name))}");
+                        Console.WriteLine($"Using all active enrichers: {string.Join(", ", enricherTypes.Select(t => t.Name))}");
                     }
 
                     if (!enricherTypes.Any())
                     {
-                        System.Console.WriteLine("No enrichers to run.");
+                        Console.WriteLine("No enrichers to run.");
                         return 0;
                     }
 
@@ -418,43 +416,43 @@ namespace PhotoBank.Console
                     if (photoIds != null && photoIds.Length > 0)
                     {
                         query = query.Where(p => photoIds.Contains(p.Id));
-                        System.Console.WriteLine($"Filtering by photo IDs: {string.Join(", ", photoIds)}");
+                        Console.WriteLine($"Filtering by photo IDs: {string.Join(", ", photoIds)}");
                     }
                     else if (storageId.HasValue)
                     {
                         query = query.Where(p => p.StorageId == storageId.Value);
-                        System.Console.WriteLine($"Filtering by storage ID: {storageId}");
+                        Console.WriteLine($"Filtering by storage ID: {storageId}");
                     }
 
                     if (limit.HasValue)
                     {
                         query = query.Take(limit.Value);
-                        System.Console.WriteLine($"Limiting to {limit} photos");
+                        Console.WriteLine($"Limiting to {limit} photos");
                     }
 
                     targetPhotoIds = await query.Select(p => p.Id).ToListAsync(ct);
-                    System.Console.WriteLine($"Found {targetPhotoIds.Count} photos to process");
+                    Console.WriteLine($"Found {targetPhotoIds.Count} photos to process");
                 }
 
                 if (dryRun)
                 {
-                    System.Console.WriteLine();
-                    System.Console.WriteLine("=== DRY RUN - No changes will be made ===");
-                    System.Console.WriteLine($"Would process {targetPhotoIds.Count} photos");
-                    System.Console.WriteLine($"Mode: {(missingOnly ? "Missing enrichers only" : "Force re-run all specified enrichers")}");
-                    System.Console.WriteLine($"Enrichers: {string.Join(", ", enricherTypes.Select(t => t.Name))}");
+                    Console.WriteLine();
+                    Console.WriteLine("=== DRY RUN - No changes will be made ===");
+                    Console.WriteLine($"Would process {targetPhotoIds.Count} photos");
+                    Console.WriteLine($"Mode: {(missingOnly ? "Missing enrichers only" : "Force re-run all specified enrichers")}");
+                    Console.WriteLine($"Enrichers: {string.Join(", ", enricherTypes.Select(t => t.Name))}");
                     return 0;
                 }
 
                 if (targetPhotoIds.Count == 0)
                 {
-                    System.Console.WriteLine("No photos to process.");
+                    Console.WriteLine("No photos to process.");
                     return 0;
                 }
 
-                System.Console.WriteLine();
-                System.Console.WriteLine($"Starting re-enrichment ({(missingOnly ? "missing only" : "force re-run")})...");
-                System.Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine($"Starting re-enrichment ({(missingOnly ? "missing only" : "force re-run")})...");
+                Console.WriteLine();
 
                 var processed = 0;
                 var successful = 0;
@@ -471,7 +469,7 @@ namespace PhotoBank.Console
 
                     // Create a new scope for each photo to keep memory bounded
                     using var photoScope = scopeFactory.CreateScope();
-                    var reEnrichService = photoScope.ServiceProvider.GetRequiredService<PhotoBank.Services.Enrichment.IReEnrichmentService>();
+                    var reEnrichService = photoScope.ServiceProvider.GetRequiredService<Services.Enrichment.IReEnrichmentService>();
 
                     try
                     {
@@ -488,18 +486,18 @@ namespace PhotoBank.Console
                         if (result)
                         {
                             successful++;
-                            System.Console.WriteLine($"{progress} Photo {photoId}: OK");
+                            Console.WriteLine($"{progress} Photo {photoId}: OK");
                         }
                         else
                         {
                             skipped++;
-                            System.Console.WriteLine($"{progress} Photo {photoId}: Skipped (not found, no files, or already complete)");
+                            Console.WriteLine($"{progress} Photo {photoId}: Skipped (not found, no files, or already complete)");
                         }
                     }
                     catch (Exception ex)
                     {
                         failed++;
-                        System.Console.WriteLine($"{progress} Photo {photoId}: FAILED - {ex.Message}");
+                        Console.WriteLine($"{progress} Photo {photoId}: FAILED - {ex.Message}");
                     }
 
                     // Progress summary every 100 photos
@@ -508,44 +506,43 @@ namespace PhotoBank.Console
                         var elapsed = DateTime.UtcNow - startTime;
                         var rate = processed / elapsed.TotalSeconds;
                         var remaining = TimeSpan.FromSeconds((targetPhotoIds.Count - processed) / rate);
-                        System.Console.WriteLine($"  Progress: {processed}/{targetPhotoIds.Count} ({rate:F1}/sec, ETA: {remaining:hh\\:mm\\:ss})");
+                        Console.WriteLine($"  Progress: {processed}/{targetPhotoIds.Count} ({rate:F1}/sec, ETA: {remaining:hh\\:mm\\:ss})");
                     }
                 }
 
                 var totalElapsed = DateTime.UtcNow - startTime;
-                System.Console.WriteLine();
-                System.Console.WriteLine("=== Re-enrichment complete ===");
-                System.Console.WriteLine($"Total: {processed} | Successful: {successful} | Skipped: {skipped} | Failed: {failed}");
-                System.Console.WriteLine($"Time: {totalElapsed:hh\\:mm\\:ss}");
+                Console.WriteLine();
+                Console.WriteLine("=== Re-enrichment complete ===");
+                Console.WriteLine($"Total: {processed} | Successful: {successful} | Skipped: {skipped} | Failed: {failed}");
+                Console.WriteLine($@"Time: {totalElapsed:hh\:mm\:ss}");
 
-                await host.StopAsync();
+                await host.StopAsync(ct);
                 return failed > 0 ? 1 : 0;
             }
             catch (OperationCanceledException)
             {
-                System.Console.WriteLine("\nRe-enrichment cancelled by user.");
+                Console.WriteLine("\nRe-enrichment cancelled by user.");
                 return 130;
             }
             catch (Exception ex)
             {
-                System.Console.Error.WriteLine($"Re-enrichment error: {ex.Message}");
+                await Console.Error.WriteLineAsync($"Re-enrichment error: {ex.Message}");
                 Log.Fatal(ex, "Re-enrichment failed");
                 return 1;
             }
             finally
             {
                 host?.Dispose();
-                Log.CloseAndFlush();
+                await Log.CloseAndFlushAsync();
             }
         }
 
         private static IReadOnlyCollection<Type> ResolveEnricherTypes(string[] enricherNames, IServiceProvider serviceProvider)
         {
-            var enricherAssembly = typeof(PhotoBank.Services.Enrichers.IEnricher).Assembly;
+            var enricherAssembly = typeof(Services.Enrichers.IEnricher).Assembly;
             var allEnricherTypes = enricherAssembly.GetTypes()
-                .Where(t => typeof(PhotoBank.Services.Enrichers.IEnricher).IsAssignableFrom(t)
-                         && !t.IsInterface
-                         && !t.IsAbstract)
+                .Where(t => typeof(Services.Enrichers.IEnricher).IsAssignableFrom(t)
+                            && t is {IsInterface: false, IsAbstract: false})
                 .ToDictionary(t => t.Name, t => t, StringComparer.OrdinalIgnoreCase);
 
             // Get list of registered enrichers for better error messages

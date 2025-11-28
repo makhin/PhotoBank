@@ -29,13 +29,13 @@ public class UnifiedFaceEnricher : IEnricher
     }
 
     public EnricherType EnricherType => EnricherType.Face;
-    public Type[] Dependencies => new[] { typeof(PreviewEnricher) };
+    public Type[] Dependencies => [typeof(PreviewEnricher)];
 
     public async Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
     {
-        if (sourceData.PreviewImage is null)
+        if (sourceData.PreviewImage == null)
         {
-            _logger.LogDebug("No preview image available for photo {PhotoId}, skipping face detection", photo.Id);
+            _logger.LogDebug("No preview image available for photo {PhotoId}", photo.Id);
             photo.FaceIdentifyStatus = FaceIdentifyStatus.NotDetected;
             return;
         }
@@ -55,7 +55,7 @@ public class UnifiedFaceEnricher : IEnricher
 
             _logger.LogInformation("Detected {FaceCount} face(s) in photo {PhotoId}", detectedFaces.Count, photo.Id);
             photo.FaceIdentifyStatus = FaceIdentifyStatus.Detected;
-            photo.Faces = new List<Face>();
+            photo.Faces = [];
 
             foreach (var detectedFace in detectedFaces)
             {
@@ -98,7 +98,11 @@ public class UnifiedFaceEnricher : IEnricher
         var face = new Face
         {
             PhotoId = photo.Id,
-            IdentityStatus = IdentityStatus.NotIdentified,
+            IdentityStatus = detectedFace.IdentifiedPersonId.HasValue
+                ? IdentityStatus.Identified
+                : IdentityStatus.NotIdentified,
+            PersonId = detectedFace.IdentifiedPersonId,
+            IdentifiedWithConfidence = detectedFace.IdentificationConfidence ?? 0.0,
             Rectangle = detectedFace.BoundingBox != null
                 ? GeoWrapper.GetRectangle(
                     detectedFace.BoundingBox,
@@ -112,11 +116,6 @@ public class UnifiedFaceEnricher : IEnricher
             Provider = _faceService.ProviderKind.ToString(),
             FaceAttributes = JsonConvert.SerializeObject(new
             {
-                detectedFace.ProviderFaceId,
-                detectedFace.Confidence,
-                detectedFace.Age,
-                detectedFace.Gender,
-                detectedFace.BoundingBox,
                 detectedFace.Emotion,
                 detectedFace.EmotionScores
             })
@@ -125,11 +124,11 @@ public class UnifiedFaceEnricher : IEnricher
         photo.Faces.Add(face);
 
         _logger.LogDebug(
-            "Processed face {FaceId} for photo {PhotoId}: Age={Age}, Gender={Gender}, Confidence={Confidence}, HasBoundingBox={HasBoundingBox}",
-            detectedFace.ProviderFaceId, photo.Id, detectedFace.Age, detectedFace.Gender, detectedFace.Confidence, detectedFace.BoundingBox != null);
+            "Processed face {FaceId} for photo {PhotoId}: Age={Age}, Gender={Gender}, Confidence={Confidence}, HasBoundingBox={HasBoundingBox}, Identified={Identified}, PersonId={PersonId}, IdentificationConfidence={IdentificationConfidence}",
+            detectedFace.ProviderFaceId, photo.Id, detectedFace.Age, detectedFace.Gender, detectedFace.Confidence, detectedFace.BoundingBox != null, detectedFace.IdentifiedPersonId.HasValue, detectedFace.IdentifiedPersonId, detectedFace.IdentificationConfidence);
     }
 
-    private async Task<byte[]> CreateFacePreviewAsync(
+    private static async Task<byte[]> CreateFacePreviewAsync(
         IMagickImage<byte> previewImage,
         FaceRecognition.Abstractions.DetectedFaceDto detectedFace)
     {

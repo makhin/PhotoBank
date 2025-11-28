@@ -39,8 +39,7 @@ public class NsfwDetector : INsfwDetector
             throw new System.IO.FileNotFoundException($"NSFW model file not found: {_options.ModelPath}");
 
         var sessionOptions = new SessionOptions();
-        // Uncomment for GPU support (requires Microsoft.ML.OnnxRuntime.Gpu)
-        // sessionOptions.AppendExecutionProvider_CUDA(0);
+        sessionOptions.AppendExecutionProvider_CUDA(0); // Use GPU device 0
 
         _session = new InferenceSession(_options.ModelPath, sessionOptions);
     }

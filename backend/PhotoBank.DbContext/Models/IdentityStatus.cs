@@ -1,6 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace PhotoBank.DbContext.Models
+﻿namespace PhotoBank.DbContext.Models
 {
     public enum IdentityStatus
     {
