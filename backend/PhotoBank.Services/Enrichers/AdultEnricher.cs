@@ -12,18 +12,18 @@ using PhotoBank.Services.Models;
 namespace PhotoBank.Services.Enrichers;
 
 /// <summary>
-/// Enricher that detects adult content using local ONNX model
+/// Enricher that detects adult content using NudeNet ONNX model
 /// </summary>
 public class AdultEnricher : IEnricher
 {
-    private readonly INsfwDetector _detector;
+    private readonly INudeNetDetector _detector;
     private readonly ILogger<AdultEnricher> _logger;
 
     public EnricherType EnricherType => EnricherType.Adult;
 
     public Type[] Dependencies => [typeof(PreviewEnricher)];
 
-    public AdultEnricher(INsfwDetector detector, ILogger<AdultEnricher> logger)
+    public AdultEnricher(INudeNetDetector detector, ILogger<AdultEnricher> logger)
     {
         _detector = detector ?? throw new ArgumentNullException(nameof(detector));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -33,13 +33,13 @@ public class AdultEnricher : IEnricher
     {
         if (sourceData?.PreviewImage == null)
         {
-            _logger.LogWarning("No preview image available for NSFW detection for photo {PhotoId}", photo.Id);
+            _logger.LogWarning("No preview image available for NudeNet detection for photo {PhotoId}", photo.Id);
             return;
         }
 
         try
         {
-            _logger.LogDebug("Running NSFW detection for photo {PhotoId}", photo.Id);
+            _logger.LogDebug("Running NudeNet detection for photo {PhotoId}", photo.Id);
 
             // Run detection asynchronously to avoid blocking
             var result = await Task.Run(() => _detector.Detect(sourceData.PreviewImage), cancellationToken);
@@ -51,19 +51,19 @@ public class AdultEnricher : IEnricher
             photo.RacyScore = result.RacyConfidence;
 
             _logger.LogDebug(
-                "NSFW detection completed for photo {PhotoId}: IsNsfw={IsNsfw} (confidence={NsfwConfidence:F2}), IsRacy={IsRacy} (confidence={RacyConfidence:F2})",
-                photo.Id, result.IsNsfw, result.NsfwConfidence, result.IsRacy, result.RacyConfidence);
+                "NudeNet detection completed for photo {PhotoId}: IsNsfw={IsNsfw} (confidence={NsfwConfidence:F2}), IsRacy={IsRacy} (confidence={RacyConfidence:F2}), Detections={DetectionCount}",
+                photo.Id, result.IsNsfw, result.NsfwConfidence, result.IsRacy, result.RacyConfidence, result.Detections.Count);
 
-            if (_logger.IsEnabled(LogLevel.Trace))
+            if (_logger.IsEnabled(LogLevel.Trace) && result.DetectionCounts.Any())
             {
-                _logger.LogTrace("NSFW scores for photo {PhotoId}: {Scores}",
+                _logger.LogTrace("NudeNet detections for photo {PhotoId}: {Detections}",
                     photo.Id,
-                    string.Join(", ", result.Scores.Select(kvp => $"{kvp.Key}={kvp.Value:F3}")));
+                    string.Join(", ", result.DetectionCounts.Select(kvp => $"{kvp.Key}={kvp.Value}")));
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during NSFW detection for photo {PhotoId}", photo.Id);
+            _logger.LogError(ex, "Error during NudeNet detection for photo {PhotoId}", photo.Id);
             throw;
         }
     }
