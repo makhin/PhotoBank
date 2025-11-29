@@ -35,7 +35,7 @@ public static class OnnxInferenceHelper
             throw new ArgumentException("Input name cannot be null or empty", nameof(inputName));
 
         // Use DisposableNamedOnnxValue with explicit using for clarity and proper resource disposal
-        using var input = DisposableNamedOnnxValue.CreateFromTensor(inputName, tensor);
+        var input = NamedOnnxValue.CreateFromTensor(inputName, tensor);
         using var results = session.Run(new[] { input });
         return results.First().AsEnumerable<float>().ToArray();
     }

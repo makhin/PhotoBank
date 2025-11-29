@@ -155,7 +155,7 @@ public class UnifiedObjectPropertyEnricherTests
 
         var mockProvider = new Mock<IObjectDetectionProvider>();
         mockProvider.Setup(p => p.Kind).Returns(ObjectDetectionProviderKind.YoloOnnx);
-        mockProvider.Setup(p => p.DetectObjects(imageBytes, 1))
+        mockProvider.Setup(p => p.DetectObjects(sourceData, 1))
             .Returns(new List<DetectedObjectDto>
             {
                 new DetectedObjectDto("car", 0.9f, 10, 10, 50, 50),
@@ -324,7 +324,7 @@ public class UnifiedObjectPropertyEnricherTests
         // Assert
         photo.ObjectProperties.Should().BeNullOrEmpty();
         mockProvider.Verify(
-            p => p.DetectObjects(It.IsAny<byte[]>(), It.IsAny<float>()),
+            p => p.DetectObjects(It.IsAny<SourceDataDto>(), It.IsAny<float>()),
             Times.Never);
     }
 }

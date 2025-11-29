@@ -224,8 +224,8 @@ public class PreviewEnricherTests
 
         // Assert
         sourceData.LetterboxScale.Should().BeGreaterThan(0);
-        sourceData.LetterboxPadX.Should().BeGreaterOrEqualTo(0);
-        sourceData.LetterboxPadY.Should().BeGreaterOrEqualTo(0);
+        sourceData.LetterboxPadX.Should().BeGreaterThanOrEqualTo(0);
+        sourceData.LetterboxPadY.Should().BeGreaterThanOrEqualTo(0);
     }
 
     // Delegate for mocking out parameter
