@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ImageMagick;
+using PhotoBank.Services.Enrichers.ObjectDetection.Abstractions;
 using PhotoBank.Services.ImageAnalysis;
 using PhotoBank.Services.Models;
-using PhotoBank.Services.ObjectDetection.Abstractions;
 
-namespace PhotoBank.Services.ObjectDetection;
+namespace PhotoBank.Services.Enrichers.ObjectDetection;
 
 /// <summary>
 /// Object detection provider using Azure Computer Vision ImageAnalysis.

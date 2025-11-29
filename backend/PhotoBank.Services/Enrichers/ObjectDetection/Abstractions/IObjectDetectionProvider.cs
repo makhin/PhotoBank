@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using ImageMagick;
 using PhotoBank.Services.Models;
 
-namespace PhotoBank.Services.ObjectDetection.Abstractions;
+namespace PhotoBank.Services.Enrichers.ObjectDetection.Abstractions;
 
 /// <summary>
 /// Provider kind for object detection.

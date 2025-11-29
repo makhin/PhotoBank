@@ -9,7 +9,7 @@ namespace PhotoBank.Services.Enrichers
     public class ColorEnricher : IEnricher
     {
         public EnricherType EnricherType => EnricherType.Color;
-        public Type[] Dependencies => new[] { typeof(AnalyzeEnricher) };
+        public Type[] Dependencies => [typeof(AnalyzeEnricher)];
 
         public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {

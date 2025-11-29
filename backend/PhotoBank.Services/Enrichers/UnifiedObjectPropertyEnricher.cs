@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
-using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.Enrichers.ObjectDetection;
+using PhotoBank.Services.Enrichers.ObjectDetection.Abstractions;
 using PhotoBank.Services.Models;
-using PhotoBank.Services.ObjectDetection.Abstractions;
 
-namespace PhotoBank.Services.ObjectDetection;
+namespace PhotoBank.Services.Enrichers;
 
 /// <summary>
 /// Unified object detection enricher that works with any object detection provider

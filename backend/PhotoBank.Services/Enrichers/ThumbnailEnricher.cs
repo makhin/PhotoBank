@@ -13,8 +13,7 @@ public sealed class ThumbnailEnricher : IEnricher
 {
     public EnricherType EnricherType => EnricherType.Thumbnail;
 
-    private static readonly Type[] s_dependencies = { typeof(PreviewEnricher) };
-    public Type[] Dependencies => s_dependencies;
+    public Type[] Dependencies => [typeof(PreviewEnricher)];
 
     private const int Width = 50;
     private const int Height = 50;

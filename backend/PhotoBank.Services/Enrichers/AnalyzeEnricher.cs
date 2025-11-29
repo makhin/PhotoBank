@@ -12,8 +12,6 @@ public sealed class AnalyzeEnricher : IEnricher
 {
     private readonly IImageAnalyzer _imageAnalyzer;
 
-    private static readonly Type[] s_dependencies = [typeof(AdultEnricher)];
-
     public AnalyzeEnricher(IImageAnalyzer imageAnalyzer)
     {
         _imageAnalyzer = imageAnalyzer ?? throw new ArgumentNullException(nameof(imageAnalyzer));
@@ -21,7 +19,7 @@ public sealed class AnalyzeEnricher : IEnricher
 
     public EnricherType EnricherType => EnricherType.Analyze;
 
-    public Type[] Dependencies => s_dependencies;
+    public Type[] Dependencies => (Type[]) [typeof(AdultEnricher)];
 
     public async Task EnrichAsync(Photo photo, SourceDataDto source, CancellationToken cancellationToken = default)
     {

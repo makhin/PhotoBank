@@ -21,9 +21,9 @@ using PhotoBank.Services.Enrichers.Onnx;
 using PhotoBank.Services.Enrichers.Services;
 using PhotoBank.Services.FaceRecognition;
 using PhotoBank.Services.ImageAnalysis;
-using PhotoBank.Services.ObjectDetection;
-using PhotoBank.Services.ObjectDetection.Abstractions;
 using PhotoBank.Services.Recognition;
+using PhotoBank.Services.Enrichers.ObjectDetection;
+using PhotoBank.Services.Enrichers.ObjectDetection.Abstractions;
 
 namespace PhotoBank.DependencyInjection;
 

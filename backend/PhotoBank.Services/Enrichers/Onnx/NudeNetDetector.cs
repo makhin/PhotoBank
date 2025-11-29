@@ -42,7 +42,6 @@ public class NudeNetDetector : OnnxInferenceServiceBase, INudeNetDetector
     // YOLOv8 constants for 320n model (most common)
     // For 320x320: predictions = 1600 + 400 + 100 = 2100
     // For 640x640: predictions = 6400 + 1600 + 400 = 8400
-    private const int YoloV8OutputSize320 = 84; // Not used, but for reference: 4 bbox + 80 COCO classes
     private const int NudeNetOutputSize = 22; // 4 bbox + 18 NudeNet classes
 
     public NudeNetDetector(IOptions<NudeNetOnnxOptions> options)
@@ -80,7 +79,7 @@ public class NudeNetDetector : OnnxInferenceServiceBase, INudeNetDetector
         // Run inference using base class method (thread-safe for concurrent operations)
         var outputArray = ExecuteInference("images", tensor);
 
-        if (outputArray == null || outputArray.Length == 0)
+        if (outputArray.Length == 0)
             return CreateEmptyResult();
 
         // Parse YOLOv8 output format

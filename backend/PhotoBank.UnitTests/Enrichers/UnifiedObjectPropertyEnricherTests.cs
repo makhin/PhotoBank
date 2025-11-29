@@ -10,10 +10,10 @@ using NUnit.Framework;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Enrichers;
+using PhotoBank.Services.Enrichers.ObjectDetection;
+using PhotoBank.Services.Enrichers.ObjectDetection.Abstractions;
 using PhotoBank.Services.ImageAnalysis;
 using PhotoBank.Services.Models;
-using PhotoBank.Services.ObjectDetection;
-using PhotoBank.Services.ObjectDetection.Abstractions;
 
 namespace PhotoBank.UnitTests.Enrichers;
 

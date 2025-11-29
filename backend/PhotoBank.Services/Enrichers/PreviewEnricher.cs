@@ -19,8 +19,7 @@ public sealed class PreviewEnricher : IEnricher
 
     public EnricherType EnricherType => EnricherType.Preview;
 
-    private static readonly Type[] s_dependencies = Array.Empty<Type>();
-    public Type[] Dependencies => s_dependencies;
+    public Type[] Dependencies => [];
 
     public Task EnrichAsync(Photo photo, SourceDataDto source, CancellationToken cancellationToken = default)
     {

@@ -10,7 +10,7 @@ namespace PhotoBank.Services.Enrichers
     public class CaptionEnricher : IEnricher
     {
         public EnricherType EnricherType => EnricherType.Caption;
-        public Type[] Dependencies => new Type[1] { typeof(AnalyzeEnricher) };
+        public Type[] Dependencies => [typeof(AnalyzeEnricher)];
 
         public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {

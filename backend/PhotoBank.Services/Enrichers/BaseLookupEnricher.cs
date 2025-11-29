@@ -37,7 +37,7 @@ namespace PhotoBank.Services.Enrichers
             _linkFactory = linkFactory;
         }
 
-        public virtual Type[] Dependencies => new[] { typeof(AnalyzeEnricher) };
+        public virtual Type[] Dependencies => [typeof(AnalyzeEnricher)];
 
         public abstract EnricherType EnricherType { get; }
 

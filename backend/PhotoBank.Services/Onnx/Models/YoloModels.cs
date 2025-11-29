@@ -39,8 +39,8 @@ public class DetectedObjectOnnx
 /// </summary>
 public static class CocoClassNames
 {
-    public static readonly string[] Names = new[]
-    {
+    public static readonly string[] Names =
+    [
         "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
         "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
         "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
@@ -50,5 +50,5 @@ public static class CocoClassNames
         "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone",
         "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear",
         "hair drier", "toothbrush"
-    };
+    ];
 }

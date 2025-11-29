@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using ImageMagick;
 using Microsoft.Extensions.Options;
+using PhotoBank.Services.Enrichers.ObjectDetection.Abstractions;
 using PhotoBank.Services.Enrichers.Onnx;
 using PhotoBank.Services.Models;
-using PhotoBank.Services.ObjectDetection.Abstractions;
 
-namespace PhotoBank.Services.ObjectDetection;
+namespace PhotoBank.Services.Enrichers.ObjectDetection;
 
 /// <summary>
 /// Object detection provider using YOLO ONNX model.

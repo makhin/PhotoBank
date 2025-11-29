@@ -25,7 +25,7 @@ namespace PhotoBank.Services.Enrichers
         }
 
         public EnricherType EnricherType => EnricherType.Metadata;
-        public Type[] Dependencies => new Type[1] { typeof(PreviewEnricher) };
+        public Type[] Dependencies => [typeof(PreviewEnricher)];
 
         public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
@@ -54,7 +54,7 @@ namespace PhotoBank.Services.Enrichers
 
             if (exifSubIfdDirectory != null || exifIfd0Directory != null || fileMetadataDirectory != null)
             {
-                photo.TakenDate = GetTakenDate(new Directory[] { exifIfd0Directory, exifSubIfdDirectory, fileMetadataDirectory });
+                photo.TakenDate = GetTakenDate([exifIfd0Directory, exifSubIfdDirectory, fileMetadataDirectory]);
             }
 
             if (gpsDirectory != null)
