@@ -17,14 +17,14 @@ namespace PhotoBank.UnitTests.Enrichers;
 [TestFixture]
 public class AdultEnricherTests
 {
-    private Mock<INsfwDetector> _mockDetector;
+    private Mock<INudeNetDetector> _mockDetector;
     private Mock<ILogger<AdultEnricher>> _mockLogger;
     private AdultEnricher _enricher;
 
     [SetUp]
     public void Setup()
     {
-        _mockDetector = new Mock<INsfwDetector>();
+        _mockDetector = new Mock<INudeNetDetector>();
         _mockLogger = new Mock<ILogger<AdultEnricher>>();
 
         _enricher = new AdultEnricher(_mockDetector.Object, _mockLogger.Object);
@@ -55,19 +55,16 @@ public class AdultEnricherTests
             PreviewImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
         };
 
-        var detectionResult = new NsfwDetectionResult
+        var detectionResult = new NudeNetDetectionResult
         {
             IsNsfw = true,
-            NsfwConfidence = 0.872f, // Raw porn score (highest NSFW indicator)
+            NsfwConfidence = 0.872f, // High explicit content confidence
             IsRacy = false,
-            RacyConfidence = 0.098f, // Raw sexy score
-            Scores = new Dictionary<string, float>
+            RacyConfidence = 0.098f,
+            Detections = new List<PhotoBank.Services.Onnx.Models.DetectedObjectOnnx>(),
+            DetectionCounts = new Dictionary<string, int>
             {
-                { "porn", 0.872f },
-                { "sexy", 0.098f },
-                { "hentai", 0.012f },
-                { "neutral", 0.015f },
-                { "drawings", 0.003f }
+                { "FEMALE_BREAST_EXPOSED", 2 }
             }
         };
 
@@ -97,19 +94,17 @@ public class AdultEnricherTests
             PreviewImage = new MagickImage(MagickColors.Blue, 100, 100) { Format = MagickFormat.Jpeg }
         };
 
-        var detectionResult = new NsfwDetectionResult
+        var detectionResult = new NudeNetDetectionResult
         {
             IsNsfw = false,
             NsfwConfidence = 0.35f,
             IsRacy = true,
             RacyConfidence = 0.65f,
-            Scores = new Dictionary<string, float>
+            Detections = new List<PhotoBank.Services.Onnx.Models.DetectedObjectOnnx>(),
+            DetectionCounts = new Dictionary<string, int>
             {
-                { "porn", 0.05f },
-                { "sexy", 0.65f },
-                { "hentai", 0.02f },
-                { "neutral", 0.25f },
-                { "drawings", 0.03f }
+                { "BUTTOCKS_EXPOSED", 1 },
+                { "BELLY_EXPOSED", 1 }
             }
         };
 
@@ -137,19 +132,17 @@ public class AdultEnricherTests
             PreviewImage = new MagickImage(MagickColors.Green, 100, 100) { Format = MagickFormat.Jpeg }
         };
 
-        var detectionResult = new NsfwDetectionResult
+        var detectionResult = new NudeNetDetectionResult
         {
             IsNsfw = false,
-            NsfwConfidence = 0.032f, // Max(porn=0.01, sexy*0.8=0.032, hentai=0.01)
+            NsfwConfidence = 0.032f,
             IsRacy = false,
-            RacyConfidence = 0.04f, // Raw sexy score
-            Scores = new Dictionary<string, float>
+            RacyConfidence = 0.04f,
+            Detections = new List<PhotoBank.Services.Onnx.Models.DetectedObjectOnnx>(),
+            DetectionCounts = new Dictionary<string, int>
             {
-                { "porn", 0.01f },
-                { "sexy", 0.04f },
-                { "hentai", 0.01f },
-                { "neutral", 0.92f },
-                { "drawings", 0.02f }
+                { "FACE_FEMALE", 1 },
+                { "FACE_MALE", 1 }
             }
         };
 
@@ -227,7 +220,7 @@ public class AdultEnricherTests
             x => x.Log(
                 LogLevel.Error,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Error during NSFW detection")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Error during NudeNet detection")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
