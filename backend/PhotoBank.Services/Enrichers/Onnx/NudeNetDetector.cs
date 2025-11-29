@@ -15,7 +15,22 @@ namespace PhotoBank.Services.Enrichers.Onnx;
 /// </summary>
 public interface INudeNetDetector : IDisposable
 {
-    NudeNetDetectionResult Detect(IMagickImage<byte> image);
+    /// <summary>
+    /// Detects NSFW content using pre-prepared letterboxed 640x640 image.
+    /// </summary>
+    /// <param name="letterboxedImage">Pre-prepared 640x640 letterboxed image.</param>
+    /// <param name="originalWidth">Original image width (before letterboxing).</param>
+    /// <param name="originalHeight">Original image height (before letterboxing).</param>
+    /// <param name="letterboxScale">Scale factor used for letterboxing.</param>
+    /// <param name="padX">Horizontal padding used for letterboxing.</param>
+    /// <param name="padY">Vertical padding used for letterboxing.</param>
+    NudeNetDetectionResult Detect(
+        IMagickImage<byte> letterboxedImage,
+        int originalWidth,
+        int originalHeight,
+        float letterboxScale,
+        int padX,
+        int padY);
 }
 
 public class NudeNetDetector : OnnxInferenceServiceBase, INudeNetDetector
@@ -42,16 +57,22 @@ public class NudeNetDetector : OnnxInferenceServiceBase, INudeNetDetector
         InitializeSession(_options.ModelPath, useCuda: true, cudaDeviceId: 0);
     }
 
-    public NudeNetDetectionResult Detect(IMagickImage<byte> image)
+    public NudeNetDetectionResult Detect(
+        IMagickImage<byte> letterboxedImage,
+        int originalWidth,
+        int originalHeight,
+        float letterboxScale,
+        int padX,
+        int padY)
     {
-        if (image == null)
-            throw new ArgumentNullException(nameof(image));
+        if (letterboxedImage == null)
+            throw new ArgumentNullException(nameof(letterboxedImage));
 
-        var originalWidth = (int)image.Width;
-        var originalHeight = (int)image.Height;
+        if (letterboxedImage.Width != _inputSize || letterboxedImage.Height != _inputSize)
+            throw new ArgumentException($"Expected letterboxed image size {_inputSize}x{_inputSize}, but got {letterboxedImage.Width}x{letterboxedImage.Height}");
 
-        // Prepare input with letterboxing (preserve aspect ratio + padding)
-        var (inputData, scale, padX, padY) = PrepareInputWithLetterbox(image);
+        // Convert letterboxed image to tensor
+        var inputData = ImageToTensor(letterboxedImage);
 
         // Create tensor from input data [1, 3, size, size]
         var tensor = new DenseTensor<float>(inputData, new[] { 1, 3, _inputSize, _inputSize });
@@ -63,7 +84,7 @@ public class NudeNetDetector : OnnxInferenceServiceBase, INudeNetDetector
             return CreateEmptyResult();
 
         // Parse YOLOv8 output format
-        var detections = ParseYoloV8Output(outputArray, originalWidth, originalHeight, scale, padX, padY);
+        var detections = ParseYoloV8Output(outputArray, originalWidth, originalHeight, letterboxScale, padX, padY);
 
         // Apply NMS to filter overlapping detections
         var filteredDetections = ApplyNMS(detections, _options.NmsThreshold);
@@ -73,41 +94,17 @@ public class NudeNetDetector : OnnxInferenceServiceBase, INudeNetDetector
     }
 
     /// <summary>
-    /// Prepare input with letterboxing: resize preserving aspect ratio and add padding.
-    /// Returns the input tensor and letterbox parameters (scale, padX, padY) for coordinate conversion.
+    /// Converts letterboxed image to tensor in CHW format (Channel, Height, Width).
+    /// Normalizes pixel values from [0, 255] to [0, 1].
     /// </summary>
-    private (float[] input, float scale, int padX, int padY) PrepareInputWithLetterbox(IMagickImage<byte> image)
+    private float[] ImageToTensor(IMagickImage<byte> letterboxedImage)
     {
-        var originalWidth = (int)image.Width;
-        var originalHeight = (int)image.Height;
-
-        // Calculate scale to fit image into size x size while preserving aspect ratio
-        var scale = Math.Min((float)_inputSize / originalWidth, (float)_inputSize / originalHeight);
-
-        // Calculate new dimensions after scaling
-        var newWidth = (uint)(originalWidth * scale);
-        var newHeight = (uint)(originalHeight * scale);
-
-        // Calculate padding to center the image
-        var padX = (_inputSize - (int)newWidth) / 2;
-        var padY = (_inputSize - (int)newHeight) / 2;
-
-        // Create letterboxed image (size x size with black padding)
-        using var letterboxed = new MagickImage(MagickColors.Black, (uint)_inputSize, (uint)_inputSize);
-
-        // Resize original image preserving aspect ratio
-        using var resized = image.Clone();
-        resized.Resize(newWidth, newHeight);
-
-        // Copy resized image to center of letterboxed canvas
-        letterboxed.Composite(resized, padX, padY, CompositeOperator.Over);
-
         // Ensure RGB format
-        letterboxed.ColorSpace = ColorSpace.sRGB;
+        letterboxedImage.ColorSpace = ColorSpace.sRGB;
 
         // Convert to CHW format (Channel, Height, Width) and normalize [0, 255] -> [0, 1]
         var input = new float[1 * 3 * _inputSize * _inputSize];
-        var pixels = letterboxed.GetPixels();
+        var pixels = letterboxedImage.GetPixels();
 
         var index = 0;
         for (int c = 0; c < 3; c++) // RGB channels
@@ -128,7 +125,7 @@ public class NudeNetDetector : OnnxInferenceServiceBase, INudeNetDetector
             }
         }
 
-        return (input, scale, padX, padY);
+        return input;
     }
 
     /// <summary>

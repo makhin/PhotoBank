@@ -52,7 +52,11 @@ public class AdultEnricherTests
         var photo = new Photo { Id = 123 };
         var sourceData = new SourceDataDto
         {
-            PreviewImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+            OriginalImage = new MagickImage(MagickColors.Red, 800, 600) { Format = MagickFormat.Jpeg },
+            LetterboxedImage640 = new MagickImage(MagickColors.Red, 640, 640) { Format = MagickFormat.Jpeg },
+            LetterboxScale = 0.8f,
+            LetterboxPadX = 0,
+            LetterboxPadY = 64
         };
 
         var detectionResult = new NudeNetDetectionResult
@@ -69,7 +73,13 @@ public class AdultEnricherTests
         };
 
         _mockDetector
-            .Setup(d => d.Detect(It.IsAny<IMagickImage<byte>>()))
+            .Setup(d => d.Detect(
+                It.IsAny<IMagickImage<byte>>(),
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<float>(),
+                It.IsAny<int>(),
+                It.IsAny<int>()))
             .Returns(detectionResult);
 
         // Act
@@ -81,7 +91,13 @@ public class AdultEnricherTests
         photo.IsRacyContent.Should().BeFalse();
         photo.RacyScore.Should().BeApproximately(0.098, 1e-6);
 
-        _mockDetector.Verify(d => d.Detect(It.IsAny<IMagickImage<byte>>()), Times.Once);
+        _mockDetector.Verify(d => d.Detect(
+            It.IsAny<IMagickImage<byte>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<float>(),
+            It.IsAny<int>(),
+            It.IsAny<int>()), Times.Once);
     }
 
     [Test]
@@ -91,7 +107,11 @@ public class AdultEnricherTests
         var photo = new Photo { Id = 456 };
         var sourceData = new SourceDataDto
         {
-            PreviewImage = new MagickImage(MagickColors.Blue, 100, 100) { Format = MagickFormat.Jpeg }
+            OriginalImage = new MagickImage(MagickColors.Blue, 1000, 800) { Format = MagickFormat.Jpeg },
+            LetterboxedImage640 = new MagickImage(MagickColors.Blue, 640, 640) { Format = MagickFormat.Jpeg },
+            LetterboxScale = 0.64f,
+            LetterboxPadX = 0,
+            LetterboxPadY = 51
         };
 
         var detectionResult = new NudeNetDetectionResult
@@ -109,7 +129,13 @@ public class AdultEnricherTests
         };
 
         _mockDetector
-            .Setup(d => d.Detect(It.IsAny<IMagickImage<byte>>()))
+            .Setup(d => d.Detect(
+                It.IsAny<IMagickImage<byte>>(),
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<float>(),
+                It.IsAny<int>(),
+                It.IsAny<int>()))
             .Returns(detectionResult);
 
         // Act
@@ -129,7 +155,11 @@ public class AdultEnricherTests
         var photo = new Photo { Id = 789 };
         var sourceData = new SourceDataDto
         {
-            PreviewImage = new MagickImage(MagickColors.Green, 100, 100) { Format = MagickFormat.Jpeg }
+            OriginalImage = new MagickImage(MagickColors.Green, 640, 640) { Format = MagickFormat.Jpeg },
+            LetterboxedImage640 = new MagickImage(MagickColors.Green, 640, 640) { Format = MagickFormat.Jpeg },
+            LetterboxScale = 1.0f,
+            LetterboxPadX = 0,
+            LetterboxPadY = 0
         };
 
         var detectionResult = new NudeNetDetectionResult
@@ -147,7 +177,13 @@ public class AdultEnricherTests
         };
 
         _mockDetector
-            .Setup(d => d.Detect(It.IsAny<IMagickImage<byte>>()))
+            .Setup(d => d.Detect(
+                It.IsAny<IMagickImage<byte>>(),
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<float>(),
+                It.IsAny<int>(),
+                It.IsAny<int>()))
             .Returns(detectionResult);
 
         // Act
@@ -161,24 +197,64 @@ public class AdultEnricherTests
     }
 
     [Test]
-    public async Task EnrichAsync_WithNullPreviewImage_LogsWarningAndReturns()
+    public async Task EnrichAsync_WithNullLetterboxedImage_LogsWarningAndReturns()
     {
         // Arrange
         var photo = new Photo { Id = 123 };
-        var sourceData = new SourceDataDto { PreviewImage = null };
+        var sourceData = new SourceDataDto { LetterboxedImage640 = null };
 
         // Act
         await _enricher.EnrichAsync(photo, sourceData);
 
         // Assert
-        _mockDetector.Verify(d => d.Detect(It.IsAny<IMagickImage<byte>>()), Times.Never);
+        _mockDetector.Verify(d => d.Detect(
+            It.IsAny<IMagickImage<byte>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<float>(),
+            It.IsAny<int>(),
+            It.IsAny<int>()), Times.Never);
 
         // Verify that a warning was logged
         _mockLogger.Verify(
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("No preview image available")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("No letterboxed image available")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+            Times.Once);
+    }
+
+    [Test]
+    public async Task EnrichAsync_WithNullOriginalImage_LogsWarningAndReturns()
+    {
+        // Arrange
+        var photo = new Photo { Id = 123 };
+        var sourceData = new SourceDataDto
+        {
+            LetterboxedImage640 = new MagickImage(MagickColors.Red, 640, 640),
+            OriginalImage = null
+        };
+
+        // Act
+        await _enricher.EnrichAsync(photo, sourceData);
+
+        // Assert
+        _mockDetector.Verify(d => d.Detect(
+            It.IsAny<IMagickImage<byte>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<float>(),
+            It.IsAny<int>(),
+            It.IsAny<int>()), Times.Never);
+
+        // Verify that a warning was logged
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("No original image available")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
@@ -194,7 +270,13 @@ public class AdultEnricherTests
         await _enricher.EnrichAsync(photo, null);
 
         // Assert
-        _mockDetector.Verify(d => d.Detect(It.IsAny<IMagickImage<byte>>()), Times.Never);
+        _mockDetector.Verify(d => d.Detect(
+            It.IsAny<IMagickImage<byte>>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
+            It.IsAny<float>(),
+            It.IsAny<int>(),
+            It.IsAny<int>()), Times.Never);
     }
 
     [Test]
@@ -204,11 +286,21 @@ public class AdultEnricherTests
         var photo = new Photo { Id = 123 };
         var sourceData = new SourceDataDto
         {
-            PreviewImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+            OriginalImage = new MagickImage(MagickColors.Red, 800, 600) { Format = MagickFormat.Jpeg },
+            LetterboxedImage640 = new MagickImage(MagickColors.Red, 640, 640) { Format = MagickFormat.Jpeg },
+            LetterboxScale = 0.8f,
+            LetterboxPadX = 0,
+            LetterboxPadY = 64
         };
 
         _mockDetector
-            .Setup(d => d.Detect(It.IsAny<IMagickImage<byte>>()))
+            .Setup(d => d.Detect(
+                It.IsAny<IMagickImage<byte>>(),
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<float>(),
+                It.IsAny<int>(),
+                It.IsAny<int>()))
             .Throws(new InvalidOperationException("Model inference failed"));
 
         // Act & Assert
@@ -233,14 +325,24 @@ public class AdultEnricherTests
         var photo = new Photo { Id = 123 };
         var sourceData = new SourceDataDto
         {
-            PreviewImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+            OriginalImage = new MagickImage(MagickColors.Red, 800, 600) { Format = MagickFormat.Jpeg },
+            LetterboxedImage640 = new MagickImage(MagickColors.Red, 640, 640) { Format = MagickFormat.Jpeg },
+            LetterboxScale = 0.8f,
+            LetterboxPadX = 0,
+            LetterboxPadY = 64
         };
 
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
         _mockDetector
-            .Setup(d => d.Detect(It.IsAny<IMagickImage<byte>>()))
+            .Setup(d => d.Detect(
+                It.IsAny<IMagickImage<byte>>(),
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<float>(),
+                It.IsAny<int>(),
+                It.IsAny<int>()))
             .Throws(new TaskCanceledException());
 
         // Act & Assert

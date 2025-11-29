@@ -182,6 +182,52 @@ public class PreviewEnricherTests
             Times.Once);
     }
 
+    [Test]
+    public async Task EnrichAsync_CreatesLetterboxedImage640()
+    {
+        // Arrange
+        var photo = new Photo();
+        var sourceData = new SourceDataDto { AbsolutePath = _tempImagePath };
+
+        _mockImageService
+            .Setup(s => s.ResizeImage(It.IsAny<MagickImage>(), out It.Ref<double>.IsAny))
+            .Callback(new ResizeImageCallback((MagickImage img, out double scale) =>
+            {
+                scale = 1.0;
+            }));
+
+        // Act
+        await _enricher.EnrichAsync(photo, sourceData);
+
+        // Assert
+        sourceData.LetterboxedImage640.Should().NotBeNull();
+        sourceData.LetterboxedImage640.Width.Should().Be(640);
+        sourceData.LetterboxedImage640.Height.Should().Be(640);
+    }
+
+    [Test]
+    public async Task EnrichAsync_SetsLetterboxParameters()
+    {
+        // Arrange
+        var photo = new Photo();
+        var sourceData = new SourceDataDto { AbsolutePath = _tempImagePath };
+
+        _mockImageService
+            .Setup(s => s.ResizeImage(It.IsAny<MagickImage>(), out It.Ref<double>.IsAny))
+            .Callback(new ResizeImageCallback((MagickImage img, out double scale) =>
+            {
+                scale = 1.0;
+            }));
+
+        // Act
+        await _enricher.EnrichAsync(photo, sourceData);
+
+        // Assert
+        sourceData.LetterboxScale.Should().BeGreaterThan(0);
+        sourceData.LetterboxPadX.Should().BeGreaterOrEqualTo(0);
+        sourceData.LetterboxPadY.Should().BeGreaterOrEqualTo(0);
+    }
+
     // Delegate for mocking out parameter
     private delegate void ResizeImageCallback(MagickImage image, out double scale);
 }

@@ -29,6 +29,27 @@ public class SourceDataDto
         set => _previewImageBytes = value;
     }
 
+    /// <summary>
+    /// Pre-prepared 640x640 letterboxed image for ONNX models (YOLO, NudeNet).
+    /// Created once in PreviewEnricher and reused by all ONNX-based enrichers.
+    /// </summary>
+    public IMagickImage<byte> LetterboxedImage640 { get; set; }
+
+    /// <summary>
+    /// Scale factor used for letterboxing to 640x640.
+    /// </summary>
+    public float LetterboxScale { get; set; }
+
+    /// <summary>
+    /// Horizontal padding used for letterboxing to 640x640.
+    /// </summary>
+    public int LetterboxPadX { get; set; }
+
+    /// <summary>
+    /// Vertical padding used for letterboxing to 640x640.
+    /// </summary>
+    public int LetterboxPadY { get; set; }
+
     public byte[] ThumbnailImage { get; set; }
     public List<byte[]> FaceImages { get; } = new();
 }

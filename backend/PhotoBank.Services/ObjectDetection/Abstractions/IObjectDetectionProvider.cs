@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ImageMagick;
+using PhotoBank.Services.Models;
 
 namespace PhotoBank.Services.ObjectDetection.Abstractions;
 
@@ -41,10 +42,10 @@ public interface IObjectDetectionProvider
     ObjectDetectionProviderKind Kind { get; }
 
     /// <summary>
-    /// Detects objects in the provided image.
+    /// Detects objects from source data (uses pre-prepared images from SourceDataDto).
     /// </summary>
-    /// <param name="image">ImageMagick image to analyze.</param>
+    /// <param name="sourceData">Source data containing pre-prepared images (letterboxed, preview, etc.).</param>
     /// <param name="scale">Photo scale factor for coordinate normalization.</param>
     /// <returns>List of detected objects with bounding boxes and confidence scores.</returns>
-    IReadOnlyList<DetectedObjectDto> DetectObjects(IMagickImage<byte> image, float scale);
+    IReadOnlyList<DetectedObjectDto> DetectObjects(SourceDataDto sourceData, float scale);
 }
