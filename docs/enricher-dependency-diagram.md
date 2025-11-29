@@ -59,7 +59,7 @@ graph TD
 ### 🔵 Уровень 1 - Базовая подготовка
 - **AdultEnricher** - проверяет на adult/racy контент с помощью ONNX модели
   - Зависимости: `PreviewEnricher`
-  - Сервисы: `INsfwDetector` (Local ONNX MobileNet)
+  - Сервисы: `INudeNetDetector` (Local ONNX NudeNet YOLOv8)
   - Данные: AdultScore, RacyScore, IsAdultContent, IsRacyContent
 
 - **MetadataEnricher** - извлекает EXIF метаданные из файла
