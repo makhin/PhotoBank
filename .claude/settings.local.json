@@ -6,7 +6,9 @@
       "Bash(git push:*)",
       "Bash(git restore:*)",
       "Bash(git commit:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(dotnet clean:*)",
+      "Bash(./PhotoBank.Console.exe:*)"
     ],
     "deny": [],
     "ask": []

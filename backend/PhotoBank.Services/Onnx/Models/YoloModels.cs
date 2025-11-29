@@ -1,5 +1,3 @@
-using Microsoft.ML.Data;
-
 namespace PhotoBank.Services.Onnx.Models;
 
 /// <summary>
@@ -7,8 +5,6 @@ namespace PhotoBank.Services.Onnx.Models;
 /// </summary>
 public class YoloImageInput
 {
-    [ColumnName("images")]
-    [VectorType(1, 3, 640, 640)]
     public float[]? Image { get; set; }
 }
 
@@ -17,7 +13,6 @@ public class YoloImageInput
 /// </summary>
 public class YoloOutput
 {
-    [ColumnName("output0")]
     public float[]? Output { get; set; }
 }
 
