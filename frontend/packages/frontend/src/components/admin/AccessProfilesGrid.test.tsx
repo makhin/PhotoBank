@@ -4,6 +4,10 @@ import type { AccessProfileDto } from '@photobank/shared';
 
 import { AccessProfilesGrid } from './AccessProfilesGrid';
 
+vi.mock('@photobank/shared/api/photobank/admin-access-profiles/admin-access-profiles', () => ({
+  useAdminAccessProfilesDelete: () => ({ mutate: vi.fn(), isPending: false }),
+}));
+
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
     toast: vi.fn(),

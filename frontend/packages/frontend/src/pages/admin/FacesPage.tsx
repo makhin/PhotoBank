@@ -30,6 +30,15 @@ const ITEMS_PER_PAGE = 20;
 const identityStatusValues = Object.values(IdentityStatusEnum) as IdentityStatusType[];
 
 const normalizeIdentityStatus = (value: unknown): IdentityStatusType => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const numericIndex = Math.trunc(value);
+    const status = identityStatusValues[numericIndex];
+
+    if (status) {
+      return status;
+    }
+  }
+
   if (typeof value === 'string' && value.trim()) {
     const match = identityStatusValues.find(
       (status) => status.toLowerCase() === value.trim().toLowerCase()
