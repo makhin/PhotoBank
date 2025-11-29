@@ -34,10 +34,6 @@
     <PackageReference Include="MediatR" Version="13.1.0" />
     <PackageReference Include="Smartcrop.net" Version="1.0.4" />
     <PackageReference Include="System.IO.Abstractions" Version="22.1.0" />
-    <PackageReference Include="Microsoft.ML" Version="5.0.0" />
-    <PackageReference Include="Microsoft.ML.ImageAnalytics" Version="5.0.0" />
-    <PackageReference Include="Microsoft.ML.OnnxTransformer" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.ML" Version="5.0.0" />
     <PackageReference Include="System.Numerics.Tensors" Version="9.0.11" />
   </ItemGroup>
 

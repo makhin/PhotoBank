@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.ML;
 using ImageMagick;
 using Microsoft.Extensions.Options;
 using Microsoft.ML.OnnxRuntime.Tensors;
