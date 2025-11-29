@@ -5,7 +5,7 @@ using ImageMagick;
 namespace PhotoBank.Services.Enrichers.Onnx;
 
 /// <summary>
-/// No-op NSFW detector used when the ONNX model is unavailable.
+/// No-op NSFW detector used when NudeNet API is unavailable.
 /// Keeps the enricher resolvable while preventing pipeline failures.
 /// </summary>
 public class DisabledNsfwDetector : INsfwDetector
@@ -19,13 +19,6 @@ public class DisabledNsfwDetector : INsfwDetector
             IsRacy = false,
             RacyConfidence = 0,
             Scores = new Dictionary<string, float>()
-            {
-                { "drawings", 0 },
-                { "hentai", 0 },
-                { "neutral", 1 },
-                { "porn", 0 },
-                { "sexy", 0 }
-            }
         };
     }
 

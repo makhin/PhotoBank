@@ -36,12 +36,12 @@ public static partial class ServiceCollectionExtensions
         const string computerVision = "ComputerVision";
         const string face = "Face";
         const string yoloOnnx = "YoloOnnx";
-        const string nsfwOnnx = "NsfwOnnx";
+        const string nudeNet = "NudeNet";
 
         services.Configure<ComputerVisionOptions>(configuration.GetSection(computerVision));
         services.Configure<FaceApiOptions>(configuration.GetSection(face));
         services.Configure<YoloOnnxOptions>(configuration.GetSection(yoloOnnx));
-        services.Configure<NsfwOnnxOptions>(configuration.GetSection(nsfwOnnx));
+        services.Configure<NudeNetOptions>(configuration.GetSection(nudeNet));
         services.Configure<ImageAnalyzerOptions>(configuration.GetSection(ImageAnalyzerOptions.SectionName));
         services.Configure<OllamaOptions>(configuration.GetSection(OllamaOptions.SectionName));
 
@@ -120,48 +120,31 @@ public static partial class ServiceCollectionExtensions
         // Register unified object property enricher (uses the provider registered above)
         services.AddTransient<IEnricher, UnifiedObjectPropertyEnricher>();
 
-        // NSFW detection - local ONNX model
-        var nsfwOptions = configuration.GetSection(nsfwOnnx).Get<NsfwOnnxOptions>();
-        if (nsfwOptions?.Enabled == true && !string.IsNullOrWhiteSpace(nsfwOptions.ModelPath))
+        // NSFW detection - NudeNet API
+        var nudeNetOptions = configuration.GetSection(nudeNet).Get<NudeNetOptions>();
+        if (nudeNetOptions?.Enabled == true && !string.IsNullOrWhiteSpace(nudeNetOptions.BaseUrl))
         {
-            if (System.IO.File.Exists(nsfwOptions.ModelPath))
+            try
             {
-                try
+                // Register NudeNet API client
+                services.AddSingleton<PhotoBank.NudeNetApiClient.INudeNetApiClient>(provider =>
                 {
-                    // Validate ONNX model by actually loading it
-                    // This ensures the model file is valid and compatible before registering services
-                    using (var sessionOptions = new Microsoft.ML.OnnxRuntime.SessionOptions())
-                    using (var validationSession = new Microsoft.ML.OnnxRuntime.InferenceSession(nsfwOptions.ModelPath, sessionOptions))
-                    {
-                        // Model loaded successfully, it's valid
-                        Console.WriteLine($"NSFW ONNX model validated: {nsfwOptions.ModelPath}");
-                    }
+                    var options = provider.GetRequiredService<IOptions<NudeNetOptions>>().Value;
+                    return new PhotoBank.NudeNetApiClient.NudeNetApiClient(options.BaseUrl);
+                });
 
-                    // Register NSFW detector as singleton (it manages its own session)
-                    services.AddSingleton<INsfwDetector, NsfwDetector>();
+                // Register NSFW detector using NudeNet
+                services.AddSingleton<INsfwDetector, NsfwDetector>();
 
-                    // Register Adult enricher
-                    services.AddTransient<IEnricher, AdultEnricher>();
+                // Register Adult enricher
+                services.AddTransient<IEnricher, AdultEnricher>();
 
-                    Console.WriteLine("NSFW ONNX enricher initialized successfully.");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"WARNING: Failed to load NSFW ONNX model: {ex.GetType().Name}: {ex.Message}");
-                    Console.WriteLine("This could be caused by:");
-                    Console.WriteLine("  - Corrupt or incompatible model file");
-                    Console.WriteLine("  - Missing ONNX Runtime native libraries");
-                    Console.WriteLine("  - Incompatible model format or version");
-                    Console.WriteLine("Adult enricher will be disabled.");
-
-                    // Register disabled detector to keep Adult enricher resolvable
-                    services.AddSingleton<INsfwDetector, DisabledNsfwDetector>();
-                    services.AddTransient<IEnricher, AdultEnricher>();
-                }
+                Console.WriteLine($"NudeNet NSFW detection service initialized at {nudeNetOptions.BaseUrl}");
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine($"WARNING: NSFW ONNX model file not found at: {nsfwOptions.ModelPath}. Adult enricher will be disabled.");
+                Console.WriteLine($"WARNING: Failed to initialize NudeNet client: {ex.GetType().Name}: {ex.Message}");
+                Console.WriteLine("Adult enricher will be disabled.");
 
                 // Register disabled detector to keep Adult enricher resolvable
                 services.AddSingleton<INsfwDetector, DisabledNsfwDetector>();
@@ -170,7 +153,7 @@ public static partial class ServiceCollectionExtensions
         }
         else
         {
-            // NSFW ONNX not enabled, Adult enricher will be disabled
+            // NudeNet not enabled, Adult enricher will be disabled
             services.AddSingleton<INsfwDetector, DisabledNsfwDetector>();
             services.AddTransient<IEnricher, AdultEnricher>();
         }
