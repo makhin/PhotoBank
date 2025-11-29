@@ -43,7 +43,7 @@ public class UnifiedFaceEnricher : IEnricher
         try
         {
             var detectedFaces = await _faceService.DetectFacesAsync(
-                sourceData.PreviewImage.ToByteArray(),
+                sourceData.PreviewImageBytes,
                 cancellationToken);
 
             if (detectedFaces.Count == 0)

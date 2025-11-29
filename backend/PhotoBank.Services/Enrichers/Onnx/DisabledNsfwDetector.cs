@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ImageMagick;
 
 namespace PhotoBank.Services.Enrichers.Onnx;
 
@@ -9,7 +10,7 @@ namespace PhotoBank.Services.Enrichers.Onnx;
 /// </summary>
 public class DisabledNsfwDetector : INsfwDetector
 {
-    public NsfwDetectionResult Detect(byte[] imageData)
+    public NsfwDetectionResult Detect(IMagickImage<byte> image)
     {
         return new NsfwDetectionResult
         {

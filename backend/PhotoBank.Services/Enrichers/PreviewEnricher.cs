@@ -33,7 +33,7 @@ public sealed class PreviewEnricher : IEnricher
         image.Format = MagickFormat.Jpg;
         photo.Scale = scale;
         source.PreviewImage = image.Clone();
-        photo.ImageHash = ImageHashHelper.ComputeHash(source.PreviewImage.ToByteArray());
+        photo.ImageHash = ImageHashHelper.ComputeHash(source.PreviewImage);
         return Task.CompletedTask;
     }
 }

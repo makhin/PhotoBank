@@ -1,12 +1,15 @@
+using System;
 using ImageMagick;
 
 namespace PhotoBank.Services;
 
 public static class ImageHashHelper
 {
-    public static string ComputeHash(byte[] data)
+    public static string ComputeHash(IMagickImage<byte> image)
     {
-        using var image = new MagickImage(data);
+        if (image == null)
+            throw new ArgumentNullException(nameof(image));
+
         var hash = image.PerceptualHash();
         return hash.ToString();
     }

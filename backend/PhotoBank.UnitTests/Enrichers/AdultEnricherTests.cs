@@ -52,7 +52,7 @@ public class AdultEnricherTests
         var photo = new Photo { Id = 123 };
         var sourceData = new SourceDataDto
         {
-            OriginalImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+            PreviewImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
         };
 
         var detectionResult = new NsfwDetectionResult
@@ -72,7 +72,7 @@ public class AdultEnricherTests
         };
 
         _mockDetector
-            .Setup(d => d.Detect(It.IsAny<byte[]>()))
+            .Setup(d => d.Detect(It.IsAny<IMagickImage<byte>>()))
             .Returns(detectionResult);
 
         // Act
@@ -84,7 +84,7 @@ public class AdultEnricherTests
         photo.IsRacyContent.Should().BeFalse();
         photo.RacyScore.Should().BeApproximately(0.098, 1e-6);
 
-        _mockDetector.Verify(d => d.Detect(It.IsAny<byte[]>()), Times.Once);
+        _mockDetector.Verify(d => d.Detect(It.IsAny<IMagickImage<byte>>()), Times.Once);
     }
 
     [Test]
@@ -94,7 +94,7 @@ public class AdultEnricherTests
         var photo = new Photo { Id = 456 };
         var sourceData = new SourceDataDto
         {
-            OriginalImage = new MagickImage(MagickColors.Blue, 100, 100) { Format = MagickFormat.Jpeg }
+            PreviewImage = new MagickImage(MagickColors.Blue, 100, 100) { Format = MagickFormat.Jpeg }
         };
 
         var detectionResult = new NsfwDetectionResult
@@ -114,7 +114,7 @@ public class AdultEnricherTests
         };
 
         _mockDetector
-            .Setup(d => d.Detect(It.IsAny<byte[]>()))
+            .Setup(d => d.Detect(It.IsAny<IMagickImage<byte>>()))
             .Returns(detectionResult);
 
         // Act
@@ -134,7 +134,7 @@ public class AdultEnricherTests
         var photo = new Photo { Id = 789 };
         var sourceData = new SourceDataDto
         {
-            OriginalImage = new MagickImage(MagickColors.Green, 100, 100) { Format = MagickFormat.Jpeg }
+            PreviewImage = new MagickImage(MagickColors.Green, 100, 100) { Format = MagickFormat.Jpeg }
         };
 
         var detectionResult = new NsfwDetectionResult
@@ -154,7 +154,7 @@ public class AdultEnricherTests
         };
 
         _mockDetector
-            .Setup(d => d.Detect(It.IsAny<byte[]>()))
+            .Setup(d => d.Detect(It.IsAny<IMagickImage<byte>>()))
             .Returns(detectionResult);
 
         // Act
@@ -168,24 +168,24 @@ public class AdultEnricherTests
     }
 
     [Test]
-    public async Task EnrichAsync_WithNullOriginalImage_LogsWarningAndReturns()
+    public async Task EnrichAsync_WithNullPreviewImage_LogsWarningAndReturns()
     {
         // Arrange
         var photo = new Photo { Id = 123 };
-        var sourceData = new SourceDataDto { OriginalImage = null };
+        var sourceData = new SourceDataDto { PreviewImage = null };
 
         // Act
         await _enricher.EnrichAsync(photo, sourceData);
 
         // Assert
-        _mockDetector.Verify(d => d.Detect(It.IsAny<byte[]>()), Times.Never);
+        _mockDetector.Verify(d => d.Detect(It.IsAny<IMagickImage<byte>>()), Times.Never);
 
         // Verify that a warning was logged
         _mockLogger.Verify(
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("No original image available")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("No preview image available")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception, string>>()),
             Times.Once);
@@ -201,7 +201,7 @@ public class AdultEnricherTests
         await _enricher.EnrichAsync(photo, null);
 
         // Assert
-        _mockDetector.Verify(d => d.Detect(It.IsAny<byte[]>()), Times.Never);
+        _mockDetector.Verify(d => d.Detect(It.IsAny<IMagickImage<byte>>()), Times.Never);
     }
 
     [Test]
@@ -211,11 +211,11 @@ public class AdultEnricherTests
         var photo = new Photo { Id = 123 };
         var sourceData = new SourceDataDto
         {
-            OriginalImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+            PreviewImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
         };
 
         _mockDetector
-            .Setup(d => d.Detect(It.IsAny<byte[]>()))
+            .Setup(d => d.Detect(It.IsAny<IMagickImage<byte>>()))
             .Throws(new InvalidOperationException("Model inference failed"));
 
         // Act & Assert
@@ -240,14 +240,14 @@ public class AdultEnricherTests
         var photo = new Photo { Id = 123 };
         var sourceData = new SourceDataDto
         {
-            OriginalImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
+            PreviewImage = new MagickImage(MagickColors.Red, 100, 100) { Format = MagickFormat.Jpeg }
         };
 
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
         _mockDetector
-            .Setup(d => d.Detect(It.IsAny<byte[]>()))
+            .Setup(d => d.Detect(It.IsAny<IMagickImage<byte>>()))
             .Throws(new TaskCanceledException());
 
         // Act & Assert
