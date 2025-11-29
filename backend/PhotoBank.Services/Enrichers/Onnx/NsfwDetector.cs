@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ImageMagick;
 using Microsoft.Extensions.Options;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using PhotoBank.Services.Onnx.Base;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace PhotoBank.Services.Enrichers.Onnx;
 
@@ -16,7 +14,7 @@ namespace PhotoBank.Services.Enrichers.Onnx;
 /// </summary>
 public interface INsfwDetector : IDisposable
 {
-    NsfwDetectionResult Detect(byte[] imageData);
+    NsfwDetectionResult Detect(IMagickImage<byte> image);
 }
 
 public class NsfwDetector : OnnxInferenceServiceBase, INsfwDetector
@@ -36,27 +34,31 @@ public class NsfwDetector : OnnxInferenceServiceBase, INsfwDetector
         InitializeSession(_options.ModelPath, useCuda: true, cudaDeviceId: 0);
     }
 
-    public NsfwDetectionResult Detect(byte[] imageData)
+    public NsfwDetectionResult Detect(IMagickImage<byte> image)
     {
-        if (imageData == null || imageData.Length == 0)
-            throw new ArgumentException("Image data cannot be null or empty", nameof(imageData));
+        if (image == null)
+            throw new ArgumentNullException(nameof(image));
 
-        // Load and preprocess image
-        using var image = Image.Load<Rgb24>(imageData);
-        image.Mutate(x => x.Resize(ImageSize, ImageSize));
+        // Resize image to 224x224
+        using var resized = image.Clone();
+        resized.Resize(ImageSize, ImageSize);
+        resized.ColorSpace = ColorSpace.sRGB;
 
         // Convert to tensor [1, 224, 224, 3] (NHWC format for TensorFlow models)
         var tensor = new DenseTensor<float>(new[] { 1, ImageSize, ImageSize, 3 });
+
+        // Get pixels from ImageMagick
+        var pixels = resized.GetPixels();
 
         for (int y = 0; y < ImageSize; y++)
         {
             for (int x = 0; x < ImageSize; x++)
             {
-                var pixel = image[x, y];
+                var pixel = pixels.GetPixel(x, y);
                 // Normalization for MobileNet: (pixel / 255.0 - 0.5) * 2
-                tensor[0, y, x, 0] = (pixel.R / 255f - 0.5f) * 2f; // R
-                tensor[0, y, x, 1] = (pixel.G / 255f - 0.5f) * 2f; // G
-                tensor[0, y, x, 2] = (pixel.B / 255f - 0.5f) * 2f; // B
+                tensor[0, y, x, 0] = (pixel.GetChannel(0) / 255f - 0.5f) * 2f; // R
+                tensor[0, y, x, 1] = (pixel.GetChannel(1) / 255f - 0.5f) * 2f; // G
+                tensor[0, y, x, 2] = (pixel.GetChannel(2) / 255f - 0.5f) * 2f; // B
             }
         }
 

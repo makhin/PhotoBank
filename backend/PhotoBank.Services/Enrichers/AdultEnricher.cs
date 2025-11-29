@@ -31,14 +31,18 @@ public class AdultEnricher : IEnricher
 
     public async Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
     {
+        if (sourceData?.PreviewImage == null)
+        {
+            _logger.LogWarning("No preview image available for NSFW detection for photo {PhotoId}", photo.Id);
+            return;
+        }
+
         try
         {
             _logger.LogDebug("Running NSFW detection for photo {PhotoId}", photo.Id);
 
-            var imageBytes = sourceData.PreviewImage.ToByteArray();
-
             // Run detection asynchronously to avoid blocking
-            var result = await Task.Run(() => _detector.Detect(imageBytes), cancellationToken);
+            var result = await Task.Run(() => _detector.Detect(sourceData.PreviewImage), cancellationToken);
 
             // Update photo properties
             photo.IsAdultContent = result.IsNsfw;

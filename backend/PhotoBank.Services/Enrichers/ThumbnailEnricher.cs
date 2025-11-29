@@ -25,7 +25,7 @@ public sealed class ThumbnailEnricher : IEnricher
             return Task.CompletedTask;
 
         // Convert IMagickImage to stream for smartcrop
-        using var imageStream = new MemoryStream(source.PreviewImage.ToByteArray());
+        using var imageStream = new MemoryStream(source.PreviewImageBytes);
 
         // Find optimal crop area using smartcrop.net
         var cropResult = new ImageCrop(Width, Height).Crop(imageStream);

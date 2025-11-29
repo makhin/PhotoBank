@@ -31,7 +31,7 @@ public sealed class AnalyzeEnricher : IEnricher
         if (source.ImageAnalysis != null)
             return;
 
-        using var stream = new MemoryStream(source.PreviewImage.ToByteArray());
+        using var stream = new MemoryStream(source.PreviewImageBytes);
         source.ImageAnalysis = await _imageAnalyzer.AnalyzeAsync(stream, cancellationToken).ConfigureAwait(false);
     }
 }
