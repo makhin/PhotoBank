@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace PhotoBank.Services.ImageAnalysis;
 
-public enum ImageAnalyzerKind { Azure, Ollama }
+public enum ImageAnalyzerKind { Azure, Ollama, OpenRouter }
 
 public interface IImageAnalyzer
 {

@@ -44,6 +44,7 @@ public static partial class ServiceCollectionExtensions
         services.Configure<NudeNetOnnxOptions>(configuration.GetSection(nudeNetOnnx));
         services.Configure<ImageAnalyzerOptions>(configuration.GetSection(ImageAnalyzerOptions.SectionName));
         services.Configure<OllamaOptions>(configuration.GetSection(OllamaOptions.SectionName));
+        services.Configure<OpenRouterOptions>(configuration.GetSection(OpenRouterOptions.SectionName));
 
         // Register IImageAnalyzer based on configuration
         var imageAnalyzerOptions = configuration.GetSection(ImageAnalyzerOptions.SectionName).Get<ImageAnalyzerOptions>()
@@ -52,6 +53,10 @@ public static partial class ServiceCollectionExtensions
         if (imageAnalyzerOptions.Provider == ImageAnalyzerKind.Ollama)
         {
             services.AddSingleton<IImageAnalyzer, OllamaImageAnalyzer>();
+        }
+        else if (imageAnalyzerOptions.Provider == ImageAnalyzerKind.OpenRouter)
+        {
+            services.AddSingleton<IImageAnalyzer, OpenRouterImageAnalyzer>();
         }
         else
         {

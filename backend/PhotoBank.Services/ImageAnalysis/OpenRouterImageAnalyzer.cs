@@ -11,14 +11,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OllamaSharp;
 
 namespace PhotoBank.Services.ImageAnalysis;
 
-public sealed class OllamaImageAnalyzer : IImageAnalyzer
+public sealed class OpenRouterImageAnalyzer : IImageAnalyzer
 {
-    private readonly OllamaApiClient _client;
-    private readonly ILogger<OllamaImageAnalyzer> _logger;
+    private readonly HttpClient _client;
+    private readonly OpenRouterOptions _options;
+    private readonly ILogger<OpenRouterImageAnalyzer> _logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -27,45 +27,78 @@ public sealed class OllamaImageAnalyzer : IImageAnalyzer
     };
 
 
-    public OllamaImageAnalyzer(IOptions<OllamaOptions> options, ILogger<OllamaImageAnalyzer> logger)
+    public OpenRouterImageAnalyzer(IOptions<OpenRouterOptions> options, ILogger<OpenRouterImageAnalyzer> logger)
     {
-        var opts = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        _client = new OllamaApiClient(new Uri(opts.Endpoint))
-        {
-            SelectedModel = opts.Model
-        };
+        _client = new HttpClient();
+        _client.DefaultRequestHeaders.Add("Authorization", $"Bearer {_options.ApiKey}");
+        _client.DefaultRequestHeaders.Add("HTTP-Referer", "https://photobank.app");
     }
 
-    public ImageAnalyzerKind Kind => ImageAnalyzerKind.Ollama;
+    public ImageAnalyzerKind Kind => ImageAnalyzerKind.OpenRouter;
 
     public async Task<ImageAnalysisResult> AnalyzeAsync(Stream image, CancellationToken ct = default)
     {
         using var ms = new MemoryStream();
         await image.CopyToAsync(ms, ct).ConfigureAwait(false);
         var imageBytes = ms.ToArray();
+        var base64Image = Convert.ToBase64String(imageBytes);
 
         var jsonResponse = await RetryHelper.RetryAsync(
             action: async () =>
             {
-                var chat = new Chat(_client);
-                var images = new List<IEnumerable<byte>> { imageBytes };
-                var responseBuilder = new StringBuilder();
-
-                await foreach (var token in chat.SendAsync(ImageAnalysisPrompts.StandardAnalysisPrompt, imagesAsBytes: images, ct))
+                var requestBody = new
                 {
-                    responseBuilder.Append(token);
+                    model = _options.Model,
+                    messages = new[]
+                    {
+                        new
+                        {
+                            role = "user",
+                            content = new object[]
+                            {
+                                new
+                                {
+                                    type = "image_url",
+                                    image_url = new
+                                    {
+                                        url = $"data:image/jpeg;base64,{base64Image}"
+                                    }
+                                },
+                                new
+                                {
+                                    type = "text",
+                                    text = ImageAnalysisPrompts.StandardAnalysisPrompt
+                                }
+                            }
+                        }
+                    },
+                    max_tokens = _options.MaxTokens,
+                    temperature = _options.Temperature
+                };
+
+                var json = JsonSerializer.Serialize(requestBody, JsonOptions);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _client.PostAsync(_options.Endpoint, content, ct).ConfigureAwait(false);
+                var responseText = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new InvalidOperationException($"OpenRouter API Error: {response.StatusCode} - {responseText}");
                 }
 
-                return responseBuilder.ToString();
+                var apiResponse = JsonSerializer.Deserialize<OpenRouterResponse>(responseText, JsonOptions);
+                return apiResponse?.Choices?[0]?.Message?.Content ?? string.Empty;
             },
             attempts: 3,
             delay: TimeSpan.FromMilliseconds(500),
             shouldRetry: ex => ex is HttpRequestException or SocketException or TaskCanceledException { InnerException: TimeoutException }
         ).ConfigureAwait(false);
 
-        _logger.LogDebug("Ollama response: {Response}", jsonResponse);
+        _logger.LogDebug("OpenRouter response: {Response}", jsonResponse);
 
         return ParseResponse(jsonResponse);
     }
@@ -75,7 +108,7 @@ public sealed class OllamaImageAnalyzer : IImageAnalyzer
         try
         {
             json = CleanJsonResponse(json);
-            var response = JsonSerializer.Deserialize<OllamaResponse>(json, JsonOptions);
+            var response = JsonSerializer.Deserialize<OpenRouterAnalysisResponse>(json, JsonOptions);
 
             if (response is null)
             {
@@ -125,9 +158,9 @@ public sealed class OllamaImageAnalyzer : IImageAnalyzer
         }
         catch (JsonException ex)
         {
-            _logger.LogError(ex, "Failed to deserialize Ollama response: {Response}", json);
+            _logger.LogError(ex, "Failed to deserialize OpenRouter response: {Response}", json);
             // Fail closed: rethrow to prevent NSFW content from bypassing checks
-            throw new InvalidOperationException($"Ollama returned malformed response that could not be parsed", ex);
+            throw new InvalidOperationException($"OpenRouter returned malformed response that could not be parsed", ex);
         }
     }
 
@@ -156,13 +189,31 @@ public sealed class OllamaImageAnalyzer : IImageAnalyzer
         Color = new ColorInfo()
     };
 
-    private sealed class OllamaResponse
+    private sealed class OpenRouterResponse
+    {
+        [JsonPropertyName("choices")]
+        public List<Choice>? Choices { get; init; }
+
+        public sealed class Choice
+        {
+            [JsonPropertyName("message")]
+            public Message? Message { get; init; }
+        }
+
+        public sealed class Message
+        {
+            [JsonPropertyName("content")]
+            public string? Content { get; init; }
+        }
+    }
+
+    private sealed class OpenRouterAnalysisResponse
     {
         [JsonPropertyName("caption")]
         public string? Caption { get; init; }
 
         [JsonPropertyName("tags")]
-        public List<OllamaTag>? Tags { get; init; }
+        public List<OpenRouterTag>? Tags { get; init; }
 
         [JsonPropertyName("is_nsfw")]
         public bool IsNsfw { get; init; }
@@ -174,7 +225,7 @@ public sealed class OllamaImageAnalyzer : IImageAnalyzer
         public List<string>? DominantColors { get; init; }
     }
 
-    private sealed class OllamaTag
+    private sealed class OpenRouterTag
     {
         [JsonPropertyName("name")]
         public string? Name { get; init; }
