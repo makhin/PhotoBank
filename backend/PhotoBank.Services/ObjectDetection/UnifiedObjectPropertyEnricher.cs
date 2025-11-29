@@ -54,7 +54,7 @@ public class UnifiedObjectPropertyEnricher : IEnricher
             detectedObjects = _provider.Kind switch
             {
                 ObjectDetectionProviderKind.Azure => GetObjectsFromAzureProvider(sourceData, (float)photo.Scale),
-                ObjectDetectionProviderKind.YoloOnnx => GetObjectsFromYoloProvider(sourceData, (float)photo.Scale),
+                ObjectDetectionProviderKind.YoloOnnx => _provider.DetectObjects(sourceData, (float)photo.Scale),
                 _ => throw new NotSupportedException($"Provider kind {_provider.Kind} is not supported")
             };
         }
@@ -123,20 +123,6 @@ public class UnifiedObjectPropertyEnricher : IEnricher
         }
 
         return azureProvider.GetDetectedObjectsFromAnalysis(sourceData.ImageAnalysis, scale);
-    }
-
-    /// <summary>
-    /// Gets detected objects from YOLO ONNX provider using preview image.
-    /// </summary>
-    private IReadOnlyList<DetectedObjectDto> GetObjectsFromYoloProvider(SourceDataDto sourceData, float scale)
-    {
-        if (sourceData.PreviewImage == null)
-        {
-            _logger.LogDebug("No preview image available for YOLO object detection");
-            return [];
-        }
-
-        return _provider.DetectObjects(sourceData.PreviewImage, scale);
     }
 
     /// <summary>

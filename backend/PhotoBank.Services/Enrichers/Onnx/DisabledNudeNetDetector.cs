@@ -10,7 +10,13 @@ namespace PhotoBank.Services.Enrichers.Onnx;
 /// </summary>
 public class DisabledNudeNetDetector : INudeNetDetector
 {
-    public NudeNetDetectionResult Detect(IMagickImage<byte> image)
+    public NudeNetDetectionResult Detect(
+        IMagickImage<byte> letterboxedImage,
+        int originalWidth,
+        int originalHeight,
+        float letterboxScale,
+        int padX,
+        int padY)
     {
         return new NudeNetDetectionResult
         {

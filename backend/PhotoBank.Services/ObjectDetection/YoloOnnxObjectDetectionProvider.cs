@@ -4,6 +4,7 @@ using System.Linq;
 using ImageMagick;
 using Microsoft.Extensions.Options;
 using PhotoBank.Services.Enrichers.Onnx;
+using PhotoBank.Services.Models;
 using PhotoBank.Services.ObjectDetection.Abstractions;
 
 namespace PhotoBank.Services.ObjectDetection;
@@ -31,17 +32,31 @@ public class YoloOnnxObjectDetectionProvider : IObjectDetectionProvider
 
     public ObjectDetectionProviderKind Kind => ObjectDetectionProviderKind.YoloOnnx;
 
-    public IReadOnlyList<DetectedObjectDto> DetectObjects(IMagickImage<byte>? image, float scale)
+    public IReadOnlyList<DetectedObjectDto> DetectObjects(SourceDataDto sourceData, float scale)
     {
-        if (image == null)
+        if (sourceData?.LetterboxedImage640 == null)
             return Array.Empty<DetectedObjectDto>();
 
-        var detectedObjects = _yoloService.DetectObjects(image, _confidenceThreshold, _nmsThreshold);
+        if (sourceData.OriginalImage == null)
+            return Array.Empty<DetectedObjectDto>();
+
+        // Use pre-prepared letterboxed image and parameters from PreviewEnricher
+        var detectedObjects = _yoloService.DetectObjects(
+            letterboxedImage: sourceData.LetterboxedImage640,
+            originalWidth: (int)sourceData.OriginalImage.Width,
+            originalHeight: (int)sourceData.OriginalImage.Height,
+            letterboxScale: sourceData.LetterboxScale,
+            padX: sourceData.LetterboxPadX,
+            padY: sourceData.LetterboxPadY,
+            confidenceThreshold: _confidenceThreshold,
+            nmsThreshold: _nmsThreshold);
 
         if (detectedObjects.Count == 0)
             return Array.Empty<DetectedObjectDto>();
 
         // Convert YOLO detections to common format
+        // Note: YOLO already returns coordinates in original image space,
+        // so we scale them by photo scale factor for database storage
         return detectedObjects.Select(obj => new DetectedObjectDto(
             ClassName: obj.ClassName,
             Confidence: obj.Confidence,

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ImageMagick;
 using PhotoBank.Services.ImageAnalysis;
+using PhotoBank.Services.Models;
 using PhotoBank.Services.ObjectDetection.Abstractions;
 
 namespace PhotoBank.Services.ObjectDetection;
@@ -21,10 +22,10 @@ public class AzureObjectDetectionProvider : IObjectDetectionProvider
     /// by AnalyzeEnricher, so this method signature is for interface compatibility.
     /// Use GetDetectedObjectsFromAnalysis() to extract objects from existing analysis result.
     /// </summary>
-    public IReadOnlyList<DetectedObjectDto> DetectObjects(IMagickImage<byte> image, float scale)
+    public IReadOnlyList<DetectedObjectDto> DetectObjects(SourceDataDto sourceData, float scale)
     {
         throw new InvalidOperationException(
-            "AzureObjectDetectionProvider does not detect objects directly from image. " +
+            "AzureObjectDetectionProvider does not detect objects directly. " +
             "Use GetDetectedObjectsFromAnalysis() with ImageAnalysisResult from SourceDataDto.");
     }
 
