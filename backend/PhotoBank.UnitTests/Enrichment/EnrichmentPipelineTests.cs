@@ -357,19 +357,16 @@ public class EnrichmentPipelineTests
 
     private sealed class TestStopCondition : IEnrichmentStopCondition
     {
-        private readonly Func<EnrichmentContext, bool> _predicate;
+        private readonly Func<EnrichmentContext, Task<string?>> _predicate;
 
         public TestStopCondition(
             string reason,
             Func<EnrichmentContext, bool> predicate,
             IEnumerable<Type>? appliesAfterEnrichers = null)
         {
-            Reason = reason;
-            _predicate = predicate;
+            _predicate = ctx => Task.FromResult(predicate(ctx) ? reason : null);
             AppliesAfterEnrichers = appliesAfterEnrichers?.ToArray() ?? Array.Empty<Type>();
         }
-
-        public string Reason { get; }
 
         public int Evaluations { get; private set; }
 
@@ -377,11 +374,11 @@ public class EnrichmentPipelineTests
 
         public EnrichmentContext? CapturedContext { get; private set; }
 
-        public bool ShouldStop(EnrichmentContext context)
+        public async Task<string?> GetStopReasonAsync(EnrichmentContext context, CancellationToken cancellationToken = default)
         {
             Evaluations++;
             CapturedContext = context;
-            return _predicate(context);
+            return await _predicate(context);
         }
     }
 
