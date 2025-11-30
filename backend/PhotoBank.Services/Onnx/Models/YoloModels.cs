@@ -31,7 +31,7 @@ public class DetectedObjectOnnx
     /// <summary>
     /// Bounding box in format: [x_min, y_min, x_max, y_max]
     /// </summary>
-    public float[] BoundingBox => new[] { X, Y, X + Width, Y + Height };
+    public float[] BoundingBox => [X, Y, X + Width, Y + Height];
 }
 
 /// <summary>

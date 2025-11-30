@@ -138,20 +138,12 @@ public sealed class OpenRouterImageAnalyzer : IImageAnalyzer
                 Categories = [],
                 Objects = [],
 
-                Adult = new AdultContent
-                {
-                    IsAdultContent = response.IsNsfw,
-                    AdultScore = response.IsNsfw ? 0.9 : 0.1,
-                    IsRacyContent = response.IsRacy,
-                    RacyScore = response.IsRacy ? 0.9 : 0.1
-                },
-
                 Color = new ColorInfo
                 {
-                    IsBWImg = false,
-                    AccentColor = dominantColors.FirstOrDefault(),
-                    DominantColorBackground = dominantColors.FirstOrDefault(),
-                    DominantColorForeground = dominantColors.Skip(1).FirstOrDefault() ?? dominantColors.FirstOrDefault(),
+                    IsBWImg = response.IsBW,
+                    AccentColor = response.AccentColor,
+                    DominantColorBackground = response.DominantColorBackground,
+                    DominantColorForeground = response.DominantColorForeground,
                     DominantColors = dominantColors
                 }
             };
@@ -167,14 +159,12 @@ public sealed class OpenRouterImageAnalyzer : IImageAnalyzer
     private static string CleanJsonResponse(string json)
     {
         json = json.Trim();
-        if (json.StartsWith("```"))
+        if (!json.StartsWith("```")) return json;
+        var startIdx = json.IndexOf('{');
+        var endIdx = json.LastIndexOf('}');
+        if (startIdx >= 0 && endIdx > startIdx)
         {
-            var startIdx = json.IndexOf('{');
-            var endIdx = json.LastIndexOf('}');
-            if (startIdx >= 0 && endIdx > startIdx)
-            {
-                json = json.Substring(startIdx, endIdx - startIdx + 1);
-            }
+            json = json.Substring(startIdx, endIdx - startIdx + 1);
         }
         return json;
     }
@@ -215,11 +205,17 @@ public sealed class OpenRouterImageAnalyzer : IImageAnalyzer
         [JsonPropertyName("tags")]
         public List<OpenRouterTag>? Tags { get; init; }
 
-        [JsonPropertyName("is_nsfw")]
-        public bool IsNsfw { get; init; }
+        [JsonPropertyName("is_bw")]
+        public bool IsBW { get; init; }
 
-        [JsonPropertyName("is_racy")]
-        public bool IsRacy { get; init; }
+        [JsonPropertyName("accent_color")]
+        public string? AccentColor { get; init; }
+
+        [JsonPropertyName("dominant_color_background")]
+        public string? DominantColorBackground { get; init; }
+
+        [JsonPropertyName("dominant_color_foreground")]
+        public string? DominantColorForeground { get; init; }
 
         [JsonPropertyName("dominant_colors")]
         public List<string>? DominantColors { get; init; }

@@ -143,7 +143,7 @@ namespace PhotoBank.Services
             var faces = (photo.Faces ?? new List<Face>())
                 .Zip(sourceData.FaceImages, (f, img) => new PhotoCreatedFace(f.Id, img))
                 .ToList();
-            var evt = new PhotoCreated(photo.Id, sourceData.PreviewImageBytes, sourceData.ThumbnailImage, faces);
+            var evt = new PhotoCreated(photo.Id, photo.Storage.Name, photo.RelativePath, sourceData.PreviewImageBytes, sourceData.ThumbnailImage, faces);
             await _mediator.Publish(evt);
         }
 

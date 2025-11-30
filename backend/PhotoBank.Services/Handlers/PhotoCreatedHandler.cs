@@ -5,7 +5,6 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Minio;
 using Minio.DataModel.Args;
@@ -34,26 +33,20 @@ public class PhotoCreatedHandler : INotificationHandler<PhotoCreated>
 
     public async Task Handle(PhotoCreated notification, CancellationToken cancellationToken)
     {
-        var info = await _context.Photos
-            .AsNoTracking()
-            .Where(p => p.Id == notification.PhotoId)
-            .Select(p => new { Storage = p.Storage.Name, p.RelativePath })
-            .SingleAsync(cancellationToken);
-
         var photoEntry = GetEntityEntry(p => p.Id == notification.PhotoId, () => new Photo { Id = notification.PhotoId });
         var uploadedKeys = new List<string>();
 
         try
         {
             // Upload preview to S3
-            var previewKey = S3KeyBuilder.BuildPreviewKey(info.Storage, info.RelativePath, notification.PhotoId);
+            var previewKey = S3KeyBuilder.BuildPreviewKey(notification.StorageName, notification.RelativePath, notification.PhotoId);
             await UploadAndSetBlobProperties(previewKey, notification.Preview, photoEntry, uploadedKeys, cancellationToken,
                 p => p.S3Key_Preview, p => p.S3ETag_Preview, p => p.Sha256_Preview, p => p.BlobSize_Preview);
 
             // Upload thumbnail to S3 if exists
             if (notification.Thumbnail != null)
             {
-                var thumbKey = S3KeyBuilder.BuildThumbnailKey(info.Storage, info.RelativePath, notification.PhotoId);
+                var thumbKey = S3KeyBuilder.BuildThumbnailKey(notification.StorageName, notification.RelativePath, notification.PhotoId);
                 await UploadAndSetBlobProperties(thumbKey, notification.Thumbnail, photoEntry, uploadedKeys, cancellationToken,
                     p => p.S3Key_Thumbnail, p => p.S3ETag_Thumbnail, p => p.Sha256_Thumbnail, p => p.BlobSize_Thumbnail);
             }
