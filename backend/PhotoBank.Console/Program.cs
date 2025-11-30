@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using PhotoBank.DependencyInjection;
 using PhotoBank.Services;
 using Serilog;
 using System.CommandLine;
+using ImageMagick;
 
 namespace PhotoBank.Console
 {
@@ -68,6 +70,10 @@ namespace PhotoBank.Console
             // Add delete-photos subcommand
             var deleteCommand = BuildDeleteCommand(args);
             rootCommand.AddCommand(deleteCommand);
+
+            // Add backfill-image-hash subcommand
+            var backfillImageHashCommand = BuildBackfillImageHashCommand(args);
+            rootCommand.AddCommand(backfillImageHashCommand);
 
             // Allow unmatched tokens (e.g., --environment, --logging:*) to pass through to the host
             rootCommand.TreatUnmatchedTokensAsErrors = false;
@@ -138,6 +144,113 @@ namespace PhotoBank.Console
             }
         }
 
+        private static async Task<int> RunBackfillImageHashAsync(string[] args)
+        {
+            IHost? host = null;
+
+            try
+            {
+                host = Host.CreateDefaultBuilder(args)
+                    .UseSerilog((context, services, configuration) => configuration
+                        .ReadFrom.Configuration(context.Configuration)
+                        .WriteTo.Console()
+                        .WriteTo.File("logs/photobank-.log",
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 7))
+                    .ConfigureServices((context, services) =>
+                    {
+                        services
+                            .AddPhotobankDbContext(context.Configuration, usePool: false)
+                            .AddPhotobankCore(context.Configuration)
+                            .AddPhotobankConsole(context.Configuration);
+                    })
+                    .Build();
+
+                Console.WriteLine("Starting image hash backfill...");
+
+                var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+                var scopeFactory = host.Services.GetRequiredService<IServiceScopeFactory>();
+                var ct = lifetime.ApplicationStopping;
+
+                await using var scope = scopeFactory.CreateAsyncScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<PhotoBank.DbContext.DbContext.PhotoBankDbContext>();
+                var minioObjectService = scope.ServiceProvider.GetRequiredService<MinioObjectService>();
+                var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+                var logger = loggerFactory.CreateLogger("BackfillImageHash");
+
+                const int batchSize = 50;
+                var processed = 0;
+                var updated = 0;
+                var skipped = 0;
+                var failed = 0;
+
+                while (true)
+                {
+                    var batch = await dbContext.Photos
+                        .Where(p => string.IsNullOrEmpty(p.ImageHash))
+                        .OrderBy(p => p.Id)
+                        .Take(batchSize)
+                        .ToListAsync(ct);
+
+                    if (batch.Count == 0)
+                    {
+                        break;
+                    }
+
+                    foreach (var photo in batch)
+                    {
+                        if (string.IsNullOrWhiteSpace(photo.S3Key_Preview))
+                        {
+                            skipped++;
+                            logger.LogWarning("Photo {PhotoId} has no preview key; skipping.", photo.Id);
+                            continue;
+                        }
+
+                        try
+                        {
+                            var previewBytes = await minioObjectService.GetObjectAsync(photo.S3Key_Preview);
+                            using var previewImage = new MagickImage(previewBytes);
+                            photo.ImageHash = ImageHashHelper.ComputeHash(previewImage);
+                            updated++;
+                        }
+                        catch (Exception ex)
+                        {
+                            failed++;
+                            logger.LogError(ex, "Failed to compute ImageHash for photo {PhotoId}.", photo.Id);
+                        }
+                    }
+
+                    processed += batch.Count;
+                    await dbContext.SaveChangesAsync(ct);
+                    dbContext.ChangeTracker.Clear();
+
+                    Console.WriteLine(
+                        $"Processed {processed} photos. Updated: {updated}, Skipped: {skipped}, Failed: {failed}");
+                }
+
+                Console.WriteLine("Image hash backfill completed.");
+
+                await host.StopAsync();
+                return failed > 0 ? 1 : 0;
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("\nBackfill cancelled by user.");
+                return 130;
+            }
+            catch (Exception ex)
+            {
+                await Console.Error.WriteLineAsync($"Backfill error: {ex.Message}");
+                Log.Fatal(ex, "Image hash backfill failed");
+                return 1;
+            }
+            finally
+            {
+                host?.Dispose();
+                await Log.CloseAndFlushAsync();
+            }
+        }
+
         private static Command BuildDeleteCommand(string[] args)
         {
             var command = new Command("delete-photos", "Delete photos and related S3 objects");
@@ -166,6 +279,19 @@ namespace PhotoBank.Console
                 }
 
                 var exitCode = await RunDeleteAsync(args, photoId, lastCount);
+                context.ExitCode = exitCode;
+            });
+
+            return command;
+        }
+
+        private static Command BuildBackfillImageHashCommand(string[] args)
+        {
+            var command = new Command("backfill-image-hash", "Compute ImageHash for photos missing it using preview images");
+
+            command.SetHandler(async context =>
+            {
+                var exitCode = await RunBackfillImageHashAsync(args);
                 context.ExitCode = exitCode;
             });
 
