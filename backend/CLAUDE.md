@@ -243,7 +243,33 @@ public interface IRepository<T>
   });
   ```
 - Never inject scoped services (like `IPhotoProcessor`, `IRepository<T>`) into singleton services that perform parallel operations
-- See `PhotoBank.Console/App.cs:126-153` for a correct implementation example
+- See `PhotoBank.Console/App.cs:128-155` for a correct implementation example
+
+**CRITICAL: Detached Entities Across Scopes**
+- Entities loaded in one DbContext cannot be used in another DbContext without being reloaded
+- Passing entity objects across scopes causes EF Core to attempt INSERT on existing entities
+- **SOLUTION**: Always reload entities by ID in each new scope:
+  ```csharp
+  // BAD - storage from parent scope
+  await Parallel.ForEachAsync(files, async (file, ct) =>
+  {
+      await using var scope = serviceProvider.CreateAsyncScope();
+      var processor = scope.ServiceProvider.GetRequiredService<IPhotoProcessor>();
+      await processor.AddPhotoAsync(storage, file); // ERROR: storage is detached!
+  });
+
+  // GOOD - reload storage in each scope
+  var storageId = storage.Id;
+  await Parallel.ForEachAsync(files, async (file, ct) =>
+  {
+      await using var scope = serviceProvider.CreateAsyncScope();
+      var storageRepo = scope.ServiceProvider.GetRequiredService<IRepository<Storage>>();
+      var scopedStorage = await storageRepo.GetAsync(storageId);
+      var processor = scope.ServiceProvider.GetRequiredService<IPhotoProcessor>();
+      await processor.AddPhotoAsync(scopedStorage, file); // OK: storage tracked in this context
+  });
+  ```
+- See `PhotoBank.Console/App.cs:114-140` for correct implementation
 
 ### Testing
 - Unit tests use `Microsoft.EntityFrameworkCore.InMemory` provider

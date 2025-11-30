@@ -111,8 +111,10 @@ namespace PhotoBank.Console
                 var duplicates = 0;
 
                 var activeEnrichers = _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
+                var storageId = storage.Id; // Store storage ID to avoid cross-context issues
+                var storageName = storage.Name;
 
-                Console.WriteLine($"Processing {total} files from storage '{storage.Name}'...");
+                Console.WriteLine($"Processing {total} files from storage '{storageName}'...");
                 Console.WriteLine($"Max degree of parallelism: {_maxDegreeOfParallelism}");
                 _logger.LogInformation("Using max degree of parallelism: {MaxDegreeOfParallelism}", _maxDegreeOfParallelism);
                 DisplayProgress(0, 0, 0, total);
@@ -129,10 +131,13 @@ namespace PhotoBank.Console
                     // gets its own DbContext instance, preventing thread-safety issues
                     await using var scope = _serviceProvider.CreateAsyncScope();
                     var photoProcessor = scope.ServiceProvider.GetRequiredService<IPhotoProcessor>();
+                    var storageRepository = scope.ServiceProvider.GetRequiredService<IRepository<Storage>>();
 
                     try
                     {
-                        var (_, wasDuplicate) = await photoProcessor.AddPhotoAsync(storage, file, activeEnrichers);
+                        // Load storage in this scope's DbContext to avoid detached entity issues
+                        var scopedStorage = await storageRepository.GetAsync(storageId);
+                        var (_, wasDuplicate) = await photoProcessor.AddPhotoAsync(scopedStorage, file, activeEnrichers);
 
                         if (wasDuplicate)
                         {
