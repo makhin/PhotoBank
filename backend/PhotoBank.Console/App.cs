@@ -109,6 +109,7 @@ namespace PhotoBank.Console
                 var processed = 0;
                 var failed = 0;
                 var duplicates = 0;
+                var skipped = 0;
 
                 var activeEnrichers = _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
                 var storageId = storage.Id; // Store storage ID to avoid cross-context issues
@@ -117,7 +118,7 @@ namespace PhotoBank.Console
                 Console.WriteLine($"Processing {total} files from storage '{storageName}'...");
                 Console.WriteLine($"Max degree of parallelism: {_maxDegreeOfParallelism}");
                 _logger.LogInformation("Using max degree of parallelism: {MaxDegreeOfParallelism}", _maxDegreeOfParallelism);
-                DisplayProgress(0, 0, 0, total);
+                DisplayProgress(0, 0, 0, 0, total);
 
                 var parallelOptions = new ParallelOptions
                 {
@@ -137,15 +138,20 @@ namespace PhotoBank.Console
                     {
                         // Load storage in this scope's DbContext to avoid detached entity issues
                         var scopedStorage = await storageRepository.GetAsync(storageId);
-                        var (_, wasDuplicate) = await photoProcessor.AddPhotoAsync(scopedStorage, file, activeEnrichers);
+                        var (photoId, result, skipReason) = await photoProcessor.AddPhotoAsync(scopedStorage, file, activeEnrichers);
 
-                        if (wasDuplicate)
+                        switch (result)
                         {
-                            Interlocked.Increment(ref duplicates);
-                        }
-                        else
-                        {
-                            Interlocked.Increment(ref processed);
+                            case PhotoProcessResult.Added:
+                                Interlocked.Increment(ref processed);
+                                break;
+                            case PhotoProcessResult.Duplicate:
+                                Interlocked.Increment(ref duplicates);
+                                break;
+                            case PhotoProcessResult.Skipped:
+                                Interlocked.Increment(ref skipped);
+                                _logger.LogInformation("Skipped {File}: {Reason}", file, skipReason);
+                                break;
                         }
                     }
                     catch (Exception e)
@@ -154,13 +160,13 @@ namespace PhotoBank.Console
                         Interlocked.Increment(ref failed);
                     }
 
-                    DisplayProgress(Volatile.Read(ref processed), Volatile.Read(ref failed), Volatile.Read(ref duplicates), total);
+                    DisplayProgress(Volatile.Read(ref processed), Volatile.Read(ref failed), Volatile.Read(ref duplicates), Volatile.Read(ref skipped), total);
                 });
 
                 Console.WriteLine();
-                _logger.LogInformation("Processing completed: {Processed} processed, {Failed} failed, {Duplicates} duplicates",
-                    processed, failed, duplicates);
-                Console.WriteLine($"Done! Processed: {processed}, Failed: {failed}, Duplicates: {duplicates}");
+                _logger.LogInformation("Processing completed: {Processed} processed, {Failed} failed, {Duplicates} duplicates, {Skipped} skipped",
+                    processed, failed, duplicates, skipped);
+                Console.WriteLine($"Done! Processed: {processed}, Failed: {failed}, Duplicates: {duplicates}, Skipped: {skipped}");
 
                 // Return non-zero exit code if there were failures
                 return failed > 0 ? 4 : 0; // Exit code 4 for "partial failure"
@@ -178,17 +184,17 @@ namespace PhotoBank.Console
             }
         }
 
-        private void DisplayProgress(int processed, int failed, int duplicates, int total)
+        private void DisplayProgress(int processed, int failed, int duplicates, int skipped, int total)
         {
             const int width = 40;
-            var completed = processed + failed + duplicates;
+            var completed = processed + failed + duplicates + skipped;
             var percent = (double)completed / Math.Max(total, 1);
             var filled = (int)(percent * width);
             var bar = new string('#', filled).PadRight(width);
 
             lock (_progressLock)
             {
-                Console.Write($"\r[{bar}] {completed}/{total} files ({failed} failed, {duplicates} duplicates)");
+                Console.Write($"\r[{bar}] {completed}/{total} files ({failed} failed, {duplicates} duplicates, {skipped} skipped)");
             }
         }
     }

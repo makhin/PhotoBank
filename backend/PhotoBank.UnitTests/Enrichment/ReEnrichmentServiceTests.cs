@@ -578,7 +578,7 @@ public class ReEnrichmentServiceTests
                 callCount++;
                 if (callCount == 1)
                 {
-                    return Task.CompletedTask; // First call succeeds
+                    return Task.FromResult<string?>(null); // First call succeeds
                 }
                 // Second call triggers cancellation
                 cts.Cancel();
@@ -632,7 +632,7 @@ public class ReEnrichmentServiceTests
                 callCount++;
                 if (callCount == 1)
                 {
-                    return Task.CompletedTask; // First call succeeds
+                    return Task.FromResult<string?>(null); // First call succeeds
                 }
                 // Second call triggers cancellation
                 cts.Cancel();
@@ -707,7 +707,7 @@ public class ReEnrichmentServiceTests
                         }
                     }
                 })
-            .Returns(Task.CompletedTask);
+            .Returns(Task.FromResult<string?>(null));
 
         // Act
         var result = await _service.ReEnrichPhotosAsync(photoIds, enricherTypes);
@@ -794,7 +794,7 @@ public class ReEnrichmentServiceTests
                         }
                     }
                 })
-            .Returns(Task.CompletedTask);
+            .Returns(Task.FromResult<string?>(null));
     }
 
     private void SetupActiveEnricherProvider(IReadOnlyCollection<Type> enrichers)

@@ -45,13 +45,13 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
         _log = log;
     }
 
-    public Task RunAsync(Photo photo, SourceDataDto source, CancellationToken ct = default) =>
+    public Task<string?> RunAsync(Photo photo, SourceDataDto source, CancellationToken ct = default) =>
         RunAsync(photo, source, _enricherTypes, ct);
 
-    public Task RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, CancellationToken ct = default) =>
+    public Task<string?> RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, CancellationToken ct = default) =>
         RunAsync(photo, source, enrichers, null, ct);
 
-    public async Task RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, IServiceProvider? serviceProvider, CancellationToken ct = default)
+    public async Task<string?> RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, IServiceProvider? serviceProvider, CancellationToken ct = default)
     {
         // If a service provider is provided, use it directly (for transaction participation).
         // Otherwise, create a new scope to isolate enricher resolution.
@@ -113,6 +113,9 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
             contextAccessor.Current = previousContext;
             scope?.Dispose();
         }
+
+        // Return stop reason if enrichment was stopped, otherwise null
+        return context.StopReason;
     }
 
     public async Task RunBatchAsync(IEnumerable<(Photo photo, SourceDataDto source)> items, CancellationToken ct = default)
