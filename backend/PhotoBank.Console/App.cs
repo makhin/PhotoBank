@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
@@ -15,7 +16,7 @@ namespace PhotoBank.Console
 
     public class App
     {
-        private readonly IPhotoProcessor _photoProcessor;
+        private readonly IServiceProvider _serviceProvider;
         private readonly IRepository<Storage> _storages;
         private readonly IRepository<Enricher> _enricherRepository;
         private readonly IActiveEnricherProvider _activeEnricherProvider;
@@ -26,7 +27,7 @@ namespace PhotoBank.Console
         private readonly Lock _progressLock = new();
 
         public App(
-            IPhotoProcessor photoProcessor,
+            IServiceProvider serviceProvider,
             IRepository<Storage> storages,
             IRepository<Enricher> enricherRepository,
             IActiveEnricherProvider activeEnricherProvider,
@@ -35,7 +36,7 @@ namespace PhotoBank.Console
             IRecognitionService recognitionService,
             IConfiguration configuration)
         {
-            _photoProcessor = photoProcessor;
+            _serviceProvider = serviceProvider;
             _storages = storages;
             _enricherRepository = enricherRepository;
             _activeEnricherProvider = activeEnricherProvider;
@@ -124,9 +125,14 @@ namespace PhotoBank.Console
 
                 await Parallel.ForEachAsync(fileList, parallelOptions, async (file, ct) =>
                 {
+                    // Create a new scope for each file to ensure each parallel operation
+                    // gets its own DbContext instance, preventing thread-safety issues
+                    await using var scope = _serviceProvider.CreateAsyncScope();
+                    var photoProcessor = scope.ServiceProvider.GetRequiredService<IPhotoProcessor>();
+
                     try
                     {
-                        var (_, wasDuplicate) = await _photoProcessor.AddPhotoAsync(storage, file, activeEnrichers);
+                        var (_, wasDuplicate) = await photoProcessor.AddPhotoAsync(storage, file, activeEnrichers);
 
                         if (wasDuplicate)
                         {
