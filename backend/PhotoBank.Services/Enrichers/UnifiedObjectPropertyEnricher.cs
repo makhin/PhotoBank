@@ -65,7 +65,8 @@ public class UnifiedObjectPropertyEnricher : IEnricher
             throw;
         }
 
-        if (detectedObjects.Count == 0)
+        // Check for null result (can happen with mocked providers or errors)
+        if (detectedObjects == null || detectedObjects.Count == 0)
         {
             _logger.LogDebug("No objects detected for photo {PhotoId} using provider {ProviderKind}",
                 photo.Id, _provider.Kind);
@@ -120,6 +121,11 @@ public class UnifiedObjectPropertyEnricher : IEnricher
         {
             throw new InvalidOperationException(
                 $"Provider is {_provider.GetType().Name} but expected AzureObjectDetectionProvider");
+        }
+
+        if (sourceData?.ImageAnalysis == null)
+        {
+            return Array.Empty<DetectedObjectDto>();
         }
 
         return azureProvider.GetDetectedObjectsFromAnalysis(sourceData.ImageAnalysis, scale);

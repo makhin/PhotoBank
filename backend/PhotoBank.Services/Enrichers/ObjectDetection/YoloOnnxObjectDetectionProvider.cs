@@ -51,7 +51,7 @@ public class YoloOnnxObjectDetectionProvider : IObjectDetectionProvider
             confidenceThreshold: _confidenceThreshold,
             nmsThreshold: _nmsThreshold);
 
-        if (detectedObjects.Count == 0)
+        if (detectedObjects == null || detectedObjects.Count == 0)
             return Array.Empty<DetectedObjectDto>();
 
         // Convert YOLO detections to common format

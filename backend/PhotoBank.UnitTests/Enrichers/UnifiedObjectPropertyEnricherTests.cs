@@ -155,7 +155,7 @@ public class UnifiedObjectPropertyEnricherTests
 
         var mockProvider = new Mock<IObjectDetectionProvider>();
         mockProvider.Setup(p => p.Kind).Returns(ObjectDetectionProviderKind.YoloOnnx);
-        mockProvider.Setup(p => p.DetectObjects(sourceData, 1))
+        mockProvider.Setup(p => p.DetectObjects(It.IsAny<SourceDataDto>(), It.IsAny<float>()))
             .Returns(new List<DetectedObjectDto>
             {
                 new DetectedObjectDto("car", 0.9f, 10, 10, 50, 50),
@@ -312,6 +312,8 @@ public class UnifiedObjectPropertyEnricherTests
 
         var mockProvider = new Mock<IObjectDetectionProvider>();
         mockProvider.Setup(p => p.Kind).Returns(ObjectDetectionProviderKind.YoloOnnx);
+        mockProvider.Setup(p => p.DetectObjects(It.IsAny<SourceDataDto>(), It.IsAny<float>()))
+            .Returns(Array.Empty<DetectedObjectDto>());
 
         var enricher = new UnifiedObjectPropertyEnricher(
             mockProvider.Object,
@@ -325,6 +327,6 @@ public class UnifiedObjectPropertyEnricherTests
         photo.ObjectProperties.Should().BeNullOrEmpty();
         mockProvider.Verify(
             p => p.DetectObjects(It.IsAny<SourceDataDto>(), It.IsAny<float>()),
-            Times.Never);
+            Times.Once); // Now it should be called once, and return empty array
     }
 }

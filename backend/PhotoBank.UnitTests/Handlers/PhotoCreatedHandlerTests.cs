@@ -59,6 +59,8 @@ public class PhotoCreatedHandlerTests
         var faceImage = new byte[] { 8, 9, 10 };
         var notification = new PhotoCreated(
             PhotoId,
+            "storage",
+            "album",
             preview,
             thumbnail,
             new[] { new PhotoCreatedFace(FaceId, faceImage) });
@@ -106,6 +108,8 @@ public class PhotoCreatedHandlerTests
         var faceImage = new byte[] { 7, 7, 7 };
         var notification = new PhotoCreated(
             PhotoId,
+            "storage",
+            "album",
             preview,
             null,
             new[] { new PhotoCreatedFace(FaceId, faceImage) });
@@ -145,6 +149,8 @@ public class PhotoCreatedHandlerTests
         var faceImage = new byte[] { 3, 3, 3, 3 };
         var notification = new PhotoCreated(
             PhotoId,
+            "storage",
+            "album",
             preview,
             thumbnail,
             new[] { new PhotoCreatedFace(FaceId, faceImage) });
