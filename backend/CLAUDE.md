@@ -139,6 +139,17 @@ The `IReEnrichmentService` allows re-running enrichers on already-processed phot
 - `ReEnrichPhotoAsync()` - Force re-run specific enrichers
 - `ReEnrichMissingAsync()` - Only run enrichers not yet applied
 
+**Stop Conditions:**
+The pipeline supports stop conditions (`IEnrichmentStopCondition`) that can halt enrichment early:
+- Configured via `AddEnrichmentStopCondition()` in DI setup
+- Example: Adult content detection stops enrichment to prevent saving inappropriate photos
+- When stop condition triggers:
+  - `RunAsync()` returns the stop reason as a `string` (null if completed successfully)
+  - `PhotoProcessor` checks the reason and skips saving the photo
+  - Photo is NOT persisted to database
+  - Console app logs: "Skipped {file}: {reason}"
+- **IMPORTANT**: Photos skipped by stop conditions are never saved to DB, preventing incomplete data
+
 ### Database Context and Access Control
 
 `PhotoBankDbContext` extends `IdentityDbContext<ApplicationUser>` and implements row-level security:
