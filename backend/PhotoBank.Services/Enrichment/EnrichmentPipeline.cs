@@ -109,7 +109,7 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
                         _log.LogInformation("Enricher {Enricher} took {Ms} ms", t.Name, elapsed);
                 }
 
-                if (EvaluateStopConditions(context, t))
+                if (await EvaluateStopConditionsAsync(context, t, ct))
                 {
                     break;
                 }
@@ -176,15 +176,15 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
         return result.ToArray();
     }
 
-    private bool EvaluateStopConditions(EnrichmentContext context, Type enricherType)
+    private async Task<bool> EvaluateStopConditionsAsync(EnrichmentContext context, Type enricherType, CancellationToken cancellationToken)
     {
-        if (EvaluateStopConditions(context, enricherType, _globalStopConditions))
+        if (await EvaluateStopConditionsAsync(context, enricherType, _globalStopConditions, cancellationToken))
         {
             return true;
         }
 
         if (_stopConditionsByEnricher.TryGetValue(enricherType, out var targeted) &&
-            EvaluateStopConditions(context, enricherType, targeted))
+            await EvaluateStopConditionsAsync(context, enricherType, targeted, cancellationToken))
         {
             return true;
         }
@@ -192,22 +192,24 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
         return false;
     }
 
-    private bool EvaluateStopConditions(
+    private async Task<bool> EvaluateStopConditionsAsync(
         EnrichmentContext context,
         Type enricherType,
-        IReadOnlyList<IEnrichmentStopCondition> stopConditions)
+        IReadOnlyList<IEnrichmentStopCondition> stopConditions,
+        CancellationToken cancellationToken)
     {
         foreach (var stopCondition in stopConditions)
         {
-            if (!stopCondition.ShouldStop(context)) continue;
+            var reason = await stopCondition.GetStopReasonAsync(context, cancellationToken);
+            if (reason is null) continue;
 
-            if (context.TryStop(stopCondition.Reason))
+            if (context.TryStop(reason))
             {
                 _log.LogInformation(
                     "Stopping enrichment for photo {PhotoId} after {Enricher}: {Reason}",
                     context.Photo.Id,
                     enricherType.Name,
-                    stopCondition.Reason);
+                    reason);
             }
 
             return true;

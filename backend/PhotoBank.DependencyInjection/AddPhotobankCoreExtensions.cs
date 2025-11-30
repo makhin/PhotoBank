@@ -80,6 +80,8 @@ public static partial class ServiceCollectionExtensions
         // This allows API to use IReEnrichmentService and related services
         services.AddEnrichmentInfrastructure();
 
+        services.AddSingleton<IEnrichmentStopCondition, DuplicatePhotoStopCondition>();
+
         // Stop condition for adult content:
         // Only stop if adult content is detected AND OpenRouter is enabled
         // (OpenRouter is used for caption generation which we want to avoid for adult content)

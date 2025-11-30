@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PhotoBank.DbContext.Models;
@@ -104,8 +105,7 @@ public static class EnrichmentPipelineServiceCollectionExtensions
     {
         services.AddSingleton<IEnrichmentStopCondition>(
             new PredicateEnrichmentStopCondition(
-                reason,
-                ctx => predicate(ctx.Photo, ctx.Source),
+                ctx => Task.FromResult(predicate(ctx.Photo, ctx.Source) ? reason : null),
                 appliesAfterEnrichers));
 
         return services;
@@ -123,8 +123,7 @@ public static class EnrichmentPipelineServiceCollectionExtensions
     {
         services.AddSingleton<IEnrichmentStopCondition>(sp =>
             new PredicateEnrichmentStopCondition(
-                reason,
-                ctx => predicate(sp, ctx.Photo, ctx.Source),
+                ctx => Task.FromResult(predicate(sp, ctx.Photo, ctx.Source) ? reason : null),
                 appliesAfterEnrichers));
 
         return services;
