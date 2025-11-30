@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
 using PhotoBank.DbContext.Models;
@@ -84,17 +85,26 @@ public static partial class ServiceCollectionExtensions
         // (OpenRouter is used for caption generation which we want to avoid for adult content)
         services.AddEnrichmentStopCondition(
             "Adult content detected",
-            static (IServiceProvider sp, Photo photo, SourceDataDto _) =>
+            (IServiceProvider sp, Photo photo, SourceDataDto _) =>
             {
                 if (!photo.IsAdultContent)
                     return false;
 
                 // Check if OpenRouter analyzer is active
                 var imageAnalyzer = sp.GetService<IImageAnalyzer>();
-                if (imageAnalyzer == null)
-                    return false; // No analyzer configured, don't stop
+                var logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<object>>();
 
-                return imageAnalyzer.Kind == ImageAnalyzerKind.OpenRouter;
+                if (imageAnalyzer == null)
+                {
+                    logger?.LogDebug("Adult content detected but no IImageAnalyzer registered - continuing enrichment");
+                    return false; // No analyzer configured, don't stop
+                }
+
+                var shouldStop = imageAnalyzer.Kind == ImageAnalyzerKind.OpenRouter;
+                logger?.LogInformation("Adult content detected. Image analyzer: {AnalyzerKind}, ShouldStop: {ShouldStop}",
+                    imageAnalyzer.Kind, shouldStop);
+
+                return shouldStop;
             },
             typeof(AdultEnricher));
 

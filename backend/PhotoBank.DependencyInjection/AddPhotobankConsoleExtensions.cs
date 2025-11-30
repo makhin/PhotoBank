@@ -48,13 +48,17 @@ public static partial class ServiceCollectionExtensions
         var imageAnalyzerOptions = configuration.GetSection(ImageAnalyzerOptions.SectionName).Get<ImageAnalyzerOptions>()
             ?? new ImageAnalyzerOptions();
 
+        Console.WriteLine($"[DI] Registering IImageAnalyzer with Provider={imageAnalyzerOptions.Provider}");
+
         if (imageAnalyzerOptions.Provider == ImageAnalyzerKind.Ollama)
         {
             services.AddSingleton<IImageAnalyzer, OllamaImageAnalyzer>();
+            Console.WriteLine("[DI] Registered OllamaImageAnalyzer");
         }
         else if (imageAnalyzerOptions.Provider == ImageAnalyzerKind.OpenRouter)
         {
             services.AddSingleton<IImageAnalyzer, OpenRouterImageAnalyzer>();
+            Console.WriteLine("[DI] Registered OpenRouterImageAnalyzer");
         }
         else
         {
@@ -69,6 +73,7 @@ public static partial class ServiceCollectionExtensions
                 };
             });
             services.AddSingleton<IImageAnalyzer, AzureImageAnalyzer>();
+            Console.WriteLine("[DI] Registered AzureImageAnalyzer");
         }
 
         services.AddSingleton<IFaceClient, FaceClient>(provider =>
