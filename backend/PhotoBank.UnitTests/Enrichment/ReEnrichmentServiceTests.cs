@@ -578,7 +578,7 @@ public class ReEnrichmentServiceTests
                 callCount++;
                 if (callCount == 1)
                 {
-                    return Task.FromResult<string?>(null); // First call succeeds
+                    return Task.FromResult(new EnrichmentResult(null, new EnrichmentStats())); // First call succeeds
                 }
                 // Second call triggers cancellation
                 cts.Cancel();
@@ -632,7 +632,7 @@ public class ReEnrichmentServiceTests
                 callCount++;
                 if (callCount == 1)
                 {
-                    return Task.FromResult<string?>(null); // First call succeeds
+                    return Task.FromResult(new EnrichmentResult(null, new EnrichmentStats())); // First call succeeds
                 }
                 // Second call triggers cancellation
                 cts.Cancel();
@@ -707,7 +707,7 @@ public class ReEnrichmentServiceTests
                         }
                     }
                 })
-            .Returns(Task.FromResult<string?>(null));
+            .Returns(Task.FromResult(new EnrichmentResult(null, new EnrichmentStats())));
 
         // Act
         var result = await _service.ReEnrichPhotosAsync(photoIds, enricherTypes);
@@ -794,7 +794,7 @@ public class ReEnrichmentServiceTests
                         }
                     }
                 })
-            .Returns(Task.FromResult<string?>(null));
+            .Returns(Task.FromResult(new EnrichmentResult(null, new EnrichmentStats())));
     }
 
     private void SetupActiveEnricherProvider(IReadOnlyCollection<Type> enrichers)

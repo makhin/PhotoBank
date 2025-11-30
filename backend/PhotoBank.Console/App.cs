@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -110,6 +111,8 @@ namespace PhotoBank.Console
                 var failed = 0;
                 var duplicates = 0;
                 var skipped = 0;
+                var totalEnrichmentTime = 0L;
+                var enricherTimesAccumulator = new Dictionary<string, long>();
 
                 var activeEnrichers = _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
                 var storageId = storage.Id; // Store storage ID to avoid cross-context issues
@@ -138,12 +141,26 @@ namespace PhotoBank.Console
                     {
                         // Load storage in this scope's DbContext to avoid detached entity issues
                         var scopedStorage = await storageRepository.GetAsync(storageId);
-                        var (photoId, result, skipReason) = await photoProcessor.AddPhotoAsync(scopedStorage, file, activeEnrichers);
+                            var (photoId, result, skipReason, stats) = await photoProcessor.AddPhotoAsync(scopedStorage, file, activeEnrichers);
 
                         switch (result)
                         {
                             case PhotoProcessResult.Added:
                                 Interlocked.Increment(ref processed);
+                                // Accumulate enrichment statistics
+                                if (stats != null)
+                                {
+                                    Interlocked.Add(ref totalEnrichmentTime, stats.TotalMilliseconds);
+                                    lock (enricherTimesAccumulator)
+                                    {
+                                        foreach (var (enricherName, time) in stats.EnricherTimes)
+                                        {
+                                            if (!enricherTimesAccumulator.ContainsKey(enricherName))
+                                                enricherTimesAccumulator[enricherName] = 0;
+                                            enricherTimesAccumulator[enricherName] += time;
+                                        }
+                                    }
+                                }
                                 break;
                             case PhotoProcessResult.Duplicate:
                                 Interlocked.Increment(ref duplicates);
@@ -167,6 +184,33 @@ namespace PhotoBank.Console
                 _logger.LogInformation("Processing completed: {Processed} processed, {Failed} failed, {Duplicates} duplicates, {Skipped} skipped",
                     processed, failed, duplicates, skipped);
                 Console.WriteLine($"Done! Processed: {processed}, Failed: {failed}, Duplicates: {duplicates}, Skipped: {skipped}");
+
+                // Display enrichment statistics
+                if (processed > 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("=== Enrichment Statistics ===");
+                    Console.WriteLine($"Total enrichment time: {totalEnrichmentTime:N0} ms ({totalEnrichmentTime / 1000.0:F2} sec)");
+                    Console.WriteLine($"Average time per photo: {totalEnrichmentTime / (double)processed:F0} ms");
+
+                    if (enricherTimesAccumulator.Count > 0)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("Average time per enricher:");
+
+                        // Sort enrichers by total time descending
+                        var sortedEnrichers = enricherTimesAccumulator
+                            .OrderByDescending(kvp => kvp.Value)
+                            .ToList();
+
+                        foreach (var (enricherName, totalTime) in sortedEnrichers)
+                        {
+                            var avgTime = totalTime / (double)processed;
+                            var percentage = (totalTime / (double)totalEnrichmentTime) * 100;
+                            Console.WriteLine($"  {enricherName,-40} {avgTime,6:F0} ms  ({percentage,5:F1}%)");
+                        }
+                    }
+                }
 
                 // Return non-zero exit code if there were failures
                 return failed > 0 ? 4 : 0; // Exit code 4 for "partial failure"

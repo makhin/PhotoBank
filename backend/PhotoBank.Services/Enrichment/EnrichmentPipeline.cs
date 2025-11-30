@@ -45,14 +45,17 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
         _log = log;
     }
 
-    public Task<string?> RunAsync(Photo photo, SourceDataDto source, CancellationToken ct = default) =>
+    public Task<EnrichmentResult> RunAsync(Photo photo, SourceDataDto source, CancellationToken ct = default) =>
         RunAsync(photo, source, _enricherTypes, ct);
 
-    public Task<string?> RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, CancellationToken ct = default) =>
+    public Task<EnrichmentResult> RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, CancellationToken ct = default) =>
         RunAsync(photo, source, enrichers, null, ct);
 
-    public async Task<string?> RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, IServiceProvider? serviceProvider, CancellationToken ct = default)
+    public async Task<EnrichmentResult> RunAsync(Photo photo, SourceDataDto source, IReadOnlyCollection<Type> enrichers, IServiceProvider? serviceProvider, CancellationToken ct = default)
     {
+        var stats = new EnrichmentStats();
+        var totalStopwatch = Stopwatch.StartNew();
+
         // If a service provider is provided, use it directly (for transaction participation).
         // Otherwise, create a new scope to isolate enricher resolution.
         IServiceScope? scope = null;
@@ -84,7 +87,7 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
                 ct.ThrowIfCancellationRequested();
 
                 var enricher = (IEnricher)provider.GetRequiredService(t);
-                var sw = _opts.LogTimings ? Stopwatch.StartNew() : null;
+                var sw = Stopwatch.StartNew();
 
                 try
                 {
@@ -98,8 +101,12 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
                 }
                 finally
                 {
-                    if (sw is not null)
-                        _log.LogInformation("Enricher {Enricher} took {Ms} ms", t.Name, sw.ElapsedMilliseconds);
+                    sw.Stop();
+                    var elapsed = sw.ElapsedMilliseconds;
+                    stats.EnricherTimes[t.Name] = elapsed;
+
+                    if (_opts.LogTimings)
+                        _log.LogInformation("Enricher {Enricher} took {Ms} ms", t.Name, elapsed);
                 }
 
                 if (EvaluateStopConditions(context, t))
@@ -112,10 +119,12 @@ public sealed class EnrichmentPipeline : IEnrichmentPipeline
         {
             contextAccessor.Current = previousContext;
             scope?.Dispose();
+            totalStopwatch.Stop();
+            stats.TotalMilliseconds = totalStopwatch.ElapsedMilliseconds;
         }
 
-        // Return stop reason if enrichment was stopped, otherwise null
-        return context.StopReason;
+        // Return enrichment result with stop reason and statistics
+        return new EnrichmentResult(context.StopReason, stats);
     }
 
     public async Task RunBatchAsync(IEnumerable<(Photo photo, SourceDataDto source)> items, CancellationToken ct = default)

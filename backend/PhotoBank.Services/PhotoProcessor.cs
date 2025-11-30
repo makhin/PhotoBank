@@ -26,7 +26,7 @@ namespace PhotoBank.Services
 
     public interface IPhotoProcessor
     {
-        Task<(int PhotoId, PhotoProcessResult Result, string? SkipReason)> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null);
+        Task<(int PhotoId, PhotoProcessResult Result, string? SkipReason, EnrichmentStats? Stats)> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null);
         Task AddFacesAsync(Storage storage);
         Task UpdatePhotosAsync(Storage storage);
     }
@@ -80,26 +80,26 @@ namespace PhotoBank.Services
             return Path.Combine(allSegments.ToArray());
         }
 
-        public async Task<(int PhotoId, PhotoProcessResult Result, string? SkipReason)> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null)
+        public async Task<(int PhotoId, PhotoProcessResult Result, string? SkipReason, EnrichmentStats? Stats)> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null)
         {
             var duplicateResult = await HandleDuplicateCheckAsync(storage, path);
             if (duplicateResult.HasValue)
             {
-                return (duplicateResult.Value.PhotoId, PhotoProcessResult.Duplicate, null);
+                return (duplicateResult.Value.PhotoId, PhotoProcessResult.Duplicate, null, null);
             }
 
-            var (photo, sourceData, stopReason) = await CreateAndEnrichPhotoAsync(storage, path, activeEnrichers);
+            var (photo, sourceData, enrichmentResult) = await CreateAndEnrichPhotoAsync(storage, path, activeEnrichers);
 
             // If enrichment was stopped (e.g., adult content detected), skip saving the photo
-            if (stopReason != null)
+            if (enrichmentResult.StopReason != null)
             {
-                return (0, PhotoProcessResult.Skipped, stopReason);
+                return (0, PhotoProcessResult.Skipped, enrichmentResult.StopReason, enrichmentResult.Stats);
             }
 
             await InsertPhotoAsync(photo);
             await PublishPhotoCreatedEventAsync(photo, sourceData);
 
-            return (photo.Id, PhotoProcessResult.Added, null);
+            return (photo.Id, PhotoProcessResult.Added, null, enrichmentResult.Stats);
         }
 
         private async Task<(int PhotoId, bool WasDuplicate)?> HandleDuplicateCheckAsync(Storage storage, string path)
@@ -123,7 +123,7 @@ namespace PhotoBank.Services
             }
         }
 
-        private async Task<(Photo Photo, SourceDataDto SourceData, string? StopReason)> CreateAndEnrichPhotoAsync(
+        private async Task<(Photo Photo, SourceDataDto SourceData, EnrichmentResult Result)> CreateAndEnrichPhotoAsync(
             Storage storage,
             string path,
             IReadOnlyCollection<Type>? activeEnrichers)
@@ -134,9 +134,9 @@ namespace PhotoBank.Services
 
             var enrichersToUse = activeEnrichers ?? _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
             // Pass serviceProvider so enrichers use the same DbContext as PhotoProcessor
-            var stopReason = await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersToUse, _serviceProvider);
+            var enrichmentResult = await _enrichmentPipeline.RunAsync(photo, sourceData, enrichersToUse, _serviceProvider);
 
-            return (photo, sourceData, stopReason);
+            return (photo, sourceData, enrichmentResult);
         }
 
         private async Task InsertPhotoAsync(Photo photo)
