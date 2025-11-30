@@ -142,7 +142,13 @@ The `IReEnrichmentService` allows re-running enrichers on already-processed phot
 **Stop Conditions:**
 The pipeline supports stop conditions (`IEnrichmentStopCondition`) that can halt enrichment early:
 - Configured via `AddEnrichmentStopCondition()` in DI setup
-- Example: Adult content detection stops enrichment to prevent saving inappropriate photos
+- Two overloads available:
+  - `Func<Photo, SourceDataDto, bool>` - simple predicate
+  - `Func<IServiceProvider, Photo, SourceDataDto, bool>` - with service access
+- Example: Adult content detection
+  - Only stops if `IsAdultContent = true` AND `OpenRouter` is active
+  - Prevents sending adult content to external API for caption generation
+  - Allows processing when using local Ollama or no image analyzer
 - When stop condition triggers:
   - `RunAsync()` returns `EnrichmentResult` with StopReason and Stats
   - `PhotoProcessor` checks the reason and skips saving the photo
