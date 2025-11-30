@@ -110,6 +110,25 @@ public static class EnrichmentPipelineServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Adds an enrichment stop condition with access to IServiceProvider.
+    /// Useful when stop condition needs to check configuration or resolve services.
+    /// </summary>
+    public static IServiceCollection AddEnrichmentStopCondition(
+        this IServiceCollection services,
+        string reason,
+        Func<IServiceProvider, Photo, SourceDataDto, bool> predicate,
+        params Type[] appliesAfterEnrichers)
+    {
+        services.AddSingleton<IEnrichmentStopCondition>(sp =>
+            new PredicateEnrichmentStopCondition(
+                reason,
+                ctx => predicate(sp, ctx.Photo, ctx.Source),
+                appliesAfterEnrichers));
+
+        return services;
+    }
 }
 
 

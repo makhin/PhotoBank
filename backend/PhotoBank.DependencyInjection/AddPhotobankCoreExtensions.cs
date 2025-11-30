@@ -8,8 +8,9 @@ using PhotoBank.Repositories;
 using PhotoBank.Services;
 using PhotoBank.Services.Api;
 using PhotoBank.Services.Enrichers;
-using PhotoBank.Services.Internal;
 using PhotoBank.Services.Enrichment;
+using PhotoBank.Services.ImageAnalysis;
+using PhotoBank.Services.Internal;
 using PhotoBank.Services.Photos;
 using PhotoBank.Services.Photos.Admin;
 using PhotoBank.Services.Photos.Faces;
@@ -77,9 +78,24 @@ public static partial class ServiceCollectionExtensions
         // Register enrichment infrastructure (pipeline, catalog, re-enrichment service)
         // This allows API to use IReEnrichmentService and related services
         services.AddEnrichmentInfrastructure();
+
+        // Stop condition for adult content:
+        // Only stop if adult content is detected AND OpenRouter is enabled
+        // (OpenRouter is used for caption generation which we want to avoid for adult content)
         services.AddEnrichmentStopCondition(
             "Adult content detected",
-            static (Photo photo, SourceDataDto _) => photo.IsAdultContent,
+            static (IServiceProvider sp, Photo photo, SourceDataDto _) =>
+            {
+                if (!photo.IsAdultContent)
+                    return false;
+
+                // Check if OpenRouter analyzer is active
+                var imageAnalyzer = sp.GetService<IImageAnalyzer>();
+                if (imageAnalyzer == null)
+                    return false; // No analyzer configured, don't stop
+
+                return imageAnalyzer.Kind == ImageAnalyzerKind.OpenRouter;
+            },
             typeof(AdultEnricher));
 
         services.AddPhotoEvents();
