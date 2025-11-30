@@ -144,11 +144,25 @@ The pipeline supports stop conditions (`IEnrichmentStopCondition`) that can halt
 - Configured via `AddEnrichmentStopCondition()` in DI setup
 - Example: Adult content detection stops enrichment to prevent saving inappropriate photos
 - When stop condition triggers:
-  - `RunAsync()` returns the stop reason as a `string` (null if completed successfully)
+  - `RunAsync()` returns `EnrichmentResult` with StopReason and Stats
   - `PhotoProcessor` checks the reason and skips saving the photo
   - Photo is NOT persisted to database
   - Console app logs: "Skipped {file}: {reason}"
 - **IMPORTANT**: Photos skipped by stop conditions are never saved to DB, preventing incomplete data
+
+**Enrichment Statistics:**
+The pipeline tracks detailed performance metrics for each enrichment operation:
+- `EnrichmentStats` class contains:
+  - `EnricherTimes`: Dictionary mapping enricher name to execution time (ms)
+  - `TotalMilliseconds`: Total enrichment time including overhead
+- `EnrichmentResult` record returned by `RunAsync()` contains:
+  - `StopReason`: Why enrichment stopped early (null if completed)
+  - `Stats`: Performance statistics
+- Console app aggregates and displays statistics:
+  - Total enrichment time across all photos
+  - Average time per photo
+  - Average time per enricher (sorted by total time, with percentages)
+- Useful for identifying performance bottlenecks and optimization opportunities
 
 ### Database Context and Access Control
 
