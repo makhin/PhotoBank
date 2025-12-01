@@ -22,7 +22,6 @@ dotnet run --project PhotoBank.Console -- [options]
 # Console app options:
 # --storage <id> (-s): Process photos from specific storage ID
 # --no-register: Skip person registration step
-# migrate-embeddings: Migrate face embeddings for all faces
 # re-enrich: Re-run enrichers on processed photos
 #   --photo-ids <ids> (-p): Specific photo IDs
 #   --enrichers <names> (-e): Specific enricher names

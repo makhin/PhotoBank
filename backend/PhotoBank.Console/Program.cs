@@ -52,15 +52,6 @@ namespace PhotoBank.Console
                 noRegisterOption
             };
 
-            // Add migrate-embeddings subcommand
-            var migrateCommand = new Command("migrate-embeddings", "Migrate face embeddings for all faces without embeddings");
-            migrateCommand.SetHandler(async () =>
-            {
-                var exitCode = await RunMigrationAsync(args);
-                Environment.Exit(exitCode);
-            });
-            rootCommand.AddCommand(migrateCommand);
-
             // Add re-enrich subcommand
             var reEnrichCommand = BuildReEnrichCommand(args);
             rootCommand.AddCommand(reEnrichCommand);
@@ -82,60 +73,6 @@ namespace PhotoBank.Console
             });
 
             return rootCommand;
-        }
-
-        private static async Task<int> RunMigrationAsync(string[] args)
-        {
-            IHost? host = null;
-            try
-            {
-                host = Host.CreateDefaultBuilder(args)
-                    .UseSerilog((context, services, configuration) => configuration
-                        .ReadFrom.Configuration(context.Configuration)
-                        .WriteTo.Console()
-                        .WriteTo.File("logs/photobank-.log",
-                            rollingInterval: RollingInterval.Day,
-                            retainedFileCountLimit: 7))
-                    .ConfigureServices((context, services) =>
-                    {
-                        services
-                            .AddPhotobankDbContext(context.Configuration, usePool: false)
-                            .AddPhotobankCore(context.Configuration)
-                            .AddPhotobankConsole(context.Configuration);
-                    })
-                    .Build();
-
-                Console.WriteLine("Starting face embeddings migration...");
-                Console.WriteLine("This will process all faces without embeddings and extract embeddings from InsightFace API.");
-                Console.WriteLine();
-
-                var recognitionService = host.Services.GetRequiredService<Services.Recognition.IRecognitionService>();
-                var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
-
-                await recognitionService.MigrateEmbeddingsAsync(lifetime.ApplicationStopping);
-
-                Console.WriteLine();
-                Console.WriteLine("Migration completed successfully!");
-
-                await host.StopAsync();
-                return 0;
-            }
-            catch (OperationCanceledException)
-            {
-                Console.WriteLine("\nMigration cancelled by user.");
-                return 130;
-            }
-            catch (Exception ex)
-            {
-                await Console.Error.WriteLineAsync($"Migration error: {ex.Message}");
-                Log.Fatal(ex, "Migration failed");
-                return 1;
-            }
-            finally
-            {
-                host?.Dispose();
-                await Log.CloseAndFlushAsync();
-            }
         }
 
         private static Command BuildDeleteCommand(string[] args)
