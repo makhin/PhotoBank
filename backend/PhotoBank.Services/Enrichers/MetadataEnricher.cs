@@ -36,10 +36,14 @@ namespace PhotoBank.Services.Enrichers
             photo.RelativePath = Path.GetDirectoryName(normalizedAbsolutePath)?
                 .Replace(normalizedStoragePath, string.Empty)
                 .TrimStart(Path.DirectorySeparatorChar);
+
+            // Create initial File entry with Storage and RelativePath for cross-storage duplicate support
             photo.Files = new List<File>
             {
                 new()
                 {
+                    StorageId = photo.Storage.Id,
+                    RelativePath = photo.RelativePath,
                     Name = Path.GetFileName(normalizedAbsolutePath)
                 }
             };
