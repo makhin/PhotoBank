@@ -52,4 +52,15 @@ public class SourceDataDto
 
     public byte[] ThumbnailImage { get; set; }
     public List<byte[]> FaceImages { get; } = new();
+
+    /// <summary>
+    /// If duplicate photo is found during enrichment, stores the ID of existing photo.
+    /// Used by DuplicateEnricher to communicate with PhotoProcessor.
+    /// </summary>
+    public int? DuplicatePhotoId { get; set; }
+
+    /// <summary>
+    /// Human-readable information about the duplicate photo.
+    /// </summary>
+    public string? DuplicatePhotoInfo { get; set; }
 }

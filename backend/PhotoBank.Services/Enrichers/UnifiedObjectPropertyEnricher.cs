@@ -36,11 +36,11 @@ public class UnifiedObjectPropertyEnricher : IEnricher
 
     // Dependencies depend on the provider type:
     // - Azure provider needs AnalyzeEnricher (uses ImageAnalysis data from SourceDataDto)
-    // - YOLO ONNX provider needs PreviewEnricher (uses PreviewImage to detect objects)
+    // - YOLO ONNX provider needs DuplicateEnricher (runs after duplicate check, uses PreviewImage to detect objects)
     public Type[] Dependencies => _provider.Kind switch
     {
         ObjectDetectionProviderKind.Azure => [typeof(AnalyzeEnricher)],
-        ObjectDetectionProviderKind.YoloOnnx => [typeof(PreviewEnricher)],
+        ObjectDetectionProviderKind.YoloOnnx => [typeof(DuplicateEnricher)],
         _ => []
     };
 

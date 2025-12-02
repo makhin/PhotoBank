@@ -80,6 +80,20 @@ namespace PhotoBank.Services
             return Path.Combine(allSegments.ToArray());
         }
 
+        private static string GetRelativePath(Storage storage, string path)
+        {
+            var directoryName = Path.GetDirectoryName(path);
+            var relativePath = string.IsNullOrEmpty(directoryName) ? string.Empty : directoryName;
+
+            // Convert "." to empty string for files in root directory
+            if (relativePath == ".")
+            {
+                relativePath = string.Empty;
+            }
+
+            return relativePath;
+        }
+
         public async Task<(int PhotoId, PhotoProcessResult Result, string? SkipReason, EnrichmentStats? Stats)> AddPhotoAsync(Storage storage, string path, IReadOnlyCollection<Type>? activeEnrichers = null)
         {
             var duplicateResult = await HandleDuplicateCheckAsync(storage, path);
@@ -90,9 +104,29 @@ namespace PhotoBank.Services
 
             var (photo, sourceData, enrichmentResult) = await CreateAndEnrichPhotoAsync(storage, path, activeEnrichers);
 
-            // If enrichment was stopped (e.g., adult content detected), skip saving the photo
+            // If enrichment was stopped (e.g., adult content detected), handle appropriately
             if (enrichmentResult.StopReason != null)
             {
+                // Check if this is a duplicate photo detected by DuplicateEnricher
+                if (sourceData.DuplicatePhotoId.HasValue)
+                {
+                    // Add File entry to existing Photo instead of creating new Photo
+                    var fileName = Path.GetFileName(path);
+                    var relativePath = GetRelativePath(storage, path);
+
+                    await _fileRepository.InsertAsync(new File
+                    {
+                        PhotoId = sourceData.DuplicatePhotoId.Value,
+                        StorageId = storage.Id,
+                        RelativePath = relativePath,
+                        Name = fileName,
+                        IsDeleted = false
+                    });
+
+                    return (sourceData.DuplicatePhotoId.Value, PhotoProcessResult.Duplicate, null, enrichmentResult.Stats);
+                }
+
+                // Other stop reasons (e.g., adult content)
                 return (0, PhotoProcessResult.Skipped, enrichmentResult.StopReason, enrichmentResult.Stats);
             }
 
