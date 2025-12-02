@@ -21,7 +21,9 @@ public class OriginalFileSourceDataProvider : ISourceDataProvider
         if (string.IsNullOrWhiteSpace(storage?.Folder))
             return false;
 
-        if (string.IsNullOrWhiteSpace(photo.RelativePath))
+        // Find file for this storage (cross-storage support)
+        var file = photo.Files.FirstOrDefault(f => f.StorageId == storage.Id);
+        if (file == null || string.IsNullOrWhiteSpace(file.RelativePath))
             return false;
 
         var absolutePath = GetAbsolutePath(photo, storage);
@@ -47,7 +49,8 @@ public class OriginalFileSourceDataProvider : ISourceDataProvider
 
     private string GetAbsolutePath(Photo photo, Storage storage)
     {
-        var fileName = photo.Files.First().Name;
-        return Path.Combine(storage.Folder, photo.RelativePath, fileName);
+        // Get file from specific storage for cross-storage duplicate support
+        var file = photo.Files.First(f => f.StorageId == storage.Id);
+        return Path.Combine(storage.Folder, file.RelativePath ?? string.Empty, file.Name);
     }
 }

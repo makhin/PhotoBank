@@ -594,8 +594,11 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             return null;
         }
 
+        // Use File's own Storage and RelativePath for cross-storage duplicate support
         var file = photo.Files.First();
-        var absolutePath = Path.Combine(photo.Storage.Folder, photo.RelativePath, file.Name);
+        var storage = file.Storage ?? photo.Storage;
+        var relativePath = file.RelativePath ?? string.Empty;
+        var absolutePath = Path.Combine(storage.Folder, relativePath, file.Name);
 
         if (!File.Exists(absolutePath))
         {

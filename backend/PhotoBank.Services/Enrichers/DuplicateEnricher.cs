@@ -39,6 +39,7 @@ public sealed class DuplicateEnricher : IEnricher
             .GetByCondition(p => p.ImageHash == photo.ImageHash)
             .AsNoTracking()
             .Include(p => p.Storage)
+            .Include(p => p.Files)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (existingPhoto != null)
@@ -46,7 +47,13 @@ public sealed class DuplicateEnricher : IEnricher
             // Mark duplicate information in SourceDataDto
             // PhotoProcessor will use this to add File entry and skip saving new Photo
             sourceData.DuplicatePhotoId = existingPhoto.Id;
-            sourceData.DuplicatePhotoInfo = $"Photo #{existingPhoto.Id} in storage '{existingPhoto.Storage?.Name}' at {existingPhoto.RelativePath}";
+
+            // Get location info from first File for display (cross-storage support)
+            var firstFile = existingPhoto.Files?.FirstOrDefault();
+            var locationInfo = firstFile != null
+                ? $"at {firstFile.RelativePath}"
+                : "location unknown";
+            sourceData.DuplicatePhotoInfo = $"Photo #{existingPhoto.Id} in storage '{existingPhoto.Storage?.Name}' {locationInfo}";
         }
     }
 }

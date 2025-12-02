@@ -40,8 +40,8 @@ namespace PhotoBank.Services
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Photo, PathDto>()
-                .ForMember(dest => dest.StorageId, opt => opt.MapFrom(src => src.StorageId))
-                .ForMember(dest => dest.Path, opt => opt.MapFrom(src => src.RelativePath))
+                .ForMember(dest => dest.StorageId, opt => opt.MapFrom(src => src.Files.FirstOrDefault().StorageId ?? 0))
+                .ForMember(dest => dest.Path, opt => opt.MapFrom(src => src.Files.FirstOrDefault().RelativePath ?? string.Empty))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Person, PersonDto>()

@@ -190,23 +190,27 @@ namespace PhotoBank.Services
             var faces = (photo.Faces ?? new List<Face>())
                 .Zip(sourceData.FaceImages, (f, img) => new PhotoCreatedFace(f.Id, img))
                 .ToList();
-            var evt = new PhotoCreated(photo.Id, photo.Storage.Name, photo.RelativePath, sourceData.PreviewImageBytes, sourceData.ThumbnailImage, faces);
+
+            // Use RelativePath from the first File entry (for cross-storage support)
+            var relativePath = photo.Files?.FirstOrDefault()?.RelativePath ?? string.Empty;
+            var evt = new PhotoCreated(photo.Id, photo.Storage.Name, relativePath, sourceData.PreviewImageBytes, sourceData.ThumbnailImage, faces);
             await _mediator.Publish(evt);
         }
 
 
         public async Task AddFacesAsync(Storage storage)
         {
+            // Filter by Files.StorageId instead of Photo.StorageId for cross-storage support
             var files = await _photoRepository
                 .GetAll()
                 .Include(p => p.Files)
                 .AsNoTracking()
-                .Where(p => p.StorageId == storage.Id && p.FaceIdentifyStatus == FaceIdentifyStatus.Undefined)
+                .Where(p => p.Files.Any(f => f.StorageId == storage.Id) && p.FaceIdentifyStatus == FaceIdentifyStatus.Undefined)
                 .Select(p => new PhotoFilePath
                 {
-                    PhotoId =p.Id,
-                    RelativePath = p.RelativePath,
-                    Files = p.Files
+                    PhotoId = p.Id,
+                    RelativePath = p.Files.First(f => f.StorageId == storage.Id).RelativePath,
+                    Files = p.Files.Where(f => f.StorageId == storage.Id).ToList()
                 }).ToListAsync();
 
             await UpdateInfoAsync(storage, files,
@@ -215,18 +219,20 @@ namespace PhotoBank.Services
 
         public async Task UpdatePhotosAsync(Storage storage)
         {
+            // Filter by Files.StorageId instead of Photo.StorageId for cross-storage support
             var files = await _photoRepository
                 .GetAll()
+                .Include(p => p.Files)
                 .AsNoTracking()
-                .Where(p => p.StorageId == storage.Id && p.TakenDate == null)
+                .Where(p => p.Files.Any(f => f.StorageId == storage.Id) && p.TakenDate == null)
                 .Select(p => new PhotoFilePath
                 {
                     PhotoId = p.Id,
-                    RelativePath = p.RelativePath,
-                    Files = p.Files
+                    RelativePath = p.Files.First(f => f.StorageId == storage.Id).RelativePath,
+                    Files = p.Files.Where(f => f.StorageId == storage.Id).ToList()
                 }).ToListAsync();
 
-            await UpdateInfoAsync(storage, files, 
+            await UpdateInfoAsync(storage, files,
                 _ => false,
                 async delegate(Photo photo)
                 {
