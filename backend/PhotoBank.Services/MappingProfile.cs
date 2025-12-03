@@ -37,12 +37,24 @@ namespace PhotoBank.Services
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.PhotoTags))
                 .ForMember(dest => dest.Persons, opt => opt.MapFrom(src => src.Faces))
                 .ForMember(dest => dest.Captions, opt => opt.MapFrom(src => src.Captions))
-                .ForMember(dest => dest.StorageName, opt => opt.MapFrom(src => src.Storage.Name))
+                .ForMember(dest => dest.StorageName,
+                    opt => opt.MapFrom(src => src.Files
+                        .OrderBy(f => f.Id)
+                        .Select(f => f.Storage.Name)
+                        .FirstOrDefault() ?? string.Empty))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Photo, PathDto>()
-                .ForMember(dest => dest.StorageId, opt => opt.MapFrom(src => src.Files.FirstOrDefault().StorageId ?? 0))
-                .ForMember(dest => dest.Path, opt => opt.MapFrom(src => src.Files.FirstOrDefault().RelativePath ?? string.Empty))
+                .ForMember(dest => dest.StorageId,
+                    opt => opt.MapFrom(src => src.Files
+                        .OrderBy(f => f.Id)
+                        .Select(f => f.StorageId)
+                        .FirstOrDefault()))
+                .ForMember(dest => dest.Path,
+                    opt => opt.MapFrom(src => src.Files
+                        .OrderBy(f => f.Id)
+                        .Select(f => f.RelativePath)
+                        .FirstOrDefault() ?? string.Empty))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Person, PersonDto>()

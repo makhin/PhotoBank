@@ -22,6 +22,7 @@ using PhotoBank.Services;
 using DbFace = PhotoBank.DbContext.Models.Face;
 using DbPerson = PhotoBank.DbContext.Models.Person;
 using DbPhoto = PhotoBank.DbContext.Models.Photo;
+using DbFile = PhotoBank.DbContext.Models.File;
 using DbStorage = PhotoBank.DbContext.Models.Storage;
 using IdentityStatus = PhotoBank.DbContext.Models.IdentityStatus;
 using PhotoBank.UnitTests.Infrastructure.Minio;
@@ -175,8 +176,6 @@ public class FaceServiceIdentifyTests
         {
             Id = photoId,
             Name = $"photo-{photoId}",
-            StorageId = storageId,
-            Storage = storage,
             TakenDate = takenDate,
             AccentColor = string.Empty,
             DominantColorBackground = string.Empty,
@@ -189,7 +188,16 @@ public class FaceServiceIdentifyTests
             S3ETag_Thumbnail = string.Empty,
             Sha256_Thumbnail = string.Empty,
             ImageHash = string.Empty,
-            RelativePath = string.Empty
+            Files = new List<DbFile>
+            {
+                new()
+                {
+                    StorageId = storage.Id,
+                    Storage = storage,
+                    RelativePath = string.Empty,
+                    Name = $"photo-{photoId}.jpg"
+                }
+            }
         };
 
         var face = new DbFace

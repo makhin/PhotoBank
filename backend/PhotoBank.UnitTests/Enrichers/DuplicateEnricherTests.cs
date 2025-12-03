@@ -88,11 +88,12 @@ public class DuplicateEnricherTests
         _dbContext.Storages.Add(storage);
         await _dbContext.SaveChangesAsync();
 
-        var photo = new Photo { Storage = storage };
+        var photo = new Photo();
         var sourceData = new SourceDataDto
         {
             AbsolutePath = _tempImagePath,
-            PreviewImage = new MagickImage(MagickColors.Blue, 50, 50)
+            PreviewImage = new MagickImage(MagickColors.Blue, 50, 50),
+            Storage = storage
         };
 
         // Act
@@ -119,11 +120,12 @@ public class DuplicateEnricherTests
         _dbContext.Storages.Add(storage);
         await _dbContext.SaveChangesAsync();
 
-        var photo = new Photo { Storage = storage };
+        var photo = new Photo();
         var sourceData = new SourceDataDto
         {
             AbsolutePath = testFile,
-            PreviewImage = new MagickImage(MagickColors.Blue, 50, 50)
+            PreviewImage = new MagickImage(MagickColors.Blue, 50, 50),
+            Storage = storage
         };
 
         try
@@ -159,11 +161,12 @@ public class DuplicateEnricherTests
         _dbContext.Storages.Add(storage);
         await _dbContext.SaveChangesAsync();
 
-        var photo = new Photo { Storage = storage };
+        var photo = new Photo();
         var sourceData = new SourceDataDto
         {
             AbsolutePath = _tempImagePath,
-            PreviewImage = new MagickImage(MagickColors.Blue, 50, 50)
+            PreviewImage = new MagickImage(MagickColors.Blue, 50, 50),
+            Storage = storage
         };
 
         // Act
@@ -186,11 +189,12 @@ public class DuplicateEnricherTests
         _dbContext.Storages.Add(storage);
         await _dbContext.SaveChangesAsync();
 
-        var photo = new Photo { Storage = storage };
+        var photo = new Photo();
         var sourceData = new SourceDataDto
         {
             AbsolutePath = _tempImagePath,
-            PreviewImage = new MagickImage(MagickColors.Blue, 50, 50)
+            PreviewImage = new MagickImage(MagickColors.Blue, 50, 50),
+            Storage = storage
         };
 
         // Act
@@ -214,23 +218,23 @@ public class DuplicateEnricherTests
         var existingPhoto = new Photo
         {
             ImageHash = "abc123",
-            Storage = existingStorage,
             Files = new List<File>
             {
-                new File { StorageId = existingStorage.Id, RelativePath = "photos/2024", Name = "existing.jpg" }
+                new File { StorageId = existingStorage.Id, Storage = existingStorage, RelativePath = "photos/2024", Name = "existing.jpg" }
             }
         };
         _dbContext.Photos.Add(existingPhoto);
         await _dbContext.SaveChangesAsync();
 
-        var photo = new Photo { Storage = storage };
+        var photo = new Photo();
 
         // Create image that will produce the same hash
         using var previewImage = new MagickImage(MagickColors.Blue, 50, 50);
         var sourceData = new SourceDataDto
         {
             AbsolutePath = _tempImagePath,
-            PreviewImage = previewImage
+            PreviewImage = previewImage,
+            Storage = storage
         };
 
         // Compute hash and update existing photo to match
@@ -256,11 +260,12 @@ public class DuplicateEnricherTests
         _dbContext.Storages.Add(storage);
         await _dbContext.SaveChangesAsync();
 
-        var photo = new Photo { Storage = storage };
+        var photo = new Photo();
         var sourceData = new SourceDataDto
         {
             AbsolutePath = _tempImagePath,
-            PreviewImage = null  // No preview image
+            PreviewImage = null,  // No preview image
+            Storage = storage
         };
 
         // Act

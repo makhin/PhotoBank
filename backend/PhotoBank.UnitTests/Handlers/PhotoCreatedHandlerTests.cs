@@ -200,9 +200,6 @@ public class PhotoCreatedHandlerTests
         var photo = new Photo
         {
             Id = PhotoId,
-            StorageId = storage.Id,
-            Storage = storage,
-            RelativePath = "album",
             Name = "photo",
             AccentColor = string.Empty,
             DominantColorBackground = string.Empty,
@@ -220,7 +217,16 @@ public class PhotoCreatedHandlerTests
             PhotoCategories = new List<PhotoCategory>(),
             ObjectProperties = new List<ObjectProperty>(),
             Faces = new List<Face>(),
-            Files = new List<PhotoBank.DbContext.Models.File>()
+            Files = new List<PhotoBank.DbContext.Models.File>
+            {
+                new()
+                {
+                    StorageId = storage.Id,
+                    Storage = storage,
+                    RelativePath = "album",
+                    Name = "photo.jpg"
+                }
+            }
         };
         storage.Photos.Add(photo);
 

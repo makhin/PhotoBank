@@ -62,7 +62,7 @@ public class PhotoFilterSpecification
         {
             var storages = filter.Storages.ToList();
             // Filter by Files.StorageId for cross-storage duplicate support
-            query = query.Where(p => p.Files.Any(f => storages.Contains(f.StorageId ?? 0)));
+            query = query.Where(p => p.Files.Any(f => storages.Contains(f.StorageId)));
 
             if (!string.IsNullOrEmpty(filter.RelativePath))
             {
