@@ -187,7 +187,15 @@ public class SearchReferenceDataServiceTests
         PhotoCategories = new List<PhotoCategory>(),
         ObjectProperties = new List<ObjectProperty>(),
         Faces = new List<Face>(),
-        Files = new List<File>()
+        Files = new List<File>
+        {
+            new()
+            {
+                Name = name,
+                StorageId = storage.Id,
+                RelativePath = relativePath
+            }
+        }
     };
 
     private sealed class ReferenceServiceFixture : IDisposable

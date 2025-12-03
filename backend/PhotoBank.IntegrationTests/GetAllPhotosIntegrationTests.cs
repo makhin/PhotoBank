@@ -70,6 +70,7 @@ public class GetAllPhotosIntegrationTests
                     {
                         builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                         builder.UseNetTopologySuite();
+                        builder.UseVector();
                         builder.CommandTimeout(120);
                     }));
             services.AddDbContext<AccessControlDbContext>(options =>

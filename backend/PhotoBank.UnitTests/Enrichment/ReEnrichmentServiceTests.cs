@@ -746,7 +746,13 @@ public class ReEnrichmentServiceTests
             Storage = storage,
             Files = new List<DbContext.Models.File>
             {
-                new() { Name = "test.jpg" }
+                new()
+                {
+                    Name = "test.jpg",
+                    StorageId = storage.Id,
+                    Storage = storage,
+                    RelativePath = "photos"
+                }
             },
             EnrichedWithEnricherType = EnricherType.None
         };

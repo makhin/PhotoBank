@@ -16,8 +16,9 @@ namespace PhotoBank.DbContext.DbContext
                 .AddJsonFile("appsettings.Development.json", optional: true)
                 .Build();
 
-            var connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? "Host=localhost;Database=photobank;Username=postgres;Password=postgres"; // fallback
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrWhiteSpace(connectionString))
+                connectionString = "Host=localhost;Database=photobank;Username=postgres;Password=postgres"; // fallback
 
             var optionsBuilder = new DbContextOptionsBuilder<PhotoBankDbContext>();
             optionsBuilder.UseNpgsql(connectionString, npgsql =>

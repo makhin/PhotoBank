@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Minio;
 using Moq;
+using Npgsql;
 using PhotoBank.AccessControl;
 using PhotoBank.Api;
 using PhotoBank.DbContext.DbContext;
@@ -61,6 +62,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 {
                     npgsql.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                     npgsql.MigrationsHistoryTable("__EFMigrationsHistory_Photo");
+                    npgsql.UseVector();
                     npgsql.UseNetTopologySuite();
                 });
             });
@@ -72,6 +74,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>
                 {
                     npgsql.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
                     npgsql.MigrationsHistoryTable("__EFMigrationsHistory_Access");
+                    npgsql.UseVector();
                     npgsql.UseNetTopologySuite();
                 });
             });

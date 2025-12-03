@@ -31,8 +31,10 @@ public sealed class TestDatabaseFixture : IAsyncDisposable
     /// </summary>
     public async Task InitializeAsync()
     {
+        // Use an image that has both PostGIS and pgvector extensions
+        // kristofdetroch/postgres-postgis-pgvector combines PostGIS and pgvector
         _container = new PostgreSqlBuilder()
-            .WithImage("postgis/postgis:16-3.4")
+            .WithImage("kristofdetroch/postgres-postgis-pgvector:latest")
             .WithPassword("postgres")
             .Build();
 
@@ -48,6 +50,7 @@ public sealed class TestDatabaseFixture : IAsyncDisposable
         {
             builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
             builder.UseNetTopologySuite();
+            builder.UseVector();
         });
 
         await using (var photoDb = new PhotoBankDbContext(photoDbOptionsBuilder.Options))
@@ -83,6 +86,7 @@ public sealed class TestDatabaseFixture : IAsyncDisposable
         {
             builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
             builder.UseNetTopologySuite();
+            builder.UseVector();
         });
         optionsBuilder.EnableSensitiveDataLogging();
         optionsBuilder.EnableDetailedErrors();

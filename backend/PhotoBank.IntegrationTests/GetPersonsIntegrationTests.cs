@@ -45,7 +45,7 @@ public class GetPersonsIntegrationTests
         try
         {
             _dbContainer = new PostgreSqlBuilder()
-                .WithImage("postgis/postgis:16-3.4")
+                .WithImage("kristofdetroch/postgres-postgis-pgvector:latest")
                 .WithPassword("postgres")
                 .Build();
             await _dbContainer.StartAsync();
@@ -78,6 +78,7 @@ public class GetPersonsIntegrationTests
         {
             builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
             builder.MigrationsHistoryTable(PhotoHistory);
+            builder.UseVector();
             builder.UseNetTopologySuite();
         });
         var photoDbOptions = photoDbOptionsBuilder.Options;
@@ -90,6 +91,7 @@ public class GetPersonsIntegrationTests
         {
             builder.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
             builder.MigrationsHistoryTable(AccessHistory);
+            builder.UseVector();
             builder.UseNetTopologySuite();
         });
         var accessDbOptions = accessDbOptionsBuilder.Options;
@@ -102,6 +104,7 @@ public class GetPersonsIntegrationTests
             {
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.MigrationsHistoryTable(PhotoHistory);
+                builder.UseVector();
                 builder.UseNetTopologySuite();
             }));
         services.AddDbContext<AccessControlDbContext>(options =>
@@ -109,6 +112,7 @@ public class GetPersonsIntegrationTests
             {
                 builder.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
                 builder.MigrationsHistoryTable(AccessHistory);
+                builder.UseVector();
                 builder.UseNetTopologySuite();
             }));
         services.AddPhotobankCore(_config);
@@ -195,6 +199,7 @@ public class GetPersonsIntegrationTests
             .UseNpgsql(_connectionString, builder =>
             {
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
+                builder.UseVector();
                 builder.UseNetTopologySuite();
             })
             .Options;
@@ -209,6 +214,7 @@ public class GetPersonsIntegrationTests
             {
                 builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                 builder.MigrationsHistoryTable(PhotoHistory);
+                builder.UseVector();
                 builder.UseNetTopologySuite();
             }));
 
@@ -217,6 +223,7 @@ public class GetPersonsIntegrationTests
             {      
                 builder.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
                 builder.MigrationsHistoryTable(AccessHistory);
+                builder.UseVector();
                 builder.UseNetTopologySuite();
             }));
 

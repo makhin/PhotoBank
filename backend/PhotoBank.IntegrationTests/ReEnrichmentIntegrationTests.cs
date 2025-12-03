@@ -99,6 +99,7 @@ public class ReEnrichmentIntegrationTests
         // Register test enrichers
         services.AddTransient<IEnricher, TestEnricherA>();
         services.AddTransient<IEnricher, TestEnricherB>();
+        services.AddEnrichmentInfrastructure(opts => opts.ContinueOnError = true);
 
         _provider = services.BuildServiceProvider();
 
@@ -331,13 +332,14 @@ public class ReEnrichmentIntegrationTests
         services.AddSingleton<IActiveEnricherProvider>(new TestActiveEnricherProvider(
             new[] { typeof(FailingTestEnricher) }));
         services.AddTransient<IEnricher, FailingTestEnricher>();
+        services.AddEnrichmentInfrastructure(opts => opts.ContinueOnError = true);
 
         _provider = services.BuildServiceProvider();
 
         var service = _provider.GetRequiredService<IReEnrichmentService>();
         var photoRepo = _provider.GetRequiredService<IRepository<Photo>>();
 
-        var photo = await photoRepo.GetAll().Include(p => p.Captions).FirstAsync();
+        var photo = await _context.Photos.Include(p => p.Captions).FirstAsync();
         var originalFlags = photo.EnrichedWithEnricherType;
 
         // Add a caption to verify it's not deleted on rollback
@@ -369,7 +371,6 @@ public class ReEnrichmentIntegrationTests
     {
         var storage = new Storage
         {
-            Id = 1,
             Name = "Test Storage",
             Folder = _testStorageFolder
         };
@@ -381,9 +382,13 @@ public class ReEnrichmentIntegrationTests
         {
             var photo = new Photo
             {
-                Id = i,
                 Name = $"test{i}",
                 RelativePath = "photos",
+                AccentColor = "00000",
+                DominantColorBackground = "black",
+                DominantColorForeground = "black",
+                DominantColors = "black",
+                ImageHash = $"hash-{i}",
                 StorageId = storage.Id,
                 Storage = storage,
                 EnrichedWithEnricherType = EnricherType.None
@@ -394,7 +399,9 @@ public class ReEnrichmentIntegrationTests
             var file = new DbContext.Models.File
             {
                 Name = "test.jpg",
-                Photo = photo
+                Photo = photo,
+                Storage = storage,
+                RelativePath = "photos"
             };
 
             _context.Files.Add(file);
@@ -413,7 +420,8 @@ public class TestEnricherA : Services.Enrichers.IEnricher
 
     public Task EnrichAsync(Photo photo, Services.Models.SourceDataDto source, System.Threading.CancellationToken cancellationToken = default)
     {
-        // Simulate enrichment
+        // Simulate enrichment by setting required metadata fields
+        photo.ImageHash ??= "test-hash";
         return Task.CompletedTask;
     }
 }
@@ -435,7 +443,7 @@ public class TestEnricherB : Services.Enrichers.IEnricher
 /// </summary>
 public class FailingTestEnricher : Services.Enrichers.IEnricher
 {
-    public EnricherType EnricherType => EnricherType.Caption;
+    public EnricherType EnricherType => EnricherType.Face;
     public Type[] Dependencies => Array.Empty<Type>();
 
     public Task EnrichAsync(Photo photo, Services.Models.SourceDataDto source, System.Threading.CancellationToken cancellationToken = default)

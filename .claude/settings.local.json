@@ -8,7 +8,13 @@
       "Bash(git commit:*)",
       "Bash(dotnet build:*)",
       "Bash(dotnet clean:*)",
-      "Bash(./PhotoBank.Console.exe:*)"
+      "Bash(./PhotoBank.Console.exe:*)",
+      "Bash(where:*)",
+      "Bash(\"C:\\Program Files\\dotnet\\dotnet.exe\" test backend/PhotoBank.UnitTests/PhotoBank.UnitTests.csproj --filter \"FullyQualifiedName~Enrichers\" --verbosity normal)",
+      "Bash(\"C:\\Program Files\\dotnet\\dotnet.exe\" test:*)",
+      "Bash(Select-String -Pattern \"(Passed|Failed|Total tests)\" -Context 0,3)",
+      "Bash(\"C:\\Program Files\\dotnet\\dotnet.exe\" test backend/PhotoBank.UnitTests/PhotoBank.UnitTests.csproj --filter \"FullyQualifiedName~DuplicateEnricherTests\" --verbosity normal)",
+      "Bash(\"C:\\Program Files\\dotnet\\dotnet.exe\" test backend/PhotoBank.UnitTests/PhotoBank.UnitTests.csproj --filter \"FullyQualifiedName~ReEnrichmentServiceTests\" --logger \"console;verbosity=detailed\")"
     ],
     "deny": [],
     "ask": []

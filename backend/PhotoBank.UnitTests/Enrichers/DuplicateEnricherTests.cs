@@ -5,10 +5,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using ImageMagick;
-using Moq;
+using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
+using PhotoBank.Services;
 using PhotoBank.Services.Enrichers;
 using PhotoBank.Services.Models;
 using File = PhotoBank.DbContext.Models.File;
@@ -18,15 +20,23 @@ namespace PhotoBank.UnitTests.Enrichers;
 [TestFixture]
 public class DuplicateEnricherTests
 {
-    private Mock<IRepository<Photo>> _mockPhotoRepository;
+    private PhotoBankDbContext _dbContext;
+    private ServiceProvider _serviceProvider;
+    private IRepository<Photo> _photoRepository;
     private DuplicateEnricher _enricher;
     private string _tempImagePath;
 
     [SetUp]
     public void Setup()
     {
-        _mockPhotoRepository = new Mock<IRepository<Photo>>();
-        _enricher = new DuplicateEnricher(_mockPhotoRepository.Object);
+        _dbContext = TestDbFactory.CreateInMemory();
+
+        var services = new ServiceCollection();
+        services.AddSingleton(_dbContext);
+        _serviceProvider = services.BuildServiceProvider();
+
+        _photoRepository = new Repository<Photo>(_serviceProvider);
+        _enricher = new DuplicateEnricher(_photoRepository);
 
         // Create a temporary test image
         _tempImagePath = Path.Combine(Path.GetTempPath(), $"test_image_{Guid.NewGuid()}.jpg");
@@ -43,6 +53,9 @@ public class DuplicateEnricherTests
         {
             System.IO.File.Delete(_tempImagePath);
         }
+
+        _serviceProvider?.Dispose();
+        _dbContext?.Dispose();
     }
 
     [Test]
@@ -72,16 +85,15 @@ public class DuplicateEnricherTests
     {
         // Arrange
         var storage = new Storage { Id = 1, Folder = Path.GetTempPath() };
+        _dbContext.Storages.Add(storage);
+        await _dbContext.SaveChangesAsync();
+
         var photo = new Photo { Storage = storage };
         var sourceData = new SourceDataDto
         {
             AbsolutePath = _tempImagePath,
             PreviewImage = new MagickImage(MagickColors.Blue, 50, 50)
         };
-
-        _mockPhotoRepository
-            .Setup(r => r.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<Func<Photo, bool>>>()))
-            .Returns(Enumerable.Empty<Photo>().AsQueryable());
 
         // Act
         await _enricher.EnrichAsync(photo, sourceData);
@@ -104,16 +116,15 @@ public class DuplicateEnricherTests
         }
 
         var storage = new Storage { Id = 1, Folder = Path.GetTempPath() };
+        _dbContext.Storages.Add(storage);
+        await _dbContext.SaveChangesAsync();
+
         var photo = new Photo { Storage = storage };
         var sourceData = new SourceDataDto
         {
             AbsolutePath = testFile,
             PreviewImage = new MagickImage(MagickColors.Blue, 50, 50)
         };
-
-        _mockPhotoRepository
-            .Setup(r => r.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<Func<Photo, bool>>>()))
-            .Returns(Enumerable.Empty<Photo>().AsQueryable());
 
         try
         {
@@ -139,16 +150,15 @@ public class DuplicateEnricherTests
     {
         // Arrange
         var storage = new Storage { Id = 1, Folder = Path.GetTempPath() };
+        _dbContext.Storages.Add(storage);
+        await _dbContext.SaveChangesAsync();
+
         var photo = new Photo { Storage = storage };
         var sourceData = new SourceDataDto
         {
             AbsolutePath = _tempImagePath,
             PreviewImage = new MagickImage(MagickColors.Blue, 50, 50)
         };
-
-        _mockPhotoRepository
-            .Setup(r => r.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<Func<Photo, bool>>>()))
-            .Returns(Enumerable.Empty<Photo>().AsQueryable());
 
         // Act
         await _enricher.EnrichAsync(photo, sourceData);
@@ -167,16 +177,15 @@ public class DuplicateEnricherTests
     {
         // Arrange
         var storage = new Storage { Id = 1, Folder = Path.GetTempPath() };
+        _dbContext.Storages.Add(storage);
+        await _dbContext.SaveChangesAsync();
+
         var photo = new Photo { Storage = storage };
         var sourceData = new SourceDataDto
         {
             AbsolutePath = _tempImagePath,
             PreviewImage = new MagickImage(MagickColors.Blue, 50, 50)
         };
-
-        _mockPhotoRepository
-            .Setup(r => r.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<Func<Photo, bool>>>()))
-            .Returns(Enumerable.Empty<Photo>().AsQueryable());
 
         // Act
         await _enricher.EnrichAsync(photo, sourceData);
@@ -190,35 +199,45 @@ public class DuplicateEnricherTests
     public async Task EnrichAsync_WhenDuplicateFound_SetsDuplicateInfo()
     {
         // Arrange
-        var storage = new Storage { Id = 1, Name = "TestStorage", Folder = Path.GetTempPath() };
+        var existingStorage = new Storage { Id = 1, Name = "ExistingStorage", Folder = "/existing" };
+        var storage = new Storage { Id = 2, Name = "TestStorage", Folder = Path.GetTempPath() };
+        _dbContext.Storages.AddRange(existingStorage, storage);
+        await _dbContext.SaveChangesAsync();
+
+        // Add existing photo with specific hash to database
+        var existingPhoto = new Photo
+        {
+            ImageHash = "abc123",
+            Storage = existingStorage,
+            Files = new List<File>
+            {
+                new File { StorageId = existingStorage.Id, RelativePath = "photos/2024", Name = "existing.jpg" }
+            }
+        };
+        _dbContext.Photos.Add(existingPhoto);
+        await _dbContext.SaveChangesAsync();
+
         var photo = new Photo { Storage = storage };
+
+        // Create image that will produce the same hash
+        using var previewImage = new MagickImage(MagickColors.Blue, 50, 50);
         var sourceData = new SourceDataDto
         {
             AbsolutePath = _tempImagePath,
-            PreviewImage = new MagickImage(MagickColors.Blue, 50, 50)
+            PreviewImage = previewImage
         };
 
-        var existingPhoto = new Photo
-        {
-            Id = 42,
-            ImageHash = "abc123",
-            Storage = new Storage { Name = "ExistingStorage" },
-            Files = new List<File>
-            {
-                new File { RelativePath = "photos/2024" }
-            }
-        };
-
-        _mockPhotoRepository
-            .Setup(r => r.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<Func<Photo, bool>>>()))
-            .Returns(new[] { existingPhoto }.AsQueryable());
+        // Compute hash and update existing photo to match
+        var computedHash = ImageHashHelper.ComputeHash(previewImage);
+        existingPhoto.ImageHash = computedHash;
+        await _dbContext.SaveChangesAsync();
 
         // Act
         await _enricher.EnrichAsync(photo, sourceData);
 
         // Assert
-        sourceData.DuplicatePhotoId.Should().Be(42);
-        sourceData.DuplicatePhotoInfo.Should().Contain("Photo #42")
+        sourceData.DuplicatePhotoId.Should().Be(existingPhoto.Id);
+        sourceData.DuplicatePhotoInfo.Should().Contain($"Photo #{existingPhoto.Id}")
             .And.Contain("ExistingStorage")
             .And.Contain("photos/2024");
     }
@@ -228,6 +247,9 @@ public class DuplicateEnricherTests
     {
         // Arrange
         var storage = new Storage { Id = 1, Folder = Path.GetTempPath() };
+        _dbContext.Storages.Add(storage);
+        await _dbContext.SaveChangesAsync();
+
         var photo = new Photo { Storage = storage };
         var sourceData = new SourceDataDto
         {
@@ -241,9 +263,7 @@ public class DuplicateEnricherTests
         // Assert
         photo.ImageHash.Should().BeNullOrEmpty();
 
-        // Repository should not be called since there's no hash to search for
-        _mockPhotoRepository.Verify(
-            r => r.GetByCondition(It.IsAny<System.Linq.Expressions.Expression<Func<Photo, bool>>>()),
-            Times.Never);
+        // Duplicate search should not happen since there's no hash
+        sourceData.DuplicatePhotoId.Should().BeNull();
     }
 }

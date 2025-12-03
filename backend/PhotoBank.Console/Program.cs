@@ -127,7 +127,7 @@ namespace PhotoBank.Console
                             .AddPhotobankDbContext(context.Configuration, usePool: false)
                             .AddPhotobankCore(context.Configuration)
                             .AddPhotobankConsole(context.Configuration)
-                            .AddSingleton<App>();
+                            .AddTransient<App>();
                     })
                     .Build();
 

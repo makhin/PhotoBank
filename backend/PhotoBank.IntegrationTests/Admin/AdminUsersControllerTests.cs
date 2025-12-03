@@ -47,7 +47,7 @@ public class AdminUsersControllerTests
         try
         {
             _dbContainer = new PostgreSqlBuilder()
-                .WithImage("postgis/postgis:16-3.4")
+                .WithImage("kristofdetroch/postgres-postgis-pgvector:latest")
                 .WithPassword("postgres")
                 .Build();
             await _dbContainer.StartAsync();
@@ -72,6 +72,7 @@ public class AdminUsersControllerTests
         {
             builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
             builder.MigrationsHistoryTable("__EFMigrationsHistory_Photo");
+            builder.UseVector();
             builder.UseNetTopologySuite();
         });
 
@@ -91,6 +92,7 @@ public class AdminUsersControllerTests
             {
                 builder.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
                 builder.MigrationsHistoryTable("__EFMigrationsHistory_Access");
+                builder.UseVector();
                 builder.UseNetTopologySuite();
             });
 
