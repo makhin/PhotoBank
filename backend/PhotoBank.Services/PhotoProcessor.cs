@@ -165,8 +165,12 @@ namespace PhotoBank.Services
             IReadOnlyCollection<Type>? activeEnrichers)
         {
             var absolutePath = BuildAbsolutePath(storage, path);
-            var sourceData = new SourceDataDto { AbsolutePath = absolutePath };
-            var photo = new Photo { Storage = storage };
+            var sourceData = new SourceDataDto
+            {
+                AbsolutePath = absolutePath,
+                Storage = storage
+            };
+            var photo = new Photo();
 
             var enrichersToUse = activeEnrichers ?? _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
             // Pass serviceProvider so enrichers use the same DbContext as PhotoProcessor

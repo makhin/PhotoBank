@@ -133,7 +133,13 @@ public class DuplicateEnricherTests
 
             // Assert
             photo.Name.Should().Be("testphoto");
-            photo.RelativePath.Should().Be("testfolder");
+
+            // Check that Files collection was created and has the correct values
+            photo.Files.Should().NotBeNull()
+                .And.ContainSingle();
+            var file = photo.Files.First();
+            file.RelativePath.Should().Be("testfolder");
+            file.Name.Should().Be("testphoto.jpg");
         }
         finally
         {
