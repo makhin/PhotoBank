@@ -87,7 +87,7 @@ public class PreviewEnricherTests
         photo.Width.Should().Be(100);
         photo.Orientation.Should().NotBeNull();
         photo.Scale.Should().Be(expectedScale);
-        photo.ImageHash.Should().NotBeNullOrEmpty();
+        // ImageHash computation moved to DuplicateEnricher
     }
 
     [Test]
@@ -135,29 +135,7 @@ public class PreviewEnricherTests
         sourceData.PreviewImage.Format.Should().Be(MagickFormat.Jpg);
     }
 
-    [Test]
-    public async Task EnrichAsync_ComputesImageHash()
-    {
-        // Arrange
-        var photo = new Photo();
-        var sourceData = new SourceDataDto { AbsolutePath = _tempImagePath };
-
-        _mockImageService
-            .Setup(s => s.ResizeImage(It.IsAny<MagickImage>(), out It.Ref<double>.IsAny))
-            .Callback(new ResizeImageCallback((MagickImage img, out double scale) =>
-            {
-                scale = 1.0;
-            }));
-
-        // Act
-        await _enricher.EnrichAsync(photo, sourceData);
-
-        // Assert
-        photo.ImageHash.Should().NotBeNullOrEmpty();
-        // Verify the hash is in hex format (current PerceptualHash ToString format)
-        photo.ImageHash.Should().MatchRegex("^[0-9a-f]+$");
-        photo.ImageHash.Length.Should().BeGreaterThan(0);
-    }
+    // ImageHash computation moved to DuplicateEnricher - test removed
 
     [Test]
     public async Task EnrichAsync_CallsResizeImage()
