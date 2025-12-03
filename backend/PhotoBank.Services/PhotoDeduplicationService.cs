@@ -27,28 +27,24 @@ public class PhotoDeduplicationService : IPhotoDeduplicationService
 
     public async Task<int> MergeDuplicatesByImageHashAsync(CancellationToken cancellationToken = default)
     {
-        var duplicateGroups = await _context.Photos
+        var duplicateHashes = await _context.Photos
             .Where(p => p.ImageHash != null)
             .GroupBy(p => p.ImageHash)
-            .Select(g => new
-            {
-                ImageHash = g.Key!,
-                PhotoIds = g.Select(p => p.Id).OrderBy(id => id).ToList(),
-            })
-            .Where(g => g.PhotoIds.Count > 1)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key!)
             .ToListAsync(cancellationToken);
 
-        if (duplicateGroups.Count == 0)
+        if (duplicateHashes.Count == 0)
         {
             _logger.LogInformation("No duplicate photos found by ImageHash");
             return 0;
         }
 
-        _logger.LogInformation("Found {GroupCount} duplicate groups to merge", duplicateGroups.Count);
+        _logger.LogInformation("Found {GroupCount} duplicate groups to merge", duplicateHashes.Count);
 
         var mergedGroups = 0;
 
-        foreach (var group in duplicateGroups)
+        foreach (var imageHash in duplicateHashes)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -56,7 +52,7 @@ public class PhotoDeduplicationService : IPhotoDeduplicationService
             try
             {
                 var photos = await _context.Photos
-                    .Where(p => p.ImageHash == group.ImageHash)
+                    .Where(p => p.ImageHash == imageHash)
                     .Include(p => p.Files)
                     .Include(p => p.Captions)
                     .Include(p => p.PhotoTags)
@@ -78,7 +74,7 @@ public class PhotoDeduplicationService : IPhotoDeduplicationService
                     "Merging {DuplicateCount} duplicate(s) into photo {PrimaryId} for hash {ImageHash}",
                     duplicates.Count,
                     primary.Id,
-                    group.ImageHash);
+                    imageHash);
 
                 var existingFileNames = new HashSet<string>(
                     primary.Files.Select(f => f.Name),
@@ -120,7 +116,7 @@ public class PhotoDeduplicationService : IPhotoDeduplicationService
             catch (Exception ex)
             {
                 await transaction.RollbackAsync(cancellationToken);
-                _logger.LogError(ex, "Failed to merge duplicates for hash {ImageHash}", group.ImageHash);
+                _logger.LogError(ex, "Failed to merge duplicates for hash {ImageHash}", imageHash);
                 throw;
             }
             finally
