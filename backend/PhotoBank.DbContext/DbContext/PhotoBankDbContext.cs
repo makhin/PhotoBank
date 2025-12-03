@@ -129,6 +129,16 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Photo>().Property(p => p.TakenDay)
                 .HasComputedColumnSql(@"(EXTRACT(DAY FROM (""TakenDate"" AT TIME ZONE 'UTC')))::int", stored: true);
 
+            // File indexes for multi-storage duplicate support
+            modelBuilder.Entity<File>()
+                .HasIndex(f => f.StorageId);
+
+            modelBuilder.Entity<File>()
+                .HasIndex(f => new { f.StorageId, f.RelativePath });
+
+            modelBuilder.Entity<File>()
+                .HasIndex(f => f.PhotoId);
+
             modelBuilder.Entity<PhotoTag>()
                 .HasKey(t => new { t.PhotoId, t.TagId });
 

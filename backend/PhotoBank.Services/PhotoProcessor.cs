@@ -148,6 +148,8 @@ namespace PhotoBank.Services
                     await _fileRepository.InsertAsync(new File
                     {
                         Photo = new Photo { Id = duplicate.PhotoId },
+                        StorageId = storage.Id,
+                        RelativePath = GetRelativePath(storage, path),
                         Name = duplicate.Name,
                     });
                     return (duplicate.PhotoId, false);
