@@ -74,13 +74,13 @@ public class PhotoFilterSpecificationTests
         var storage1 = new Storage { Id = 100, Name = "s100", Folder = "f100" };
         var storage2 = new Storage { Id = 200, Name = "s200", Folder = "f200" };
         var matching = CreatePhoto(101, storage1, "match");
-        matching.RelativePath = "album/2024";
+        matching.Files.First().RelativePath = "album/2024";
 
         var samePathDifferentStorage = CreatePhoto(102, storage2, "different-storage");
-        samePathDifferentStorage.RelativePath = "album/2024";
+        samePathDifferentStorage.Files.First().RelativePath = "album/2024";
 
         var otherPath = CreatePhoto(103, storage1, "other-path");
-        otherPath.RelativePath = "album/2023";
+        otherPath.Files.First().RelativePath = "album/2023";
 
         _context.Storages.AddRange(storage1, storage2);
         _context.Photos.AddRange(matching, samePathDifferentStorage, otherPath);
@@ -286,7 +286,7 @@ public class PhotoFilterSpecificationTests
 
     private static Photo CreatePhoto(int id, Storage storage, string name, DateTime? takenDate = null)
     {
-        return new Photo
+        var photo = new Photo
         {
             Id = id,
             Storage = storage,
@@ -308,8 +308,18 @@ public class PhotoFilterSpecificationTests
             Captions = new List<Caption>(),
             PhotoTags = new List<PhotoTag>(),
             Faces = new List<Face>(),
-            Files = new List<File>()
+            Files = new List<File>
+            {
+                new File
+                {
+                    StorageId = storage.Id,
+                    Storage = storage,
+                    RelativePath = string.Empty,
+                    Name = $"{name}.jpg"
+                }
+            }
         };
+        return photo;
     }
 
     private sealed class TestCurrentUser : ICurrentUser
