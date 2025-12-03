@@ -64,8 +64,6 @@ namespace PhotoBank.UnitTests.Services
             var photo = new Photo
             {
                 Name = "photo",
-                Storage = storage,
-                StorageId = storage.Id,
                 S3Key_Preview = "preview",
                 S3ETag_Preview = "preview-etag",
                 Sha256_Preview = "preview-hash",
@@ -81,11 +79,19 @@ namespace PhotoBank.UnitTests.Services
                 PhotoTags = new List<PhotoTag>(),
                 PhotoCategories = new List<PhotoCategory>(),
                 ObjectProperties = new List<ObjectProperty>(),
-                Files = new List<File>(),
+                Files = new List<File>
+                {
+                    new()
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = "path",
+                        Name = "photo.jpg"
+                    }
+                },
                 TakenDate = DateTime.UtcNow,
                 IsAdultContent = false,
                 IsRacyContent = false,
-                RelativePath = "path",
                 ImageHash = "hash"
             };
             context.Photos.Add(photo);

@@ -289,8 +289,6 @@ public class PhotoFilterSpecificationTests
         var photo = new Photo
         {
             Id = id,
-            Storage = storage,
-            StorageId = storage.Id,
             Name = name,
             TakenDate = takenDate,
             AccentColor = string.Empty,
@@ -298,7 +296,6 @@ public class PhotoFilterSpecificationTests
             DominantColorForeground = string.Empty,
             DominantColors = string.Empty,
             ImageHash = string.Empty,
-            RelativePath = string.Empty,
             S3Key_Preview = string.Empty,
             S3ETag_Preview = string.Empty,
             Sha256_Preview = string.Empty,

@@ -28,8 +28,25 @@ namespace PhotoBank.UnitTests.Enrichers
             _mockImageMetadataReaderWrapper = new Mock<IImageMetadataReaderWrapper>();
             _metadataEnricher = new MetadataEnricher(_mockImageMetadataReaderWrapper.Object);
 
-            _photo = new Photo { Storage = new Storage { Folder = "c:\\storageFolder" } };
-            _sourceData = new SourceDataDto { AbsolutePath = "c:\\storageFolder\\folder\\photo.jpg" };
+            var storage = new Storage { Folder = "c:\\storageFolder" };
+            _photo = new Photo
+            {
+                Files = new List<File>
+                {
+                    new()
+                    {
+                        Storage = storage,
+                        StorageId = storage.Id,
+                        RelativePath = "folder",
+                        Name = "photo.jpg"
+                    }
+                }
+            };
+            _sourceData = new SourceDataDto
+            {
+                AbsolutePath = "c:\\storageFolder\\folder\\photo.jpg",
+                Storage = storage
+            };
         }
 
         [Test]

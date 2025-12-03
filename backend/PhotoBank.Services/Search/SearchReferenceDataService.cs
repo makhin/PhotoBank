@@ -239,7 +239,7 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
                 return (IReadOnlyList<PathDto>)paths
                     .Select(f => new PathDto
                     {
-                        StorageId = f.StorageId ?? 0,
+                        StorageId = f.StorageId,
                         Path = f.RelativePath!,
                     })
                     .ToList();
