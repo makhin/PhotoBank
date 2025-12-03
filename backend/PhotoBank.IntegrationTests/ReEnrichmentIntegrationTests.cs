@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,22 +32,8 @@ public class ReEnrichmentIntegrationTests
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
     {
-        // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
-        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
-        try
-        {
-            _dbFixture = new TestDatabaseFixture();
-            await _dbFixture.InitializeAsync();
-        }
-        catch (ArgumentException ex) when (ex.Message.Contains("Docker endpoint"))
-        {
-            Assert.Ignore("Docker not available: " + ex.Message);
-        }
-        catch (DockerUnavailableException ex)
-        {
-            Assert.Ignore("Docker not available: " + ex.Message);
-        }
+        _dbFixture = new TestDatabaseFixture();
+        await _dbFixture.InitializeAsync();
     }
 
     [OneTimeTearDown]

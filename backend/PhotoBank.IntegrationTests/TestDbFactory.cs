@@ -1,12 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Npgsql;
 using PhotoBank.DbContext.DbContext;
-using Respawn;
-using Testcontainers.PostgreSql;
+using PhotoBank.IntegrationTests.Infra;
 
 namespace PhotoBank.IntegrationTests;
 
@@ -16,14 +11,12 @@ namespace PhotoBank.IntegrationTests;
 /// </summary>
 public sealed class TestDatabaseFixture : IAsyncDisposable
 {
-    private PostgreSqlContainer? _container;
-    private Respawner? _respawner;
-    private string _connectionString = string.Empty;
+    private readonly PostgreSqlIntegrationTestFixture _fixture = new();
 
     /// <summary>
     /// Gets the PostgreSQL connection string for the test database.
     /// </summary>
-    public string ConnectionString => _connectionString;
+    public string ConnectionString => _fixture.ConnectionString;
 
     /// <summary>
     /// Starts the PostgreSQL container and applies migrations.
@@ -31,44 +24,8 @@ public sealed class TestDatabaseFixture : IAsyncDisposable
     /// </summary>
     public async Task InitializeAsync()
     {
-        // Use an image that has both PostGIS and pgvector extensions
-        // kristofdetroch/postgres-postgis-pgvector combines PostGIS and pgvector
-        _container = new PostgreSqlBuilder()
-            .WithImage("kristofdetroch/postgres-postgis-pgvector:latest")
-            .WithPassword("postgres")
-            .Build();
-
-        await _container.StartAsync();
-
-        _connectionString = _container.GetConnectionString();
-
-        // Apply PhotoBankDbContext migrations
-        var photoDbOptionsBuilder = new DbContextOptionsBuilder<PhotoBankDbContext>();
-        photoDbOptionsBuilder.ConfigureWarnings(w =>
-            w.Log(RelationalEventId.PendingModelChangesWarning));
-        photoDbOptionsBuilder.UseNpgsql(_connectionString, builder =>
-        {
-            builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
-            builder.UseNetTopologySuite();
-            builder.UseVector();
-        });
-
-        await using (var photoDb = new PhotoBankDbContext(photoDbOptionsBuilder.Options))
-        {
-            await photoDb.Database.MigrateAsync();
-        }
-
-        // Initialize Respawner for data cleanup between tests
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
-        _respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
-        {
-            DbAdapter = DbAdapter.Postgres,
-            TablesToIgnore = new[]
-            {
-                new Respawn.Graph.Table("__EFMigrationsHistory")
-            }
-        });
+        await _fixture.InitializeAsync();
+        _fixture.EnsureDatabaseAvailable();
     }
 
     /// <summary>
@@ -76,22 +33,7 @@ public sealed class TestDatabaseFixture : IAsyncDisposable
     /// </summary>
     public PhotoBankDbContext CreateContext()
     {
-        if (string.IsNullOrEmpty(_connectionString))
-        {
-            throw new InvalidOperationException("Database not initialized. Call InitializeAsync() first.");
-        }
-
-        var optionsBuilder = new DbContextOptionsBuilder<PhotoBankDbContext>();
-        optionsBuilder.UseNpgsql(_connectionString, builder =>
-        {
-            builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
-            builder.UseNetTopologySuite();
-            builder.UseVector();
-        });
-        optionsBuilder.EnableSensitiveDataLogging();
-        optionsBuilder.EnableDetailedErrors();
-
-        return new PhotoBankDbContext(optionsBuilder.Options);
+        return _fixture.CreatePhotoDbContext();
     }
 
     /// <summary>
@@ -100,14 +42,7 @@ public sealed class TestDatabaseFixture : IAsyncDisposable
     /// </summary>
     public async Task ResetDatabaseAsync()
     {
-        if (_respawner == null)
-        {
-            throw new InvalidOperationException("Respawner not initialized. Call InitializeAsync() first.");
-        }
-
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
-        await _respawner.ResetAsync(conn);
+        await _fixture.ResetDatabaseAsync();
     }
 
     /// <summary>
@@ -116,9 +51,6 @@ public sealed class TestDatabaseFixture : IAsyncDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
-        if (_container != null)
-        {
-            await _container.DisposeAsync();
-        }
+        await _fixture.DisposeAsync();
     }
 }
