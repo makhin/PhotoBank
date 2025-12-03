@@ -60,6 +60,9 @@ namespace PhotoBank.Console
             var deleteCommand = BuildDeleteCommand(args);
             rootCommand.AddCommand(deleteCommand);
 
+            var mergeDuplicatesCommand = BuildMergeDuplicatesCommand(args);
+            rootCommand.AddCommand(mergeDuplicatesCommand);
+
             // Allow unmatched tokens (e.g., --environment, --logging:*) to pass through to the host
             rootCommand.TreatUnmatchedTokensAsErrors = false;
 
@@ -103,6 +106,19 @@ namespace PhotoBank.Console
                 }
 
                 var exitCode = await RunDeleteAsync(args, photoId, lastCount);
+                context.ExitCode = exitCode;
+            });
+
+            return command;
+        }
+
+        private static Command BuildMergeDuplicatesCommand(string[] args)
+        {
+            var command = new Command("merge-duplicates", "Merge photo duplicates detected by matching ImageHash values");
+
+            command.SetHandler(async context =>
+            {
+                var exitCode = await RunMergeDuplicatesAsync(args);
                 context.ExitCode = exitCode;
             });
 
@@ -222,6 +238,55 @@ namespace PhotoBank.Console
             {
                 await Console.Error.WriteLineAsync($"Deletion error: {ex.Message}");
                 Log.Fatal(ex, "Photo deletion failed");
+                return 1;
+            }
+            finally
+            {
+                host?.Dispose();
+                await Log.CloseAndFlushAsync();
+            }
+        }
+
+        private static async Task<int> RunMergeDuplicatesAsync(string[] args)
+        {
+            IHost? host = null;
+
+            try
+            {
+                host = Host.CreateDefaultBuilder(args)
+                    .UseSerilog((context, services, configuration) => configuration
+                        .ReadFrom.Configuration(context.Configuration)
+                        .WriteTo.Console()
+                        .WriteTo.File("logs/photobank-.log",
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 7))
+                    .ConfigureServices((context, services) =>
+                    {
+                        services
+                            .AddPhotobankDbContext(context.Configuration, usePool: false)
+                            .AddPhotobankCore(context.Configuration)
+                            .AddPhotobankConsole(context.Configuration);
+                    })
+                    .Build();
+
+                var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+                var deduplicationService = host.Services.GetRequiredService<IPhotoDeduplicationService>();
+
+                var mergedGroups = await deduplicationService.MergeDuplicatesByImageHashAsync(lifetime.ApplicationStopping);
+                Console.WriteLine($"Merged {mergedGroups} duplicate group(s) by ImageHash.");
+
+                await host.StopAsync();
+                return 0;
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("\nDuplicate merge cancelled by user.");
+                return 130;
+            }
+            catch (Exception ex)
+            {
+                await Console.Error.WriteLineAsync($"Duplicate merge error: {ex.Message}");
+                Log.Fatal(ex, "Photo duplicate merge failed");
                 return 1;
             }
             finally
