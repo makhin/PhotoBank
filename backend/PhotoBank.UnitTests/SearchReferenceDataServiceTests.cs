@@ -167,10 +167,7 @@ public class SearchReferenceDataServiceTests
     private static Photo CreatePhoto(int id, Storage storage, string name, string relativePath) => new()
     {
         Id = id,
-        StorageId = storage.Id,
-        Storage = storage,
         Name = name,
-        RelativePath = relativePath,
         AccentColor = string.Empty,
         DominantColorBackground = string.Empty,
         DominantColorForeground = string.Empty,
@@ -193,6 +190,7 @@ public class SearchReferenceDataServiceTests
             {
                 Name = name,
                 StorageId = storage.Id,
+                Storage = storage,
                 RelativePath = relativePath
             }
         }

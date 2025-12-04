@@ -139,7 +139,6 @@ public class PhotoDeletionService : IPhotoDeletionService
     {
         return await _context.Photos
             .AsTracking()
-            .Include(p => p.Storage)
             .Include(p => p.Files)
                 .ThenInclude(f => f.Storage)  // Load Storage for each File (cross-storage support)
             .Include(p => p.Captions)

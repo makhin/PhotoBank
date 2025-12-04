@@ -44,7 +44,7 @@ public sealed class PhotoFileSystemDuplicateChecker : IPhotoFileSystemDuplicateC
         var result = new DuplicateVerification
         {
             PhotoId = await _photoRepository.GetByCondition(p =>
-                    p.Name == name && p.RelativePath == relativePath && p.Storage.Id == storage.Id)
+                    p.Name == name && p.Files.Any(f => f.RelativePath == relativePath && f.StorageId == storage.Id))
                 .Select(p => p.Id)
                 .SingleOrDefaultAsync(),
             Name = Path.GetFileName(path)

@@ -65,8 +65,6 @@ public class PhotoServiceGetFacesPageAsyncTests
         var photo = new Photo
         {
             Name = "photo.jpg",
-            Storage = storage,
-            StorageId = storage.Id,
             AccentColor = "000000",
             DominantColorBackground = "000000",
             DominantColorForeground = "000000",
@@ -78,12 +76,21 @@ public class PhotoServiceGetFacesPageAsyncTests
             S3ETag_Thumbnail = "etag-thumbnail",
             Sha256_Thumbnail = "sha-thumbnail",
             ImageHash = "hash",
-            RelativePath = "faces",
             Captions = new List<Caption>(),
             PhotoTags = new List<PhotoTag>(),
             PhotoCategories = new List<PhotoCategory>(),
             ObjectProperties = new List<ObjectProperty>(),
-            Faces = new List<Face>()
+            Faces = new List<Face>(),
+            Files = new List<File>
+            {
+                new()
+                {
+                    StorageId = storage.Id,
+                    Storage = storage,
+                    RelativePath = "faces",
+                    Name = "photo.jpg"
+                }
+            }
         };
         context.Photos.Add(photo);
         await context.SaveChangesAsync();

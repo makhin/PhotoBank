@@ -206,20 +206,22 @@ namespace PhotoBank.UnitTests.Services
                 .All()
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = Guid.NewGuid().ToString())
-                .With(p => p.Files = new List<File>
+                .Build();
+
+            foreach (var photo in photos)
+            {
+                photo.Files = new List<File>
                 {
                     new File
                     {
                         StorageId = storage.Id,
                         Storage = storage,
                         RelativePath = string.Empty,
-                        Name = $"{p.Name}.jpg"
+                        Name = $"{photo.Name}.jpg"
                     }
-                })
-                .Build();
+                };
+            }
             context.Photos.AddRange(photos);
             await context.SaveChangesAsync();
 
@@ -253,8 +255,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.IsBW = true)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "bw")
                 .With(p => p.Files = new List<File>
                 {
@@ -272,8 +272,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.IsBW = false)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "color")
                 .With(p => p.Files = new List<File>
                 {
@@ -320,8 +318,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 1)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "withTag")
                 .With(p => p.Files = new List<File>
                 {
@@ -342,8 +338,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 2)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "withoutTag")
                 .With(p => p.Files = new List<File>
                 {
@@ -392,8 +386,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 1)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "all")
                 .With(p => p.Files = new List<File>
                 {
@@ -416,8 +408,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 2)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "t1")
                 .With(p => p.Files = new List<File>
                 {
@@ -439,8 +429,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 3)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "t2")
                 .With(p => p.Files = new List<File>
                 {
@@ -495,8 +483,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 1)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "both")
                 .With(p => p.Files = new List<File>
                 {
@@ -519,8 +505,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 2)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "p1")
                 .With(p => p.Files = new List<File>
                 {
@@ -542,8 +526,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 3)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "p2")
                 .With(p => p.Files = new List<File>
                 {
@@ -595,8 +577,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.TakenDate = new DateTime(2020, 1, 1))
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "before")
                 .With(p => p.Files = new List<File>
                 {
@@ -615,8 +595,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.TakenDate = new DateTime(2020, 3, 1))
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "after")
                 .With(p => p.Files = new List<File>
                 {
@@ -663,8 +641,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.TakenDate = new DateTime(2020, 1, 1))
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "before")
                 .With(p => p.Files = new List<File>
                 {
@@ -683,8 +659,6 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.TakenDate = new DateTime(2020, 3, 1))
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "after")
                 .With(p => p.Files = new List<File>
                 {

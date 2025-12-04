@@ -41,10 +41,10 @@ public sealed class DuplicateEnricher : IEnricher
 
         // Extract Name and RelativePath from file path (moved from MetadataEnricher)
         var normalizedAbsolutePath = sourceData.AbsolutePath.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
-        var normalizedStoragePath = photo.Storage.Folder.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+        var normalizedStoragePath = sourceData.Storage.Folder.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
 
         photo.Name = Path.GetFileNameWithoutExtension(normalizedAbsolutePath);
-        photo.RelativePath = Path.GetDirectoryName(normalizedAbsolutePath)?
+        var relativePath = Path.GetDirectoryName(normalizedAbsolutePath)?
             .Replace(normalizedStoragePath, string.Empty)
             .TrimStart(Path.DirectorySeparatorChar);
 
@@ -53,8 +53,8 @@ public sealed class DuplicateEnricher : IEnricher
         {
             new()
             {
-                StorageId = photo.Storage.Id,
-                RelativePath = photo.RelativePath,
+                StorageId = sourceData.Storage.Id,
+                RelativePath = relativePath,
                 Name = Path.GetFileName(normalizedAbsolutePath)
             }
         };
@@ -68,8 +68,8 @@ public sealed class DuplicateEnricher : IEnricher
         var existingPhoto = await _photoRepository
             .GetByCondition(p => p.ImageHash == photo.ImageHash)
             .AsNoTracking()
-            .Include(p => p.Storage)
             .Include(p => p.Files)
+                .ThenInclude(f => f.Storage)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (existingPhoto != null)
@@ -81,9 +81,9 @@ public sealed class DuplicateEnricher : IEnricher
             // Get location info from first File for display (cross-storage support)
             var firstFile = existingPhoto.Files?.FirstOrDefault();
             var locationInfo = firstFile != null
-                ? $"at {firstFile.RelativePath}"
+                ? $"at {firstFile.RelativePath} in storage '{firstFile.Storage?.Name}'"
                 : "location unknown";
-            sourceData.DuplicatePhotoInfo = $"Photo #{existingPhoto.Id} in storage '{existingPhoto.Storage?.Name}' {locationInfo}";
+            sourceData.DuplicatePhotoInfo = $"Photo #{existingPhoto.Id} {locationInfo}";
         }
     }
 }

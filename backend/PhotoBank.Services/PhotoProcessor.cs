@@ -131,7 +131,7 @@ namespace PhotoBank.Services
             }
 
             await InsertPhotoAsync(photo);
-            await PublishPhotoCreatedEventAsync(photo, sourceData);
+            await PublishPhotoCreatedEventAsync(photo, storage, sourceData);
 
             return (photo.Id, PhotoProcessResult.Added, null, enrichmentResult.Stats);
         }
@@ -148,6 +148,8 @@ namespace PhotoBank.Services
                     await _fileRepository.InsertAsync(new File
                     {
                         Photo = new Photo { Id = duplicate.PhotoId },
+                        StorageId = storage.Id,
+                        RelativePath = GetRelativePath(storage, path),
                         Name = duplicate.Name,
                     });
                     return (duplicate.PhotoId, false);
@@ -163,8 +165,12 @@ namespace PhotoBank.Services
             IReadOnlyCollection<Type>? activeEnrichers)
         {
             var absolutePath = BuildAbsolutePath(storage, path);
-            var sourceData = new SourceDataDto { AbsolutePath = absolutePath };
-            var photo = new Photo { Storage = storage };
+            var sourceData = new SourceDataDto
+            {
+                AbsolutePath = absolutePath,
+                Storage = storage
+            };
+            var photo = new Photo();
 
             var enrichersToUse = activeEnrichers ?? _activeEnricherProvider.GetActiveEnricherTypes(_enricherRepository);
             // Pass serviceProvider so enrichers use the same DbContext as PhotoProcessor
@@ -185,7 +191,7 @@ namespace PhotoBank.Services
             }
         }
 
-        private async Task PublishPhotoCreatedEventAsync(Photo photo, SourceDataDto sourceData)
+        private async Task PublishPhotoCreatedEventAsync(Photo photo, Storage storage, SourceDataDto sourceData)
         {
             var faces = (photo.Faces ?? new List<Face>())
                 .Zip(sourceData.FaceImages, (f, img) => new PhotoCreatedFace(f.Id, img))
@@ -193,7 +199,7 @@ namespace PhotoBank.Services
 
             // Use RelativePath from the first File entry (for cross-storage support)
             var relativePath = photo.Files?.FirstOrDefault()?.RelativePath ?? string.Empty;
-            var evt = new PhotoCreated(photo.Id, photo.Storage.Name, relativePath, sourceData.PreviewImageBytes, sourceData.ThumbnailImage, faces);
+            var evt = new PhotoCreated(photo.Id, storage.Name, relativePath, sourceData.PreviewImageBytes, sourceData.ThumbnailImage, faces);
             await _mediator.Publish(evt);
         }
 
@@ -204,6 +210,7 @@ namespace PhotoBank.Services
             var files = await _photoRepository
                 .GetAll()
                 .Include(p => p.Files)
+                    .ThenInclude(f => f.Storage)
                 .AsNoTracking()
                 .Where(p => p.Files.Any(f => f.StorageId == storage.Id) && p.FaceIdentifyStatus == FaceIdentifyStatus.Undefined)
                 .Select(p => new PhotoFilePath
@@ -223,6 +230,7 @@ namespace PhotoBank.Services
             var files = await _photoRepository
                 .GetAll()
                 .Include(p => p.Files)
+                    .ThenInclude(f => f.Storage)
                 .AsNoTracking()
                 .Where(p => p.Files.Any(f => f.StorageId == storage.Id) && p.TakenDate == null)
                 .Select(p => new PhotoFilePath
@@ -289,12 +297,13 @@ namespace PhotoBank.Services
                 var sourceData = new SourceDataDto
                 {
                     AbsolutePath = absolutePath,
+                    Storage = storage
                 };
 
                 var photo = new Photo
                 {
                     Id = photoFile.PhotoId,
-                    Storage = storage
+                    Files = photoFile.Files
                 };
 
                 // Pass serviceProvider so enrichers use the same DbContext

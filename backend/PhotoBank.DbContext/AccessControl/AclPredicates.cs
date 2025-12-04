@@ -27,7 +27,7 @@ public static class AclPredicates
         var nsfw = acl.CanSeeNsfw;
 
         return p =>
-            storage.Contains(p.StorageId) &&
+            p.Files.Any(f => storage.Contains(f.StorageId)) &&
             (nsfw || (!p.IsAdultContent && !p.IsRacyContent)) &&
             (
                 groups.Length == 0

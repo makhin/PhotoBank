@@ -319,7 +319,7 @@ namespace PhotoBank.Services
         {
             var faces = await _faceRepository
                 .GetAll()
-                .Where(f => f.Photo.StorageId == 9 && f.IdentityStatus == IdentityStatus.ForReprocessing)
+                .Where(f => f.Photo.Files.Any(file => file.StorageId == 9) && f.IdentityStatus == IdentityStatus.ForReprocessing)
                 .Select(f => new
                 {
                     f.Id,

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using ImageMagick;
+using PhotoBank.DbContext.Models;
 using PhotoBank.Services.ImageAnalysis;
 
 namespace PhotoBank.Services.Models;
@@ -9,6 +10,13 @@ public class SourceDataDto
 {
     [Required]
     public string AbsolutePath { get; set; }
+
+    /// <summary>
+    /// Storage where the photo file is located.
+    /// Used by enrichers to determine file paths and storage-specific operations.
+    /// </summary>
+    [Required]
+    public Storage Storage { get; set; }
 
     [Required]
     public ImageAnalysisResult ImageAnalysis { get; set; }

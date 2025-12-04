@@ -368,15 +368,13 @@ public class ReEnrichmentIntegrationTests
             var photo = new Photo
             {
                 Name = $"test{i}",
-                RelativePath = "photos",
                 AccentColor = "00000",
                 DominantColorBackground = "black",
                 DominantColorForeground = "black",
                 DominantColors = "black",
                 ImageHash = $"hash-{i}",
-                StorageId = storage.Id,
-                Storage = storage,
-                EnrichedWithEnricherType = EnricherType.None
+                EnrichedWithEnricherType = EnricherType.None,
+                Files = new List<DbContext.Models.File>()
             };
 
             _context.Photos.Add(photo);
@@ -386,8 +384,11 @@ public class ReEnrichmentIntegrationTests
                 Name = "test.jpg",
                 Photo = photo,
                 Storage = storage,
+                StorageId = storage.Id,
                 RelativePath = "photos"
             };
+
+            photo.Files.Add(file);
 
             _context.Files.Add(file);
         }

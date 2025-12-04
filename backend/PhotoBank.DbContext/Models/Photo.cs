@@ -13,8 +13,6 @@ namespace PhotoBank.DbContext.Models
             Scale = 1;
         }
         public int Id { get; set; }
-        public int StorageId { get; set; }
-        public Storage Storage { get; set; }
         [Required, MaxLength(255)]
         public string Name { get; set; }
         public DateTime? TakenDate { get; set; }
@@ -36,7 +34,6 @@ namespace PhotoBank.DbContext.Models
         [MaxLength(64)]
         public string? Sha256_Preview { get; set; }
         public long? BlobSize_Preview { get; set; }
-        public DateTime? MigratedAt_Preview { get; set; }
         [MaxLength(512)]
         public string? S3Key_Thumbnail { get; set; }
         [MaxLength(128)]
@@ -44,7 +41,6 @@ namespace PhotoBank.DbContext.Models
         [MaxLength(64)]
         public string? Sha256_Thumbnail { get; set; }
         public long? BlobSize_Thumbnail { get; set; }
-        public DateTime? MigratedAt_Thumbnail { get; set; }
         public uint? Height { get; set; }
         public uint? Width { get; set; }
         public int? Orientation { get; set; }
@@ -59,8 +55,6 @@ namespace PhotoBank.DbContext.Models
         public double RacyScore { get; set; }
         [MaxLength(256)]
         public string ImageHash { get; set; }
-        [MaxLength(255)]
-        public string RelativePath { get; set; }
         public List<File> Files { get; set; }
         public double Scale { get; set; }
         public FaceIdentifyStatus FaceIdentifyStatus { get; set; }

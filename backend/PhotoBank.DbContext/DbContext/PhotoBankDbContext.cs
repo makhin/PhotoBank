@@ -107,9 +107,6 @@ namespace PhotoBank.DbContext.DbContext
                 .IncludeProperties(p => new { p.S3Key_Preview, p.S3Key_Thumbnail });
 
             modelBuilder.Entity<Photo>()
-                .HasIndex(p => new { p.Name, p.RelativePath });
-
-            modelBuilder.Entity<Photo>()
                 .HasIndex(p => new { p.TakenDate });
 
             modelBuilder.Entity<Photo>()
@@ -121,13 +118,20 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => new { p.IsRacyContent });
 
-            modelBuilder.Entity<Photo>()
-                .HasIndex(p => new { p.StorageId, p.TakenDate });
-
             modelBuilder.Entity<Photo>().Property(p => p.TakenMonth)
                 .HasComputedColumnSql(@"(EXTRACT(MONTH FROM (""TakenDate"" AT TIME ZONE 'UTC')))::int", stored: true);
             modelBuilder.Entity<Photo>().Property(p => p.TakenDay)
                 .HasComputedColumnSql(@"(EXTRACT(DAY FROM (""TakenDate"" AT TIME ZONE 'UTC')))::int", stored: true);
+
+            // File indexes for multi-storage duplicate support
+            modelBuilder.Entity<File>()
+                .HasIndex(f => f.StorageId);
+
+            modelBuilder.Entity<File>()
+                .HasIndex(f => new { f.StorageId, f.RelativePath });
+
+            modelBuilder.Entity<File>()
+                .HasIndex(f => f.PhotoId);
 
             modelBuilder.Entity<PhotoTag>()
                 .HasKey(t => new { t.PhotoId, t.TagId });
@@ -186,10 +190,6 @@ namespace PhotoBank.DbContext.DbContext
 
             modelBuilder.Entity<Face>()
                 .HasIndex(p => p.ExternalGuid);
-
-            modelBuilder.Entity<Photo>()
-                .HasIndex(p => p.StorageId)
-                .IncludeProperties(p => p.RelativePath);
 
             modelBuilder.Entity<Tag>(e =>
             {
