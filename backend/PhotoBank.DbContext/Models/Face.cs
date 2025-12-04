@@ -26,7 +26,6 @@ namespace PhotoBank.DbContext.Models
         [MaxLength(64)]
         public string? Sha256_Image { get; set; }
         public long? BlobSize_Image { get; set; }
-        public DateTime? MigratedAt_Image { get; set; }
         [MaxLength(64)]
         public string? Provider { get; set; }
         [MaxLength(256)]
