@@ -2,7 +2,7 @@
   "profiles": {
     "PhotoBank.Console": {
       "commandName": "Project",
-      "commandLineArgs": "--storage 14 --no-register"
+      "commandLineArgs": "merge-duplicates"
     }
   }
 }

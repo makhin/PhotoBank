@@ -164,8 +164,7 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<File>(e =>
             {
                 e.HasQueryFilter(f => !f.IsDeleted);
-                e.HasIndex(p => p.Name);
-                e.HasIndex(p => new { p.Name, p.PhotoId }).IsUnique();
+                e.HasIndex(p => new { p.Name, p.StorageId, p.RelativePath }).IsUnique();
             });
 
             modelBuilder.Entity<Face>()
