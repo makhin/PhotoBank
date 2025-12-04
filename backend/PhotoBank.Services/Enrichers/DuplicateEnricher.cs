@@ -66,7 +66,7 @@ public sealed class DuplicateEnricher : IEnricher
 
         // Search for existing photo with same ImageHash across all storages
         var existingPhoto = await _photoRepository
-            .GetByCondition(p => p.ImageHash == photo.ImageHash)
+            .GetByCondition(p => p.ImageHash == photo.ImageHash && p.Id != photo.Id)
             .AsNoTracking()
             .Include(p => p.Files)
                 .ThenInclude(f => f.Storage)

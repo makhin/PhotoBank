@@ -31,6 +31,10 @@ namespace PhotoBank.DbContext.Migrations
                 name: "IX_Photos_StorageId_TakenDate",
                 table: "Photos");
 
+            migrationBuilder.Sql(
+                "UPDATE \"Files\" f SET \"StorageId\" = p.\"StorageId\", \"RelativePath\" = p.\"RelativePath\" " +
+                "FROM \"Photos\" p WHERE f.\"PhotoId\" = p.\"Id\" AND (p.\"StorageId\" IS NOT NULL OR p.\"RelativePath\" IS NOT NULL);");
+
             migrationBuilder.DropColumn(
                 name: "MigratedAt_Preview",
                 table: "Photos");
@@ -60,7 +64,6 @@ namespace PhotoBank.DbContext.Migrations
                 table: "Files",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0,
                 oldClrType: typeof(int),
                 oldType: "integer",
                 oldNullable: true);
@@ -71,7 +74,6 @@ namespace PhotoBank.DbContext.Migrations
                 type: "character varying(255)",
                 maxLength: 255,
                 nullable: false,
-                defaultValue: "",
                 oldClrType: typeof(string),
                 oldType: "character varying(255)",
                 oldMaxLength: 255,
