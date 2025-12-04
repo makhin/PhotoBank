@@ -61,13 +61,16 @@ public class PhotoFilterSpecification
         if (filter.Storages?.Any() == true)
         {
             var storages = filter.Storages.ToList();
-            // Filter by Files.StorageId for cross-storage duplicate support
-            query = query.Where(p => p.Files.Any(f => storages.Contains(f.StorageId)));
 
             if (!string.IsNullOrEmpty(filter.RelativePath))
             {
-                // Filter by Files.RelativePath for cross-storage duplicate support
-                query = query.Where(p => p.Files.Any(f => f.RelativePath == filter.RelativePath));
+                query = query.Where(p => p.Files.Any(f =>
+                    storages.Contains(f.StorageId) && f.RelativePath == filter.RelativePath));
+            }
+            else
+            {
+                // Filter by Files.StorageId for cross-storage duplicate support
+                query = query.Where(p => p.Files.Any(f => storages.Contains(f.StorageId)));
             }
         }
 
