@@ -118,6 +118,9 @@ namespace PhotoBank.DbContext.DbContext
             modelBuilder.Entity<Photo>()
                 .HasIndex(p => new { p.IsRacyContent });
 
+            modelBuilder.Entity<Photo>()
+                .HasIndex(p => p.ImageHash);
+
             modelBuilder.Entity<Photo>().Property(p => p.TakenMonth)
                 .HasComputedColumnSql(@"(EXTRACT(MONTH FROM (""TakenDate"" AT TIME ZONE 'UTC')))::int", stored: true);
             modelBuilder.Entity<Photo>().Property(p => p.TakenDay)

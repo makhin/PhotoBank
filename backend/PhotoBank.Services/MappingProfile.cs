@@ -42,6 +42,11 @@ namespace PhotoBank.Services
                         .OrderBy(f => f.Id)
                         .Select(f => f.Storage.Name)
                         .FirstOrDefault() ?? string.Empty))
+                .ForMember(dest => dest.RelativePath,
+                    opt => opt.MapFrom(src => src.Files
+                        .OrderBy(f => f.Id)
+                        .Select(f => f.RelativePath)
+                        .FirstOrDefault() ?? string.Empty))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Photo, PathDto>()
