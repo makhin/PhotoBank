@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using PhotoBank.AccessControl;
@@ -78,15 +77,27 @@ public class PhotoQueryService : IPhotoQueryService
             .ThenByDescending(p => p.Id)
             .Skip(skip)
             .Take(pageSize)
-            .ProjectTo<PhotoItemDto>(_mapper.ConfigurationProvider)
+            .Include(p => p.Files)!.ThenInclude(f => f.Storage)
+            .Include(p => p.PhotoTags)
+            .Include(p => p.Faces)
+            .Include(p => p.Captions)
+            .AsSplitQuery()
             .ToListAsync(ct);
 
-        await FillUrlsAsync(photos);
+        var photoDtos = _mapper.Map<List<PhotoItemDto>>(photos, opts =>
+        {
+            if (!currentUser.IsAdmin)
+            {
+                opts.Items["AllowedStorageIds"] = currentUser.AllowedStorageIds;
+            }
+        });
+
+        await FillUrlsAsync(photoDtos);
 
         return new PageResponse<PhotoItemDto>
         {
             TotalCount = count,
-            Items = photos
+            Items = photoDtos
         };
     }
 

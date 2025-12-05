@@ -61,17 +61,22 @@ public class PhotoFilterSpecification
         if (filter.Storages?.Any() == true)
         {
             var storages = filter.Storages.ToList();
-            query = query.Where(p => storages.Contains(p.StorageId));
 
             if (!string.IsNullOrEmpty(filter.RelativePath))
             {
-                query = query.Where(p => p.RelativePath == filter.RelativePath);
+                query = query.Where(p => p.Files.Any(f =>
+                    storages.Contains(f.StorageId) && f.RelativePath == filter.RelativePath));
+            }
+            else
+            {
+                // Filter by Files.StorageId for cross-storage duplicate support
+                query = query.Where(p => p.Files.Any(f => storages.Contains(f.StorageId)));
             }
         }
 
         if (!string.IsNullOrEmpty(filter.Caption))
         {
-            // Full-text search ñ ts_vector
+            // Full-text search ï¿½ ts_vector
             query = query.Where(p => p.Captions.Any(c =>
                 EF.Functions.ToTsVector("english", c.Text)
                     .Matches(EF.Functions.WebSearchToTsQuery("english", filter.Caption!))));

@@ -15,7 +15,10 @@
       "Bash(git commit:*)",
       "Bash(git show:*)",
       "Bash(dotnet --version:*)",
-      "Bash(dotnet ef --help:*)"
+      "Bash(dotnet ef --help:*)",
+      "Bash(dotnet list:*)",
+      "Bash(findstr:*)",
+      "Bash(Select-Object -First 3)"
     ],
     "deny": [],
     "ask": []

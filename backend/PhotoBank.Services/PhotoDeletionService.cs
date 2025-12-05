@@ -139,8 +139,8 @@ public class PhotoDeletionService : IPhotoDeletionService
     {
         return await _context.Photos
             .AsTracking()
-            .Include(p => p.Storage)
             .Include(p => p.Files)
+                .ThenInclude(f => f.Storage)  // Load Storage for each File (cross-storage support)
             .Include(p => p.Captions)
             .Include(p => p.PhotoTags)
             .Include(p => p.PhotoCategories)
@@ -168,13 +168,14 @@ public class PhotoDeletionService : IPhotoDeletionService
             keys.Add((_bucket, faceKey!));
         }
 
-        if (TryParseLocation(photo.Storage?.Folder, out var location))
+        // For cross-storage duplicate support: each File has its own Storage and RelativePath
+        // Iterate through Files and use their individual Storage/RelativePath instead of Photo's
+        foreach (var file in photo.Files.Where(f => !string.IsNullOrWhiteSpace(f.Name)))
         {
-            var prefix = CombinePrefixes(location.Prefix, photo.RelativePath);
-
-            foreach (var fileName in photo.Files.Select(f => f.Name).Where(n => !string.IsNullOrWhiteSpace(n)))
+            if (TryParseLocation(file.Storage?.Folder, out var location))
             {
-                var key = BuildObjectKey(prefix, fileName!);
+                var prefix = CombinePrefixes(location.Prefix, file.RelativePath);
+                var key = BuildObjectKey(prefix, file.Name!);
                 keys.Add((location.Bucket, key));
             }
         }

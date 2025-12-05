@@ -167,10 +167,7 @@ public class SearchReferenceDataServiceTests
     private static Photo CreatePhoto(int id, Storage storage, string name, string relativePath) => new()
     {
         Id = id,
-        StorageId = storage.Id,
-        Storage = storage,
         Name = name,
-        RelativePath = relativePath,
         AccentColor = string.Empty,
         DominantColorBackground = string.Empty,
         DominantColorForeground = string.Empty,
@@ -187,7 +184,16 @@ public class SearchReferenceDataServiceTests
         PhotoCategories = new List<PhotoCategory>(),
         ObjectProperties = new List<ObjectProperty>(),
         Faces = new List<Face>(),
-        Files = new List<File>()
+        Files = new List<File>
+        {
+            new()
+            {
+                Name = name,
+                StorageId = storage.Id,
+                Storage = storage,
+                RelativePath = relativePath
+            }
+        }
     };
 
     private sealed class ReferenceServiceFixture : IDisposable

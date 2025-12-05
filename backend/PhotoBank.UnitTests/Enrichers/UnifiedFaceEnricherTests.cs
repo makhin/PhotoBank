@@ -40,11 +40,11 @@ public class UnifiedFaceEnricherTests
     }
 
     [Test]
-    public void Dependencies_ShouldContainPreview()
+    public void Dependencies_ShouldContainDuplicate()
     {
         // Act & Assert
         _enricher.Dependencies.Should().ContainSingle()
-            .And.Contain(typeof(PreviewEnricher));
+            .And.Contain(typeof(DuplicateEnricher));
     }
 
     [Test]

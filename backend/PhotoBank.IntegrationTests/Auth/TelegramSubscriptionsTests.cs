@@ -1,25 +1,17 @@
-using DotNet.Testcontainers.Builders;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 using NUnit.Framework;
-using PhotoBank.AccessControl;
-using PhotoBank.DbContext.DbContext;
 using PhotoBank.DbContext.Models;
 using PhotoBank.IntegrationTests.Infra;
 using PhotoBank.ViewModel.Dto;
-using Respawn;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Testcontainers.PostgreSql;
 
 namespace PhotoBank.IntegrationTests.Auth;
 
@@ -29,119 +21,34 @@ public class TelegramSubscriptionsTests
 {
     private const string ServiceKey = "integration-telegram-key";
 
-    private PostgreSqlContainer _dbContainer = null!;
-    private Respawner _respawner = null!;
-    private string _connectionString = string.Empty;
+    private readonly PostgreSqlIntegrationTestFixture _fixture = new();
     private ApiWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
 
     [OneTimeSetUp]
     public async Task OneTimeSetup()
     {
-        // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
-        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
-        try
-        {
-            _dbContainer = new PostgreSqlBuilder()
-                .WithImage("postgis/postgis:16-3.4")
-                .WithPassword("postgres")
-                .Build();
-            await _dbContainer.StartAsync();
-        }
-        catch (ArgumentException ex) when (ex.Message.Contains("Docker endpoint"))
-        {
-            Assert.Ignore("Docker not available: " + ex.Message);
-        }
-        catch (DockerUnavailableException ex)
-        {
-            Assert.Ignore("Docker not available: " + ex.Message);
-        }
-
-        _connectionString = _dbContainer.GetConnectionString();
-
-        var photoDbOptionsBuilder = new DbContextOptionsBuilder<PhotoBankDbContext>();
-
-        photoDbOptionsBuilder.ConfigureWarnings(w =>
-            w.Log(RelationalEventId.PendingModelChangesWarning));
-
-        photoDbOptionsBuilder.UseNpgsql(_connectionString, builder =>
-        {
-            builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
-            builder.MigrationsHistoryTable("__EFMigrationsHistory_Photo");
-            builder.UseNetTopologySuite();
-        });
-
-        var photoDbOptions = photoDbOptionsBuilder.Options;
-
-        await using (var photoDb = new PhotoBankDbContext(photoDbOptions))
-            await photoDb.Database.MigrateAsync();
-
-        var asm1 = typeof(PhotoBankDbContext).Assembly.GetName().Name;
-        Console.WriteLine($"[DBG] PhotoBankDbContext runtime MigrationsAssembly = {asm1}");
-
-        var accessDbOptionsBuilder = new DbContextOptionsBuilder<AccessControlDbContext>();
-        accessDbOptionsBuilder.ConfigureWarnings(w =>
-            w.Log(RelationalEventId.PendingModelChangesWarning));
-
-        accessDbOptionsBuilder.UseNpgsql(_connectionString, builder =>
-        {
-            builder.MigrationsAssembly(typeof(AccessControlDbContext).Assembly.GetName().Name);
-            builder.MigrationsHistoryTable("__EFMigrationsHistory_Access");
-            builder.UseNetTopologySuite();
-        });
-
-        var acDbOptions = accessDbOptionsBuilder.Options;
-
-        await using (var accessDb = new AccessControlDbContext(acDbOptions))
-            await accessDb.Database.MigrateAsync();
-        var asm = typeof(AccessControlDbContext).Assembly.GetName().Name;
-        Console.WriteLine($"[DBG] AccessControlDbContext runtime MigrationsAssembly = {asm}");
-
-        await using var conn = new NpgsqlConnection(_connectionString);
-        await conn.OpenAsync();
-        _respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
-        {
-            DbAdapter = DbAdapter.Postgres,
-            TablesToIgnore = new[]
-            {
-                new Respawn.Graph.Table("__EFMigrationsHistory_Photo"),
-                new Respawn.Graph.Table("__EFMigrationsHistory_Access")
-            }
-        });
+        await _fixture.InitializeAsync();
+        _fixture.EnsureDatabaseAvailable();
     }
 
     [OneTimeTearDown]
     public async Task OneTimeTearDown()
     {
-        if (_dbContainer != null)
-        {
-            await _dbContainer.DisposeAsync();
-        }
+        await _fixture.DisposeAsync();
     }
 
     [SetUp]
     public async Task Setup()
     {
-        if (_respawner == null)
+        await _fixture.ResetDatabaseAsync();
+
+        var configurationOverrides = new Dictionary<string, string?>
         {
-            Assert.Ignore("Database respawner is not available.");
-        }
+            ["Auth:Telegram:ServiceKey"] = ServiceKey
+        };
 
-        await using (var conn = new NpgsqlConnection(_connectionString))
-        {
-            await conn.OpenAsync();
-            await _respawner.ResetAsync(conn);
-        }
-
-        var configuration = TestConfiguration.Build(
-            _connectionString,
-            new Dictionary<string, string?>
-            {
-                ["Auth:Telegram:ServiceKey"] = ServiceKey
-            });
-
-        _factory = new ApiWebApplicationFactory(configuration: configuration);
+        _factory = _fixture.CreateApiFactory(configurationOverrides);
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             BaseAddress = new Uri("http://localhost")

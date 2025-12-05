@@ -70,6 +70,7 @@ public class GetAllPhotosIntegrationTests
                     {
                         builder.MigrationsAssembly(typeof(PhotoBankDbContext).Assembly.GetName().Name);
                         builder.UseNetTopologySuite();
+                        builder.UseVector();
                         builder.CommandTimeout(120);
                     }));
             services.AddDbContext<AccessControlDbContext>(options =>
@@ -109,7 +110,7 @@ public class GetAllPhotosIntegrationTests
             PageSize = 10000 // Should be capped to MaxPageSize
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.TotalCount.Should().Be(5180);
+        result.TotalCount.Should().Be(5066);
         result.Items.Should().HaveCount(PageRequest.MaxPageSize);
     }
 
@@ -123,7 +124,7 @@ public class GetAllPhotosIntegrationTests
             PageSize = 10
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.TotalCount.Should().Be(5180);
+        result.TotalCount.Should().Be(5066);
         result.Items.Should().HaveCount(10);
     }
 
@@ -185,7 +186,7 @@ public class GetAllPhotosIntegrationTests
             IsBW = true
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.TotalCount.Should().Be(60);
+        result.TotalCount.Should().Be(55);
     }
 
     [Test]
@@ -251,7 +252,7 @@ public class GetAllPhotosIntegrationTests
             Tags = new []{ 3504 }
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.TotalCount.Should().Be(2462);
+        result.TotalCount.Should().Be(2374);
     }
 
     [Test]
@@ -264,7 +265,7 @@ public class GetAllPhotosIntegrationTests
             Persons = new[] { 1 }
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.TotalCount.Should().Be(401);
+        result.TotalCount.Should().Be(391);
     }
 
     [Test]
@@ -277,7 +278,7 @@ public class GetAllPhotosIntegrationTests
             Tags = new[] { 3504, 3505 }
         };
         var result = await MeasureGetAllPhotosAsync(filterDto);
-        result.TotalCount.Should().Be(2420);
+        result.TotalCount.Should().Be(2332);
     }
 
     [Test]

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using DotNet.Testcontainers.Builders;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,22 +32,8 @@ public class ReEnrichmentIntegrationTests
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
     {
-        // Configure Npgsql to treat DateTime with Kind=Unspecified as UTC
-        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
-        try
-        {
-            _dbFixture = new TestDatabaseFixture();
-            await _dbFixture.InitializeAsync();
-        }
-        catch (ArgumentException ex) when (ex.Message.Contains("Docker endpoint"))
-        {
-            Assert.Ignore("Docker not available: " + ex.Message);
-        }
-        catch (DockerUnavailableException ex)
-        {
-            Assert.Ignore("Docker not available: " + ex.Message);
-        }
+        _dbFixture = new TestDatabaseFixture();
+        await _dbFixture.InitializeAsync();
     }
 
     [OneTimeTearDown]
@@ -99,6 +84,7 @@ public class ReEnrichmentIntegrationTests
         // Register test enrichers
         services.AddTransient<IEnricher, TestEnricherA>();
         services.AddTransient<IEnricher, TestEnricherB>();
+        services.AddEnrichmentInfrastructure(opts => opts.ContinueOnError = true);
 
         _provider = services.BuildServiceProvider();
 
@@ -331,13 +317,14 @@ public class ReEnrichmentIntegrationTests
         services.AddSingleton<IActiveEnricherProvider>(new TestActiveEnricherProvider(
             new[] { typeof(FailingTestEnricher) }));
         services.AddTransient<IEnricher, FailingTestEnricher>();
+        services.AddEnrichmentInfrastructure(opts => opts.ContinueOnError = true);
 
         _provider = services.BuildServiceProvider();
 
         var service = _provider.GetRequiredService<IReEnrichmentService>();
         var photoRepo = _provider.GetRequiredService<IRepository<Photo>>();
 
-        var photo = await photoRepo.GetAll().Include(p => p.Captions).FirstAsync();
+        var photo = await _context.Photos.Include(p => p.Captions).FirstAsync();
         var originalFlags = photo.EnrichedWithEnricherType;
 
         // Add a caption to verify it's not deleted on rollback
@@ -369,7 +356,6 @@ public class ReEnrichmentIntegrationTests
     {
         var storage = new Storage
         {
-            Id = 1,
             Name = "Test Storage",
             Folder = _testStorageFolder
         };
@@ -381,12 +367,14 @@ public class ReEnrichmentIntegrationTests
         {
             var photo = new Photo
             {
-                Id = i,
                 Name = $"test{i}",
-                RelativePath = "photos",
-                StorageId = storage.Id,
-                Storage = storage,
-                EnrichedWithEnricherType = EnricherType.None
+                AccentColor = "00000",
+                DominantColorBackground = "black",
+                DominantColorForeground = "black",
+                DominantColors = "black",
+                ImageHash = $"hash-{i}",
+                EnrichedWithEnricherType = EnricherType.None,
+                Files = new List<DbContext.Models.File>()
             };
 
             _context.Photos.Add(photo);
@@ -394,8 +382,13 @@ public class ReEnrichmentIntegrationTests
             var file = new DbContext.Models.File
             {
                 Name = "test.jpg",
-                Photo = photo
+                Photo = photo,
+                Storage = storage,
+                StorageId = storage.Id,
+                RelativePath = "photos"
             };
+
+            photo.Files.Add(file);
 
             _context.Files.Add(file);
         }
@@ -413,7 +406,8 @@ public class TestEnricherA : Services.Enrichers.IEnricher
 
     public Task EnrichAsync(Photo photo, Services.Models.SourceDataDto source, System.Threading.CancellationToken cancellationToken = default)
     {
-        // Simulate enrichment
+        // Simulate enrichment by setting required metadata fields
+        photo.ImageHash ??= "test-hash";
         return Task.CompletedTask;
     }
 }
@@ -435,7 +429,7 @@ public class TestEnricherB : Services.Enrichers.IEnricher
 /// </summary>
 public class FailingTestEnricher : Services.Enrichers.IEnricher
 {
-    public EnricherType EnricherType => EnricherType.Caption;
+    public EnricherType EnricherType => EnricherType.Face;
     public Type[] Dependencies => Array.Empty<Type>();
 
     public Task EnrichAsync(Photo photo, Services.Models.SourceDataDto source, System.Threading.CancellationToken cancellationToken = default)

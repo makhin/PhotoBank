@@ -468,8 +468,8 @@ public sealed class ReEnrichmentService : IReEnrichmentService
     private async Task<Photo> LoadPhotoWithDependenciesAsync(int photoId, CancellationToken ct)
     {
         return await _context.Photos
-            .Include(p => p.Storage)
             .Include(p => p.Files)
+                .ThenInclude(f => f.Storage)
             .Include(p => p.Captions)
             .Include(p => p.PhotoTags)
                 .ThenInclude(pt => pt.Tag)
@@ -594,8 +594,17 @@ public sealed class ReEnrichmentService : IReEnrichmentService
             return null;
         }
 
+        // Use File's own Storage and RelativePath for cross-storage duplicate support
         var file = photo.Files.First();
-        var absolutePath = Path.Combine(photo.Storage.Folder, photo.RelativePath, file.Name);
+        var storage = file.Storage;
+
+        if (storage == null)
+        {
+            _logger.LogWarning("File storage is not loaded for photo {PhotoId}", photo.Id);
+            return null;
+        }
+        var relativePath = file.RelativePath ?? string.Empty;
+        var absolutePath = Path.Combine(storage.Folder, relativePath, file.Name);
 
         if (!File.Exists(absolutePath))
         {

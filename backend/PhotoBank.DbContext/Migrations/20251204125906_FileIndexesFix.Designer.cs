@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -13,9 +14,11 @@ using PhotoBank.DbContext.DbContext;
 namespace PhotoBank.DbContext.Migrations
 {
     [DbContext(typeof(PhotoBankDbContext))]
-    partial class PhotoBankDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251204125906_FileIndexesFix")]
+    partial class FileIndexesFix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -352,6 +355,9 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<int>("IdentityStatus")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("MigratedAt_Image")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int?>("PersonId")
                         .HasColumnType("integer");
 
@@ -421,11 +427,10 @@ namespace PhotoBank.DbContext.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("RelativePath")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
 
-                    b.Property<int>("StorageId")
+                    b.Property<int?>("StorageId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -433,8 +438,6 @@ namespace PhotoBank.DbContext.Migrations
                     b.HasIndex("PhotoId");
 
                     b.HasIndex("StorageId");
-
-                    b.HasIndex("StorageId", "RelativePath");
 
                     b.HasIndex("Name", "StorageId", "RelativePath")
                         .IsUnique();
@@ -581,6 +584,12 @@ namespace PhotoBank.DbContext.Migrations
                     b.Property<Point>("Location")
                         .HasColumnType("geometry");
 
+                    b.Property<DateTime?>("MigratedAt_Preview")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("MigratedAt_Thumbnail")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -591,6 +600,11 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.Property<double>("RacyScore")
                         .HasColumnType("double precision");
+
+                    b.Property<string>("RelativePath")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("S3ETag_Preview")
                         .HasMaxLength(128)
@@ -619,7 +633,7 @@ namespace PhotoBank.DbContext.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
-                    b.Property<int?>("StorageId")
+                    b.Property<int>("StorageId")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("TakenDate")
@@ -654,7 +668,13 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.HasIndex("StorageId");
 
+                    NpgsqlIndexBuilderExtensions.IncludeProperties(b.HasIndex("StorageId"), new[] { "RelativePath" });
+
                     b.HasIndex("TakenDate");
+
+                    b.HasIndex("Name", "RelativePath");
+
+                    b.HasIndex("StorageId", "TakenDate");
 
                     b.ToTable("Photos");
                 });
@@ -860,9 +880,7 @@ namespace PhotoBank.DbContext.Migrations
 
                     b.HasOne("PhotoBank.DbContext.Models.Storage", "Storage")
                         .WithMany()
-                        .HasForeignKey("StorageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("StorageId");
 
                     b.Navigation("Photo");
 
@@ -886,9 +904,13 @@ namespace PhotoBank.DbContext.Migrations
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.Photo", b =>
                 {
-                    b.HasOne("PhotoBank.DbContext.Models.Storage", null)
+                    b.HasOne("PhotoBank.DbContext.Models.Storage", "Storage")
                         .WithMany("Photos")
-                        .HasForeignKey("StorageId");
+                        .HasForeignKey("StorageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Storage");
                 });
 
             modelBuilder.Entity("PhotoBank.DbContext.Models.PhotoCategory", b =>

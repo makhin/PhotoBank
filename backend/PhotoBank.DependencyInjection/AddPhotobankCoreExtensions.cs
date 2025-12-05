@@ -74,13 +74,15 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<IEnricher, MetadataEnricher>();
         services.AddTransient<IEnricher, ThumbnailEnricher>();
         services.AddTransient<IEnricher, PreviewEnricher>();
+        services.AddTransient<IEnricher, DuplicateEnricher>();
         services.AddTransient<IImageMetadataReaderWrapper, ImageMetadataReaderWrapper>();
 
         // Register enrichment infrastructure (pipeline, catalog, re-enrichment service)
         // This allows API to use IReEnrichmentService and related services
         services.AddEnrichmentInfrastructure();
 
-        services.AddSingleton<IEnrichmentStopCondition, DuplicatePhotoStopCondition>();
+        // Stop condition for duplicate photos (cross-storage detection)
+        services.AddSingleton<IEnrichmentStopCondition, DuplicateStopCondition>();
 
         // Stop condition for adult content:
         // Only stop if adult content is detected AND OpenRouter is enabled

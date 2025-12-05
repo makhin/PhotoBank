@@ -21,7 +21,7 @@ public class AdultEnricher : IEnricher
 
     public EnricherType EnricherType => EnricherType.Adult;
 
-    public Type[] Dependencies => [typeof(PreviewEnricher)];
+    public Type[] Dependencies => [typeof(DuplicateEnricher)];
 
     public AdultEnricher(INudeNetDetector detector, ILogger<AdultEnricher> logger)
     {

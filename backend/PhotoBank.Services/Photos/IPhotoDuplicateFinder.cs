@@ -7,6 +7,7 @@ using AutoMapper;
 using ImageMagick;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using PhotoBank.AccessControl;
 using PhotoBank.DbContext.Models;
 using PhotoBank.Repositories;
 using PhotoBank.Services.Internal;
@@ -25,17 +26,20 @@ public sealed class PhotoDuplicateFinder : IPhotoDuplicateFinder
     private readonly IMapper _mapper;
     private readonly S3Options _s3Options;
     private readonly IMediaUrlResolver _mediaUrlResolver;
+    private readonly ICurrentUserAccessor _currentUserAccessor;
 
     public PhotoDuplicateFinder(
         IRepository<Photo> photoRepository,
         IMapper mapper,
         IOptions<S3Options> s3Options,
-        IMediaUrlResolver mediaUrlResolver)
+        IMediaUrlResolver mediaUrlResolver,
+        ICurrentUserAccessor currentUserAccessor)
     {
         _photoRepository = photoRepository;
         _mapper = mapper;
         _s3Options = s3Options?.Value ?? new S3Options();
         _mediaUrlResolver = mediaUrlResolver;
+        _currentUserAccessor = currentUserAccessor;
     }
 
     public async Task<IEnumerable<PhotoItemDto>> FindDuplicatesAsync(int? id, string? hash, int threshold, CancellationToken cancellationToken = default)
@@ -75,9 +79,22 @@ public sealed class PhotoDuplicateFinder : IPhotoDuplicateFinder
 
         var entities = await _photoRepository.GetAll().AsNoTracking()
             .Where(p => matchedIds.Contains(p.Id))
+            .Include(p => p.Files)!.ThenInclude(f => f.Storage)
+            .Include(p => p.PhotoTags)
+            .Include(p => p.Faces)
+            .Include(p => p.Captions)
+            .AsSplitQuery()
             .ToListAsync(cancellationToken);
 
-        var items = _mapper.Map<List<PhotoItemDto>>(entities);
+        var currentUser = await _currentUserAccessor.GetCurrentUserAsync(cancellationToken);
+
+        var items = _mapper.Map<List<PhotoItemDto>>(entities, opts =>
+        {
+            if (!currentUser.IsAdmin)
+            {
+                opts.Items["AllowedStorageIds"] = currentUser.AllowedStorageIds;
+            }
+        });
         await FillUrlsAsync(items, cancellationToken);
 
         return items;

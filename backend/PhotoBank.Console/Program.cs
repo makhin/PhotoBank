@@ -127,7 +127,7 @@ namespace PhotoBank.Console
                             .AddPhotobankDbContext(context.Configuration, usePool: false)
                             .AddPhotobankCore(context.Configuration)
                             .AddPhotobankConsole(context.Configuration)
-                            .AddSingleton<App>();
+                            .AddTransient<App>();
                     })
                     .Build();
 
@@ -357,7 +357,7 @@ namespace PhotoBank.Console
                     }
                     else if (storageId.HasValue)
                     {
-                        query = query.Where(p => p.StorageId == storageId.Value);
+                        query = query.Where(p => p.Files.Any(f => f.StorageId == storageId.Value));
                         Console.WriteLine($"Filtering by storage ID: {storageId}");
                     }
 

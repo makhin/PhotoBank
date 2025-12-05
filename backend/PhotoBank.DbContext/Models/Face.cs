@@ -8,6 +8,11 @@ namespace PhotoBank.DbContext.Models
 {
     public class Face : IEntityBase
     {
+        // EF Core requires a parameterless constructor when entities have properties
+        // with complex types (like Pgvector.Vector) that have constructor parameters
+        // This prevents the "No suitable constructor was found for entity type 'Vector'" error
+        public Face() { }
+
         public int Id { get; set; }
         [Column(TypeName = "geometry")]
         public Geometry? Rectangle { get; set; }
@@ -21,7 +26,6 @@ namespace PhotoBank.DbContext.Models
         [MaxLength(64)]
         public string? Sha256_Image { get; set; }
         public long? BlobSize_Image { get; set; }
-        public DateTime? MigratedAt_Image { get; set; }
         [MaxLength(64)]
         public string? Provider { get; set; }
         [MaxLength(256)]

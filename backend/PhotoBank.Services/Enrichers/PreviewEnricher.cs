@@ -33,7 +33,7 @@ public sealed class PreviewEnricher : IEnricher
         image.Format = MagickFormat.Jpg;
         photo.Scale = scale;
         source.PreviewImage = image.Clone();
-        photo.ImageHash = ImageHashHelper.ComputeHash(source.PreviewImage);
+        // ImageHash computation moved to DuplicateEnricher
 
         // Create letterboxed 640x640 image for ONNX models (YOLO, NudeNet)
         CreateLetterboxedImage(source.OriginalImage, source);

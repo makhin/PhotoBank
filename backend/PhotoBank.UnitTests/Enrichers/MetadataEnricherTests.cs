@@ -28,8 +28,25 @@ namespace PhotoBank.UnitTests.Enrichers
             _mockImageMetadataReaderWrapper = new Mock<IImageMetadataReaderWrapper>();
             _metadataEnricher = new MetadataEnricher(_mockImageMetadataReaderWrapper.Object);
 
-            _photo = new Photo { Storage = new Storage { Folder = "c:\\storageFolder" } };
-            _sourceData = new SourceDataDto { AbsolutePath = "c:\\storageFolder\\folder\\photo.jpg" };
+            var storage = new Storage { Folder = "c:\\storageFolder" };
+            _photo = new Photo
+            {
+                Files = new List<File>
+                {
+                    new()
+                    {
+                        Storage = storage,
+                        StorageId = storage.Id,
+                        RelativePath = "folder",
+                        Name = "photo.jpg"
+                    }
+                }
+            };
+            _sourceData = new SourceDataDto
+            {
+                AbsolutePath = "c:\\storageFolder\\folder\\photo.jpg",
+                Storage = storage
+            };
         }
 
         [Test]
@@ -43,18 +60,18 @@ namespace PhotoBank.UnitTests.Enrichers
         }
 
         [Test]
-        public void Dependencies_ShouldReturnPreviewEnricher()
+        public void Dependencies_ShouldReturnDuplicateEnricher()
         {
             // Act
             var result = _metadataEnricher.Dependencies;
 
             // Assert
             result.Should().ContainSingle()
-                .And.Contain(typeof(PreviewEnricher));
+                .And.Contain(typeof(DuplicateEnricher));
         }
 
         [Test]
-        public async Task EnrichAsync_ShouldSetPhotoProperties()
+        public async Task EnrichAsync_ShouldCallMetadataReader()
         {
             // Arrange
             var directories = new List<Directory>
@@ -72,10 +89,11 @@ namespace PhotoBank.UnitTests.Enrichers
             await _metadataEnricher.EnrichAsync(_photo, _sourceData);
 
             // Assert
-            _photo.Name.Should().Be("photo");
-            _photo.RelativePath.Should().Be("folder");
-            _photo.Files.Should().ContainSingle()
-                .Which.Name.Should().Be("photo.jpg");
+            // Name, RelativePath, and Files creation moved to DuplicateEnricher
+            // This enricher now only reads EXIF metadata
+            _mockImageMetadataReaderWrapper.Verify(
+                reader => reader.ReadMetadata(_sourceData.AbsolutePath),
+                Times.Once);
         }
 
         [Test]

@@ -206,10 +206,22 @@ namespace PhotoBank.UnitTests.Services
                 .All()
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = Guid.NewGuid().ToString())
                 .Build();
+
+            foreach (var photo in photos)
+            {
+                photo.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = $"{photo.Name}.jpg"
+                    }
+                };
+            }
             context.Photos.AddRange(photos);
             await context.SaveChangesAsync();
 
@@ -243,18 +255,34 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.IsBW = true)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "bw")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "bw.jpg"
+                    }
+                })
                 .Build();
             var colorPhoto = Builder<Photo>.CreateNew()
                 .With(p => p.Id = 2)
                 .With(p => p.IsBW = false)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "color")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "color.jpg"
+                    }
+                })
                 .Build();
             context.Photos.AddRange(bwPhoto, colorPhoto);
             await context.SaveChangesAsync();
@@ -290,9 +318,17 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 1)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "withTag")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "withTag.jpg"
+                    }
+                })
                 .Build();
             photoWithTag.PhotoTags = new List<PhotoTag>
             {
@@ -302,9 +338,17 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 2)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "withoutTag")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "withoutTag.jpg"
+                    }
+                })
                 .Build();
             context.Photos.AddRange(photoWithTag, photoWithoutTag);
             await context.SaveChangesAsync();
@@ -342,9 +386,17 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 1)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "all")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "all.jpg"
+                    }
+                })
                 .Build();
             photoAllTags.PhotoTags = new List<PhotoTag>
             {
@@ -356,9 +408,17 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 2)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "t1")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "t1.jpg"
+                    }
+                })
                 .Build();
             photoOnlyTag1.PhotoTags = new List<PhotoTag>
             {
@@ -369,9 +429,17 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 3)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "t2")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "t2.jpg"
+                    }
+                })
                 .Build();
             photoOnlyTag2.PhotoTags = new List<PhotoTag>
             {
@@ -415,9 +483,17 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 1)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "both")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "both.jpg"
+                    }
+                })
                 .Build();
             photoBoth.Faces = new List<Face>
             {
@@ -429,9 +505,17 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 2)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "p1")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "p1.jpg"
+                    }
+                })
                 .Build();
             photoOnlyP1.Faces = new List<Face>
             {
@@ -442,9 +526,17 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.Id = 3)
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "p2")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "p2.jpg"
+                    }
+                })
                 .Build();
             photoOnlyP2.Faces = new List<Face>
             {
@@ -485,9 +577,17 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.TakenDate = new DateTime(2020, 1, 1))
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "before")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "before.jpg"
+                    }
+                })
                 .Build();
 
             var afterDate = Builder<Photo>.CreateNew()
@@ -495,9 +595,17 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.TakenDate = new DateTime(2020, 3, 1))
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "after")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "after.jpg"
+                    }
+                })
                 .Build();
 
             context.Photos.AddRange(beforeDate, afterDate);
@@ -533,9 +641,17 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.TakenDate = new DateTime(2020, 1, 1))
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "before")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "before.jpg"
+                    }
+                })
                 .Build();
 
             var afterDate = Builder<Photo>.CreateNew()
@@ -543,9 +659,17 @@ namespace PhotoBank.UnitTests.Services
                 .With(p => p.TakenDate = new DateTime(2020, 3, 1))
                 .With(p => p.Location = new Point(0, 0))
                 .With(p => p.S3Key_Thumbnail = "thumb")
-                .With(p => p.Storage = storage)
-                .With(p => p.StorageId = storage.Id)
                 .With(p => p.Name = "after")
+                .With(p => p.Files = new List<File>
+                {
+                    new File
+                    {
+                        StorageId = storage.Id,
+                        Storage = storage,
+                        RelativePath = string.Empty,
+                        Name = "after.jpg"
+                    }
+                })
                 .Build();
 
             context.Photos.AddRange(beforeDate, afterDate);

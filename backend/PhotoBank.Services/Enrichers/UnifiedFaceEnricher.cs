@@ -29,7 +29,7 @@ public class UnifiedFaceEnricher : IEnricher
     }
 
     public EnricherType EnricherType => EnricherType.Face;
-    public Type[] Dependencies => [typeof(PreviewEnricher)];
+    public Type[] Dependencies => [typeof(DuplicateEnricher)];
 
     public async Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
     {

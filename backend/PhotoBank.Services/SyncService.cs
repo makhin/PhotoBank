@@ -50,15 +50,15 @@ namespace PhotoBank.Services
                     .Select(p => _fileSystem.Path.GetRelativePath(storage.Folder, p)),
                 StringComparer.OrdinalIgnoreCase);
 
-            // Files in DB
+            // Files in DB for this storage
+            // Use direct StorageId filter (more efficient) and file's own RelativePath
             var storageFiles = await _fileRepository
-                .GetByCondition(f => f.Photo.Storage.Id == storage.Id)
-                .Include(f => f.Photo)
+                .GetByCondition(f => f.StorageId == storage.Id)
                 .AsNoTracking()
                 .Select(f => new
                 {
                     f.Id,
-                    Path = _fileSystem.Path.Combine(f.Photo.RelativePath ?? string.Empty, f.Name),
+                    Path = _fileSystem.Path.Combine(f.RelativePath ?? string.Empty, f.Name),
                     f.IsDeleted
                 })
                 .ToListAsync();

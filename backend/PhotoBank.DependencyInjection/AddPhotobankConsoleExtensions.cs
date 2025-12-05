@@ -93,6 +93,11 @@ public static partial class ServiceCollectionExtensions
         services.AddTransient<IPhotoProcessor, PhotoProcessor>();
         services.AddScoped<IPhotoDeletionService, PhotoDeletionService>();
         services.AddSingleton<ICurrentUser, DummyCurrentUser>();
+        services.AddScoped<ICurrentUserAccessor>(sp =>
+        {
+            var currentUser = sp.GetRequiredService<ICurrentUser>();
+            return new SimpleCurrentUserAccessor(currentUser);
+        });
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<ISyncService, SyncService>();
         services.AddTransient<IEnricher, MetadataEnricher>();

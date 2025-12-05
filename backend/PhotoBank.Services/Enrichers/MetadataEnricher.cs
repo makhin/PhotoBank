@@ -25,24 +25,13 @@ namespace PhotoBank.Services.Enrichers
         }
 
         public EnricherType EnricherType => EnricherType.Metadata;
-        public Type[] Dependencies => [typeof(PreviewEnricher)];
+        // Now depends on DuplicateEnricher which handles Name, RelativePath, Files creation
+        public Type[] Dependencies => [typeof(DuplicateEnricher)];
 
         public Task EnrichAsync(Photo photo, SourceDataDto sourceData, CancellationToken cancellationToken = default)
         {
-            var normalizedAbsolutePath = sourceData.AbsolutePath.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
-            var normalizedStoragePath = photo.Storage.Folder.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
-
-            photo.Name = Path.GetFileNameWithoutExtension(normalizedAbsolutePath);
-            photo.RelativePath = Path.GetDirectoryName(normalizedAbsolutePath)?
-                .Replace(normalizedStoragePath, string.Empty)
-                .TrimStart(Path.DirectorySeparatorChar);
-            photo.Files = new List<File>
-            {
-                new()
-                {
-                    Name = Path.GetFileName(normalizedAbsolutePath)
-                }
-            };
+            // Name, RelativePath, and Files creation moved to DuplicateEnricher
+            // This enricher now only handles EXIF metadata extraction
 
             IEnumerable<Directory> directories = _imageMetadataReaderWrapper.ReadMetadata(sourceData.AbsolutePath);
 

@@ -68,7 +68,7 @@ public class UnifiedObjectPropertyEnricherTests
     }
 
     [Test]
-    public void Dependencies_WithYoloProvider_ShouldReturnPreviewEnricher()
+    public void Dependencies_WithYoloProvider_ShouldReturnDuplicateEnricher()
     {
         // Arrange
         var mockProvider = new Mock<IObjectDetectionProvider>();
@@ -83,7 +83,7 @@ public class UnifiedObjectPropertyEnricherTests
 
         // Assert
         result.Should().ContainSingle()
-            .And.Contain(typeof(PreviewEnricher));
+            .And.Contain(typeof(DuplicateEnricher));
     }
 
     [Test]

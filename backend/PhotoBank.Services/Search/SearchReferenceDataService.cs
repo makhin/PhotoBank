@@ -222,23 +222,25 @@ public sealed class SearchReferenceDataService : ISearchReferenceDataService
             () => CacheKeys.Paths(currentUser),
             async _ =>
             {
+                // Get paths from Files instead of Photos for cross-storage duplicate support
                 var query = _photoRepository.GetAll()
                     .AsNoTracking()
                     .MaybeApplyAcl(currentUser)
-                    .Where(p => p.RelativePath != null);
+                    .SelectMany(p => p.Files)
+                    .Where(f => f.RelativePath != null);
 
                 var paths = await query
-                    .Select(p => new { p.StorageId, p.RelativePath })
+                    .Select(f => new { f.StorageId, f.RelativePath })
                     .Distinct()
-                    .OrderBy(p => p.StorageId)
-                    .ThenBy(p => p.RelativePath)
+                    .OrderBy(f => f.StorageId)
+                    .ThenBy(f => f.RelativePath)
                     .ToListAsync();
 
                 return (IReadOnlyList<PathDto>)paths
-                    .Select(p => new PathDto
+                    .Select(f => new PathDto
                     {
-                        StorageId = p.StorageId,
-                        Path = p.RelativePath!,
+                        StorageId = f.StorageId,
+                        Path = f.RelativePath!,
                     })
                     .ToList();
             },

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using AutoMapper;
 using PhotoBank.AccessControl;
 using PhotoBank.DbContext.Models;
@@ -7,6 +9,8 @@ namespace PhotoBank.Services
 {
     public class MappingProfile : Profile
     {
+        private const string AllowedStorageIdsKey = "AllowedStorageIds";
+
         public MappingProfile()
         {
             CreateMap<Photo, PhotoDto>()
@@ -36,12 +40,29 @@ namespace PhotoBank.Services
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.PhotoTags))
                 .ForMember(dest => dest.Persons, opt => opt.MapFrom(src => src.Faces))
                 .ForMember(dest => dest.Captions, opt => opt.MapFrom(src => src.Captions))
-                .ForMember(dest => dest.StorageName, opt => opt.MapFrom(src => src.Storage.Name))
+                .ForMember(dest => dest.StorageName,
+                    opt => opt.MapFrom((src, _, _, context) => FilterFiles(src, context)
+                        .OrderBy(f => f.Id)
+                        .Select(f => f.Storage.Name)
+                        .FirstOrDefault() ?? string.Empty))
+                .ForMember(dest => dest.RelativePath,
+                    opt => opt.MapFrom((src, _, _, context) => FilterFiles(src, context)
+                        .OrderBy(f => f.Id)
+                        .Select(f => f.RelativePath)
+                        .FirstOrDefault() ?? string.Empty))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Photo, PathDto>()
-                .ForMember(dest => dest.StorageId, opt => opt.MapFrom(src => src.StorageId))
-                .ForMember(dest => dest.Path, opt => opt.MapFrom(src => src.RelativePath))
+                .ForMember(dest => dest.StorageId,
+                    opt => opt.MapFrom((src, _, _, context) => FilterFiles(src, context)
+                        .OrderBy(f => f.Id)
+                        .Select(f => f.StorageId)
+                        .FirstOrDefault()))
+                .ForMember(dest => dest.Path,
+                    opt => opt.MapFrom((src, _, _, context) => FilterFiles(src, context)
+                        .OrderBy(f => f.Id)
+                        .Select(f => f.RelativePath)
+                        .FirstOrDefault() ?? string.Empty))
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
 
             CreateMap<Person, PersonDto>()
@@ -99,6 +120,23 @@ namespace PhotoBank.Services
                     opt => opt.MapFrom(src => src.DateRanges))
                 .ForMember(dest => dest.UserAssignments, opt => opt.Ignore())
                 .IgnoreAllPropertiesWithAnInaccessibleSetter();
+        }
+
+        private static IEnumerable<File> FilterFiles(Photo photo, ResolutionContext context)
+        {
+            if (context.Options.Items.TryGetValue(AllowedStorageIdsKey, out var value) &&
+                value is IEnumerable<int> allowedStorageIds)
+            {
+                var allowedSet = allowedStorageIds as ISet<int> ?? allowedStorageIds.ToHashSet();
+                var filtered = photo.Files.Where(f => allowedSet.Contains(f.StorageId)).ToList();
+
+                if (filtered.Count > 0)
+                {
+                    return filtered;
+                }
+            }
+
+            return photo.Files;
         }
     }
 }

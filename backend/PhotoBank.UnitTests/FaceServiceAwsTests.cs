@@ -313,8 +313,6 @@ public class FaceServiceAwsTests
         var photo = new DbPhoto
         {
             Id = 2000 + faceId,
-            StorageId = storage.Id,
-            Storage = storage,
             Name = $"photo-{faceId}",
             AccentColor = "ffffff",
             DominantColorBackground = "bg",
@@ -331,9 +329,17 @@ public class FaceServiceAwsTests
             PhotoCategories = new List<DbPhotoCategory>(),
             ObjectProperties = new List<DbObjectProperty>(),
             Faces = new List<DbFace>(),
-            Files = new List<DbFile>(),
-            ImageHash = $"hash-{faceId}",
-            RelativePath = $"path-{faceId}"
+            Files = new List<DbFile>
+            {
+                new()
+                {
+                    StorageId = storage.Id,
+                    Storage = storage,
+                    RelativePath = $"path-{faceId}",
+                    Name = $"photo-{faceId}.jpg"
+                }
+            },
+            ImageHash = $"hash-{faceId}"
         };
 
         storage.Photos = new List<DbPhoto> { photo };
