@@ -7,31 +7,27 @@ graph TD
     %% Корневой энричер
     Preview[PreviewEnricher<br/>🖼️ Создание превью]
 
-    %% Энричеры первого уровня
-    Preview --> Adult[AdultEnricher<br/>🔞 Adult контент ONNX]
-    Preview --> Metadata[MetadataEnricher<br/>📋 EXIF данные]
-    Preview --> Thumbnail[ThumbnailEnricher<br/>🔲 Миниатюра]
+    %% Подготовка и проверка дубликатов
+    Preview --> Duplicate[DuplicateEnricher<br/>🔁 Дубликаты + файлы]
 
-    %% Энричеры второго уровня (зависят от Adult)
-    Adult --> Analyze[AnalyzeEnricher<br/>🔍 Azure Vision API]
+    %% Энричеры базового уровня
+    Duplicate --> Adult[AdultEnricher<br/>🔞 Adult контент ONNX]
+    Duplicate --> Metadata[MetadataEnricher<br/>📋 EXIF данные]
+    Duplicate --> Thumbnail[ThumbnailEnricher<br/>🔲 Миниатюра]
+    Duplicate --> UnifiedFace[UnifiedFaceEnricher<br/>👤 Лица unified]
 
-    %% Энричеры третьего уровня (зависят от Analyze)
+    %% Энричеры анализа
+    Adult --> Analyze[AnalyzeEnricher<br/>🔍 Анализ изображения]
+
+    %% Энричеры детального анализа
     Analyze --> Color[ColorEnricher<br/>🎨 Цвета]
     Analyze --> Caption[CaptionEnricher<br/>💬 Описание]
     Analyze --> Tag[TagEnricher<br/>🏷️ Теги]
     Analyze --> Category[CategoryEnricher<br/>📁 Категории]
-    Analyze --> Object[ObjectPropertyEnricher<br/>📦 Объекты]
 
-    %% Энричер с двойной зависимостью
-    Preview --> UnifiedFace[UnifiedFaceEnricher<br/>👤 Лица unified]
-    Metadata --> UnifiedFace
-
-    %% Устаревшие энричеры
-    Preview -.-> FaceOld[FaceEnricher<br/>👤 Лица Azure<br/>⚠️ DEPRECATED]
-    Metadata -.-> FaceOld
-
-    Preview -.-> FaceAws[FaceEnricherAws<br/>👤 Лица AWS<br/>⚠️ DEPRECATED]
-    Metadata -.-> FaceAws
+    %% Унифицированный энричер объектов (зависимость зависит от провайдера)
+    Analyze -.-> UnifiedObject[UnifiedObjectPropertyEnricher<br/>📦 Объекты unified]
+    Duplicate -.-> UnifiedObject
 
     %% Стили
     classDef root fill:#4CAF50,stroke:#2E7D32,color:#fff
@@ -39,15 +35,17 @@ graph TD
     classDef level2 fill:#FF9800,stroke:#E65100,color:#fff
     classDef level3 fill:#FFB74D,stroke:#E65100,color:#fff
     classDef unified fill:#9C27B0,stroke:#6A1B9A,color:#fff
-    classDef deprecated fill:#757575,stroke:#424242,color:#fff,stroke-dasharray: 5 5
 
     class Preview root
-    class Metadata,Thumbnail,Adult level1
+    class Duplicate,Metadata,Thumbnail,Adult level1
     class Analyze level2
-    class Color,Caption,Tag,Category,Object level3
-    class UnifiedFace unified
-    class FaceOld,FaceAws deprecated
+    class Color,Caption,Tag,Category level3
+    class UnifiedFace,UnifiedObject unified
 ```
+
+> Примечание: `UnifiedObjectPropertyEnricher` зависит от провайдера —
+> - **Azure**: зависит от `AnalyzeEnricher` (использует ImageAnalysis)
+> - **YOLO ONNX**: зависит от `DuplicateEnricher` (использует PreviewImage)
 
 ## Уровни зависимостей
 
@@ -55,26 +53,37 @@ graph TD
 - **PreviewEnricher** - создает preview изображения из оригинального файла
   - Зависимостей: нет
   - Сервисы: `IImageService` (ImageMagick)
+  - Дополнительно: формирует letterbox 640x640 для ONNX моделей
 
-### 🔵 Уровень 1 - Базовая подготовка
-- **AdultEnricher** - проверяет на adult/racy контент с помощью ONNX модели
+### 🔵 Уровень 1 - Подготовка и базовая обработка
+- **DuplicateEnricher** - проверяет дубликаты и подготавливает базовые поля
   - Зависимости: `PreviewEnricher`
+  - Сервисы: `IRepository<Photo>`
+  - Данные: ImageHash, Name, RelativePath, Files, DuplicatePhotoId
+
+- **AdultEnricher** - проверяет на adult/racy контент с помощью ONNX модели
+  - Зависимости: `DuplicateEnricher`
   - Сервисы: `INudeNetDetector` (Local ONNX NudeNet YOLOv8)
   - Данные: AdultScore, RacyScore, IsAdultContent, IsRacyContent
 
 - **MetadataEnricher** - извлекает EXIF метаданные из файла
-  - Зависимости: `PreviewEnricher`
+  - Зависимости: `DuplicateEnricher`
   - Сервисы: `IImageMetadataReaderWrapper` (MetadataExtractor)
   - Извлекает: Дата съемки, GPS, Camera info
 
 - **ThumbnailEnricher** - генерирует миниатюру 50x50px
-  - Зависимости: `PreviewEnricher`
-  - Сервисы: `IComputerVisionClient` (Azure)
+  - Зависимости: `DuplicateEnricher`
+  - Сервисы: Smartcrop + ImageMagick
+
+- **UnifiedFaceEnricher** ✅ - универсальный детектор лиц
+  - Зависимости: `DuplicateEnricher`
+  - Сервисы: `IUnifiedFaceService` (Azure/AWS/Local провайдеры)
+  - Функции: Определение лиц, возраст, пол, эмоции, создание preview лиц
 
 ### 🟠 Уровень 2 - Анализ содержимого
-- **AnalyzeEnricher** - анализирует изображение через Azure Computer Vision API
+- **AnalyzeEnricher** - анализирует изображение через `IImageAnalyzer`
   - Зависимости: `AdultEnricher`
-  - Сервисы: `IComputerVisionClient` (Azure)
+  - Сервисы: `IImageAnalyzer` (Azure/OpenRouter/Ollama и др.)
   - Извлекает: Categories, Description, Tags, Objects, Colors, Adult content
 
 ### 🟠 Уровень 3 - Детализация анализа
@@ -94,24 +103,13 @@ graph TD
   - Базовый класс: `BaseLookupEnricher<Category, PhotoCategory>`
   - База данных: `IRepository<Category>`
 
-- **ObjectPropertyEnricher** - создает/связывает обнаруженные объекты
-  - Базовый класс: `BaseLookupEnricher<PropertyName, ObjectProperty>`
+### 🟣 Уровень 1/2 - Унифицированные объекты
+- **UnifiedObjectPropertyEnricher** - детекция объектов через провайдер
+  - Зависимости:
+    - Azure: `AnalyzeEnricher`
+    - YOLO ONNX: `DuplicateEnricher`
+  - Сервисы: `IObjectDetectionProvider`
   - База данных: `IRepository<PropertyName>`
-
-### 🟣 Уровень 1+2 - Комбинированные зависимости
-- **UnifiedFaceEnricher** ✅ - универсальный детектор лиц
-  - Зависимости: `PreviewEnricher` + `MetadataEnricher`
-  - Сервисы: `IUnifiedFaceService` (поддержка Azure/AWS/Local провайдеров)
-  - Функции: Определение лиц, возраст, пол, эмоции, создание preview лиц
-
-### ⚠️ Устаревшие энричеры (DEPRECATED)
-- **FaceEnricher** - только Azure Face API
-  - Зависимости: `PreviewEnricher` + `MetadataEnricher`
-  - Статус: `[Obsolete("Use UnifiedFaceEnricher instead")]`
-
-- **FaceEnricherAws** - только AWS Rekognition
-  - Зависимости: `PreviewEnricher` + `MetadataEnricher`
-  - Статус: `[Obsolete("Use UnifiedFaceEnricher instead")]`
 
 ## Базовые классы
 
@@ -142,7 +140,6 @@ classDiagram
 
     TagEnricher --|> BaseLookupEnricher
     CategoryEnricher --|> BaseLookupEnricher
-    ObjectPropertyEnricher --|> BaseLookupEnricher
 
     class TagEnricher {
         +EnricherType: Tag
@@ -151,10 +148,6 @@ classDiagram
     class CategoryEnricher {
         +EnricherType: Category
     }
-
-    class ObjectPropertyEnricher {
-        +EnricherType: ObjectProperty
-    }
 ```
 
 ## Порядок выполнения
@@ -162,27 +155,28 @@ classDiagram
 Enrichment Pipeline использует топологическую сортировку для определения порядка выполнения:
 
 1. **PreviewEnricher** (корневой)
-2. **Параллельно:**
+2. **DuplicateEnricher**
+3. **Параллельно (после DuplicateEnricher):**
    - AdultEnricher (ONNX)
    - MetadataEnricher
    - ThumbnailEnricher
-3. **После AdultEnricher:**
+   - UnifiedFaceEnricher
+   - UnifiedObjectPropertyEnricher (если провайдер YOLO ONNX)
+4. **После AdultEnricher:**
    - AnalyzeEnricher
-4. **После AnalyzeEnricher (параллельно):**
+5. **После AnalyzeEnricher (параллельно):**
    - ColorEnricher
    - CaptionEnricher
    - TagEnricher
    - CategoryEnricher
-   - ObjectPropertyEnricher
-5. **После PreviewEnricher + MetadataEnricher:**
-   - UnifiedFaceEnricher
+   - UnifiedObjectPropertyEnricher (если провайдер Azure)
 
 ## Статистика
 
-- **Всего энричеров:** 11 (9 активных + 2 устаревших)
-- **Уровней зависимостей:** 3
-- **Внешних сервисов:** 4 (Azure Vision, Azure Face, AWS Rekognition, MetadataExtractor)
-- **Репозиториев БД:** 3 (Tag, Category, PropertyName)
+- **Всего энричеров:** 12
+- **Уровней зависимостей:** 4
+- **Внешних сервисов:** 5 (ImageMagick, MetadataExtractor, Smartcrop, ONNX, ImageAnalyzer)
+- **Репозиториев БД:** 4 (Photo, Tag, Category, PropertyName)
 - **Поддержка параллелизма:** Да (`RunBatchAsync`)
 
 ## Компоненты оркестрации
