@@ -119,9 +119,10 @@ The photo enrichment system is the core of PhotoBank's processing:
 **Key Enrichers:**
 - `MetadataEnricher` - Extracts EXIF data (date, GPS, camera info)
 - `PreviewEnricher` - Generates preview images
+- `DuplicateEnricher` - Computes image hash, initializes file metadata, detects duplicates
 - `ThumbnailEnricher` - Generates thumbnails
 - `UnifiedFaceEnricher` - Detects faces using configured provider (InsightFace/Azure/AWS)
-- `UnifiedObjectPropertyEnricher` - Detects objects using YOLO ONNX models
+- `UnifiedObjectPropertyEnricher` - Detects objects using Azure or YOLO ONNX providers
 - `AdultEnricher` - Detects adult/racy content using NudeNet ONNX
 - `CaptionEnricher` - Generates captions using image analysis (OpenRouter/Ollama)
 - `ColorEnricher` - Analyzes dominant colors
@@ -129,9 +130,11 @@ The photo enrichment system is the core of PhotoBank's processing:
 
 **Enricher Dependencies:**
 Enrichers declare dependencies to ensure proper execution order. For example:
-- Face/object detection depends on metadata extraction
-- Caption generation depends on face/object detection
-- All enrichers that need images depend on Preview/Thumbnail enrichers
+- `DuplicateEnricher` depends on `PreviewEnricher` (hash/preview-based prep)
+- `AdultEnricher`, `MetadataEnricher`, `ThumbnailEnricher`, `UnifiedFaceEnricher` depend on `DuplicateEnricher`
+- `AnalyzeEnricher` depends on `AdultEnricher`
+- `CaptionEnricher`, `ColorEnricher`, `CategoryEnricher`, `TagEnricher` depend on `AnalyzeEnricher`
+- `UnifiedObjectPropertyEnricher` depends on `AnalyzeEnricher` (Azure) or `DuplicateEnricher` (YOLO ONNX)
 
 **Re-enrichment:**
 The `IReEnrichmentService` allows re-running enrichers on already-processed photos:
