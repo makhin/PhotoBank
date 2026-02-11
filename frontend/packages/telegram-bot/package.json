@@ -27,7 +27,7 @@
     "@grammyjs/runner": "^2.0.3",
     "@photobank/shared": "workspace:*",
     "@tanstack/react-query": "^5.90.5",
-    "axios": "^1.12.2",
+    "axios": "^1.13.5",
     "bottleneck": "^2.19.5",
     "date-fns": "^4.1.0",
     "dexie": "^4.2.1",
